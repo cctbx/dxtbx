@@ -14,7 +14,7 @@ import struct
 LITTLE_ENDIAN = 1234
 BIG_ENDIAN = 4321
 
-from Toolkit.ImageFormat.Format import Format
+from dxtbx.format.Format import Format
 
 
 def tiff_byte_order(filename):

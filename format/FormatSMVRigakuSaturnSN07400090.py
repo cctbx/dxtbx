@@ -14,7 +14,7 @@ from __future__ import print_function
 import time
 from scitbx import matrix
 
-from Toolkit.ImageFormat.FormatSMVRigakuSaturn import FormatSMVRigakuSaturn
+from dxtbx.format.FormatSMVRigakuSaturn import FormatSMVRigakuSaturn
 
 
 class FormatSMVRigakuSaturnSN07400090(FormatSMVRigakuSaturn):

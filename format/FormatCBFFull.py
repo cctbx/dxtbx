@@ -13,7 +13,7 @@ from __future__ import print_function
 import pycbf
 import exceptions
 
-from Toolkit.ImageFormat.FormatCBF import FormatCBF
+from dxtbx.format.FormatCBF import FormatCBF
 
 
 class FormatCBFFull(FormatCBF):

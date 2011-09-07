@@ -12,7 +12,7 @@ from __future__ import print_function
 import time
 from scitbx import matrix
 
-from Toolkit.ImageFormat.FormatSMV import FormatSMV
+from dxtbx.format.FormatSMV import FormatSMV
 
 
 class FormatSMVRigakuSaturn(FormatSMV):

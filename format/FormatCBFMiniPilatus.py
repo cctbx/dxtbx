@@ -11,9 +11,9 @@
 from __future__ import print_function
 import time
 
-from Toolkit.ImageFormat.FormatCBFMini import FormatCBFMini
-from Toolkit.ImageFormat.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
-from Toolkit.ImageFormat.FormatPilatusHelpers import determine_pilatus_mask
+from dxtbx.format.FormatCBFMini import FormatCBFMini
+from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
+from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 class FormatCBFMiniPilatus(FormatCBFMini):
