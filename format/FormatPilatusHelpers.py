@@ -8,6 +8,8 @@
 # Helper methods for class for working with Pilatus images, for instance for
 # identifying the regions to be masked.
 
+from __future__ import print_function
+
 
 def pilatus_6M_mask():
     """Hard coded mask regions for a Pilatus 6M instrument."""
@@ -68,3 +70,14 @@ def determine_pilatus_mask(xdetector):
         return pilatus_300K_mask()
 
     raise RuntimeError, "unknown image size: %d %d" % size
+
+
+if __name__ == "__main__":
+    l = []
+    for f0, f1, s0, s1 in pilatus_6M_mask():
+        l.append(
+            "LIMITS EXCLUDE %.1f %.1f %.1f %.1f"
+            % (0.172 * f0, 0.172 * f1, 0.172 * s0, 0.172 * s1)
+        )
+
+    print(l)
