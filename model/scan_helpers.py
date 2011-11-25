@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# XScanHelpers.py
+# scan_helpers.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# Helpers for the XScan class, which are things for handling e.g. filenames,
+# Helpers for the scan class, which are things for handling e.g. filenames,
 # templates and so on. In first instance this will being in code from
 # $XIA2_ROOT/Experts/FindImages.py as I will need it here too.
 
@@ -180,7 +180,7 @@ def template_number2image(template, number):
     return image
 
 
-class XScanHelperImageFiles:
+class scan_helper_image_files:
     """A helper class which handles things like image names, making templates,
     finding matching images and so on. Currently this just provides aliases
     to existing functions elsewhere, but ultimately it would be good if they
@@ -221,10 +221,10 @@ class XScanHelperImageFiles:
         return template_number2image(template, index)
 
 
-class XScanHelperImageFormats:
+class scan_helper_image_formats:
     """A helper class which enxapsulates the allowed and supported image
     formats namely CBF, TIFF, SMV, RAXIS, MAR. N.B. there will be some
-    crosstalk between this class and the ImageFormat classes."""
+    crosstalk between this class and the _image_format classes."""
 
     FORMAT_CBF = "FORMAT_CBF"
     FORMAT_TIFF = "FORMAT_TIFF"
@@ -235,11 +235,11 @@ class XScanHelperImageFormats:
     @staticmethod
     def check_format(format):
         if format in [
-            XScanHelperImageFormats.FORMAT_CBF,
-            XScanHelperImageFormats.FORMAT_TIFF,
-            XScanHelperImageFormats.FORMAT_SMV,
-            XScanHelperImageFormats.FORMAT_RAXIS,
-            XScanHelperImageFormats.FORMAT_MAR,
+            scan_helper_image_formats.FORMAT_CBF,
+            scan_helper_image_formats.FORMAT_TIFF,
+            scan_helper_image_formats.FORMAT_SMV,
+            scan_helper_image_formats.FORMAT_RAXIS,
+            scan_helper_image_formats.FORMAT_MAR,
         ]:
             return True
 
