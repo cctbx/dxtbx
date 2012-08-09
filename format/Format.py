@@ -39,6 +39,7 @@ from dxtbx.model.goniometer import goniometer, goniometer_factory
 from dxtbx.model.detector import detector, detector_factory
 from dxtbx.model.beam import beam, beam_factory
 from dxtbx.model.scan import scan, scan_factory
+from dxtbx.model.cube import cube
 
 
 class _MetaFormat(type):
@@ -84,6 +85,7 @@ class Format:
         self._detector_instance = None
         self._beam_instance = None
         self._scan_instance = None
+        self._cube_instance = None
 
         self._goniometer_factory = goniometer_factory
         self._detector_factory = detector_factory
@@ -152,6 +154,14 @@ class Format:
 
         return self._scan_instance
 
+    def get_cube(self):
+        """Get the cube; generating if needed"""
+
+        if not self._cube_instance:
+            self._cube_instance = cube(file_to_template(self._image_file))
+
+        return self._cube_instance
+
     def get_image_file(self):
         """Get the image file provided to the constructor."""
 
@@ -219,8 +229,25 @@ class Format:
         return ord(magic[0]) == 0x1F and ord(magic[1]) == 0x8B
 
     @staticmethod
+    def is_url(path):
+        """See if the file is a URL."""
+
+        from urlparse import urlparse
+
+        if urlparse(path).scheme:
+            return True
+
+        return False
+
+    @staticmethod
     def open_file(filename, mode="rb"):
         """Open file for reading, decompressing silently if necessary."""
+
+        if Format.is_url(filename):
+
+            import urllib2
+
+            return urllib2.urlopen(filename)
 
         if Format.is_bz2(filename):
 

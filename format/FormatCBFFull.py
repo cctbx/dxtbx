@@ -11,7 +11,6 @@
 
 from __future__ import print_function
 import pycbf
-import exceptions
 
 from dxtbx.format.FormatCBF import FormatCBF
 

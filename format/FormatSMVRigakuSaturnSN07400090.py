@@ -11,7 +11,6 @@
 # of fast and slow directions.)
 
 from __future__ import print_function
-import time
 from scitbx import matrix
 
 from dxtbx.format.FormatSMVRigakuSaturn import FormatSMVRigakuSaturn

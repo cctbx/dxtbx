@@ -9,7 +9,6 @@
 
 from __future__ import print_function
 import pycbf
-import exceptions
 
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask

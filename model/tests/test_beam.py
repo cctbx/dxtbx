@@ -8,7 +8,6 @@
 # Tests for the beam class.
 
 from __future__ import print_function
-import math
 import os
 import sys
 
