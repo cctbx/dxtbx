@@ -49,7 +49,7 @@ def image2template(filename):
             number = match.group(2)
             try:
                 exten = match.group(3)
-            except:
+            except:  # intentional
                 exten = ""
 
             for digit in string.digits:
@@ -84,7 +84,7 @@ def image2image(filename):
             number = match.group(2)
             try:
                 exten = match.group(3)
-            except:
+            except:  # intentional
                 exten = ""
 
             return int(number)

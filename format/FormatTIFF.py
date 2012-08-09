@@ -35,7 +35,7 @@ class FormatTIFF(Format):
             width, height, depth, header, order = read_basic_tiff_header(image_file)
             return 1
 
-        except:
+        except:  # intentional
             pass
 
         return 0
