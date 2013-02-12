@@ -36,7 +36,7 @@ def LookForFormatClasses():
     paths. N.B. the class names themselves must be unique (otherwise there
     is no hope of importing them!)"""
 
-    assert "XIA2_ROOT" in os.environ
+    import dxtbx
 
     format_classes = []
     file_names = []
@@ -44,27 +44,18 @@ def LookForFormatClasses():
     # FIXME in here - dxtbx should already be in os.path - look for it there,
     # also wouldn't it be tidy to refer to a Phil parameter?
 
-    xia2_format_dir = os.path.join(os.environ["XIA2_ROOT"], "dxtbx", "format")
+    format_dir = os.path.split(dxtbx.__file__)[0]
 
     if os.name == "nt":
         home = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"])
     else:
         home = os.environ["HOME"]
 
-    user_format_dir = os.path.join(home, ".xia2")
-
-    for f in os.listdir(xia2_format_dir):
+    for f in os.listdir(format_dir):
         if "Format" in f[:6] and ".py" in f[-3:]:
             assert not f in file_names
             file_names.append(f)
-            format_classes.append(os.path.join(xia2_format_dir, f))
-
-    if os.path.exists(user_format_dir):
-        for f in os.listdir(user_format_dir):
-            if "Format" in f[:6] and ".py" in f[-3:]:
-                assert not f in file_names
-                file_names.append(f)
-                format_classes.append(os.path.join(user_format_dir, f))
+            format_classes.append(os.path.join(format_dir, f))
 
     return format_classes
 
