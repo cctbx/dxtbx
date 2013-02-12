@@ -14,8 +14,6 @@ from __future__ import print_function
 import os
 import sys
 
-assert ("XIA2_ROOT") in os.environ
-
 from detector_helpers import detector_helper_sensors
 from detector import detector_factory
 

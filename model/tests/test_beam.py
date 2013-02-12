@@ -11,8 +11,6 @@ from __future__ import print_function
 import os
 import sys
 
-sys.path.append(os.path.join(os.environ["XIA2_ROOT"]))
-
 from dxtbx.model.beam import beam
 from dxtbx.model.beam import beam_factory
 

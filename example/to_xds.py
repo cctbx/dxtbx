@@ -16,11 +16,6 @@ import sys
 import math
 from scitbx import matrix
 
-assert "XIA2_ROOT" in os.environ
-
-if not os.environ["XIA2_ROOT"] in sys.path:
-    sys.path.append(os.environ["XIA2_ROOT"])
-
 from dxtbx.model.detector_helpers_types import detector_helpers_types
 from dxtbx.format.Registry import Registry
 

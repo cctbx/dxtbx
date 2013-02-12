@@ -11,11 +11,6 @@ from __future__ import print_function
 import os
 import sys
 
-assert "XIA2_ROOT" in os.environ
-
-if not os.environ["XIA2_ROOT"] in sys.path:
-    sys.path.append(os.environ["XIA2_ROOT"])
-
 from Toolkit.ImageFormat.Format import Format
 from Toolkit.ImageFormat.FormatCBF import FormatCBF
 
