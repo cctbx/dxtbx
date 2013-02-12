@@ -110,7 +110,15 @@ class FormatSMVADSC(FormatSMV):
 
         format = self._scan_factory.format("SMV")
         exposure_time = float(self._header_dictionary["TIME"])
-        epoch = time.mktime(time.strptime(self._header_dictionary["DATE"]))
+        for format_string in ["%a %b %d %H:%M:%S %Y", "%a %b %d %H:%M:%S %Z %Y"]:
+            try:
+                epoch = time.mktime(
+                    time.strptime(self._header_dictionary["DATE"], format_string)
+                )
+            except ValueError as e:
+                pass
+
+        assert epoch
         osc_start = float(self._header_dictionary["OSC_START"])
         osc_range = float(self._header_dictionary["OSC_RANGE"])
 
