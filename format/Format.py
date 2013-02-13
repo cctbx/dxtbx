@@ -230,7 +230,8 @@ class Format:
 
         from urlparse import urlparse
 
-        if urlparse(path).scheme:
+        scheme = urlparse(path).scheme
+        if scheme and scheme != "c":
             return True
 
         return False
