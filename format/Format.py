@@ -34,7 +34,6 @@ from dxtbx.model.goniometer import goniometer, goniometer_factory
 from dxtbx.model.detector import detector, detector_factory
 from dxtbx.model.beam import beam, beam_factory
 from dxtbx.model.scan import scan, scan_factory
-from dxtbx.model.cube import cube, cube_factory
 
 
 class _MetaFormat(type):
@@ -80,14 +79,12 @@ class Format:
         self._detector_instance = None
         self._beam_instance = None
         self._scan_instance = None
-        self._cube_instance = None
         self._raw_data = None
 
         self._goniometer_factory = goniometer_factory
         self._detector_factory = detector_factory
         self._beam_factory = beam_factory
         self._scan_factory = scan_factory
-        self._cube_factory = cube_factory
 
         self.setup()
 
@@ -120,10 +117,6 @@ class Format:
             assert isinstance(scan_instance, scan)
             self._scan_instance = scan_instance
 
-            cube_instance = self._cube()
-            # assert(isinstance(cube_instance, cube))
-            self._cube_inctance = cube_instance
-
         except exceptions.Exception as e:
             traceback.print_exc(sys.stderr)
         finally:
@@ -154,11 +147,6 @@ class Format:
         headers."""
 
         return self._scan_instance
-
-    def get_cube(self):
-        """Get the cube"""
-
-        return self._cube_instance
 
     def get_raw_data(self):
         """Get the pixel intensities (i.e. read the image and return as a
@@ -222,19 +210,6 @@ class Format:
         long as the result is an scan."""
 
         raise RuntimeError, "overload me"
-
-    def _cube(self):
-        """Get the data cube - this method could optionally be overloaded,
-        otherwise it will use the regular cube factory - which behind the
-        scenes uses iotbx."""
-
-        # FIXME since behind the scenes this goes through the
-        # iotbx, it will not use the general file opening below -
-        # could this be rectified?
-
-        self._cube_instance = cube_factory.from_filename(self._image_file)
-
-        return
 
     ####################################################################
     #                                                                  #

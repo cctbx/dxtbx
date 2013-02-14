@@ -36,6 +36,8 @@ class FormatCBFMini(FormatCBF):
                 return 2
             if "_array_data.header_convention" in record and "SLS" in record:
                 return 2
+            if "_array_data.header_convention" in record and "?" in record:
+                return 2
 
         return 0
 
