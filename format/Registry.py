@@ -9,9 +9,10 @@
 # this is useful for i.e. identifying the best tool to read a given range
 # of image formats.
 
+from __future__ import division
+
 from RegistryHelpers import InheritsFromFormat
-from RegistryHelpers import LookForFormatClasses
-from RegistryHelpers import LoadFormatClass
+from RegistryHelpers import LoadFormatClasses
 
 
 class _Registry:
@@ -37,8 +38,7 @@ class _Registry:
         if self._setup:
             return
 
-        for format_class in LookForFormatClasses():
-            LoadFormatClass(format_class)
+        LoadFormatClasses()
 
         self._setup = True
 
