@@ -12,7 +12,8 @@
 # from the X(component)Factories which will allow construction of e.g.
 # goniometers etc. from the headers and hence a format specific factory.
 
-import os
+from __future__ import division
+
 import sys
 
 try:
@@ -42,10 +43,18 @@ class _MetaFormat(type):
 
     def __init__(self, name, bases, attributes):
         super(_MetaFormat, self).__init__(name, bases, attributes)
+        self._children = []
 
-        from dxtbx.format.Registry import Registry
+        # NOP if this is the Format base class.  Register the class if
+        # and only if it is directly derived from Format.  Otherwise,
+        # append it as a child of its superclass.
+        if len(bases) == 1:
+            if bases[0].__name__ == "Format":
+                from dxtbx.format.Registry import Registry
 
-        Registry.add(self)
+                Registry.add(self)
+            else:
+                bases[0]._children.append(self)
 
         return
 
