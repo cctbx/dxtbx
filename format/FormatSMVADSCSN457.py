@@ -9,8 +9,8 @@
 # FormatSMVADSC, customised for example on Australian Synchrotron SN 457
 # which has reversed phi.
 
+from __future__ import division
 from __future__ import print_function
-import time
 
 from dxtbx.format.FormatSMVADSC import FormatSMVADSC
 
@@ -23,23 +23,20 @@ class FormatSMVADSCSN457(FormatSMVADSC):
     def understand(image_file):
         """Check to see if this is ADSC SN 457."""
 
-        if FormatSMVADSC.understand(image_file) == 0:
-            return 0
-
         # check this is detector serial number 457
 
         size, header = FormatSMVADSC.get_smv_header(image_file)
 
         if int(header["DETECTOR_SN"]) != 457:
-            return 0
+            return False
 
-        return 3
+        return True
 
     def __init__(self, image_file):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        assert FormatSMVADSC.understand(image_file) > 0
+        assert self.understand(image_file)
 
         FormatSMVADSC.__init__(self, image_file)
 

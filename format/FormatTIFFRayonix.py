@@ -8,7 +8,9 @@
 # An implementation of the TIFF image reader for Rayonix images. Inherits from
 # FormatTIFF.
 
+from __future__ import division
 from __future__ import print_function
+
 import time
 import datetime
 import struct
@@ -27,9 +29,6 @@ class FormatTIFFRayonix(FormatTIFF):
         describe the size of the image match with the TIFF records which do
         the same."""
 
-        if FormatTIFF.understand(image_file) == 0:
-            return 0
-
         width, height, depth, order, bytes = FormatTIFF.get_tiff_header(image_file)
 
         assert len(bytes) == 4096
@@ -47,7 +46,7 @@ class FormatTIFFRayonix(FormatTIFF):
         _depth = struct.unpack(_I, bytes[1024 + 88 : 1024 + 92])[0]
 
         if width != _width or height != _height or depth != _depth:
-            return 0
+            return False
 
         nimages = struct.unpack(_I, bytes[1024 + 112 : 1024 + 116])[0]
         origin = struct.unpack(_I, bytes[1024 + 116 : 1024 + 120])[0]
@@ -55,15 +54,15 @@ class FormatTIFFRayonix(FormatTIFF):
         view = struct.unpack(_I, bytes[1024 + 124 : 1024 + 128])[0]
 
         if nimages != 1 or origin != 0 or orientation != 0 or view != 0:
-            return 0
+            return False
 
-        return 2
+        return True
 
     def __init__(self, image_file):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        assert FormatTIFFRayonix.understand(image_file) > 0
+        assert self.understand(image_file)
 
         width, height, depth, order, bytes = FormatTIFF.get_tiff_header(image_file)
 

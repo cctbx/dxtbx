@@ -8,7 +8,9 @@
 # An implementation of the SMV image reader for Rigaku Saturn images.
 # Inherits from FormatSMV.
 
+from __future__ import division
 from __future__ import print_function
+
 import time
 from scitbx import matrix
 
@@ -24,9 +26,6 @@ class FormatSMVNOIR(FormatSMV):
         """Check to see if this looks like a ALS 4.2.2 NOIR SMV format image,
         i.e. we can make sense of it. Essentially that will be if it contains
         all of the keys we are looking for."""
-
-        if FormatSMV.understand(image_file) == 0:
-            return 0
 
         size, header = FormatSMV.get_smv_header(image_file)
 
@@ -51,7 +50,7 @@ class FormatSMVNOIR(FormatSMV):
 
         for header_item in wanted_header_items:
             if not header_item in header:
-                return 0
+                return False
 
         detector_prefix = header["DETECTOR_NAMES"].split()[0].strip()
 
@@ -68,16 +67,16 @@ class FormatSMVNOIR(FormatSMV):
 
         for header_item in more_wanted_header_items:
             if not "%s%s" % (detector_prefix, header_item) in header:
-                return 0
+                return False
 
-        return 2
+        return True
 
     def __init__(self, image_file):
         """Initialise the image structure from the given file, including a
         proper model of the experiment. Easy from Rigaku Saturn images as
         they contain everything pretty much we need..."""
 
-        assert FormatSMVNOIR.understand(image_file) > 0
+        assert self.understand(image_file)
 
         FormatSMV.__init__(self, image_file)
 

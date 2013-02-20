@@ -8,7 +8,9 @@
 # An implementation of the SMV image reader for ADSC images. Inherits from
 # FormatSMV.
 
+from __future__ import division
 from __future__ import print_function
+
 import time
 
 from dxtbx.format.FormatSMV import FormatSMV
@@ -24,9 +26,6 @@ class FormatSMVADSC(FormatSMV):
         can make sense of it. Essentially that will be if it contains all of
         the keys we are looking for and not some we are not (i.e. that belong
         to a Rigaku Saturn.)"""
-
-        if FormatSMV.understand(image_file) == 0:
-            return 0
 
         size, header = FormatSMV.get_smv_header(image_file)
 
@@ -50,15 +49,15 @@ class FormatSMVADSC(FormatSMV):
 
         for header_item in unwanted_header_items:
             if header_item in header:
-                return 0
+                return False
 
-        return 2
+        return True
 
     def __init__(self, image_file):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        assert FormatSMVADSC.understand(image_file) > 0
+        assert self.understand(image_file)
 
         FormatSMV.__init__(self, image_file)
 

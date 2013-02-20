@@ -8,9 +8,9 @@
 # An implementation of the TIFF image reader for Rayonix images. Inherits from
 # FormatTIFF.
 
+from __future__ import division
 from __future__ import print_function
-import time
-import datetime
+
 import struct
 
 from dxtbx.format.FormatTIFFRayonix import FormatTIFFRayonix
@@ -27,9 +27,6 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
         describe the size of the image match with the TIFF records which do
         the same."""
 
-        if FormatTIFFRayonix.understand(image_file) != 2:
-            return 0
-
         width, height, depth, order, bytes = FormatTIFFRayonix.get_tiff_header(
             image_file
         )
@@ -44,15 +41,15 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
                 serial_number = int(record.split()[-1])
 
         if serial_number > 0:
-            return 0
+            return False
 
-        return 3
+        return True
 
     def __init__(self, image_file):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        assert FormatTIFFRayonixESRF.understand(image_file) > 0
+        assert self.understand(image_file)
         FormatTIFFRayonix.__init__(self, image_file)
 
         return
