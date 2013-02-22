@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 #!/usr/bin/env python
 # test_scan.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
@@ -7,9 +10,7 @@
 #
 # Tests for the scan class, and it's helper classes.
 
-from __future__ import print_function
 import os
-import sys
 
 from dxtbx.model.scan import scan
 from dxtbx.model.scan import scan_factory
@@ -24,7 +25,7 @@ def work_helper_image_files():
 
     import dxtbx
 
-    directory = os.path.join(os.path.split(dxtbx.__file__)[0], "model", "tests")
+    directory = os.path.join(os.path.split(dxtbx.__file__)[0], "tests")
 
     template = "image_###.dat"
 
@@ -64,7 +65,7 @@ def work_xscan_factory():
 
     import dxtbx
 
-    directory = os.path.join(os.path.split(dxtbx.__file__)[0], "model", "tests")
+    directory = os.path.join(os.path.split(dxtbx.__file__)[0], "tests")
 
     template = "image_###.dat"
 
@@ -91,12 +92,12 @@ def work_xscan_factory():
         pass
 
     xscans.sort()
-    print(sum(xscans[1:], xscans[0]))
+    sum(xscans[1:], xscans[0])
 
     a = scan_factory.add(xscans[:10])
     b = scan_factory.add(xscans[10:])
 
-    print(a + b)
+    a + b
 
     filename = scan_helper_image_files.template_directory_index_to_image(
         template, directory, 1
@@ -104,12 +105,18 @@ def work_xscan_factory():
 
     assert len(scan_factory.search(filename)) == 20
 
-    print((a + b)[1:5])
-    print((a + b)[:10])
+    (a + b)[1:5]
+    (a + b)[:10]
 
     cbf = os.path.join(directory, "phi_scan_001.cbf")
 
-    print(scan_factory.imgCIF(cbf))
+    print("OK")
+
+
+def test_scan():
+    work_helper_image_files()
+    work_helper_image_formats()
+    work_xscan_factory()
 
 
 if __name__ == "__main__":

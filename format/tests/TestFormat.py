@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 #!/usr/bin/env python
 # TestFormat.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
@@ -7,8 +10,6 @@
 #
 # Code to give the Format static methods a workout.
 
-from __future__ import print_function
-import os
 import sys
 
 from Toolkit.ImageFormat.Format import Format

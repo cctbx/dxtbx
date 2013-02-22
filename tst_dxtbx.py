@@ -1,3 +1,4 @@
+from __future__ import division
 from __future__ import print_function
 
 
@@ -11,8 +12,9 @@ def tst_dxtbx():
         return
 
     import os
-    from boost.python import streambuf
-    from dxtbx import read_uint16
+
+    # from boost.python import streambuf
+    # from dxtbx import read_uint16
     from dxtbx.format.Registry import Registry
 
     from dials_regression.image_examples.get_all_working_images import (
@@ -28,4 +30,27 @@ def tst_dxtbx():
     print("OK")
 
 
-tst_dxtbx()
+def tst_dxtbx_models():
+
+    from dxtbx.tests.test_beam import test_beam
+
+    test_beam()
+
+    from dxtbx.tests.test_detector import test_detector
+
+    test_detector()
+
+    from dxtbx.tests.test_goniometer import test_goniometer
+
+    test_goniometer()
+
+    from dxtbx.tests.test_scan import test_scan
+
+    test_scan()
+
+    return
+
+
+if __name__ == "__main__":
+    tst_dxtbx()
+    tst_dxtbx_models()

@@ -1,3 +1,5 @@
+from __future__ import division
+
 #!/usr/bin/env python
 # scan_helpers.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter

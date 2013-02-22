@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 #!/usr/bin/env python
 # test_goniometer.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
@@ -7,10 +10,7 @@
 #
 # Tests for the goniometer class.
 
-from __future__ import print_function
 import math
-import os
-import sys
 
 from dxtbx.model.goniometer import goniometer
 from dxtbx.model.goniometer import goniometer_factory
@@ -81,21 +81,22 @@ def test_goniometer():
     assert compare_tuples(kappa.get_axis(), axis)
     assert not compare_tuples(kappa.get_fixed(), fixed)
 
-    cbf = goniometer_factory.imgCIF("phi_scan_001.cbf")
+    import libtbx.load_env
+    import os
 
-    print(cbf)
+    dxtbx_dir = libtbx.env.dist_path("dxtbx")
+
+    image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
+    cbf = goniometer_factory.imgCIF(image)
 
     kappa = goniometer_factory.kappa(50.0, -10.0, 30.0, 0.0, "-y", "phi")
 
-    print(kappa)
-
-    cbf = goniometer_factory.imgCIF("omega_scan.cbf")
-
-    print(cbf)
+    image = os.path.join(dxtbx_dir, "tests", "omega_scan.cbf")
+    cbf = goniometer_factory.imgCIF(image)
 
     kappa = goniometer_factory.kappa(50.0, -10.0, 30.0, 20.0, "-y", "omega")
 
-    print(kappa)
+    print("OK")
 
 
 if __name__ == "__main__":

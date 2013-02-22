@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 #!/usr/bin/env python
 # test_detector.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
@@ -7,9 +10,6 @@
 #
 # Tests for the detector class.
 
-from __future__ import print_function
-import os
-import sys
 from scitbx import matrix
 
 from dxtbx.model.detector import detector
@@ -44,11 +44,19 @@ def test_detector():
         (0, 1024),
         [],
     )
-    c = detector_factory.imgCIF("phi_scan_001.cbf", "CCD")
-    x = detector_factory.XDS("example-xparm.xds")
 
-    print(t)
-    print(x)
+    import libtbx.load_env
+    import os
+
+    dxtbx_dir = libtbx.env.dist_path("dxtbx")
+
+    image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
+    xparm = os.path.join(dxtbx_dir, "tests", "example-xparm.xds")
+
+    c = detector_factory.imgCIF(image, "CCD")
+    x = detector_factory.XDS(xparm)
+
+    print("OK")
 
 
 def work_detector():

@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 #!/usr/bin/env python
 # to_xds.py
 #
@@ -10,7 +13,6 @@
 # an example XDS.INP file. This should illustrate the usage of the dxtbx
 # classes.
 
-from __future__ import print_function
 import os
 import sys
 import math

@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 #!/usr/bin/env python
 # FormatTIFFHelpers.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
@@ -8,7 +11,6 @@
 # Helper code to assist with reading TIFF file headers, which are by their
 # nature binary so we need to mess with things like byte swapping.
 
-from __future__ import print_function
 import struct
 
 LITTLE_ENDIAN = 1234

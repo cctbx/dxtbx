@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 #!/usr/bin/env python
 # detector_helpers_types.py
 #
@@ -10,7 +13,6 @@
 # detector types, hashed by the sensor type, image dimensions and pixel
 # dimensions.
 
-from __future__ import print_function
 import os
 import sys
 
