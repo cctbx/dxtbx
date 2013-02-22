@@ -3,9 +3,14 @@ from __future__ import print_function
 
 def tst_dxtbx():
     import libtbx.load_env
-    import os
 
-    dials_regression = libtbx.env.dist_path("dials_regression")
+    try:
+        dials_regression = libtbx.env.dist_path("dials_regression")
+    except KeyError as e:
+        print("FAIL: dials_regression not configured")
+        return
+
+    import os
     from boost.python import streambuf
     from dxtbx import read_uint16
     from dxtbx.format.Registry import Registry
