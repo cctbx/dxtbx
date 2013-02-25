@@ -502,7 +502,7 @@ class detector_factory:
         # making proper use of cctbx vector calls - should not be as
         # complex as it appears to be...
 
-        origin = cbf_detector.get_pixel_coordinates(0, 0)
+        origin = tuple(cbf_detector.get_pixel_coordinates(0, 0))
         fast = cbf_detector.get_pixel_coordinates(0, 1)
         slow = cbf_detector.get_pixel_coordinates(1, 0)
 
@@ -518,6 +518,7 @@ class detector_factory:
         size = tuple(reversed(cbf_handle.get_image_size(0)))
         underload = find_undefined_value(cbf_handle)
         overload = cbf_handle.get_overload(0)
+        trusted_range = (int(underload), int(overload))
 
         cbf_detector.__swig_destroy__(cbf_detector)
         del cbf_detector
@@ -529,7 +530,7 @@ class detector_factory:
             origin,
             pixel,
             size,
-            (underload, overload),
+            trusted_range,
         )
 
     #        return detector(detector_factory.sensor(sensor),

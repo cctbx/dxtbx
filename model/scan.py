@@ -17,12 +17,13 @@ import pycbf
 import math
 import copy
 import time
+from dxtbx_model_ext import ScanData
 
 from scan_helpers import scan_helper_image_files
 from scan_helpers import scan_helper_image_formats
 
 
-class scan:
+class Scan(ScanData):
     """A class to represent the scan used to perform a rotation method X-ray
     diffraction experiment. In essence this is the information provided to the
     camera on where the images should go, how long the exposures should be
@@ -51,6 +52,7 @@ class scan:
         tuple corresponding to the first image in the scan. It is implied that
         subsequent images will be continuous with this, sharing the same
         oscillation width."""
+        from scitbx.array_family import flex
 
         assert "#" in template
         assert os.path.exists(directory)
@@ -58,14 +60,11 @@ class scan:
         assert len(image_range) == 2
         assert len(oscillation) == 2
         assert len(epochs) == (image_range[1] - image_range[0] + 1)
-
+        epochs = flex.double(epochs)
+        ScanData.__init__(self, image_range, oscillation, exposure_time, epochs)
         self._template = template
         self._directory = directory
         self._format = format
-        self._image_range = image_range
-        self._exposure_time = exposure_time
-        self._oscillation = oscillation
-        self._epochs = epochs
 
         return
 
@@ -73,9 +72,9 @@ class scan:
 
         return (
             "%s\n" % os.path.join(self._directory, self._template)
-            + "%d -> %d\n" % (self._image_range)
-            + "%.3f -> %.3f\n" % (self.get_oscillation_range())
-            + "%s" % self.get_image_time(self._image_range[0])
+            + "%d -> %d\n" % (self.image_range)
+            + "%.3f -> %.3f\n" % (self.total_oscillation_range)
+            + "%s" % self.get_image_time(self.image_range[0])
         )
 
     def __cmp__(self, other):
@@ -85,9 +84,9 @@ class scan:
         assert self._template == other.get_template()
         assert self._directory == other.get_directory()
         assert self._format == other.get_format()
-        assert self._exposure_time == other.get_exposure_time()
+        assert self.exposure_time == other.exposure_time
 
-        return self._image_range[0] - other.get_image_range()[0]
+        return self.image_range[0] - other.image_range[0]
 
     def __add__(self, other):
         """Return a new sweep which cosists of the contents of this sweep and
@@ -99,39 +98,25 @@ class scan:
         assert self._template == other.get_template()
         assert self._directory == other.get_directory()
         assert self._format == other.get_format()
-        assert self._exposure_time == other.get_exposure_time()
-        assert self._image_range[1] + 1 == other.get_image_range()[0]
-        assert (
-            math.fabs(
-                self.get_oscillation_range()[1] - other.get_oscillation_range()[0]
-            )
-            < 0.01
-        )
-        assert math.fabs(self.get_oscillation()[1] - other.get_oscillation()[1]) < 0.01
+        assert self.exposure_time == other.exposure_time
+        assert self.image_range[1] + 1 == other.image_range[0]
 
-        new_image_range = (self._image_range[0], other.get_image_range()[1])
-        new_epochs = copy.deepcopy(self._epochs)
-        new_epochs.update(other.get_epochs())
+        assert math.fabs(self.oscillation_range[1] - other.oscillation_range[0]) < 0.01
+        assert math.fabs(self.oscillation[1] - other.oscillation[1]) < 0.01
 
-        return scan(
+        new_image_range = (self.image_range[0], other.image_range[1])
+        new_epochs = copy.deepcopy(self.epochs)
+        new_epochs.extend(other.epochs)
+
+        return Scan(
             self._template,
             self._directory,
             self._format,
             new_image_range,
-            self._exposure_time,
-            self._oscillation,
+            self.exposure_time,
+            self.oscillation,
             new_epochs,
         )
-
-    def __len__(self):
-        """Implement the len(s) call - will return the total number of images
-        in the scan, which should mean that copying using
-
-        c = s[:len(s)]
-
-        should do something meaningful."""
-
-        return self._image_range[1] - self._image_range[0] + 1
 
     def __getitem__(self, index):
         """Implement ability to get an scan object corresponding to a single
@@ -142,17 +127,17 @@ class scan:
 
         if type(index) == type(1):
 
-            assert not index < self._image_range[0]
-            assert not index > self._image_range[1]
+            assert not index < self.image_range[0]
+            assert not index > self.image_range[1]
 
-            return scan(
+            return Scan(
                 self._template,
                 self._directory,
                 self._format,
                 (index, index),
-                self._exposure_time,
-                self.get_oscillation(index),
-                {index: self._epochs[index]},
+                self.exposure_time,
+                self.get_image_oscillation(index),
+                {index: self.epochs[index]},
             )
 
         if hasattr(index, "start"):
@@ -163,27 +148,26 @@ class scan:
 
             # work around unspecified image ranges i.e. [:10]
 
-            if start == 0:
-                start = self._image_range[0]
+            if start == 0 or start == None:
+                start = self.image_range[0]
 
-            if stop == sys.maxint:
-                stop = self._image_range[1]
-
-            assert not start < self._image_range[0]
-            assert not stop > self._image_range[1]
+            if stop == sys.maxint or stop == None:
+                stop = self.image_range[1]
+            assert not start < self.image_range[0]
+            assert not stop > self.image_range[1]
 
             new_epochs = {}
 
             for i in range(start, stop + 1):
-                new_epochs[i] = self._epochs[i]
+                new_epochs[i] = self.epochs[i]
 
-            return scan(
+            return Scan(
                 self._template,
                 self._directory,
                 self._format,
                 (start, stop),
-                self._exposure_time,
-                self.get_oscillation(start),
+                self.exposure_time,
+                self.get_image_oscillation(start),
                 new_epochs,
             )
 
@@ -201,54 +185,17 @@ class scan:
         """Get the image format for the images."""
         return self._format
 
-    def get_image_range(self):
-        """Get the image range (i.e. start, end inclusive) for this scan."""
-        return self._image_range
-
-    def get_exposure_time(self):
-        """Get the exposure time used for these images."""
-        return self._exposure_time
-
-    def get_oscillation(self, index=None):
-        """Get the oscillation start and width for a given frame in the
-        scan."""
-
-        if index is None:
-            return self._oscillation
-
-        assert not index < self._image_range[0]
-        assert not index > self._image_range[1]
-
-        offset = (index - self._image_range[0]) * self._oscillation[1]
-
-        return (self._oscillation[0] + offset, self._oscillation[1])
-
-    def get_oscillation_range(self):
-        """Return the overall range of this scan."""
-
-        range = (self._image_range[1] - self._image_range[0] + 1) * self._oscillation[1]
-
-        return (self._oscillation[0], self._oscillation[0] + range)
-
-    def get_epochs(self):
-        """Return the dictionary containing the image epochs."""
-        return self._epochs
-
     def get_image_name(self, index):
         """Get the full image name for this image index."""
         return scan_helper_image_files.template_directory_index_to_image(
             self._template, self._directory, self._image
         )
 
-    def get_image_epoch(self, index):
-        """Get the epoch for this image."""
-        return self._epochs[index]
-
     def get_image_time(self, index):
         """Get the time for this which is the epoch translated into a human
         readable form."""
 
-        return time.asctime(time.gmtime(self._epochs[index]))
+        return time.asctime(time.gmtime(self.epochs[index]))
 
 
 class scan_factory:
@@ -264,7 +211,7 @@ class scan_factory:
         )
         index = scan_helper_image_files.image_to_index(filename)
 
-        return scan(
+        return Scan(
             template,
             directory,
             format,
@@ -302,7 +249,7 @@ class scan_factory:
 
         gonio.__swig_destroy__(gonio)
 
-        return scan(
+        return Scan(
             template,
             directory,
             format,
