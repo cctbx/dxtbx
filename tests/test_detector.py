@@ -12,7 +12,7 @@ from __future__ import print_function
 
 from scitbx import matrix
 
-from dxtbx.model.detector import detector
+from dxtbx.model.detector import FlatPanelDetector
 from dxtbx.model.detector import detector_factory
 from dxtbx.model.detector_helpers import compute_frame_rotation
 

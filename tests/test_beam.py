@@ -10,7 +10,7 @@ from __future__ import print_function
 #
 # Tests for the beam class.
 
-from dxtbx.model.beam import beam
+from dxtbx.model.beam import Beam
 from dxtbx.model.beam import beam_factory
 
 
