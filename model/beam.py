@@ -26,12 +26,25 @@ class beam_factory:
         pass
 
     @staticmethod
+    def make_beam(direction, wavelength):
+        return Beam(tuple(map(float, direction)), float(wavelength))
+
+    @staticmethod
+    def make_polarized_beam(direction, wavelength, polarization, polarization_fraction):
+        return PolarizedBeam(
+            tuple(map(float, direction)),
+            float(wavelength),
+            tuple(map(float, polarization)),
+            float(polarization_fraction),
+        )
+
+    @staticmethod
     def simple(wavelength):
         """Construct a beam object on the principle that the beam is aligned
         with the +z axis, as is quite normal. Also assume the beam has
         polarization fraction 0.999 and is polarized in the x-z plane."""
 
-        return Beam((0.0, 0.0, 1.0), wavelength)
+        return beam_factory.make_beam((0.0, 0.0, 1.0), wavelength)
 
     @staticmethod
     def complex(
@@ -40,7 +53,7 @@ class beam_factory:
         """Full access to the constructor for cases where we do know everything
         that we need..."""
 
-        return PolarizedBeam(
+        return beam_factory.make_polarized_beam(
             beam_direction, wavelength, polarization_plane_normal, polarization_fraction
         )
 
@@ -87,7 +100,9 @@ class beam_factory:
             0.0,
         )
 
-        return PolarizedBeam(direction, wavelength, polar_plane_normal, polar_fraction)
+        return beam_factory.make_polarized_beam(
+            direction, wavelength, polar_plane_normal, polar_fraction
+        )
 
     @staticmethod
     def imgCIF_H(cbf_handle):
@@ -130,4 +145,6 @@ class beam_factory:
             0.0,
         )
 
-        return PolarizedBeam(direction, wavelength, polar_plane_normal, polar_fraction)
+        return beam_factory.make_polarized_beam(
+            direction, wavelength, polar_plane_normal, polar_fraction
+        )

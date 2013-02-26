@@ -30,6 +30,23 @@ class goniometer_factory:
         pass
 
     @staticmethod
+    def make_goniometer(rotation_axis, fixed_rotation):
+        return Goniometer(
+            tuple(map(float, rotation_axis)), tuple(map(float, fixed_rotation))
+        )
+
+    @staticmethod
+    def make_kappa_goniometer(alpha, omega, kappa, phi, direction, scan_axis):
+        return KappaGoniometer(
+            float(alpha),
+            float(omega),
+            float(kappa),
+            float(phi),
+            str(direction),
+            str(scan_axis),
+        )
+
+    @staticmethod
     def single_axis():
         """Construct a single axis goniometer which is canonical in the
         CBF reference frame."""
@@ -37,7 +54,7 @@ class goniometer_factory:
         axis = (1, 0, 0)
         fixed = (1, 0, 0, 0, 1, 0, 0, 0, 1)
 
-        return Goniometer(axis, fixed)
+        return goniometer_factory.make_goniometer(axis, fixed)
 
     @staticmethod
     def known_axis(axis):
@@ -62,7 +79,9 @@ class goniometer_factory:
         rotation axes and then composing them to the scan axis and fixed
         component of the rotation."""
 
-        return KappaGoniometer(alpha, omega, kappa, phi, direction, scan_axis)
+        return goniometer_factory.make_kappa_goniometer(
+            alpha, omega, kappa, phi, direction, scan_axis
+        )
 
     @staticmethod
     def imgCIF(cif_file):
@@ -78,7 +97,7 @@ class goniometer_factory:
         cbf_gonio.__swig_destroy__(cbf_gonio)
         del cbf_gonio
 
-        return Goniometer(axis, fixed)
+        return goniometer_factory.make_goniometer(axis, fixed)
 
     @staticmethod
     def imgCIF_H(cbf_handle):
@@ -92,4 +111,4 @@ class goniometer_factory:
         cbf_gonio.__swig_destroy__(cbf_gonio)
         del cbf_gonio
 
-        return Goniometer(axis, fixed)
+        return goniometer_factory.make_goniometer(axis, fixed)

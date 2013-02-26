@@ -1,5 +1,4 @@
 from __future__ import division
-from __future__ import print_function
 
 #!/usr/bin/env python
 # detector.py
@@ -34,6 +33,21 @@ class detector_factory:
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def make_flat_panel_detector(
+        stype, fast_axis, slow_axis, origin, pixel_size, image_size, trusted_range
+    ):
+        """Ensure all types are correct before creating c++ detector class."""
+        return FlatPanelDetector(
+            str(stype),
+            tuple(map(float, fast_axis)),
+            tuple(map(float, slow_axis)),
+            tuple(map(float, origin)),
+            tuple(map(float, pixel_size)),
+            tuple(map(int, image_size)),
+            tuple(map(float, trusted_range)),
+        )
 
     @staticmethod
     def simple(
@@ -76,7 +90,7 @@ class detector_factory:
             - slow * beam_centre[1]
         )
 
-        detector = FlatPanelDetector(
+        detector = detector_factory.make_flat_panel_detector(
             detector_factory.sensor(sensor),
             fast,
             slow,
@@ -138,7 +152,7 @@ class detector_factory:
 
         R = two_theta.axis_and_angle_as_r3_rotation_matrix(two_theta_angle, deg=True)
 
-        detector = FlatPanelDetector(
+        detector = detector_factory.make_flat_panel_detector(
             detector_factory.sensor(sensor),
             (R * fast),
             (R * slow),
@@ -164,7 +178,7 @@ class detector_factory:
         assert len(pixel) == 2
         assert len(size) == 2
 
-        return FlatPanelDetector(
+        return detector_factory.make_flat_panel_detector(
             detector_factory.sensor(sensor),
             fast,
             slow,
@@ -238,7 +252,7 @@ class detector_factory:
         c_fast = _m * detector_fast
         c_slow = _m * detector_slow
 
-        return FlatPanelDetector(
+        return detector_factory.make_flat_panel_detector(
             detector_factory.sensor("unknown"),
             c_fast,
             c_slow,
@@ -282,13 +296,12 @@ class detector_factory:
         size = tuple(reversed(cbf_handle.get_image_size(0)))
         underload = find_undefined_value(cbf_handle)
         overload = cbf_handle.get_overload(0)
-        trusted_range = (int(underload), int(overload))
+        trusted_range = (underload, overload)
 
         cbf_detector.__swig_destroy__(cbf_detector)
         del cbf_detector
 
-        print(fast, slow, origin, pixel, size, (underload, overload))
-        return FlatPanelDetector(
+        return detector_factory.make_flat_panel_detector(
             detector_factory.sensor(sensor),
             fast,
             slow,
@@ -330,12 +343,12 @@ class detector_factory:
         size = tuple(reversed(cbf_handle.get_image_size(0)))
         underload = find_undefined_value(cbf_handle)
         overload = cbf_handle.get_overload(0)
-        trusted_range = (int(underload), int(overload))
+        trusted_range = (underload, overload)
 
         cbf_detector.__swig_destroy__(cbf_detector)
         del cbf_detector
 
-        return FlatPanelDetector(
+        return detector_factory.make_flat_panel_detector(
             detector_factory.sensor(sensor),
             fast,
             slow,
