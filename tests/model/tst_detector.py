@@ -1,6 +1,6 @@
 from __future__ import division
 from __future__ import print_function
-from dxtbx.model import FlatPanelDetector, MultiFlatPanelDetector
+from dxtbx.model import Detector, MultiPanelDetector
 
 
 def tst_get_pixel_lab_coord(detector):
@@ -18,19 +18,6 @@ def tst_get_pixel_lab_coord(detector):
     corner2 = (512 * 0.172, 512 * 0.172, 200)
     dcorner = abs(matrix.col(corner) - matrix.col(corner))
     assert dcorner < eps
-    print("OK")
-
-
-def tst_get_image_rectangle(detector):
-    from scitbx import matrix
-
-    eps = 1e-7
-    orig = detector.origin
-    corner = (512 * 0.172, 512 * 0.172, 200)
-    rect1 = (orig[0], orig[1], orig[2], corner[0], corner[1], corner[2])
-    rect2 = detector.get_image_rectangle()
-    drect = abs(matrix.col(rect1) - matrix.col(rect2))
-    assert drect < eps
     print("OK")
 
 
@@ -88,7 +75,7 @@ def tst_pixel_to_millimeter_to_pixel(detector):
 def tst_flat_panel_detector():
 
     # Create the detector
-    detector = FlatPanelDetector(
+    detector = Detector(
         "",  # Type
         (10, 0, 0),  # Fast axis
         (0, 10, 0),  # Slow axis
@@ -100,7 +87,6 @@ def tst_flat_panel_detector():
 
     # Perform some tests
     tst_get_pixel_lab_coord(detector)
-    tst_get_image_rectangle(detector)
     tst_get_image_size_mm(detector)
     tst_is_value_in_trusted_range(detector)
     tst_is_coord_valid(detector)
