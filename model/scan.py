@@ -38,6 +38,7 @@ class Scan(ScanData):
         exposure_time,
         oscillation,
         epochs,
+        deg=False,
     ):
         """Construct a new scan class, which represents the information given
         to the camera to perform the diffraction experiment. N.B. though some
@@ -61,7 +62,7 @@ class Scan(ScanData):
         assert len(oscillation) == 2
         assert len(epochs) == (image_range[1] - image_range[0] + 1)
         epochs = flex.double(epochs)
-        ScanData.__init__(self, image_range, oscillation, exposure_time, epochs)
+        ScanData.__init__(self, image_range, oscillation, exposure_time, epochs, deg)
         self._template = template
         self._directory = directory
         self._format = format
@@ -209,7 +210,14 @@ class scan_factory:
 
     @staticmethod
     def make_scan(
-        template, directory, format, image_range, exposure_time, oscillation, epochs
+        template,
+        directory,
+        format,
+        image_range,
+        exposure_time,
+        oscillation,
+        epochs,
+        deg=False,
     ):
         return Scan(
             template,
@@ -219,6 +227,7 @@ class scan_factory:
             float(exposure_time),
             tuple(map(float, oscillation)),
             list(map(int, epochs)),
+            deg,
         )
 
     @staticmethod

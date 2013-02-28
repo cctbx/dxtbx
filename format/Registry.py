@@ -78,6 +78,7 @@ class _Registry:
         for format in self._formats:
             if format.understand(image_file):
                 return recurse(format, image_file)
+
         return None
 
 
