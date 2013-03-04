@@ -16,7 +16,7 @@ from __future__ import division
 import math
 import pycbf
 from scitbx import matrix
-from dxtbx_model_ext import Detector
+from dxtbx_model_ext import Panel, Detector
 
 from detector_helpers import detector_helper_sensors
 from detector_helpers import find_undefined_value
@@ -38,13 +38,15 @@ class detector_factory:
     ):
         """Ensure all types are correct before creating c++ detector class."""
         return Detector(
-            str(stype),
-            tuple(map(float, fast_axis)),
-            tuple(map(float, slow_axis)),
-            tuple(map(float, origin)),
-            tuple(map(float, pixel_size)),
-            tuple(map(int, image_size)),
-            tuple(map(float, trusted_range)),
+            Panel(
+                str(stype),
+                tuple(map(float, fast_axis)),
+                tuple(map(float, slow_axis)),
+                tuple(map(float, origin)),
+                tuple(map(float, pixel_size)),
+                tuple(map(int, image_size)),
+                tuple(map(float, trusted_range)),
+            )
         )
 
     @staticmethod
