@@ -1,4 +1,4 @@
-import string
+from __future__ import division
 import re
 
 # filename template code stolen from xia2...
