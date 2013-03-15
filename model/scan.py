@@ -38,7 +38,7 @@ class Scan(ScanData):
         exposure_time,
         oscillation,
         epochs,
-        deg=False,
+        deg=True,
     ):
         """Construct a new scan class, which represents the information given
         to the camera to perform the diffraction experiment. N.B. though some
@@ -217,7 +217,7 @@ class scan_factory:
         exposure_time,
         oscillation,
         epochs,
-        deg=False,
+        deg=True,
     ):
         return Scan(
             template,
