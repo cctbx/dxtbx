@@ -193,6 +193,11 @@ class Scan(ScanData):
 
     def get_image_name(self, index):
         """Get the full image name for this image index."""
+
+        array_index = index - self.get_image_range()[0]
+
+        # FIXME where does index go in here??!
+
         return scan_helper_image_files.template_directory_index_to_image(
             self._template, self._directory, self._image
         )
@@ -201,7 +206,9 @@ class Scan(ScanData):
         """Get the time for this which is the epoch translated into a human
         readable form."""
 
-        return time.asctime(time.gmtime(self.get_epochs()[index]))
+        array_index = index - self.get_image_range()[0]
+
+        return time.asctime(time.gmtime(self.get_epochs()[array_index]))
 
 
 class scan_factory:
