@@ -11,7 +11,6 @@
 from __future__ import division
 from __future__ import print_function
 
-import time
 from scitbx import matrix
 
 from dxtbx.format.FormatSMV import FormatSMV
@@ -62,6 +61,7 @@ class FormatSMVRigakuA200(FormatSMV):
             "GONIO_VALUES",
             "GONIO_VECTORS",
             "SPATIAL_BEAM_POSITION",
+            "SPATIAL_DISTORTION_VECTORS",
         ]
 
         for header_item in more_wanted_header_items:
@@ -102,8 +102,20 @@ class FormatSMVRigakuA200(FormatSMV):
             float, self._header_dictionary["%sDETECTOR_VECTORS" % detector_name].split()
         )
 
-        detector_fast = matrix.col(tuple(detector_axes[:3]))
-        detector_slow = matrix.col(tuple(detector_axes[3:]))
+        detector_x = matrix.col(tuple(detector_axes[:3]))
+        detector_y = matrix.col(tuple(detector_axes[3:]))
+
+        # Now map these to real axes
+
+        detector_remap = map(
+            float,
+            self._header_dictionary[
+                "%sSPATIAL_DISTORTION_VECTORS" % detector_name
+            ].split(),
+        )
+
+        detector_fast = detector_x * detector_remap[0] + detector_y * detector_remap[1]
+        detector_slow = detector_x * detector_remap[2] + detector_y * detector_remap[3]
 
         beam_pixels = map(
             float,
