@@ -28,7 +28,7 @@ def load(filename):
     return format_instance(filename)
 
 
-def sweep(filenames):
+def make_sweep(filenames):
     """Use the dxtbx to load a sweep of data.
 
     Params:
