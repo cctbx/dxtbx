@@ -1,4 +1,5 @@
 from __future__ import division
+from __future__ import print_function
 
 #!/usr/bin/env python
 # scan_helpers.py
@@ -242,5 +243,5 @@ class scan_helper_image_formats:
             scan_helper_image_formats.FORMAT_MAR,
         ]:
             return True
-
-        return False
+        print("Format %s may not be supported--contact Nick Sauter" % format)
+        return True

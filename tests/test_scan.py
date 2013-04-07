@@ -56,7 +56,8 @@ def work_helper_image_formats():
     """Test the static methods and properties in scan_helper_image_formats."""
 
     assert scan_helper_image_formats.check_format(scan_helper_image_formats.FORMAT_CBF)
-    assert not (scan_helper_image_formats.check_format("CBF"))
+    # suspend this test pending further discussion -- Nick Sauter
+    # assert(not(scan_helper_image_formats.check_format('CBF')))
 
 
 def work_xscan_factory():
