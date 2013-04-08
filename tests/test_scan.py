@@ -88,7 +88,7 @@ def work_xscan_factory():
     try:
         print(sum(xscans[1:], xscans[0]))
         print("I should not see this message")
-    except AssertionError as e:
+    except RuntimeError as e:
         pass
 
     xscans.sort()

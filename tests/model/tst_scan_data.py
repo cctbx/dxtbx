@@ -1,6 +1,6 @@
 from __future__ import division
 from __future__ import print_function
-from dxtbx.model import ScanData
+from dxtbx.model import Scan
 
 
 def tst_is_angle_valid(scan):
@@ -44,7 +44,7 @@ def tst_get_frames_with_angle(scan):
 def run():
     image_range = (0, 1000)
     oscillation = (0, 0.1)
-    scan = ScanData(image_range, oscillation, 0.0)
+    scan = Scan(image_range, oscillation, 0.0)
     tst_is_angle_valid(scan)
     tst_is_frame_valid(scan)
     tst_get_angle_from_frame(scan)

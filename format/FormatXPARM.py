@@ -104,7 +104,7 @@ class FormatXPARM(Format):
 
         # Create the scan object
         return self._scan_factory.make_scan(
-            template, directory, format, image_range, 0.0, oscillation, [0], deg=True
+            image_range, 0.0, oscillation, [0], deg=True
         )
 
     def get_raw_data(self):
