@@ -34,7 +34,13 @@ class detector_factory:
 
     @staticmethod
     def make_detector(
-        stype, fast_axis, slow_axis, origin, pixel_size, image_size, trusted_range
+        stype,
+        fast_axis,
+        slow_axis,
+        origin,
+        pixel_size,
+        image_size,
+        trusted_range=(0.0, 0.0),
     ):
         """Ensure all types are correct before creating c++ detector class."""
         return Detector(
