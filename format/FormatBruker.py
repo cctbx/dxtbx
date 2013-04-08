@@ -78,7 +78,7 @@ class FormatBruker(Format):
             ),
             trusted_range=(0, self.detectorbase.parameters["CCD_IMAGE_SATURATION"]),
             mask=[],
-        )
+        )  # a list of dead rectangles
 
     def _beam(self):
         """Return a simple model for the beam."""
