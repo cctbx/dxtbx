@@ -39,6 +39,7 @@ class FormatSMVADSC(FormatSMV):
             "OSC_RANGE",
             "SIZE1",
             "SIZE2",
+            "DETECTOR_SN",
             "BYTE_ORDER",
         ]
 
