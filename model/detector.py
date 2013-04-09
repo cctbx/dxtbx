@@ -64,8 +64,8 @@ class detector_factory:
         slow_direction,
         pixel_size,
         image_size,
-        trusted_range,
-        mask,
+        trusted_range=(0.0, 0.0),
+        mask=[],
     ):
         """Construct a simple detector at a given distance from the sample
         along the direct beam presumed to be aligned with -z, offset by the
@@ -119,8 +119,8 @@ class detector_factory:
         two_theta_angle,
         pixel_size,
         image_size,
-        trusted_range,
-        mask,
+        trusted_range=(0.0, 0.0),
+        mask=[],
     ):
         """Construct a simple detector at a given distance from the sample
         along the direct beam presumed to be aligned with -z, offset by the
@@ -171,7 +171,7 @@ class detector_factory:
         return detector
 
     @staticmethod
-    def complex(sensor, origin, fast, slow, pixel, size, trusted_range):
+    def complex(sensor, origin, fast, slow, pixel, size, trusted_range=(0.0, 0.0)):
         """A complex detector model, where you know exactly where everything
         is. This is useful for implementation of the Rigaku Saturn header
         format, as that is exactly what is in there. Origin, fast and slow are
@@ -226,9 +226,13 @@ class detector_factory:
         slow = tuple([dslow[j] / lslow for j in range(3)])
 
         size = tuple(reversed(cbf_handle.get_image_size(0)))
-        underload = find_undefined_value(cbf_handle)
-        overload = cbf_handle.get_overload(0)
-        trusted_range = (underload, overload)
+
+        try:
+            underload = find_undefined_value(cbf_handle)
+            overload = cbf_handle.get_overload(0)
+            trusted_range = (underload, overload)
+        except:  # intentional
+            trusted_range = (0.0, 0.0)
 
         cbf_detector.__swig_destroy__(cbf_detector)
         del cbf_detector
@@ -273,9 +277,13 @@ class detector_factory:
         slow = tuple([dslow[j] / lslow for j in range(3)])
 
         size = tuple(reversed(cbf_handle.get_image_size(0)))
-        underload = find_undefined_value(cbf_handle)
-        overload = cbf_handle.get_overload(0)
-        trusted_range = (underload, overload)
+
+        try:
+            underload = find_undefined_value(cbf_handle)
+            overload = cbf_handle.get_overload(0)
+            trusted_range = (underload, overload)
+        except:  # intentional
+            trusted_range = (0.0, 0.0)
 
         cbf_detector.__swig_destroy__(cbf_detector)
         del cbf_detector
