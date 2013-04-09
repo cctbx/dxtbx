@@ -12,10 +12,10 @@
 from __future__ import division
 from __future__ import print_function
 
-from dxtbx.format.FormatSMVADSC import FormatSMVADSC
+from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN
 
 
-class FormatSMVADSCSN457(FormatSMVADSC):
+class FormatSMVADSCSN457(FormatSMVADSCSN):
     """A class for reading SMV format ADSC images, and correctly constructing
     a model for the experiment from this, for instrument number 457."""
 
@@ -25,7 +25,7 @@ class FormatSMVADSCSN457(FormatSMVADSC):
 
         # check this is detector serial number 457
 
-        size, header = FormatSMVADSC.get_smv_header(image_file)
+        size, header = FormatSMVADSCSN.get_smv_header(image_file)
 
         if int(header["DETECTOR_SN"]) != 457:
             return False
@@ -38,7 +38,7 @@ class FormatSMVADSCSN457(FormatSMVADSC):
 
         assert self.understand(image_file)
 
-        FormatSMVADSC.__init__(self, image_file)
+        FormatSMVADSCSN.__init__(self, image_file)
 
         return
 
