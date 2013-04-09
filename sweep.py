@@ -15,6 +15,7 @@
 # accessed *only* from the factories.
 
 from __future__ import division
+from __future__ import print_function
 
 
 class SweepReader(object):
@@ -518,7 +519,7 @@ class SweepFactory:
 
         # Ensure we have enough images and format has been specified
         assert len(filenames) > 0
-
+        print(filenames)
         # Get the format object
         filenames = sorted(filenames)
         format_class = Registry.find(filenames[0])

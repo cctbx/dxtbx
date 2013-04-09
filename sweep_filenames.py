@@ -24,6 +24,8 @@ def template_regex(filename):
 
     global patterns, compiled_patterns
 
+    template = None
+    digits = 0
     for j, cp in enumerate(compiled_patterns):
         match = cp.match(rfilename)
         if not match:
@@ -53,17 +55,22 @@ def find_matching_images(image_name):
 
     directory, filename = os.path.split(image_name)
     template, digits = template_regex(filename)
-    len_digits = template.count("#")
-    pfx = template.split("#")[0]
-    sfx = template.split("#")[-1]
-    template_str = pfx + "%%0%dd" % len_digits + sfx
 
-    files_in_directory = os.listdir(directory)
+    if template:
+        len_digits = template.count("#")
+        pfx = template.split("#")[0]
+        sfx = template.split("#")[-1]
+        template_str = pfx + "%%0%dd" % len_digits + sfx
 
-    matching_images = []
+        files_in_directory = os.listdir(directory)
 
-    for j in range(0, 10 ** len_digits):
-        if template_str % j in files_in_directory:
-            matching_images.append(os.path.join(directory, template_str % j))
+        matching_images = []
+
+        for j in range(0, 10 ** len_digits):
+            if template_str % j in files_in_directory:
+                matching_images.append(os.path.join(directory, template_str % j))
+
+    else:
+        matching_images = [image_name]
 
     return matching_images
