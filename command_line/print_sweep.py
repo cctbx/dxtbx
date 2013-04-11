@@ -4,9 +4,9 @@ from __future__ import print_function
 
 def print_sweep(list_of_images):
 
-    from dxtbx.sweep import sweep_factory
+    from dxtbx.sweep import SweepFactory
 
-    s = sweep_factory.sweep(list_of_images)
+    s = SweepFactory.sweep(list_of_images)
 
     print(s.get_detector())
     print(s.get_beam())
