@@ -176,10 +176,12 @@ class Format(object):
         flex array of integers."""
 
         # FIXME this should be replaced with specialist code in subclasses
+        try:
+            from iotbx.detectors import ImageFactory
 
-        from iotbx.detectors import ImageFactory
-
-        image = ImageFactory(self._image_file)
+            image = ImageFactory(self._image_file)
+        except Exception:
+            image = self.detectorbase
         image.read()
         raw_data = image.get_raw_data()
 
