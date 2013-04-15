@@ -5,7 +5,7 @@ from __future__ import print_function
 def to_ewald_sphere(list_of_images):
 
     from dxtbx.sweep import SweepFactory
-    from dxtbx_command_line_ext import ImageToEwaldSphere
+    from dxtbx import ImageToEwaldSphere
 
     sweep = SweepFactory.sweep(list_of_images)
     beam = sweep.get_beam()
