@@ -21,7 +21,7 @@ class FormatXPARM(Format):
     def understand(image_file):
         """Check to see if this looks like an CBF format image, i.e. we can
         make sense of it."""
-        return xparm.reader.is_xparm_file(image_file)
+        return xparm.reader.is_xparm_file(image_file, check_filename=False)
 
     def __init__(self, image_file):
         """Initialise the image structure from the given file."""
@@ -51,7 +51,7 @@ class FormatXPARM(Format):
 
         # Read some quantities directly from the XPARM.XDS file
         xparm_handle = xparm.reader()
-        xparm_handle.read_file(xparm_filename)
+        xparm_handle.read_file(xparm_filename, check_filename=False)
         self._image_size = xparm_handle.detector_size
         self._pixel_size = xparm_handle.pixel_size
         self._starting_angle = xparm_handle.starting_angle
