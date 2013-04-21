@@ -38,7 +38,7 @@ class FormatPYmultitile(FormatPY):
 
     def _start(self):
 
-        from cxi_xdr_xes.cftbx.detector.cspad_detector import CSPadDetector
+        from xfel.cftbx.detector.cspad_detector import CSPadDetector
 
         self.detectorbase = CSPadDetector(self._image_file)
         self.detectorbase.readHeader()
