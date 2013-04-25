@@ -21,7 +21,7 @@ class ImageSetReader(object):
     """Definition for a image set of images, defined to be a set of diffraction
     images in files with matching templates, or a volume formatted file."""
 
-    def __init__(self, format_class, template, filenames):
+    def __init__(self, format_class, filenames):
         """Construct a image set object from the given format.
 
         Params:
@@ -80,10 +80,6 @@ class ImageSetReader(object):
     def get_filename(self, index):
         """ Get the filename for the given image. """
         return self._filenames[index]
-
-    #    def get_image_indices(self):
-    #        """ Get the image indices."""
-    #        return self._indices
 
     def get_image_paths(self):
         return self._filenames
@@ -214,7 +210,7 @@ class ImageSetReader(object):
 class BufferedImageSetReader(ImageSetReader):
     """ Class to provide cached reading of images. """
 
-    def __init__(self, format_class, template, filenames, max_cache=None):
+    def __init__(self, format_class, filenames, max_cache=None):
         """Initialise the BufferedImageSetReader class.
 
         Params:
@@ -225,7 +221,7 @@ class BufferedImageSetReader(ImageSetReader):
         from collections import OrderedDict
 
         # Initialise the base class
-        ImageSetReader.__init__(self, format_class, template, filenames)
+        ImageSetReader.__init__(self, format_class, filenames)
 
         # Set the maximum images to cache
         if max_cache:
@@ -344,7 +340,7 @@ class ImageSet(object):
 
     def __str__(self):
         """ Return the array indices of the image set as a string. """
-        return str(self.indices())
+        return str(self.paths())
 
     def __iter__(self):
         """ Iterate over the array indices and read each image in turn. """
@@ -435,9 +431,9 @@ class ImageSetFactory:
         #            path, image_name = os.path.split(image)
         #            assert(path == directory)
 
-        template = None
+        # template = None
         # Create the image set object
-        image_set = ImageSet(BufferedImageSetReader(format_class, template, filenames))
+        image_set = ImageSet(BufferedImageSetReader(format_class, filenames))
 
         # Check the image set is valid
         if check_headers and not image_set.is_valid():
