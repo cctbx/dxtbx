@@ -6,7 +6,7 @@
 #   included in the root directory of this package.
 #
 # An implementation of the SMV image reader for Rigaku Saturn images.
-# Inherits from FormatSMV.
+# Inherits from FormatSMVRigaku.
 
 from __future__ import division
 from __future__ import print_function
@@ -14,10 +14,10 @@ from __future__ import print_function
 import time
 from scitbx import matrix
 
-from dxtbx.format.FormatSMV import FormatSMV
+from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
 
-class FormatSMVNOIR(FormatSMV):
+class FormatSMVNOIR(FormatSMVRigaku):
     """A class for reading SMV format ALS 4.2.2 NOIR images, and correctly
     constructing a model for the experiment from this."""
 
@@ -27,7 +27,7 @@ class FormatSMVNOIR(FormatSMV):
         i.e. we can make sense of it. Essentially that will be if it contains
         all of the keys we are looking for."""
 
-        size, header = FormatSMV.get_smv_header(image_file)
+        size, header = FormatSMVRigaku.get_smv_header(image_file)
 
         wanted_header_items = [
             "DETECTOR_NUMBER",
@@ -78,7 +78,7 @@ class FormatSMVNOIR(FormatSMV):
 
         assert self.understand(image_file)
 
-        FormatSMV.__init__(self, image_file)
+        FormatSMVRigaku.__init__(self, image_file)
 
         self.detector_class = "NOIR1"
         self.detector = "adsc"
