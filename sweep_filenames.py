@@ -19,8 +19,6 @@ def template_regex(filename):
 
     rfilename = filename[::-1]
 
-    global patterns, compiled_patterns
-
     template = None
     digits = 0
     for j, cp in enumerate(compiled_patterns):
