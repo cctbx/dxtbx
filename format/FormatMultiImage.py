@@ -1,11 +1,7 @@
 from __future__ import division
-from dxtbx.format.Format import Format
 
 
-class FormatMultiImage(Format):
-    def __init__(self, image_file):
-        Format.__init__(self, image_file)
-
+class FormatMultiImage(object):
     def get_num_images(self):
         raise RuntimeError("Overload!")
 
