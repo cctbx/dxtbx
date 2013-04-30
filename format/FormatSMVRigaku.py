@@ -11,8 +11,6 @@
 from __future__ import division
 from __future__ import print_function
 
-from scitbx import matrix
-
 from dxtbx.format.FormatSMV import FormatSMV
 
 

@@ -27,7 +27,7 @@ class TestMultiFileState(object):
         return filenames
 
     def run(self):
-        from dxtbx.imageset2 import MultiFileState
+        from dxtbx.imageset import MultiFileState
         from dxtbx.format.Registry import Registry
 
         # Get the filenames
@@ -58,7 +58,7 @@ class TestSweepFileList(object):
         pass
 
     def run(self):
-        from dxtbx.imageset2 import SweepFileList
+        from dxtbx.imageset import SweepFileList
 
         # Create the template and array range
         template = template = "%s%%0%dd%s" % ("filename", 5, ".cbf")
@@ -113,12 +113,16 @@ class TestSweepFileList(object):
         try:
             filename = filelist.get_filename(too_low)
             assert False
-        except:
+        except AssertionError:
+            raise
+        except Exception:
             pass
         try:
             filename = filelist.get_filename(too_high)
             assert False
-        except:
+        except AssertionError:
+            raise
+        except Exception:
             pass
         filename = filelist.get_filename(just_right)
         assert filename == template % (just_right + 1)
@@ -133,12 +137,16 @@ class TestSweepFileList(object):
         try:
             filename = filelist[too_low]
             assert False
-        except:
+        except AssertionError:
+            raise
+        except Exception:
             pass
         try:
             filename = filelist[too_high]
             assert False
-        except:
+        except AssertionError:
+            raise
+        except Exception:
             pass
         filename = filelist[just_right]
         assert filename == template % (array_range[0] + just_right + 1)
@@ -152,7 +160,7 @@ class TestSweepFileList(object):
         print("OK")
 
     def tst_cmp(self, filelist):
-        from dxtbx.imageset2 import SweepFileList
+        from dxtbx.imageset import SweepFileList
 
         assert filelist == filelist
 
@@ -201,7 +209,7 @@ class TestMultiFileReader(object):
     def sweep_file_list(self):
         import libtbx.load_env
         import os
-        from dxtbx.imageset2 import SweepFileList
+        from dxtbx.imageset import SweepFileList
 
         try:
             dials_regression = libtbx.env.dist_path("dials_regression")
@@ -225,7 +233,7 @@ class TestMultiFileReader(object):
 
     def run_tests(self, filenames):
 
-        from dxtbx.imageset2 import MultiFileReader
+        from dxtbx.imageset import MultiFileReader
         from dxtbx.format.Registry import Registry
 
         # Get the parameters we need
@@ -348,7 +356,7 @@ class TestImageSet(object):
         return filenames
 
     def run(self):
-        from dxtbx.imageset2 import MultiFileReader, ImageSet
+        from dxtbx.imageset import MultiFileReader, ImageSet
         from dxtbx.format.Registry import Registry
 
         # Get the filenames
@@ -476,7 +484,7 @@ class TestImageSweep(object):
     def get_file_list(self):
         import libtbx.load_env
         import os
-        from dxtbx.imageset2 import SweepFileList
+        from dxtbx.imageset import SweepFileList
 
         try:
             dials_regression = libtbx.env.dist_path("dials_regression")
@@ -495,7 +503,7 @@ class TestImageSweep(object):
         return filenames
 
     def run(self):
-        from dxtbx.imageset2 import MultiFileReader, ImageSweep
+        from dxtbx.imageset import MultiFileReader, ImageSweep
         from dxtbx.format.Registry import Registry
 
         # Get the filenames
@@ -672,7 +680,7 @@ class TestImageSetFactory(object):
         return filenames
 
     def run(self):
-        from dxtbx.imageset2 import ImageSetFactory, ImageSweep
+        from dxtbx.imageset import ImageSetFactory, ImageSweep
 
         filenames = self.get_file_list()
 
