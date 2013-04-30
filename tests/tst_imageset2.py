@@ -469,7 +469,7 @@ class TestImageSet(object):
         imageset.get_beam(index)
 
 
-class TestSweep(object):
+class TestImageSweep(object):
     def __init__(self):
         pass
 
@@ -495,7 +495,7 @@ class TestSweep(object):
         return filenames
 
     def run(self):
-        from dxtbx.imageset2 import MultiFileReader, Sweep
+        from dxtbx.imageset2 import MultiFileReader, ImageSweep
         from dxtbx.format.Registry import Registry
 
         # Get the filenames
@@ -508,7 +508,7 @@ class TestSweep(object):
         reader = MultiFileReader(format_class, filenames)
 
         # Create the sweep
-        sweep = Sweep(reader)
+        sweep = ImageSweep(reader)
 
         # Run a load of tests
         self.tst_get_item(sweep)
@@ -672,11 +672,13 @@ class TestImageSetFactory(object):
         return filenames
 
     def run(self):
-        from dxtbx.imageset2 import ImageSetFactory, Sweep
+        from dxtbx.imageset2 import ImageSetFactory, ImageSweep
 
         filenames = self.get_file_list()
 
         sweep = ImageSetFactory.new(filenames)
+
+        assert isinstance(sweep[0], ImageSweep) == True
 
         print("OK")
 
@@ -704,7 +706,7 @@ class TestRunner(object):
         test.run()
 
         # The the sweep class
-        test = TestSweep()
+        test = TestImageSweep()
         test.run()
 
         # Test the ImageSetFactory class

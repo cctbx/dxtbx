@@ -448,7 +448,7 @@ class SweepFileList(object):
         return self._array_range[0] <= index < self._array_range[1]
 
 
-class Sweep(ImageSet):
+class ImageSweep(ImageSet):
     """ A class exposing the external sweep interface. """
 
     def __init__(self, reader, indices=None):
@@ -472,7 +472,7 @@ class Sweep(ImageSet):
             if item.step != None:
                 raise IndexError("Sweeps must be sequential")
             indices = self._indices[item]
-            return Sweep(self.reader(), indices)
+            return ImageSweep(self.reader(), indices)
         else:
             return self.reader().read(self._indices[item])
 
@@ -809,7 +809,7 @@ class ImageSetFactory(object):
         filenames = SweepFileList(template, array_range)
 
         # Create the sweep object
-        sweep = Sweep(MultiFileReader(format_class, filenames))
+        sweep = ImageSweep(MultiFileReader(format_class, filenames))
 
         # Check the sweep is valid
         if check_headers and not sweep.is_valid():
