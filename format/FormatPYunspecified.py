@@ -65,7 +65,7 @@ class FormatPYunspecified(FormatPY):
 
         from spotfinder.applications.xfel import cxi_phil
         from iotbx.detectors.npy import NpyImage
-        import os
+        import os, copy
 
         args = [
             self._image_file,
@@ -87,6 +87,8 @@ class FormatPYunspecified(FormatPY):
             I = NpyImage(self._image_file, source_data=params.indexing.data)
         I.readHeader(horizons_phil)
         I.translate_tiles(horizons_phil)
+        # necessary to keep the phil parameters for subsequent calls to get_tile_manager()
+        I.horizons_phil_cache = copy.deepcopy(horizons_phil)
         self.detectorbase = I
 
     def _goniometer(self):
