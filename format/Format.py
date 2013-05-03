@@ -13,6 +13,7 @@
 # goniometers etc. from the headers and hence a format specific factory.
 
 from __future__ import division
+from __future__ import print_function
 
 import sys
 
@@ -141,7 +142,7 @@ class Format(object):
             self._scan_instance = scan_instance
 
         except exceptions.Exception as e:
-            traceback.print_exc(sys.stderr)
+            print("Couldn't create a detector model for this image")
         finally:
             self._end()
 
