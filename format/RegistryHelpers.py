@@ -36,7 +36,7 @@ def LoadFormatClasses():
         and os.environ.has_key("HOMEPATH")
     ):
         home = os.path.join(os.environ["HOMEDRIVE"], os.environ["HOMEPATH"])
-    else:
+    elif os.environ.has_key("HOME"):
         home = os.environ["HOME"]
 
     for f in os.listdir(format_dir):
