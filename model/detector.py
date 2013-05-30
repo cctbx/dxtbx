@@ -16,7 +16,12 @@ from __future__ import division
 import math
 import pycbf
 from scitbx import matrix
-from dxtbx_model_ext import Panel, Detector
+from dxtbx_model_ext import (
+    Panel,
+    Detector,
+    SimplePxMmStrategy,
+    ParallaxCorrectedPxMmStrategy,
+)
 
 from detector_helpers import detector_helper_sensors
 from detector_helpers import find_undefined_value
@@ -41,9 +46,14 @@ class detector_factory:
         pixel_size,
         image_size,
         trusted_range=(0.0, 0.0),
+        px_mm=None,
     ):
         """Ensure all types are correct before creating c++ detector class."""
-        return Detector(
+
+        if px_mm == None:
+            px_mm = SimplePxMmStrategy()
+
+        d = Detector(
             Panel(
                 str(stype),
                 tuple(map(float, fast_axis)),
@@ -52,8 +62,11 @@ class detector_factory:
                 tuple(map(float, pixel_size)),
                 tuple(map(int, image_size)),
                 tuple(map(float, trusted_range)),
+                px_mm,
             )
         )
+
+        return d
 
     @staticmethod
     def simple(
@@ -66,6 +79,7 @@ class detector_factory:
         image_size,
         trusted_range=(0.0, 0.0),
         mask=[],
+        px_mm=None,
     ):
         """Construct a simple detector at a given distance from the sample
         along the direct beam presumed to be aligned with -z, offset by the
@@ -121,6 +135,7 @@ class detector_factory:
         image_size,
         trusted_range=(0.0, 0.0),
         mask=[],
+        px_mm=None,
     ):
         """Construct a simple detector at a given distance from the sample
         along the direct beam presumed to be aligned with -z, offset by the
@@ -167,11 +182,14 @@ class detector_factory:
             image_size,
             trusted_range,
         )
+
         detector.mask = mask
         return detector
 
     @staticmethod
-    def complex(sensor, origin, fast, slow, pixel, size, trusted_range=(0.0, 0.0)):
+    def complex(
+        sensor, origin, fast, slow, pixel, size, trusted_range=(0.0, 0.0), px_mm=None
+    ):
         """A complex detector model, where you know exactly where everything
         is. This is useful for implementation of the Rigaku Saturn header
         format, as that is exactly what is in there. Origin, fast and slow are
@@ -237,14 +255,18 @@ class detector_factory:
         cbf_detector.__swig_destroy__(cbf_detector)
         del cbf_detector
 
+        # Get the sensor type
+        dtype = detector_factory.sensor(sensor)
+
+        # If the sensor type is PAD then create the detector with a
+        # parallax corrected pixel to millimeter function
+        if dtype == detector_helper_sensors.SENSOR_PAD:
+            px_mm = ParallaxCorrectedPxMmStrategy(0.252500934883)
+        else:
+            px_mm = SimplePxMmStrategy()
+
         return detector_factory.make_detector(
-            detector_factory.sensor(sensor),
-            fast,
-            slow,
-            origin,
-            pixel,
-            size,
-            trusted_range,
+            dtype, fast, slow, origin, pixel, size, trusted_range, px_mm
         )
 
     @staticmethod
