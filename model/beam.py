@@ -31,28 +31,47 @@ class beam_factory:
             return Beam(tuple(map(float, sample_to_source)), float(wavelength))
         elif unit_s0:
             assert wavelength
-            return Beam(tuple(map(float, -unit_s0)), float(wavelength))
+            return Beam(
+                tuple(map(lambda x: -x, map(float, unit_s0))), float(wavelength)
+            )
         else:
             assert s0
             return Beam(tuple(map(float, s0)))
 
-    # @staticmethod
-    # def make_beam(direction, wavelength = None):
-    # if wavelength == None:
-    # return Beam(tuple(map(float, direction)))
-    # else:
-    # return Beam(
-    # tuple(map(float, direction)),
-    # float(wavelength))
-
     @staticmethod
-    def make_polarized_beam(direction, wavelength, polarization, polarization_fraction):
-        return PolarizedBeam(
-            tuple(map(float, direction)),
-            float(wavelength),
-            tuple(map(float, polarization)),
-            float(polarization_fraction),
-        )
+    def make_polarized_beam(
+        sample_to_source=None,
+        wavelength=None,
+        s0=None,
+        unit_s0=None,
+        polarization=None,
+        polarization_fraction=None,
+    ):
+        assert polarization
+        assert polarization_fraction
+        if sample_to_source:
+            assert wavelength
+            return PolarizedBeam(
+                tuple(map(float, sample_to_source)),
+                float(wavelength),
+                tuple(map(float, polarization)),
+                float(polarization_fraction),
+            )
+        elif unit_s0:
+            assert wavelength
+            return PolarizedBeam(
+                tuple(map(lambda x: -x, map(float, unit_s0))),
+                float(wavelength),
+                tuple(map(float, polarization)),
+                float(polarization_fraction),
+            )
+        else:
+            assert s0
+            return PolarizedBeam(
+                tuple(map(float, s0)),
+                tuple(map(float, polarization)),
+                float(polarization_fraction),
+            )
 
     @staticmethod
     def simple(wavelength):
@@ -60,13 +79,15 @@ class beam_factory:
         with the +z axis, as is quite normal. Also assume the beam has
         polarization fraction 0.999 and is polarized in the x-z plane."""
 
-        return beam_factory.make_beam((0.0, 0.0, 1.0), wavelength)
+        return beam_factory.make_beam(
+            sample_to_source=(0.0, 0.0, 1.0), wavelength=wavelength
+        )
 
     @staticmethod
     def simple_directional(direction, wavelength):
         """Construct a beam with direction and wavelength."""
 
-        return beam_factory.make_beam(direction, wavelength)
+        return beam_factory.make_beam(sample_to_source=direction, wavelength=wavelength)
 
     @staticmethod
     def complex(
@@ -76,7 +97,10 @@ class beam_factory:
         that we need..."""
 
         return beam_factory.make_polarized_beam(
-            beam_direction, wavelength, polarization_plane_normal, polarization_fraction
+            sample_to_source=beam_direction,
+            wavelength=wavelength,
+            polarization=polarization_plane_normal,
+            polarization_fraction=polarization_fraction,
         )
 
     @staticmethod
@@ -123,7 +147,10 @@ class beam_factory:
         )
 
         return beam_factory.make_polarized_beam(
-            direction, wavelength, polar_plane_normal, polar_fraction
+            sample_to_source=direction,
+            wavelength=wavelength,
+            polarization=polar_plane_normal,
+            polarization_fraction=polar_fraction,
         )
 
     @staticmethod
