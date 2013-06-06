@@ -530,7 +530,9 @@ class ImageSweep(ImageSet):
 
     def get_template(self):
         """ Get the template. """
-        return self.reader()._filenames.template()
+        from dxtbx.sweep_filenames import template_format_to_string
+
+        return template_format_to_string(self.reader()._filenames.template())
 
     def get_array_range(self):
         """ Get the array range. """
@@ -783,7 +785,7 @@ class ImageSetFactory(object):
         ]
 
     @staticmethod
-    def from_template(template, image_range, check_headers=False):
+    def from_template(template, image_range=None, check_headers=False):
         """Create a new sweep from a template.
 
         Params:
@@ -797,11 +799,20 @@ class ImageSetFactory(object):
         """
         import os
         from dxtbx.format.Registry import Registry
+        from dxtbx.sweep_filenames import template_image_range
+
+        # Check the template is valid
+        if template.count("#") < 1:
+            raise ValueError("Invalid template")
 
         # Get the template format
         pfx = template.split("#")[0]
         sfx = template.split("#")[-1]
         template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
+
+        # Get the template image range
+        if image_range is None:
+            image_range = template_image_range(template)
 
         # Set the image range
         array_range = (image_range[0] - 1, image_range[1])
