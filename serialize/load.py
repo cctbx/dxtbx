@@ -10,7 +10,7 @@
 #  included in the root directory of this package.
 
 
-def loads(string):
+def imageset_from_string(string):
     """Load the string and return the models.
 
     Params:
@@ -21,12 +21,12 @@ def loads(string):
 
     """
     import json
-    from dxtbx.serialize import imageset
+    from dxtbx.serialize.imageset import imageset_from_dict
 
-    return imageset.from_dict(json.loads(string))
+    return imageset_from_dict(json.loads(string))
 
 
-def load(infile):
+def imageset(infile):
     """Load the given JSON file.
 
     Params:
@@ -39,8 +39,8 @@ def load(infile):
     # If the input is a string then open and read from that file
     if isinstance(infile, str):
         with open(infile, "r") as infile:
-            return loads(infile.read())
+            return imageset_from_string(infile.read())
 
     # Otherwise assume the input is a file and read from it
     else:
-        return loads(infile.read())
+        return imageset_from_string(infile.read())

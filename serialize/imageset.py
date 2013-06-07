@@ -20,7 +20,7 @@ def filename_to_absolute(filename):
     return os.path.abspath(filename)
 
 
-def imageset_to_dict(imageset):
+def basic_imageset_to_dict(imageset):
     """Convert an imageset to a dictionary
 
     Params:
@@ -70,7 +70,7 @@ def imagesweep_to_dict(sweep):
     )
 
 
-def to_dict(imageset):
+def imageset_to_dict(imageset):
     """Convert the imageset to a dictionary
 
     Params:
@@ -86,12 +86,12 @@ def to_dict(imageset):
     if isinstance(imageset, ImageSweep):
         return imagesweep_to_dict(imageset)
     elif isinstance(imageset, ImageSet):
-        return imageset_to_dict(imageset)
+        return basic_imageset_to_dict(imageset)
     else:
         raise TypeError("Unknown ImageSet Type")
 
 
-def imageset_from_dict(d):
+def basic_imageset_from_dict(d):
     """ Construct an ImageSet class from the dictionary."""
     from dxtbx.imageset import ImageSetFactory
     from dxtbx.serialize import beam, detector
@@ -135,7 +135,7 @@ def imagesweep_from_dict(d):
     return sweep
 
 
-def from_dict(d):
+def imageset_from_dict(d):
     """Convert the dictionary to a sweep
 
     Params:
