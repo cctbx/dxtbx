@@ -24,8 +24,6 @@ class FormatXPARM(Format):
 
         return is_recognized_file(image_file)
 
-    #        return xparm.reader.is_xparm_file(image_file, check_filename = False)
-
     def __init__(self, image_file):
         """Initialise the image structure from the given file."""
 
