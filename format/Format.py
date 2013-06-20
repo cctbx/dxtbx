@@ -141,7 +141,10 @@ class Format(object):
             self._scan_instance = scan_instance
 
         except exceptions.Exception as e:
-            print("Couldn't create a detector model for this image")
+            print(
+                "Couldn't create a detector model for image file '%s'"
+                % (self._image_file)
+            )
         finally:
             self._end()
 
