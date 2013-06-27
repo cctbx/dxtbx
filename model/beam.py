@@ -13,7 +13,7 @@ from __future__ import division
 
 import math
 import pycbf
-from dxtbx_model_ext import Beam, PolarizedBeam
+from dxtbx_model_ext import Beam
 
 
 class beam_factory:
@@ -66,29 +66,42 @@ class beam_factory:
         unit_s0=None,
         polarization=None,
         polarization_fraction=None,
+        divergence=None,
+        sigma_divergence=None,
     ):
         assert polarization
         assert polarization_fraction
+
+        if divergence == None or sigma_divergence == None:
+            divergence = 0.0
+            sigma_divergence = 0.0
+
         if sample_to_source:
             assert wavelength
-            return PolarizedBeam(
+            return Beam(
                 tuple(map(float, sample_to_source)),
                 float(wavelength),
+                float(divergence),
+                float(sigma_divergence),
                 tuple(map(float, polarization)),
                 float(polarization_fraction),
             )
         elif unit_s0:
             assert wavelength
-            return PolarizedBeam(
+            return Beam(
                 tuple(map(lambda x: -x, map(float, unit_s0))),
                 float(wavelength),
+                float(divergence),
+                float(sigma_divergence),
                 tuple(map(float, polarization)),
                 float(polarization_fraction),
             )
         else:
             assert s0
-            return PolarizedBeam(
+            return Beam(
                 tuple(map(float, s0)),
+                float(divergence),
+                float(sigma_divergence),
                 tuple(map(float, polarization)),
                 float(polarization_fraction),
             )
