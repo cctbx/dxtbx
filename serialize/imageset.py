@@ -1,3 +1,5 @@
+from __future__ import division
+
 #!/usr/bin/env python
 #
 # dxtbx.serialize.imageset.py
