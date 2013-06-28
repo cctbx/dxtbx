@@ -141,9 +141,10 @@ class Format(object):
             self._scan_instance = scan_instance
 
         except exceptions.Exception as e:
+            # FIXME ideally should not squash the errors here...
             print(
-                "Couldn't create a detector model for image file '%s'"
-                % (self._image_file)
+                "Can't create a detector model for image file '%s' (%s)"
+                % (self._image_file, str(e))
             )
         finally:
             self._end()
