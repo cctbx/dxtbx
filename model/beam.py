@@ -228,5 +228,8 @@ class beam_factory:
         )
 
         return beam_factory.make_polarized_beam(
-            direction, wavelength, polar_plane_normal, polar_fraction
+            sample_to_source=direction,
+            wavelength=wavelength,
+            polarization=polar_plane_normal,
+            polarization_fraction=polar_fraction,
         )
