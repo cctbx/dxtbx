@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-# FormatSMVADSC.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
+# FormatSMVADSCDBG.py
+#   Copyright (C) 2013 LBNL, Aaron Brewster
 #
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# An implementation of the SMV image reader for ADSC images. Inherits from
-# FormatSMV.
+# An implementation of the SMV image reader for pseudo "ADSC" images, converted
+# from Pilatus images using iotbx debug_write.
 
 from __future__ import division
 from __future__ import print_function
-
-import time
 
 from dxtbx.format.FormatSMVADSC import FormatSMVADSC
 
@@ -52,8 +50,9 @@ class FormatSMVADSCDBG(FormatSMVADSC):
         beam_x = float(self._header_dictionary["BEAM_CENTER_X"])
         beam_y = float(self._header_dictionary["BEAM_CENTER_Y"])
         pixel_size = float(self._header_dictionary["PIXEL_SIZE"])
+        # size1 and size2 swapped here
         image_size = (
-            float(self._header_dictionary["SIZE2"]),  # size1 and size2 swapped here
+            float(self._header_dictionary["SIZE2"]),
             float(self._header_dictionary["SIZE1"]),
         )
         overload = 65535
