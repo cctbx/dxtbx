@@ -142,6 +142,9 @@ class Format(object):
 
         except exceptions.Exception as e:
             # FIXME ideally should not squash the errors here...
+            import traceback, sys
+
+            traceback.print_exc(file=sys.stdout)
             print(
                 "Can't create a detector model for image file '%s' (%s)"
                 % (self._image_file, str(e))
