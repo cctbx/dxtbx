@@ -19,6 +19,12 @@ class FormatSMVADSCNoDateStamp(FormatSMVADSC):
 
         size, header = FormatSMVADSC.get_smv_header(image_file)
 
+        wanted_header_items = ["TIME"]
+
+        for header_item in wanted_header_items:
+            if not header_item in header:
+                return False
+
         unwanted_header_items = ["DATE"]
 
         for header_item in unwanted_header_items:
