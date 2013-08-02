@@ -147,7 +147,9 @@ class to_xds(object):
     def get_template(self):
         return self._sweep.get_template()
 
-    def XDS_INP(self, out=None):
+    def XDS_INP(
+        self, out=None, job_card="XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT"
+    ):
         if out is None:
             out = sys.stdout
 
@@ -222,7 +224,7 @@ class to_xds(object):
             start_end = (1, start_end[1])
 
         print("DATA_RANGE= %d %d" % start_end, file=out)
-        print("JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT", file=out)
+        print("JOB=%s" % job_card, file=out)
 
     def xparm_xds(
         self, real_space_a, real_space_b, real_space_c, space_group, out=None
