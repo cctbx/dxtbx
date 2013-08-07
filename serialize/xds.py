@@ -12,7 +12,6 @@ from __future__ import print_function
 #  This code is distributed under the BSD license, a copy of which is
 #  included in the root directory of this package.
 
-import math
 import sys
 from scitbx import matrix
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
