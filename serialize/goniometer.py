@@ -24,6 +24,9 @@ def to_dict(gonio):
     """
     from collections import OrderedDict
 
+    if gonio == None:
+        return None
+
     return OrderedDict(
         [
             ("rotation_axis", gonio.get_rotation_axis()),
