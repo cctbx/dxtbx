@@ -27,6 +27,7 @@ def panel_to_dict(panel):
     return OrderedDict(
         [
             ("type", panel.get_type()),
+            ("name", panel.get_name()),
             ("fast_axis", panel.get_fast_axis()),
             ("slow_axis", panel.get_slow_axis()),
             ("origin", panel.get_origin()),
@@ -37,11 +38,12 @@ def panel_to_dict(panel):
     )
 
 
-def panel_from_dict(d):
+def panel_from_dict(d, t=None):
     """Convert the dictionary to a panel model
 
     Params:
         d The dictionary of parameters
+        t The template dictionary to use
 
     Returns:
         The panel model
@@ -49,8 +51,17 @@ def panel_from_dict(d):
     """
     from dxtbx.model import Panel
 
+    if d == None:
+        if t == None:
+            return None
+        else:
+            return from_dict(t, None)
+    elif t != None:
+        d = dict(t.items() + d.items())
+
     return Panel(
         str(d["type"]),
+        str(d["name"]),
         tuple(d["fast_axis"]),
         tuple(d["slow_axis"]),
         tuple(d["origin"]),
@@ -73,11 +84,12 @@ def to_dict(detector):
     return [panel_to_dict(p) for p in detector]
 
 
-def from_dict(d):
+def from_dict(d, t=None):
     """Convert the dictionary to a detector model
 
     Params:
         d The dictionary of parameters
+        t The template dictionary to use
 
     Returns:
         The detector model
@@ -87,7 +99,12 @@ def from_dict(d):
 
     # If None, return None
     if d == None:
-        return None
+        if t == None:
+            return None
+        else:
+            return from_dict(t, None)
+    elif t == None:
+        t = [None] * len(d)
 
     # Create the model from the dictionary
-    return Detector(PanelList([panel_from_dict(p) for p in d]))
+    return Detector(PanelList([panel_from_dict(p, pt) for p, pt in zip(d, t)]))

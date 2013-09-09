@@ -484,6 +484,7 @@ class TestImageSet(object):
         detector = Detector(
             Panel(
                 "UNKNOWN",
+                "Panel",
                 (1, 0, 0),
                 (0, 1, 0),
                 (0, 0, 1),

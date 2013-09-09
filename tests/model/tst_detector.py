@@ -86,6 +86,13 @@ def tst_parallax_correction(detector):
     print("OK")
 
 
+def tst_get_names(detector):
+    names = detector.get_names()
+    assert len(names) == 1
+    assert names[0] == "Panel"
+    print("OK")
+
+
 def tst_detector():
     from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
@@ -93,6 +100,7 @@ def tst_detector():
     detector = Detector(
         Panel(
             "",  # Type
+            "Panel",  # Name
             (10, 0, 0),  # Fast axis
             (0, 10, 0),  # Slow axis
             (0, 0, 200),  # Origin
@@ -108,6 +116,7 @@ def tst_detector():
     tst_is_value_in_trusted_range(detector)
     tst_is_coord_valid(detector)
     tst_pixel_to_millimeter_to_pixel(detector)
+    tst_get_names(detector)
 
     # Attenuation length
     la = 0.252500934883
@@ -116,6 +125,7 @@ def tst_detector():
     detector = Detector(
         Panel(
             "",  # Type
+            "",  # Name
             (10, 0, 0),  # Fast axis
             (0, 10, 0),  # Slow axis
             (0, 0, 200),  # Origin

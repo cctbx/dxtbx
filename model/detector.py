@@ -47,6 +47,7 @@ class detector_factory:
         image_size,
         trusted_range=(0.0, 0.0),
         px_mm=None,
+        name="Panel",
     ):
         """Ensure all types are correct before creating c++ detector class."""
 
@@ -58,6 +59,7 @@ class detector_factory:
         d = Detector(
             Panel(
                 str(stype),
+                str(name),
                 tuple(map(float, fast_axis)),
                 tuple(map(float, slow_axis)),
                 tuple(map(float, origin)),
