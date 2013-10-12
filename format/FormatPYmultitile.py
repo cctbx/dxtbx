@@ -60,8 +60,8 @@ class FormatPYmultitile(FormatPY):
             fast_direction="+x",
             slow_direction="-y",
             pixel_size=(
-                self.detectorbase._pixel_size[0],
-                self.detectorbase._pixel_size[1],
+                self.detectorbase._pixel_size[0] * 1e3,
+                self.detectorbase._pixel_size[1] * 1e3,
             ),
             image_size=(self.detectorbase.size1, self.detectorbase.size2),
             trusted_range=(0, self.detectorbase._saturation),
