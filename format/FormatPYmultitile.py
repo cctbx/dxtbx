@@ -147,14 +147,13 @@ class FormatPYmultitile(FormatPY):
         return detector
 
     def get_raw_data(self, index=None):
-        """If @p index is @c None, return a list of intensity flex array for
-        each ASIC.  Otherwise return the array for the ASIC at index @p
-        index.
+        """If @p index is @c None, return the flex array for the first ASIC.
+        Otherwise return the array for the ASIC at index @p index.
         """
 
         if index is not None:
             return self._raw_data[index]
-        return self._raw_data
+        return self._raw_data[0]
 
     def _beam(self):
         """Return a simple model for the beam."""
