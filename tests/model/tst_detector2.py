@@ -1,5 +1,5 @@
+from __future__ import division
 from __future__ import print_function
-
 from dxtbx.model.detector2 import Detector2, Detector3
 
 
