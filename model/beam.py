@@ -18,7 +18,7 @@ from dxtbx_model_ext import Beam
 
 class beam_factory:
     """A factory class for beam objects, which encapsulate standard beam
-    models. In cases where a full cbf desctiption is available this
+    models. In cases where a full cbf description is available this
     will be used, otherwise simplified descriptions can be applied."""
 
     def __init__(self):
@@ -34,7 +34,7 @@ class beam_factory:
         sigma_divergence=None,
     ):
 
-        if divergence == None or sigma_divergence == None:
+        if divergence is None or sigma_divergence is None:
             divergence = 0.0
             sigma_divergence = 0.0
 
