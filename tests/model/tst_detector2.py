@@ -445,7 +445,7 @@ class Test2:
 
 
 if __name__ == "__main__":
-    test = Test()
-    test.run()
+    # test = Test()
+    # test.run()
     test = Test2()
     test.run()
