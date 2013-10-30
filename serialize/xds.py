@@ -79,37 +79,38 @@ class to_xds(object):
         self._sweep = sweep
 
         # detector dimensions in pixels
-        self.detector_size = map(int, self.get_detector().get_image_size())
+        assert len(self.get_detector()) == 1
+        self.detector_size = map(int, self.get_detector()[0].get_image_size())
         self.fast, self.slow = self.detector_size
 
         R = align_reference_frame(
-            self.get_detector().get_fast_axis(),
+            self.get_detector()[0].get_fast_axis(),
             (1, 0, 0),
-            self.get_detector().get_slow_axis(),
+            self.get_detector()[0].get_slow_axis(),
             (0, 1, 0),
         )
 
         self.imagecif_to_xds_transformation_matrix = R
 
         self.detector_x_axis = (
-            R * matrix.col(self.get_detector().get_fast_axis())
+            R * matrix.col(self.get_detector()[0].get_fast_axis())
         ).elems
         self.detector_y_axis = (
-            R * matrix.col(self.get_detector().get_slow_axis())
+            R * matrix.col(self.get_detector()[0].get_slow_axis())
         ).elems
 
-        F = R * matrix.col(self.get_detector().get_fast_axis())
-        S = R * matrix.col(self.get_detector().get_slow_axis())
+        F = R * matrix.col(self.get_detector()[0].get_fast_axis())
+        S = R * matrix.col(self.get_detector()[0].get_slow_axis())
         N = F.cross(S)
         self.detector_normal = N.elems
 
-        origin = R * matrix.col(self.get_detector().get_origin())
+        origin = R * matrix.col(self.get_detector()[0].get_origin())
 
         centre = -(origin - origin.dot(N) * N)
         x = centre.dot(F)
         y = centre.dot(S)
 
-        self.pixel_size = self.get_detector().get_pixel_size()
+        self.pixel_size = self.get_detector()[0].get_pixel_size()
         f, s = self.pixel_size
         self.detector_distance = origin.dot(N)
         # Need to add 0.5 because XDS seems to do centroids in fortran coords
@@ -152,7 +153,7 @@ class to_xds(object):
         if out is None:
             out = sys.stdout
 
-        sensor = self.get_detector().get_type()
+        sensor = self.get_detector()[0].get_type()
         fast, slow = self.detector_size
         f, s = self.pixel_size
         df = int(1000 * f)
@@ -163,7 +164,7 @@ class to_xds(object):
         detector = xds_detector_name(
             detector_helpers_types.get(sensor, fast, slow, df, ds)
         )
-        trusted = self.get_detector().get_trusted_range()
+        trusted = self.get_detector()[0].get_trusted_range()
 
         print(
             "DETECTOR=%s MINIMUM_VALID_PIXEL_VALUE=%d OVERLOAD=%d"
@@ -211,7 +212,7 @@ class to_xds(object):
             file=out,
         )
         print("TRUSTED_REGION= 0.0 1.41", file=out)
-        for f0, s0, f1, s1 in self.get_detector().get_mask():
+        for f0, s0, f1, s1 in self.get_detector()[0].get_mask():
             print(
                 "UNTRUSTED_RECTANGLE= %d %d %d %d" % (f0 - 1, f1 + 1, s0 - 1, s1 + 1),
                 file=out,

@@ -37,24 +37,23 @@ def tst_goniometer():
     print("OK")
 
 
-def tst_panel():
-    """Test pickling the panel object."""
-    obj1 = Panel()
-    obj1.set_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
-    obj2 = pickle_then_unpickle(obj1)
-    assert obj1 == obj2
-    print("OK")
+# def tst_panel():
+#    '''Test pickling the panel object.'''
+#    obj1 = Panel()
+#    obj1.set_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
+#    obj2 = pickle_then_unpickle(obj1)
+#    assert(obj1 == obj2)
+#    print "OK"
 
-
-def tst_detector():
-    """Test pickling the detector object."""
-    p = Panel()
-    p.set_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
-    obj1 = Detector(p)
-    obj1.set_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
-    obj2 = pickle_then_unpickle(obj1)
-    assert obj1 == obj2
-    print("OK")
+# def tst_detector():
+#    '''Test pickling the detector object.'''
+#    p = Panel()
+#    p.set_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
+#    obj1 = Detector(p)
+#    obj1.set_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
+#    obj2 = pickle_then_unpickle(obj1)
+#    assert(obj1 == obj2)
+#    print "OK"
 
 
 def tst_scan():
@@ -69,8 +68,8 @@ def run():
     """Run all the tests"""
     tst_beam()
     tst_goniometer()
-    tst_panel()
-    tst_detector()
+    #    tst_panel()
+    #    tst_detector()
     tst_scan()
 
 
