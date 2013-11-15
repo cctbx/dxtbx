@@ -121,7 +121,7 @@ class FormatPYunspecified(FormatPY):
         return self._scan_factory.make_scan(
             image_range=(1, 1),
             # femtosecond X-ray pulse, set this to a dummy argument
-            exposure_time=1.0,
+            exposure_times=[1.0],
             oscillation=(0.0, 0.0),
             epochs={
                 1: 0.0
