@@ -106,8 +106,6 @@ class Test(object):
         assert len(blocks[0].metadata()) == 9
         imageset = blocks[0].extract_all()
         assert len(imageset) == 9
-        imageset = blocks[0].extract_stills()
-        assert imageset == None
         sweeps = blocks[0].extract_sweeps()
         assert len(sweeps) == 1
         assert len(sweeps[0]) == 9
@@ -125,8 +123,6 @@ class Test(object):
         assert len(blocks[0].metadata()) == 6
         imageset = blocks[0].extract_all()
         assert len(imageset) == 6
-        imageset = blocks[0].extract_stills()
-        assert imageset == None
         sweeps = blocks[0].extract_sweeps()
         assert len(sweeps) == 2
         assert len(sweeps[0]) == 3
@@ -148,8 +144,6 @@ class Test(object):
         assert len(blocks[0].metadata()) == 9
         imageset = blocks[0].extract_all()
         assert len(imageset) == 9
-        imageset = blocks[0].extract_stills()
-        assert imageset == None
         sweeps = blocks[0].extract_sweeps()
         assert len(sweeps) == 1
         assert len(sweeps[0]) == 9
@@ -160,8 +154,6 @@ class Test(object):
         assert len(blocks[1].metadata()) == 7
         imageset = blocks[1].extract_all()
         assert len(imageset) == 7
-        imageset = blocks[1].extract_stills()
-        assert imageset == None
         sweeps = blocks[1].extract_sweeps()
         assert len(sweeps) == 7
         assert all(len(s) == 1 for s in sweeps)
@@ -172,8 +164,6 @@ class Test(object):
         assert len(blocks[2].metadata()) == 2
         imageset = blocks[2].extract_all()
         assert len(imageset) == 2
-        imageset = blocks[2].extract_stills()
-        assert imageset == None
         sweeps = blocks[2].extract_sweeps()
         assert len(sweeps) == 2
         assert all(len(s) == 1 for s in sweeps)
@@ -184,8 +174,6 @@ class Test(object):
         assert len(blocks[3].metadata()) == 1
         imageset = blocks[3].extract_all()
         assert len(imageset) == 1
-        imageset = blocks[3].extract_stills()
-        assert imageset == None
         sweeps = blocks[3].extract_sweeps()
         assert len(sweeps) == 1
         assert all(len(s) == 1 for s in sweeps)
