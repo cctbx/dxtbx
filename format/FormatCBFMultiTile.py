@@ -13,11 +13,10 @@ from __future__ import print_function
 import pycbf
 
 from dxtbx.format.FormatCBFFull import FormatCBFFull
-from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
 
 
-class FormatCBFMultiTile(FormatCBFFull, FormatStill):
+class FormatCBFMultiTile(FormatCBFFull):
     """An image reading class multi-tile CBF files"""
 
     @staticmethod
@@ -51,11 +50,6 @@ class FormatCBFMultiTile(FormatCBFFull, FormatStill):
 
         self._cbf_handle = pycbf.cbf_handle_struct()
         self._cbf_handle.read_widefile(self._image_file, pycbf.MSG_DIGEST)
-
-    def _goniometer(self):
-        """Not sensible for still shot data"""
-
-        return None
 
     def _detector(self):
         """Return a working detector instance."""
@@ -114,11 +108,6 @@ class FormatCBFMultiTile(FormatCBFFull, FormatStill):
         """Return a working beam instance."""
 
         return self._beam_factory.imgCIF_H(self._cbf_handle)
-
-    def _scan(self):
-        """Not sensible for still shot data"""
-
-        return None
 
     def get_raw_data(self, index=None):
         if self._raw_data is None:
