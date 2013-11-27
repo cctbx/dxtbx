@@ -109,10 +109,7 @@ if __name__ == "__main__":
                 )
             else:
                 json.dump(
-                    dictionary,
-                    open(options.output, "w"),
-                    indent=indent,
-                    ensure_ascii=True,
+                    dictionary, open(options.output, "w"), indent=2, ensure_ascii=True
                 )
         elif ext == ".pickle":
             pickle.dump(
