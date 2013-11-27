@@ -13,9 +13,9 @@ if __name__ == "__main__":
         "-v",
         "--verbose",
         dest="verbose",
-        action="store_true",
-        default=False,
-        help="Write extra output",
+        action="count",
+        default=0,
+        help="Set the verbosity level (-vv gives a verbosity level of 2)",
     )
 
     # Write the datablock to JSON or Pickle
@@ -28,6 +28,16 @@ if __name__ == "__main__":
         help="The output JSON or pickle file (filename.json | filename.pickle)",
     )
 
+    # Write the datablock to JSON or Pickle
+    parser.add_option(
+        "-c",
+        "--compact",
+        dest="compact",
+        action="store_true",
+        default=False,
+        help="For JSON output, use compact representation",
+    )
+
     # Parse the command line arguments
     (options, args) = parser.parse_args()
     if len(args) == 0:
@@ -35,7 +45,17 @@ if __name__ == "__main__":
 
     # Get the data blocks from the input files
     # We've set verbose to print out files as they're tested.
-    datablocks = DataBlockFactory.from_filenames(args, verbose=options.verbose)
+    unhandled = []
+    datablocks = DataBlockFactory.from_args(
+        args, verbose=options.verbose, unhandled=unhandled
+    )
+
+    # Print out any unhandled files
+    if len(unhandled) > 0:
+        print("-" * 80)
+        print("The following command line arguments were not handled:")
+        for filename in unhandled:
+            print("  %s" % filename)
 
     # Loop through the data blocks
     for i, datablock in enumerate(datablocks):
@@ -59,7 +79,7 @@ if __name__ == "__main__":
         print("  num stills: %d" % num_stills)
 
         # Loop through all the sweeps
-        if options.verbose:
+        if options.verbose > 1:
             for j, sweep in enumerate(sweeps):
                 print("")
                 print("Sweep %d" % j)
@@ -80,12 +100,23 @@ if __name__ == "__main__":
         ext = os.path.splitext(options.output)[1]
         if ext == ".json":
             dictionary = [db.to_dict() for db in datablocks]
-            json.dump(
-                dictionary, open(options.output, "w"), indent=2, ensure_ascii=True
-            )
+            if options.compact:
+                json.dump(
+                    dictionary,
+                    open(options.output, "w"),
+                    separators=(",", ":"),
+                    ensure_ascii=True,
+                )
+            else:
+                json.dump(
+                    dictionary,
+                    open(options.output, "w"),
+                    indent=indent,
+                    ensure_ascii=True,
+                )
         elif ext == ".pickle":
             pickle.dump(
-                datablocks, open(options.output, "w"), protocol=pickle.HIGHEST_PROTOCOL
+                datablocks, open(options.output, "wb"), protocol=pickle.HIGHEST_PROTOCOL
             )
         else:
             raise RuntimeError("expected extension .json or .pickle, got %s" % ext)
