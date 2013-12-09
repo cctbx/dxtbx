@@ -38,7 +38,7 @@ def from_dict(d, t=None):
         The detector model
 
     """
-    from dxtbx.model import Detector
+    from dxtbx.model import Detector, HierarchicalDetector
     from dxtbx.array_family import flex
 
     # If None, return None
@@ -56,4 +56,7 @@ def from_dict(d, t=None):
             d = {"panels": d}
 
     # Create the model from the dictionary
-    return Detector.from_dict(d)
+    if "hierarchy" in d:
+        return HierarchicalDetector.from_dict(d)
+    else:
+        return Detector.from_dict(d)

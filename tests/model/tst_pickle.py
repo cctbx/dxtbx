@@ -1,7 +1,7 @@
 from __future__ import division
 from __future__ import print_function
 from dxtbx.model import Beam, Goniometer
-from dxtbx.model import Panel, Detector, Scan, PanelGroup
+from dxtbx.model import Panel, Detector, HierarchicalDetector, Scan, PanelGroup
 
 
 def pickle_then_unpickle(obj):
@@ -50,7 +50,17 @@ def tst_detector():
     """Test pickling the detector object."""
     p = Panel()
     p.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
-    obj1 = Detector(p)
+    obj1 = HierarchicalDetector(p)
+    obj2 = pickle_then_unpickle(obj1)
+    assert obj1 == obj2
+    print("OK")
+
+
+def tst_hierarchical_detector():
+    """Test pickling the detector object."""
+    p = Panel()
+    p.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    obj1 = HierarchicalDetector(p)
     root = obj1.hierarchy()
     root.add_panel(obj1[0])
     root.add_group()
@@ -77,6 +87,7 @@ def run():
     tst_goniometer()
     tst_panel()
     tst_detector()
+    tst_hierarchical_detector()
     tst_scan()
 
 
