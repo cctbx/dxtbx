@@ -48,7 +48,13 @@ class FormatCBFMultiTile(FormatCBFFull):
 
         FormatCBF._start(self)  # Note, skip up an inhieritance level
 
-        self._cbf_handle = pycbf.cbf_handle_struct()
+        try:
+            from xfel.cftbx.detector.cspad_cbf_tbx import cbf_wrapper
+
+            self._cbf_handle = cbf_wrapper()
+        except ImportError:
+            self._cbf_handle = pycbf.cbf_handle_struct()
+
         self._cbf_handle.read_widefile(self._image_file, pycbf.MSG_DIGEST)
 
     def _detector(self):
