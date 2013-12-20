@@ -106,11 +106,17 @@ class DataBlock(object):
         """ Extract all the stills as an image set. """
         from dxtbx.imageset2 import ImageSetFactory
 
-        filenames, records = zip(
-            *[(k, r) for k, r in self._images.iteritems() if r.template == None]
-        )
+        # Get the list of filename, records for the still images
+        stills = [(k, r) for k, r in self._images.iteritems() if r.template == None]
+        if len(stills) == 0:
+            return None
+
+        # Split records
+        filenames, records = zip(*stills)
         if len(filenames) == 0:
             return None
+
+        # Create the imageset
         imageset = ImageSetFactory.make_imageset(filenames, self._format_class)
         for i, r in enumerate(records):
             imageset.set_beam(r.beam, i)
