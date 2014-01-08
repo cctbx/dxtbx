@@ -462,6 +462,7 @@ class DataBlockFactory(object):
         from collections import OrderedDict
         from dxtbx.format.Registry import Registry
         from dxtbx.model import Beam, Detector, Goniometer, Scan
+        from os.path import abspath, expanduser, expandvars
 
         # If we have a list, extract for each dictionary in the list
         if isinstance(d, list):
@@ -491,7 +492,7 @@ class DataBlockFactory(object):
                     detector = Detector.from_dict(dlist[imageset["detector"]])
                 goniometer = Goniometer.from_dict(glist[imageset["goniometer"]])
                 scan = Scan.from_dict(slist[imageset["scan"]])
-                template = imageset["template"]
+                template = abspath(expanduser(expandvars(imageset["template"])))
                 pfx = template.split("#")[0]
                 sfx = template.split("#")[-1]
                 template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
