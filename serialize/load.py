@@ -72,6 +72,7 @@ def imageset(filename):
     from os.path import abspath, dirname
 
     # If the input is a string then open and read from that file
-    with temp_chdir(abspath(dirname(filename))):
-        with open(filename, "r") as filename:
-            return imageset_from_string(filename.read())
+    filename = abspath(filename)
+    with temp_chdir(dirname(filename)):
+        with open(filename, "r") as infile:
+            return imageset_from_string(infile.read())
