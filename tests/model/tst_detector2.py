@@ -1,7 +1,9 @@
 from __future__ import division
 from __future__ import print_function
-from dxtbx.model import HierarchicalDetector, PanelTreeNode, VirtualPanel
-from dxtbx.model import PanelGroup
+from dxtbx.model import HierarchicalDetector, VirtualPanel
+from dxtbx.model import PanelGroup, MakePanelTreeNodeClass
+
+PanelTreeNode = MakePanelTreeNodeClass(VirtualPanel)
 
 
 class TestPanelTreeNode(object):
