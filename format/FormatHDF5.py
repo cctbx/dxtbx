@@ -2,11 +2,13 @@ from __future__ import division
 from __future__ import print_function
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.model import Beam, Detector, Goniometer, Scan
 
 
 class FormatHDF5(Format, FormatMultiImage):
     def __init__(self, image_file):
         assert self.understand(image_file)
+        FormatMultiImage.__init__(self)
         Format.__init__(self, image_file)
 
     @staticmethod
