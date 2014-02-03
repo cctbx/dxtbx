@@ -102,6 +102,7 @@ class Test(object):
         self.tst_create_multiple_blocks()
         self.tst_pickling()
         self.tst_json()
+        self.tst_from_null_sweep()
 
     def tst_create_single_sweep(self):
 
@@ -218,6 +219,29 @@ class Test(object):
             assert b1.format_class() == b2.format_class()
             assert b1 == b2
         assert blocks1 == blocks2
+
+        print("OK")
+
+    def tst_from_null_sweep(self):
+        from dxtbx.datablock import DataBlockFactory
+        from dxtbx.serialize.imageset import NullSweep
+        from dxtbx.model import Beam, Detector, Goniometer, Scan
+
+        sweep = NullSweep("template_###.cbf")
+        sweep.beam = Beam((0, 0, 1))
+        sweep.detector = Detector()
+        sweep.goniometer = Goniometer((1, 0, 0))
+        sweep.scan = Scan((1, 10), (0, 0.1))
+
+        # Create the datablock
+        datablock = DataBlockFactory.from_null_sweep(sweep)
+
+        sweeps = datablock.extract_sweeps()
+        assert len(sweeps) == 1
+        assert sweeps[0].get_beam() == sweep.beam
+        assert sweeps[0].get_detector() == sweep.detector
+        assert sweeps[0].get_goniometer() == sweep.goniometer
+        assert sweeps[0].get_scan() == sweep.scan
 
         print("OK")
 

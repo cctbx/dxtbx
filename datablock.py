@@ -13,6 +13,11 @@ from __future__ import division
 from __future__ import print_function
 
 
+class NullFormat(object):
+    def __init__(self, filename):
+        pass
+
+
 class ImageRecord(object):
     """ Record for storing image metadata. """
 
@@ -440,7 +445,7 @@ class DataBlockFactory(object):
         return DataBlock(filenames)
 
     @staticmethod
-    def from_dict(d):
+    def from_dict(d, format_class=None):
         """ Create the datablock from a dictionary. """
         from collections import OrderedDict
         from dxtbx.format.Registry import Registry
@@ -509,7 +514,8 @@ class DataBlockFactory(object):
                 raise RuntimeError("unknown imageset id %s" % imageset["__id__"])
 
         # Get the format class from the first image
-        format_class = Registry.find(records.keys()[0])
+        if format_class == None:
+            format_class = Registry.find(records.keys()[0])
 
         # Return the datablock
         datablock = DataBlock()
@@ -592,6 +598,32 @@ class DataBlockFactory(object):
         return datablock
 
     @staticmethod
+    def from_null_sweep(imageset):
+        """ Create the data block from a null sweep. """
+
+        # Create a data block dictionary
+        obj = {
+            "__id__": "DataBlock",
+            "beam": [imageset.get_beam().to_dict()],
+            "detector": [imageset.get_detector().to_dict()],
+            "goniometer": [imageset.get_goniometer().to_dict()],
+            "scan": [imageset.get_scan().to_dict()],
+            "imageset": [
+                {
+                    "__id__": "ImageSweep",
+                    "beam": 0,
+                    "detector": 0,
+                    "goniometer": 0,
+                    "scan": 0,
+                    "template": imageset.get_template(),
+                }
+            ],
+        }
+
+        # Return the datablock
+        return DataBlockFactory.from_dict(obj, format_class=NullFormat)
+
+    @staticmethod
     def from_imageset(imageset):
         """ Create the data block from the imageset. """
 
@@ -613,12 +645,15 @@ class DataBlockFactory(object):
     def from_imageset_json(string):
         """ Load a datablock from a sweep json. """
         from dxtbx.serialize import load
+        from dxtbx.serialize.imageset import NullSweep
         from dxtbx.imageset import ImageSet, ImageSweep
 
         # Load the imageset and create a datablock from the filenames
         imageset = load.imageset_from_string(string)
         if isinstance(imageset, ImageSweep):
             return DataBlockFactory.from_sweep(imageset)
+        elif isinstance(imageset, NullSweep):
+            return DataBlockFactory.from_null_sweep(imageset)
         else:
             return DataBlockFactory.from_imageset(imageset)
 
@@ -626,12 +661,15 @@ class DataBlockFactory(object):
     def from_imageset_json_file(filename):
         """ Load a datablock from a sweep file. """
         from dxtbx.serialize import load
+        from dxtbx.serialize.imageset import NullSweep
         from dxtbx.imageset import ImageSet, ImageSweep
 
         # Load the imageset and create a datablock from the filenames
         imageset = load.imageset(filename)
         if isinstance(imageset, ImageSweep):
             return DataBlockFactory.from_sweep(imageset)
+        elif isinstance(imageset, NullSweep):
+            return DataBlockFactory.from_null_sweep(imageset)
         else:
             return DataBlockFactory.from_imageset(imageset)
 
