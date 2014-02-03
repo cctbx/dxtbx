@@ -445,7 +445,7 @@ class DataBlockFactory(object):
         return DataBlock(filenames)
 
     @staticmethod
-    def from_dict(d, format_class=None):
+    def from_dict(d, check_format=True):
         """ Create the datablock from a dictionary. """
         from collections import OrderedDict
         from dxtbx.format.Registry import Registry
@@ -514,8 +514,10 @@ class DataBlockFactory(object):
                 raise RuntimeError("unknown imageset id %s" % imageset["__id__"])
 
         # Get the format class from the first image
-        if format_class == None:
+        if check_format:
             format_class = Registry.find(records.keys()[0])
+        else:
+            format_class = NullFormat
 
         # Return the datablock
         datablock = DataBlock()
@@ -524,15 +526,17 @@ class DataBlockFactory(object):
         return datablock
 
     @staticmethod
-    def from_json(string):
+    def from_json(string, check_format=True):
         """ Decode a datablock from JSON string. """
         from dxtbx.serialize.load import _decode_dict
         import json
 
-        return DataBlockFactory.from_dict(json.loads(string, object_hook=_decode_dict))
+        return DataBlockFactory.from_dict(
+            json.loads(string, object_hook=_decode_dict), check_format
+        )
 
     @staticmethod
-    def from_json_file(filename):
+    def from_json_file(filename, check_format=True):
         """ Decode a datablock from a JSON file. """
         from os.path import dirname, abspath
         from dxtbx.serialize.filename import temp_chdir
@@ -540,7 +544,7 @@ class DataBlockFactory(object):
         filename = abspath(filename)
         with temp_chdir(dirname(filename)):
             with open(filename, "r") as infile:
-                return DataBlockFactory.from_json(infile.read())
+                return DataBlockFactory.from_json(infile.read(), check_format)
 
     @staticmethod
     def from_pickle_file(filename):
@@ -621,7 +625,7 @@ class DataBlockFactory(object):
         }
 
         # Return the datablock
-        return DataBlockFactory.from_dict(obj, format_class=NullFormat)
+        return DataBlockFactory.from_dict(obj, check_format=False)
 
     @staticmethod
     def from_imageset(imageset):
@@ -674,12 +678,12 @@ class DataBlockFactory(object):
             return DataBlockFactory.from_imageset(imageset)
 
     @staticmethod
-    def from_serialized_format(filename):
+    def from_serialized_format(filename, check_format=True):
         """ Load a datablock from serialized formats. """
 
         # First try as JSON format
         try:
-            return DataBlockFactory.from_json_file(filename)
+            return DataBlockFactory.from_json_file(filename, check_format)
         except Exception as e:
             pass
 
