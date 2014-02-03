@@ -117,3 +117,11 @@ def imageset(obj, outfile, compact=False):
     # Otherwise assume the input is a file and write to it
     else:
         outfile.write(imageset_to_string(obj, compact))
+
+
+def datablock(obj, outfile, **kwargs):
+    """ Dump the given object to file. """
+    from dxtbx.datablock import DataBlockDumper
+
+    dump = DataBlockDumper(obj)
+    dump.as_file(outfile, **kwargs)

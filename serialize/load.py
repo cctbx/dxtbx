@@ -76,3 +76,18 @@ def imageset(filename):
     with temp_chdir(dirname(filename)):
         with open(filename, "r") as infile:
             return imageset_from_string(infile.read())
+
+
+def datablock(filename):
+    """Load a given JSONi or pickle file.
+
+    Params:
+      filename The input filename
+
+    Returns:
+      The datablock
+
+    """
+    from dxtbx.datablock import DataBlockFactory
+
+    return DataBlockFactory.from_serialized_format(filename)
