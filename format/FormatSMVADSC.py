@@ -94,7 +94,7 @@ class FormatSMVADSC(FormatSMV):
             float(self._header_dictionary["SIZE2"]),
         )
         overload = 65535
-        underload = 0
+        underload = 1
 
         return self._detector_factory.simple(
             "CCD",
