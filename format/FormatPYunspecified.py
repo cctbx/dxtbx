@@ -105,7 +105,7 @@ class FormatPYunspecified(FormatPY):
             fast_direction="+x",
             slow_direction="-y",
             pixel_size=(self.detectorbase.pixel_size, self.detectorbase.pixel_size),
-            image_size=(self.detectorbase.size1, self.detectorbase.size2),
+            image_size=(self.detectorbase.size2, self.detectorbase.size1),
             trusted_range=(0, self.detectorbase.saturation),
             mask=[],
         )  # a list of dead rectangles
