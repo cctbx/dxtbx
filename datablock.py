@@ -567,7 +567,7 @@ class DataBlockDictImporter(object):
                     beam, detector, gonio, scan = load_models(image)
                     iset.set_beam(beam, i)
                     iset.set_detector(detector, i)
-                    if goniometer:
+                    if gonio:
                         iset.set_goniometer(gonio, i)
                     if scan:
                         iset.set_scan(scan, i)
@@ -611,10 +611,10 @@ class DataBlockFactory(object):
         # Try as serialized formats
         for filename in unhandled1:
             try:
-                datablocks.extend(DataBlockFractory.from_serialized_format(filename))
+                datablocks.extend(DataBlockFactory.from_serialized_format(filename))
                 if verbose:
                     print("Loaded datablocks(s) from %s" % filename)
-            except Exception:
+            except Exception as e:
                 unhandled.append(filename)
 
         # Return the datablocks
