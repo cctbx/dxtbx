@@ -47,7 +47,7 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
         tag = detector_2d_assembled_1[self._images[0]]
         data = tag["detector_data"]
         image_size = data.shape
-        trusted_range = (0, 64000)
+        trusted_range = (0, 200000)
 
         # Initialise detector frame
         fast = matrix.col((1.0, 0.0, 0.0))
