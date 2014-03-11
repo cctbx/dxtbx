@@ -19,8 +19,11 @@ def print_header():
         print(i.get_goniometer())
         print(i.get_detector())
         print(i.get_scan())
-        print("Total Counts:")
-        print(flex.sum(i.get_raw_data()))
+        from dxtbx.format.FormatMultiImage import FormatMultiImage
+
+        if not issubclass(format_class, FormatMultiImage):
+            print("Total Counts:")
+            print(flex.sum(i.get_raw_data()))
 
 
 if __name__ == "__main__":
