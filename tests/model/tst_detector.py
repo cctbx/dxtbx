@@ -1,6 +1,8 @@
 from __future__ import division
 from __future__ import print_function
 from dxtbx.model import Panel, Detector
+from libtbx.test_utils import approx_equal
+from scitbx.array_family import flex
 
 
 def tst_get_pixel_lab_coord(detector):
@@ -62,8 +64,11 @@ def tst_pixel_to_millimeter_to_pixel(detector):
     # Pick some random pixels and check that px -> mm -> px give px == px
     w, h = detector[0].get_image_size()
     random_pixel = lambda: (random() * w, random() * h)
-    for i in range(100):
-        xy = random_pixel()
+    pixels = flex.vec2_double(random_pixel() for i in range(100))
+    xy_mm = detector[0].pixel_to_millimeter(pixels)
+    xy_px = detector[0].millimeter_to_pixel(xy_mm)
+    assert approx_equal(xy_px, pixels, eps=eps)
+    for xy in pixels:
         xy_mm = detector[0].pixel_to_millimeter(xy)
         xy_px = detector[0].millimeter_to_pixel(xy_mm)
         assert abs(matrix.col(xy_px) - matrix.col(xy)) < eps
