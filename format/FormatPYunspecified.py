@@ -3,9 +3,7 @@ from __future__ import print_function
 
 from dxtbx.format.FormatPY import FormatPY
 
-# from dxtbx.format.FormatStill import FormatStill
 
-# class FormatPYunspecified(FormatStill, FormatPY):
 class FormatPYunspecified(FormatPY):
     @staticmethod
     def understand(image_file):
