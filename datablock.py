@@ -102,7 +102,7 @@ class DataBlock(object):
     def unique_beams(self):
         """ Iterate through unique beams. """
         from dxtbx.imageset import ImageSweep
-        from collections import OrderedDict
+        from libtbx.containers import OrderedDict
 
         obj = OrderedDict()
         for iset in self._imagesets:
@@ -116,7 +116,7 @@ class DataBlock(object):
     def unique_detectors(self):
         """ Iterate through unique detectors. """
         from dxtbx.imageset import ImageSweep
-        from collections import OrderedDict
+        from libtbx.containers import OrderedDict
 
         obj = OrderedDict()
         for iset in self._imagesets:
@@ -130,7 +130,7 @@ class DataBlock(object):
     def unique_goniometers(self):
         """ Iterate through unique goniometers. """
         from dxtbx.imageset import ImageSweep
-        from collections import OrderedDict
+        from libtbx.containers import OrderedDict
 
         obj = OrderedDict()
         for iset in self._imagesets:
@@ -149,7 +149,7 @@ class DataBlock(object):
     def unique_scans(self):
         """ Iterate through unique scans. """
         from dxtbx.imageset import ImageSweep
-        from collections import OrderedDict
+        from libtbx.containers import OrderedDict
 
         obj = OrderedDict()
         for iset in self._imagesets:
@@ -167,7 +167,7 @@ class DataBlock(object):
 
     def to_dict(self):
         """ Convert the datablock to a dictionary """
-        from collections import OrderedDict
+        from libtbx.containers import OrderedDict
         from itertools import groupby
         from dxtbx.imageset import ImageSweep
         from dxtbx.format.FormatMultiImage import FormatMultiImage
@@ -530,7 +530,7 @@ class DataBlockDictImporter(object):
 
     def _load_datablocks(self, obj, check_format=True):
         """ Create the datablock from a dictionary. """
-        from collections import OrderedDict
+        from libtbx.containers import OrderedDict
         from dxtbx.format.Registry import Registry
         from dxtbx.model import Beam, Detector, Goniometer, Scan
         from dxtbx.model import HierarchicalDetector
