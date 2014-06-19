@@ -41,6 +41,13 @@ def tst_get_frames_with_angle(scan):
     pass
 
 
+def tst_scan_oscillation_recycle(scan):
+    for deg in (True, False):
+        oscillation = scan.get_oscillation(deg=deg)
+        scan.set_oscillation(oscillation, deg=deg)
+        assert scan.get_oscillation(deg=deg) == oscillation
+
+
 def tst_scan_360_append():
 
     scan1 = Scan((1, 360), (0.0, 1.0))
@@ -70,6 +77,7 @@ def run():
     image_range = (0, 1000)
     oscillation = (0, 0.1)
     scan = Scan(image_range, oscillation)
+    tst_scan_oscillation_recycle(scan)
     tst_is_angle_valid(scan)
     tst_is_frame_valid(scan)
     tst_get_angle_from_frame(scan)
