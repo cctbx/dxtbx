@@ -91,7 +91,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         detector = HierarchicalDetector()
         root = detector.hierarchy()
-        root.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
+        root.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 250))
 
         for j in range(24):
 
