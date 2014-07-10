@@ -591,6 +591,7 @@ class detector_factory:
             pixel_size,
             image_size,
             trusted_range,
+            px_mm,
         )
         detector[0].mask = mask
         return detector
@@ -654,6 +655,7 @@ class detector_factory:
             pixel_size,
             image_size,
             trusted_range,
+            px_mm,
         )
 
         detector.mask = mask
@@ -683,6 +685,7 @@ class detector_factory:
             pixel,
             size,
             trusted_range,
+            px_mm,
         )
 
     @staticmethod
