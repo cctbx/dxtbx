@@ -520,9 +520,7 @@ class detector_factory:
     ):
         """Ensure all types are correct before creating c++ detector class."""
 
-        if stype == "SENSOR_PAD":
-            px_mm = ParallaxCorrectedPxMmStrategy(0.252500934883)
-        else:
+        if px_mm is None:
             px_mm = SimplePxMmStrategy()
         try:
             d = Detector()
@@ -735,10 +733,10 @@ class detector_factory:
 
         # If the sensor type is PAD then create the detector with a
         # parallax corrected pixel to millimeter function
-        if dtype == detector_helper_sensors.SENSOR_PAD:
-            px_mm = ParallaxCorrectedPxMmStrategy(0.252500934883)
-        else:
-            px_mm = SimplePxMmStrategy()
+        # if dtype == detector_helper_sensors.SENSOR_PAD:
+        # px_mm = ParallaxCorrectedPxMmStrategy(0.252500934883)
+        # else:
+        px_mm = SimplePxMmStrategy()
 
         return detector_factory.make_detector(
             dtype, fast, slow, origin, pixel, size, trusted_range, px_mm

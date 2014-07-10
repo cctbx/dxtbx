@@ -50,10 +50,13 @@ def to_imageset(input_filename, extra_filename=None):
         detector = models.get_detector()
         if detector_name.strip() == "PILATUS":
             from dxtbx.model import ParallaxCorrectedPxMmStrategy
+            from cctbx.eltbx import attenuation_coefficient
 
-            la = 0.252500934883
+            table = attenuation_coefficient.get_table("Si")
+            mu = table.mu_at_angstrom(wavelength) / 10.0
+            t0 = handle.sensor_thickness
             for panel in detector:
-                panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(la))
+                panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, t0))
         imageset.set_beam(models.get_beam())
         imageset.set_detector(detector)
         imageset.set_goniometer(models.get_goniometer())
