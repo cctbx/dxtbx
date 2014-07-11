@@ -21,7 +21,7 @@ class Test(object):
         self.detector = models.get_detector()
         self.beam = models.get_beam()
         assert len(self.detector) == 1
-        self.t0 = 0.0
+        self.t0 = 0.320
         from cctbx.eltbx import attenuation_coefficient
 
         table = attenuation_coefficient.get_table("Si")
