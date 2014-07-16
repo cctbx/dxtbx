@@ -47,7 +47,7 @@ class FormatHDF5Dectris(FormatHDF5):
             slow_direction="-y",
             pixel_size=(self.detectorbase.pixel_size, self.detectorbase.pixel_size),
             image_size=(self.detectorbase.size1, self.detectorbase.size2),
-            trusted_range=(0, self.detectorbase.saturation),
+            trusted_range=(-1, self.detectorbase.saturation),
             mask=[],
         )  # a list of dead rectangles
 
