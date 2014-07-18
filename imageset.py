@@ -1123,7 +1123,9 @@ class ImageSetFactory(object):
         return imagesetlist
 
     @staticmethod
-    def from_template(template, image_range=None, check_headers=False):
+    def from_template(
+        template, image_range=None, check_headers=False, check_format=True
+    ):
         """Create a new sweep from a template.
 
         Params:
@@ -1138,6 +1140,9 @@ class ImageSetFactory(object):
         import os
         from dxtbx.format.Registry import Registry
         from dxtbx.sweep_filenames import template_image_range
+
+        if not check_format:
+            assert not check_headers
 
         # Check the template is valid
         if template.count("#") < 1:
@@ -1159,10 +1164,19 @@ class ImageSetFactory(object):
         filenames = SweepFileList(template_format, array_range)
 
         # Get the format class
-        format_class = Registry.find(filenames[0])
+        if check_format:
+            format_class = Registry.find(filenames[0])
+            if issubclass(format_class, FormatMultiImage):
+                assert len(filenames) == 1
+                format_instance = format_class(filenames[0])
+                reader = SingleFileReader(format_instance)
+            else:
+                reader = MultiFileReader(format_class, filenames)
+        else:
+            reader = NullReader(filenames)
 
         # Create the sweep object
-        sweep = ImageSweep(MultiFileReader(format_class, filenames))
+        sweep = ImageSweep(reader)
 
         # Check the sweep is valid
         if check_headers and not sweep.is_valid():
