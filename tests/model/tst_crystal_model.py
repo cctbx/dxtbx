@@ -253,6 +253,9 @@ Crystal:
     uc_minimum = uc.change_basis(cb_op_to_minimum)
     model_minimum = model.change_basis(cb_op_to_minimum)
     assert uc_minimum.is_similar_to(model_minimum.get_unit_cell())
+    assert model_minimum != model
+    model_minimum.update(model)
+    assert model_minimum == model
     #
     from scitbx.math import euler_angles
 
