@@ -175,13 +175,12 @@ class PanelGroup(VirtualPanel):
     def set_parent_frame(self, fast_axis, slow_axis, origin):
         """Set the parent frame.
 
-        Set's it's own parent plane and then, after updating it's global
-        frame, propagates the frame down to it's children.
+        Sets its own parent plane and then, after updating its global
+        frame, propagates the frame down to its children.
 
-        Params:
-            fast_axis The fast axis of the virtual detector plane
-            slow_axis The slow axis of the virtual detector plane
-            origin The origin vector to the virtual detector plane
+        :param fast_axis: The fast axis of the virtual detector plane
+        :param slow_axis: The slow axis of the virtual detector plane
+        :param origin: The origin vector to the virtual detector plane
 
         """
         VirtualPanel.set_parent_frame(self, fast_axis, slow_axis, origin)
@@ -193,13 +192,12 @@ class PanelGroup(VirtualPanel):
     def set_local_frame(self, fast_axis, slow_axis, origin):
         """Set the local frame.
 
-        Set's it's own local plane and then, after updating it's global
-        frame, propagates the frame down to it's children.
+        Sets its own local plane and then, after updating its global
+        frame, propagates the frame down to its children.
 
-        Params:
-            fast_axis The fast axis of the virtual detector plane
-            slow_axis The slow axis of the virtual detector plane
-            origin The origin vector to the virtual detector plane
+        :param fast_axis: The fast axis of the virtual detector plane
+        :param slow_axis: The slow axis of the virtual detector plane
+        :param origin: The origin vector to the virtual detector plane
 
         """
         VirtualPanel.set_local_frame(self, fast_axis, slow_axis, origin)
@@ -211,13 +209,12 @@ class PanelGroup(VirtualPanel):
     def set_frame(self, fast_axis, slow_axis, origin):
         """Set the local frame.
 
-        Set's it's own global plane and then, after updating it's local
-        frame, propagates the frame down to it's children.
+        Sets its own global plane and then, after updating its local
+        frame, propagates the frame down to its children.
 
-        Params:
-            fast_axis The fast axis of the virtual detector plane
-            slow_axis The slow axis of the virtual detector plane
-            origin The origin vector to the virtual detector plane
+        :param fast_axis: The fast axis of the virtual detector plane
+        :param slow_axis: The slow axis of the virtual detector plane
+        :param origin: The origin vector to the virtual detector plane
 
         """
         VirtualPanel.set_frame(self, fast_axis, slow_axis, origin)
@@ -229,8 +226,8 @@ class PanelGroup(VirtualPanel):
     def add_group(self):
         """Add a new group to this group.
 
-        Returns:
-            A new panel group
+        :returns: A new panel group
+        :rtype: PanelGroup
 
         """
         group = PanelGroup(self)
@@ -243,8 +240,8 @@ class PanelGroup(VirtualPanel):
     def add_panel(self, panel):
         """Add a new panel to this group.
 
-        Returns:
-            A new panel
+        :returns: A new panel
+        :rtype: Panel
 
         """
         assert isinstance(panel, Panel)
@@ -260,8 +257,7 @@ class PanelGroup(VirtualPanel):
     def __getitem__(self, index):
         """Get the child at the given index.
 
-        Params:
-            index The index of the child to get.
+        :param index: The index of the child to get.
 
         """
         return self._children[index]
