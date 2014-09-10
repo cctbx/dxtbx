@@ -80,6 +80,8 @@ class FormatCBFMiniPilatusDLS6MSN100F(FormatCBFMiniPilatus):
 
         FormatCBFMiniPilatus.__init__(self, image_file)
 
+        self._raw_data = None
+
         return
 
     # FIXME this beamline has a kappa goniometer so should really be supporting this
