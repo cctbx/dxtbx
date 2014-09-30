@@ -491,7 +491,7 @@ class ExperimentListDict(object):
             )
             scan = ExperimentListDict.model_or_none(self._slist, eobj, "scan")
             crystal = ExperimentListDict.model_or_none(self._clist, eobj, "crystal")
-            key = (eobj["imageset"], eobj.get("scan", None))
+            key = (eobj.get("imageset", None), eobj.get("scan", None))
             try:
                 imageset = imagesets[key]
             except Exception:
