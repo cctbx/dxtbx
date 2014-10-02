@@ -221,16 +221,13 @@ class ExperimentList(object):
         """
         from libtbx.containers import OrderedDict
 
-        temp = OrderedDict(
-            [
-                (e.imageset.reader(), i)
-                for i, e in enumerate(self)
-                if e.imageset is not None
-            ]
-        )
         return OrderedDict(
-            [(self[i].imageset.complete_set(), None) for i in temp.itervalues()]
+            [(e.imageset, None) for e in self if e.imageset is not None]
         ).keys()
+        # temp = OrderedDict([(e.imageset.reader(), i)
+        #   for i, e in enumerate(self) if e.imageset is not None])
+        # return OrderedDict([(self[i].imageset.complete_set(), None)
+        #   for i in temp.itervalues()]).keys()
 
     def is_consistent(self):
         """ Check all the models are consistent. """
@@ -259,7 +256,7 @@ class ExperimentList(object):
     def to_dict(self):
         """ Serialize the experiment list to dictionary. """
         from libtbx.containers import OrderedDict
-        from dxtbx.imageset import ImageSet, ImageSweep
+        from dxtbx.imageset import ImageSet, ImageSweep, MemImageSet
         from dxtbx.serialize.crystal import to_dict as crystal_to_dict
         from dxtbx.format.FormatMultiImage import FormatMultiImage
 
@@ -332,6 +329,8 @@ class ExperimentList(object):
                 result["imageset"].append(
                     OrderedDict([("__id__", "ImageSweep"), ("template", template)])
                 )
+            elif isinstance(imset, MemImageSet):
+                result["imageset"].append(OrderedDict([("__id__", "MemImageSet")]))
             elif isinstance(imset, ImageSet):
                 result["imageset"].append(
                     OrderedDict([("__id__", "ImageSet"), ("images", imset.paths())])
@@ -505,6 +504,10 @@ class ExperimentListDict(object):
                         imageset = self._make_stills(imageset)
                     elif imageset["__id__"] == "ImageSweep":
                         imageset = self._make_sweep(imageset, scan)
+                    elif imageset["__id__"] == "MemImageSet":
+                        imageset = self._make_mem_imageset(imageset)
+                    else:
+                        raise RuntimeError("Unknown imageset type")
 
                     # Fill in any models if they aren't already there
                     if beam is None:
@@ -546,6 +549,10 @@ class ExperimentListDict(object):
 
         # Return the experiment list
         return el
+
+    def _make_mem_imageset(self, imageset):
+        """ Can't make a mem imageset from dict. """
+        return None
 
     def _make_stills(self, imageset):
         """ Make a still imageset. """
