@@ -18,7 +18,7 @@ class FormatSMVADSCSN(FormatSMVADSC):
             return False
         try:
             int(header["DETECTOR_SN"])
-        except KeyError as ValueError:
+        except (KeyError, ValueError):
             return False
 
         return True

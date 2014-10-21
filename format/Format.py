@@ -13,6 +13,7 @@
 # goniometers etc. from the headers and hence a format specific factory.
 
 from __future__ import division
+from __future__ import print_function
 
 import sys
 
@@ -141,6 +142,13 @@ class Format(object):
 
         except exceptions.Exception as e:
             # FIXME ideally should not squash the errors here...
+
+            from traceback import print_exc
+
+            print("*** Caught exception ***")
+            print(e)
+            print_exc()
+
             pass
         finally:
             self._end()
