@@ -17,8 +17,6 @@ from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 def read_cbf_image_as_double(cbf_image):
-    # from scitbx.array_family import flex
-    # from cbflib_adaptbx import uncompress, compress
     from cbflib_adaptbx import uncompress
     import binascii
 
