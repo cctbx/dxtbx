@@ -214,11 +214,12 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
 
     def _scan(self):
         """Return the scan information for this image."""
+        import calendar
 
         rotation = map(float, self._header_dictionary["ROTATION"].split())
 
         format = self._scan_factory.format("SMV")
-        epoch = time.mktime(
+        epoch = calendar.timegm(
             time.strptime(
                 self._header_dictionary["DTREK_DATE_TIME"], "%d-%b-%Y %H:%M:%S"
             )

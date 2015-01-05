@@ -13,6 +13,7 @@ import time
 
 
 def get_pilatus_timestamp(timestamp_string):
+    import calendar
 
     timestamp, milliseconds = timestamp_string.split(".")
 
@@ -20,7 +21,7 @@ def get_pilatus_timestamp(timestamp_string):
 
         try:
             struct_time = time.strptime(timestamp, format)
-            return time.mktime(struct_time) + float("0." + milliseconds)
+            return calendar.timegm(struct_time) + float("0." + milliseconds)
 
         except:  # intentional
             pass
