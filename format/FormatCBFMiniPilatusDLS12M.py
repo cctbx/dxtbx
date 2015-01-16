@@ -62,13 +62,11 @@ def read_cbf_image(cbf_image):
         packed=data[data_offset : data_offset + size], fast=fast, slow=slow
     )
 
-    # FIXME make masking work
-    if False:
-        mask = read_mask()
-        assert len(mask) == len(pixel_values)
+    mask = read_mask()
+    assert len(mask) == len(pixel_values)
 
-        isel = (mask == -2).iselection()
-        pixel_values.set_selected(isel, mask.select(isel))
+    isel = (mask == -2).iselection()
+    pixel_values.as_1d().set_selected(isel, mask.select(isel))
 
     return pixel_values
 
