@@ -102,14 +102,12 @@ class FormatRAXISIVSPring8(Format):
 
         beam = (beam_x * dx, beam_y * dy)
 
-        return self._detector_factory.two_theta(
+        return self._detector_factory.simple(
             "IMAGE_PLATE",
             distance,
             beam,
-            "+y",
-            "-x",
             "+x",
-            two_theta,
+            "+y",
             (dx, dy),
             (nx, ny),
             (0, 1000000),
