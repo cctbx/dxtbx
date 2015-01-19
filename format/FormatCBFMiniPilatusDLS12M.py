@@ -29,13 +29,12 @@ def read_mask():
     global __mask
     if not __mask:
         import os
-        import bz2
         import cPickle as pickle
         from scitbx.array_family import flex
 
         source_dir = os.path.split(__file__)[0]
-        mask_file = os.path.join(source_dir, "FormatCBFMiniPilatusDLS12M.pbz2")
-        __mask = pickle.load(bz2.BZ2File(mask_file, "rb"))
+        mask_file = os.path.join(source_dir, "FormatCBFMiniPilatusDLS12M.pickle")
+        __mask = pickle.load(open(mask_file, "rb"))
     return __mask
 
 
@@ -70,11 +69,8 @@ def read_cbf_image(cbf_image):
         packed=data[data_offset : data_offset + size], fast=fast, slow=slow
     )
 
-    mask = read_mask()
-    assert len(mask) == len(pixel_values)
-
-    isel = (mask == -2).iselection()
-    pixel_values.as_1d().set_selected(isel, mask.select(isel))
+    isel = read_mask()
+    pixel_values.as_1d().set_selected(isel, -2)
 
     return pixel_values
 
