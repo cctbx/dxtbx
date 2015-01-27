@@ -513,6 +513,8 @@ class detector_factory:
         trusted_range=(0.0, 0.0),
         px_mm=None,
         name="Panel",
+        thickness=0.0,
+        material="",
     ):
         """Ensure all types are correct before creating c++ detector class."""
 
@@ -531,6 +533,8 @@ class detector_factory:
             p.set_pixel_size(tuple(map(float, pixel_size)))
             p.set_image_size(tuple(map(int, image_size)))
             p.set_trusted_range(tuple(map(float, trusted_range)))
+            p.set_thickness(thickness)
+            p.set_material(material)
             p.set_px_mm_strategy(px_mm)
         except Exception as e:
             print(e)
