@@ -274,11 +274,12 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
 
         pixel_x *= 1000.0
         pixel_y *= 1000.0
+        distance *= 1000.0
 
         if single_panel:
             detector = self._detector_factory.simple(
                 "PAD",
-                distance * 1000.0,
+                distance,
                 (beam_x * pixel_x, beam_y * pixel_y),
                 "+x",
                 "-y",
