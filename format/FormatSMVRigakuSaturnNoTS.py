@@ -29,6 +29,9 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
 
         size, header = FormatSMVRigaku.get_smv_header(image_file)
 
+        if "DTREK_DATE_TIME" in header:
+            return False
+
         wanted_header_items = [
             "DETECTOR_NUMBER",
             "DETECTOR_NAMES",
