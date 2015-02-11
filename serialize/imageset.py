@@ -114,7 +114,7 @@ def basic_imageset_from_dict(d):
     return imageset
 
 
-def imagesweep_from_dict(d):
+def imagesweep_from_dict(d, check_format=True):
     """Construct and image sweep from the dictionary."""
     from dxtbx.imageset import ImageSetFactory
     from dxtbx.serialize import beam, detector, goniometer, scan
@@ -132,7 +132,9 @@ def imagesweep_from_dict(d):
 
     # Construct the sweep
     try:
-        sweep = ImageSetFactory.from_template(template, image_range)[0]
+        sweep = ImageSetFactory.from_template(
+            template, image_range, check_format=check_format
+        )[0]
 
         # Get the existing models as dictionaries
         beam_dict = beam.to_dict(sweep.get_beam())
@@ -157,7 +159,7 @@ def imagesweep_from_dict(d):
     return sweep
 
 
-def imageset_from_dict(d):
+def imageset_from_dict(d, check_format=True):
     """Convert the dictionary to a sweep
 
     Params:
@@ -178,6 +180,6 @@ def imageset_from_dict(d):
     if "filenames" in d:
         return basic_imageset_from_dict(d)
     elif "template" in d:
-        return imagesweep_from_dict(d)
+        return imagesweep_from_dict(d, check_format=check_format)
     else:
         raise TypeError("Unable to deserialize given imageset")
