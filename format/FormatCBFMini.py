@@ -38,6 +38,8 @@ class FormatCBFMini(FormatCBF):
                 return True
             if "# Detector" in record and "PILATUS" in record:  # CBFlib v0.8.0 allowed
                 return True
+            if "# Detector" in record and "ADSC" in record and "HF-4M" in header:
+                return True
 
         return False
 
