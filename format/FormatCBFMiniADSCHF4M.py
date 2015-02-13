@@ -15,7 +15,21 @@ from __future__ import print_function
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
-# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
+
+def get_adsc_timestamp(timestamp):
+    import calendar
+    import time
+
+    for format in ["%a_%b_%d_%H:%M:%S_%Y"]:
+
+        try:
+            struct_time = time.strptime(timestamp, format)
+            return calendar.timegm(struct_time)
+
+        except:  # intentional
+            pass
+
+    raise RuntimeError, "timestamp %s not recognised" % timestamp
 
 
 class FormatCBFMiniADSCHF4M(FormatCBFMini):
@@ -23,8 +37,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
     @staticmethod
     def understand(image_file):
-        """Check to see if this looks like an Pilatus mini CBF format image,
-        i.e. we can make sense of it."""
 
         header = FormatCBFMini.get_cbf_header(image_file)
 
@@ -46,9 +58,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         return
 
-    # FIXME this beamline has a kappa goniometer so should really be supporting
-    # this in here...
-
     def _start(self):
         FormatCBFMini._start(self)
         try:
@@ -66,8 +75,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         if "Phi" in self._cif_header_dictionary:
             phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
-            # NKS remove assertion that phi == 0 so those data can be processed
-            # assert( phi_value == 0.0)
 
         return self._goniometer_factory.single_axis()
 
@@ -153,7 +160,7 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
         osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
         osc_range = float(self._cif_header_dictionary["Angle_increment"].split()[0])
 
-        timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
+        timestamp = get_adsc_timestamp(self._cif_header_dictionary["timestamp"])
 
         return self._scan_factory.single(
             self._image_file, format, exposure_time, osc_start, osc_range, timestamp
