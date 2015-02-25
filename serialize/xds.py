@@ -245,7 +245,22 @@ class to_xds(object):
         )
 
         if detector == "PILATUS":
-            print("SENSOR_THICKNESS= 0.32", file=out)
+            print(
+                "SENSOR_THICKNESS= %.3f" % self.get_detector()[0].get_thickness(),
+                file=out,
+            )
+            if self.get_detector()[0].get_material():
+                from cctbx.eltbx import attenuation_coefficient
+
+                material = self.get_detector()[0].get_material()
+                table = attenuation_coefficient.get_table(material)
+                mu = table.mu_at_angstrom(self.wavelength) / 10.0
+                print(
+                    "!SENSOR_MATERIAL / THICKNESS %s %.3f"
+                    % (material, self.get_detector()[0].get_thickness()),
+                    file=out,
+                )
+                print("!SILICON= %f" % mu, file=out)
 
         print(
             "DIRECTION_OF_DETECTOR_X-AXIS= %.3f %.3f %.3f" % self.detector_x_axis,
