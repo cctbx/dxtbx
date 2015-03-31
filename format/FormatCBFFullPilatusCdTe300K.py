@@ -10,10 +10,11 @@
 from __future__ import division
 from __future__ import print_function
 
-import pycbf
+# import pycbf
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
-from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
+
+# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 class FormatCBFFullPilatusCdTe300K(FormatCBFFullPilatus):

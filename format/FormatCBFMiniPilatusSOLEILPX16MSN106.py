@@ -11,8 +11,9 @@ from __future__ import division
 from __future__ import print_function
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
-from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
+
+# from dxtbx.model import ParallaxCorrectedPxMmStrategy
+# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 def read_cbf_image_as_double(cbf_image):
@@ -84,7 +85,7 @@ class FormatCBFMiniPilatusSOLEILPX16MSN106(FormatCBFMiniPilatus):
     def _goniometer(self):
         """Construct a goniometer from the records in the mini CBF header."""
 
-        import math
+        # import math
 
         alpha = float(self._cif_header_dictionary["Alpha"].split()[0])
         omega = float(self._cif_header_dictionary["Chi"].split()[0])

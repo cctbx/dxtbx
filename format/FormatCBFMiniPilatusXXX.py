@@ -12,8 +12,9 @@ from __future__ import division
 from __future__ import print_function
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
-from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
+
+# from dxtbx.model import ParallaxCorrectedPxMmStrategy
+# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 class FormatCBFMiniPilatusXXX(FormatCBFMiniPilatus):

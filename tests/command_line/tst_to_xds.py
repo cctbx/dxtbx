@@ -7,7 +7,8 @@ import os
 import libtbx.load_env
 from libtbx import easy_run
 from libtbx.test_utils import open_tmp_file
-from libtbx.test_utils import show_diff
+
+# from libtbx.test_utils import show_diff
 
 from dxtbx.serialize import dump
 from dxtbx.imageset import ImageSetFactory
