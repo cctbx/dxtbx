@@ -515,6 +515,7 @@ class detector_factory:
         name="Panel",
         thickness=0.0,
         material="",
+        mu=0.0,
     ):
         """Ensure all types are correct before creating c++ detector class."""
 
@@ -553,6 +554,7 @@ class detector_factory:
         trusted_range=(0.0, 0.0),
         mask=[],
         px_mm=None,
+        mu=0.0,
     ):
         """Construct a simple detector at a given distance from the sample
         along the direct beam presumed to be aligned with -z, offset by the
@@ -592,6 +594,7 @@ class detector_factory:
             image_size,
             trusted_range,
             px_mm,
+            mu=mu,
         )
         detector[0].mask = mask
         return detector
@@ -610,6 +613,7 @@ class detector_factory:
         trusted_range=(0.0, 0.0),
         mask=[],
         px_mm=None,
+        mu=0.0,
     ):
         """Construct a simple detector at a given distance from the sample
         along the direct beam presumed to be aligned with -z, offset by the
@@ -656,6 +660,7 @@ class detector_factory:
             image_size,
             trusted_range,
             px_mm,
+            mu=mu,
         )
 
         detector.mask = mask
