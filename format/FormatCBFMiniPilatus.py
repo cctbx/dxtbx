@@ -120,9 +120,6 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         mu = table.mu_at_angstrom(wavelength) / 10.0
         t0 = thickness
 
-        # FIXME would also be very nice to be able to take into account the
-        # misalignment of the individual modules given the calibration information...
-
         detector = self._detector_factory.simple(
             "PAD",
             distance * 1000.0,
