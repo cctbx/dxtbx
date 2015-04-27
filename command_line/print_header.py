@@ -23,8 +23,9 @@ def print_header():
 
         if not issubclass(format_class, FormatMultiImage):
             try:
-                counts = flex.sum(i.get_raw_data())
-                print("Total Counts: %d" % counts)
+                d = i.get_raw_data()
+                d = d.set_selected((d < 0), 0)
+                print("Total Counts: %d" % flex.sum(d))
             except AttributeError as e:
                 print(e)
 
