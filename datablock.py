@@ -172,6 +172,11 @@ class DataBlock(object):
         from dxtbx.format.FormatMultiImage import FormatMultiImage
         from os.path import abspath
 
+        def abspath_or_none(filename):
+            if filename is None:
+                return None
+            return abspath(filename)
+
         # Get a list of all the unique models
         b = list(self.unique_beams())
         d = list(self.unique_detectors())
@@ -197,6 +202,18 @@ class DataBlock(object):
                         [
                             ("__id__", "ImageSweep"),
                             ("template", template),
+                            (
+                                "mask",
+                                abspath_or_none(iset.external_lookup.mask.filename),
+                            ),
+                            (
+                                "gain",
+                                abspath_or_none(iset.external_lookup.gain.filename),
+                            ),
+                            (
+                                "pedestal",
+                                abspath_or_none(iset.external_lookup.pedestal.filename),
+                            ),
                             ("beam", b.index(iset.get_beam())),
                             ("detector", d.index(iset.get_detector())),
                             ("goniometer", g.index(iset.get_goniometer())),
@@ -209,6 +226,15 @@ class DataBlock(object):
                 for i in range(len(iset)):
                     image_dict = OrderedDict()
                     image_dict["filename"] = abspath(iset.get_path(i))
+                    image_dict["mask"] = abspath_or_none(
+                        iset.external_lookup.mask.filename
+                    )
+                    image_dict["gain"] = abspath_or_none(
+                        iset.external_lookup.gain.filename
+                    )
+                    image_dict["pedestal"] = abspath_or_none(
+                        iset.external_lookup.pedestal.filename
+                    )
                     try:
                         image_dict["beam"] = b.index(iset.get_beam(i))
                     except Exception:
@@ -618,6 +644,7 @@ class DataBlockDictImporter(object):
         from dxtbx.model import HierarchicalDetector
         from dxtbx.serialize.filename import load_path
         from dxtbx.imageset import ImageSetFactory
+        import pickle
 
         # If we have a list, extract for each dictionary in the list
         if isinstance(obj, list):
@@ -663,18 +690,32 @@ class DataBlockDictImporter(object):
                 beam, detector, gonio, scan = load_models(imageset)
                 template = load_path(imageset["template"])
                 i0, i1 = scan.get_image_range()
-                imagesets.append(
-                    ImageSetFactory.make_sweep(
-                        template,
-                        range(i0, i1 + 1),
-                        None,
-                        beam,
-                        detector,
-                        gonio,
-                        scan,
-                        check_format,
-                    )
+                iset = ImageSetFactory.make_sweep(
+                    template,
+                    range(i0, i1 + 1),
+                    None,
+                    beam,
+                    detector,
+                    gonio,
+                    scan,
+                    check_format,
                 )
+                if "mask" in imageset and imageset["mask"] is not None:
+                    imageset["mask"] = load_path(imageset["mask"])
+                    with open(imageset["mask"]) as infile:
+                        iset.external_lookup.mask.filename = imageset["mask"]
+                        iset.external_lookup.mask.data = pickle.load(infile)
+                if "gain" in imageset and imageset["gain"] is not None:
+                    imageset["gain"] = load_path(imageset["gain"])
+                    with open(imageset["gain"]) as infile:
+                        iset.external_lookup.gain.filename = imageset["gain"]
+                        iset.external_lookup.gain.data = pickle.load(infile)
+                if "pedestal" in imageset and imageset["pedestal"] is not None:
+                    imageset["pedestal"] = load_path(imageset["pedestal"])
+                    with open(imageset["pedestal"]) as infile:
+                        iset.external_lookup.pedestal.filename = imageset["pedestal"]
+                        iset.external_lookup.pedestal.data = pickle.load(infile)
+                imagesets.append(iset)
             elif ident == "ImageSet":
                 filenames = [image["filename"] for image in imageset["images"]]
                 iset = ImageSetFactory.make_imageset(filenames, None, check_format)
@@ -686,6 +727,21 @@ class DataBlockDictImporter(object):
                         iset.set_goniometer(gonio, i)
                     if scan:
                         iset.set_scan(scan, i)
+                if "mask" in imageset and imageset["mask"] is not None:
+                    imageset["mask"] = load_path(imageset["mask"])
+                    with open(imageset["mask"]) as infile:
+                        iset.external_lookup.mask.filename = imageset["mask"]
+                        iset.external_lookup.mask.data = pickle.load(infile)
+                if "gain" in imageset and imageset["gain"] is not None:
+                    imageset["gain"] = load_path(imageset["gain"])
+                    with open(imageset["gain"]) as infile:
+                        iset.external_lookup.gain.filename = imageset["gain"]
+                        iset.external_lookup.gain.data = pickle.load(infile)
+                if "pedestal" in imageset and imageset["pedestal"] is not None:
+                    imageset["pedestal"] = load_path(imageset["pedestal"])
+                    with open(imageset["pedestal"]) as infile:
+                        iset.external_lookup.pedestal.filename = imageset["pedestal"]
+                        iset.external_lookup.pedestal.data = pickle.load(infile)
                 imagesets.append(iset)
             else:
                 raise RuntimeError("expected ImageSet/ImageSweep, got %s" % ident)
