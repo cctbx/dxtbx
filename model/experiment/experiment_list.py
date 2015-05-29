@@ -22,6 +22,7 @@ class Experiment(object):
       - goniometer The goniometer model
       - scan The scan model
       - crystal The crystal model
+      - profile The profile model
 
     Some of these may be set to "None"
 
@@ -35,6 +36,7 @@ class Experiment(object):
         goniometer=None,
         scan=None,
         crystal=None,
+        profile=None,
     ):
         """ Initialise the experiment with the given models. """
         self.imageset = imageset
@@ -43,6 +45,7 @@ class Experiment(object):
         self.goniometer = goniometer
         self.scan = scan
         self.crystal = crystal
+        self.profile = profile
 
     def __contains__(self, item):
         """ Check if the experiment contains the model. """
@@ -53,6 +56,7 @@ class Experiment(object):
             or item is self.goniometer
             or item is self.scan
             or item is self.crystal
+            or item is self.profile
         )
 
     def __eq__(self, other):
@@ -66,6 +70,7 @@ class Experiment(object):
             and self.goniometer is other.goniometer
             and self.scan is other.scan
             and self.crystal is other.crystal
+            and self.profile is other.profile
         )
 
     def __ne__(self, other):
@@ -170,6 +175,8 @@ class ExperimentList(object):
                 exp.scan = b
             elif exp.crystal is a:
                 exp.crystal = b
+            elif exp.profile is a:
+                exp.profile = b
             else:
                 raise ValueError("unidentified model %s" % a)
 
@@ -213,6 +220,12 @@ class ExperimentList(object):
         from libtbx.containers import OrderedDict
 
         return OrderedDict([(e.crystal, None) for e in self]).keys()
+
+    def profiles(self):
+        """ Get a list of the unique profile models (includes None). """
+        from libtbx.containers import OrderedDict
+
+        return OrderedDict([(e.profile, None) for e in self]).keys()
 
     def imagesets(self):
         """Get a list of the unique imagesets (includes None).
@@ -270,6 +283,7 @@ class ExperimentList(object):
         slist = self.scans()
         clist = self.crystals()
         ilist = self.imagesets()
+        plist = self.profiles()
 
         # Create the output dictionary
         result = OrderedDict()
@@ -297,6 +311,8 @@ class ExperimentList(object):
                 obj["scan"] = find_index(slist, e.scan)
             if e.crystal is not None:
                 obj["crystal"] = find_index(clist, e.crystal)
+            if e.profile is not None:
+                obj["profile"] = find_index(plist, e.profile)
             if e.imageset is not None:
                 same = [e.imageset is imset for imset in ilist]
                 assert same.count(True) == 1
@@ -346,6 +362,7 @@ class ExperimentList(object):
         result["goniometer"] = [g.to_dict() for g in glist if g is not None]
         result["scan"] = [s.to_dict() for s in slist if s is not None]
         result["crystal"] = [crystal_to_dict(c) for c in clist if c is not None]
+        result["profile"] = [p.to_dict() for p in plist if p is not None]
 
         # Return the dictionary
         return result
@@ -399,6 +416,7 @@ class ExperimentListDict(object):
         self._glist = self._extract_models("goniometer")
         self._slist = self._extract_models("scan")
         self._clist = self._extract_models("crystal")
+        self._plist = self._extract_models("profile")
 
         # Go through all the imagesets and make sure the dictionary
         # references by an index rather than a file path. Experiments
@@ -663,6 +681,13 @@ class ExperimentListDict(object):
         return from_dict(obj)
 
     @staticmethod
+    def _profile_from_dict(obj):
+        """ Get the profile from a dictionary. """
+        from dxtbx.model import ProfileFactory
+
+        return ProfileFactory.from_dict(obj)
+
+    @staticmethod
     def _from_file(filename):
         """ Load a model dictionary from a file. """
         from dxtbx.serialize.load import _decode_dict
@@ -724,6 +749,10 @@ class ExperimentListDumper(object):
                 ("%s_crystal_%d.json" % (basepath, i), d)
                 for i, d in enumerate(dictionary["crystal"])
             ]
+            plist = [
+                ("%s_profile_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["profile"])
+            ]
 
             # Get the list of experiments
             edict = OrderedDict(
@@ -744,9 +773,18 @@ class ExperimentListDumper(object):
                     e["scan"] = slist[e["scan"]][0]
                 if "crystal" in e:
                     e["crystal"] = clist[e["crystal"]][0]
+                if "profile" in e:
+                    e["profile"] = plist[e["profile"]][0]
 
             to_write = (
-                ilist + blist + dlist + glist + slist + clist + [(filename, edict)]
+                ilist
+                + blist
+                + dlist
+                + glist
+                + slist
+                + clist
+                + plist
+                + [(filename, edict)]
             )
         else:
             to_write = [(filename, dictionary)]
