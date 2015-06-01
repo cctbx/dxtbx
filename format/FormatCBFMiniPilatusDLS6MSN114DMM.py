@@ -13,8 +13,6 @@ from __future__ import print_function
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatStill import FormatStill
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
-from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 class FormatCBFMiniPilatusDLS6MSN114DMM(FormatCBFMiniPilatus, FormatStill):
