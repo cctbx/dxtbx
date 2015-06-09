@@ -149,6 +149,7 @@ class TestExperimentList(object):
         self.tst_indices()
         self.tst_models()
         self.tst_to_dict()
+        self.tst_where()
 
     def tst_contains(self):
 
@@ -325,6 +326,26 @@ class TestExperimentList(object):
             assert eobj["scan"] == s[i]
 
         # Test passed
+        print("OK")
+
+    def tst_where(self):
+        for beam in self.el.beams():
+            assert beam is not None
+            for i in self.el.where(beam=beam):
+                assert self.el[i].beam is beam
+        for goniometer in self.el.goniometers():
+            assert goniometer is not None
+            for i in self.el.where(goniometer=goniometer):
+                assert self.el[i].goniometer is goniometer
+        for scan in self.el.scans():
+            assert scan is not None
+            for i in self.el.where(scan=scan):
+                assert self.el[i].scan is scan
+        for detector in self.el.detectors():
+            assert detector is not None
+            for i in self.el.where(detector=detector):
+                assert self.el[i].detector is detector
+
         print("OK")
 
     def generate(self):
