@@ -1,10 +1,10 @@
 from __future__ import division
 from __future__ import print_function
 
-from dxtbx.model import Profile, ProfileFactory
+from dxtbx.model import ProfileModelBaseIface, ProfileModelFactory
 
 
-class NullProfile(Profile):
+class NullProfile(ProfileModelBaseIface):
 
     name = "null"
 
@@ -26,7 +26,7 @@ class Test(object):
     def run(self):
         profile1 = NullProfile(10)
         dictionary = profile1.to_dict()
-        profile2 = ProfileFactory.from_dict(dictionary)
+        profile2 = ProfileModelFactory.from_dict(dictionary)
         assert profile1.parameter == profile2.parameter
         print("OK")
 
