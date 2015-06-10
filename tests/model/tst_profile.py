@@ -12,11 +12,14 @@ class NullProfile(ProfileModelBaseIface):
         self.parameter = parameter
 
     def to_dict(self):
-        return {"name": self.name, "parameter": self.parameter}
+        return {"__id__": self.name, "parameter": self.parameter}
 
     @classmethod
     def from_dict(Class, obj):
         return Class(obj["parameter"])
+
+
+ProfileModelFactory.append(NullProfile.name, NullProfile)
 
 
 class Test(object):
