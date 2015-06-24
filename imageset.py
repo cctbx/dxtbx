@@ -506,7 +506,9 @@ class ImageSet(object):
         """
         if isinstance(item, slice):
             indices = self._indices[item]
-            return ImageSet(self.reader(), indices, self._models)
+            subset = ImageSet(self.reader(), indices, self._models)
+            subset.external_lookup = self.external_lookup
+            return subset
         else:
             return self.get_corrected_data(item)
 
@@ -774,7 +776,9 @@ class MemImageSet(ImageSet):
         """
         if isinstance(item, slice):
             indices = self._indices[item]
-            return MemImageSet(self._images, indices)
+            subset = MemImageSet(self._images, indices)
+            subset.external_lookup = self.external_lookup
+            return subset
         else:
             return self.get_corrected_data(item)
 
@@ -1020,7 +1024,7 @@ class ImageSweep(ImageSet):
                 scan = None
             else:
                 scan = self._scan[item]
-            return ImageSweep(
+            subset = ImageSweep(
                 self.reader(),
                 self._indices[item],
                 self._beam,
@@ -1028,6 +1032,8 @@ class ImageSweep(ImageSet):
                 self._detector,
                 scan,
             )
+            subset.external_lookup = self.external_lookup
+            return subset
         else:
             return self.reader().read(self._indices[item])
 
