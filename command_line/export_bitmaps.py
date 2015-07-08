@@ -43,15 +43,12 @@ dxtbx.export_bitmaps image_files [options]
             % s.getvalue()
         )
 
-    from dxtbx.imageset import ImageSetFactory
+    from dxtbx.datablock import DataBlockFactory
 
-    imagesets = ImageSetFactory.new(args, ignore_unknown=True)
     unhandled = []
-    assert len(imagesets) > 0
-    for imageset in imagesets:
-        for argument in args:
-            if argument not in imageset.paths():
-                unhandled.append(argument)
+    datablocks = DataBlockFactory.from_args(args, verbose=False, unhandled=unhandled)
+    assert len(datablocks) > 0
+    imagesets = datablocks[0].extract_imagesets()
 
     cmd_line = command_line.argument_interpreter(master_params=master_phil_scope)
     working_phil = cmd_line.process_and_fetch(args=unhandled)
