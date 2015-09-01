@@ -10,6 +10,7 @@
 
 from __future__ import division
 from __future__ import print_function
+import os
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
