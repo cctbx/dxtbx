@@ -30,6 +30,8 @@ def compare_tuples(a, b, tol=1.0e-6):
 def test_goniometer():
     """A test class for the goniometer class."""
 
+    from libtbx import easy_pickle
+
     axis = (1, 0, 0)
     fixed = (1, 0, 0, 0, 1, 0, 0, 0, 1)
 
@@ -90,10 +92,18 @@ def test_goniometer():
 
     kappa = goniometer_factory.kappa(50.0, -10.0, 30.0, 0.0, "-y", "phi")
 
+    s = easy_pickle.dumps(kappa)
+    kappa2 = easy_pickle.loads(s)
+    assert kappa == kappa2
+
     image = os.path.join(dxtbx_dir, "tests", "omega_scan.cbf")
     cbf = goniometer_factory.imgCIF(image)
 
     kappa = goniometer_factory.kappa(50.0, -10.0, 30.0, 20.0, "-y", "omega")
+
+    s = easy_pickle.dumps(kappa)
+    kappa2 = easy_pickle.loads(s)
+    assert kappa == kappa2
 
     print("OK")
 
