@@ -829,7 +829,6 @@ class DetectorFactory(object):
     def __init__(self, obj, beam):
         from dxtbx.model import Detector, Panel
         from cctbx.eltbx import attenuation_coefficient
-        from dxtbx.model import ParallaxCorrectedPxMmStrategy
         from scitbx import matrix
 
         # Get the handles
@@ -1013,7 +1012,8 @@ class DataList(object):
 
         d = self.lookup[index]
         i = index - self.offset[d]
-        return flex.double(self.datasets[d][i, :, :])
+        data = self.datasets[d][i, :, :]
+        return flex.int(data)
 
 
 class DataFactory(object):
