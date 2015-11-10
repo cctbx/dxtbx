@@ -22,6 +22,13 @@ from dxtbx_model_ext import SimplePxMmStrategy, ParallaxCorrectedPxMmStrategy
 from detector_helpers import detector_helper_sensors
 from detector_helpers import find_undefined_value
 
+import os
+
+if "DXTBX_OVERLOAD_SCALE" in os.environ:
+    dxtbx_overload_scale = float(os.environ["DXTBX_OVERLOAD_SCALE"])
+else:
+    dxtbx_overload_scale = 1
+
 
 class PanelTreeNode(object):
     """A class to wrap a virtual panel object and project methods for setting
@@ -762,7 +769,7 @@ class detector_factory:
 
         try:
             underload = find_undefined_value(cbf_handle)
-            overload = cbf_handle.get_overload(0)
+            overload = cbf_handle.get_overload(0) * dxtbx_overload_scale
             trusted_range = (underload, overload)
         except:  # intentional
             trusted_range = (0.0, 0.0)
@@ -818,7 +825,7 @@ class detector_factory:
         try:
             underload = find_undefined_value(cbf_handle)
             overload = cbf_handle.get_overload(0)
-            trusted_range = (underload, overload)
+            trusted_range = (underload, overload * dxtbx_overload_scale)
         except:  # intentional
             trusted_range = (0.0, 0.0)
 
