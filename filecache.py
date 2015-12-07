@@ -65,7 +65,7 @@ class lazy_file_cache:
         self._closed = False
 
         # Print debug information
-        self._debug = True
+        self._debug = False
 
         # Size of a block to read. This should not be smaller than 4k, which is the
         # default block size on many systems.
@@ -181,14 +181,15 @@ class lazy_file_cache:
         if tochar is None:
             # Simple case, no need for string processing.
 
-            if not self._all_cached:
-                # Ensure that relevant data is in cache
-                if maxbytes is None:
-                    self._cache_all()
-                else:
-                    self._cache_up_to(start + maxbytes)
+            if maxbytes is None:
+                # Ensure that all data is read
+                self._cache_all()
+                data = self._cache[start:]
 
-            data = self._cache[start : (start + maxbytes)]
+            else:
+                # Ensure that relevant data is in cache
+                self._cache_up_to(start + maxbytes)
+                data = self._cache[start : (start + maxbytes)]
 
         else:
             # Find slice ending in substring, optionally up to a maximum length
@@ -288,6 +289,8 @@ class pseudo_file:
         self._check_not_closed()
         if size > 0:
             data = self._cache_object.read(start=self._seek, maxbytes=size)
+        elif size == 0:
+            data = ""
         else:
             data = self._cache_object.read(start=self._seek)
         self._seek += len(data)
@@ -309,7 +312,7 @@ class pseudo_file:
         else:
             data = self._cache_object.read(start=self._seek)
         self._seek += len(data)
-        return data.split("\n")
+        return data.splitlines(True)
 
     def seek(self, offset, whence=os.SEEK_SET):
         self._check_not_closed()
