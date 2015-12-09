@@ -37,12 +37,11 @@
 #     cache.close()
 # Further access attempts will result in an exception.
 
-# NOTE: This code is currently NOT thread-safe!
-
 from __future__ import division
 from __future__ import print_function
-import os
 from cStringIO import StringIO
+import os
+from threading import Lock
 
 
 class lazy_file_cache:
@@ -55,6 +54,7 @@ class lazy_file_cache:
         # be closed.
         self._all_cached = False
         self._file = file_object
+        self._file_lock = Lock()
 
         # StringIO object containing cached information
         self._cache_object = StringIO()
@@ -84,42 +84,45 @@ class lazy_file_cache:
         '''Ensure that the file has been read up to "position"'''
 
         # Is read actually necessary?
-        if self._all_cached:
+        if self._all_cached or (position < self._cache_size):
             return
 
-        read_bytes = position - self._cache_size
-        if read_bytes <= 0:
-            return
+        with self._file_lock:
+            read_bytes = position - self._cache_size
+            # This looks like an unnecessary check, but required for concurrency
+            if read_bytes <= 0:
+                return
 
-        # Do not read less than a memory page, round up read size to a
-        # multiple of page sizes if necessary.
-        read_bytes = self._page_size * (
-            (read_bytes + self._page_size - 1) // self._page_size
-        )
-        if self._debug:
-            print("Reading %d bytes from file" % read_bytes)
-
-        expected_cache_size = self._cache_size + read_bytes
-
-        data = self._file.read(read_bytes)
-        self._cache_object.seek(self._cache_size)
-        self._cache_object.write(data)
-        self._cache_size = self._cache_object.tell()
-
-        if self._debug:
-            print(
-                "Read %d bytes from file, cache size %d" % (len(data), self._cache_size)
+            # Do not read less than a memory page, round up read size to a
+            # multiple of page sizes if necessary.
+            read_bytes = self._page_size * (
+                (read_bytes + self._page_size - 1) // self._page_size
             )
+            if self._debug:
+                print("Reading %d bytes from file" % read_bytes)
 
-        if expected_cache_size != self._cache_size:
-            # must have reached end of file
+            expected_cache_size = self._cache_size + read_bytes
+
+            data = self._file.read(read_bytes)
+            self._cache_object.seek(self._cache_size)
+            self._cache_object.write(data)
+            self._cache_size = self._cache_object.tell()
+
             if self._debug:
                 print(
-                    "Lazy cache reached EOF (%d != %d)"
-                    % (expected_cache_size, self._cache_size)
+                    "Read %d bytes from file, cache size %d"
+                    % (len(data), self._cache_size)
                 )
-            self._all_cached = True
-            self._close_file()
+
+            if expected_cache_size != self._cache_size:
+                # must have reached end of file
+                if self._debug:
+                    print(
+                        "Lazy cache reached EOF (%d != %d)"
+                        % (expected_cache_size, self._cache_size)
+                    )
+                self._all_cached = True
+                self._close_file()
 
     def _cache_all(self):
         """Read entire remaining file into cache."""
@@ -128,16 +131,17 @@ class lazy_file_cache:
         if self._all_cached:
             return
 
-        if self._debug:
-            print("Reading remaining file into cache")
+        with self._file_lock:
+            if self._debug:
+                print("Reading remaining file into cache")
 
-        data = self._file.read()
-        self._cache_object.seek(self._cache_size)
-        self._cache_object.write(data)
-        self._cache_size += len(data)
+            data = self._file.read()
+            self._cache_object.seek(self._cache_size)
+            self._cache_object.write(data)
+            self._cache_size += len(data)
 
-        self._all_cached = True
-        self._close_file()
+            self._all_cached = True
+            self._close_file()
 
     def _check_not_closed(self):
         if self._closed:
