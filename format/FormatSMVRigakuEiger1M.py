@@ -45,7 +45,6 @@ class FormatSMVRigakuEiger1M(FormatSMVRigaku):
 
     def _start(self):
 
-        print("starting")
         FormatSMVRigaku._start(self)
 
     def _goniometer(self):
