@@ -30,6 +30,7 @@ from dxtbx.format.nexus import DetectorFactory
 from dxtbx.format.nexus import GoniometerFactory
 from dxtbx.format.nexus import ScanFactory
 from dxtbx.format.nexus import DataFactory
+from dxtbx.format.nexus import MaskFactory
 
 
 class FormatNexus(FormatHDF5):
@@ -85,6 +86,7 @@ class FormatNexus(FormatHDF5):
         self._goniometer_model = GoniometerFactory(sample).model
         self._scan_model = ScanFactory(sample).model
         self._raw_data = DataFactory(data).model
+        self._mask = (MaskFactory(detector).mask,)
 
     def _end(self):
         return
@@ -117,6 +119,9 @@ class FormatNexus(FormatHDF5):
 
     def get_raw_data(self, index):
         return self._raw_data[index]
+
+    def get_mask(self, index=None):
+        return self._mask
 
     def get_num_images(self):
         return self._scan().get_num_images()
