@@ -1045,7 +1045,7 @@ class MaskFactory(object):
             from dials.array_family import flex
 
             height, width = dset.shape
-            mask_data = flex.int(dset[:, :].flatten()) != 0
+            mask_data = flex.int(dset[:, :].flatten()) == 0
             mask_data.reshape(flex.grid(height, width))
             return mask_data
 
