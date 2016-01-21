@@ -147,7 +147,7 @@ class FormatCBFMultiTile(FormatCBFFull):
 
         return self._beam_factory.imgCIF_H(self._cbf_handle)
 
-    def get_raw_data(self, index=None):
+    def get_raw_data(self):
         if self._raw_data is None:
             self._raw_data = []
 
@@ -192,9 +192,7 @@ class FormatCBFMultiTile(FormatCBFFull):
                     break
             assert len(d) == len(self._raw_data)
 
-        if index is not None:
-            return self._raw_data[index]
-        return self._raw_data[0]
+        return tuple(self._raw_data)
 
 
 if __name__ == "__main__":

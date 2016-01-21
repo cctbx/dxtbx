@@ -6,8 +6,14 @@ def overload(image_file):
     from dxtbx import load
 
     i = load(image_file)
-    d = i.get_detector()
-    return max(i.get_raw_data()) > d.get_trusted_range()[1]
+    data = i.get_raw_data()
+    if not isinstance(data, tuple):
+        data = (data,)
+    detector = i.get_detector()
+    for pid, (d, p) in enumerate(zip(data, detector)):
+        if max(d) > p.get_trusted_range()[1]:
+            return True
+    return False
 
 
 if __name__ == "__main__":
