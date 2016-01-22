@@ -398,7 +398,7 @@ class DataBlockTemplateImporter(object):
                 append_to_datablocks(imageset)
 
     def _create_imageset(self, format_class, template, filenames):
-        """ Create a mulit file sweep or imageset. """
+        """ Create a multi file sweep or imageset. """
         from dxtbx.imageset import ImageSetFactory
         from dxtbx.sweep_filenames import template_string_number_index
 
@@ -618,7 +618,7 @@ class DataBlockFilenameImporter(object):
         return records
 
     def _create_multi_file_imageset(self, format_class, records):
-        """ Create a mulit file sweep or imageset. """
+        """ Create a multi file sweep or imageset. """
         from dxtbx.imageset import ImageSetFactory
 
         # Make either an imageset or sweep
