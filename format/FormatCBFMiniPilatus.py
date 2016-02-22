@@ -61,6 +61,8 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
         FormatCBFMini.__init__(self, image_file)
 
+        self._raw_data = None
+
         return
 
     def _start(self):
