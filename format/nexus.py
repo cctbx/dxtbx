@@ -708,11 +708,12 @@ class NXmxReader(object):
 
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename=None, handle=None):
         import h5py
 
         # Get the file handle
-        handle = h5py.File(filename, "r")
+        if filename is not None:
+            handle = h5py.File(filename, "r")
 
         # A list of errors
         self.errors = []
