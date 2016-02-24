@@ -105,7 +105,7 @@ class FormatCBFFullPilatus(FormatCBFFull):
                     panel.set_px_mm_strategy(
                         ParallaxCorrectedPxMmStrategy(mu, thickness)
                     )
-                    panel.set_mu(table.mu_at_angstrom(wavelength))
+                    panel.set_mu(mu)
 
         return detector
 
