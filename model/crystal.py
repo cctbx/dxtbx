@@ -224,8 +224,6 @@ class crystal_model(object):
 
         self._cov_B = cov
 
-        # propagate to errors in the unit cell parameters
-        self._calc_cell_parameter_sd()
         return
 
     def _calc_cell_parameter_sd(self):
@@ -458,6 +456,14 @@ class crystal_model(object):
 
         :rtype: :py:class:`tuple`
         """
+        if self._cov_B is None:
+            return None
+        if self._cell_sd is not None:
+            return self._cell_sd
+
+        # propagate covariance of B to errors in the unit cell parameters
+        self._calc_cell_parameter_sd()
+
         return self._cell_sd
 
     def set_A(self, A):
