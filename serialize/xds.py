@@ -120,6 +120,8 @@ def xds_detector_name(dxtbx_name):
 
     if "pilatus" in dxtbx_name:
         return "PILATUS"
+    if "eiger" in dxtbx_name:
+        return "PILATUS"
     if "rayonix" in dxtbx_name:
         return "CCDCHESS"
     if "adsc" in dxtbx_name:
