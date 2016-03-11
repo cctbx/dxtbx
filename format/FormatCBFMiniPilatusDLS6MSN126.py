@@ -72,7 +72,7 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
             if (
                 "# Detector" in record
                 and "PILATUS" in record
-                and "S/N 60-0126 Diamond" in header
+                and "S/N 60-0126" in header
             ):
                 return True
 
