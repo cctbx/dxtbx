@@ -71,7 +71,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
             from iotbx.detectors.pilatus_minicbf import PilatusImage
 
             self.detectorbase = PilatusImage(self._image_file)
-            # self.detectorbase.readHeader()
+            self.detectorbase.readHeader()  # necessary for LABELIT
         except KeyError as e:
             pass
 
