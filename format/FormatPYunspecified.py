@@ -34,6 +34,9 @@ class FormatPYunspecified(FormatPY):
 
         FormatPY.__init__(self, image_file)
 
+    def detectorbase_start(self):
+        pass
+
     def _start(self):
         import os
 

@@ -110,6 +110,7 @@ class FormatRAXIS(Format):
             self._f = "<f"
             self._i = "<i"
 
+    def detectorbase_start(self):
         from iotbx.detectors.raxis import RAXISImage
 
         self.detectorbase = RAXISImage(self._image_file)

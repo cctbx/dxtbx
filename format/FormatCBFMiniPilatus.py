@@ -67,13 +67,6 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
     def _start(self):
         FormatCBFMini._start(self)
-        try:
-            from iotbx.detectors.pilatus_minicbf import PilatusImage
-
-            self.detectorbase = PilatusImage(self._image_file)
-            self.detectorbase.readHeader()  # necessary for LABELIT
-        except KeyError as e:
-            pass
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. This should
@@ -241,6 +234,13 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         # returns merged untrusted pixels and active areas using bitwise AND (pixels are accepted
         # if they are inside of the active areas AND inside of the trusted range)
         return tuple([m & tm for m, tm in zip(mask, trusted_mask)])
+
+    def detectorbase_start(self):
+
+        from iotbx.detectors.pilatus_minicbf import PilatusImage
+
+        self.detectorbase = PilatusImage(self._image_file)
+        self.detectorbase.readHeader()  # necessary for LABELIT
 
 
 if __name__ == "__main__":
