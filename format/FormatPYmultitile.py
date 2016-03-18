@@ -39,7 +39,9 @@ class FormatPYmultitile(FormatPY):
         FormatPY.__init__(self, image_file)
 
     def _start(self):
-        pass
+        # this Format class depends on stuff from detectorbase
+        self.detectorbase_start()
+        return
 
     def detectorbase_start(self):
         from xfel.cftbx.detector.cspad_detector import CSPadDetector
