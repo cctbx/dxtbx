@@ -90,7 +90,12 @@ class EigerNXmxFixer(object):
 
         # Add saturation value
         create_scalar(
-            handle["entry/instrument/detector"], "saturation_value", "int32", 10000
+            handle["entry/instrument/detector"],
+            "saturation_value",
+            "int32",
+            handle[
+                "entry/instrument/detector/detectorSpecific/detectorModule_000/countrate_correction_count_cutoff"
+            ],
         )
 
         # Add detector type
