@@ -95,7 +95,7 @@ class EigerNXmxFixer(object):
                 "saturation_value",
                 "int32",
                 handle[
-                    "/entry/instrument/detector/detectorSpecific/countrate_correction"
+                    "/entry/instrument/detector/detectorSpecific/countrate_correction_count_cutoff"
                 ],
             )
         except Exception:
