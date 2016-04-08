@@ -52,7 +52,8 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchy, FormatStill):
         from cctbx.eltbx import attenuation_coefficient
 
         table = attenuation_coefficient.get_table("Si")
-        mu = table.mu_at_angstrom(wavelength) / 10.0
+        # mu_at_angstrom returns cm^-1
+        mu = table.mu_at_angstrom(wavelength)
         t0 = thickness
 
         for panel in d:
