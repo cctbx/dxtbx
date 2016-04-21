@@ -693,7 +693,11 @@ class ExperimentListDict(object):
 
         # Make a sweep from the input data
         return ImageSetFactory.make_sweep(
-            template, list(range(i0, i1 + 1)), None, check_format=self._check_format
+            template,
+            list(range(i0, i1 + 1)),
+            None,
+            check_format=self._check_format,
+            scan=scan,
         )
 
     @staticmethod

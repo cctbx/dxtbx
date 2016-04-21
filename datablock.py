@@ -835,6 +835,8 @@ class DataBlockFactory(object):
         scan_tolerance=None,
     ):
         """ Try to load datablocks from any recognized format. """
+        import os.path
+        from libtbx.utils import Sorry
 
         if unhandled is None:
             unhandled = []
