@@ -80,7 +80,7 @@ class FormatXPARM(Format):
             self._slow_axis,
             self._pixel_size,
             self._image_size,
-            (0, 0),
+            (0, 1.0e9),
         )
 
     def _beam(self):
