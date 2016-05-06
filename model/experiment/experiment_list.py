@@ -401,7 +401,13 @@ class ExperimentList(object):
             elif isinstance(imset, ImageSet):
                 r = OrderedDict([("__id__", "ImageSet"), ("images", imset.paths())])
             elif isinstance(imset, ImageGrid):
-                r = OrderedDict([("__id__", "ImageGrid"), ("images", imset.paths())])
+                r = OrderedDict(
+                    [
+                        ("__id__", "ImageGrid"),
+                        ("images", imset.paths()),
+                        ("grid_size", imset.get_grid_size()),
+                    ]
+                )
             else:
                 raise TypeError("expected ImageSet or ImageSweep, got %s" % type(imset))
             r["mask"] = imset.external_lookup.mask.filename
@@ -685,11 +691,12 @@ class ExperimentListDict(object):
             filenames, None, check_format=self._check_format
         )
 
-    def _make_stills(self, imageset):
+    def _make_grid(self, imageset):
         """ Make a still imageset. """
         from dxtbx.imageset import ImageGrid
 
-        return ImageGrid.from_imageset(self._make_stills(imageset))
+        grid_size = imageset["grid_size"]
+        return ImageGrid.from_imageset(self._make_stills(imageset), grid_size)
 
     def _make_sweep(self, imageset, scan):
         """ Make an image sweep. """
