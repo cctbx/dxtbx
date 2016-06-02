@@ -185,6 +185,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                 p.set_material("Si")
                 p.set_mu(mu)
                 p.set_px_mm_strategy(px_mm)
+                p.set_raw_image_offset((xmin, ymin))
                 self.coords[p.get_name()] = (xmin, ymin, xmax, ymax)
 
             else:
@@ -215,6 +216,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                     p.set_material("Si")
                     p.set_mu(mu)
                     p.set_px_mm_strategy(px_mm)
+                    p.set_raw_image_offset((xmin, ymin))
                     self.coords[p.get_name()] = (xmin, ymin, xmax, ymax)
 
         return detector

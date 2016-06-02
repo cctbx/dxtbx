@@ -372,6 +372,7 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
                 p.set_material("Si")
                 p.set_mu(mu)
                 p.set_local_frame(fast.elems, slow.elems, origin_panel.elems)
+                p.set_raw_image_offset((xmin, ymin))
                 self.coords[panel_name] = (xmin, ymin, xmax, ymax)
 
                 root.add_panel(p)
