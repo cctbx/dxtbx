@@ -344,7 +344,11 @@ class to_xds(object):
         print("STARTING_ANGLE= %.3f" % self.starting_angle, file=out)
         print("OSCILLATION_RANGE= %.3f" % self.oscillation_range, file=out)
         print("X-RAY_WAVELENGTH= %.5f" % self.wavelength, file=out)
-        print("INCIDENT_BEAM_DIRECTION= %.3f %.3f %.3f" % self.beam_vector, file=out)
+        print(
+            "INCIDENT_BEAM_DIRECTION= %.3f %.3f %.3f"
+            % tuple([b / self.wavelength for b in self.beam_vector]),
+            file=out,
+        )
 
         # FIXME LATER
         if hasattr(self.get_beam(), "get_polarization_fraction"):
