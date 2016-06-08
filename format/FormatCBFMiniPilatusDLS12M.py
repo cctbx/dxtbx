@@ -134,6 +134,14 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         thickness = float(self._cif_header_dictionary["Silicon"].split()[2]) * 1000.0
 
+        # for longer wavelength data sets move 192.3 below to 184.9
+        if wavelength < 1.128:
+            off_x = 191.9
+        else:
+            off_x = 184.9
+
+        z += beam_shift_y * y
+
         detector = HierarchicalDetector()
         root = detector.hierarchy()
         root.set_frame(x.elems, y.elems, (-distance * z).elems)
@@ -155,22 +163,12 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
             fast = matrix.col((1, 0, 0))
             slow = matrix.col((0, math.sin(angle), math.cos(angle)))
             normal = fast.cross(slow)
-            # for longer wavelength data sets move 192.3 below to 184.9
-            if wavelength < 1.128:
-                off_x = 191.9
-            else:
-                off_x = 184.9
+
+            row_origin = 250.0 * normal - off_x * fast - 16.8 * slow
 
             if group_rows:
                 xmin, xmax = 0, 2463
 
-                origin = (
-                    250.0 * normal
-                    - off_x * fast
-                    - 16.8 * slow
-                    + 250 * z
-                    + beam_shift_y * y
-                )
                 p = detector.add_panel()
 
                 # OBS! you need to set the panel to a root before set local frame...
@@ -181,7 +179,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                 p.set_image_size((2463, 195))
                 p.set_trusted_range((-1, 1000000))
                 p.set_pixel_size((0.172, 0.172))
-                p.set_local_frame(fast.elems, slow.elems, origin.elems)
+                p.set_local_frame(fast.elems, slow.elems, row_origin.elems)
                 p.set_thickness(thickness)
                 p.set_material("Si")
                 p.set_mu(mu)
@@ -191,10 +189,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
             else:
                 shift_x = 487 + 7
-
-                row_origin = (
-                    250.0 * normal - off_x * fast - 16.8 * slow + beam_shift_y * y
-                )
 
                 for i in range(5):
                     xmin, xmax = i * shift_x, i * shift_x + 487
