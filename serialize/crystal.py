@@ -89,6 +89,12 @@ def to_dict(crystal):
     except AttributeError:
         ML_domain_size_ang = None
 
+    # Isoforms used for stills
+    try:
+        identified_isoform = crystal.identified_isoform
+    except AttributeError:
+        identified_isoform = None
+
     # Collect the information as a python dictionary
     xl_dict = OrderedDict(
         [
@@ -102,6 +108,9 @@ def to_dict(crystal):
             ("ML_domain_size_ang", ML_domain_size_ang),
         ]
     )
+
+    if identified_isoform is not None:
+        xl_dict["identified_isoform"] = identified_isoform
 
     # Add in scan points if present
     if crystal.num_scan_points > 0:
@@ -162,6 +171,12 @@ def from_dict(d):
         pass
     try:
         xl._ML_domain_size_ang = d["ML_domain_size_ang"]
+    except KeyError:
+        pass
+
+    # Isoforms used for stills
+    try:
+        xl.identified_isoform = d["identified_isoform"]
     except KeyError:
         pass
 
