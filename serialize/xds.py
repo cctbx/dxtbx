@@ -68,6 +68,9 @@ def to_imageset(input_filename, extra_filename=None):
             t0 = handle.sensor_thickness
             for panel in detector:
                 panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, t0))
+                panel.set_trusted_range(
+                    (handle.minimum_valid_pixel_value, handle.overload)
+                )
         imageset.set_beam(models.get_beam())
         imageset.set_detector(detector)
         imageset.set_goniometer(models.get_goniometer())
@@ -322,12 +325,12 @@ class to_xds(object):
                 print("!SILICON= %f" % mu, file=out)
 
         print(
-            "DIRECTION_OF_DETECTOR_X-AXIS= %.3f %.3f %.3f" % self.detector_x_axis,
+            "DIRECTION_OF_DETECTOR_X-AXIS= %.5f %.5f %.5f" % self.detector_x_axis,
             file=out,
         )
 
         print(
-            "DIRECTION_OF_DETECTOR_Y-AXIS= %.3f %.3f %.3f" % self.detector_y_axis,
+            "DIRECTION_OF_DETECTOR_Y-AXIS= %.5f %.5f %.5f" % self.detector_y_axis,
             file=out,
         )
 
@@ -335,7 +338,7 @@ class to_xds(object):
 
         print("DETECTOR_DISTANCE= %.3f" % self.detector_distance, file=out)
         print("ORGX= %.1f ORGY= %.1f" % self.detector_origin, file=out)
-        print("ROTATION_AXIS= %.3f %.3f %.3f" % self.rotation_axis, file=out)
+        print("ROTATION_AXIS= %.5f %.5f %.5f" % self.rotation_axis, file=out)
         print("STARTING_ANGLE= %.3f" % self.starting_angle, file=out)
         print("OSCILLATION_RANGE= %.3f" % self.oscillation_range, file=out)
         print("X-RAY_WAVELENGTH= %.5f" % self.wavelength, file=out)
@@ -395,13 +398,13 @@ class to_xds(object):
                 print("!", file=out)
                 print("SEGMENT= %d %d %d %d" % self.panel_limits[panel_id], file=out)
                 print(
-                    "DIRECTION_OF_SEGMENT_X-AXIS= %.3f %.3f %.3f"
+                    "DIRECTION_OF_SEGMENT_X-AXIS= %.5f %.5f %.5f"
                     % self.panel_x_axis[panel_id],
                     file=out,
                 )
 
                 print(
-                    "DIRECTION_OF_SEGMENT_Y-AXIS= %.3f %.3f %.3f"
+                    "DIRECTION_OF_SEGMENT_Y-AXIS= %.5f %.5f %.5f"
                     % self.panel_y_axis[panel_id],
                     file=out,
                 )
