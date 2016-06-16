@@ -8,7 +8,6 @@
 from __future__ import division
 from __future__ import print_function
 
-import time
 from scitbx import matrix
 
 from dxtbx.format.FormatBruker import FormatBruker
