@@ -1,4 +1,5 @@
 from __future__ import division
+from __future__ import print_function
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatHDF5 import FormatHDF5
 
@@ -218,3 +219,10 @@ class FormatHDF5Nexus(FormatHDF5):
 
     def get_image_file(self, index=None):
         return Format.get_image_file(self)
+
+
+if __name__ == "__main__":
+    import sys
+
+    for arg in sys.argv[1:]:
+        print(FormatHDF5Nexus.understand(arg))
