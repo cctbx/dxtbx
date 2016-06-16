@@ -74,7 +74,10 @@ class FormatBrukerFixedChi(FormatBruker):
 
         if self.header_dict["AXIS"][0] == "2":
             # OMEGA scan
-            axis = (1, 0, 0)
+            axis = (-1, 0, 0)
+            incr = float(self.header_dict["INCREME"][0])
+            if incr < 0:
+                axis = (1, 0, 0)
             fixed = phi.axis_and_angle_as_r3_rotation_matrix(angles[2], deg=True)
             return self._goniometer_factory.make_goniometer(axis, fixed.elems)
         else:
@@ -126,12 +129,18 @@ class FormatBrukerFixedChi(FormatBruker):
 
     def _scan(self):
 
+        start = float(self.header_dict["START"][0])
+        incr = float(self.header_dict["INCREME"][0])
+        if incr < 0:
+            start *= -1
+            incr *= -1
+
         return self._scan_factory.single(
             filename=self._image_file,
             format="BrukerCCD",
             exposure_times=1,
-            osc_start=float(self.header_dict["START"][0]),
-            osc_width=float(self.header_dict["INCREME"][0]),
+            osc_start=start,
+            osc_width=incr,
             epoch=None,
         )
 
