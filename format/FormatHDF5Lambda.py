@@ -79,8 +79,8 @@ class FormatHDF5Lambda(FormatHDF5):
 
         # Get the pixel and image size
         pixel_size = (
-            1000 * detector["x_pixel_size"].value,
-            1000 * detector["y_pixel_size"].value,
+            1.0e-3 * detector["x_pixel_size"].value,
+            1.0e-3 * detector["y_pixel_size"].value,
         )
         layout = detector["layout"].value[0].split("X")
         image_size = int(layout[0]), int(layout[1])
@@ -97,7 +97,7 @@ class FormatHDF5Lambda(FormatHDF5):
             image_size,
             trusted_range,
             name="Panel",
-            thickness=0.0,
+            thickness=thickness,
             material="GaAs",
         )
 
