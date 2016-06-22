@@ -147,7 +147,7 @@ class FormatHDF5Lambda(FormatHDF5):
 
         detector = self._h5_handle["entry/instrument/detector"]
         data = detector["data"]
-        im = data[index, :, :].astype("int")  # convert from int16
+        im = data[index, :, :].astype("int32")  # convert from int16
         return flex.int(im)
 
     def get_image_file(self, index=None):
