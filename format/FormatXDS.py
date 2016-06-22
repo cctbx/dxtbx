@@ -94,6 +94,9 @@ class FormatXDS(Format):
                 self._panel_fast,
                 self._panel_slow,
             ):
+                # ensure mutual orthogonality in presence of numerical rounding errors
+                normal = fast.cross(slow)
+                slow = normal.cross(fast)
                 p = detector.add_panel()
                 root.add_panel(p)
                 p.set_type("unknown")
