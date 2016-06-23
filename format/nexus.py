@@ -884,7 +884,7 @@ class DetectorFactory(object):
         slow_axis = -fast_axis.cross(normal)
 
         # Compute the attenuation coefficient.
-        # This will fail for undefined composite materials (ie all except CdTe)
+        # This will fail for undefined composite materials
         # mu_at_angstrom returns cm^-1, but need mu in mm^-1
         if material == "Si":
             pass
@@ -893,6 +893,8 @@ class DetectorFactory(object):
         elif material == "Sillicon":
             material = "Si"
         elif material == "CdTe":
+            pass
+        elif material == "GaAs":
             pass
         else:
             raise RuntimeError("Unknown material: %s" % material)
