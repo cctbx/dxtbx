@@ -122,7 +122,6 @@ class Format(object):
         self._scan_factory = scan_factory
 
         self.setup()
-        return
 
     def setup(self):
         """Read the image file, construct the information which we will be
@@ -159,8 +158,6 @@ class Format(object):
             pass
         finally:
             self._end()
-
-        return
 
     def get_goniometer(self):
         """Get the standard goniometer instance which was derived from the
