@@ -135,6 +135,7 @@ class FormatSMVRigakuSaturnSN07400090(FormatSMVRigakuSaturn):
             pixel_size,
             image_size,
             (underload, overload),
+            gain=10,
         )
 
 

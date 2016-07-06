@@ -557,6 +557,7 @@ class detector_factory:
         thickness=0.0,
         material="",
         mu=0.0,
+        gain=None,
     ):
         """Ensure all types are correct before creating c++ detector class."""
 
@@ -578,6 +579,8 @@ class detector_factory:
             p.set_thickness(thickness)
             p.set_material(material)
             p.set_px_mm_strategy(px_mm)
+            if gain is not None:
+                p.set_gain(gain)
         except Exception as e:
             print(e)
             raise e
@@ -709,7 +712,15 @@ class detector_factory:
 
     @staticmethod
     def complex(
-        sensor, origin, fast, slow, pixel, size, trusted_range=(0.0, 0.0), px_mm=None
+        sensor,
+        origin,
+        fast,
+        slow,
+        pixel,
+        size,
+        trusted_range=(0.0, 0.0),
+        px_mm=None,
+        gain=None,
     ):
         """A complex detector model, where you know exactly where everything
         is. This is useful for implementation of the Rigaku Saturn header
@@ -732,6 +743,7 @@ class detector_factory:
             size,
             trusted_range,
             px_mm,
+            gain=gain,
         )
 
     @staticmethod
