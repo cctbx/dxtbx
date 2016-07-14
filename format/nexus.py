@@ -988,9 +988,14 @@ class ScanFactory(object):
         else:
 
             self.model = []
-            for i, image in range(image_range[0], image_range[1] + 1):
+            for i, image in enumerate(range(image_range[0], image_range[1] + 1)):
                 self.model.append(
-                    Scan((image, image + 1), oscillation, exposure_time[i], epochs[i])
+                    Scan(
+                        (image, image),
+                        oscillation,
+                        exposure_time[i : i + 1],
+                        epochs[i : i + 1],
+                    )
                 )
 
 
