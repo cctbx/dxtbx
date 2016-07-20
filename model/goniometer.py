@@ -12,7 +12,7 @@ from __future__ import division
 # of the XSweep classes.
 
 import pycbf
-from dxtbx_model_ext import Goniometer, KappaGoniometer
+from dxtbx_model_ext import Goniometer, KappaGoniometer, MultiAxisGoniometer
 
 from goniometer_helpers import cbf_gonio_to_effective_axis_fixed
 
@@ -43,6 +43,10 @@ class goniometer_factory:
             str(direction),
             str(scan_axis),
         )
+
+    @staticmethod
+    def make_multi_axis_goniometer(axes, angles, scan_axis):
+        return MultiAxisGoniometer(axes, angles, scan_axis)
 
     @staticmethod
     def single_axis():
@@ -90,6 +94,12 @@ class goniometer_factory:
         return goniometer_factory.make_kappa_goniometer(
             alpha, omega, kappa, phi, direction, scan_axis
         )
+
+    @staticmethod
+    def multi_axis(axes, angles, scan_axis):
+        """"""
+
+        return goniometer_factory.make_multi_axis_goniometer(axes, angles, scan_axis)
 
     @staticmethod
     def imgCIF(cif_file):

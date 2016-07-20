@@ -111,6 +111,10 @@ def tst_dxtbx_models():
 
     test_goniometer()
 
+    from dxtbx.tests.test_goniometer import test_goniometer
+
+    test_goniometer()
+
     from dxtbx.tests.test_scan import test_scan
 
     test_scan()
