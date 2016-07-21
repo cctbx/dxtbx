@@ -12,7 +12,13 @@
 
 from __future__ import division
 from __future__ import print_function
-from dxtbx_format_nexus_ext import *
+
+try:
+    from dxtbx_format_nexus_ext import *
+except ImportError:
+    print(
+        "Warning, HDF5 libraries not found"
+    )  # stop gap for LCLS until linking is worked out
 
 
 class check_dtype(object):
