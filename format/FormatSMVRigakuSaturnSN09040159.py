@@ -13,10 +13,12 @@ from __future__ import print_function
 
 from scitbx import matrix
 
-from dxtbx.format.FormatSMVRigakuSaturn import FormatSMVRigakuSaturn
+from dxtbx.format.FormatSMVRigakuSaturnNoTS import FormatSMVRigakuSaturnNoTS
+
+SERIALS = ["09040159", "07510101"]
 
 
-class FormatSMVRigakuSaturn09040159(FormatSMVRigakuSaturn):
+class FormatSMVRigakuSaturn09040159(FormatSMVRigakuSaturnNoTS):
     """A class for reading SMV format Rigaku Saturn images, and correctly
     constructing a model for the experiment from this. This is the custom
     version for instrument with serial number 09040159 at CSHL."""
@@ -27,7 +29,7 @@ class FormatSMVRigakuSaturn09040159(FormatSMVRigakuSaturn):
         i.e. we can make sense of it. Essentially that will be if it contains
         all of the keys we are looking for. Also checks the serial number."""
 
-        size, header = FormatSMVRigakuSaturn.get_smv_header(image_file)
+        size, header = FormatSMVRigakuSaturnNoTS.get_smv_header(image_file)
 
         detector_prefix = header["DETECTOR_NAMES"].split()[0].strip()
         try:
@@ -35,7 +37,7 @@ class FormatSMVRigakuSaturn09040159(FormatSMVRigakuSaturn):
         except KeyError:
             return False
 
-        if serial_number != "09040159":
+        if not serial_number in SERIALS:
             return False
 
         return True
