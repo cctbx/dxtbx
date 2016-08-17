@@ -45,8 +45,8 @@ class goniometer_factory:
         )
 
     @staticmethod
-    def make_multi_axis_goniometer(axes, angles, scan_axis):
-        return MultiAxisGoniometer(axes, angles, scan_axis)
+    def make_multi_axis_goniometer(axes, angles, names, scan_axis):
+        return MultiAxisGoniometer(axes, angles, names, scan_axis)
 
     @staticmethod
     def single_axis():
@@ -96,10 +96,12 @@ class goniometer_factory:
         )
 
     @staticmethod
-    def multi_axis(axes, angles, scan_axis):
+    def multi_axis(axes, angles, names, scan_axis):
         """"""
 
-        return goniometer_factory.make_multi_axis_goniometer(axes, angles, scan_axis)
+        return goniometer_factory.make_multi_axis_goniometer(
+            axes, angles, names, scan_axis
+        )
 
     @staticmethod
     def imgCIF(cif_file):
@@ -177,8 +179,9 @@ class goniometer_factory:
         order = order.reversed()
         axes = axes.select(order)
         angles = angles.select(order)
+        axis_names = axis_names.select(order)
         scan_axis = axes.size() - scan_axis - 1
 
         # construct a multi-axis goniometer
-        gonio = goniometer_factory.multi_axis(axes, angles, scan_axis)
+        gonio = goniometer_factory.multi_axis(axes, angles, axis_names, scan_axis)
         return gonio
