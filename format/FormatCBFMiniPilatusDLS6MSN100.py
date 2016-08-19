@@ -402,7 +402,7 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
             height = 50  # mm
             radius = 20  # mm
 
-            steps_per_degree = 10
+            steps_per_degree = 1
             theta = (
                 flex.double([range(360 * steps_per_degree)])
                 * math.pi
