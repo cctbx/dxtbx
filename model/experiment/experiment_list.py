@@ -370,7 +370,7 @@ class ExperimentList(object):
                 obj["imageset"] = same.index(True)
                 if e.scan is None and not isinstance(e.imageset, ImageSweep):
                     if len(e.imageset) != len(e.imageset.complete_set()):
-                        obj["imageset"] = (obj["imageset"], e.imageset.indices())
+                        obj["imageset"] = obj["imageset"]
             result["experiment"].append(obj)
 
         def get_template(imset):
@@ -400,6 +400,8 @@ class ExperimentList(object):
                 r = OrderedDict([("__id__", "MemImageSet")])
             elif isinstance(imset, ImageSet):
                 r = OrderedDict([("__id__", "ImageSet"), ("images", imset.paths())])
+                if imset.reader().is_single_file_reader():
+                    r["single_file_indices"] = imset.indices()
             elif isinstance(imset, ImageGrid):
                 r = OrderedDict(
                     [
@@ -408,6 +410,8 @@ class ExperimentList(object):
                         ("grid_size", imset.get_grid_size()),
                     ]
                 )
+                if imset.reader().is_single_file_reader():
+                    r["single_file_indices"] = imset.indices()
             else:
                 raise TypeError("expected ImageSet or ImageSweep, got %s" % type(imset))
             r["mask"] = imset.external_lookup.mask.filename
@@ -687,8 +691,15 @@ class ExperimentListDict(object):
         from dxtbx.serialize.filename import load_path
 
         filenames = [load_path(p) for p in imageset["images"]]
+        indices = None
+        if "single_file_indices" in imageset:
+            indices = imageset["single_file_indices"]
+            assert len(indices) == len(filenames)
         return ImageSetFactory.make_imageset(
-            filenames, None, check_format=self._check_format
+            filenames,
+            None,
+            check_format=self._check_format,
+            single_file_indices=indices,
         )
 
     def _make_grid(self, imageset):
