@@ -187,7 +187,6 @@ class FormatEigerStream(Format, FormatMultiImage):
         """
         import numpy as np
         import lz4, bitshuffle
-        import struct
 
         blob = np.fromstring(data[12:], dtype=np.uint8)
         # blocksize is big endian uint32 starting at byte 8, divided by element size
@@ -204,7 +203,6 @@ class FormatEigerStream(Format, FormatMultiImage):
         """
         import numpy as np
         import lz4, bitshuffle
-        import struct
 
         dtype = np.dtype(dtype)
         data = lz4.loads(data)
