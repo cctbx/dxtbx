@@ -351,6 +351,8 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
                 p.set_pixel_size((pixel_x, pixel_y))
                 p.set_thickness(thickness)
                 p.set_material("Si")
+                p.set_mu(mu)
+                p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, t0))
                 p.set_local_frame(fast.elems, slow.elems, origin_panel.elems)
                 p.set_raw_image_offset((xmin, ymin))
                 self.coords[panel_name] = (xmin, ymin, xmax, ymax)
