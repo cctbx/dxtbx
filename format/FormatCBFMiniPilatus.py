@@ -209,7 +209,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
         return self._raw_data
 
-    def get_mask(self):
+    def get_mask(self, goniometer_shadow_mask=False, goniometer=None):
         from scitbx.array_family import flex
 
         detector = self.get_detector()
