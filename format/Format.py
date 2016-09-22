@@ -69,8 +69,8 @@ class _MetaFormat(type):
     _cache_controller = dxtbx.filecache_controller.simple_controller()
 
     @classmethod
-    def get_cache_controller(self):
-        return self._cache_controller
+    def get_cache_controller(cls):
+        return cls._cache_controller
 
 
 class Format(object):
@@ -103,7 +103,7 @@ class Format(object):
         return False
 
     @classmethod
-    def ignore(Class):
+    def ignore(cls):
         return False
 
     def __init__(self, image_file):
@@ -342,7 +342,7 @@ class Format(object):
         return ord(magic[0]) == 0x1F and ord(magic[1]) == 0x8B
 
     @classmethod
-    def open_file(dxtbx_format, filename, mode="rb", url=False):
+    def open_file(cls, filename, mode="rb", url=False):
         """Open file for reading, decompressing silently if necessary,
         caching transparently if possible."""
 
@@ -354,13 +354,11 @@ class Format(object):
         elif Format.is_bz2(filename):
             if bz2 is None:
                 raise RuntimeError, "bz2 file provided without bz2 module"
-
             fh_func = lambda: bz2.BZ2File(filename, mode)
 
         elif Format.is_gzip(filename):
             if gzip is None:
                 raise RuntimeError, "gz file provided without gzip module"
-
             fh_func = lambda: gzip.GzipFile(filename, mode)
 
         else:
@@ -368,6 +366,4 @@ class Format(object):
 
         ##  To disable caching logic:
         # return fh_func()
-        return dxtbx_format.__metaclass__.get_cache_controller().check(
-            filename, fh_func
-        )
+        return cls.__metaclass__.get_cache_controller().check(filename, fh_func)

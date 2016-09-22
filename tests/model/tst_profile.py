@@ -15,8 +15,8 @@ class NullProfile(ProfileModelBaseIface):
         return {"__id__": self.name, "parameter": self.parameter}
 
     @classmethod
-    def from_dict(Class, obj):
-        return Class(obj["parameter"])
+    def from_dict(cls, obj):
+        return cls(obj["parameter"])
 
 
 ProfileModelFactory.append(NullProfile.name, NullProfile)
