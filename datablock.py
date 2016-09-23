@@ -10,6 +10,7 @@
 
 from __future__ import division
 from __future__ import print_function
+import cPickle as pickle
 
 
 class DataBlock(object):
@@ -728,7 +729,6 @@ class DataBlockDictImporter(object):
         from dxtbx.model import Detector
         from dxtbx.serialize.filename import load_path
         from dxtbx.imageset import ImageSetFactory, ImageGrid
-        import pickle
 
         # If we have a list, extract for each dictionary in the list
         if isinstance(obj, list):
@@ -1011,8 +1011,6 @@ class DataBlockFactory(object):
     @staticmethod
     def from_pickle_file(filename):
         """ Decode a datablock from a pickle file. """
-        import cPickle as pickle
-
         with open(filename, "rb") as infile:
             obj = pickle.load(infile)
             if isinstance(obj, list):
@@ -1077,7 +1075,6 @@ class DataBlockDumper(object):
         """ Dump datablock as json. """
         from os.path import splitext
         import json
-        import cPickle as pickle
 
         ext = splitext(filename)[1]
         dictionary = [db.to_dict() for db in self._datablocks]
@@ -1093,7 +1090,6 @@ class DataBlockDumper(object):
 
     def as_pickle(self, filename=None, **kwargs):
         """ Dump datablock as pickle. """
-        import cPickle as pickle
 
         # Get the pickle string
         text = pickle.dumps(self._datablocks, protocol=pickle.HIGHEST_PROTOCOL)
