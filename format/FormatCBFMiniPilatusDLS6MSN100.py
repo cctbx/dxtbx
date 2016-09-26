@@ -563,9 +563,9 @@ if enable_smargon:
             for coords in (faceA, faceE):
                 coords = coords.deep_copy()
 
-                for i in range(len(axes)):
+                for i, axis in enumerate(axes):
                     sel = flex.bool(len(coords), True)
-                    rotation = matrix.col(axes[i]).axis_and_angle_as_r3_rotation_matrix(
+                    rotation = matrix.col(axis).axis_and_angle_as_r3_rotation_matrix(
                         angles[i], deg=True
                     )
                     coords.set_selected(sel, rotation.elems * coords.select(sel))

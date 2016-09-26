@@ -383,7 +383,7 @@ class to_xds(object):
             print("UNIT_CELL_C-AXIS= %.6f %.6f %.6f" % unit_cell_c_axis.elems, file=out)
 
         if len(self.panel_x_axis) > 1:
-            for panel_id in range(len(self.panel_x_axis)):
+            for panel_id, panel_x_axis in enumerate(self.panel_x_axis):
 
                 print(file=out)
                 print("!", file=out)
@@ -391,8 +391,7 @@ class to_xds(object):
                 print("!", file=out)
                 print("SEGMENT= %d %d %d %d" % self.panel_limits[panel_id], file=out)
                 print(
-                    "DIRECTION_OF_SEGMENT_X-AXIS= %.5f %.5f %.5f"
-                    % self.panel_x_axis[panel_id],
+                    "DIRECTION_OF_SEGMENT_X-AXIS= %.5f %.5f %.5f" % panel_x_axis,
                     file=out,
                 )
 
