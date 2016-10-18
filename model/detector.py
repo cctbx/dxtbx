@@ -55,6 +55,7 @@ class detector_factory:
         material="",
         mu=0.0,
         gain=None,
+        identifier="",
     ):
         """Ensure all types are correct before creating c++ detector class."""
 
@@ -76,6 +77,7 @@ class detector_factory:
             p.set_thickness(thickness)
             p.set_material(material)
             p.set_px_mm_strategy(px_mm)
+            p.set_identifier(identifier)
             if gain is not None:
                 p.set_gain(gain)
         except Exception as e:
@@ -96,6 +98,7 @@ class detector_factory:
         mask=[],
         px_mm=None,
         mu=0.0,
+        identifier="",
     ):
         """Construct a simple detector at a given distance from the sample
         along the direct beam presumed to be aligned with -z, offset by the
@@ -136,6 +139,7 @@ class detector_factory:
             trusted_range,
             px_mm,
             mu=mu,
+            identifier=identifier,
         )
         detector[0].mask = mask
         return detector
@@ -155,6 +159,7 @@ class detector_factory:
         mask=[],
         px_mm=None,
         mu=0.0,
+        identifier="",
     ):
         """Construct a simple detector at a given distance from the sample
         along the direct beam presumed to be aligned with -z, offset by the
@@ -202,6 +207,7 @@ class detector_factory:
             trusted_range,
             px_mm,
             mu=mu,
+            identifier=identifier,
         )
 
         detector.mask = mask
@@ -218,6 +224,7 @@ class detector_factory:
         trusted_range=(0.0, 0.0),
         px_mm=None,
         gain=None,
+        identifier="",
     ):
         """A complex detector model, where you know exactly where everything
         is. This is useful for implementation of the Rigaku Saturn header
@@ -241,6 +248,7 @@ class detector_factory:
             trusted_range,
             px_mm,
             gain=gain,
+            identifier=identifier,
         )
 
     @staticmethod
