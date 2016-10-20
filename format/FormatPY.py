@@ -26,11 +26,11 @@ class FormatPY(Format):
             or tag[0:4] == chr(0o200) + chr(0o002) + "}q"
         )
 
-    def __init__(self, image_file):
+    def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
         assert self.understand(image_file)
-        Format.__init__(self, image_file)
+        Format.__init__(self, image_file, **kwargs)
         return
 
 

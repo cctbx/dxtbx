@@ -226,6 +226,7 @@ class DataBlock(object):
                                 ("goniometer", g.index(iset.get_goniometer())),
                                 ("scan", s.index(iset.get_scan())),
                                 ("images", iset.indices()),
+                                ("params", iset.format_kwargs()),
                             ]
                         )
                     )
@@ -253,6 +254,7 @@ class DataBlock(object):
                                 ("detector", d[iset.get_detector()]),
                                 ("goniometer", g.index(iset.get_goniometer())),
                                 ("scan", s.index(iset.get_scan())),
+                                ("params", iset.format_kwargs()),
                             ]
                         )
                     )
@@ -297,6 +299,7 @@ class DataBlock(object):
                         pass
                     image_list.append(image_dict)
                 imageset["images"] = image_list
+                imageset["params"] = iset.format_kwargs()
                 result["imageset"].append(imageset)
 
         # Add the models to the dictionary
@@ -395,7 +398,7 @@ class FormatChecker(object):
 class DataBlockTemplateImporter(object):
     """ A class to import a datablock from a template. """
 
-    def __init__(self, templates, verbose=False):
+    def __init__(self, templates, verbose=False, **kwargs):
         """ Import the datablocks from the given templates. """
         from dxtbx.sweep_filenames import locate_files_matching_template_string
         from libtbx.utils import Sorry
@@ -436,10 +439,10 @@ class DataBlockTemplateImporter(object):
             elif fmt.ignore():
                 raise Sorry("Image file %s format will be ignored" % paths[0])
             else:
-                imageset = self._create_imageset(fmt, template, paths)
+                imageset = self._create_imageset(fmt, template, paths, **kwargs)
                 append_to_datablocks(imageset)
 
-    def _create_imageset(self, format_class, template, filenames):
+    def _create_imageset(self, format_class, template, filenames, **kwargs):
         """ Create a multi file sweep or imageset. """
         from dxtbx.imageset import ImageSetFactory
         from dxtbx.sweep_filenames import template_string_number_index
@@ -471,7 +474,14 @@ class DataBlockTemplateImporter(object):
 
         # Create the sweep
         imageset = ImageSetFactory.make_sweep(
-            template, range(*image_range), format_class, b, d, g, s
+            template,
+            range(*image_range),
+            format_class,
+            b,
+            d,
+            g,
+            s,
+            format_kwargs=kwargs,
         )
 
         # Return the imageset
@@ -489,6 +499,7 @@ class DataBlockFilenameImporter(object):
         compare_detector=None,
         compare_goniometer=None,
         scan_tolerance=None,
+        format_kwargs=None,
     ):
         """ Import the datablocks from the given filenames. """
         from itertools import groupby
@@ -515,7 +526,9 @@ class DataBlockFilenameImporter(object):
                 self.unhandled.extend(group)
             elif issubclass(fmt, FormatMultiImage):
                 for filename in group:
-                    imageset = self._create_single_file_imageset(fmt, filename)
+                    imageset = self._create_single_file_imageset(
+                        fmt, filename, format_kwargs=format_kwargs
+                    )
                     append_to_datablocks(imageset)
                     if verbose:
                         print("Loaded file: %s" % filename)
@@ -530,7 +543,9 @@ class DataBlockFilenameImporter(object):
                 )
                 for group, items in groupby(records, lambda r: r.group):
                     items = list(items)
-                    imageset = self._create_multi_file_imageset(fmt, list(items))
+                    imageset = self._create_multi_file_imageset(
+                        fmt, list(items), format_kwargs=format_kwargs
+                    )
                     append_to_datablocks(imageset)
 
     def _extract_file_metadata(
@@ -659,7 +674,7 @@ class DataBlockFilenameImporter(object):
         # Return the records
         return records
 
-    def _create_multi_file_imageset(self, format_class, records):
+    def _create_multi_file_imageset(self, format_class, records, format_kwargs=None):
         """ Create a multi file sweep or imageset. """
         from dxtbx.imageset import ImageSetFactory
 
@@ -679,6 +694,7 @@ class DataBlockFilenameImporter(object):
                 records[0].detector,
                 records[0].goniometer,
                 records[0].scan,
+                format_kwargs=format_kwargs,
             )
 
         else:
@@ -690,7 +706,9 @@ class DataBlockFilenameImporter(object):
                 filenames.append(r.filename)
 
             # make an imageset
-            imageset = ImageSetFactory.make_imageset(filenames, format_class)
+            imageset = ImageSetFactory.make_imageset(
+                filenames, format_class, format_kwargs=format_kwargs
+            )
             for i, r in enumerate(records):
                 imageset.set_beam(r.beam, i)
                 imageset.set_detector(r.detector, i)
@@ -700,18 +718,22 @@ class DataBlockFilenameImporter(object):
         # Return the imageset
         return imageset
 
-    def _create_single_file_imageset(self, format_class, filename):
+    def _create_single_file_imageset(self, format_class, filename, format_kwargs=None):
         """ Create an imageset from a multi image file. """
         from dxtbx.imageset import SingleFileReader, ImageSet, ImageSweep
 
-        format_instance = format_class(filename)
+        if format_kwargs is None:
+            format_kwargs = {}
+        format_instance = format_class(filename, **format_kwargs)
         try:
             scan = format_instance.get_scan()
             if abs(scan.get_oscillation()[1]) > 0.0:
-                return ImageSweep(SingleFileReader(format_instance))
+                return ImageSweep(
+                    SingleFileReader(format_instance), format_kwargs=format_kwargs
+                )
         except Exception:
             pass
-        return ImageSet(SingleFileReader(format_instance))
+        return ImageSet(SingleFileReader(format_instance), format_kwargs=format_kwargs)
 
 
 class DataBlockDictImporter(object):
@@ -769,6 +791,10 @@ class DataBlockDictImporter(object):
         imagesets = []
         for imageset in obj["imageset"]:
             ident = imageset["__id__"]
+            if "params" in imageset:
+                format_kwargs = imageset["params"]
+            else:
+                format_kwargs = {}
             if ident == "ImageSweep":
                 beam, detector, gonio, scan = load_models(imageset)
                 if "template" in imageset:
@@ -783,6 +809,7 @@ class DataBlockDictImporter(object):
                         gonio,
                         scan,
                         check_format,
+                        format_kwargs=format_kwargs,
                     )
                     if "mask" in imageset and imageset["mask"] is not None:
                         imageset["mask"] = load_path(imageset["mask"])
@@ -814,6 +841,7 @@ class DataBlockDictImporter(object):
                         gonio,
                         scan,
                         check_format,
+                        format_kwargs=format_kwargs,
                     )
                     if "mask" in imageset and imageset["mask"] is not None:
                         imageset["mask"] = load_path(imageset["mask"])
@@ -841,7 +869,7 @@ class DataBlockDictImporter(object):
                 ]
                 assert len(indices) == 0 or len(indices) == len(filenames)
                 iset = ImageSetFactory.make_imageset(
-                    filenames, None, check_format, indices
+                    filenames, None, check_format, indices, format_kwargs=format_kwargs
                 )
                 if ident == "ImageGrid":
                     grid_size = imageset["grid_size"]
@@ -907,6 +935,7 @@ class DataBlockFactory(object):
         compare_detector=None,
         compare_goniometer=None,
         scan_tolerance=None,
+        format_kwargs=None,
     ):
         """ Try to load datablocks from any recognized format. """
         from libtbx.utils import Sorry
@@ -920,10 +949,11 @@ class DataBlockFactory(object):
             args,
             verbose,
             unhandled1,
-            compare_beam=None,
-            compare_detector=None,
-            compare_goniometer=None,
-            scan_tolerance=None,
+            compare_beam=compare_beam,
+            compare_detector=compare_detector,
+            compare_goniometer=compare_goniometer,
+            scan_tolerance=scan_tolerance,
+            format_kwargs=format_kwargs,
         )
 
         # Try as serialized formats
@@ -947,6 +977,7 @@ class DataBlockFactory(object):
         compare_detector=None,
         compare_goniometer=None,
         scan_tolerance=None,
+        format_kwargs=None,
     ):
         """ Create a list of data blocks from a list of directory or file names. """
 
@@ -975,7 +1006,8 @@ class DataBlockFactory(object):
             compare_beam,
             compare_detector,
             compare_goniometer,
-            scan_tolerance=None,
+            scan_tolerance=scan_tolerance,
+            format_kwargs=format_kwargs,
         )
         if unhandled is not None:
             unhandled.extend(importer.unhandled)

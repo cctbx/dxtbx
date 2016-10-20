@@ -27,12 +27,12 @@ class FormatPYunspecified(FormatPY):
 
         return True
 
-    def __init__(self, image_file):
+    def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
         assert self.understand(image_file)
 
-        FormatPY.__init__(self, image_file)
+        FormatPY.__init__(self, image_file, **kwargs)
 
     def detectorbase_start(self):
         pass
@@ -222,9 +222,9 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
         except AttributeError:
             return False
 
-    def __init__(self, data):
+    def __init__(self, data, **kwargs):
         """ @param data In memory image dictionary, alredy initialized """
-        FormatPYunspecified.__init__(self, data)
+        FormatPYunspecified.__init__(self, data, **kwargs)
 
         import copy
 
