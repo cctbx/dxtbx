@@ -109,6 +109,10 @@ class FormatCBFFullPilatus(FormatCBFFull):
                     )
                     panel.set_mu(mu)
 
+        m = re.search("^#\s*Detector:\s+(.*?)\s*$", self._cif_header, re.MULTILINE)
+        if m and m.group(1):
+            panel.set_identifier(m.group(1))
+
         return detector
 
     def read_cbf_image(self, cbf_image):
