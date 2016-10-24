@@ -540,6 +540,7 @@ class DataBlockFilenameImporter(object):
                     compare_detector,
                     compare_goniometer,
                     scan_tolerance,
+                    format_kwargs=format_kwargs,
                 )
                 for group, items in groupby(records, lambda r: r.group):
                     items = list(items)
@@ -556,6 +557,7 @@ class DataBlockFilenameImporter(object):
         compare_detector=None,
         compare_goniometer=None,
         scan_tolerance=None,
+        format_kwargs=None,
     ):
         """ Extract the file meta data in order to sort them. """
         from dxtbx.sweep_filenames import template_regex
@@ -568,6 +570,8 @@ class DataBlockFilenameImporter(object):
             compare_detector = operator.__eq__
         if compare_goniometer is None:
             compare_goniometer = operator.__eq__
+        if format_kwargs is None:
+            format_kwargs = {}
 
         class Record(object):
             def __init__(
@@ -596,7 +600,7 @@ class DataBlockFilenameImporter(object):
         for filename in filenames:
 
             # Read the image
-            fmt = format_class(filename)
+            fmt = format_class(filename, **format_kwargs)
 
             # Get the meta data from the format
             try:
