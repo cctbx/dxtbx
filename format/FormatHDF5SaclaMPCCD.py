@@ -139,7 +139,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                     self.RECONST_SIZE / 2 * self.PIXEL_SIZE,
                     self.RECONST_SIZE / 2 * self.PIXEL_SIZE,
                 ),
-                fast_direction="+x",
+                fast_direction="-x",
                 slow_direction="-y",
                 pixel_size=(self.PIXEL_SIZE, self.PIXEL_SIZE),
                 image_size=(self.RECONST_SIZE, self.RECONST_SIZE),
