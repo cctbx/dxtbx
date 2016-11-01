@@ -861,6 +861,12 @@ class MemImageSet(ImageSet):
         # Some static stuff
         self.external_lookup = ExternalLookup()
 
+        # The format kwargs
+        if format_kwargs is None:
+            self._format_kwargs = {}
+        else:
+            self._format_kwargs = format_kwargs
+
     def __getitem__(self, item):
         """Get an item from the image set.
 
@@ -878,7 +884,7 @@ class MemImageSet(ImageSet):
         if isinstance(item, slice):
             indices = self._indices[item]
             subset = MemImageSet(
-                self._images, indices, format_kwargs=self.format_kwarg()
+                self._images, indices, format_kwargs=self.format_kwargs()
             )
             subset.external_lookup = self.external_lookup
             return subset
