@@ -95,7 +95,7 @@ class FormatSMVJHSim(FormatSMV):
             float(self._header_dictionary["SIZE2"]),
         )
         overload = 65535
-        underload = 1
+        underload = -1
 
         return self._detector_factory.simple(
             "CCD",
