@@ -29,6 +29,7 @@ class FormatSMVADSC(FormatSMV):
 
         size, header = FormatSMV.get_smv_header(image_file)
 
+        # this used to include TIME
         wanted_header_items = [
             "BEAM_CENTER_X",
             "BEAM_CENTER_Y",
@@ -40,12 +41,11 @@ class FormatSMVADSC(FormatSMV):
             "SIZE1",
             "SIZE2",
             "BYTE_ORDER",
-            "TIME",
         ]
 
         for header_item in wanted_header_items:
             if not header_item in header:
-                return 0
+                return False
 
         unwanted_header_items = ["DTREK_DATE_TIME"]
 
