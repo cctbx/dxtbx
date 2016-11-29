@@ -29,6 +29,10 @@ class FormatSMVADSC(FormatSMV):
 
         size, header = FormatSMV.get_smv_header(image_file)
 
+        # do not understand JHSim images
+        if header.get("BEAMLINE") == "fake":
+            return False
+
         # this used to include TIME
         wanted_header_items = [
             "BEAM_CENTER_X",
