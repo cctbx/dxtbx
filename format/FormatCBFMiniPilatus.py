@@ -183,6 +183,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         fast = 0
         slow = 0
         length = 0
+        byte_offset = False
 
         for record in cbf_header.split("\n"):
             if "X-Binary-Size-Fastest-Dimension" in record:
@@ -193,12 +194,20 @@ class FormatCBFMiniPilatus(FormatCBFMini):
                 length = int(record.split()[-1])
             elif "X-Binary-Size:" in record:
                 size = int(record.split()[-1])
+            elif "conversions" in record:
+                if "x-CBF_BYTE_OFFSET" in record:
+                    byte_offset = True
 
         assert length == fast * slow
 
-        pixel_values = uncompress(
-            packed=data[data_offset : data_offset + size], fast=fast, slow=slow
-        )
+        if byte_offset:
+            pixel_values = uncompress(
+                packed=data[data_offset : data_offset + size], fast=fast, slow=slow
+            )
+        else:
+            raise ValueError(
+                "Uncompression of type other than byte_offset is not supported (contact authors)"
+            )
 
         return pixel_values
 
@@ -244,6 +253,20 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
     @staticmethod
     def as_file(detector, beam, gonio, scan, data, path):
+        """Note to developers: first attempt to write a miniCBF given a dxtbx-style experiment,
+        But fields are not filled rigorously as in cbflib/src/cbf_minicbf_header.c
+        Present code does not account for:
+          Pilatus model number and serial number
+          Data collection date and time
+          Sensor material
+          Dead time (exposure time - exposure period)
+          Highest trusted value
+          Energy threshold for photon counting
+          Gain
+          Bad pixels
+          Auxiliary files (bad pixel mask, flat field, trim, image path)
+          Detector not normal to beam
+        """
         import pycbf
         from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
 
@@ -255,15 +278,12 @@ class FormatCBFMiniPilatus(FormatCBFMini):
     items described in the category ARRAY_STRUCTURE. """
         cbf.add_category("array_data", ["header_convention", "header_contents", "data"])
 
-        "also need to add invalid pixels on sensor boundaries"
-
         panel = detector[0]
         pixel_xy = panel.get_pixel_size()
-        pixel_x, pixel_y = map(float, pixel_xy)
-        pixel_x_microns = pixel_x * 1000
-        pixel_y_microns = pixel_y * 1000
+        pixel_x_microns = pixel_xy[0] * 1000
+        pixel_y_microns = pixel_xy[1] * 1000
 
-        thickness = panel.get_thickness()
+        thickness = max(0.000001, panel.get_thickness())
 
         exposure_period = scan.get_exposure_times()[0]
         phi_start = scan.get_oscillation()[0]
@@ -285,7 +305,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         distance_meters = detector[0].get_distance() / 1000
 
         beam_center = detector[0].get_beam_centre_px(beam.get_s0())
-        ORGX, ORGY = map(float, beam_center)
+        ORGX, ORGY = beam_center
 
         cbf.add_row(
             [
@@ -326,7 +346,6 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         dimmid = focus[0]
         dimslow = 1
         padding = 0
-
         elsize = 4
         elsigned = 1
 
