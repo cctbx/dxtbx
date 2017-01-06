@@ -5,6 +5,9 @@ from __future__ import print_function
 def tst_dxtbx():
     import libtbx.load_env
 
+    if not libtbx.env.has_module("dials"):
+        print("Skipping test: dials not present")
+        return
     try:
         dials_regression = libtbx.env.dist_path("dials_regression")
     except KeyError as e:
