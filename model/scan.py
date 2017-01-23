@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import absolute_import, division
 
 #!/usr/bin/env python
 # scan.py
@@ -15,8 +15,8 @@ import pycbf
 import copy
 from dxtbx_model_ext import Scan
 
-from scan_helpers import scan_helper_image_files
-from scan_helpers import scan_helper_image_formats
+from dxtbx.model.scan_helpers import scan_helper_image_files
+from dxtbx.model.scan_helpers import scan_helper_image_formats
 
 
 class scan_factory:

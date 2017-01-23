@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import absolute_import, division
 
 #!/usr/bin/env python
 # detector_helpers.py
@@ -159,7 +159,6 @@ def set_mosflm_beam_centre(detector, beam, mosflm_beam_centre):
     """
     mosflm_y, mosflm_x = mosflm_beam_centre
     from scitbx import matrix
-    import math
 
     s0 = matrix.col(beam.get_s0()).normalize()
     for panel in detector:

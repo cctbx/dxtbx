@@ -7,12 +7,12 @@
 # $Id:
 #
 
-from __future__ import division
+from __future__ import absolute_import, division
 from __future__ import print_function
 
 import pycbf
 
-from FormatCBFMultiTile import FormatCBFMultiTile
+from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile
 from dxtbx.model import Detector
 from scitbx.matrix import sqr, col
 from libtbx.utils import Sorry

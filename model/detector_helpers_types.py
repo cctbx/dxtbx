@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import absolute_import, division
 from __future__ import print_function
 
 #!/usr/bin/env python
@@ -16,8 +16,8 @@ from __future__ import print_function
 import os
 import sys
 
-from detector_helpers import detector_helper_sensors
-from detector import detector_factory
+from dxtbx.model.detector_helpers import detector_helper_sensors
+from dxtbx.model.detector import detector_factory
 
 
 class detector_helpers_types:

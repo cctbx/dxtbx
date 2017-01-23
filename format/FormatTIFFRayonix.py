@@ -8,7 +8,7 @@
 # An implementation of the TIFF image reader for Rayonix images. Inherits from
 # FormatTIFF.
 
-from __future__ import division
+from __future__ import absolute_import, division
 from __future__ import print_function
 
 import time

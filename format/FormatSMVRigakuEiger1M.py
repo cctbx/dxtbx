@@ -9,7 +9,7 @@
 # Inherits from FormatSMVRigaku. Be aware: this is completely unrelated
 # to the HDF5 Eiger format.
 
-from __future__ import division
+from __future__ import absolute_import, division
 from __future__ import print_function
 
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku

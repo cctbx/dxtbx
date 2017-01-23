@@ -8,7 +8,7 @@
 # An implementation of the SMV image reader for Rigaku Saturn images.
 # Inherits from FormatSMVRigaku.
 
-from __future__ import division
+from __future__ import absolute_import, division
 from __future__ import print_function
 
 # import time

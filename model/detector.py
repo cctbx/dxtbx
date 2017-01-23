@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import absolute_import, division
 from __future__ import print_function
 
 #!/usr/bin/env python
@@ -14,13 +14,12 @@ from __future__ import print_function
 # flat detectors, or composite detectors constructed from a number of flat
 # elements.
 
-import math
 import pycbf
 from scitbx import matrix
 from dxtbx_model_ext import Panel, Detector
-from dxtbx_model_ext import SimplePxMmStrategy, ParallaxCorrectedPxMmStrategy
-from detector_helpers import detector_helper_sensors
-from detector_helpers import find_undefined_value
+from dxtbx_model_ext import SimplePxMmStrategy
+from dxtbx.model.detector_helpers import detector_helper_sensors
+from dxtbx.model.detector_helpers import find_undefined_value
 
 import os
 

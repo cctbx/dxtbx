@@ -7,7 +7,7 @@
 #
 # Tests for the beamline definition database
 
-from __future__ import division
+from __future__ import absolute_import, division
 from __future__ import print_function
 import dxtbx.data.beamline_defs as dxbd
 
