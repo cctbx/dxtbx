@@ -121,6 +121,3 @@ class CrystalAux(boost.python.injector, Crystal):
         msg = self.show(out=s)
         s.seek(0)
         return s.read()
-
-
-crystal_model = Crystal
