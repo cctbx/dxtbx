@@ -66,9 +66,10 @@ def to_dict(crystal):
 
     """
     from collections import OrderedDict
+    from scitbx import matrix
 
     # Get the real space vectors
-    A = crystal.get_A().inverse()
+    A = matrix.sqr(crystal.get_A()).inverse()
     real_space_a = (A[0], A[1], A[2])
     real_space_b = (A[3], A[4], A[5])
     real_space_c = (A[6], A[7], A[8])
@@ -115,17 +116,14 @@ def to_dict(crystal):
     # Add in scan points if present
     if crystal.num_scan_points > 0:
         A_at_scan_points = tuple(
-            [
-                crystal.get_A_at_scan_point(i).elems
-                for i in range(crystal.num_scan_points)
-            ]
+            [crystal.get_A_at_scan_point(i) for i in range(crystal.num_scan_points)]
         )
         xl_dict["A_at_scan_points"] = A_at_scan_points
 
     # Add in covariance of B if present
-    cov_B = crystal.get_B_covariance()
-    if cov_B is not None:
-        xl_dict["B_covariance"] = cov_B.elems
+    cov_B = tuple(crystal.get_B_covariance())
+    if len(cov_B) != 0:
+        xl_dict["B_covariance"] = cov_B
 
     return xl_dict
 
@@ -140,7 +138,7 @@ def from_dict(d):
         The crystal model
 
     """
-    from dxtbx.model.crystal import crystal_model
+    from dxtbx.model import Crystal
 
     # If None, return None
     if d is None:
@@ -156,13 +154,8 @@ def from_dict(d):
     real_space_c = d["real_space_c"]
     # str required to force unicode to ascii conversion
     space_group = str("Hall:" + d["space_group_hall_symbol"])
-    mosaicity = d["mosaicity"]
-    xl = crystal_model(
-        real_space_a,
-        real_space_b,
-        real_space_c,
-        space_group_symbol=space_group,
-        mosaicity=mosaicity,
+    xl = Crystal(
+        real_space_a, real_space_b, real_space_c, space_group_symbol=space_group
     )
     # New parameters for maximum likelihood values
     try:
@@ -191,6 +184,13 @@ def from_dict(d):
     try:
         cov_B = d["B_covariance"]
         xl.set_B_covariance(cov_B)
+    except KeyError:
+        pass
+
+    # Extract mosaicity, if present
+    try:
+        mosaicity = d["mosaicity"]
+        xl.set_mosaicity(mosaicity)
     except KeyError:
         pass
 
