@@ -18,7 +18,7 @@ from libtbx.utils import Sorry
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
-from dxtbx.model.experiment.experiment_list import ExperimentListFactory
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 phil_scope = parse(
     """
