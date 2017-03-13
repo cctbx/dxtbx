@@ -20,8 +20,12 @@ class FormatSMVJHSim(FormatSMV):
     """A class for reading SMV format JHSim images, and correctly constructing
     a model for the experiment from this."""
 
-    # Metadata not in the header
+    # all ADSC detectors generate images with an ADC offset of 40
+    # for Mar/Rayonix it is 10
+    # Rigaku SMV uses 20, and 5 for image plate formats
+    # for one particular simulation, I used 1
     ADC_OFFSET = 1
+    image_pedestal = 1
 
     @staticmethod
     def understand(image_file):
@@ -76,8 +80,27 @@ class FormatSMVJHSim(FormatSMV):
             float(self._header_dictionary["SIZE1"]),
             float(self._header_dictionary["SIZE2"]),
         )
-        overload = 65535
-        underload = -1
+        image_pedestal = 1
+        try:
+            image_pedestal = float(self._header_dictionary["ADC_OFFSET"])
+        except (KeyError):
+            pass
+        overload = 65535 - image_pedestal
+        underload = 1 - image_pedestal
+
+        # interpret beam center conventions
+        image_width_mm = pixel_size * image_size[0]
+        image_height_mm = pixel_size * image_size[1]
+        adxv_beam_center = (beam_x, beam_y)
+        mosflm_beam_center = (
+            image_height_mm - adxv_beam_center[1],
+            adxv_beam_center[0],
+        )
+        cctbx_beam_center = (adxv_beam_center[0], image_height_mm - adxv_beam_center[1])
+        xds_beam_center = (
+            cctbx_beam_center[0] / pixel_size,
+            cctbx_beam_center[1] / pixel_size,
+        )
 
         # Guess whether this is mimicking a Pilatus, if so set detector type so
         # that spot-finding parameters are appropriate
@@ -89,7 +112,7 @@ class FormatSMVJHSim(FormatSMV):
         return self._detector_factory.simple(
             stype,
             distance,
-            (beam_y, beam_x),
+            cctbx_beam_center,
             "+x",
             "-y",
             (pixel_size, pixel_size),
@@ -145,6 +168,11 @@ class FormatSMVJHSim(FormatSMV):
         from scitbx.array_family import flex
 
         assert len(self.get_detector()) == 1
+        image_pedestal = 1
+        try:
+            image_pedestal = float(self._header_dictionary["ADC_OFFSET"])
+        except (KeyError):
+            pass
         panel = self.get_detector()[0]
         size = panel.get_image_size()
         f = FormatSMVJHSim.open_file(self._image_file, "rb")
@@ -160,8 +188,9 @@ class FormatSMVJHSim(FormatSMV):
         else:
             raw_data = read_uint16_bs(streambuf(f), int(size[0] * size[1]))
 
-        # Subtract ADC offset
-        raw_data -= self.ADC_OFFSET
+        # apply image pedestal, will result in *negative pixel values*
+
+        raw_data -= image_pedestal
 
         image_size = panel.get_image_size()
         raw_data.reshape(flex.grid(image_size[1], image_size[0]))
