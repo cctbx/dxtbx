@@ -73,19 +73,19 @@ class Test(object):
 
     def tst_inverted_axis(self):
         def get_values(invert_y):
-            from dxtbx.model.beam import beam_factory
+            from dxtbx.model.beam import BeamFactory
 
-            beam = beam_factory.simple(wavelength=1)
+            beam = BeamFactory.simple(wavelength=1)
 
             if invert_y:
                 y_direction = "-y"
             else:
                 y_direction = "+y"
 
-            from dxtbx.model.detector import detector_factory
+            from dxtbx.model.detector import DetectorFactory
 
-            detector = detector_factory.simple(
-                sensor=detector_factory.sensor("PAD"),
+            detector = DetectorFactory.simple(
+                sensor=DetectorFactory.sensor("PAD"),
                 distance=100,
                 beam_centre=[50, 50],
                 fast_direction="+x",

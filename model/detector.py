@@ -29,7 +29,7 @@ else:
     dxtbx_overload_scale = 1
 
 
-class detector_factory:
+class DetectorFactory:
     """A factory class for detector objects, which will encapsulate standard
     detector designs to make it a little easier to get started with these. In
     cases where a CBF image is provided a full description can be used, in
@@ -38,6 +38,37 @@ class detector_factory:
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def from_dict(d, t=None):
+        """Convert the dictionary to a detector model
+
+        Params:
+            d The dictionary of parameters
+            t The template dictionary to use
+
+        Returns:
+            The detector model
+
+        """
+        from dxtbx.model import Detector
+
+        # If None, return None
+        if d == None:
+            if t == None:
+                return None
+            else:
+                return from_dict(t, None)
+        elif t != None:
+            if isinstance(d, list):
+                d = {"panels": d}
+            d2 = dict(t.items() + d.items())
+        else:
+            if isinstance(d, list):
+                d = {"panels": d}
+
+        # Create the model from the dictionary
+        return Detector.from_dict(d)
 
     @staticmethod
     def make_detector(
@@ -128,8 +159,8 @@ class detector_factory:
             - slow * beam_centre[1]
         )
 
-        detector = detector_factory.make_detector(
-            detector_factory.sensor(sensor),
+        detector = DetectorFactory.make_detector(
+            DetectorFactory.sensor(sensor),
             fast,
             slow,
             origin,
@@ -196,8 +227,8 @@ class detector_factory:
 
         R = two_theta.axis_and_angle_as_r3_rotation_matrix(two_theta_angle, deg=True)
 
-        detector = detector_factory.make_detector(
-            detector_factory.sensor(sensor),
+        detector = DetectorFactory.make_detector(
+            DetectorFactory.sensor(sensor),
             (R * fast),
             (R * slow),
             (R * origin),
@@ -237,8 +268,8 @@ class detector_factory:
         assert len(pixel) == 2
         assert len(size) == 2
 
-        return detector_factory.make_detector(
-            detector_factory.sensor(sensor),
+        return DetectorFactory.make_detector(
+            DetectorFactory.sensor(sensor),
             fast,
             slow,
             origin,
@@ -257,7 +288,7 @@ class detector_factory:
         cbf_handle = pycbf.cbf_handle_struct()
         cbf_handle.read_file(cif_file, pycbf.MSG_DIGEST)
 
-        return detector_factory.imgCIF_H(cbf_handle, sensor)
+        return DetectorFactory.imgCIF_H(cbf_handle, sensor)
 
     @staticmethod
     def imgCIF_H(cbf_handle, sensor):
@@ -286,8 +317,8 @@ class detector_factory:
         cbf_detector.__swig_destroy__(cbf_detector)
         del cbf_detector
 
-        return detector_factory.make_detector(
-            detector_factory.sensor(sensor),
+        return DetectorFactory.make_detector(
+            DetectorFactory.sensor(sensor),
             fast,
             slow,
             origin,
