@@ -195,6 +195,9 @@ class Format(object):
         except Exception:
             return None
 
+    def get_vendortype(self):
+        return "no dxtbx Format vendortype"
+
     def detectorbase_start(self):
         print("Overload detectorbase_start")
         raise RuntimeError("Overload!")
