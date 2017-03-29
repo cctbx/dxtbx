@@ -164,6 +164,11 @@ detector_phil_scope = libtbx.phil.parse(
               "the mosflm convention."
       .short_caption = "Beam centre coordinates (mm, mm) using the Mosflm convention"
 
+    distance = None
+      .type = float
+      .help = "The detector distance (used when mosflm_beam_centre is set)"
+      .short_caption = "Detector distance"
+
     slow_fast_beam_centre = None
       .type = ints(size_min=2, size_max=3)
       .help = "Override the beam centre from the image headers, following "
@@ -417,7 +422,12 @@ class DetectorFactory:
         # If the mosflm beam centre is set then update
         if params.detector.mosflm_beam_centre is not None:
             assert beam is not None
-            set_mosflm_beam_centre(detector, beam, params.detector.mosflm_beam_centre)
+            set_mosflm_beam_centre(
+                detector,
+                beam,
+                params.detector.mosflm_beam_centre,
+                params.detector.distance,
+            )
 
         # If the slow fast beam centre is set then update
         if params.detector.slow_fast_beam_centre is not None:

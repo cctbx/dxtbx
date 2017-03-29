@@ -1172,6 +1172,8 @@ class BeamComparison(object):
         self.polarization_fraction_tolerance = polarization_fraction_tolerance
 
     def __call__(self, a, b):
+        if a is None and b is None:
+            return True
         return a.is_similar_to(
             b,
             wavelength_tolerance=self.wavelength_tolerance,
@@ -1195,6 +1197,8 @@ class DetectorComparison(object):
         self.origin_tolerance = origin_tolerance
 
     def __call__(self, a, b):
+        if a is None and b is None:
+            return True
         return a.is_similar_to(
             b,
             fast_axis_tolerance=self.fast_axis_tolerance,
