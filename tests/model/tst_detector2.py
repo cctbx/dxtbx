@@ -353,7 +353,7 @@ class Test2:
           image_size = (1000,1000)
           trusted_range = (-1, 1000)
         }
-      
+
         hierarchy {
           name = "Root"
           origin = (100, 100, 100)
@@ -449,7 +449,7 @@ class Test2:
           thickness = 0.01
           parallax_correction = True
         }
-      
+
         hierarchy {
           name = "Root"
           origin = (200, 200, 200)

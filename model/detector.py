@@ -121,7 +121,7 @@ detector_phil_scope = libtbx.phil.parse(
         .type = floats(size=3)
         .help = "Override the panel origin. Requires fast_axis and slow_axis."
         .short_caption = "Panel origin vector"
-    
+
       group
         .multiple = True
       {
