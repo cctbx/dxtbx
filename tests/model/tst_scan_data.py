@@ -86,6 +86,47 @@ def tst_swap():
     print("OK")
 
 
+def tst_from_phil():
+    from dxtbx.model.scan import ScanFactory, scan_phil_scope
+    from libtbx.phil import parse
+
+    params = scan_phil_scope.fetch(
+        parse(
+            """
+    scan {
+      image_range = 1, 10
+      oscillation = (-4, 0.1)
+    }
+  """
+        )
+    ).extract()
+
+    s1 = ScanFactory.from_phil(params)
+
+    assert s1.get_num_images() == 10
+    assert s1.get_image_range() == (1, 10)
+    assert s1.get_oscillation() == (-4, 0.1)
+
+    params = scan_phil_scope.fetch(
+        parse(
+            """
+    scan {
+      image_range = 1, 20
+      extrapolate_scan = True
+      oscillation = (20, 0.01)
+    }
+  """
+        )
+    ).extract()
+
+    s2 = ScanFactory.from_phil(params, s1)
+    assert s2.get_num_images() == 20
+    assert s2.get_image_range() == (1, 20)
+    assert s2.get_oscillation() == (20, 0.01)
+
+    print("OK")
+
+
 def run():
     image_range = (0, 1000)
     oscillation = (0, 0.1)
@@ -98,6 +139,7 @@ def run():
     tst_get_frames_with_angle(scan)
     tst_scan_360_append()
     tst_swap()
+    tst_from_phil()
 
 
 if __name__ == "__main__":
