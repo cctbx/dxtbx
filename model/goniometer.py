@@ -224,7 +224,7 @@ class GoniometerFactory:
                 )
         else:
             if params.goniometer.axes is None:
-                raise RuntimeError("No reference and no axes set")
+                return None
             if len(params.goniometer.axes) > 3:
                 goniometer = GoniometerFactory.multi_axis_goniometer_from_phil(params)
             else:

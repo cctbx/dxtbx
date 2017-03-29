@@ -209,7 +209,7 @@ class DetectorFactory:
             if panel_params.name is not None:
                 panel.set_name(panel_params.name)
             if panel_params.type is not None:
-                panal.set_type(panel_params.type)
+                panel.set_type(panel_params.type)
             if panel_params.pixel_size is not None:
                 panel.set_pixel_size(panel_params.pixel_size)
             else:
@@ -314,7 +314,7 @@ class DetectorFactory:
             if panel_params.name is not None:
                 panel.set_name(panel_params.name)
             if panel_params.type is not None:
-                panal.set_type(panel_params.type)
+                panel.set_type(panel_params.type)
             if panel_params.pixel_size is not None:
                 panel.set_pixel_size(panel_params.pixel_size)
             if panel_params.image_size is not None:
@@ -342,7 +342,7 @@ class DetectorFactory:
             else:
                 panel.set_px_mm_strategy(SimplePxMmStrategy())
             axes = [panel_params.fast_axis, panel_params.slow_axis, panel_params.origin]
-            if axes.count(None) != 0:
+            if axes.count(None) != 3:
                 if panel_params.fast_axis is None:
                     panel_params.fast_axis = panel.get_local_fast_axis()
                 if panel_params.slow_axis is None:
