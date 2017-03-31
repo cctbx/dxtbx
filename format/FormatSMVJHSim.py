@@ -8,7 +8,7 @@
 # An implementation of the SMV image reader for JHSim images. Inherits from
 # FormatSMV.
 
-from __future__ import absolute_import, division
+from __future__ import division
 from __future__ import print_function
 
 import time
@@ -96,10 +96,13 @@ class FormatSMVJHSim(FormatSMV):
             image_height_mm - adxv_beam_center[1],
             adxv_beam_center[0],
         )
-        cctbx_beam_center = (adxv_beam_center[0], image_height_mm - adxv_beam_center[1])
         xds_beam_center = (
-            cctbx_beam_center[0] / pixel_size,
-            cctbx_beam_center[1] / pixel_size,
+            adxv_beam_center[0] / pixel_size,
+            (image_height_mm - adxv_beam_center[1]) / pixel_size,
+        )
+        cctbx_beam_center = (
+            adxv_beam_center[0] + pixel_size,
+            image_height_mm - adxv_beam_center[1] + pixel_size,
         )
 
         # Guess whether this is mimicking a Pilatus, if so set detector type so
@@ -189,8 +192,10 @@ class FormatSMVJHSim(FormatSMV):
             raw_data = read_uint16_bs(streambuf(f), int(size[0] * size[1]))
 
         # apply image pedestal, will result in *negative pixel values*
+        # this is a horrible idea since raw_data is unsigned
+        # see all instances of image_pedestal in dxtbx
 
-        raw_data -= image_pedestal
+        raw_data -= int(image_pedestal)
 
         image_size = panel.get_image_size()
         raw_data.reshape(flex.grid(image_size[1], image_size[0]))
