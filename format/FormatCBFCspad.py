@@ -210,7 +210,10 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchy, FormatStill):
         recursive_sync(cbf, root, mapped_detectors, True)
 
 
-class FormatCBFCspadInMemory(FormatCBFCspad):
+from dxtbx.format.FormatCBFFull import FormatCBFFull
+
+
+class FormatCBFFullStillInMemory(FormatCBFFull, FormatStill):
     """Overrides the Format object's init method to accept a cbf handle instead
     of a file name. Used with XFELs when it is desirable to never write
     a file to disk, but to process it only in memory.
@@ -270,3 +273,7 @@ class FormatCBFCspadInMemory(FormatCBFCspad):
         # If copied or pickled, may not have _cbf_handle any more
         if hasattr(self, "_cbf_handle") and self._cbf_handle is not None:
             self._cbf_handle.__swig_destroy__(self._cbf_handle)
+
+
+class FormatCBFCspadInMemory(FormatCBFFullStillInMemory, FormatCBFCspad):
+    """ mixin class for in memory cspad images"""
