@@ -7,7 +7,7 @@ def setup_hdf5_plugin_path():
     plugin_path = libtbx.env.under_base("lib")
     try:
         os.environ["HDF5_PLUGIN_PATH"] = (
-            os.environ["HDF5_PLUGIN_PATH"] + ":" + plugin_path
+            plugin_path + ":" + os.environ["HDF5_PLUGIN_PATH"]
         )
     except Exception:
         os.environ["HDF5_PLUGIN_PATH"] = plugin_path
