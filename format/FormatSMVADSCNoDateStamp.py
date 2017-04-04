@@ -69,6 +69,7 @@ class FormatSMVADSCNoDateStamp(FormatSMVADSC):
         from iotbx.detectors.adsc import ADSCImage
 
         self.detectorbase = ADSCImage(self._image_file)
+        self.detectorbase.open_file = self.open_file
         self.detectorbase.readHeader()
 
 

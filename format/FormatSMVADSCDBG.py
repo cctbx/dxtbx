@@ -38,6 +38,7 @@ class FormatSMVADSCDBG(FormatSMVADSC):
         from iotbx.detectors import SMVImage
 
         self.detectorbase = SMVImage(self._image_file)
+        self.detectorbase.open_file = self.open_file
         self.detectorbase.readHeader()
         self.detectorbase.parameters["SIZE1"] = 2527
         self.detectorbase.parameters["SIZE2"] = 2463

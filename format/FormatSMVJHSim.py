@@ -59,6 +59,7 @@ class FormatSMVJHSim(FormatSMV):
             from iotbx.detectors import SMVImage
 
             self.detectorbase = SMVImage(self._image_file)
+            self.detectorbase.open_file = self.open_file
             self.detectorbase.readHeader()
 
     def _goniometer(self):
