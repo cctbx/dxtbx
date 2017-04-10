@@ -46,8 +46,10 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
+        from dxtbx import IncorrectFormatError
 
-        assert self.understand(image_file)
+        if not self.understand(image_file):
+            raise IncorrectFormatError(self, image_file)
 
         FormatCBFMultiTile.__init__(self, image_file, **kwargs)
 
