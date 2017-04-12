@@ -295,7 +295,7 @@ def read_multitile_cbf_image(cbf_image):
 def tst_smv(filename):
     from dxtbx.format.image import SMVReader
     from dxtbx.datablock import DataBlockFactory
-    from dials.array_family import flex
+    from scitbx.array_family import flex
 
     image = SMVReader(filename).image()
     assert image.n_tiles() == 1
@@ -311,7 +311,7 @@ def tst_smv(filename):
 
 def tst_tiff(filename):
     from dxtbx.datablock import DataBlockFactory
-    from dials.array_family import flex
+    from scitbx.array_family import flex
     from dxtbx.format.image import TIFFReader
 
     image = TIFFReader(filename).image()
@@ -328,7 +328,7 @@ def tst_tiff(filename):
 
 def tst_cbf_fast(filename):
     from dxtbx.datablock import DataBlockFactory
-    from dials.array_family import flex
+    from scitbx.array_family import flex
     from dxtbx.format.image import CBFFastReader
 
     image = CBFFastReader(filename).image()
@@ -345,7 +345,7 @@ def tst_cbf_fast(filename):
 
 def tst_cbf(filename):
     from dxtbx.datablock import DataBlockFactory
-    from dials.array_family import flex
+    from scitbx.array_family import flex
     from dxtbx.format.image import CBFReader
 
     image = CBFReader(filename).image()
