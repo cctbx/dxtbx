@@ -187,7 +187,21 @@ class FormatCBFMiniEiger(FormatCBFMini):
     def _beam(self):
         wavelength = float(self._cif_header_dictionary["Wavelength"].split()[0])
 
-        return self._beam_factory.simple(wavelength)
+        beam = self._beam_factory.simple(wavelength)
+
+        try:
+            flux = float(self._cif_header_dictionary["Flux"].split()[0])
+            beam.set_flux(flux)
+        except KeyError:
+            pass
+
+        try:
+            transmission = float(self._cif_header_dictionary["Transmission"].split()[0])
+            beam.set_transmission(transmission)
+        except KeyError:
+            pass
+
+        return beam
 
     def _scan(self):
         format = self._scan_factory.format("CBF")
