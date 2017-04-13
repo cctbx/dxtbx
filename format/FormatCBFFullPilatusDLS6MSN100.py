@@ -59,6 +59,19 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
         return
 
+    def get_mask(self, goniometer=None):
+        mask = super(FormatCBFFullPilatusDLS6MSN100, self).get_mask()
+        if self._dynamic_shadowing:
+            gonio_masker = self.get_goniometer_shadow_masker(goniometer=goniometer)
+            scan = self.get_scan()
+            detector = self.get_detector()
+            shadow_mask = gonio_masker.get_mask(detector, scan.get_oscillation()[0])
+            assert len(mask) == len(shadow_mask)
+            for m, sm in zip(mask, shadow_mask):
+                m &= sm
+
+        return mask
+
     def get_goniometer_shadow_masker(self, goniometer=None):
         if goniometer is None:
             goniometer = self.get_goniometer()
@@ -129,9 +142,9 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
                 from scitbx import matrix
 
                 R = align_reference_frame(
-                    matrix.col((1, 0, 0)),
                     matrix.col((-1, 0, 0)),
-                    matrix.col((0, 1, 0)),
+                    matrix.col((1, 0, 0)),
+                    matrix.col((0, -1, 0)),
                     matrix.col((0, 1, 0)),
                 )
                 faceA = R.elems * SMG.faceA
@@ -146,8 +159,9 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
                 for coords in (faceA, faceE):
                     coords = coords.deep_copy()
-
                     for i, axis in enumerate(axes):
+                        if i == 0:
+                            continue  # shadow doesn't change with phi setting
                         sel = flex.bool(len(coords), True)
                         rotation = matrix.col(
                             axis
