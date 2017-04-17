@@ -69,10 +69,10 @@ class check_shape(object):
 
     def __call__(self, dset):
         shape = dset.shape
-        if not shape == self.shape:
+        if not shape in self.shape:
             return (
                 False,
-                "%s has shape %s, expected %s"
+                "%s has shape %s, expected one of %s"
                 % (dset.name, str(shape), str(self.shape)),
             )
         return True, ""
@@ -233,6 +233,7 @@ def convert_units(value, input_units, output_units):
             "microns": lambda x: x * 1e-3,
             "angstroms": lambda x: x * 10,
         },
+        "angstroms": {"angstrom": lambda x: x},
     }
     if input_units == output_units:
         return value
@@ -362,13 +363,17 @@ class NXdetector_module(object):
             "data_origin": {
                 "minOccurs": 1,
                 "checks": [
-                    check_dset(dtype=["uint32", "uint64", "int32", "int64"], shape=(2,))
+                    check_dset(
+                        dtype=["uint32", "uint64", "int32", "int64"], shape=[(2,), (3,)]
+                    )
                 ],
             },
             "data_size": {
                 "minOccurs": 1,
                 "checks": [
-                    check_dset(dtype=["int32", "int64", "uint32", "uint64"], shape=(2,))
+                    check_dset(
+                        dtype=["int32", "int64", "uint32", "uint64"], shape=[(2,), (3,)]
+                    )
                 ],
             },
             "module_offset": {
@@ -582,7 +587,7 @@ class NXbeam(object):
             "incident_wavelength_spectrum": {"minOccurs": 0, "checks": []},
             "incident_polarization_stokes": {
                 "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], shape=(4,))],
+                "checks": [check_dset(dtype=["float32", "float64"], shape=[(4,)])],
             },
             "flux": {
                 "minOccurs": 0,
@@ -615,7 +620,7 @@ class NXsample(object):
             "unit_cell_group": {"minOccurs": 0, "checks": []},
             "sample_orientation": {
                 "minOccurs": 0,
-                "checks": [check_dset(dtype="float64", shape=(3,))],
+                "checks": [check_dset(dtype="float64", shape=[(3,)])],
             },
             "orientation_matrix": {
                 "minOccurs": 0,
