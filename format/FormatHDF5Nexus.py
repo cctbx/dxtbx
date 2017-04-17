@@ -7,6 +7,7 @@ from dxtbx.format.FormatHDF5 import FormatHDF5
 class FormatHDF5Nexus(FormatHDF5):
     @staticmethod
     def understand(image_file):
+        return False
         try:
             tag = FormatHDF5.open_file(image_file, "rb").read(8)
         except IOError as e:
