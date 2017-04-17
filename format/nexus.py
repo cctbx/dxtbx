@@ -377,7 +377,7 @@ class NXdetector_module(object):
                 ],
             },
             "module_offset": {
-                "minOccurs": 1,
+                "minOccurs": 0,
                 "checks": [
                     check_dset(
                         dtype=["float64", "float32", "int64", "int32"], is_scalar=True
@@ -390,7 +390,7 @@ class NXdetector_module(object):
                 ],
             },
             "fast_pixel_direction": {
-                "minOccurs": 1,
+                "minOccurs": 0,
                 "checks": [
                     check_dset(dtype=["float32", "float64"], is_scalar=True),
                     check_attr("transformation_type"),
@@ -401,7 +401,7 @@ class NXdetector_module(object):
                 ],
             },
             "slow_pixel_direction": {
-                "minOccurs": 1,
+                "minOccurs": 0,
                 "checks": [
                     check_dset(dtype=["float32", "float64"], is_scalar=True),
                     check_attr("transformation_type"),
@@ -430,7 +430,7 @@ class NXdetector(object):
         items = {
             "depends_on": {"minOccurs": 1, "checks": []},
             "data": {"minOccurs": 0, "checks": [check_dset(dims=3)]},
-            "description": {"minOccurs": 1, "checks": []},
+            "description": {"minOccurs": 0, "checks": []},
             "time_per_channel": {"minOccurs": 0, "checks": []},
             "distance": {
                 "minOccurs": 0,
@@ -441,7 +441,7 @@ class NXdetector(object):
                 "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
             },
             "count_time": {
-                "minOccurs": 1,
+                "minOccurs": 0,
                 "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
             },
             "beam_centre_x": {
@@ -511,12 +511,12 @@ class NXdetector(object):
             },
             "gain_setting": {"minOccurs": 0, "checks": []},
             "saturation_value": {
-                "minOccurs": 1,
+                "minOccurs": 0,
                 "checks": [check_dset(dtype=["int32", "int64"], is_scalar=True)],
             },
-            "sensor_material": {"minOccurs": 1, "checks": []},
+            "sensor_material": {"minOccurs": 0, "checks": []},
             "sensor_thickness": {
-                "minOccurs": 1,
+                "minOccurs": 0,
                 "checks": [
                     check_dset(dtype=["float32", "float64"], is_scalar=True),
                     check_attr("units", dtype=str),
@@ -526,7 +526,7 @@ class NXdetector(object):
                 "minOccurs": 0,
                 "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
             },
-            "type": {"minOccurs": 1, "checks": []},
+            "type": {"minOccurs": 0, "checks": []},
         }
 
         run_checks(self.handle, items)
@@ -610,7 +610,7 @@ class NXsample(object):
 
         items = {
             "name": {"minOccurs": 0, "checks": []},
-            "depends_on": {"minOccurs": 1, "checks": []},
+            "depends_on": {"minOccurs": 0, "checks": []},
             "chemical_formula": {"minOccurs": 0, "checks": []},
             "unit_cell": {
                 "minOccurs": 0,
