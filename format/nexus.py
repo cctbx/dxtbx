@@ -882,7 +882,7 @@ class BeamFactory(object):
         )
 
         # Construct the beam model
-        self.model = Beam(direction=(0, 0, -1), wavelength=wavelength_value)
+        self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
 
 
 def get_change_of_basis(transformation):
@@ -1286,9 +1286,11 @@ class DetectorFactory(object):
         module_offset = nx_module["module_offset"]
         origin = construct_vector(nx_file, module_offset.name)
 
-        origin = -matrix.col(origin)
-        fast_axis = -fast_axis
-        slow_axis = -slow_axis
+        # Change of basis to convert from NeXus to IUCr/ImageCIF convention
+        cob = matrix.sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
+        origin = cob * matrix.col(origin)
+        fast_axis = cob * fast_axis
+        slow_axis = cob * slow_axis
 
         # Ensure that fast and slow axis are orthogonal
         normal = fast_axis.cross(slow_axis)
