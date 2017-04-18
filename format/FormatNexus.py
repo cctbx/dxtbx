@@ -23,7 +23,7 @@ from dxtbx.format.nexus import BeamFactory
 from dxtbx.format.nexus import DetectorFactory, DetectorFactoryFromGroup
 from dxtbx.format.nexus import GoniometerFactory
 from dxtbx.format.nexus import ScanFactory
-from dxtbx.format.nexus import DataFactory
+from dxtbx.format.nexus import DataFactory, DetectorGroupDataFactory
 from dxtbx.format.nexus import MaskFactory
 
 
@@ -79,13 +79,14 @@ class FormatNexus(FormatHDF5):
             ), "Currently only supports 1 NXdetector_module unless in a detector group"
 
             self._detector_model = DetectorFactory(detector, self._beam_model).model
+            self._raw_data = DataFactory(data).model
         else:
             self._detector_model = DetectorFactoryFromGroup(
                 instrument, self._beam_model
             ).model
+            self._raw_data = DetectorGroupDataFactory(data, instrument).model
 
         self._setup_gonio_and_scan(sample, detector)
-        self._raw_data = DataFactory(data).model
         self._mask = (MaskFactory(detector).mask,)
 
     def _setup_gonio_and_scan(self, sample, detector):
@@ -164,6 +165,9 @@ class FormatNexusStill(FormatNexus, FormatStill):
         """ No rotation-specific models for stills """
         self._goniometer_model = None
         self._scan_model = None
+
+    def get_num_images(self):
+        return len(self._raw_data)
 
 
 if __name__ == "__main__":
