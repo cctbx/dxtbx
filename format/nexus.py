@@ -12,7 +12,12 @@
 
 from __future__ import absolute_import, division
 from __future__ import print_function
-from dxtbx_format_nexus_ext import *
+
+try:
+    from dxtbx_format_nexus_ext import *
+except ImportError:
+    # Workaround for psana build, which doesn't link HDF5 properly
+    pass
 
 
 class check_dtype(object):
