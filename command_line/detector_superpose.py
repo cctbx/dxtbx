@@ -23,6 +23,7 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 from scitbx.array_family import flex
 from scitbx.math.superpose import least_squares_fit
 from xfel.command_line.cspad_detector_congruence import iterate_detector_at_level
+from libtbx.test_utils import approx_equal
 
 help_message = (
     """
@@ -56,6 +57,10 @@ fit_target = *corners centers
   .help = Corners: perform superpose using corners of panels. Centers:\
           perform superpose using centers of panels (requires at least 3\
           panels
+repeat_until_converged = True
+  .type = bool
+  .help = If True, do rounds of fitting until the angle of rotation and \
+          magnitude of translation stop changing.
 """,
     process_includes=True,
 )
@@ -119,31 +124,6 @@ class Script(object):
                 len(panel_ids) >= 3
             ), "When using centers as target for superpose, detector needs at least 3 panels"
 
-        # Treat panels as a list of 4 sites (corners) or 1 site (centers) for use with lsq superpose
-        reference_sites = flex.vec3_double()
-        moving_sites = flex.vec3_double()
-        for panel_id in panel_ids:
-            for detector, sites in zip(
-                [reference, moving], [reference_sites, moving_sites]
-            ):
-                panel = detector[panel_id]
-                size = panel.get_image_size()
-                corners = flex.vec3_double(
-                    [
-                        panel.get_pixel_lab_coord(point)
-                        for point in [
-                            (0, 0),
-                            (0, size[1] - 1),
-                            (size[0] - 1, size[1] - 1),
-                            (size[0] - 1, 0),
-                        ]
-                    ]
-                )
-                if params.fit_target == "corners":
-                    sites.extend(corners)
-                elif params.fit_target == "centers":
-                    sites.append(corners.mean())
-
         def rmsd_from_centers(a, b):
             assert len(a) == len(b)
             assert len(a) % 4 == len(b) % 4 == 0
@@ -154,53 +134,94 @@ class Script(object):
                 cb.append(b[i : i + 4].mean())
             return 1000 * math.sqrt((ca - cb).sum_sq() / len(ca))
 
-        # Compute super position
-        rmsd = 1000 * math.sqrt(
-            (reference_sites - moving_sites).sum_sq() / len(reference_sites)
-        )
-        print("RMSD before fit: %.1f microns" % rmsd)
-        if params.fit_target == "corners":
-            rmsd = rmsd_from_centers(reference_sites, moving_sites)
-            print("RMSD of centers before fit: %.1f microns" % rmsd)
-        lsq = least_squares_fit(reference_sites, moving_sites)
-        rmsd = 1000 * math.sqrt(
-            (reference_sites - lsq.other_sites_best_fit()).sum_sq()
-            / len(reference_sites)
-        )
-        print("RMSD of fit: %.1f microns" % rmsd)
-        if params.fit_target == "corners":
-            rmsd = rmsd_from_centers(reference_sites, lsq.other_sites_best_fit())
-            print("RMSD of fit of centers: %.1f microns" % rmsd)
-        angle, axis = lsq.r.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
-            deg=True
-        )
-        print(
-            "Axis and angle of rotation: (%.3f, %.3f, %.3f), %.2f degrees"
-            % (axis[0], axis[1], axis[2], angle)
-        )
-        print(
-            "Translation (x, y, z, in microns): (%.3f, %.3f, %.3f)"
-            % (1000 * lsq.t).elems
-        )
+        cycles = 0
+        while True:
+            cycles += 1
 
-        # Apply the shifts
-        if params.apply_at_hierarchy_level == None:
-            iterable = moving
-        else:
-            iterable = iterate_detector_at_level(
-                moving.hierarchy(), level=params.apply_at_hierarchy_level
+            # Treat panels as a list of 4 sites (corners) or 1 site (centers) for use with lsq superpose
+            reference_sites = flex.vec3_double()
+            moving_sites = flex.vec3_double()
+            for panel_id in panel_ids:
+                for detector, sites in zip(
+                    [reference, moving], [reference_sites, moving_sites]
+                ):
+                    panel = detector[panel_id]
+                    size = panel.get_image_size()
+                    corners = flex.vec3_double(
+                        [
+                            panel.get_pixel_lab_coord(point)
+                            for point in [
+                                (0, 0),
+                                (0, size[1] - 1),
+                                (size[0] - 1, size[1] - 1),
+                                (size[0] - 1, 0),
+                            ]
+                        ]
+                    )
+                    if params.fit_target == "corners":
+                        sites.extend(corners)
+                    elif params.fit_target == "centers":
+                        sites.append(corners.mean())
+
+            # Compute super position
+            rmsd = 1000 * math.sqrt(
+                (reference_sites - moving_sites).sum_sq() / len(reference_sites)
+            )
+            print("RMSD before fit: %.1f microns" % rmsd)
+            if params.fit_target == "corners":
+                rmsd = rmsd_from_centers(reference_sites, moving_sites)
+                print("RMSD of centers before fit: %.1f microns" % rmsd)
+            lsq = least_squares_fit(reference_sites, moving_sites)
+            rmsd = 1000 * math.sqrt(
+                (reference_sites - lsq.other_sites_best_fit()).sum_sq()
+                / len(reference_sites)
+            )
+            print("RMSD of fit: %.1f microns" % rmsd)
+            if params.fit_target == "corners":
+                rmsd = rmsd_from_centers(reference_sites, lsq.other_sites_best_fit())
+                print("RMSD of fit of centers: %.1f microns" % rmsd)
+            angle, axis = lsq.r.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
+                deg=True
+            )
+            print(
+                "Axis and angle of rotation: (%.3f, %.3f, %.3f), %.2f degrees"
+                % (axis[0], axis[1], axis[2], angle)
+            )
+            print(
+                "Translation (x, y, z, in microns): (%.3f, %.3f, %.3f)"
+                % (1000 * lsq.t).elems
             )
 
-        for group in iterable:
-            fast = col(group.get_fast_axis())
-            slow = col(group.get_slow_axis())
-            ori = col(group.get_origin())
+            # Apply the shifts
+            if params.apply_at_hierarchy_level == None:
+                iterable = moving
+            else:
+                iterable = iterate_detector_at_level(
+                    moving.hierarchy(), level=params.apply_at_hierarchy_level
+                )
 
-            group.set_frame(lsq.r * fast, lsq.r * slow, (lsq.r * ori) + lsq.t)
+            for group in iterable:
+                fast = col(group.get_fast_axis())
+                slow = col(group.get_slow_axis())
+                ori = col(group.get_origin())
 
-            fast = col(group.get_fast_axis())
-            slow = col(group.get_slow_axis())
-            ori = col(group.get_origin())
+                group.set_frame(lsq.r * fast, lsq.r * slow, (lsq.r * ori) + lsq.t)
+
+                fast = col(group.get_fast_axis())
+                slow = col(group.get_slow_axis())
+                ori = col(group.get_origin())
+
+            if not params.repeat_until_converged:
+                break
+
+            if approx_equal(angle, 0.0, out=None) and approx_equal(
+                (1000 * lsq.t).length(), 0.0, out=None
+            ):
+                print("Converged after", cycles, "cycles")
+                break
+            else:
+                print("Movement not close to zero, repeating fit")
+                print()
 
         from dxtbx.serialize import dump
 
