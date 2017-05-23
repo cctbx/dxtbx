@@ -481,7 +481,7 @@ class DataBlockTemplateImporter(object):
             d,
             g,
             s,
-            format_kwargs=kwargs,
+            format_kwargs=kwargs.get("format_kwargs"),
         )
 
         # Return the imageset
