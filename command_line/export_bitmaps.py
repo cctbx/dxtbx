@@ -86,7 +86,10 @@ dxtbx.export_bitmaps image_files [options]
                 # also binning doesn't work
                 assert binning == 1
                 flex_image = _get_flex_image_multipanel(
-                    brightness=brightness, panels=detector, raw_data=image
+                    brightness=brightness,
+                    panels=detector,
+                    raw_data=image,
+                    beam=imageset.get_beam(),
                 )
             else:
                 flex_image = _get_flex_image(
