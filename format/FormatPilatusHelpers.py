@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division
-from __future__ import print_function
 
 #!/usr/bin/env python
 # FormatPilatusHelpers.py
@@ -118,7 +117,7 @@ def get_vendortype(xdetector):
 
 def get_vendortype_eiger(xdetector):
     array = xdetector[0].get_image_size()
-    print(array, end=" ")
+    # print array,
     if array == (4150, 4371):
         return "Eiger-16M"
     elif array == (3110, 3269):
