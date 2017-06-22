@@ -43,6 +43,8 @@ class FormatCBFMini(FormatCBF):
                 return True
             if "_array_data.header_convention" in record and "?" in record:
                 return True
+            if "_array_data.header_convention" in record and "XDS special" in record:
+                return True
             if (
                 "_array_data.header_convention" in record and "GENERIC_MINI" in record
             ):  # intended for simulated PAD data, non-Pilatus array size
