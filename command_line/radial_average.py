@@ -96,7 +96,7 @@ def run(args, image=None):
         logger = open(params.output_file, "w")
         logger.write("%s " % params.output_file)
 
-    if params.verbose:
+    if params.show_plots:
         from matplotlib import pyplot as plt
         import numpy as np
 
@@ -234,7 +234,7 @@ def run(args, image=None):
 
         # logger.write("Maximum 2theta for %s: %f, value: %f\n"%(file_path, max_twotheta, max_result))
 
-        if params.verbose:
+        if params.show_plots:
             if params.plot_x_max is not None:
                 results = results.select(xvals <= params.plot_x_max)
                 xvals = xvals.select(xvals <= params.plot_x_max)
