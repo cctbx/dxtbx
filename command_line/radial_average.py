@@ -6,6 +6,7 @@ from __future__ import absolute_import, division
 
 import libtbx.phil
 from libtbx.utils import Usage, Sorry
+from libtbx import easy_pickle
 import sys
 import os
 import math
@@ -35,6 +36,10 @@ master_phil = libtbx.phil.parse(
     .type = float
   normalize = False
     .type = bool
+  show_plots = True
+    .type = bool
+  mask = None
+    .type = str
 """
 )
 
@@ -92,6 +97,9 @@ def run(args):
             [colormap(i) for i in np.linspace(0, 0.9, len(params.file_path))]
         )
 
+    if params.mask is not None:
+        params.mask = easy_pickle.load(params.mask)
+
     # Iterate over each file provided
     for file_path in params.file_path:
         img = dxtbx.load(file_path)
@@ -142,6 +150,11 @@ def run(args):
             all_data = (all_data,)
 
         for tile, (panel, data) in enumerate(zip(detector, all_data)):
+            if params.mask is None:
+                mask = flex.bool(flex.grid(data.focus()), True)
+            else:
+                mask = params.mask[tile]
+
             if hasattr(data, "as_double"):
                 data = data.as_double()
 
@@ -159,6 +172,7 @@ def run(args):
             # compute the average
             radial_average(
                 data,
+                mask,
                 bc,
                 sums,
                 sums_sq,
@@ -225,7 +239,7 @@ def run(args):
             if params.plot_y_max is not None:
                 plt.ylim(0, params.plot_y_max)
 
-    if params.verbose:
+    if params.show_plots:
         plt.legend(
             [os.path.basename(os.path.splitext(f)[0]) for f in params.file_path], ncol=2
         )
