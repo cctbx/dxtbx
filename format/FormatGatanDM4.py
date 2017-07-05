@@ -19,7 +19,7 @@ import struct
 import os
 
 
-class FormatGatanDM4(Format, FormatMultiImage):
+class FormatGatanDM4(FormatMultiImage, Format):
     """An image reading class for images in Gatan Digital Micrograph DM4
     format, which may be multi image stacks.
 

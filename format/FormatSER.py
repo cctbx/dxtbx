@@ -18,7 +18,7 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage
 import struct
 
 
-class FormatSER(Format, FormatMultiImage):
+class FormatSER(FormatMultiImage, Format):
     def __init__(self, image_file, **kwargs):
 
         from dxtbx import IncorrectFormatError
