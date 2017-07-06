@@ -257,6 +257,12 @@ class Format(object):
                 format_instance = Class.get_instance(self._filenames[index])
                 return format_instance.get_detectorbase()
 
+            def __len__(self):
+                return len(self._filenames)
+
+            def copy(self, filenames):
+                return DetectorBaseFactory(filenames)
+
         return DetectorBaseFactory
 
     @classmethod
@@ -280,6 +286,9 @@ class Format(object):
             def __len__(self):
                 return len(self._filenames)
 
+            def copy(self, filenames):
+                return Reader(filenames)
+
         return Reader
 
     @classmethod
@@ -302,6 +311,12 @@ class Format(object):
 
             def __len__(self):
                 return len(self._filenames)
+
+            def copy(self, filenames):
+                return Masker(filenames)
+
+            def identifiers(self):
+                return self.paths()
 
         return Masker
 
@@ -347,22 +362,12 @@ class Format(object):
 
             # If any are None then read from format
             if [beam, detector, goniometer, scan].count(None) != 0:
-                format_instance = Class(filenames[i])
-                beam = []
-                detector = []
-                goniometer = []
-                scan = []
                 for i in range(len(filenames)):
-                    beam.append(format_instance.get_beam())
-                    detector.append(format_instance.get_detector())
-                    goniometer.append(format_instance.get_goniometer())
-                    scan.append(format_instance.get_scan())
-
-            # Set the models
-            iset.set_beam_list(beam)
-            iset.set_detector_list(detector)
-            iset.set_goniometer_list(goniometer)
-            iset.set_scan_list(scan)
+                    format_instance = Class(filenames[i])
+                    iset.set_beam(i, format_instance.get_beam())
+                    iset.set_detector(i, format_instance.get_detector())
+                    iset.set_goniometer(i, format_instance.get_goniometer())
+                    iset.set_scan(i, format_instance.get_scan())
 
         else:
 
