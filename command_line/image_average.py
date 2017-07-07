@@ -289,7 +289,6 @@ def run(argv=None):
     if len(paths) == 1:
         # test if the iamge is a multi-image
         from dxtbx.datablock import DataBlockFactory
-        from dxtbx.imageset import SingleFileReader
 
         datablocks = DataBlockFactory.from_filenames([paths[0]])
         assert len(datablocks) == 1
@@ -297,7 +296,7 @@ def run(argv=None):
         imagesets = datablock.extract_imagesets()
         assert len(imagesets) == 1
         imageset = imagesets[0]
-        if not issubclass(type(imageset.reader()), SingleFileReader):
+        if not imageset.reader().is_single_file_reader():
             from libtbx.utils import Usage
 
             raise Usage("Supply more than one image")
