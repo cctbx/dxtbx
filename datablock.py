@@ -1083,9 +1083,9 @@ class DataBlockFactory(object):
     @staticmethod
     def from_in_memory(images, indices=None):
         """ Function to instantiate data block from in memory imageset. """
-        from dxtbx.imageset import MemImageSet
+        from dxtbx.imageset import ImageSet, ImageSetData, MemReader
 
-        return DataBlock([MemImageSet(images, indices)])
+        return DataBlock([ImageSet(ImageSetData(MemReader(images)), indices)])
 
 
 class DataBlockDumper(object):

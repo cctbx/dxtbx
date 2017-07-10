@@ -434,8 +434,9 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
                 # FIXME_HACK
                 template = get_template(imset)
                 r = OrderedDict([("__id__", "ImageSweep"), ("template", template)])
-            elif isinstance(imset, MemImageSet):
-                r = OrderedDict([("__id__", "MemImageSet")])
+            # elif isinstance(imset, MemImageSet):
+            #   r = OrderedDict([
+            #     ('__id__', 'MemImageSet')])
             elif isinstance(imset, ImageSet):
                 r = OrderedDict([("__id__", "ImageSet"), ("images", imset.paths())])
                 if imset.reader().is_single_file_reader():
