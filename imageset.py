@@ -79,10 +79,10 @@ class MemReader(object):
         self._images = images
 
     def paths(self):
-        raise NotImplementedError("MemReader has no image paths")
+        return ["" for im in self._images]
 
     def identifiers(self):
-        raise NotImplementedError("MemReader has no image paths")
+        return self.paths()
 
     def __len__(self):
         return len(self._images)
@@ -96,6 +96,24 @@ class MemReader(object):
 
     def master_path(self):
         return ""
+
+
+class MemMasker(object):
+    def __init__(self, images):
+        self._images = images
+
+    def get(self, index, goniometer=None):
+        format_instance = self._images[index]
+        return format_instance.get_mask(goniometer=goniometer)
+
+    def paths(self):
+        return ["" for im in self._images]
+
+    def identifiers(self):
+        return self.paths()
+
+    def __len__(self):
+        return len(self._images)
 
 
 class ExternalLookupItem(object):
@@ -354,6 +372,8 @@ class ImageSet(object):
 
     def get_goniometer(self, index=0):
         """ Get the goniometer model. """
+        if self._data.goniometer is None or len(self._data.goniometer) == 0:
+            return None
         return self._data.goniometer[self._indices[index]]
 
     def set_goniometer(self, goniometer, index=0):
@@ -362,6 +382,8 @@ class ImageSet(object):
 
     def get_scan(self, index=0):
         """ Get the scan model. """
+        if self._data.goniometer is None or len(self._data.goniometer) == 0:
+            return None
         return self._data.scan[self._indices[index]]
 
     def set_scan(self, scan, index=0):
@@ -398,7 +420,7 @@ class ImageSet(object):
         return self._data.masker
 
     def params(self):
-        return self._data.properties["params"]
+        return self._data.properties.get("params", {})
 
     def complete_set(self):
         """
