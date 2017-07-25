@@ -338,8 +338,8 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
             shadow_mask = gonio_masker.get_mask(detector, scan.get_oscillation()[0])
             assert len(mask) == len(shadow_mask)
             for m, sm in zip(mask, shadow_mask):
-                m &= sm
-
+                if sm is not None:
+                    m &= sm
         return mask
 
     def _goniometer(self):
