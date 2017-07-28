@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# FormatSMVRigakuEiger1M.py
+# FormatSMVRigakuEiger4M.py
 #   Copyright (C) 2013 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -15,7 +15,7 @@ from __future__ import print_function
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
 
-class FormatSMVRigakuEiger1M(FormatSMVRigaku):
+class FormatSMVRigakuEiger4M(FormatSMVRigaku):
     """A class for reading SMV format Rigaku Pilatus 200L images."""
 
     @staticmethod
@@ -228,4 +228,4 @@ if __name__ == "__main__":
     import sys
 
     for arg in sys.argv[1:]:
-        print(FormatSMVRigakuEiger1M.understand(arg))
+        print(FormatSMVRigakuEiger4M.understand(arg))
