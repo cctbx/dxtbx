@@ -299,9 +299,11 @@ class Format(object):
         if (
             not hasattr(Class, "_current_instance_")
             or Class._current_filename_ != filename
+            or Class._current_kwargs_ != kwargs
         ):
             Class._current_instance_ = Class(filename, **kwargs)
             Class._current_filename_ = filename
+            Class._current_kwargs_ = kwargs
         return Class._current_instance_
 
     @classmethod
