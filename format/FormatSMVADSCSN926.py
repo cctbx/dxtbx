@@ -89,6 +89,7 @@ class FormatSMVADSCSN926(FormatSMVADSCSN):
             image_size,
             (underload, overload),
             [],
+            gain=self._adsc_module_gain(),
         )
 
 
