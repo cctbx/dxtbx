@@ -40,6 +40,8 @@ master_phil = libtbx.phil.parse(
     .type = bool
   mask = None
     .type = str
+  median_filter_size = None
+    .type = int
 """
 )
 
@@ -202,6 +204,16 @@ def run(args, image=None):
         # average the results, avoiding division by zero
         results = sums.set_selected(counts <= 0, 0)
         results /= counts.set_selected(counts <= 0, 1).as_double()
+
+        if params.median_filter_size is not None:
+            logger.write(
+                "WARNING, the median filter is not fully propogated to the variances\n"
+            )
+            from scipy.ndimage.filters import median_filter
+
+            results = flex.double(
+                median_filter(results.as_numpy_array(), size=params.median_filter_size)
+            )
 
         # calculate standard devations
         std_devs = [
