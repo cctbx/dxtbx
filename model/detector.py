@@ -599,6 +599,7 @@ class DetectorFactory:
         mask=[],
         px_mm=None,
         mu=0.0,
+        gain=None,
         identifier="",
     ):
         """Construct a simple detector at a given distance from the sample
@@ -647,6 +648,7 @@ class DetectorFactory:
             trusted_range,
             px_mm,
             mu=mu,
+            gain=gain,
             identifier=identifier,
         )
 

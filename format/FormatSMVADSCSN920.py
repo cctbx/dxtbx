@@ -73,6 +73,7 @@ class FormatSMVADSCSN920(FormatSMVADSCSN):
             image_size,
             (underload, overload),
             [],
+            gain=self._adsc_module_gain(),
         )
 
     def get_raw_data(self):

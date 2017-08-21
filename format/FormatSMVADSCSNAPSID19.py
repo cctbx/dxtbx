@@ -78,6 +78,7 @@ class FormatSMVADSCSNAPSID19(FormatSMVADSCSN):
             image_size,
             (underload, overload),
             [],
+            gain=self._adsc_module_gain(),
         )
 
     def _goniometer(self):
