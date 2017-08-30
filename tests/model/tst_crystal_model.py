@@ -5,7 +5,7 @@ from cStringIO import StringIO
 from libtbx.test_utils import approx_equal, show_diff
 from scitbx import matrix
 from cctbx import crystal, sgtbx, uctbx
-from dxtbx.model import Crystal, MosaicCrystal, CrystalFactory
+from dxtbx.model import Crystal, MosaicCrystalKabsch2010, CrystalFactory
 
 
 def random_rotation():
@@ -288,13 +288,13 @@ Crystal:
         A_min = matrix.sqr(model_minimum.get_A_at_scan_point(i))
         assert approx_equal(A_min, A_orig * M_inv)
 
-    mosaic_model = MosaicCrystal(
+    mosaic_model = MosaicCrystalKabsch2010(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),
         space_group_symbol="P 1",
     )
-    mosaic_model2 = MosaicCrystal(
+    mosaic_model2 = MosaicCrystalKabsch2010(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),
@@ -317,14 +317,14 @@ Crystal:
 
 def exercise_similarity():
 
-    model_1 = MosaicCrystal(
+    model_1 = MosaicCrystalKabsch2010(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),
         space_group_symbol="P 1",
     )
     model_1.set_mosaicity(0.5)
-    model_2 = MosaicCrystal(
+    model_2 = MosaicCrystalKabsch2010(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),

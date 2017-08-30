@@ -28,9 +28,9 @@ class CrystalFactory(object):
 
         # Create the model from the dictionary
         if "mosaicity" in d:
-            from dxtbx.model import MosaicCrystal
+            from dxtbx.model import MosaicCrystalKabsch2010
 
-            return MosaicCrystal.from_dict(d)
+            return MosaicCrystalKabsch2010.from_dict(d)
         else:
             from dxtbx.model import Crystal
 

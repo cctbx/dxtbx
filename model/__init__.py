@@ -272,7 +272,7 @@ class CrystalAux(boost.python.injector, Crystal):
         return xl
 
 
-class MosaicCrystalAux(CrystalAux, MosaicCrystal):
+class MosaicCrystalKabsch2010Aux(CrystalAux, MosaicCrystalKabsch2010):
     def show(self, show_scan_varying=False, out=None):
         from scitbx import matrix
 
@@ -325,7 +325,7 @@ class MosaicCrystalAux(CrystalAux, MosaicCrystal):
             The crystal model
 
         """
-        xl = MosaicCrystal(CrystalAux.from_dict(d))
+        xl = MosaicCrystalKabsch2010(CrystalAux.from_dict(d))
 
         # These parameters don't survive the Crystal copy constructor so have to be re-set
         # New parameters for maximum likelihood values
