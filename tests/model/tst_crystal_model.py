@@ -5,7 +5,7 @@ from cStringIO import StringIO
 from libtbx.test_utils import approx_equal, show_diff
 from scitbx import matrix
 from cctbx import crystal, sgtbx, uctbx
-from dxtbx.model import Crystal, CrystalFactory
+from dxtbx.model import Crystal, MosaicCrystal, CrystalFactory
 
 
 def random_rotation():
@@ -60,7 +60,6 @@ def exercise_crystal_model():
     assert approx_equal(
         model.get_real_space_vectors(), (real_space_a, real_space_b, real_space_c)
     )
-    assert approx_equal(model.get_mosaicity(), 0)
 
     model2 = Crystal(
         real_space_a=(10, 0, 0),
@@ -68,9 +67,8 @@ def exercise_crystal_model():
         real_space_c=(0, 0, 12),
         space_group_symbol="P 1",
     )
-    assert model == model2
-    model2.set_mosaicity(0.01)
-    assert model != model2
+    assert model == model2 and not (model != model2)
+
     # rotate 45 degrees about x-axis
     R1 = matrix.sqr(
         (
@@ -163,7 +161,6 @@ Crystal:
         real_space_c=(0, 0, 12),
         space_group=sgtbx.space_group_info("P 222").group(),
     )
-    model3.set_mosaicity(0.01)
     assert model3.get_space_group().type().hall_symbol() == " P 2 2"
     assert model != model3
     #
@@ -291,17 +288,43 @@ Crystal:
         A_min = matrix.sqr(model_minimum.get_A_at_scan_point(i))
         assert approx_equal(A_min, A_orig * M_inv)
 
+    mosaic_model = MosaicCrystal(
+        real_space_a=(10, 0, 0),
+        real_space_b=(0, 11, 0),
+        real_space_c=(0, 0, 12),
+        space_group_symbol="P 1",
+    )
+    mosaic_model2 = MosaicCrystal(
+        real_space_a=(10, 0, 0),
+        real_space_b=(0, 11, 0),
+        real_space_c=(0, 0, 12),
+        space_group_symbol="P 1",
+    )
+    assert approx_equal(mosaic_model.get_mosaicity(), 0)
+    assert mosaic_model == mosaic_model2
+    mosaic_model2.set_mosaicity(0.01)
+    assert mosaic_model != mosaic_model2
+    # FIXME Crystal == MosaicCrytal gives unexpected result, depending on parameter order
+    # model4 = Crystal(real_space_a=(10,0,0),
+    #                  real_space_b=(0,11,0),
+    #                  real_space_c=(0,0,12),
+    #                  space_group_symbol="P 1")
+    # print "model4 == mosaic_model", model4 == mosaic_model # True
+    # print "mosaic_model == model4", mosaic_model == model4 # False
+    # print "mosaic_model2 == model4", mosaic_model2 == model4 # False
+    # print "model4 == mosaic_model2", model4 == mosaic_model2 # True
+
 
 def exercise_similarity():
 
-    model_1 = Crystal(
+    model_1 = MosaicCrystal(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),
         space_group_symbol="P 1",
     )
     model_1.set_mosaicity(0.5)
-    model_2 = Crystal(
+    model_2 = MosaicCrystal(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),
