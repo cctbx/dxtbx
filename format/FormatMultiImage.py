@@ -144,6 +144,7 @@ class FormatMultiImage(object):
         from dxtbx.imageset import ImageSet
         from dxtbx.imageset import ImageSweep
         from os.path import abspath
+        from dials.array_family import flex
 
         if isinstance(filenames, str):
             filenames = [filenames]
@@ -203,6 +204,9 @@ class FormatMultiImage(object):
             else:
                 is_sweep = False
 
+        if single_file_indices is not None:
+            single_file_indices = flex.size_t(single_file_indices)
+
         # Create an imageset or sweep
         if not is_sweep:
 
@@ -211,7 +215,9 @@ class FormatMultiImage(object):
                 ImageSetData(
                     reader=reader,
                     masker=masker,
-                    properties={"vendor": vendor, "params": params, "format": Class},
+                    vendor=vendor,
+                    params=params,
+                    format=Class,
                 ),
                 indices=single_file_indices,
             )
@@ -278,12 +284,10 @@ class FormatMultiImage(object):
                 ImageSetData(
                     reader=reader,
                     masker=masker,
-                    properties={
-                        "vendor": vendor,
-                        "params": params,
-                        "format": Class,
-                        "template": template,
-                    },
+                    vendor=vendor,
+                    params=params,
+                    format=Class,
+                    template=template,
                 ),
                 beam=beam,
                 detector=detector,

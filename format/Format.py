@@ -469,12 +469,10 @@ class Format(object):
                 ImageSetData(
                     reader=reader,
                     masker=masker,
-                    properties={
-                        "vendor": vendor,
-                        "params": params,
-                        "format": Class,
-                        "template": template,
-                    },
+                    vendor=vendor,
+                    params=params,
+                    format=Class,
+                    template=template,
                 ),
                 beam=beam,
                 detector=detector,

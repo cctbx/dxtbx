@@ -787,7 +787,7 @@ class ImageSweepAux(ImageSweep, boost.python.injector):
 
     def get_template(self):
         """ Return the template """
-        return self._data.properties["template"]
+        return self.data().get_template()
 
 
 # class ImageSweep(ImageSet):
