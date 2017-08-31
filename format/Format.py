@@ -411,7 +411,9 @@ class Format(object):
                 ImageSetData(
                     reader=reader,
                     masker=masker,
-                    properties={"vendor": vendor, "params": params, "format": Class},
+                    vendor=vendor,
+                    params=params,
+                    format=Class,
                 )
             )
 
