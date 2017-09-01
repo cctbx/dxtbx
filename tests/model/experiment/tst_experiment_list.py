@@ -709,15 +709,15 @@ class TestExperimentListDumper(object):
         experiments = ExperimentListFactory.from_json_file(filename, check_format=True)
 
         imageset = experiments[0].imageset
-        assert imageset.external_lookup.mask.data is not None
-        assert imageset.external_lookup.gain.data is not None
-        assert imageset.external_lookup.pedestal.data is not None
+        assert not imageset.external_lookup.mask.data.empty()
+        assert not imageset.external_lookup.gain.data.empty()
+        assert not imageset.external_lookup.pedestal.data.empty()
         assert imageset.external_lookup.mask.filename is not None
         assert imageset.external_lookup.gain.filename is not None
         assert imageset.external_lookup.pedestal.filename is not None
-        assert imageset.external_lookup.mask.data.all_eq(True)
-        assert imageset.external_lookup.gain.data.all_eq(1)
-        assert imageset.external_lookup.pedestal.data.all_eq(0)
+        assert imageset.external_lookup.mask.data.tile(0).data().all_eq(True)
+        assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
+        assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
 
         dump = ExperimentListDumper(experiments)
         filename = "temp%s.json" % uuid4().hex
@@ -726,15 +726,15 @@ class TestExperimentListDumper(object):
         experiments = ExperimentListFactory.from_json_file(filename, check_format=True)
 
         imageset = experiments[0].imageset
-        assert imageset.external_lookup.mask.data is not None
-        assert imageset.external_lookup.gain.data is not None
-        assert imageset.external_lookup.pedestal.data is not None
+        assert not imageset.external_lookup.mask.data.empty()
+        assert not imageset.external_lookup.gain.data.empty()
+        assert not imageset.external_lookup.pedestal.data.empty()
         assert imageset.external_lookup.mask.filename is not None
         assert imageset.external_lookup.gain.filename is not None
         assert imageset.external_lookup.pedestal.filename is not None
-        assert imageset.external_lookup.mask.data.all_eq(True)
-        assert imageset.external_lookup.gain.data.all_eq(1)
-        assert imageset.external_lookup.pedestal.data.all_eq(0)
+        assert imageset.external_lookup.mask.data.tile(0).data().all_eq(True)
+        assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
+        assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
 
     def tst_dump_with_bad_lookup(self):
         from dxtbx.imageset import ImageSweep
@@ -758,9 +758,9 @@ class TestExperimentListDumper(object):
         experiments = ExperimentListFactory.from_json_file(filename, check_format=False)
 
         imageset = experiments[0].imageset
-        assert imageset.external_lookup.mask.data is None
-        assert imageset.external_lookup.gain.data is None
-        assert imageset.external_lookup.pedestal.data is None
+        assert imageset.external_lookup.mask.data.empty()
+        assert imageset.external_lookup.gain.data.empty()
+        assert imageset.external_lookup.pedestal.data.empty()
         assert imageset.external_lookup.mask.filename is not None
         assert imageset.external_lookup.gain.filename is not None
         assert imageset.external_lookup.pedestal.filename is not None
@@ -772,9 +772,9 @@ class TestExperimentListDumper(object):
         experiments = ExperimentListFactory.from_json_file(filename, check_format=False)
 
         imageset = experiments[0].imageset
-        assert imageset.external_lookup.mask.data is None
-        assert imageset.external_lookup.gain.data is None
-        assert imageset.external_lookup.pedestal.data is None
+        assert imageset.external_lookup.mask.data.empty()
+        assert imageset.external_lookup.gain.data.empty()
+        assert imageset.external_lookup.pedestal.data.empty()
         assert imageset.external_lookup.mask.filename is not None
         assert imageset.external_lookup.gain.filename is not None
         assert imageset.external_lookup.pedestal.filename is not None

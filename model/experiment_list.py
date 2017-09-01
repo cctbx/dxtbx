@@ -112,6 +112,7 @@ class ExperimentListDict(object):
         from dxtbx.imageset import ImageSweep, ImageSet, ImageGrid
         from dxtbx.serialize.filename import load_path
         import cPickle as pickle
+        from dxtbx.format.image import ImageBool, ImageDouble
 
         # Map of imageset/scan pairs
         imagesets = {}
@@ -146,7 +147,7 @@ class ExperimentListDict(object):
                         format_kwargs = {}
                     if "mask" in imageset and imageset["mask"] is not None:
                         mask_filename = load_path(imageset["mask"])
-                        if self._check_format:
+                        if self._check_format and mask_filename is not "":
                             mask = pickle.load(open(mask_filename))
                         else:
                             mask = None
@@ -155,7 +156,7 @@ class ExperimentListDict(object):
                         mask = None
                     if "gain" in imageset and imageset["gain"] is not None:
                         gain_filename = load_path(imageset["gain"])
-                        if self._check_format:
+                        if self._check_format and gain_filename is not "":
                             gain = pickle.load(open(gain_filename))
                         else:
                             gain = None
@@ -164,7 +165,7 @@ class ExperimentListDict(object):
                         gain = None
                     if "pedestal" in imageset and imageset["pedestal"] is not None:
                         pedestal_filename = load_path(imageset["pedestal"])
-                        if self._check_format:
+                        if self._check_format and pedestal_filename is not "":
                             pedestal = pickle.load(open(pedestal_filename))
                         else:
                             pedestal = None
@@ -181,7 +182,12 @@ class ExperimentListDict(object):
                         )
                     elif imageset["__id__"] == "ImageSweep":
                         imageset = self._make_sweep(
-                            imageset, scan, format_kwargs=format_kwargs
+                            imageset,
+                            beam=beam,
+                            detector=detector,
+                            goniometer=goniometer,
+                            scan=scan,
+                            format_kwargs=format_kwargs,
                         )
                     elif imageset["__id__"] == "MemImageSet":
                         imageset = self._make_mem_imageset(imageset)
@@ -190,6 +196,24 @@ class ExperimentListDict(object):
 
                     # Set the external lookup
                     if imageset is not None:
+                        if mask_filename is None:
+                            mask_filename = ""
+                        if gain_filename is None:
+                            gain_filename = ""
+                        if pedestal_filename is None:
+                            pedestal_filename = ""
+                        if mask is None:
+                            mask = ImageBool()
+                        else:
+                            mask = ImageBool(mask)
+                        if gain is None:
+                            gain = ImageDouble()
+                        else:
+                            gain = ImageDouble(gain)
+                        if pedestal is None:
+                            pedestal = ImageDouble()
+                        else:
+                            pedestal = ImageDouble(pedestal)
                         imageset.external_lookup.mask.data = mask
                         imageset.external_lookup.mask.filename = mask_filename
                         imageset.external_lookup.gain.data = gain
@@ -268,7 +292,15 @@ class ExperimentListDict(object):
             self._make_stills(imageset, format_kwargs=format_kwargs), grid_size
         )
 
-    def _make_sweep(self, imageset, scan, format_kwargs=None):
+    def _make_sweep(
+        self,
+        imageset,
+        beam=None,
+        detector=None,
+        goniometer=None,
+        scan=None,
+        format_kwargs=None,
+    ):
         """ Make an image sweep. """
         from dxtbx.sweep_filenames import template_image_range
         from dxtbx.imageset import ImageSetFactory
@@ -290,6 +322,9 @@ class ExperimentListDict(object):
             list(range(i0, i1 + 1)),
             None,
             check_format=self._check_format,
+            beam=beam,
+            detector=detector,
+            goniometer=goniometer,
             scan=scan,
             format_kwargs=format_kwargs,
         )
