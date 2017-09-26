@@ -325,7 +325,11 @@ def construct_vector(nx_file, item, vector=None):
         vector = nx_file[item].attrs["vector"]
         if ttype == "translation":
             value = convert_units(value, units, "mm")
-            vector = vector * value
+            try:
+                vector = vector * value
+            except ValueError as e:
+                vector = vector * value[0]
+
     else:
         pass
     visitor = TransformVisitor(vector)
@@ -1371,8 +1375,11 @@ class GoniometerFactory(object):
             obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
         )
 
-        # Construct the model
-        self.model = Goniometer(tuple(rotation_axis))
+        # Construct the model - if nonsense present cope by failing over...
+        try:
+            self.model = Goniometer(tuple(rotation_axis))
+        except:  # deliberate
+            self.model = Goniometer((1, 0, 0))
 
 
 def find_goniometer_rotation(obj):
