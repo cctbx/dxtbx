@@ -948,6 +948,7 @@ class ImageSetFactory(object):
             template=template,
             as_sweep=True,
             check_format=check_format,
+            single_file_indices=range(*array_range),
         )
 
         # Return the sweep

@@ -5,11 +5,15 @@ class Reader(object):
 
     _format_class_ = None
 
-    def __init__(self, filenames, **kwargs):
+    def __init__(self, filenames, num_images=None, **kwargs):
         self.kwargs = kwargs
         self.format_class = Reader._format_class_
         assert len(filenames) == 1
         self._filename = filenames[0]
+        if num_images is None:
+            self._num_images = self.read_num_images()
+        else:
+            self._num_images = num_images
 
     def nullify_format_instance(self):
         self.format_class._current_instance_ = None
@@ -22,9 +26,12 @@ class Reader(object):
     def paths(self):
         return [self._filename]
 
-    def num_images(self):
+    def read_num_images(self):
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
         return format_instance.get_num_images()
+
+    def num_images(self):
+        return self._num_images
 
     def __len__(self):
         return self.num_images()
@@ -46,11 +53,15 @@ class Masker(object):
 
     _format_class_ = None
 
-    def __init__(self, filenames, **kwargs):
+    def __init__(self, filenames, num_images=None, **kwargs):
         self.kwargs = kwargs
         self.format_class = Masker._format_class_
         assert len(filenames) == 1
         self._filename = filenames[0]
+        if num_images is None:
+            self._num_images = self.read_num_images()
+        else:
+            self._num_images = num_images
 
     def get(self, index, goniometer=None):
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
@@ -59,9 +70,12 @@ class Masker(object):
     def paths(self):
         return [self._filename]
 
-    def num_images(self):
+    def read_num_images(self):
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
         return format_instance.get_num_images()
+
+    def num_images(self):
+        return self._num_images
 
     def __len__(self):
         return self.num_images()
@@ -159,9 +173,17 @@ class FormatMultiImage(object):
         if format_kwargs is None:
             format_kwargs = {}
 
+        # If we have no specific format class, we need indices for number of images
+        if Class == FormatMultiImage:
+            assert single_file_indices is not None
+            assert min(single_file_indices) >= 0
+            num_images = max(single_file_indices) + 1
+        else:
+            num_images = None
+
         # Get some information from the format class
-        reader = Class.get_reader()(filenames, **format_kwargs)
-        masker = Class.get_masker()(filenames, **format_kwargs)
+        reader = Class.get_reader()(filenames, num_images=num_images, **format_kwargs)
+        masker = Class.get_masker()(filenames, num_images=num_images, **format_kwargs)
 
         # Get the format instance
         assert len(filenames) == 1
@@ -257,7 +279,7 @@ class FormatMultiImage(object):
             # Check indices are sequential
             if single_file_indices is not None:
                 assert all(
-                    i == j
+                    i + 1 == j
                     for i, j in zip(single_file_indices[:-1], single_file_indices[1:])
                 )
                 num_images = len(single_file_indices)
