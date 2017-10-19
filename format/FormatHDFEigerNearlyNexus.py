@@ -242,6 +242,13 @@ class EigerNXmxFixer(object):
         else:
             group = handle["/entry/sample/transformations"]
 
+        # check for incomplete omega definitions dirty hack...
+        if "omega" in group:
+            try:
+                data = group["omega"][()]
+            except AttributeError as e:
+                del group["omega"]
+
         if "omega" not in group:
             # print "Creating omega transformation:"
             # print " - making up rotation axis to be (1, 0, 0)"
