@@ -39,7 +39,7 @@ class FormatNexus(FormatHDF5):
     def understand(image_file):
         try:
             is_nexus = is_nexus_file(image_file)
-        except IOError as e:
+        except IOError:
             return False
         return is_nexus
 
@@ -169,7 +169,7 @@ class FormatNexusStill(FormatNexus, FormatStill):
                 for sample in find_class(entry, "NXsample"):
                     if "depends_on" not in sample:
                         is_nexus_still = True
-        except IOError as e:
+        except IOError:
             return False
         return is_nexus_still
 

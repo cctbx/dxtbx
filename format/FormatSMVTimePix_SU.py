@@ -81,8 +81,6 @@ class FormatSMVTimePix_SU(FormatSMV):
 
         FormatSMV.__init__(self, image_file, **kwargs)
 
-        return
-
     def _start(self):
 
         FormatSMV._start(self)
@@ -293,13 +291,13 @@ class FormatSMVTimePix_SU(FormatSMV):
         try:
             date_str = self._header_dictionary["DATE"]
             date_str = date_str.replace("PST", "").replace("PDT", "")
-        except KeyError as e:
+        except KeyError:
             date_str = ""
         for format_string in ["%a %b %d %H:%M:%S %Y", "%a %b %d %H:%M:%S %Z %Y"]:
             try:
                 epoch = calendar.timegm(time.strptime(date_str, format_string))
                 break
-            except ValueError as e:
+            except ValueError:
                 pass
 
         # assert(epoch)

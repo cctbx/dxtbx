@@ -46,8 +46,6 @@ class FormatCBFFull(FormatCBF):
         FormatCBF.__init__(self, image_file, **kwargs)
         self._raw_data = None
 
-        return
-
     def __del__(self):
         self._cbf_handle.__swig_destroy__(self._cbf_handle)
 
@@ -176,7 +174,7 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         while cbf.category_name().lower() != "array_data":
             try:
                 cbf.next_category()
-            except Exception as e:
+            except Exception:
                 return None
         cbf.select_column(0)
         cbf.select_row(0)

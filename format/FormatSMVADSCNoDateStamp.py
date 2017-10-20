@@ -44,8 +44,6 @@ class FormatSMVADSCNoDateStamp(FormatSMVADSC):
 
         FormatSMVADSC.__init__(self, image_file, **kwargs)
 
-        return
-
     def _start(self):
 
         FormatSMVADSC._start(self)

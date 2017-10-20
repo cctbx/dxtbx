@@ -189,7 +189,7 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
                 )
                 translations.append(value * axis)
             else:
-                raise RuntimeError, "unknown axis unit %s" % unit
+                raise RuntimeError("unknown axis unit %s" % unit)
 
         rotations.reverse()
         translations.reverse()

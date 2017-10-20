@@ -8,7 +8,7 @@ def get_image_examples():
 
     try:
         dials_regression = libtbx.env.dist_path("dials_regression")
-    except KeyError as e:
+    except KeyError:
         print("SKIP: dials_regression not configured")
         exit(0)
 
@@ -355,7 +355,7 @@ def tst_cbf(filename):
 
     try:
         data2 = read_multitile_cbf_image(filename)
-    except Exception as e:
+    except Exception:
         data2 = (read_cbf_image(filename),)
 
     assert len(data1) == len(data2)

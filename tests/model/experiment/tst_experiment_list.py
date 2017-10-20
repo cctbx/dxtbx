@@ -698,7 +698,7 @@ class TestExperimentListDumper(object):
 
         try:
             dials_regression = libtbx.env.dist_path("dials_regression")
-        except KeyError as e:
+        except KeyError:
             print("FAIL: dials_regression not configured")
             exit(0)
 
@@ -747,7 +747,7 @@ class TestExperimentListDumper(object):
 
         try:
             dials_regression = libtbx.env.dist_path("dials_regression")
-        except KeyError as e:
+        except KeyError:
             print("FAIL: dials_regression not configured")
             exit(0)
 

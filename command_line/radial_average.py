@@ -69,7 +69,7 @@ def run(args, image=None):
             if not "=" in arg:
                 try:
                     user_phil.append(libtbx.phil.parse("""file_path=%s""" % arg))
-                except ValueError as e:
+                except ValueError:
                     raise Sorry("Unrecognized argument '%s'" % arg)
             else:
                 try:

@@ -140,7 +140,7 @@ class EigerNXmxFixer(object):
         for k in sorted(handle_orig["/entry/data"].iterkeys()):
             try:
                 shape = handle_orig["/entry/data/%s" % k].shape
-            except KeyError as e:
+            except KeyError:
                 delete.append("/entry/data/%s" % k)
 
         for d in delete:
@@ -246,7 +246,7 @@ class EigerNXmxFixer(object):
         if "omega" in group:
             try:
                 data = group["omega"][()]
-            except AttributeError as e:
+            except AttributeError:
                 del group["omega"]
 
         if "omega" not in group:
@@ -306,7 +306,7 @@ class FormatEigerNearlyNexus(FormatHDF5):
     def understand(image_file):
         try:
             is_nexus = is_eiger_nearly_nexus_file(image_file)
-        except IOError as e:
+        except IOError:
             return False
         return is_nexus
 

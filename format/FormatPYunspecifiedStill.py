@@ -20,7 +20,7 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
             import cPickle as pickle
 
             data = pickle.load(stream)
-        except IOError as e:
+        except IOError:
             return False
 
         if "OSC_START" not in data or "OSC_RANGE" not in data:

@@ -30,10 +30,10 @@ def get_adsc_timestamp(timestamp):
             struct_time = time.strptime(timestamp, format)
             return calendar.timegm(struct_time)
 
-        except:  # intentional
+        except Exception:
             pass
 
-    raise RuntimeError, "timestamp %s not recognised" % timestamp
+    raise RuntimeError("timestamp %s not recognised" % timestamp)
 
 
 class FormatCBFMiniADSCHF4M(FormatCBFMini):
@@ -64,8 +64,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
         FormatCBFMini.__init__(self, image_file, **kwargs)
 
         self._raw_data = None
-
-        return
 
     def _start(self):
         FormatCBFMini._start(self)

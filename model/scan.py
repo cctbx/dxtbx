@@ -259,4 +259,4 @@ class ScanFactory:
         elif name.upper() == "MAR":
             return scan_helper_image_formats.FORMAT_MAR
 
-        raise RuntimeError, "name %s not known" % name
+        raise RuntimeError("name %s not known" % name)

@@ -243,7 +243,7 @@ def convert_units(value, input_units, output_units):
         return value
     try:
         return converters[input_units][output_units](value)
-    except Exception as e:
+    except Exception:
         pass
     raise RuntimeError(
         'Can\'t convert units "%s" to "%s"' % (input_units, output_units)
@@ -269,7 +269,7 @@ def visit_dependancies(nx_file, item, visitor=None):
             raise RuntimeError("'%s' is a circular dependency" % depends_on)
         try:
             item = nx_file[depends_on]
-        except Exception as e:
+        except Exception:
             raise RuntimeError("'%s' is missing from nx_file" % depends_on)
         dependency_chain.append(depends_on)
         try:
@@ -331,7 +331,7 @@ def construct_vector(nx_file, item, vector=None):
             value = convert_units(value, units, "mm")
             try:
                 vector = vector * value
-            except ValueError as e:
+            except ValueError:
                 vector = vector * value[0]
             vector += offset
 
@@ -1383,7 +1383,7 @@ class GoniometerFactory(object):
         # Construct the model - if nonsense present cope by failing over...
         try:
             self.model = Goniometer(tuple(rotation_axis))
-        except:  # deliberate
+        except Exception:
             self.model = Goniometer((1, 0, 0))
 
 
@@ -1397,7 +1397,7 @@ def find_goniometer_rotation(obj):
             v = o[()]
             if min(v) < max(v):
                 return o
-    raise ValueError, "no rotation found"
+    raise ValueError("no rotation found")
 
 
 class ScanFactory(object):
@@ -1414,7 +1414,7 @@ class ScanFactory(object):
         # in dependency tree
         try:
             phi = find_goniometer_rotation(obj)
-        except ValueError as e:
+        except ValueError:
             phi = obj.handle.file[obj.handle["depends_on"][()]]
         image_range = (1, len(phi))
         if len(phi) > 1:

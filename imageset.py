@@ -670,7 +670,7 @@ class ImageSetFactory(object):
         elif isinstance(filenames, str):
             filenames = [filenames]
         else:
-            raise RuntimeError, "unknown argument passed to ImageSetFactory"
+            raise RuntimeError("unknown argument passed to ImageSetFactory")
 
         # Analyse the filenames and group the images into imagesets.
         analyse_files = FilenameAnalyser()
@@ -687,7 +687,7 @@ class ImageSetFactory(object):
                 else:
                     iset = ImageSetFactory._create_imageset(filelist, check_headers)
                 imagesetlist.append(iset)
-            except Exception as e:
+            except Exception:
                 if not ignore_unknown:
                     raise
 

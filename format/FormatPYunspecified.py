@@ -16,7 +16,7 @@ class FormatPYunspecified(FormatPY):
             import cPickle as pickle
 
             data = pickle.load(stream)
-        except IOError as e:
+        except IOError:
             return False
 
         wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]

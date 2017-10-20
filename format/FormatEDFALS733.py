@@ -15,7 +15,7 @@ class FormatEDFALS733(Format):
     def understand(image_file):
         try:
             tag = FormatEDFALS733.open_file(image_file, "rb").read(10)
-        except IOError as e:
+        except IOError:
             return False
 
         return tag == "{\nHeaderID"

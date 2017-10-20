@@ -78,7 +78,6 @@ class FormatSMVCMOS1(FormatSMV):
 
         detector_prefixes = self._header_dictionary["DETECTOR_NAMES"].split()
         self._prefix = detector_prefixes[0]
-        return
 
     def _start(self):
         FormatSMV._start(self)
@@ -150,7 +149,7 @@ class FormatSMVCMOS1(FormatSMV):
                 )
                 translations.append(gonio_values[j] * axis)
             else:
-                raise RuntimeError, "unknown axis unit %s" % unit
+                raise RuntimeError("unknown axis unit %s" % unit)
 
         rotations.reverse()
         translations.reverse()

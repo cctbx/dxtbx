@@ -33,7 +33,7 @@ class FormatSER(FormatMultiImage, Format):
 
         try:
             tag = FormatSER.open_file(image_file, "rb").read(14)
-        except IOError as e:
+        except IOError:
             return False
 
         # File should be little endian

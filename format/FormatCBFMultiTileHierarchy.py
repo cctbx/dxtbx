@@ -53,8 +53,6 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
         FormatCBFMultiTile.__init__(self, image_file, **kwargs)
 
-        return
-
     def _start(self):
         """Parent class will open the image file as a cbf file handle, and keep
         the handle somewhere safe."""
@@ -296,7 +294,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                 underload = cbf.get_doublevalue()
                 overload = cbf.get_overload(0)
                 trusted_range = (underload, overload)
-            except:  # intentional
+            except Exception:
                 trusted_range = (0.0, 0.0)
 
             p.set_pixel_size(tuple(map(float, pixel)))

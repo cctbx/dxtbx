@@ -164,7 +164,7 @@ def xds_detector_name(dxtbx_name):
     if "mar" in dxtbx_name:
         return "MAR"
 
-    raise RuntimeError, "detector %s unknown" % dxtbx_name
+    raise RuntimeError("detector %s unknown" % dxtbx_name)
 
 
 class to_xds(object):
@@ -290,7 +290,7 @@ class to_xds(object):
     def get_template(self):
         try:
             return self._sweep.get_template()
-        except AttributeError as e:
+        except AttributeError:
             return "FIXME####.h5"
 
     def XDS_INP(

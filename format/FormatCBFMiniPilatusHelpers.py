@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division
 
-#!/usr/bin/env python
 # FormatCBFMiniPilatus.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
@@ -9,12 +8,11 @@ from __future__ import absolute_import, division
 #
 # Helpers for FormatCBFMiniPilatus...
 
+import calendar
 import time
 
 
 def get_pilatus_timestamp(timestamp_string):
-    import calendar
-
     if "." in timestamp_string:
         timestamp, milliseconds = timestamp_string.split(".")
     else:
@@ -27,7 +25,7 @@ def get_pilatus_timestamp(timestamp_string):
             struct_time = time.strptime(timestamp, format)
             return calendar.timegm(struct_time) + float("0." + milliseconds)
 
-        except:  # intentional
+        except Exception:
             pass
 
-    raise RuntimeError, "timestamp %s not recognised" % timestamp
+    raise RuntimeError("timestamp %s not recognised" % timestamp)

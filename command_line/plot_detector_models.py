@@ -55,7 +55,7 @@ def run(args):
         else:
             try:
                 user_phil.append(parse(arg))
-            except Exception as e:
+            except Exception:
                 raise Sorry("Unrecognized argument %s" % arg)
     params = phil_scope.fetch(sources=user_phil).extract()
     if not params.orthographic:
@@ -118,7 +118,7 @@ def run(args):
         # read the data and get the detector models
         try:
             datablocks = DataBlockFactory.from_json_file(file_name, check_format=False)
-        except Exception as e:
+        except Exception:
             experiments = ExperimentListFactory.from_json_file(
                 file_name, check_format=False
             )

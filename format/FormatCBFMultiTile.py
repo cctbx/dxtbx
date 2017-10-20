@@ -86,8 +86,6 @@ class FormatCBFMultiTile(FormatCBFFull):
 
         self._raw_data = None
 
-        return
-
     def _start(self):
         """Open the image file as a cbf file handle, and keep this somewhere
         safe."""
@@ -144,7 +142,7 @@ class FormatCBFMultiTile(FormatCBFFull):
                 underload = cbf.get_doublevalue()
                 overload = cbf.get_overload(0)
                 trusted_range = (underload, overload)
-            except:  # intentional
+            except Exception:
                 trusted_range = (0.0, 0.0)
 
             cbf_detector.__swig_destroy__(cbf_detector)
@@ -176,7 +174,7 @@ class FormatCBFMultiTile(FormatCBFFull):
             while cbf.category_name().lower() != "array_data":
                 try:
                     cbf.next_category()
-                except Exception as e:
+                except Exception:
                     return None
             cbf.select_column(0)
             cbf.select_row(0)
@@ -206,7 +204,7 @@ class FormatCBFMultiTile(FormatCBFFull):
 
                 try:
                     cbf.next_row()
-                except Exception as e:
+                except Exception:
                     break
             assert len(d) == len(self._raw_data)
 

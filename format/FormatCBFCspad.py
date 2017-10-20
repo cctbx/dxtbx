@@ -245,14 +245,11 @@ class FormatCBFFullStillInMemory(FormatCBFFullStill):
             assert isinstance(beam_instance, Beam)
             self._beam_instance = beam_instance
 
-        except Exception as e:
-            # except exceptions.Exception, e:
+        except Exception:
             # FIXME ideally should not squash the errors here...
             pass
         finally:
             self._end()
-
-        return
 
     def __getstate__(self):
         # For pickling and copying, don't carry the cbf_handle
