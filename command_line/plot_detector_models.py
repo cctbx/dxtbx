@@ -16,6 +16,7 @@ from libtbx.phil import parse
 from libtbx.utils import Sorry
 
 from matplotlib.patches import FancyArrowPatch
+from matplotlib.backends.backend_pdf import PdfPages
 
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -28,6 +29,12 @@ phil_scope = parse(
   orthographic = False
     .type = bool
     .help = If true, draw an orthographic projection (IE drop the Z-axis)
+  panel_numbers = True
+    .type = bool
+    .help = If true, label panel numbers
+  pdf_file = None
+    .type = path
+    .help = If not None, save the result as a pdf figure.
 """
 )
 
@@ -135,7 +142,16 @@ def run(args):
                 ax = fig.gca(projection="3d")
             plot_group(detector.hierarchy(), color, orthographic=params.orthographic)
 
-    plt.show()
+    if params.orthographic:
+        plt.axes().set_aspect("equal", "datalim")
+
+    if params.pdf_file:
+        pp = PdfPages(params.pdf_file)
+        for i in plt.get_fignums():
+            pp.savefig(plt.figure(i))
+        pp.close()
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
