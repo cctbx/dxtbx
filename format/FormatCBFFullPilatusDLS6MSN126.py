@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # FormatCBFFullPilatus.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
+#   Copyright (C) 2017 Diamond Light Source, Richard Gildea
 #
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
@@ -17,7 +17,7 @@ from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 # from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
-class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
+class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
     """An image reading class for full CBF format images from Pilatus
     detectors."""
 
@@ -40,7 +40,7 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
             if (
                 "# Detector" in record
                 and "PILATUS" in record
-                and "S/N 60-0100 Diamond" in header
+                and "S/N 60-0126 Diamond" in header
             ):
                 return True
 
@@ -61,7 +61,7 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
         FormatCBFFullPilatus.__init__(self, image_file, **kwargs)
 
     def get_mask(self, goniometer=None):
-        mask = super(FormatCBFFullPilatusDLS6MSN100, self).get_mask()
+        mask = super(FormatCBFFullPilatusDLS6MSN126, self).get_mask()
         if self._dynamic_shadowing:
             gonio_masker = self.get_goniometer_shadow_masker(goniometer=goniometer)
             scan = self.get_scan()
@@ -79,47 +79,11 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
         assert goniometer is not None
 
-        # avoid a module-level import from the DIALS namespace that kills LABELIT
-        from dials.util.masking import GoniometerShadowMaskGenerator
-
         if goniometer.get_names()[1] == "GON_CHI":
             # SmarGon
             from dxtbx.format.SmarGonShadowMask import SmarGonShadowMaskGenerator
 
             return SmarGonShadowMaskGenerator(goniometer)
-
-        elif goniometer.get_names()[1] == "GON_KAPPA":
-            # mini Kappa
-
-            from dials.util.masking import GoniometerShadowMaskGenerator
-            from scitbx.array_family import flex
-            import math
-
-            # Simple model of cone around goniometer phi axis
-            # Exact values don't matter, only the ratio of height/radius
-            height = 50  # mm
-            radius = 20  # mm
-
-            steps_per_degree = 1
-            theta = (
-                flex.double([range(360 * steps_per_degree)])
-                * math.pi
-                / 180
-                * 1
-                / steps_per_degree
-            )
-            y = radius * flex.cos(theta)  # x
-            z = radius * flex.sin(theta)  # y
-            x = flex.double(theta.size(), height)  # z
-
-            coords = flex.vec3_double(zip(x, y, z))
-            coords.insert(0, (0, 0, 0))
-
-            if goniometer is None:
-                goniometer = self.get_goniometer()
-            return GoniometerShadowMaskGenerator(
-                goniometer, coords, flex.size_t(len(coords), 0)
-            )
 
         else:
             raise RuntimeError(
