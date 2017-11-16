@@ -220,6 +220,14 @@ class DataBlock(object):
                                         iset.external_lookup.pedestal.filename
                                     ),
                                 ),
+                                (
+                                    "dx",
+                                    abspath_or_none(iset.external_lookup.dx.filename),
+                                ),
+                                (
+                                    "dy",
+                                    abspath_or_none(iset.external_lookup.dy.filename),
+                                ),
                                 ("beam", b.index(iset.get_beam())),
                                 ("detector", d.index(iset.get_detector())),
                                 ("goniometer", g.index(iset.get_goniometer())),
@@ -249,6 +257,14 @@ class DataBlock(object):
                                         iset.external_lookup.pedestal.filename
                                     ),
                                 ),
+                                (
+                                    "dx",
+                                    abspath_or_none(iset.external_lookup.dx.filename),
+                                ),
+                                (
+                                    "dy",
+                                    abspath_or_none(iset.external_lookup.dy.filename),
+                                ),
                                 ("beam", b.index(iset.get_beam())),
                                 ("detector", d.index(iset.get_detector())),
                                 ("goniometer", g.index(iset.get_goniometer())),
@@ -275,6 +291,8 @@ class DataBlock(object):
                     image_dict["pedestal"] = abspath_or_none(
                         iset.external_lookup.pedestal.filename
                     )
+                    image_dict["dx"] = abspath_or_none(iset.external_lookup.dx.filename)
+                    image_dict["dy"] = abspath_or_none(iset.external_lookup.dy.filename)
                     if iset.reader().is_single_file_reader():
                         image_dict["image"] = iset.indices()[i]
                     try:
@@ -849,6 +867,21 @@ class DataBlockDictImporter(object):
                                 iset.external_lookup.pedestal.data = ImageDouble(
                                     pickle.load(infile)
                                 )
+                    if "dx" in imageset and imageset["dx"] is not None:
+                        imageset["dx"] = load_path(imageset["dx"])
+                        iset.external_lookup.dx.filename = imageset["dx"]
+                        with open(imageset["dx"]) as infile:
+                            iset.external_lookup.dx.data = ImageDouble(
+                                pickle.load(infile)
+                            )
+                    if "dy" in imageset and imageset["dy"] is not None:
+                        imageset["dy"] = load_path(imageset["dy"])
+                        iset.external_lookup.dy.filename = imageset["dy"]
+                        with open(imageset["dy"]) as infile:
+                            iset.external_lookup.dy.data = ImageDouble(
+                                pickle.load(infile)
+                            )
+                    iset.update_detector_px_mm_data()
                 elif "master" in imageset:
                     template = load_path(imageset["master"])
                     i0, i1 = scan.get_image_range()
@@ -893,6 +926,21 @@ class DataBlockDictImporter(object):
                                 iset.external_lookup.pedestal.data = ImageDouble(
                                     pickle.load(infile)
                                 )
+                    if "dx" in imageset and imageset["dx"] is not None:
+                        imageset["dx"] = load_path(imageset["dx"])
+                        iset.external_lookup.dx.filename = imageset["dx"]
+                        with open(imageset["dx"]) as infile:
+                            iset.external_lookup.dx.data = ImageDouble(
+                                pickle.load(infile)
+                            )
+                    if "dy" in imageset and imageset["dy"] is not None:
+                        imageset["dy"] = load_path(imageset["dy"])
+                        iset.external_lookup.dy.filename = imageset["dy"]
+                        with open(imageset["dy"]) as infile:
+                            iset.external_lookup.dy.data = ImageDouble(
+                                pickle.load(infile)
+                            )
+                    iset.update_detector_px_mm_data()
                 imagesets.append(iset)
             elif ident == "ImageSet" or ident == "ImageGrid":
                 filenames = [image["filename"] for image in imageset["images"]]
@@ -936,6 +984,17 @@ class DataBlockDictImporter(object):
                             iset.external_lookup.pedestal.data = ImageDouble(
                                 pickle.load(infile)
                             )
+                if "dx" in imageset and imageset["dx"] is not None:
+                    imageset["dx"] = load_path(imageset["dx"])
+                    iset.external_lookup.dx.filename = imageset["dx"]
+                    with open(imageset["dx"]) as infile:
+                        iset.external_lookup.dx.data = ImageDouble(pickle.load(infile))
+                if "dy" in imageset and imageset["dy"] is not None:
+                    imageset["dy"] = load_path(imageset["dy"])
+                    iset.external_lookup.dy.filename = imageset["dy"]
+                    with open(imageset["dy"]) as infile:
+                        iset.external_lookup.dy.data = ImageDouble(pickle.load(infile))
+                    iset.update_detector_px_mm_data()
                 imagesets.append(iset)
             else:
                 raise RuntimeError("expected ImageSet/ImageSweep, got %s" % ident)
