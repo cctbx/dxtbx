@@ -300,7 +300,6 @@ class TestImageSet(object):
         return filenames
 
     def run(self):
-        from dxtbx.imageset import ImageSet
         from dxtbx.format.Registry import Registry
 
         # Get the filenames

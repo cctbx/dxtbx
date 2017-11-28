@@ -507,7 +507,6 @@ class TestExperimentListFactory(object):
         print("OK")
 
     def tst_from_imageset(self):
-        from dxtbx.imageset import ImageSet
         from dxtbx.model import Beam, Detector, Goniometer, Scan
         from dxtbx.model import Crystal
         from dxtbx.format.Format import Format
@@ -529,7 +528,6 @@ class TestExperimentListFactory(object):
         print("OK")
 
     def tst_from_sweep(self):
-        from dxtbx.imageset import ImageSweep
         from dxtbx.model import Beam, Detector, Goniometer, Scan
         from dxtbx.model import Crystal
         from dxtbx.format.Format import Format
@@ -560,7 +558,6 @@ class TestExperimentListFactory(object):
         print("OK")
 
     def tst_from_datablock(self):
-        from dxtbx.imageset import ImageSweep
         from dxtbx.model import Beam, Detector, Goniometer, Scan
         from dxtbx.datablock import DataBlockFactory
         from dxtbx.model import Crystal
@@ -656,7 +653,6 @@ class TestExperimentListDumper(object):
         self.check(elist1, elist2)
 
     def tst_dump_empty_sweep(self):
-        from dxtbx.imageset import ImageSweep
         from dxtbx.model import Beam, Detector, Goniometer, Scan
         from dxtbx.model import Crystal
         from uuid import uuid4
@@ -688,7 +684,6 @@ class TestExperimentListDumper(object):
         print("OK")
 
     def tst_dump_with_lookup(self):
-        from dxtbx.imageset import ImageSweep
         from dxtbx.model import Beam, Detector, Goniometer, Scan
         from dxtbx.model import Crystal
         from uuid import uuid4
@@ -737,7 +732,6 @@ class TestExperimentListDumper(object):
         assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
 
     def tst_dump_with_bad_lookup(self):
-        from dxtbx.imageset import ImageSweep
         from dxtbx.model import Beam, Detector, Goniometer, Scan
         from dxtbx.model import Crystal
         from uuid import uuid4

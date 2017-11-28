@@ -30,7 +30,7 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
         # simply return False
 
         try:
-            from dials.util.masking import GoniometerShadowMaskGenerator
+            from dials.util.masking import GoniometerShadowMaskGenerator  # test import
         except ImportError:
             return False
 

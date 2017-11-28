@@ -296,7 +296,6 @@ def read_multitile_cbf_image(cbf_image):
 
 def tst_smv(filename):
     from dxtbx.format.image import SMVReader
-    from dxtbx.datablock import DataBlockFactory
     from scitbx.array_family import flex
 
     image = SMVReader(filename).image()
@@ -312,7 +311,6 @@ def tst_smv(filename):
 
 
 def tst_tiff(filename):
-    from dxtbx.datablock import DataBlockFactory
     from scitbx.array_family import flex
     from dxtbx.format.image import TIFFReader
 
@@ -329,7 +327,6 @@ def tst_tiff(filename):
 
 
 def tst_cbf_fast(filename):
-    from dxtbx.datablock import DataBlockFactory
     from scitbx.array_family import flex
     from dxtbx.format.image import CBFFastReader
 
@@ -346,7 +343,6 @@ def tst_cbf_fast(filename):
 
 
 def tst_cbf(filename):
-    from dxtbx.datablock import DataBlockFactory
     from scitbx.array_family import flex
     from dxtbx.format.image import CBFReader
 
