@@ -387,8 +387,7 @@ class to_xds(object):
         print("TRUSTED_REGION= 0.0 1.41", file=out)
         for f0, s0, f1, s1 in self.get_detector()[0].get_mask():
             print(
-                "UNTRUSTED_RECTANGLE= %d %d %d %d" % (f0 - 1, f1 + 1, s0 - 1, s1 + 1),
-                file=out,
+                "UNTRUSTED_RECTANGLE= %d %d %d %d" % (f0, f1 + 1, s0, s1 + 1), file=out
             )
 
         start_end = self.get_scan().get_image_range()

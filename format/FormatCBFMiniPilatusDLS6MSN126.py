@@ -276,8 +276,8 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
                 ParallaxCorrectedPxMmStrategy(mu, t0),
             )
 
-            for f0, s0, f1, s1 in determine_pilatus_mask(detector):
-                detector[0].add_mask(f0, s0, f1, s1)
+            for f0, f1, s0, s1 in determine_pilatus_mask(detector):
+                detector[0].add_mask(f0 - 1, s0 - 1, f1, s1)
 
             detector[0].set_thickness(thickness)
             detector[0].set_material("Si")

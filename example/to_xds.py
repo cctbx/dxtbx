@@ -133,7 +133,7 @@ class to_xds:
         print("NAME_TEMPLATE_OF_DATA_FRAMES= %s" % self._template.replace("#", "?"))
         print("TRUSTED_REGION= 0.0 1.41")
         for f0, f1, s0, s1 in self.get_detector().get_mask():
-            print("UNTRUSTED_RECTANGLE= %d %d %d %d" % (f0 - 1, f1 + 1, s0 - 1, s1 + 1))
+            print("UNTRUSTED_RECTANGLE= %d %d %d %d" % (f0, f1 + 1, s0, s1 + 1))
 
         start_end = self.get_scan().get_image_range()
 
