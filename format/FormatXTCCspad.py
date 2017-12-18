@@ -12,7 +12,6 @@ class FormatXTCCspad(FormatXTC):
         self.events_list = []
         self.populate_events()
         FormatXTC.__init__(self, image_file, **kwargs)
-        # from IPython import embed; embed(); exit()
 
     def _get_event(self, index):
         return self.events_list[index]
@@ -26,7 +25,6 @@ class FormatXTCCspad(FormatXTC):
 
     @staticmethod
     def understand(image_file):
-        # return False
         import psana
 
         try:
@@ -72,9 +70,7 @@ class FormatXTCCspad(FormatXTC):
                     asic_data = data[
                         sensor_count, :, asic_count * fdim : (asic_count + 1) * fdim
                     ]
-                    self._raw_data.append(
-                        flex.double(np.ascontiguousarray(asic_data))
-                    )  # , dtype=np.float32))
+                    self._raw_data.append(flex.double(np.ascontiguousarray(asic_data)))
                     asic_count += 1
                 sensor_count += 1
         assert len(d) == len(self._raw_data)
@@ -101,18 +97,6 @@ class FormatXTCCspad(FormatXTC):
 
     def get_scan(self, index=None):
         return None
-
-    # Delete later
-    def get_mask(self, index=None, goniometer=None):
-        return None
-
-    # Delete later
-    def get_detectorbase(self, index=None):
-        print("get_detectorbase Overload!")
-
-    # Delete later
-    def get_image_file(self, index=None):
-        print("get_image_file Overload!")
 
     def _detector(self, index=None):
         import psana
@@ -198,7 +182,6 @@ class FormatXTCCspad(FormatXTC):
                         )
                     )
                     p.set_name(val)
-                    # from IPython import embed; embed(); exit()
 
         try:
             # Get wavelength of beam. Ideally should be event dependent
