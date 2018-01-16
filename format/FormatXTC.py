@@ -9,8 +9,8 @@ locator_scope = parse(
     """
   data_source = None
     .type = str
-    .help = file format as specified at LCLS,eg. exp=mfxo1916:run=20:smd
-            More info at https://confluence.slac.stanford.edu/display/PSDM/Manual#Manual-Datasetspecification
+    .help = file format as specified at LCLS,eg. exp=mfxo1916:run=20:smd\
+           More info at https://confluence.slac.stanford.edu/display/PSDM/Manual#Manual-Datasetspecification 
   detector_address = None
     .type = str
     .help = detector used for collecting the data at LCLS
