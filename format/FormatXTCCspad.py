@@ -185,9 +185,7 @@ class FormatXTCCspad(FormatXTC):
                     p.set_name(val)
 
         try:
-            # Get wavelength of beam. Ideally should be event dependent
-            # However detector does not have the option to take in event
-            beam = self._beam()
+            beam = self._beam(index)
         except Exception as e:
             print(
                 "No beam object initialized. Returning CSPAD detector without parallax corrections"

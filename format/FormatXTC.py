@@ -10,7 +10,7 @@ locator_scope = parse(
   data_source = None
     .type = str
     .help = file format as specified at LCLS,eg. exp=mfxo1916:run=20:smd\
-           More info at https://confluence.slac.stanford.edu/display/PSDM/Manual#Manual-Datasetspecification 
+           More info at https://confluence.slac.stanford.edu/display/PSDM/Manual#Manual-Datasetspecification
   detector_address = None
     .type = str
     .help = detector used for collecting the data at LCLS
@@ -37,7 +37,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         from the user"""
         try:
             from psana import DataSource, DetNames
-        except Exception as e:
+        except ImportError as e:
             return False
         try:
             params = FormatXTC.params_from_phil(image_file)
