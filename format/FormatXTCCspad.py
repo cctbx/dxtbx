@@ -41,7 +41,7 @@ class FormatXTCCspad(FormatXTC):
             if "cspad" in FormatXTC._src.lower():
                 return True
             return False
-        except Exception as e:
+        except Exception:
             return False
 
     def get_raw_data(self, index):
@@ -186,7 +186,7 @@ class FormatXTCCspad(FormatXTC):
 
         try:
             beam = self._beam(index)
-        except Exception as e:
+        except Exception:
             print(
                 "No beam object initialized. Returning CSPAD detector without parallax corrections"
             )

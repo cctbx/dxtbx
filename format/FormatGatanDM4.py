@@ -259,7 +259,7 @@ class FormatGatanDM4(FormatMultiImage, Format):
             name = tag["tname"]
             if name == "":
                 name = "NONAME"
-            if tag.has_key("tags"):  # tag directory
+            if "tags" in tag:  # tag directory
                 print(prefix + "DIR: {0}".format(name))
                 prefix += "  "
                 self._print_tag_hierarchy(tag["tags"], prefix)
@@ -279,7 +279,7 @@ class FormatGatanDM4(FormatMultiImage, Format):
             if tag["tname"] == name:
                 result.extend([tag])
             else:
-                if tag.has_key("tags"):
+                if "tags" in tag:
                     result.extend(self._search_tag_hierarchy(name, tag["tags"]))
         return result
 

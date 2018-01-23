@@ -40,7 +40,7 @@ class FormatXTCRayonix(FormatXTC):
             if "rayonix" in FormatXTC._src.lower():
                 return True
             return False
-        except Exception as e:
+        except Exception:
             return False
 
     def get_raw_data(self, index):
