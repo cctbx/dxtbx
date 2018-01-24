@@ -1,8 +1,10 @@
 from __future__ import absolute_import, division
 from __future__ import print_function
-from dxtbx.datablock import DataBlockFactory
-import libtbx.load_env
+
 import os
+
+import libtbx.load_env
+from dxtbx.datablock import DataBlockFactory
 
 
 def run():
