@@ -1,8 +1,13 @@
 from __future__ import absolute_import, division
 from __future__ import print_function
 from dxtbx.format.FormatXTC import FormatXTC
-from xfel.cxi.cspad_ana import cspad_tbx
-from xfel.cftbx.detector import cspad_cbf_tbx
+
+try:
+    from xfel.cxi.cspad_ana import cspad_tbx
+    from xfel.cftbx.detector import cspad_cbf_tbx
+except ImportError:
+    # xfel not configured
+    pass
 
 
 class FormatXTCCspad(FormatXTC):
