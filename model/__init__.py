@@ -10,7 +10,7 @@ from dxtbx.model.detector import *
 from dxtbx.model.scan import *
 from dxtbx.model.crystal import *
 from dxtbx.model.profile import *
-from dxtbx.model.scaling_model import *
+from libtbx.containers import OrderedSet, OrderedDict
 
 
 class DetectorAux(boost.python.injector, Detector):
@@ -408,53 +408,37 @@ class MosaicCrystalSauter2014Aux(CrystalAux, MosaicCrystalSauter2014):
 class ExperimentListAux(boost.python.injector, ExperimentList):
     def beams(self):
         """ Get a list of the unique beams (includes None). """
-        from libtbx.containers import OrderedSet
-
-        return list(OrderedSet([e.beam for e in self]))
+        return list(OrderedSet(e.beam for e in self))
 
     def detectors(self):
         """ Get a list of the unique detectors (includes None). """
-        from libtbx.containers import OrderedSet
-
-        return list(OrderedSet([e.detector for e in self]))
+        return list(OrderedSet(e.detector for e in self))
 
     def goniometers(self):
         """ Get a list of the unique goniometers (includes None). """
-        from libtbx.containers import OrderedSet
-
-        return list(OrderedSet([e.goniometer for e in self]))
+        return list(OrderedSet(e.goniometer for e in self))
 
     def scans(self):
         """ Get a list of the unique scans (includes None). """
-        from libtbx.containers import OrderedSet
-
-        return list(OrderedSet([e.scan for e in self]))
+        return list(OrderedSet(e.scan for e in self))
 
     def crystals(self):
         """ Get a list of the unique crystals (includes None). """
-        from libtbx.containers import OrderedSet
-
-        return list(OrderedSet([e.crystal for e in self]))
+        return list(OrderedSet(e.crystal for e in self))
 
     def profiles(self):
         """ Get a list of the unique profile models (includes None). """
-        from libtbx.containers import OrderedSet
-
-        return list(OrderedSet([e.profile for e in self]))
+        return list(OrderedSet(e.profile for e in self))
 
     def scaling_models(self):
         """ Get a list of the unique scaling models (includes None). """
-        from libtbx.containers import OrderedSet
-
-        return list(OrderedSet([e.scaling_model for e in self]))
+        return list(OrderedSet(e.scaling_model for e in self))
 
     def imagesets(self):
         """Get a list of the unique imagesets (includes None).
 
         This returns unique complete sets rather than partial.
         """
-        from libtbx.containers import OrderedSet
-
         return list(OrderedSet([e.imageset for e in self if e.imageset is not None]))
         # temp = OrderedDict([(e.imageset.reader(), i)
         #   for i, e in enumerate(self) if e.imageset is not None])
@@ -504,7 +488,6 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
 
     def to_dict(self):
         """ Serialize the experiment list to dictionary. """
-        from libtbx.containers import OrderedDict
         from dxtbx.imageset import ImageSet, ImageSweep, ImageGrid
 
         # Check the experiment list is consistent
