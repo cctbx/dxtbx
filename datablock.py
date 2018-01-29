@@ -1383,7 +1383,6 @@ class BeamDiff(object):
         self.polarization_fraction_tolerance = polarization_fraction_tolerance
 
     def __call__(self, a, b):
-        from logging import info
         from scitbx import matrix
 
         aw = a.get_wavelength()
@@ -1404,10 +1403,8 @@ class BeamDiff(object):
         if abs(af - bf) > self.polarization_fraction_tolerance:
             text.append(" Polarization Fraction: %s, %s" % (tuple(af, bf)))
         if len(text) > 0:
-            info("Beam:")
-            for t in text:
-                info(t)
-            info("")
+            text = ["Beam:"] + text
+        return text
 
 
 class DetectorDiff(object):
@@ -1425,8 +1422,6 @@ class DetectorDiff(object):
         self.origin_tolerance = origin_tolerance
 
     def __call__(self, a, b):
-        from logging import info
-
         text = []
         if len(a) != len(b):
             text.append("Num Panels: %d, %d" % (len(a), len(b)))
@@ -1462,10 +1457,8 @@ class DetectorDiff(object):
                 text.append(" panel %d:" % i)
                 text.extend(temp_text)
         if len(text) > 0:
-            info("Detector:")
-            for t in text:
-                info(t)
-            info("")
+            text = ["Detector:"] + text
+        return text
 
 
 class GoniometerDiff(object):
@@ -1485,7 +1478,6 @@ class GoniometerDiff(object):
         self.setting_rotation_tolerance = setting_rotation_tolerance
 
     def __call__(self, a, b):
-        from logging import info
         from scitbx import matrix
 
         a_axis = matrix.col(a.get_rotation_axis())
@@ -1502,10 +1494,8 @@ class GoniometerDiff(object):
         if not all_approx_equal(a_setting, b_setting, self.setting_rotation_tolerance):
             text.append(" Setting rotation: %s, %s" % (a_setting, b_setting))
         if len(text) > 0:
-            info("Goniometer:")
-            for t in text:
-                info(t)
-            info("")
+            text = ["Goniometer:"] + text
+        return text
 
 
 class ScanDiff(object):
@@ -1518,8 +1508,6 @@ class ScanDiff(object):
         self.scan_tolerance = scan_tolerance
 
     def __call__(self, a, b):
-        from logging import info
-
         eps = self.scan_tolerance * abs(a.get_oscillation()[1])
         a_image_range = a.get_image_range()
         b_image_range = b.get_image_range()
@@ -1541,14 +1529,16 @@ class ScanDiff(object):
                 " Incompatible image range: %s, %s" % (a_image_range, b_image_range)
             )
         if abs(a_oscillation[1] - b_oscillation[1]) > eps:
-            text.append(" Oscillation: %s, %s" % (a_oscillation, b_oscillation))
+            text.append(
+                " Incompatible Oscillation: %s, %s" % (a_oscillation, b_oscillation)
+            )
         if min(diff_2pi, diff_abs) > eps * a.get_num_images():
-            text.append(" Oscillation Range: %s, %s" % (a_osc_range, b_osc_range))
+            text.append(
+                " Incompatible Oscillation Range: %s, %s" % (a_osc_range, b_osc_range)
+            )
         if len(text) > 0:
-            info("Scan:")
-            for t in text:
-                info(t)
-            info("")
+            text = ["Scan:"] + text
+        return text
 
 
 class SweepDiff(object):
@@ -1582,7 +1572,9 @@ class SweepDiff(object):
             self.s_diff = ScanDiff(scan_tolerance=tolerance.scan.oscillation)
 
     def __call__(self, sweep1, sweep2):
-        self.b_diff(sweep1.get_beam(), sweep2.get_beam())
-        self.d_diff(sweep1.get_detector(), sweep2.get_detector())
-        self.g_diff(sweep1.get_goniometer(), sweep2.get_goniometer())
-        self.s_diff(sweep1.get_scan(), sweep2.get_scan())
+        text = []
+        text.extend(self.b_diff(sweep1.get_beam(), sweep2.get_beam()))
+        text.extend(self.d_diff(sweep1.get_detector(), sweep2.get_detector()))
+        text.extend(self.g_diff(sweep1.get_goniometer(), sweep2.get_goniometer()))
+        text.extend(self.s_diff(sweep1.get_scan(), sweep2.get_scan()))
+        return text
