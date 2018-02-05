@@ -14,6 +14,8 @@ class TestBeam:
             sigma_divergence=0.01,
             polarization_normal=(4, 5, 6),
             polarization_fraction=0.9,
+            flux=1.0,
+            transmission=1.0,
         )
 
         # Create a dictionary and get the beam back
