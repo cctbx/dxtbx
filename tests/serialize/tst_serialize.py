@@ -88,6 +88,7 @@ class Test(object):
             (1.0, 0.2),
             flex.double([0.1, 0.1, 0.1]),
             flex.double([0.1, 0.2, 0.3]),
+            0,
         )
         d = s1.to_dict()
         s2 = ScanFactory.from_dict(d)
@@ -95,6 +96,7 @@ class Test(object):
         assert d["oscillation"] == (1.0, 0.2)
         assert d["exposure_time"] == [0.1, 0.1, 0.1]
         assert d["epochs"] == [0.1, 0.2, 0.3]
+        assert d["batch_offset"] == 0
         assert s1 == s2
 
         # Test with a template and partial dictionary
@@ -111,6 +113,11 @@ class Test(object):
         s4 = ScanFactory.from_dict(d3, d)
         assert abs(s4.get_epochs()[2] - 0.3) < 1e-7
         assert abs(s4.get_epochs()[9] - 1.0) < 1e-7
+
+        d4 = {"batch_offset": 100}
+        s5 = ScanFactory.from_dict(d4, d)
+        assert s5.get_batch_offset() == 100
+        assert s5.get_batch_range() == (101, 103)
 
 
 if __name__ == "__main__":
