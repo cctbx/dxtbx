@@ -168,7 +168,7 @@ class EigerNXmxFixer(object):
         )
         group["fast_pixel_direction"].attrs["transformation_type"] = "translation"
         group["fast_pixel_direction"].attrs["vector"] = fast_axis
-        group["fast_pixel_direction"].attrs["offset"] = 0
+        group["fast_pixel_direction"].attrs["offset"] = (0, 0, 0)
         group["fast_pixel_direction"].attrs["units"] = "m"
         group["fast_pixel_direction"].attrs[
             "depends_on"
@@ -183,7 +183,7 @@ class EigerNXmxFixer(object):
         )
         group["slow_pixel_direction"].attrs["transformation_type"] = "translation"
         group["slow_pixel_direction"].attrs["vector"] = slow_axis
-        group["slow_pixel_direction"].attrs["offset"] = 0
+        group["slow_pixel_direction"].attrs["offset"] = (0, 0, 0)
         group["slow_pixel_direction"].attrs["units"] = "m"
         group["slow_pixel_direction"].attrs[
             "depends_on"
@@ -194,7 +194,7 @@ class EigerNXmxFixer(object):
         create_scalar(group, "module_offset", "float32", 0)
         group["module_offset"].attrs["transformation_type"] = "translation"
         group["module_offset"].attrs["vector"] = (0, 0, 0)
-        group["module_offset"].attrs["offset"] = 0
+        group["module_offset"].attrs["offset"] = (0, 0, 0)
         group["module_offset"].attrs["units"] = "m"
         group["module_offset"].attrs[
             "depends_on"
