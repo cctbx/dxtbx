@@ -34,7 +34,7 @@ class FormatSMVADSC(FormatSMV):
             return False
 
         # do not understand Timepix_SU images
-        if header.get("BEAMLINE").upper() == "TIMEPIX_SU":
+        if header.get("BEAMLINE", "").upper() == "TIMEPIX_SU":
             return False
 
         # this used to include TIME
