@@ -1,5 +1,6 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import sys
 
 #!/usr/bin/env python
 # print_beam_centre.py
@@ -13,8 +14,6 @@ from __future__ import print_function
 # an example XDS.INP file. This should illustrate the usage of the dxtbx
 # classes.
 # LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.print_beam_centre
-
-import sys
 
 
 def run(file_names):

@@ -2,8 +2,7 @@
 # LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.read_sweep
 # tool to benchmark overall time cost for simply reading data
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 
 def read_sweep(list_of_images):

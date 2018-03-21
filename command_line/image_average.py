@@ -4,11 +4,13 @@
 # LIBTBX_SET_DISPATCHER_NAME cxi.image_average
 #
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import sys, dxtbx
+import sys
+
+import dxtbx
 from scitbx.array_family import flex
+
 
 """
 Average single-panel images of any format. Handles many individual images or single container files.
