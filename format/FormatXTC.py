@@ -5,8 +5,7 @@ from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from libtbx.phil import parse
 
-locator_scope = parse(
-    """
+locator_str = """
   data_source = None
     .type = str
     .help = file format as specified at LCLS,eg. exp=mfxo1916:run=20:smd\
@@ -15,7 +14,7 @@ locator_scope = parse(
     .type = str
     .help = detector used for collecting the data at LCLS
 """
-)
+locator_scope = parse(locator_str)
 
 
 class FormatXTC(FormatMultiImage, FormatStill, Format):
@@ -40,7 +39,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         except ImportError:
             return False
         try:
-            params = FormatXTC.params_from_phil(image_file)
+            params = FormatXTC.params_from_phil(locator_scope, image_file)
         except Exception:
             return False
         if params.data_source is None:
@@ -82,10 +81,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         return True
 
     @staticmethod
-    def params_from_phil(image_file):
+    def params_from_phil(master_phil, user_phil):
         try:
-            user_input = parse(file_name=image_file)
-            working_phil = locator_scope.fetch(sources=[user_input])
+            user_input = parse(file_name=user_phil)
+            #      from IPython import embed; embed(); exit()
+            working_phil = master_phil.fetch(sources=[user_input])
             params = working_phil.extract()
             return params
         except Exception:
@@ -94,7 +94,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     def _get_datasource(self, image_file):
         from psana import DataSource
 
-        params = self.params_from_phil(image_file)
+        params = FormatXTC.params_from_phil(locator_scope, image_file)
         if params.data_source is None:
             return False
         else:
