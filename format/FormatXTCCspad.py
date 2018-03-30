@@ -73,11 +73,11 @@ class FormatXTCCspad(FormatXTC):
                 for asic_count, asic in enumerate(sensor):
                     fdim, sdim = asic.get_image_size()
                     asic_data = data[
-                        sensor_count, :, asic_count * fdim : (asic_count + 1) * fdim
-                    ]
-                    self._raw_data.append(flex.double(np.ascontiguousarray(asic_data)))
-                    asic_count += 1
-                sensor_count += 1
+                        sensor_count + quad_count * 8,
+                        :,
+                        asic_count * fdim : (asic_count + 1) * fdim,
+                    ]  # 8 sensors per quad
+                    self._raw_data.append(flex.double(np.array(asic_data)))
         assert len(d) == len(self._raw_data)
         return tuple(self._raw_data)
 
