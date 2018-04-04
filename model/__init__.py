@@ -1,5 +1,7 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import sys
+
 import boost.python
 from cctbx import sgtbx  # import dependency
 from cctbx.crystal_orientation import crystal_orientation  # import dependency
@@ -52,8 +54,6 @@ class CrystalAux(boost.python.injector, Crystal):
         from scitbx import matrix
 
         if out is None:
-            import sys
-
             out = sys.stdout
         uc = self.get_unit_cell().parameters()
         uc_sd = self.get_cell_parameter_sd()
@@ -259,8 +259,6 @@ class MosaicCrystalKabsch2010Aux(CrystalAux, MosaicCrystalKabsch2010):
         CrystalAux._show(self, show_scan_varying, out)
 
         if out is None:
-            import sys
-
             out = sys.stdout
 
         msg = []
@@ -331,8 +329,6 @@ class MosaicCrystalSauter2014Aux(CrystalAux, MosaicCrystalSauter2014):
         CrystalAux._show(self, show_scan_varying, out)
 
         if out is None:
-            import sys
-
             out = sys.stdout
 
         msg = []

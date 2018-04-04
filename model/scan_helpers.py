@@ -1,13 +1,5 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-# scan_helpers.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # Helpers for the scan class, which are things for handling e.g. filenames,
 # templates and so on.
 

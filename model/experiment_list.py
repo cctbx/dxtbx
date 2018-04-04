@@ -1,16 +1,7 @@
-#!/usr/bin/env python
-#
-#  experiment_list.py
-#
-#  Copyright (C) 2013 Diamond Light Source
-#
-#  Author: James Parkhurst
-#
-#  This code is distributed under the BSD license, a copy of which is
-#  included in the root directory of this package.
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
 import pkg_resources
+
 from dxtbx.model import Experiment, ExperimentList
 
 

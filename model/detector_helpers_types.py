@@ -1,14 +1,5 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-# detector_helpers_types.py
-#
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # Helpers for the detector class... this time enumerating all of the common
 # detector types, hashed by the sensor type, image dimensions and pixel
 # dimensions.

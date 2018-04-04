@@ -1,9 +1,7 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
-
 #!/usr/bin/env python
-# to_xds.py
-#
+
+from __future__ import absolute_import, division, print_function
+
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is

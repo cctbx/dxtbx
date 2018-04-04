@@ -1,7 +1,7 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
-
 #!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function
+
 # resolution_corners.py
 #
 #   Copyright (C) 2013 Diamond Light Source, Graeme Winter
