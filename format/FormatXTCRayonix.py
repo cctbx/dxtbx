@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division
 from __future__ import print_function
-from dxtbx.format.FormatXTC import FormatXTC
+from dxtbx.format.FormatXTC import FormatXTC, locator_str
+from libtbx.phil import parse
 
 try:
     from xfel.cxi.cspad_ana import cspad_tbx, rayonix_tbx
@@ -8,20 +9,31 @@ except ImportError:
     # xfel not configured
     pass
 
+rayonix_locator_str = """
+  rayonix {
+    bin_size = 2
+      .type = int
+      .help = Detector binning mode
+  }
+"""
+
+rayonix_locator_scope = parse(rayonix_locator_str + locator_str, process_includes=True)
+
 
 class FormatXTCRayonix(FormatXTC):
     def __init__(self, image_file, **kwargs):
         assert self.understand(image_file)
+        FormatXTC.__init__(
+            self, image_file, locator_scope=rayonix_locator_scope, **kwargs
+        )
         self._ds = self._get_datasource(image_file)
+        self._env = self._ds.env()
         self.events_list = []
         self.populate_events()
-        FormatXTC.__init__(self, image_file, **kwargs)
+        self.n_images = len(self.events_list)
 
     def _get_event(self, index):
         return self.events_list[index]
-
-    def _start(self):
-        self.n_images = len(self.events_list)
 
     def populate_events(self):
         for nevent, evt in enumerate(self._ds.events()):
@@ -81,19 +93,17 @@ class FormatXTCRayonix(FormatXTC):
     def _detector(self):
         import psana
 
-        self._env = self._ds.env()
-        self._det = psana.Detector(self._src, self._env)
+        pixel_size = rayonix_tbx.get_rayonix_pixel_size(self.params.rayonix.bin_size)
         return self._detector_factory.simple(
             sensor="UNKNOWN",
             distance=100.0,
             beam_centre=(50.0, 50.0),
             fast_direction="+x",
             slow_direction="-y",
-            pixel_size=(
-                rayonix_tbx.get_rayonix_pixel_size(2),
-                rayonix_tbx.get_rayonix_pixel_size(2),
+            pixel_size=(pixel_size, pixel_size),
+            image_size=rayonix_tbx.get_rayonix_detector_dimensions(
+                self.params.rayonix.bin_size
             ),
-            image_size=self._det.shape(),
             trusted_range=(
                 rayonix_tbx.rayonix_min_trusted_value,
                 rayonix_tbx.rayonix_saturated_value,
