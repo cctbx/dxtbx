@@ -1,4 +1,7 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
+
+import logging
+
 from scitbx.array_family import flex  # import dependency
 
 try:
@@ -13,11 +16,12 @@ if ext is not None:
 
 import dxtbx.imageset  # implicit import
 
+logging.getLogger("dxtbx").addHandler(logging.NullHandler())
+
 
 class IncorrectFormatError(RuntimeError):
     """
     An exception class for an incorrect format error
-
     """
 
     def __init__(self, format_instance, filename):
