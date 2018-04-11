@@ -42,7 +42,7 @@ def _decode_dict(data):
     return rv
 
 
-def imageset_from_string(string):
+def imageset_from_string(string, directory=None):
     """Load the string and return the models.
 
     Params:
@@ -55,7 +55,9 @@ def imageset_from_string(string):
     import json
     from dxtbx.serialize.imageset import imageset_from_dict
 
-    return imageset_from_dict(json.loads(string, object_hook=_decode_dict))
+    return imageset_from_dict(
+        json.loads(string, object_hook=_decode_dict), directory=directory
+    )
 
 
 def imageset(filename):
@@ -68,14 +70,13 @@ def imageset(filename):
         The models
 
     """
-    from dxtbx.serialize.filename import temp_chdir
     from os.path import abspath, dirname
 
     # If the input is a string then open and read from that file
     filename = abspath(filename)
-    with temp_chdir(dirname(filename)):
-        with open(filename, "r") as infile:
-            return imageset_from_string(infile.read())
+    directory = dirname(filename)
+    with open(filename, "r") as infile:
+        return imageset_from_string(infile.read(), directory=directory)
 
 
 def datablock(filename, check_format=True):
