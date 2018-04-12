@@ -642,7 +642,9 @@ class ExperimentListFactory(object):
                 )
                 if verbose:
                     print("Loaded experiments from %s" % filename)
-            except Exception:
+            except Exception as e:
+                if verbose:
+                    print("Could not load experiments from %s: %s" % (filename, str(e)))
                 unhandled.append(filename)
 
         # Return the experiments

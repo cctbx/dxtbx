@@ -419,6 +419,9 @@ def test_experimentlist_factory_from_pickle(dials_regression):
 
 
 def test_experimentlist_factory_from_args(dials_regression):
+    pytest.importorskip("dials")
+    os.environ["DIALS_REGRESSION"] = dials_regression
+
     # Get all the filenames
     filenames = [
         os.path.join(dials_regression, "experiment_test_data", "experiment_1.json"),
@@ -428,7 +431,7 @@ def test_experimentlist_factory_from_args(dials_regression):
     ]
 
     # Get the experiments from a list of filenames
-    experiments = ExperimentListFactory.from_args(filenames)
+    experiments = ExperimentListFactory.from_args(filenames, verbose=True)
 
     # Have 4 experiment
     assert len(experiments) == 3
