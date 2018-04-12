@@ -8,8 +8,7 @@
 # An implementation of the SMV image reader for JHSim images. Inherits from
 # FormatSMV.
 
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
 import time
 

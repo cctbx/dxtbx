@@ -10,8 +10,8 @@
 #
 # Experimental format for TIA .ser files used by FEI microscope at eBIC.
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
 from dxtbx.format.FormatSER import FormatSER
 
 

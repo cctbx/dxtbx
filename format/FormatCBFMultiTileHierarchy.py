@@ -7,15 +7,13 @@
 # $Id:
 #
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import pycbf
-
 from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile
 from dxtbx.model import Detector
-from scitbx.matrix import sqr, col
 from libtbx.utils import Sorry
+from scitbx.matrix import col, sqr
 
 
 class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):

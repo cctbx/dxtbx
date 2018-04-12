@@ -8,13 +8,12 @@
 # An implementation of the SMV image reader for Rigaku Saturn images.
 # Inherits from FormatSMVRigaku.
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import time
-from scitbx import matrix
 
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
+from scitbx import matrix
 
 
 class FormatSMVNOIR(FormatSMVRigaku):

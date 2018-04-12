@@ -7,10 +7,10 @@
 # least viewed.
 #
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import struct, re
+import re
+import struct
 
 from dxtbx.format.FormatTIFFRayonix import FormatTIFFRayonix
 

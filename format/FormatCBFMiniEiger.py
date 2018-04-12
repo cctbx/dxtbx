@@ -8,13 +8,13 @@
 # An implementation of the CBF image reader for Eiger images. Inherits from
 # FormatCBFMini.
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import os
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
-import os
 
 if "DXTBX_OVERLOAD_SCALE" in os.environ:
     dxtbx_overload_scale = float(os.environ["DXTBX_OVERLOAD_SCALE"])

@@ -10,12 +10,10 @@
 # FormatSMVRigakuSaturn customizing only the difference (incorrect definition
 # of fast and slow directions.)
 
-from __future__ import absolute_import, division
-from __future__ import print_function
-
-from scitbx import matrix
+from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatSMVRigakuSaturn import FormatSMVRigakuSaturn
+from scitbx import matrix
 
 
 class FormatSMVRigakuSaturnSN07400090(FormatSMVRigakuSaturn):

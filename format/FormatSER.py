@@ -11,11 +11,12 @@
 # Experimental format for TIA .ser files used by some FEI microscopes. See
 # http://www.er-c.org/cbb/info/TIAformat/
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import struct
+
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-import struct
 
 
 class FormatSER(FormatMultiImage, Format):

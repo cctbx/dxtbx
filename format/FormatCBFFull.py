@@ -9,12 +9,11 @@
 # amongst others - this will read the header and construct the full model,
 # but will allow for extension for specific implementations of CBF.
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import pycbf
-
 from dxtbx.format.FormatCBF import FormatCBF
+from dxtbx.format.FormatStill import FormatStill
 
 
 class FormatCBFFull(FormatCBF):
@@ -104,9 +103,6 @@ class FormatCBFFull(FormatCBF):
             return self._raw_data
         except Exception:
             return None
-
-
-from dxtbx.format.FormatStill import FormatStill
 
 
 class FormatCBFFullStill(FormatStill, FormatCBFFull):
