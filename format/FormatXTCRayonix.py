@@ -32,13 +32,6 @@ class FormatXTCRayonix(FormatXTC):
         self.populate_events()
         self.n_images = len(self.events_list)
 
-    def populate_events(self):
-        for nevent, evt in enumerate(self._ds.events()):
-            wavelength = cspad_tbx.evt_wavelength(evt)
-            if wavelength is None:
-                continue
-            self.events_list.append(evt)
-
     @staticmethod
     def understand(image_file):
         import psana
@@ -81,7 +74,7 @@ class FormatXTCRayonix(FormatXTC):
         """Returns a simple model for the beam """
         if index is None:
             index = 0
-        evt = self.events_list[index]
+        evt = self._get_event(index)
         wavelength = cspad_tbx.evt_wavelength(evt)
         if wavelength is None:
             return None

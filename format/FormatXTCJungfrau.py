@@ -34,15 +34,6 @@ class FormatXTCJungfrau(FormatXTC):
         self.populate_events()
         self.n_images = len(self.events_list)
 
-    def populate_events(self):
-        for nevent, evt in enumerate(self._ds.events()):
-            wavelength = cspad_tbx.evt_wavelength(evt)
-            if wavelength is None:
-                continue
-            if nevent > 2:
-                break
-            self.events_list.append(evt)
-
     @staticmethod
     def understand(image_file):
         try:
@@ -98,7 +89,7 @@ class FormatXTCJungfrau(FormatXTC):
         """Returns a simple model for the beam """
         if index is None:
             index = 0
-        evt = self.events_list[index]
+        evt = self._get_event(index)
         wavelength = cspad_tbx.evt_wavelength(evt)
         if wavelength is None:
             return None
@@ -119,9 +110,9 @@ class FormatXTCJungfrau(FormatXTC):
             index = 0
         self._env = self._ds.env()
         self._det = psana.Detector(self._src, self._env)
-        geom = self._det.pyda.geoaccess(self.events_list[index])
+        geom = self._det.pyda.geoaccess(self._get_event(index))
         pixel_size = (
-            self._det.pixel_size(self.events_list[index]) / 1000.0
+            self._det.pixel_size(self._get_event(index)) / 1000.0
         )  # convert to mm
         d = Detector()
         pg0 = d.hierarchy()
