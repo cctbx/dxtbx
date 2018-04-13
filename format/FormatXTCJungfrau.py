@@ -35,11 +35,11 @@ class FormatXTCJungfrau(FormatXTC):
         self.populate_events()
         self.n_images = len(self.events_list)
 
-    def _get_event(self, index):
-        return self.events_list[index]
-
     def populate_events(self):
         for nevent, evt in enumerate(self._ds.events()):
+            wavelength = cspad_tbx.evt_wavelength(evt)
+            if wavelength is None:
+                continue
             self.events_list.append(evt)
 
     @staticmethod
@@ -98,7 +98,10 @@ class FormatXTCJungfrau(FormatXTC):
         if index is None:
             index = 0
         evt = self.events_list[index]
-        return self._beam_factory.simple(cspad_tbx.evt_wavelength(evt))
+        wavelength = cspad_tbx.evt_wavelength(evt)
+        if wavelength is None:
+            return None
+        return self._beam_factory.simple(wavelength)
 
     def get_goniometer(self, index=None):
         return None
