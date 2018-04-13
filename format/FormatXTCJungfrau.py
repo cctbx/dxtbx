@@ -1,5 +1,4 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from libtbx.phil import parse
 import numpy as np
@@ -40,6 +39,8 @@ class FormatXTCJungfrau(FormatXTC):
             wavelength = cspad_tbx.evt_wavelength(evt)
             if wavelength is None:
                 continue
+            if nevent > 2:
+                break
             self.events_list.append(evt)
 
     @staticmethod
@@ -199,4 +200,5 @@ if __name__ == "__main__":
     import sys
 
     for arg in sys.argv[1:]:
+        # Bug, should call this part differently for understand method to work
         print(FormatXTCJungfrau.understand(arg))
