@@ -30,9 +30,8 @@ class FormatXTCJungfrau(FormatXTC):
         )
         self._ds = self._get_datasource(image_file)
         self._env = self._ds.env()
-        self.events_list = []
         self.populate_events()
-        self.n_images = len(self.events_list)
+        self.n_images = len(self.times)
 
     @staticmethod
     def understand(image_file):
@@ -60,7 +59,7 @@ class FormatXTCJungfrau(FormatXTC):
         det = psana.Detector(self._src, self._env)
         d = self.get_detector()
         evt = self._get_event(index)
-        data = det.calib(evt)
+        data = det.raw(evt)
         data = data.astype(np.float64)
         self._raw_data = []
         for quad_count, quad in enumerate(d.hierarchy()):
@@ -74,6 +73,8 @@ class FormatXTCJungfrau(FormatXTC):
                 ]  # 8 sensors per quad
                 self._raw_data.append(flex.double(np.array(asic_data)))
         assert len(d) == len(self._raw_data)
+        # from IPython import embed; embed();
+        # import pdb; pdb.set_trace()
         return tuple(self._raw_data)
 
     def get_num_images(self):

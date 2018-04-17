@@ -32,9 +32,8 @@ class FormatXTCCspad(FormatXTC):
         )
         self._ds = self._get_datasource(image_file)
         self._env = self._ds.env()
-        self.events_list = []
         self.populate_events()
-        self.n_images = len(self.events_list)
+        self.n_images = len(self.times)
 
     @staticmethod
     def understand(image_file):
@@ -63,7 +62,7 @@ class FormatXTCCspad(FormatXTC):
         import numpy as np
 
         det = psana.Detector(self._src, self._env)
-        d = self.get_detector()
+        d = self.get_detector(index)
         data = cspad_cbf_tbx.get_psana_corrected_data(
             det,
             self._get_event(index),
