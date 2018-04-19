@@ -4,13 +4,19 @@ from dxtbx.imageset import ImageSet
 
 
 class ImageSetLazy(ImageSet):
+
+    """
+    Lazy ImageSet class that doesn't necessitate setting the models ahead of time.
+    Only when a particular model (like detector or beam) for an image is requested,
+    it sets the model using the format class and then returns the model
+    """
+
     def get_detector(self, index=None):
         if index is None:
             index = 0
         detector = super(ImageSetLazy, self).get_detector(index)
         if detector is None:
             format_instance = self.get_format_class()._current_instance_
-            # format_instance = self.get_format_class()(self.paths()[self.indices()[index]])
             detector = format_instance.get_detector(self.indices()[index])
             self.set_detector(detector, index)
         return detector
@@ -21,7 +27,6 @@ class ImageSetLazy(ImageSet):
         beam = super(ImageSetLazy, self).get_beam(index)
         if beam is None:
             format_instance = self.get_format_class()._current_instance_
-            # format_instance = self.get_format_class()(self.paths()[self.indices()[index]])
             beam = format_instance.get_beam(self.indices()[index])
             self.set_beam(beam, index)
         return beam
@@ -32,7 +37,6 @@ class ImageSetLazy(ImageSet):
         goniometer = super(ImageSetLazy, self).get_goniometer(index)
         if goniometer is None:
             format_instance = self.get_format_class()._current_instance_
-            # format_instance = self.get_format_class()(self.paths()[self.indices()[index]])
             goniometer = format_instance.get_goniometer(self.indices()[index])
             self.set_goniometer(goniometer, index)
         return goniometer
@@ -43,7 +47,6 @@ class ImageSetLazy(ImageSet):
         scan = super(ImageSetLazy, self).get_scan(index)
         if scan is None:
             format_instance = self.get_format_class()._current_instance_
-            # format_instance = self.get_format_class()(self.paths()[self.indices()[index]])
             scan = format_instance.get_scan(self.indices()[index])
             self.set_scan(scan, index)
         return scan
@@ -61,17 +64,12 @@ class ImageSetLazy(ImageSet):
 
 
 class FormatMultiImageLazy(FormatMultiImage):
-    def get_goniometer(self, index=None):
-        return self._goniometer_instance
 
-    def get_detector(self, index=None):
-        return self._detector_instance
-
-    def get_beam(self, index=None):
-        return self._beam_instance
-
-    def get_scan(self, index=None):
-        return self._scan_instance
+    """
+    Lazy version of FormatMultiImage that does not instantiate the models ahead of time.
+    It creates an ImageSetLazy class and returns it. Saves time when image file contains
+    too many images to setup before processing.
+    """
 
     @classmethod
     def get_imageset(
@@ -173,6 +171,7 @@ class FormatMultiImageLazy(FormatMultiImage):
         if not is_sweep:
 
             # Create the imageset
+            # Do not read and then set the models
             iset = ImageSetLazy(
                 ImageSetData(
                     reader=reader,
@@ -183,30 +182,6 @@ class FormatMultiImageLazy(FormatMultiImage):
                 ),
                 indices=single_file_indices,
             )
-
-            # If any are None then read from format
-        #      if [beam, detector, goniometer, scan].count(None) != 0:
-        #
-        #        # Get list of models
-        #        beam = []
-        #        detector = []
-        #        goniometer = []
-        #        scan = []
-        #        for i in range(format_instance.get_num_images()):
-        #          beam.append(format_instance.get_beam(i))
-        #          detector.append(format_instance.get_detector(i))
-        #          goniometer.append(format_instance.get_goniometer(i))
-        #          scan.append(format_instance.get_scan(i))
-        #
-        #      if single_file_indices is None:
-        #        single_file_indices = list(range(format_instance.get_num_images()))
-        #
-        #      # Set the list of models
-        #      for i in range(len(single_file_indices)):
-        #        iset.set_beam(beam[single_file_indices[i]], i)
-        #        iset.set_detector(detector[single_file_indices[i]], i)
-        #        iset.set_goniometer(goniometer[single_file_indices[i]], i)
-        #        iset.set_scan(scan[single_file_indices[i]], i)
 
         else:
 
