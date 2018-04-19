@@ -2,11 +2,11 @@ from __future__ import absolute_import, division
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
-class FormatMultiImageLazy(FormatMultiImage):
+class FormatMultiImageJIT(FormatMultiImage):
 
     """
-    Lazy version of FormatMultiImage that does not instantiate the models ahead of time.
-    It creates an ImageSetLazy class and returns it. Saves time when image file contains
+    Just-in-Time version of FormatMultiImage that does not instantiate the models ahead of time.
+    It creates an ImageSetJIT class and returns it. Saves time when image file contains
     too many images to setup before processing.
     """
 
@@ -24,10 +24,10 @@ class FormatMultiImageLazy(FormatMultiImage):
         format_kwargs=None,
         template=None,
         check_format=True,
-        lazy=True,
+        just_in_time=True,
     ):
 
-        return super(FormatMultiImageLazy, Class).get_imageset(
+        return super(FormatMultiImageJIT, Class).get_imageset(
             filenames,
             beam,
             detector,
@@ -39,5 +39,5 @@ class FormatMultiImageLazy(FormatMultiImage):
             format_kwargs,
             template,
             check_format,
-            lazy,
+            just_in_time,
         )
