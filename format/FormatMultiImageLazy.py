@@ -27,8 +27,7 @@ class FormatMultiImageLazy(FormatMultiImage):
         lazy=True,
     ):
 
-        return super(FormatMultiImageLazy, self).get_imageset(
-            Class,
+        return super(FormatMultiImageLazy, Class).get_imageset(
             filenames,
             beam,
             detector,
