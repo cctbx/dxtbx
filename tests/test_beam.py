@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division
-from __future__ import print_function
 
 #!/usr/bin/env python
 # test_beam.py
@@ -23,8 +22,6 @@ def test_beam():
 
     image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
     cbf = BeamFactory.imgCIF(image)
-
-    print("OK")
 
 
 if __name__ == "__main__":

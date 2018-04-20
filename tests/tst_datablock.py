@@ -111,7 +111,6 @@ class Test(object):
         sweeps = blocks[0].extract_sweeps()
         assert len(sweeps) == 1
         assert len(sweeps[0]) == 9
-        print("OK")
 
     def tst_create_multiple_sweeps(self):
         filenames = self.multiple_sweep_filenames()
@@ -124,7 +123,6 @@ class Test(object):
         assert len(sweeps) == 2
         assert len(sweeps[0]) == 3
         assert len(sweeps[1]) == 3
-        print("OK")
 
     def tst_create_multiple_blocks(self):
         filenames = self.multiple_block_filenames()
@@ -140,8 +138,6 @@ class Test(object):
         assert len(sweeps) == 1
         assert len(sweeps[0]) == 9
 
-        print("OK")
-
     def tst_pickling(self):
         filenames = self.multiple_block_filenames()
         blocks1 = DataBlockFactory.from_filenames(filenames)
@@ -151,8 +147,6 @@ class Test(object):
             assert b1.format_class() == b2.format_class()
             assert b1 == b2
         assert blocks1 == blocks2
-
-        print("OK")
 
     def tst_json(self):
 
@@ -184,8 +178,6 @@ class Test(object):
                         assert im1.get_beam(i) == im2.get_beam(i)
                         assert im1.get_detector(i) == im2.get_detector(i)
 
-        print("OK")
-
     def tst_from_null_sweep(self):
         from dxtbx.format.Format import Format
         from dxtbx.imageset import ImageSweep
@@ -212,8 +204,6 @@ class Test(object):
         assert sweeps[0].get_goniometer() == sweep.get_goniometer()
         assert sweeps[0].get_scan() == sweep.get_scan()
 
-        print("OK")
-
     def tst_with_bad_external_lookup(self):
         filename = join(
             self.dials_regression,
@@ -239,8 +229,6 @@ class Test(object):
         assert imageset.external_lookup.mask.data.empty()
         assert imageset.external_lookup.gain.data.empty()
         assert imageset.external_lookup.pedestal.data.empty()
-
-        print("OK")
 
     def tst_with_external_lookup(self):
         filename = join(
@@ -271,8 +259,6 @@ class Test(object):
         assert imageset.external_lookup.mask.data.tile(0).data().all_eq(True)
         assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
         assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
-
-        print("OK")
 
 
 if __name__ == "__main__":

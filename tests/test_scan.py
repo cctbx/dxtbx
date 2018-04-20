@@ -111,8 +111,6 @@ def work_xScanFactory():
 
     cbf = os.path.join(directory, "phi_scan_001.cbf")
 
-    print("OK")
-
 
 def test_scan():
     work_helper_image_files()

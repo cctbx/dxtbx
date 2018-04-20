@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division
-from __future__ import print_function
 
 #!/usr/bin/env python
 # test_detector.py
@@ -54,8 +53,6 @@ def test_detector():
 
     c = DetectorFactory.imgCIF(image, "CCD")
     # x = DetectorFactory.XDS(xparm)
-
-    print("OK")
 
 
 def work_detector():

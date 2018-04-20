@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division
-from __future__ import print_function
 
 from dxtbx.model import Scan
 
@@ -13,7 +12,6 @@ def tst_is_batch_valid(scan):
         assert scan.is_batch_valid(i) == True
     for i in range(br2 + 1, br2 + 100):
         assert scan.is_batch_valid(i) == False
-    print("OK")
 
 
 def tst_is_angle_valid(scan):
@@ -27,7 +25,6 @@ def tst_is_angle_valid(scan):
         assert scan.is_angle_valid(i) == True
     for i in range(os2 + 1, 360):
         assert scan.is_angle_valid(i) == False
-    print("OK")
 
 
 def tst_is_frame_valid(scan):
@@ -39,7 +36,6 @@ def tst_is_frame_valid(scan):
         assert scan.is_image_index_valid(i) == True
     for i in range(image_range[1] + 1, image_range[1] + 100):
         assert scan.is_image_index_valid(i) == False
-    print("OK")
 
 
 def tst_get_angle_from_frame(scan):
@@ -59,7 +55,6 @@ def tst_scan_oscillation_recycle(scan):
         oscillation = scan.get_oscillation(deg=deg)
         scan.set_oscillation(oscillation, deg=deg)
         assert scan.get_oscillation(deg=deg) == oscillation
-    print("OK")
 
 
 def tst_scan_360_append():
@@ -74,7 +69,6 @@ def tst_scan_360_append():
     assert abs(scan.get_oscillation()[1] - 1.0) < eps
     assert scan.get_image_range() == (1, 720)
     assert scan.get_batch_range() == (1, 720)
-    print("OK")
 
     scan1 = Scan((1, 360), (0.0, 1.0))
     scan2 = Scan((361, 720), (360.0, 1.0))
@@ -97,8 +91,6 @@ def tst_scan_360_append():
     else:
         raise Exception_expected
 
-    print("OK")
-
 
 def tst_swap():
 
@@ -109,7 +101,6 @@ def tst_swap():
     assert scan1.get_image_range() == (40, 60)
     assert scan2.get_oscillation() == (0.0, 1.0)
     assert scan1.get_oscillation() == (10.0, 2.0)
-    print("OK")
 
 
 def tst_from_phil():
@@ -161,8 +152,6 @@ def tst_from_phil():
     for i in range(ir1, ir2):
         assert s2.get_batch_for_image_index(i) == i + s2.get_batch_offset()
         assert s2.is_batch_valid(s2.get_batch_for_image_index(i))
-
-    print("OK")
 
 
 def run():

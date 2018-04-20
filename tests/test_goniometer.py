@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division
-from __future__ import print_function
 
 #!/usr/bin/env python
 # test_goniometer.py
@@ -104,8 +103,6 @@ def test_goniometer():
     s = easy_pickle.dumps(kappa)
     kappa2 = easy_pickle.loads(s)
     assert kappa == kappa2
-
-    print("OK")
 
 
 def test_multi_axis_goniometer():
@@ -216,8 +213,6 @@ def test_multi_axis_goniometer():
     assert single_axis.get_setting_rotation() == (1, 0, 0, 0, 1, 0, 0, 0, 1)
     assert single_axis.get_rotation_axis() == (1, 0, 0)
 
-    print("OK")
-
 
 def test_goniometer_from_phil():
     from dxtbx.model.goniometer import GoniometerFactory
@@ -282,8 +277,6 @@ def test_goniometer_from_phil():
     g4 = GoniometerFactory.from_phil(params, reference=g3)
 
     assert tuple(g4.get_axes()) == ((0, 1, 0), (1, 0, 0), (0, 0, 1))
-
-    print("OK")
 
 
 if __name__ == "__main__":

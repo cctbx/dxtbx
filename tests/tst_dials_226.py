@@ -27,4 +27,4 @@ def run():
 
 if __name__ == "__main__":
     # run() # disabled 2016/OCT/17 to enable nightly builds to pass
-    print("OK")
+    pass  # I guess

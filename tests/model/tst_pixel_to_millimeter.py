@@ -44,9 +44,6 @@ class Test(object):
 
         self.tst_inverted_axis()
 
-        # Test passed
-        print("OK")
-
     def tst_single(self, xy):
         from scitbx import matrix
 
@@ -69,8 +66,6 @@ class Test(object):
         xy_corr_gold = [self.detector[0].get_lab_coord(xy_single) for xy_single in xy]
         assert approx_equal(xy_corr, xy_corr_gold)
         assert approx_equal(xy_corr_panel, xy_corr_gold)
-
-        print("OK")
 
     def tst_inverted_axis(self):
         def get_values(invert_y):
@@ -118,8 +113,6 @@ class Test(object):
         assert abs(v11[1] - v21[1]) < 1e-7
         assert abs(v12[0] - v22[0]) < 1e-7
         assert abs(v12[1] - v22[1]) < 1e-7
-
-        print("OK")
 
     def correct_gold(self, xy):
         from scitbx import matrix
@@ -182,8 +175,6 @@ class TestOffsetPxMmStrategy(object):
         pnew = pickle.loads(pickle.dumps(pnew))
 
         assert pnew == p
-
-        print("OK")
 
 
 if __name__ == "__main__":
