@@ -113,6 +113,7 @@ class FormatXTC(FormatMultiImageJIT, FormatStill, Format):
 
     @staticmethod
     def params_from_phil(master_phil, user_phil):
+        """ Read the locator file """
         try:
             user_input = parse(file_name=user_phil)
             working_phil = master_phil.fetch(sources=[user_input])
@@ -122,6 +123,9 @@ class FormatXTC(FormatMultiImageJIT, FormatStill, Format):
             return None
 
     def populate_events(self):
+        """Read the timestamps from the XTC stream.  Assumes the psana idx mode of reading data.
+        Handles multiple LCLS runs by concatenating the timestamps from multiple runs together
+        in a single list and creating a mapping."""
         self.times = []
         self.run_mapping = {}
         for run in self._ds.runs():
@@ -134,6 +138,7 @@ class FormatXTC(FormatMultiImageJIT, FormatStill, Format):
             self.times.extend(times)
 
     def get_run_from_index(self, index=None):
+        """ Look up the run number given an index """
         if index is None:
             index = 0
         for run_number in self.run_mapping:
@@ -143,6 +148,8 @@ class FormatXTC(FormatMultiImageJIT, FormatStill, Format):
         raise IndexError("Index is not within bounds")
 
     def _get_event(self, index):
+        """Retrieve a psana event given and index. This is the slow step for reading XTC streams,
+        so implement a cache for the last read event."""
         if index == self.current_index:
             return self.current_event
         else:
@@ -151,6 +158,7 @@ class FormatXTC(FormatMultiImageJIT, FormatStill, Format):
             return self.current_event
 
     def _get_datasource(self, image_file):
+        """ Construct a psana data source object given the locator parameters """
         from psana import DataSource
 
         params = self.params
@@ -171,11 +179,8 @@ class FormatXTC(FormatMultiImageJIT, FormatStill, Format):
             img = params.data_source
         return DataSource(img)
 
-    def get_run(self, index):
-        evt = self._get_event(index)
-        return evt.run()
-
     def get_psana_timestamp(self, index):
+        """ Get the cctbx.xfel style event timestamp given an index """
         from xfel.cxi.cspad_ana import cspad_tbx
         import psana
 
