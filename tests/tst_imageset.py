@@ -605,13 +605,13 @@ class Test_SACLA_MPCCD_Cheetah_File(object):
             "./image_examples/SACLA_MPCCD_Cheetah/run266702-0-subset.h5",
         )
 
-    def run(self, just_in_time=False):
+    def run(self, lazy=False):
 
         from dxtbx.format.Registry import Registry
 
         format_class = Registry.find(self.filename)
 
-        iset = format_class.get_imageset([self.filename], just_in_time=just_in_time)
+        iset = format_class.get_imageset([self.filename], lazy=lazy)
 
         assert len(iset) == 4
         for i in range(len(iset)):
@@ -623,7 +623,7 @@ class Test_SACLA_MPCCD_Cheetah_File(object):
             assert iset.get_scan(i) is None
 
         iset = format_class.get_imageset(
-            [self.filename], single_file_indices=[1], just_in_time=just_in_time
+            [self.filename], single_file_indices=[1], lazy=lazy
         )
         assert len(iset) == 1
 
@@ -750,7 +750,7 @@ def run():
     TestImageSweep().run()
     #  TestNexusFile().run()
     Test_SACLA_MPCCD_Cheetah_File().run()
-    Test_SACLA_MPCCD_Cheetah_File().run(just_in_time=True)
+    Test_SACLA_MPCCD_Cheetah_File().run(lazy=True)
     TestImageSetFactory().run()
     TestPickleImageSet().run()
 
