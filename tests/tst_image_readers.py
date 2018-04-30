@@ -299,8 +299,12 @@ def tst_smv(filename):
     from scitbx.array_family import flex
 
     image = SMVReader(filename).image()
+    if image.is_double():
+        image = image.as_double()
+    else:
+        image = image.as_int()
     assert image.n_tiles() == 1
-    data1 = image.tile(0).as_int()
+    data1 = image.tile(0).data()
 
     data2 = read_smv_image(filename)
 
@@ -313,8 +317,12 @@ def tst_tiff(filename):
     from dxtbx.format.image import TIFFReader
 
     image = TIFFReader(filename).image()
+    if image.is_double():
+        image = image.as_double()
+    else:
+        image = image.as_int()
     assert image.n_tiles() == 1
-    data1 = image.tile(0).as_int()
+    data1 = image.tile(0).data()
 
     data2 = read_tiff_image(filename)
 
@@ -341,7 +349,12 @@ def tst_cbf(filename):
     from dxtbx.format.image import CBFReader
 
     image = CBFReader(filename).image()
-    data1 = tuple(image.tile(i).as_int() for i in range(image.n_tiles()))
+    if image.is_double():
+        image = image.as_double()
+    else:
+        image = image.as_int()
+
+    data1 = tuple(image.tile(i).data() for i in range(image.n_tiles()))
 
     try:
         data2 = read_multitile_cbf_image(filename)
@@ -385,15 +398,15 @@ def tst_hdf5(filename):
 
 def tst_all():
     for k, v in IMAGE_EXAMPLES.iteritems():
-        # if v == 'smv':
-        #  tst_smv(k)
-        # elif v == 'tiff':
-        #  tst_tiff(k)
-        # elif v == 'cbf':
-        #  tst_cbf_fast(k)
-        #  tst_cbf(k)
-        # elif v == 'cbf_multitile':
-        #  tst_cbf(k)
+        if v == "smv":
+            tst_smv(k)
+        elif v == "tiff":
+            tst_tiff(k)
+        elif v == "cbf":
+            # tst_cbf_fast(k)
+            tst_cbf(k)
+        elif v == "cbf_multitile":
+            tst_cbf(k)
         if v == "hdf5":
             tst_hdf5(k)
 
