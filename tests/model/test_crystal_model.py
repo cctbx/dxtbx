@@ -490,7 +490,6 @@ def test_set_scan_varying_B_covariance():
         space_group_symbol="P 1",
     )
 
-    cov_B = matrix.sqr([1] * (9 * 9))
     from scitbx.array_family import flex
 
     cov_B = flex.double(
