@@ -1,5 +1,5 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
 import math
 from cStringIO import StringIO
 from libtbx.test_utils import approx_equal, show_diff
@@ -20,7 +20,7 @@ def random_rotation():
     return euler_angles_as_matrix([random.uniform(0, 360) for i in xrange(3)])
 
 
-def exercise_crystal_model_from_mosflm_matrix():
+def test_crystal_model_from_mosflm_matrix():
     mosflm_matrix = map(
         float,
         """ -0.00495480 -0.01491776  0.00238445
@@ -41,8 +41,7 @@ def exercise_crystal_model_from_mosflm_matrix():
     )
 
 
-def exercise_crystal_model():
-
+def test_crystal_model():
     real_space_a = matrix.col((10, 0, 0))
     real_space_b = matrix.col((0, 11, 0))
     real_space_c = matrix.col((0, 0, 12))
@@ -357,8 +356,7 @@ Crystal:
     assert mosaic_model != mosaic_model2
 
 
-def exercise_similarity():
-
+def test_similarity():
     model_1 = MosaicCrystalKabsch2010(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
@@ -392,10 +390,9 @@ def exercise_similarity():
     assert model_1.is_similar_to(model_2)  # inside tolerance
 
     # unit_cell.is_similar_to is tested elsewhere
-    return
 
 
-def exercise_check_old_vs_new():
+def test_check_old_vs_new():
     from dxtbx.tests.model.crystal_model_old import crystal_model_old
 
     model_1 = Crystal(
@@ -487,17 +484,3 @@ def exercise_check_old_vs_new():
     assert approx_equal(covB1, covB2)
     assert approx_equal(cell_volume_sd_1, cell_volume_sd_2)
     assert approx_equal(cell_sd_1, cell_sd_2)
-
-
-def run():
-    exercise_crystal_model()
-    exercise_crystal_model_from_mosflm_matrix()
-    exercise_similarity()
-    exercise_check_old_vs_new()
-
-
-if __name__ == "__main__":
-    from libtbx.utils import show_times_at_exit
-
-    show_times_at_exit()
-    run()
