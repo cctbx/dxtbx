@@ -1,9 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
 import math
-from cStringIO import StringIO
-from libtbx.test_utils import approx_equal, show_diff
-from scitbx import matrix
+import random
+
 from cctbx import crystal, sgtbx, uctbx
 from dxtbx.model import (
     Crystal,
@@ -11,13 +10,14 @@ from dxtbx.model import (
     MosaicCrystalSauter2014,
     CrystalFactory,
 )
+from libtbx.test_utils import approx_equal
+from scitbx import matrix
 
 
 def random_rotation():
-    import random
     from scitbx.math import euler_angles_as_matrix
 
-    return euler_angles_as_matrix([random.uniform(0, 360) for i in xrange(3)])
+    return euler_angles_as_matrix([random.uniform(0, 360) for i in range(3)])
 
 
 def test_crystal_model_from_mosflm_matrix():
@@ -142,11 +142,9 @@ def test_crystal_model():
     assert approx_equal(a_, R * real_space_a)
     assert approx_equal(b_, R * real_space_b)
     assert approx_equal(c_, R * real_space_c)
-    s = StringIO()
-    print(model, file=s)
-    assert not show_diff(
-        s.getvalue().replace("-0.0000", " 0.0000"),
-        """\
+    assert (
+        str(model).replace("-0.0000", " 0.0000")
+        == """\
 Crystal:
     Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
     Space group: P 1
@@ -159,8 +157,7 @@ Crystal:
     A = UB:    {{ 0.0433, -0.0682,  0.0417},
                 { 0.0789,  0.0043, -0.0510},
                 { 0.0436,  0.0600,  0.0510}}
-
-""",
+"""
     )
     model.set_B((1 / 12, 0, 0, 0, 1 / 12, 0, 0, 0, 1 / 12))
     assert approx_equal(model.get_unit_cell().parameters(), (12, 12, 12, 90, 90, 90))
