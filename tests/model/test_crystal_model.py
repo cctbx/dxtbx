@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import math
 import random
+import pytest
 
 from cctbx import crystal, sgtbx, uctbx
 from dxtbx.model import (
@@ -10,6 +11,8 @@ from dxtbx.model import (
     MosaicCrystalSauter2014,
     CrystalFactory,
 )
+from libtbx.test_utils import approx_equal
+from scitbx import matrix
 
 
 def random_rotation():
@@ -318,7 +321,8 @@ Crystal:
     assert mosaic_model == mosaic_model2
     mosaic_model2.set_mosaicity(0.01)
     assert mosaic_model != mosaic_model2
-    # FIXME Crystal == MosaicCrytal gives unexpected result, depending on parameter order
+    # FIXME Crystal == MosaicCrystal gives unexpected result, depending on
+    # parameter order
     # model4 = Crystal(real_space_a=(10,0,0),
     #                  real_space_b=(0,11,0),
     #                  real_space_c=(0,0,12),
@@ -481,9 +485,12 @@ def test_check_old_vs_new():
     assert approx_equal(cell_sd_1, cell_sd_2)
 
 
-def test_set_scan_varying_B_covariance():
+@pytest.mark.parametrize(
+    "crystal_class", [Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014]
+)
+def test_set_scan_varying_B_covariance(crystal_class):
 
-    xl = Crystal(
+    xl = crystal_class(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),
