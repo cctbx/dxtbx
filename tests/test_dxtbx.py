@@ -1,55 +1,60 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import os
+import pytest
 
 
-def tst_dxtbx():
-    import libtbx.load_env
-
-    if not libtbx.env.has_module("dials"):
-        print("Skipping test: dials not present")
+def pytest_generate_tests(metafunc):
+    if "dxtbx_test_image" not in metafunc.fixturenames:
         return
     try:
-        dials_regression = libtbx.env.dist_path("dials_regression")
-    except KeyError:
-        print("FAIL: dials_regression not configured")
+        from dials_regression.image_examples.get_all_working_images import (
+            get_all_working_images,
+        )
+    except ImportError:
+        metafunc.parametrize(
+            "dxtbx_test_image",
+            [
+                pytest.param(
+                    None,
+                    marks=pytest.mark.skip(
+                        "dials_regression is required for this group of tests"
+                    ),
+                )
+            ],
+            ids=["noregression"],
+        )
         return
+    imagelist = get_all_working_images()
+    metafunc.parametrize("dxtbx_test_image", imagelist, ids=[i[1] for i in imagelist])
 
-    import os
 
+def test_dxtbx(dials_regression, dxtbx_test_image):
     # from boost.python import streambuf
     # from dxtbx import read_uint16
     from dxtbx.format.Registry import Registry
 
-    from dials_regression.image_examples.get_all_working_images import (
-        get_all_working_images,
-    )
+    directory, image = dxtbx_test_image
+    file_path = os.path.join(dials_regression, "image_examples", directory, image)
 
-    for directory, image in get_all_working_images():
-        file_path = os.path.join(dials_regression, "image_examples", directory, image)
-        format = Registry.find(file_path)
-        i = format(file_path)
-        det = i.get_detector()
-        if det is not None:
-            size = det[0].get_image_size()
-        b = i.get_beam()
-        g = i.get_goniometer()
-        s = i.get_scan()
-        try:
-            d = i.get_raw_data()
-        except IOError:
-            pass
-
-
-def tst_dxtbx_compressed():
-    import libtbx.load_env
-
+    format = Registry.find(file_path)
+    i = format(file_path)
+    det = i.get_detector()
+    if det is not None:
+        size = det[0].get_image_size()
+    b = i.get_beam()
+    g = i.get_goniometer()
+    s = i.get_scan()
     try:
-        dials_regression = libtbx.env.dist_path("dials_regression")
-    except KeyError:
-        print("FAIL: dials_regression not configured")
-        return
+        d = i.get_raw_data()
+    except IOError:
+        pass
 
-    import os
+
+@pytest.mark.skip(
+    "Test disabled in https://github.com/cctbx/cctbx_project/commit/e6ae0e03afe87500ad573b2fde42dca9334ea2e5"
+)
+def test_dxtbx_compressed(dials_regression, tmpdir):
     from dxtbx.format.Registry import Registry
 
     from dials_regression.image_examples.get_all_working_images import (
@@ -59,16 +64,14 @@ def tst_dxtbx_compressed():
     # test that reading gz or bz2 compressed files works: it doesn't!
 
     from libtbx import smart_open
-    from libtbx.test_utils import open_tmp_directory
     import shutil
 
-    tmp_dir = open_tmp_directory()
-    print(tmp_dir)
+    tmpdir.chdir()
 
     for directory, image in get_all_working_images():
         file_path = os.path.join(dials_regression, "image_examples", directory, image)
         for ext in (".gz", ".bz2")[:]:
-            compressed_path = os.path.join(tmp_dir, os.path.basename(file_path)) + ext
+            compressed_path = os.path.basename(file_path) + ext
             with open(file_path, "rb") as f_in, smart_open.for_writing(
                 compressed_path
             ) as f_out:
@@ -96,31 +99,7 @@ def tst_dxtbx_compressed():
                     pass
 
 
-def tst_dxtbx_models():
-
-    from dxtbx.tests.test_beam import test_beam
-
-    test_beam()
-
-    from dxtbx.tests.test_detector import test_detector
-
-    test_detector()
-
-    from dxtbx.tests.test_goniometer import test_goniometer
-
-    test_goniometer()
-
-    from dxtbx.tests.test_goniometer import test_multi_axis_goniometer
-
-    test_multi_axis_goniometer()
-
-    from dxtbx.tests.test_scan import test_scan
-
-    test_scan()
-
-
-def tst_sweep():
-
+def test_sweep():
     from dxtbx.sweep_filenames import template_regex
 
     questions_answers = {
@@ -135,9 +114,3 @@ def tst_sweep():
     for filename in questions_answers:
         answer = template_regex(filename)
         assert answer[0] == questions_answers[filename]
-
-
-if __name__ == "__main__":
-    tst_dxtbx()
-    tst_dxtbx_models()  # these tests are failing in the misc_build.  Disable them until they can be debugged.
-    # tst_dxtbx_compressed()

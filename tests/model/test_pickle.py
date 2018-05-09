@@ -1,39 +1,30 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from dxtbx.model import Beam, Detector, Goniometer, Panel, Scan
 
 
 def pickle_then_unpickle(obj):
     """Pickle to a temp file then un-pickle."""
-    import cPickle as pickle
-    import cStringIO
+    import six.moves.cPickle as pickle
 
-    # Create a temporary "file"
-    temp = cStringIO.StringIO()
-
-    # Pickle the object
-    pickle.dump(obj, temp)
-
-    # Read the object
-    temp.seek(0)
-    return pickle.load(temp)
+    return pickle.loads(pickle.dumps(obj))
 
 
-def tst_beam():
+def test_beam():
     """Test pickling the beam object."""
     obj1 = Beam((1, 1, 1))
     obj2 = pickle_then_unpickle(obj1)
     assert obj1 == obj2
 
 
-def tst_goniometer():
+def test_goniometer():
     """Test pickling the goniometer object."""
     obj1 = Goniometer()
     obj2 = pickle_then_unpickle(obj1)
     assert obj1 == obj2
 
 
-def tst_panel():
+def test_panel():
     """Test pickling the panel object."""
     obj1 = Panel()
     obj1.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
@@ -41,7 +32,7 @@ def tst_panel():
     assert obj1 == obj2
 
 
-def tst_detector():
+def test_detector():
     """Test pickling the detector object."""
     p = Panel()
     p.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
@@ -50,7 +41,7 @@ def tst_detector():
     assert obj1 == obj2
 
 
-def tst_hierarchical_detector():
+def test_hierarchical_detector():
     """Test pickling the detector object."""
     p = Panel()
     p.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
@@ -65,22 +56,8 @@ def tst_hierarchical_detector():
     assert obj1 == obj2
 
 
-def tst_scan():
+def test_scan():
     """Test pickling the scan data object."""
     obj1 = Scan((1, 2), (1, 1))
     obj2 = pickle_then_unpickle(obj1)
     assert obj1 == obj2
-
-
-def run():
-    """Run all the tests"""
-    tst_beam()
-    tst_goniometer()
-    tst_panel()
-    tst_detector()
-    tst_hierarchical_detector()
-    tst_scan()
-
-
-if __name__ == "__main__":
-    run()

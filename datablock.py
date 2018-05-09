@@ -1,12 +1,11 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
-import cPickle as pickle
 import json
 
 import dxtbx.imageset
 from libtbx.utils import Sorry
+import six.moves.cPickle as pickle
 
 
 class DataBlock(object):

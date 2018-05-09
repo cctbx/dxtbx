@@ -1,14 +1,10 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import libtbx.load_env
+import os
 
 
 class Test(object):
-    def __init__(self):
-        import os
-
-        dials_regression = libtbx.env.dist_path("dials_regression")
+    def test_run(self, dials_regression):
         filename = os.path.join(dials_regression, "image_examples", "XDS", "XPARM.XDS")
 
         import dxtbx
@@ -22,28 +18,23 @@ class Test(object):
             self.detector[0].get_normal()
         )
 
-    def run(self):
         from random import uniform
+        from scitbx import matrix
 
         # Generate some random coordinates and do the correction
         random_coord = lambda: (uniform(-1000, 1000), uniform(-1000, 1000))
         for i in range(10000):
             xy = random_coord()
-            self.tst_single(xy)
+            xy = matrix.col(xy)
 
-    def tst_single(self, xy):
-        from scitbx import matrix
+            # Do the forward and reverse corrections
+            xy_corr_gold = matrix.col(self.correct_gold(xy))
+            xy_corr = matrix.col(self.correct(xy))
+            xy_corr_inv = matrix.col(self.correct_inv(xy_corr))
 
-        xy = matrix.col(xy)
-
-        # Do the forward and reverse corrections
-        xy_corr_gold = matrix.col(self.correct_gold(xy))
-        xy_corr = matrix.col(self.correct(xy))
-        xy_corr_inv = matrix.col(self.correct_inv(xy_corr))
-
-        # Check the values
-        assert abs(xy_corr_gold - xy_corr) < 1e-7
-        assert abs(xy_corr_inv - xy) < 1e-3
+            # Check the values
+            assert abs(xy_corr_gold - xy_corr) < 1e-7
+            assert abs(xy_corr_inv - xy) < 1e-3
 
     def correct_gold(self, xy):
         from scitbx import matrix
@@ -67,13 +58,3 @@ class Test(object):
         from dxtbx.model import parallax_correction_inv
 
         return parallax_correction_inv(self.distance, self.attlen, self.origin, xy)
-
-
-if __name__ == "__main__":
-    if not libtbx.env.has_module("dials"):
-        print("Skipping test: dials not present")
-    elif not libtbx.env.has_module("dials_regression"):
-        print("Skipping test: dials_regression not present")
-    else:
-        test = Test()
-        test.run()

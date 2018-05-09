@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from dxtbx.model import Detector, Panel
 from libtbx.test_utils import approx_equal
@@ -61,7 +61,6 @@ def tst_is_coord_valid(detector):
 
 
 def tst_pixel_to_millimeter_to_pixel(detector):
-
     from scitbx import matrix
     from random import random
 
@@ -150,7 +149,6 @@ def tst_detectors_are_different(detA, detB):
 
 
 def tst_resolution(detector):
-
     from dxtbx.model import Beam
 
     beam = Beam(direction=(0, 0, 1), wavelength=1.0)
@@ -197,7 +195,7 @@ def tst_panel_mask():
     assert m2[40, 40] == False
 
 
-def tst_detector():
+def test_detector():
     from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
     def create_detector(offset=0):
@@ -269,11 +267,3 @@ def tst_detector():
     )
 
     tst_parallax_correction(detector)
-
-
-def run():
-    tst_detector()
-
-
-if __name__ == "__main__":
-    run()

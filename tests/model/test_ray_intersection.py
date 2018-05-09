@@ -1,8 +1,9 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
+
+import pytest
 
 
 def tst_intersection_at_origin(intersection, wavelength, origin):
-
     eps = 1e-7
 
     # Set the beam vector to directed towards the detector origin
@@ -17,7 +18,6 @@ def tst_intersection_at_origin(intersection, wavelength, origin):
 
 
 def tst_intersection_at_corners(intersection, panel, wavelength):
-
     from scitbx import matrix
 
     eps = 1e-7
@@ -50,24 +50,17 @@ def tst_intersection_at_corners(intersection, panel, wavelength):
 
 
 def tst_intersection_away_from_panel(intersection, panel, wavelength):
-
     from scitbx import matrix
 
     # Set the beam vector to directed away from the detector origin
     s = -(1.0 / wavelength) * matrix.col(panel.get_origin())
 
     # Check that they are equal to None
-    try:
+    with pytest.raises(RuntimeError):
         intersection(s)
-    except (RuntimeError):
-        # Test Passed
-        return
-
-    # Test Failed
-    assert False
 
 
-def tst_beam_plane_intersection():
+def test_beam_plane_intersection():
     from dxtbx.model import Panel
     from scitbx import matrix
 
@@ -94,7 +87,7 @@ def tst_beam_plane_intersection():
     )
 
     # Create the intersection object
-    intersection = lambda x: panel.get_ray_intersection(x)
+    intersection = panel.get_ray_intersection
 
     # Perform a load of tests
     tst_intersection_at_origin(intersection, wavelength, origin)
@@ -103,7 +96,6 @@ def tst_beam_plane_intersection():
 
 
 def tst_transform_at_origin(transform, panel):
-
     eps = 1e-7
 
     # Get lab coordinate at point
@@ -145,7 +137,7 @@ def tst_transform_at_corners(transform, panel):
     assert abs(xyz44 - xyz4) < eps
 
 
-def tst_plane_to_lab_transform():
+def test_plane_to_lab_transform():
     from dxtbx.model import Panel
     from scitbx import matrix
 
@@ -172,7 +164,7 @@ def tst_plane_to_lab_transform():
     )
 
     # Create the intersection object
-    transform = lambda x: panel.get_lab_coord(x)
+    transform = panel.get_lab_coord
 
     # Perform a load of tests
     tst_transform_at_origin(transform, panel)
@@ -187,7 +179,9 @@ def tst_fwd_rev_random(intersection, transform, panel):
 
     # Set the shift parameters
     image_size = panel.get_image_size_mm()
-    random_xy = lambda: (random() * image_size[0], random() * image_size[1])
+
+    def random_xy():
+        return (random() * image_size[0], random() * image_size[1])
 
     # Loop a number of times
     num = 1000
@@ -206,7 +200,7 @@ def tst_fwd_rev_random(intersection, transform, panel):
         assert abs(xy - matrix.col(xy_2)) < eps
 
 
-def tst_forward_and_reverse_transform():
+def test_forward_and_reverse_transform():
     from dxtbx.model import Panel
     from scitbx import matrix
 
@@ -233,18 +227,8 @@ def tst_forward_and_reverse_transform():
     )
 
     # Create the intersection object and transform object
-    intersection = lambda x: panel.get_ray_intersection(x)
-    transform = lambda x: panel.get_lab_coord(x)
+    intersection = panel.get_ray_intersection
+    transform = panel.get_lab_coord
 
     # Do a test
     tst_fwd_rev_random(intersection, transform, panel)
-
-
-def run():
-    tst_beam_plane_intersection()
-    tst_plane_to_lab_transform()
-    tst_forward_and_reverse_transform()
-
-
-if __name__ == "__main__":
-    run()
