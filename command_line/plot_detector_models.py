@@ -155,6 +155,8 @@ def run(args):
                 panel_numbers=params.panel_numbers,
             )
 
+    plt.xlabel("x")
+    plt.ylabel("y")
     if params.orthographic:
         plt.axes().set_aspect("equal", "datalim")
 
