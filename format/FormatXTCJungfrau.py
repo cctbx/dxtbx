@@ -70,9 +70,7 @@ class FormatXTCJungfrau(FormatXTC):
             )
         det = self._cached_psana_detectors[run.run()]
         data = det.calib(evt)
-        # from IPython import embed; embed(); exit()
         data = data.astype(np.float64)
-        # data = data[::-1, ::-1,:] # PSANA readout is opposite in both quadrants for the slow axis.
         self._raw_data = []
         for quad_count, quad in enumerate(d.hierarchy()):
             for asic_count, asic in enumerate(quad):
