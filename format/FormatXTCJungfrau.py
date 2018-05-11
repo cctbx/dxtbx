@@ -63,7 +63,7 @@ class FormatXTCJungfrau(FormatXTC):
         import psana
         from scitbx.array_family import flex
 
-        d = self.get_detector(index)
+        d = FormatXTCJungfrau.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         if run.run() not in self._cached_psana_detectors:
@@ -92,7 +92,7 @@ class FormatXTCJungfrau(FormatXTC):
         return self.n_images
 
     def get_detector(self, index=None):
-        return self._detector()
+        return FormatXTCJungfrau._detector(self, index)
 
     def get_beam(self, index=None):
         return self._beam(index)
