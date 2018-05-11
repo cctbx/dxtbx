@@ -22,6 +22,7 @@ locator_str = """
             More info at https://confluence.slac.stanford.edu/display/PSDM/Manual#Manual-Datasetspecification
   detector_address = None
     .type = str
+    .multiple = True
     .help = detector used for collecting the data at LCLS
 """
 locator_scope = parse(locator_str)
@@ -110,15 +111,17 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 print("%3d" % (i + 1) + ") " + template.format(*n))
             print("-" * len(header))
 
-            FormatXTC._src = names[
-                int(
-                    raw_input(
-                        "Please Enter name of detector numbered 1 through %d : "
-                        % (len(names))
+            FormatXTC._src = [
+                names[
+                    int(
+                        raw_input(
+                            "Please Enter name of detector numbered 1 through %d : "
+                            % (len(names))
+                        )
                     )
-                )
-                - 1
-            ][0]
+                    - 1
+                ][0]
+            ]
         return True
 
     @staticmethod

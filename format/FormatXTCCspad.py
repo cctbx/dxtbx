@@ -41,16 +41,18 @@ class FormatXTCCspad(FormatXTC):
 
         try:
             if FormatXTC._src is None:
-                FormatXTC._src = names[
-                    int(
-                        raw_input(
-                            "Please Enter name of detector numbered 1 through %d : "
-                            % (len(names))
+                FormatXTC._src = [
+                    names[
+                        int(
+                            raw_input(
+                                "Please Enter name of detector numbered 1 through %d : "
+                                % (len(names))
+                            )
                         )
-                    )
-                    - 1
-                ][0]
-            if "cspad" in FormatXTC._src.lower():
+                        - 1
+                    ][0]
+                ]
+            if any(["cspad" in src.lower() for src in FormatXTC._src]):
                 return True
             return False
         except Exception:
@@ -61,7 +63,8 @@ class FormatXTCCspad(FormatXTC):
         from scitbx.array_family import flex
         import numpy as np
 
-        det = psana.Detector(self._src, self._env)
+        assert len(self._src) == 1
+        det = psana.Detector(self._src[0], self._env)
         d = self.get_detector(index)
         data = cspad_cbf_tbx.get_psana_corrected_data(
             det,
@@ -124,7 +127,8 @@ class FormatXTCCspad(FormatXTC):
         if index is None:
             index = 0
         self._env = self._ds.env()
-        self._det = psana.Detector(self._src, self._env)
+        assert len(self._src) == 1
+        self._det = psana.Detector(self._src[0], self._env)
         geom = self._det.pyda.geoaccess(self._get_event(index))
         cob = read_slac_metrology(geometry=geom, include_asic_offset=True)
         d = Detector()
