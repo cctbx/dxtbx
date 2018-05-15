@@ -6,7 +6,7 @@ import os
 def test_filecache():
     import dxtbx.filecache
     import libtbx.load_env
-    from StringIO import StringIO  # this is not cStringIO on purpose!
+    from io import BytesIO
 
     dxtbx_dir = libtbx.env.dist_path("dxtbx")
     image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
@@ -18,7 +18,7 @@ def test_filecache():
     cache = dxtbx.filecache.lazy_file_cache(open(image, "rb"))
 
     # read 100 bytes
-    sh = StringIO(correct_data)
+    sh = BytesIO(correct_data)
     with cache.open() as fh:
         actual = fh.read(100)
         expected = sh.read(100)
@@ -31,14 +31,14 @@ def test_filecache():
         assert actual == expected
 
     # readlines
-    sh = StringIO(correct_data)
+    sh = BytesIO(correct_data)
     with cache.open() as fh:
         actual = fh.readlines()
         expected = sh.readlines()
         assert actual == expected
 
     # 5x readline
-    sh = StringIO(correct_data)
+    sh = BytesIO(correct_data)
     with cache.open() as fh:
         actual = [fh.readline() for n in range(5)]
         expected = [sh.readline() for n in range(5)]
@@ -51,7 +51,7 @@ def test_filecache():
     fh = dxtbx.filecache.pseudo_file(cache)
 
     # readline stress test
-    sh = StringIO(correct_data)
+    sh = BytesIO(correct_data)
     with cache.open() as fh:
         actual = fh.readline()
         expected = sh.readline()
@@ -73,7 +73,7 @@ def test_filecache():
     cache.close()
     cache = dxtbx.filecache.lazy_file_cache(open(image, "rb"))
 
-    sh = StringIO(correct_data)
+    sh = BytesIO(correct_data)
     fh = dxtbx.filecache.pseudo_file(cache)
     import random
 
@@ -95,14 +95,14 @@ def test_filecache_more(dials_regression):
     with dxtbx.filecache.pseudo_file(cache) as fh:
         fh.seek(3000 * 3000 * 2)
         fh.read(1024)
-        assert fh.read(1) == ""
+        assert fh.read(1) == b""
 
     cache = dxtbx.filecache.lazy_file_cache(open(filename, "rb"))
     with dxtbx.filecache.pseudo_file(cache) as fh:
         data = fh.read(3000 * 3000 * 2)
         assert len(data) == 3000 * 3000 * 2
         assert len(fh.read(1024)) == 1024
-        assert fh.read(1) == ""
+        assert fh.read(1) == b""
 
     cache = dxtbx.filecache.lazy_file_cache(open(filename, "rb"))
     with dxtbx.filecache.pseudo_file(cache) as fh:
