@@ -1,16 +1,4 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
-
-#!/usr/bin/env python
-#
-# dxtbx.serialize.xds.py
-#
-#  Copyright (C) 2013 Diamond Light Source
-#
-#  Authors: James Parkhurst, Richard Gildea, Graeme Winter
-#
-#  This code is distributed under the BSD license, a copy of which is
-#  included in the root directory of this package.
+from __future__ import absolute_import, division, print_function
 
 import glob
 import sys
@@ -277,7 +265,6 @@ class to_xds(object):
         self.rotation_axis = (
             Rd * matrix.col(self.get_goniometer().get_rotation_axis())
         ).elems
-        return
 
     def get_detector(self):
         return self._sweep.get_detector()
@@ -388,7 +375,7 @@ class to_xds(object):
         if template.endswith("master.h5"):
             master_file = template
             g = glob.glob(template.split("master.h5")[0] + "data_*[0-9].h5")
-            assert len(g), "No associated data files found for %s" % master_file
+            assert g, "No associated data files found for %s" % master_file
             template = template_regex(g[0])[0]
             template = master_file.split("master.h5")[0] + template.split("data_")[-1]
         print("NAME_TEMPLATE_OF_DATA_FRAMES= %s" % template.replace("#", "?"), file=out)
