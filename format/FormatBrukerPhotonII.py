@@ -170,6 +170,17 @@ class FormatBrukerPhotonII(FormatBruker):
         """Get the pixel intensities (i.e. read the image and return as a
         flex array of integers.)"""
 
+        # It is better to catch FORMAT 86 here and fail with a sensible error msg
+        # as soon as something is attempted with the image data rather than in
+        # the understand method. Otherwise the user gets FormatBruker reading the
+        # image improperly but without failing
+        if self.header_dict["FORMAT"] != "100":
+            from libtbx.utils import Sorry
+
+            raise Sorry(
+                "Only FORMAT 100 images from the Photon II are currently " "supported"
+            )
+
         from boost.python import streambuf
         from dxtbx import (
             read_uint8,
