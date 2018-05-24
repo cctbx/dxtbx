@@ -316,6 +316,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         if self._raw_data is None:
             import numpy
             from scitbx.array_family import flex
+            from libtbx.containers import OrderedDict
 
             self._raw_data = []
 
@@ -330,7 +331,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             assert len(types) == cbf.count_rows()
 
             # read the data
-            data = {}
+            data = OrderedDict()
             cbf.find_category("array_data")
             for i in xrange(cbf.count_rows()):
                 cbf.find_column("array_id")
@@ -358,7 +359,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
             # extract the data for each panel
             if cbf.has_sections():
-                section_shapes = {}
+                section_shapes = OrderedDict()
                 for i in xrange(cbf.count_rows()):
                     cbf.find_column("id")
                     section_name = cbf.get_value()
@@ -383,7 +384,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                     )
                     cbf.next_row()
 
-                for section_name in sorted(section_shapes):
+                for section_name in section_shapes:
                     section_shape = section_shapes[section_name]
                     section = data[section_shape["array_id"]][
                         section_shape[2], section_shape[1], section_shape[0]
@@ -391,7 +392,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                     section.reshape(flex.grid(section.focus()[-2], section.focus()[-1]))
                     self._raw_data.append(section)
             else:
-                for key in sorted(data):
+                for key in data:
                     data[key].reshape(
                         flex.grid(data[key].focus()[-2], data[key].focus()[-1])
                     )
