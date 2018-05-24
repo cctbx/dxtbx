@@ -115,9 +115,6 @@ class FormatMultiImage(object):
     def get_detectorbase(self, index=None):
         raise NotImplementedError
 
-    def get_image_file(self, index=None):
-        raise NotImplementedError
-
     @classmethod
     def get_reader(Class):
         """
