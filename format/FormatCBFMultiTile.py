@@ -1,14 +1,7 @@
-#!/usr/bin/env python
-# FormatCBFMultiTile.py
-#
-# Reads a multi-tile CBF image, discovering it's detector geometery
+# Reads a multi-tile CBF image, discovering its detector geometry
 # automatically
-#
-# $Id:
-#
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import pycbf
 
@@ -164,7 +157,6 @@ class FormatCBFMultiTile(FormatCBFFull):
         return self._beam_factory.imgCIF_H(self._get_cbf_handle())
 
     def get_raw_data(self):
-        print("hLL")
         if self._raw_data is None:
             self._raw_data = []
 
@@ -233,7 +225,6 @@ class FormatCBFMultiTileStill(FormatStill, FormatCBFMultiTile):
 
 
 if __name__ == "__main__":
-
     import sys
 
     for arg in sys.argv[1:]:

@@ -1,22 +1,13 @@
-#!/usr/bin/env python
-# FormatGatanDM4.py
-#
-#  Copyright (C) (2017) STFC Rutherford Appleton Laboratory, UK.
-#
-#  Author: David Waterman.
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # Experimental format for Gatan Digital Micrograph DM4 files. See
 # http://www.er-c.org/cbb/info/dmformat/
 
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import os
+import struct
+
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-import struct
-import os
 
 
 class FormatGatanDM4(FormatMultiImage, Format):

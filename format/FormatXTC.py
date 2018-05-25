@@ -1,7 +1,8 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatStill import FormatStill
+from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from libtbx.phil import parse
 
@@ -26,8 +27,6 @@ locator_str = """
     .help = detector used for collecting the data at LCLS
 """
 locator_scope = parse(locator_str)
-
-from dxtbx.format.FormatMultiImage import Reader
 
 
 class XtcReader(Reader):
