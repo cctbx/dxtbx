@@ -62,6 +62,7 @@ def run(args, imageset=None):
     from scitbx.array_family import flex
     import os, sys
     from dxtbx.datablock import DataBlockFactory
+    from dxtbx.model.experiment_list import ExperimentListFactory
 
     # Parse input
     try:
@@ -119,9 +120,20 @@ def run(args, imageset=None):
 
     if imageset is None:
         iterable = params.file_path
-        load_func = lambda x: DataBlockFactory.from_filenames([x])[
-            0
-        ].extract_imagesets()[0]
+
+        def loader(x):
+            try:
+                obj = DataBlockFactory.from_filenames([x])[0].extract_imagesets()[0]
+            except IndexError:
+                import dxtbx.datablock
+
+                try:
+                    obj = DataBlockFactory.from_json_file(x)[0].extract_imagesets()[0]
+                except dxtbx.datablock.InvalidDataBlockError:
+                    obj = ExperimentListFactory.from_json_file(x)[0].imageset
+            return obj
+
+        load_func = loader
     else:
         iterable = [imageset]
         load_func = lambda x: x
