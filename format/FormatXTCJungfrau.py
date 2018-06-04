@@ -31,7 +31,7 @@ class FormatXTCJungfrau(FormatXTC):
         FormatXTC.__init__(
             self, image_file, locator_scope=jungfrau_locator_scope, **kwargs
         )
-        self._ds = self._get_datasource(image_file)
+        self._ds = FormatXTCJungfrau._get_datasource(image_file, self.params)
         self._env = self._ds.env()
         self.populate_events()
         self.n_images = len(self.times)
@@ -41,23 +41,11 @@ class FormatXTCJungfrau(FormatXTC):
     @staticmethod
     def understand(image_file):
         try:
-            if FormatXTC._src is None:
-                FormatXTC._src = [
-                    names[
-                        int(
-                            raw_input(
-                                "Please Enter name of detector numbered 1 through %d : "
-                                % (len(names))
-                            )
-                        )
-                        - 1
-                    ][0]
-                ]
-            if any(["jungfrau" in src.lower() for src in FormatXTC._src]):
-                return True
-            return False
+            params = FormatXTC.params_from_phil(jungfrau_locator_scope, image_file)
         except Exception:
             return False
+        ds = FormatXTC._get_datasource(image_file, params)
+        return any(["jungfrau" in src.lower() for src in params.detector_address])
 
     def get_raw_data(self, index):
         import psana
@@ -67,9 +55,9 @@ class FormatXTCJungfrau(FormatXTC):
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         if run.run() not in self._cached_psana_detectors:
-            assert len(self._src) == 1
+            assert len(self.params.detector_address) == 1
             self._cached_psana_detectors[run.run()] = psana.Detector(
-                self._src[0], self._env
+                self.params.detector_address[0], self._env
             )
         det = self._cached_psana_detectors[run.run()]
         data = det.calib(evt)
@@ -124,8 +112,8 @@ class FormatXTCJungfrau(FormatXTC):
         if index is None:
             index = 0
         self._env = self._ds.env()
-        assert len(self._src) == 1
-        self._det = psana.Detector(self._src[0], self._env)
+        assert len(self.params.detector_address) == 1
+        self._det = psana.Detector(self.params.detector_address[0], self._env)
         geom = self._det.pyda.geoaccess(self._get_event(index))
         pixel_size = (
             self._det.pixel_size(self._get_event(index)) / 1000.0
@@ -214,7 +202,7 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
         FormatXTC.__init__(
             self, image_file, locator_scope=jungfrau_locator_scope, **kwargs
         )
-        self._ds = self._get_datasource(image_file)
+        self._ds = FormatXTCJungfrauMonolithic._get_datasource(image_file, self.params)
         self._env = self._ds.env()
         self.populate_events()
         self.n_images = len(self.times)
@@ -239,9 +227,9 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         if run.run() not in self._cached_psana_detectors:
-            assert len(self._src) == 1
+            assert len(self.params.detector_address) == 1
             self._cached_psana_detectors[run.run()] = psana.Detector(
-                self._src[0], self._env
+                self.params.detector_address[0], self._env
             )
         det = self._cached_psana_detectors[run.run()]
         data = det.image(evt)

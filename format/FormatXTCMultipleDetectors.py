@@ -18,16 +18,16 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
         FormatXTC.__init__(
             self, image_file, locator_scope=multiple_locator_scope, **kwargs
         )
-        self._ds = self._get_datasource(image_file)
+        self._ds = FormatXTCMultipleDetectors._get_datasource(image_file, self.params)
         self._env = self._ds.env()
         self.populate_events()
         self.n_images = len(self.times)
 
-        if any(["rayonix" in src.lower() for src in FormatXTC._src]):
+        if any(["rayonix" in src.lower() for src in self.params.detector_address]):
             FormatXTCRayonix.__init__(self, image_file, **kwargs)
-        if any(["cspad" in src.lower() for src in FormatXTC._src]):
+        if any(["cspad" in src.lower() for src in self.params.detector_address]):
             FormatXTCCspad.__init__(self, image_file, **kwargs)
-        if any(["jungfrau" in src.lower() for src in FormatXTC._src]):
+        if any(["jungfrau" in src.lower() for src in self.params.detector_address]):
             FormatXTCJungfrau.__init__(self, image_file, **kwargs)
         FormatXTC.__init__(
             self, image_file, locator_scope=multiple_locator_scope, **kwargs
@@ -35,25 +35,31 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
 
     @staticmethod
     def understand(image_file):
-        if FormatXTC._src is None or len(FormatXTC._src) <= 1:
+        try:
+            params = FormatXTC.params_from_phil(multiple_locator_scope, image_file)
+        except Exception:
+            return False
+        ds = FormatXTC._get_datasource(image_file, params)
+
+        if params.detector_address is None or len(params.detector_address) <= 1:
             return False
         return [
             "rayonix" in src.lower()
             or "cspad" in src.lower()
             or "jungfrau" in src.lower()
-            for src in FormatXTC._src
+            for src in params.detector_address
         ].count(True) >= 2
 
     def get_raw_data(self, index=None):
         if index is None:
             index = 0
 
-        all_addresses = self._src
+        all_addresses = self.params.detector_address
 
         raw_data = []
 
         for address in all_addresses:
-            self._src = [address]
+            self.params.detector_address = [address]
             sub_d = None
             if "rayonix" in address.lower():
                 data = FormatXTCRayonix.get_raw_data(self, index)
@@ -65,7 +71,7 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
             if not isinstance(data, tuple):
                 data = (data,)
             raw_data.extend(data)
-        self._src = all_addresses
+        self.params.detector_address = all_addresses
 
         self._raw_data = raw_data
         return tuple(raw_data)
@@ -81,7 +87,7 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
         d = Detector()
         root = d.hierarchy()
 
-        all_addresses = self._src
+        all_addresses = self.params.detector_address
 
         def recursive_add_node(a, b):
             # add a to b
@@ -93,7 +99,7 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
                     recursive_add_node(child, g)
 
         for address in all_addresses:
-            self._src = [address]
+            self.params.detector_address = [address]
             sub_d = None
             try:
                 if "rayonix" in address.lower():
@@ -106,7 +112,7 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
                 continue
             assert sub_d is not None, address
             recursive_add_node(sub_d.hierarchy(), root)
-        self._src = all_addresses
+        self.params.detector_address = all_addresses
 
         return d
 
