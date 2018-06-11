@@ -269,5 +269,13 @@ class FormatCBFFullStillInMemory(FormatCBFFullStill):
             self._cbf_handle.__swig_destroy__(self._cbf_handle)
 
 
-class FormatCBFCspadInMemory(FormatCBFFullStillInMemory, FormatCBFCspad):
+class FormatCBFMultiTileHierarchyStillInMemory(
+    FormatCBFFullStillInMemory, FormatCBFMultiTileHierarchyStill
+):
+    def get_raw_data(self):
+        # need to specify the get_raw_data function needed
+        return FormatCBFMultiTileHierarchyStill.get_raw_data(self)
+
+
+class FormatCBFCspadInMemory(FormatCBFMultiTileHierarchyStillInMemory, FormatCBFCspad):
     """ mixin class for in memory cspad images"""
