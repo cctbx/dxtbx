@@ -86,10 +86,13 @@ class FormatSMVADSC(FormatSMV):
             self.detectorbase.readHeader()
 
     def _goniometer(self):
-        """Return a model for a simple single-axis goniometer. This should
-        probably be checked against the image header."""
+        """Return a model for a simple single-axis goniometer. Invert the axis if
+        the rotation range is negative."""
 
-        return self._goniometer_factory.single_axis()
+        if float(self._header_dictionary["OSC_RANGE"]) > 0:
+            return self._goniometer_factory.single_axis()
+        else:
+            return self._goniometer_factory.single_axis_reverse()
 
     def _adsc_module_gain(self, model=None):
         """Return an appropriate gain value in ADU per captured X-ray for an
@@ -227,7 +230,7 @@ class FormatSMVADSC(FormatSMV):
 
         # assert(epoch)
         osc_start = float(self._header_dictionary["OSC_START"])
-        osc_range = float(self._header_dictionary["OSC_RANGE"])
+        osc_range = abs(float(self._header_dictionary["OSC_RANGE"]))
 
         return self._scan_factory.single(
             self._image_file, format, exposure_time, osc_start, osc_range, epoch
