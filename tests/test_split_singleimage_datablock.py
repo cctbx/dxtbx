@@ -1,9 +1,9 @@
 from __future__ import absolute_import, division, print_function
-import pytest, os
+import os
 from dxtbx.datablock import DataBlockFactory, DataBlockDumper
 
 """
-Test to show that deserializing a datablock that has single file indices while using check_format=False fails
+Test deserializing a datablock that has single file indices while using check_format = True or False
 """
 
 
@@ -12,7 +12,6 @@ def get_indices(datablock):
     return list(imageset.indices())
 
 
-@pytest.mark.xfail
 def test_split_single_image_datablock(dials_regression, tmpdir):
     tmpdir.chdir()
     sacla_file = os.path.join(
@@ -39,4 +38,4 @@ def test_split_single_image_datablock(dials_regression, tmpdir):
 
     db = DataBlockFactory.from_json_file(dumped_filename, check_format=False)[0]
     assert db.num_images() == 1
-    assert get_indices(db) == [2]  # fails. returns [0]
+    assert get_indices(db) == [2]
