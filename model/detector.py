@@ -668,7 +668,9 @@ class DetectorFactory:
         pixel,
         size,
         trusted_range=(0.0, 0.0),
+        mask=[],
         px_mm=None,
+        mu=0.0,
         gain=None,
         identifier="",
     ):
@@ -684,7 +686,7 @@ class DetectorFactory:
         assert len(pixel) == 2
         assert len(size) == 2
 
-        return DetectorFactory.make_detector(
+        detector = DetectorFactory.make_detector(
             DetectorFactory.sensor(sensor),
             fast,
             slow,
@@ -693,9 +695,12 @@ class DetectorFactory:
             size,
             trusted_range,
             px_mm,
+            mu=mu,
             gain=gain,
             identifier=identifier,
         )
+        detector[0].mask = mask
+        return detector
 
     @staticmethod
     def imgCIF(cif_file, sensor):
