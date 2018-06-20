@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# FormatSMVRigakuEiger1M.py
+# FormatSMVRigakuEiger.py
 #   Copyright (C) 2013 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -14,7 +14,7 @@ from __future__ import absolute_import, division, print_function
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
 
-class FormatSMVRigakuEiger1M(FormatSMVRigaku):
+class FormatSMVRigakuEiger(FormatSMVRigaku):
     """A class for reading SMV format Rigaku Pilatus 200L images."""
 
     @staticmethod
@@ -33,7 +33,7 @@ class FormatSMVRigakuEiger1M(FormatSMVRigaku):
         if not "%sDETECTOR_DESCRIPTION" % name in header:
             return False
 
-        return "Eiger1M" in header["%sDETECTOR_DESCRIPTION" % name]
+        return "Eiger" in header["%sDETECTOR_DESCRIPTION" % name]
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file, including a
@@ -227,4 +227,4 @@ if __name__ == "__main__":
     import sys
 
     for arg in sys.argv[1:]:
-        print(FormatSMVRigakuEiger1M.understand(arg))
+        print(FormatSMVRigakuEiger.understand(arg))
