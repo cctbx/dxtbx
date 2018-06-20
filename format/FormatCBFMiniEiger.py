@@ -131,15 +131,15 @@ class FormatCBFMiniEiger(FormatCBFMini):
 
         pixel_x, pixel_y = map(float, pixel_xy)
 
-        # extract sensor thickness, assume < 10mm; default to 450 microns unfound
-        try:
+        if "Silicon" in self._cif_header_dictionary:
             thickness = (
-                float(self._cif_header_dictionary["Silicon"].split()[-2]) * 1000.0
+                float(self._cif_header_dictionary["Silicon"].split()[2]) * 1000.0
             )
             material = "Si"
-            if thickness > 10:
-                thickness = thickness / 1000.0
-        except KeyError:
+        elif "CdTe" in self._cif_header_dictionary:
+            thickness = float(self._cif_header_dictionary["CdTe"].split()[2]) * 1000.0
+            material = "CdTe"
+        else:
             thickness = 0.450
             material = "Si"
 
@@ -160,7 +160,7 @@ class FormatCBFMiniEiger(FormatCBFMini):
 
         from cctbx.eltbx import attenuation_coefficient
 
-        table = attenuation_coefficient.get_table("Si")
+        table = attenuation_coefficient.get_table(material)
         mu = table.mu_at_angstrom(wavelength) / 10.0
         t0 = thickness
 

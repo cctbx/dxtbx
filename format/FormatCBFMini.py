@@ -140,6 +140,9 @@ class FormatCBFMini(FormatCBF):
         elif "CdTe" in self._cif_header_dictionary:
             thickness = float(self._cif_header_dictionary["CdTe"].split()[2]) * 1000.0
             material = "CdTe"
+        else:
+            thickness = 0.450
+            material = "Si"
 
         nx = int(self._cif_header_dictionary["X-Binary-Size-Fastest-Dimension"])
         ny = int(self._cif_header_dictionary["X-Binary-Size-Second-Dimension"])
@@ -153,7 +156,7 @@ class FormatCBFMini(FormatCBF):
         # wavelength of the radiation (which we have in the same file...)
         from cctbx.eltbx import attenuation_coefficient
 
-        table = attenuation_coefficient.get_table("Si")
+        table = attenuation_coefficient.get_table(material)
         mu = table.mu_at_angstrom(wavelength) / 10.0
         t0 = thickness
 
