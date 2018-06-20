@@ -174,7 +174,8 @@ class FormatCBFMiniEiger(FormatCBFMini):
             (nx, ny),
             (underload, overload),
             [],
-            ParallaxCorrectedPxMmStrategy(mu, t0),
+            px_mm=ParallaxCorrectedPxMmStrategy(mu, t0),
+            mu=mu,
         )
 
         for f0, f1, s0, s1 in determine_eiger_mask(detector):
