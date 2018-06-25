@@ -130,7 +130,8 @@ class FormatBrukerPhotonII(FormatBruker):
             int(self.header_dict["NROWS"].split()[0]),
         )
 
-        # Not a CCD, but is an integrating detector
+        # Not a CCD, but is an integrating detector. Photon II has a 90 um Gadox
+        # scintillator.
         return self._detector_factory.complex(
             "CCD",
             origin.elems,
