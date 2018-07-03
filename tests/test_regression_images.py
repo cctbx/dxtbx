@@ -11,8 +11,9 @@ import py.path
 
 from dxtbx.format.Registry import Registry
 import libtbx.load_env
-from iotbx import detectors
-from iotbx.command_line.detector_image_as_png import convert_image, run as pngrun
+from iotbx.command_line.detector_image_as_png import convert_image
+
+# from iotbx.command_line.detector_image_as_png import run as pngrun
 from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 import scitbx.matrix
 
@@ -52,6 +53,8 @@ def _generate_all_test_images():
     special_h5 = "/net/viper/raid1/dectris/eiger16MNov2015/2015_11_10/insu6_1_master.h5"
     try:
         import h5py
+
+        assert h5py.version, "Supress unused import warnings"
     except ImportError:
         yield pytest.mark.skip(reason="h5py not found")(special_h5), special_h5
     else:
@@ -156,13 +159,13 @@ def test_read_image(test_image_for_reading):
     print("Format:", format_instance)
 
     # Test metadata reading
-    beam = instance.get_beam()
-    gonio = instance.get_goniometer()
+    instance.get_goniometer()
+    instance.get_beam()
+    instance.get_scan()
     detector = instance.get_detector()
     # From old test_dxtbx; get the image size
     if detector is not None:
         detector[0].get_image_size()
-    scan = instance.get_scan()
 
     for panel in detector:
         d_mat = scitbx.matrix.sqr(panel.get_d_matrix())
@@ -192,17 +195,17 @@ def test_read_image(test_image_for_reading):
 
         # test the older detectorbase interface if available
         if hasattr(instance, "detectorbase"):
-            I = SlipViewerImageFactory(test_image_for_reading)
-            I.read()
+            imgfactory = SlipViewerImageFactory(test_image_for_reading)
+            imgfactory.read()
             print("  Detectorbase:", instance.detectorbase.__class__.__name__)
 
             try:
-                print(I.rawdata.focus())
+                print(imgfactory.rawdata.focus())
             except AttributeError:
                 # Not all instances have this attribute
                 print("  multireadout")
 
-            I_raw_data = I.get_raw_data()
+            I_raw_data = imgfactory.get_raw_data()
             if not isinstance(I_raw_data, tuple):
                 I_raw_data = (I_raw_data,)
 
@@ -210,11 +213,7 @@ def test_read_image(test_image_for_reading):
             for Ip, Rp in zip(I_raw_data, R_raw_data):
                 assert (Ip == Rp).all_eq(True)
 
-            OV = (
-                convert_image(test_image_for_reading, graphics_bin=2)
-                .output()
-                .getvalue()
-            )
+            convert_image(test_image_for_reading, graphics_bin=2).output().getvalue()
 
         print()
 
@@ -229,17 +228,17 @@ def test_no_multiple_format_understanding(test_image):
 
     Registry.setup()
 
-    global highest_level, found_a_repeat
+    global any_understood, highest_level, found_a_repeat
 
     any_understood = False
 
     def recurse(format, image_file, level):
+        global any_understood, highest_level, found_a_repeat
         for child in format._children:
             understood = child.understand(image_file)
             if understood:
                 any_understood = True
                 print("level: %d" % (level), child.__name__)
-                global highest_level, found_a_repeat
                 found_a_repeat = level == highest_level
                 highest_level = level
                 recurse(child, image_file, level + 1)
