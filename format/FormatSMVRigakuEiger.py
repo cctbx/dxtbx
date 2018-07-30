@@ -5,9 +5,8 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# An implementation of the SMV image reader for Rigaku Pilatus 200L images.
-# Inherits from FormatSMVRigaku. Be aware: this is completely unrelated
-# to the HDF5 Eiger format.
+# An implementation of the SMV image reader for Rigaku Eiger.
+# Be aware: this is completely unrelated to the HDF5 Eiger format.
 
 from __future__ import absolute_import, division, print_function
 
@@ -17,7 +16,7 @@ from scitbx import matrix
 
 
 class FormatSMVRigakuEiger(FormatSMVRigaku):
-    """A class for reading SMV format Rigaku Pilatus 200L images."""
+    """A class for reading SMV format Rigaku Eiger images."""
 
     @staticmethod
     def understand(image_file):
