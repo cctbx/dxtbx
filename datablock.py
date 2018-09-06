@@ -1215,6 +1215,7 @@ class DataBlockDumper(object):
                 open(filename, "w"),
                 separators=(",", ":"),
                 ensure_ascii=True,
+                cls=AutoEncoder,
             )
         else:
             json.dump(
