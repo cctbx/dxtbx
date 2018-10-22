@@ -12,6 +12,10 @@ except ImportError:
 
 cspad_locator_str = """
   cspad {
+    detz_offset = None
+      .type = float
+      .help = Distance from back of detector rail to sample interaction region (CXI) \
+              or actual detector distance (XPP/MFX)
     apply_gain_mask = True
       .type = bool
       .help = flag to indicate if gain should be applied to cspad data
@@ -30,6 +34,9 @@ class FormatXTCCspad(FormatXTC):
         FormatXTC.__init__(
             self, image_file, locator_scope=cspad_locator_scope, **kwargs
         )
+        assert (
+            self.params.cspad.detz_offset is not None
+        ), "Supply a detz_offset for the cspad"
         self._ds = FormatXTCCspad._get_datasource(image_file, self.params)
         self._env = self._ds.env()
         self.populate_events()
@@ -109,14 +116,18 @@ class FormatXTCCspad(FormatXTC):
         from dxtbx.model import Detector
         from scitbx.matrix import col
         from dxtbx.model import ParallaxCorrectedPxMmStrategy
+        from xfel.cxi.cspad_ana.cspad_tbx import env_distance
 
         if index is None:
             index = 0
-        self._env = self._ds.env()
+        self._env = self._ds.env()  # XXX should be run specific
         assert len(self.params.detector_address) == 1
         self._det = psana.Detector(self.params.detector_address[0], self._env)
         geom = self._det.pyda.geoaccess(self._get_event(index).run())
         cob = read_slac_metrology(geometry=geom, include_asic_offset=True)
+        distance = env_distance(
+            self.params.detector_address[0], self._env, self.params.cspad.detz_offset
+        )
         d = Detector()
         pg0 = d.hierarchy()
         # first deal with D0
@@ -124,7 +135,7 @@ class FormatXTCCspad(FormatXTC):
         origin = col((cob[(0,)] * col((0, 0, 0, 1)))[0:3])
         fast = col((cob[(0,)] * col((1, 0, 0, 1)))[0:3]) - origin
         slow = col((cob[(0,)] * col((0, 1, 0, 1)))[0:3]) - origin
-        origin += col((0.0, 0.0, -100.0))
+        origin += col((0.0, 0.0, -distance))
         pg0.set_local_frame(fast.elems, slow.elems, origin.elems)
         pg0.set_name("D%d" % (det_num))
         for quad_num in xrange(4):
