@@ -11,7 +11,7 @@ except ImportError:
 
 rayonix_locator_str = """
   rayonix {
-    bin_size = 2
+    bin_size = None
       .type = int
       .help = Detector binning mode
   }
@@ -22,6 +22,8 @@ rayonix_locator_scope = parse(rayonix_locator_str + locator_str, process_include
 
 class FormatXTCRayonix(FormatXTC):
     def __init__(self, image_file, **kwargs):
+        import psana
+
         assert self.understand(image_file)
         FormatXTC.__init__(
             self, image_file, locator_scope=rayonix_locator_scope, **kwargs
@@ -30,6 +32,16 @@ class FormatXTCRayonix(FormatXTC):
         self._env = self._ds.env()
         self.populate_events()
         self.n_images = len(self.times)
+
+        cfgs = self._ds.env().configStore()
+        rayonix_cfg = cfgs.get(psana.Rayonix.ConfigV2, psana.Source("Rayonix"))
+        if self.params.rayonix.bin_size is None:
+            assert rayonix_cfg.binning_f() == rayonix_cfg.binning_s()
+            self._bin_size = rayonix_cfg.binning_f()
+        else:
+            self._bin_size = self.params.rayonix.bin_size
+        self._pixel_size = rayonix_tbx.get_rayonix_pixel_size(self._bin_size)
+        self._image_size = rayonix_cfg.width(), rayonix_cfg.height()
 
     @staticmethod
     def understand(image_file):
@@ -79,17 +91,14 @@ class FormatXTCRayonix(FormatXTC):
     def _detector(self):
         import psana
 
-        pixel_size = rayonix_tbx.get_rayonix_pixel_size(self.params.rayonix.bin_size)
         return self._detector_factory.simple(
             sensor="UNKNOWN",
             distance=100.0,
             beam_centre=(50.0, 50.0),
             fast_direction="+x",
             slow_direction="-y",
-            pixel_size=(pixel_size, pixel_size),
-            image_size=rayonix_tbx.get_rayonix_detector_dimensions(
-                self.params.rayonix.bin_size
-            ),
+            pixel_size=(self._pixel_size, self._pixel_size),
+            image_size=self._image_size,
             trusted_range=(
                 rayonix_tbx.rayonix_min_trusted_value,
                 rayonix_tbx.rayonix_saturated_value,
