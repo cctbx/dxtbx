@@ -46,7 +46,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         Format.__init__(self, image_file, **kwargs)
         self.current_index = None
         self.current_event = None
-
+        self._psana_runs = {}  ## empty container, to prevent breaking other formats
         if "locator_scope" in kwargs:
             self.params = FormatXTC.params_from_phil(
                 kwargs["locator_scope"], image_file, strict=True
@@ -117,9 +117,12 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         if hasattr(self, "times") and len(self.times) > 0:
             return
 
+        if not self._psana_runs:
+            self._psana_runs = self._get_psana_runs(self._ds)
+
         self.times = []
         self.run_mapping = {}
-        for run in self._ds.runs():
+        for run in self._psana_runs.values():
             times = run.times()
             self.run_mapping[run.run()] = (
                 len(self.times),
@@ -169,6 +172,17 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         else:
             img = params.data_source
         return DataSource(img)
+
+    @staticmethod
+    def _get_psana_runs(datasource):
+        """
+        Extracts the runs,
+        These can only be extracted once,
+        only call this method after datasource is set
+        """
+        # this is key,value = run_integer, psana.Run, e.g. {62: <psana.Run(@0x7fbd0e23c990)>}
+        psana_runs = {r.run(): r for r in datasource.runs()}
+        return psana_runs
 
     def get_psana_timestamp(self, index):
         """ Get the cctbx.xfel style event timestamp given an index """

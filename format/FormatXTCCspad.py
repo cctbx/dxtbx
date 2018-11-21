@@ -37,8 +37,10 @@ class FormatXTCCspad(FormatXTC):
         assert (
             self.params.cspad.detz_offset is not None
         ), "Supply a detz_offset for the cspad"
-        self._ds = FormatXTCCspad._get_datasource(image_file, self.params)
-        self._env = self._ds.env()
+        self._ds = FormatXTC._get_datasource(image_file, self.params)
+        self._psana_runs = FormatXTC._get_psana_runs(self._ds)
+        self._cache_psana_det()  # NOTE: move to base FormatXTC class
+        self._cache_psana_pedestals()  # NOTE: move to base FormatXTC class
         self.populate_events()
         self.n_images = len(self.times)
 
@@ -51,19 +53,39 @@ class FormatXTCCspad(FormatXTC):
         ds = FormatXTC._get_datasource(image_file, params)
         return any(["cspad" in src.lower() for src in params.detector_address])
 
+    def _cache_psana_det(self):
+        """Store a psana detector instance for each run"""
+        assert len(self.params.detector_address) == 1
+        import psana
+
+        self._psana_det = {}
+        for run_number, run in self._psana_runs.items():
+            self._psana_det[run_number] = psana.Detector(
+                self.params.detector_address[0], run.env()
+            )
+
+    def _cache_psana_pedestals(self):
+        """Store a pedestal for each psana detector instance"""
+        self._pedestals = {}
+        for run_number, run in self._psana_runs.iteritems():
+            det = self._psana_det[run_number]
+            self._pedestals[run_number] = det.pedestals(run)
+
     def get_raw_data(self, index):
         import psana
         from scitbx.array_family import flex
         import numpy as np
 
         assert len(self.params.detector_address) == 1
-        det = psana.Detector(self.params.detector_address[0], self._env)
         d = FormatXTCCspad.get_detector(self, index)
+        event = self._get_event(index)
+        run_number = event.run()
+        det = self._psana_det[run_number]
         data = cspad_cbf_tbx.get_psana_corrected_data(
             det,
-            self._get_event(index),
+            event,
             use_default=False,
-            dark=self.params.cspad.dark_correction,
+            dark=self._pedestals[run_number],
             common_mode=None,
             apply_gain_mask=self.params.cspad.apply_gain_mask,
             gain_mask_value=None,
@@ -120,13 +142,15 @@ class FormatXTCCspad(FormatXTC):
 
         if index is None:
             index = 0
-        self._env = self._ds.env()  # XXX should be run specific
-        assert len(self.params.detector_address) == 1
-        self._det = psana.Detector(self.params.detector_address[0], self._env)
-        geom = self._det.pyda.geoaccess(self._get_event(index).run())
+
+        ev = self._get_event(index)
+        run_number = ev.run()
+        run = self._psana_runs[run_number]
+        det = self._psana_det[run_number]
+        geom = det.pyda.geoaccess(run_number)
         cob = read_slac_metrology(geometry=geom, include_asic_offset=True)
         distance = env_distance(
-            self.params.detector_address[0], self._env, self.params.cspad.detz_offset
+            self.params.detector_address[0], run.env(), self.params.cspad.detz_offset
         )
         d = Detector()
         pg0 = d.hierarchy()
