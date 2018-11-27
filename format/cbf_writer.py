@@ -28,7 +28,7 @@ class FullCBFWriter(object):
             from dxtbx.format.Registry import Registry
 
             format_class = Registry.find(filename)
-            imageset = format_class.get_imageset(filename)
+            imageset = format_class.get_imageset([filename])
 
         self.imageset = imageset
 
@@ -558,3 +558,16 @@ class FullCBFWriter(object):
         cbf.write_widefile(
             filename, pycbf.CBF, pycbf.MIME_HEADERS | pycbf.MSG_DIGEST | pycbf.PAD_4K, 0
         )
+
+
+if __name__ == "__main__":
+    import sys
+
+    filename = sys.argv[1]
+    if len(sys.argv) > 2:
+        index = int(sys.argv[2])
+    else:
+        index = None
+
+    writer = FullCBFWriter(filename=filename)
+    writer.write_cbf("converted.cbf", index)
