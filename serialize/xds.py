@@ -388,11 +388,7 @@ class to_xds(object):
             )
         template = self.get_template()
         if template.endswith("master.h5"):
-            master_file = template
-            g = glob.glob(template.split("master.h5")[0] + "data_*[0-9].h5")
-            assert g, "No associated data files found for %s" % master_file
-            template = template_regex(g[0])[0]
-            template = master_file.split("master.h5")[0] + template.split("data_")[-1]
+            template = template.replace("master", "??????")
         print("NAME_TEMPLATE_OF_DATA_FRAMES= %s" % template.replace("#", "?"), file=out)
         print("TRUSTED_REGION= 0.0 1.41", file=out)
         for f0, s0, f1, s1 in self.get_detector()[0].get_mask():
