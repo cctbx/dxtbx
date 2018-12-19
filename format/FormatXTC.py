@@ -49,11 +49,11 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         self._psana_runs = {}  ## empty container, to prevent breaking other formats
         if "locator_scope" in kwargs:
             self.params = FormatXTC.params_from_phil(
-                kwargs["locator_scope"], image_file, strict=True
+                master_phil=kwargs["locator_scope"], user_phil=image_file, strict=True
             )
         else:
             self.params = FormatXTC.params_from_phil(
-                locator_scope, image_file, strict=True
+                master_phil=locator_scope, user_phil=image_file, strict=True
             )
         assert self.params.mode == "idx", "idx mode should be used for analysis"
         self._initialized = True
