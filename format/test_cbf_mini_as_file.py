@@ -12,7 +12,8 @@ from dials.util.options import tolerance_phil_scope
 @pytest.mark.parametrize(
     "image_file",
     [
-        "image_examples/RigakuA200/XV10001.img",
+        "image_examples/ALS_831/q315r_lyso_001.img",
+        #'image_examples/RigakuA200/XV10001.img',
         "image_examples/DLS_I02/X4_wide_M1S4_1_0001.cbf",
     ],
 )
