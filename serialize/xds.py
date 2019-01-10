@@ -289,7 +289,9 @@ class to_xds(object):
         real_space_b=None,
         real_space_c=None,
         job_card="XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT",
+        as_str=None,
     ):
+        # as_str is deprecated and will be removed in the future
         result = []
 
         assert [real_space_a, real_space_b, real_space_c].count(None) in (0, 3)
