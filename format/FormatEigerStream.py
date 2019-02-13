@@ -8,14 +8,14 @@ from dxtbx.model import Goniometer  # import dependency
 from dxtbx.model import Scan  # import dependency
 
 injected_data = {}
-# from dlstbx.eiger_stream.data import valid_things
-# injected_data = valid_things
+# import dlstbx.eiger_stream.data
+# injected_data = dlstbx.eiger_stream.data.valid_things
+# injected_data = dlstbx.eiger_stream.data.invalid_things
 
 
 class FormatEigerStream(FormatMultiImage, Format):
     """
     A format class to understand an EIGER stream
-
     """
 
     @staticmethod
@@ -56,9 +56,9 @@ class FormatEigerStream(FormatMultiImage, Format):
         from dxtbx.model.detector import DetectorFactory
 
         configuration = self.header["configuration"]
+        info = self.header["info"]
 
-        from pprint import pprint
-
+        #   from pprint import pprint
         #   pprint(configuration)
 
         # Set the trusted range
@@ -74,10 +74,8 @@ class FormatEigerStream(FormatMultiImage, Format):
 
         # Get the pixel and image sizes
         pixel_size = (configuration["x_pixel_size"], configuration["y_pixel_size"])
-        image_size = (
-            configuration["x_pixels_in_detector"],
-            configuration["y_pixels_in_detector"],
-        )
+        # Image size is not x/y_pixels_in_detector, which are likely the physical dimensions
+        image_size = (info["shape"][0], info["shape"][1])
 
         # Get the detector axes
         # TODO Spec doesn't have detector_orientation
