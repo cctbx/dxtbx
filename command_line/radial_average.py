@@ -51,6 +51,8 @@ master_phil = libtbx.phil.parse(
     .type = int
   panel = None
     .type = int
+  max_images = None
+    .type = int
 """
 )
 
@@ -145,7 +147,10 @@ def run(args, imageset=None):
         iset = load_func(item)
         n_images = len(iset)
         if params.image_number is None:
-            subiterable = xrange(n_images)
+            if params.max_images is None:
+                subiterable = xrange(n_images)
+            else:
+                subiterable = xrange(0, min(params.max_images, n_images))
         else:
             subiterable = [params.image_number]
         for image_number in subiterable:
