@@ -1,16 +1,6 @@
-#!/usr/bin/env python
-#
-# imageset.py
-#
-#  Copyright (C) 2013 Diamond Light Source
-#
-#  Author: James Parkhurst
-#
-#  This code is distributed under the BSD license, a copy of which is
-#  included in the root directory of this package.
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
+
 import boost.python
-import dxtbx.format.image
 
 ext = boost.python.import_ext("dxtbx_ext")
 from dxtbx_imageset_ext import *
@@ -416,7 +406,6 @@ class ImageSetFactory(object):
             A list of sweeps
 
         """
-        import os
         from dxtbx.format.Registry import Registry
         from dxtbx.sweep_filenames import template_image_range
         from dxtbx.format.Format import Format
@@ -500,7 +489,6 @@ class ImageSetFactory(object):
     @staticmethod
     def _create_sweep(filelist, check_headers):
         """Create a sweep"""
-        import os
         from dxtbx.format.Registry import Registry
 
         # Extract info from filelist
@@ -522,23 +510,16 @@ class ImageSetFactory(object):
         # Get the format object
         format_class = Registry.find(filenames[0])
 
-        # Get the first image and our understanding
-        first_image = filenames[0]
-
-        # Get the directory and first filename and set the template format
-        directory, first_image_name = os.path.split(first_image)
-        first_image_number = indices[0]
-
         # Get the template format
         pfx = template.split("#")[0]
         sfx = template.split("#")[-1]
         template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
 
         # Set the image range
-        array_range = (min(indices) - 1, max(indices))
+        array_range = range(min(indices) - 1, max(indices))
 
         # Create the sweep file list
-        filenames = [template_format % (i + 1) for i in range(*array_range)]
+        filenames = [template_format % (i + 1) for i in array_range]
 
         sweep = format_class.get_imageset(filenames, template=template, as_sweep=True)
 
@@ -559,7 +540,7 @@ class ImageSetFactory(object):
         from dxtbx.format.FormatMultiImage import FormatMultiImage
 
         # Get the format object
-        if format_class == None:
+        if format_class is None:
             if check_format:
                 format_class = Registry.find(filenames[0])
             else:
@@ -594,7 +575,6 @@ class ImageSetFactory(object):
         format_kwargs=None,
     ):
         """Create a sweep"""
-        import os
         from dxtbx.format.Registry import Registry
         from dxtbx.format.Format import Format
 
@@ -614,26 +594,17 @@ class ImageSetFactory(object):
         # Sort the filenames
         filenames = sorted(filenames)
 
-        # Get the first image and our understanding
-        first_image = filenames[0]
-
-        # Get the directory and first filename and set the template format
-        directory, first_image_name = os.path.split(first_image)
-        first_image_number = indices[0]
-
         # Set the image range
         array_range = (min(indices) - 1, max(indices))
         if scan is not None:
             assert array_range == scan.get_array_range()
 
         # Get the format object and reader
-        if format_class == None:
+        if format_class is None:
             if check_format:
                 format_class = Registry.find(filenames[0])
             else:
                 format_class = Format
-        else:
-            format_class = format_class
 
         # Done require template to be vaid if not checking format
         # try:

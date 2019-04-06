@@ -1,24 +1,16 @@
-#!/usr/bin/env python
-#
-# dxtbx.serialize.imageset.py
-#
-#  Copyright (C) 2013 Diamond Light Source
-#
-#  Author: James Parkhurst
-#
-#  This code is distributed under the BSD license, a copy of which is
-#  included in the root directory of this package.
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
+
+import collections
+import os
 
 
 def filename_to_absolute(filename):
     """ Convert filenames to absolute form. """
-    from os.path import abspath
 
     if isinstance(filename, list):
-        return [abspath(f) for f in filename]
+        return [os.path.abspath(f) for f in filename]
 
-    return abspath(filename)
+    return os.path.abspath(filename)
 
 
 def filename_or_none(filename):
@@ -37,10 +29,9 @@ def basic_imageset_to_dict(imageset):
         A dictionary of the parameters
 
     """
-    from libtbx.containers import OrderedDict
 
     # Return the dictionary representation
-    return OrderedDict(
+    return collections.OrderedDict(
         [
             ("__id__", "imageset"),
             ("filenames", filename_to_absolute(imageset.paths())),
@@ -63,10 +54,9 @@ def imagesweep_to_dict(sweep):
         A dictionary of the parameters
 
     """
-    from libtbx.containers import OrderedDict
 
     # Return the dictionary representation
-    return OrderedDict(
+    return collections.OrderedDict(
         [
             ("__id__", "imageset"),
             ("template", filename_to_absolute(sweep.get_template())),
@@ -92,7 +82,6 @@ def imageset_to_dict(imageset):
 
     """
     from dxtbx.imageset import ImageSet, ImageSweep
-    from dxtbx.format.image import ImageBool, ImageDouble
 
     # If this is an imageset then return a list of filenames
     if isinstance(imageset, ImageSweep):
@@ -221,7 +210,7 @@ def imageset_from_dict(d, check_format=True, directory=None):
 
     """
     # Check the input
-    if d == None:
+    if d is None:
         return None
 
     # Check the version and id

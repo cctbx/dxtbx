@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from collections import defaultdict
 from glob import glob
-import os.path
+import os
 import re
 
 
@@ -126,7 +126,7 @@ def group_files_by_imageset(filenames):
     template = []
     for f in filenames:
         t = template_regex(f)
-        if t[0] == None:
+        if t[0] is None:
             template.append((f, None))
         else:
             template.append(t)
@@ -191,7 +191,6 @@ def template_string_to_glob_expr(template):
 def template_string_number_index(template):
     """Get the number idex of the template."""
     pfx = template.split("#")[0]
-    sfx = template.split("#")[-1]
     return len(pfx), len(pfx) + template.count("#")
 
 

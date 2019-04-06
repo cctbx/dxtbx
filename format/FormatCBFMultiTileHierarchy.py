@@ -9,6 +9,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import collections
+
 import pycbf
 from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile
 from dxtbx.format.FormatStill import FormatStill
@@ -316,7 +318,6 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         if self._raw_data is None:
             import numpy
             from scitbx.array_family import flex
-            from libtbx.containers import OrderedDict
 
             self._raw_data = []
 
@@ -331,7 +332,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             assert len(types) == cbf.count_rows()
 
             # read the data
-            data = OrderedDict()
+            data = collections.OrderedDict()
             cbf.find_category("array_data")
             for i in xrange(cbf.count_rows()):
                 cbf.find_column("array_id")
@@ -359,7 +360,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
             # extract the data for each panel
             if cbf.has_sections():
-                section_shapes = OrderedDict()
+                section_shapes = collections.OrderedDict()
                 for i in xrange(cbf.count_rows()):
                     cbf.find_column("id")
                     section_name = cbf.get_value()

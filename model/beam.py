@@ -99,8 +99,8 @@ class BeamFactory:
         from dxtbx.model import Beam
 
         # If None, return None
-        if d == None:
-            if t == None:
+        if d is None:
+            if t is None:
                 return None
             else:
                 return from_dict(t, None)
@@ -161,7 +161,7 @@ class BeamFactory:
         assert polarization_fraction >= 0.0
         assert polarization_fraction <= 1.0
 
-        if divergence == None or sigma_divergence == None:
+        if divergence is None or sigma_divergence is None:
             divergence = 0.0
             sigma_divergence = 0.0
 

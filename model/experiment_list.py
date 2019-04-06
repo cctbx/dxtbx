@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import collections
 import pkg_resources
 
 from dxtbx.model import Experiment, ExperimentList
@@ -505,7 +506,6 @@ class ExperimentListDumper(object):
         """ Dump experiment list as json """
         import json
         from os.path import splitext
-        from libtbx.containers import OrderedDict
 
         # Get the dictionary and get the JSON string
         dictionary = self._experiment_list.to_dict()
@@ -549,7 +549,7 @@ class ExperimentListDumper(object):
             ]
 
             # Get the list of experiments
-            edict = OrderedDict(
+            edict = collections.OrderedDict(
                 [("__id__", "ExperimentList"), ("experiment", dictionary["experiment"])]
             )
 
