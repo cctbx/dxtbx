@@ -82,6 +82,10 @@ def imageset_to_dict(imageset):
 
     """
     from dxtbx.imageset import ImageSet, ImageSweep
+    from dxtbx.format.image import (  # noqa: F401, import dependency
+        ImageBool,
+        ImageDouble,
+    )
 
     # If this is an imageset then return a list of filenames
     if isinstance(imageset, ImageSweep):
