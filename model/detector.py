@@ -479,8 +479,8 @@ class DetectorFactory:
         from dxtbx.model import Detector
 
         # If None, return None
-        if d == None:
-            if t == None:
+        if d is None:
+            if t is None:
                 return None
             else:
                 return from_dict(t, None)

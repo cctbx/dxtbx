@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+import itertools
 import json
 
 import dxtbx.imageset
@@ -154,7 +155,6 @@ class DataBlock(object):
 
     def to_dict(self):
         """ Convert the datablock to a dictionary """
-        from itertools import groupby
         from dxtbx.format.FormatMultiImage import FormatMultiImage
         from os.path import abspath
 
@@ -347,7 +347,7 @@ class FormatChecker(object):
         from dxtbx.format.Registry import Registry
 
         try:
-            if self._format_class == None or not self.understand(filename):
+            if self._format_class is None or not self.understand(filename):
                 self._format_class = Registry.find(filename)
             self._format_class = self.check_child_formats(filename)
             if self._verbose:
@@ -361,7 +361,7 @@ class FormatChecker(object):
         from dxtbx.format.Registry import Registry
 
         try:
-            if self._format_class == None or not self.understand(filename):
+            if self._format_class is None or not self.understand(filename):
                 self._format_class = Registry.find(filename)
             self._format_class = self.check_child_formats(filename)
         except Exception:
@@ -504,8 +504,6 @@ class DataBlockFilenameImporter(object):
         format_kwargs=None,
     ):
         """ Import the datablocks from the given filenames. """
-        from itertools import groupby
-        from dxtbx.format.Registry import Registry
         from dxtbx.format.FormatMultiImage import FormatMultiImage
 
         # Init the datablock list
@@ -544,7 +542,7 @@ class DataBlockFilenameImporter(object):
                     scan_tolerance,
                     format_kwargs=format_kwargs,
                 )
-                for group, items in groupby(records, lambda r: r.group):
+                for group, items in itertools.groupby(records, lambda r: r.group):
                     items = list(items)
                     imageset = self._create_multi_file_imageset(
                         fmt, list(items), format_kwargs=format_kwargs
@@ -752,7 +750,6 @@ class DataBlockDictImporter(object):
 
     def _load_datablocks(self, obj, check_format=True, directory=None):
         """ Create the datablock from a dictionary. """
-        from dxtbx.format.Registry import Registry
         from dxtbx.model import BeamFactory, DetectorFactory
         from dxtbx.model import GoniometerFactory, ScanFactory
         from dxtbx.serialize.filename import load_path

@@ -159,7 +159,7 @@ class FormatHDF5Lambda(FormatHDF5):
         return Format.get_beam(self)
 
     def get_scan(self, index=None):
-        if index == None:
+        if index is None:
             return Format.get_scan(self)
         else:
             scan = Format.get_scan(self)

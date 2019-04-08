@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 #!/usr/bin/env python
 # scan.py
@@ -12,7 +12,6 @@ from __future__ import absolute_import, division
 # XSweep classes.
 
 import pycbf
-import copy
 from dxtbx_model_ext import Scan
 
 from dxtbx.model.scan_helpers import scan_helper_image_files
@@ -122,8 +121,8 @@ class ScanFactory:
         from scitbx.array_family import flex  # import dependency
 
         # If None, return None
-        if d == None:
-            if t == None:
+        if d is None:
+            if t is None:
                 return None
             else:
                 return from_dict(t, None)

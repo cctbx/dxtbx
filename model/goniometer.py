@@ -12,10 +12,10 @@ from __future__ import absolute_import, division
 # of the XSweep classes.
 
 import pycbf
-from dxtbx_model_ext import KappaGoniometer  # special import
+from dxtbx_model_ext import KappaGoniometer  # noqa: F401, import dependency
 from dxtbx_model_ext import Goniometer, MultiAxisGoniometer
 import libtbx.phil
-import scitbx.math  # import dependency
+import scitbx.math  # noqa: F401, import dependency
 
 
 goniometer_phil_scope = libtbx.phil.parse(
@@ -265,8 +265,8 @@ class GoniometerFactory:
         from dxtbx.model import Goniometer, MultiAxisGoniometer
 
         # If None, return None
-        if d == None:
-            if t == None:
+        if d is None:
+            if t is None:
                 return None
             else:
                 return from_dict(t, None)

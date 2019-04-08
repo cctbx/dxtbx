@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
+
 from scitbx import matrix
-from cctbx.uctbx import unit_cell
 from cctbx.sgtbx import space_group as SG
 
 
@@ -18,8 +18,8 @@ class CrystalFactory(object):
 
         """
         # If None, return None
-        if d == None:
-            if t == None:
+        if d is None:
+            if t is None:
                 return None
             else:
                 return from_dict(t, None)

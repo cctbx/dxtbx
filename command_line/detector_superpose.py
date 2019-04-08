@@ -194,7 +194,7 @@ class Script(object):
             )
 
             # Apply the shifts
-            if params.apply_at_hierarchy_level == None:
+            if params.apply_at_hierarchy_level is None:
                 iterable = moving
             else:
                 iterable = iterate_detector_at_level(
