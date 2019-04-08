@@ -542,14 +542,14 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         assert self.is_consistent()
 
         # Get the list of unique models
-        blist = self.beams()
-        dlist = self.detectors()
-        glist = self.goniometers()
-        slist = self.scans()
-        clist = self.crystals()
-        ilist = self.imagesets()
-        plist = self.profiles()
-        scalelist = self.scaling_models()
+        blist = [x for x in self.beams() if x is not None]
+        dlist = [x for x in self.detectors() if x is not None]
+        glist = [x for x in self.goniometers() if x is not None]
+        slist = [x for x in self.scans() if x is not None]
+        clist = [x for x in self.crystals() if x is not None]
+        ilist = [x for x in self.imagesets() if x is not None]
+        plist = [x for x in self.profiles() if x is not None]
+        scalelist = [x for x in self.scaling_models() if x is not None]
 
         # Lookup table for imageset index
         imageset_index = {imset: i for i, imset in enumerate(ilist)}
