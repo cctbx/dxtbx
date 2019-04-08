@@ -1,0 +1,17 @@
+# We only use travis for syntax validation at this point
+
+language: python
+python:
+  - "2.7"
+
+jobs:
+  include:
+    - name: "Syntax validation - Python 2.7"
+      script:
+         - python -m compileall -q *
+
+    - name: "Syntax validation - Python 3.7"
+      dist: xenial
+      python: 3.7
+      script:
+         - python3 -m compileall -q *
