@@ -269,6 +269,8 @@ def test_experimentlist_to_dict(experiment_list):
     assert len(obj["detector"]) == 3
     assert len(obj["goniometer"]) == 3
     assert len(obj["scan"]) == 3
+    assert len(obj["scaling_model"]) == 5
+    assert all([model is None for model in obj['scaling_model']])
 
     # The expected models
     b = [0, 1, 2, 1, 0]
