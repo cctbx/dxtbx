@@ -1,19 +1,22 @@
 from __future__ import absolute_import, division, print_function
 
+
 import sys
+from collections import OrderedDict
 
 import boost.python
 import cctbx.crystal
 from cctbx import sgtbx  # import dependency
 from cctbx.crystal_orientation import crystal_orientation  # import dependency
 from dxtbx_model_ext import *
+from dxtbx.imageset import ImageSet, ImageSweep, ImageGrid
 from dxtbx.model.beam import *
 from dxtbx.model.goniometer import *
 from dxtbx.model.detector import *
 from dxtbx.model.scan import *
 from dxtbx.model.crystal import *
 from dxtbx.model.profile import *
-from libtbx.containers import OrderedSet, OrderedDict
+from libtbx.containers import OrderedSet
 
 
 class DetectorAux(boost.python.injector, Detector):
@@ -483,15 +486,8 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         return list(OrderedSet(e.scaling_model for e in self))
 
     def imagesets(self):
-        """Get a list of the unique imagesets (includes None).
-
-        This returns unique complete sets rather than partial.
-        """
+        """Get a list of the unique imagesets."""
         return list(OrderedSet([e.imageset for e in self if e.imageset is not None]))
-        # temp = OrderedDict([(e.imageset.reader(), i)
-        #   for i, e in enumerate(self) if e.imageset is not None])
-        # return OrderedDict([(self[i].imageset.complete_set(), None)
-        #   for i in temp.itervalues()]).keys()
 
     def all_stills(self):
         """ Check if all the experiments are stills """
@@ -536,60 +532,50 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
 
     def to_dict(self):
         """ Serialize the experiment list to dictionary. """
-        from dxtbx.imageset import ImageSet, ImageSweep, ImageGrid
 
         # Check the experiment list is consistent
         assert self.is_consistent()
 
-        # Get the list of unique models
-        blist = [x for x in self.beams() if x is not None]
-        dlist = [x for x in self.detectors() if x is not None]
-        glist = [x for x in self.goniometers() if x is not None]
-        slist = [x for x in self.scans() if x is not None]
-        clist = [x for x in self.crystals() if x is not None]
-        ilist = [x for x in self.imagesets() if x is not None]
-        plist = [x for x in self.profiles() if x is not None]
-        scalelist = [x for x in self.scaling_models() if x is not None]
-
-        # Lookup table for imageset index
-        imageset_index = {imset: i for i, imset in enumerate(ilist)}
+        # Table of names, source collections and experiment accessors
+        # for member models that are serialized as an index table-lookup
+        lookup_members = [
+            ("beam", self.beams, lambda x: x.beam),
+            ("detector", self.detectors, lambda x: x.detector),
+            ("goniometer", self.goniometers, lambda x: x.goniometer),
+            ("scan", self.scans, lambda x: x.scan),
+            ("crystal", self.crystals, lambda x: x.crystal),
+            ("profile", self.profiles, lambda x: x.profile),
+            ("scaling_model", self.scaling_models, lambda x: x.scaling_model),
+            ("imageset", self.imagesets, lambda x: x.imageset),
+        ]
+        # Generate index lookup tables for each output member collection instance
+        index_lookup = {
+            name: OrderedDict(
+                [
+                    (model, i)
+                    for i, model in enumerate(x for x in models() if x is not None)
+                ]
+            )
+            for name, models, _ in lookup_members
+        }
 
         # Create the output dictionary
         result = OrderedDict()
         result["__id__"] = "ExperimentList"
         result["experiment"] = []
 
-        # Function to find in list by reference
-        def find_index(l, m):
-            for i, mm in enumerate(l):
-                if mm is m:
-                    return i
-            return -1
-
         # Add the experiments to the dictionary
         for e in self:
             obj = OrderedDict()
             obj["__id__"] = "Experiment"
             obj["identifier"] = e.identifier
-            if e.beam is not None:
-                obj["beam"] = find_index(blist, e.beam)
-            if e.detector is not None:
-                obj["detector"] = find_index(dlist, e.detector)
-            if e.goniometer is not None:
-                obj["goniometer"] = find_index(glist, e.goniometer)
-            if e.scan is not None:
-                obj["scan"] = find_index(slist, e.scan)
-            if e.crystal is not None:
-                obj["crystal"] = find_index(clist, e.crystal)
-            if e.profile is not None:
-                obj["profile"] = find_index(plist, e.profile)
-            if e.scaling_model is not None:
-                obj["scaling_model"] = find_index(scalelist, e.scaling_model)
-            if e.imageset is not None:
-                obj["imageset"] = imageset_index[e.imageset]
-                if e.scan is None and not isinstance(e.imageset, ImageSweep):
-                    if len(e.imageset) != len(e.imageset.complete_set()):
-                        obj["imageset"] = obj["imageset"]
+
+            # For each member model, look up the index
+            for name, _, attr in lookup_members:
+                model = attr(e)
+                if model is not None:
+                    obj[name] = index_lookup[name][model]
+
             result["experiment"].append(obj)
 
         def get_template(imset):
@@ -600,7 +586,7 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
 
         # Serialize all the imagesets
         result["imageset"] = []
-        for imset in ilist:
+        for imset in index_lookup["imageset"].keys():
             if isinstance(imset, ImageSweep):
                 # FIXME_HACK
                 template = get_template(imset)
@@ -634,14 +620,12 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
             r["params"] = imset.params()
             result["imageset"].append(r)
 
-        # Extract all the model dictionaries
-        result["beam"] = [b.to_dict() for b in blist if b is not None]
-        result["detector"] = [d.to_dict() for d in dlist if d is not None]
-        result["goniometer"] = [g.to_dict() for g in glist if g is not None]
-        result["scan"] = [s.to_dict() for s in slist if s is not None]
-        result["crystal"] = [c.to_dict() for c in clist if c is not None]
-        result["profile"] = [p.to_dict() for p in plist if p is not None]
-        result["scaling_model"] = [s.to_dict() for s in scalelist if s is not None]
+        # Extract all the ordered model dictionaries - is important these
+        # preserve the same order as used in experiment serialization above
+        for name, models in index_lookup.items():
+            # Only fill out entries not handled above e.g. imageset
+            if not name in result:
+                result[name] = [x.to_dict() for x in models.keys()]
 
         # Return the dictionary
         return result
