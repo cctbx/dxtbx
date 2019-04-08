@@ -479,12 +479,8 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         return list(OrderedSet(e.profile for e in self))
 
     def scaling_models(self):
-        """ Get a list of the scaling models (includes None).
-
-        This is not a unique list as one must account for the fact that
-        there could be a mix of valid and null scaling models, which would
-        cause a loss of association by order when getting the list of models."""
-        return [e.scaling_model for e in self]
+        """ Get a list of the unique scaling models (includes None). """
+        return list(OrderedSet(e.scaling_model for e in self))
 
     def imagesets(self):
         """Get a list of the unique imagesets (includes None).
@@ -645,7 +641,7 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         result["scan"] = [s.to_dict() for s in slist if s is not None]
         result["crystal"] = [c.to_dict() for c in clist if c is not None]
         result["profile"] = [p.to_dict() for p in plist if p is not None]
-        result["scaling_model"] = [s.to_dict() if s is not None else None for s in scalelist]
+        result["scaling_model"] = [s.to_dict() for s in scalelist if s is not None]
 
         # Return the dictionary
         return result
