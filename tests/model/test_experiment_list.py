@@ -1,23 +1,33 @@
 from __future__ import absolute_import, division, print_function
 
-import six.moves.cPickle as pickle
-from glob import glob
 import os
+from glob import glob
 
 import pytest
+import six.moves.cPickle as pickle
+from scitbx.array_family import flex
 
-from dxtbx.model import Experiment, ExperimentList
+import dxtbx
+from dxtbx.datablock import DataBlockFactory
+from dxtbx.format.Format import Format
+from dxtbx.imageset import ImageSetFactory
+from dxtbx.model import (
+    Beam,
+    Crystal,
+    Detector,
+    Experiment,
+    ExperimentList,
+    Goniometer,
+    Scan,
+)
 from dxtbx.model.experiment_list import (
-    ExperimentListFactory,
-    ExperimentListDumper,
     ExperimentListDict,
+    ExperimentListDumper,
+    ExperimentListFactory,
 )
 
 
 def test_experiment_contains():
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-    from dxtbx.model import Crystal
-
     # Create a load of models
     b1 = Beam()
     d1 = Detector()
@@ -53,9 +63,6 @@ def test_experiment_contains():
 
 
 def test_experiment_equality():
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-    from dxtbx.model import Crystal
-
     # Create a load of models
     b1 = Beam()
     d1 = Detector()
@@ -92,9 +99,6 @@ def test_experiment_equality():
 
 
 def test_experiment_consistent(dials_regression):
-    from dxtbx.imageset import ImageSetFactory
-    from dxtbx.model import Scan
-
     # Create a sweep
     sweep_filenames = os.path.join(
         dials_regression, "centroid_test_data", "centroid*.cbf"
@@ -125,8 +129,6 @@ def test_experiment_consistent(dials_regression):
 
 
 def test_experimentlist_contains(experiment_list):
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-
     # Check all the models are found
     for e in experiment_list:
         assert e.beam in experiment_list
@@ -182,8 +184,6 @@ def test_experimentlist_replace(experiment_list):
 
 
 def test_experimentlist_indices(experiment_list):
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-
     # Get the models
     b = [e.beam for e in experiment_list]
     d = [e.detector for e in experiment_list]
@@ -306,8 +306,6 @@ def test_experimentlist_where(experiment_list):
 
 @pytest.fixture
 def experiment_list():
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-
     # Initialise a list of experiments
     experiments = ExperimentList()
 
@@ -455,10 +453,6 @@ def test_experimentlist_factory_from_args(dials_regression):
 
 
 def test_experimentlist_factory_from_imageset():
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-    from dxtbx.model import Crystal
-    from dxtbx.format.Format import Format
-
     imageset = Format.get_imageset(["filename.cbf"], as_imageset=True)
     imageset.set_beam(Beam(), 0)
     imageset.set_detector(Detector(), 0)
@@ -475,10 +469,6 @@ def test_experimentlist_factory_from_imageset():
 
 
 def test_experimentlist_factory_from_sweep():
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-    from dxtbx.model import Crystal
-    from dxtbx.format.Format import Format
-
     filenames = ["filename_%01d.cbf" % (i + 1) for i in range(0, 2)]
 
     imageset = Format.get_imageset(
@@ -504,11 +494,6 @@ def test_experimentlist_factory_from_sweep():
 
 
 def test_experimentlist_factory_from_datablock():
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-    from dxtbx.datablock import DataBlockFactory
-    from dxtbx.model import Crystal
-    from dxtbx.format.Format import Format
-
     filenames = ["filename_%01d.cbf" % (i + 1) for i in range(0, 2)]
 
     imageset = Format.get_imageset(
@@ -586,7 +571,6 @@ def test_experimentlist_dumper_dump_scan_varying(dials_regression, tmpdir):
     beam = elist1[0].beam
     goniometer = elist1[0].goniometer
     crystal.set_A_at_scan_points([crystal.get_A()] * 5)
-    from scitbx.array_family import flex
 
     cov_B = flex.double([1e-5] * 9 * 9)
     crystal.set_B_covariance(cov_B)
@@ -613,9 +597,6 @@ def test_experimentlist_dumper_dump_scan_varying(dials_regression, tmpdir):
 
 def test_experimentlist_dumper_dump_empty_sweep(tmpdir):
     tmpdir.chdir()
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-    from dxtbx.model import Crystal
-    from dxtbx.format.Format import Format
 
     filenames = ["filename_%01d.cbf" % (i + 1) for i in range(0, 2)]
 
@@ -641,8 +622,6 @@ def test_experimentlist_dumper_dump_empty_sweep(tmpdir):
 
 def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmpdir):
     tmpdir.chdir()
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-    from dxtbx.model import Crystal
 
     filename = os.path.join(
         dials_regression, "centroid_test_data", "experiments_with_lookup.json"
@@ -681,8 +660,6 @@ def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmpdir):
 
 def test_experimentlist_dumper_dump_with_bad_lookup(dials_regression, tmpdir):
     tmpdir.chdir()
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-    from dxtbx.model import Crystal
 
     filename = os.path.join(
         dials_regression, "centroid_test_data", "experiments_with_bad_lookup.json"
@@ -714,8 +691,6 @@ def test_experimentlist_dumper_dump_with_bad_lookup(dials_regression, tmpdir):
 
 
 def test_experimentlist_with_identifiers():
-    from dxtbx.model import Beam, Detector, Goniometer, Scan
-
     # Initialise a list of experiments
     experiments = ExperimentList()
 
@@ -752,8 +727,6 @@ def test_experimentlist_with_identifiers():
 
 
 def test_load_models(dials_regression):
-    import dxtbx
-
     filename = os.path.join(
         dials_regression,
         "image_examples",
@@ -806,17 +779,30 @@ def test_load_models(dials_regression):
         assert o1 == o2 == o3 == o4 == o5
 
 
+def test_partial_missing_model_serialization():
+    goniometer = Goniometer()
+    elist = ExperimentList([Experiment(), Experiment(goniometer=goniometer)])
+    elist_ = ExperimentListFactory.from_dict(elist.to_dict())
+    check(elist, elist_)
+
+
 def check(el1, el2):
     # All the experiment lists should be the same length
-    assert len(el1) == 1
     assert len(el1) == len(el2)
 
     # Check all the models are the same
     for e1, e2 in zip(el1, el2):
-        assert e1.imageset and e1.imageset == e2.imageset
-        assert e1.beam and e1.beam == e2.beam
-        assert e1.detector is not None and e1.detector == e2.detector
-        assert e1.goniometer and e1.goniometer == e2.goniometer
-        assert e1.scan and e1.scan == e2.scan
-        assert e1.crystal and e1.crystal == e2.crystal
-        assert e1.identifier == e2.identifier
+        assert compare_experiment(e1, e2)
+
+
+def compare_experiment(exp1, exp2):
+    return (
+        exp1.imageset == exp2.imageset
+        and exp1.beam == exp2.beam
+        and exp1.detector == exp2.detector
+        and exp1.goniometer == exp2.goniometer
+        and exp1.scan == exp2.scan
+        and exp2.profile == exp2.profile
+        and exp1.scaling_model == exp2.scaling_model
+        and exp1.identifier == exp2.identifier
+    )
