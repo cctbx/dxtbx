@@ -1,0 +1,12 @@
+# GIT change notifications sent out by DLS Jenkins
+
+link=https://github.com/cctbx/dxtbx
+commit_link=https://github.com/cctbx/dxtbx/commit/%s
+
+sender=DXTBX commit
+
+recipient=cctbx-commit
+recipient_domain=jiscmail.ac.uk
+
+replyto=dials-support
+replyto_domain=lists.sourceforge.net
