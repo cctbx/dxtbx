@@ -101,7 +101,7 @@ namespace dxtbx { namespace model {
     /** Default constructor: initialise all to zero */
     Beam()
       : wavelength_(0.0),
-        direction_(0.0, 0.0, 0.0),
+        direction_(0.0, 0.0, 1.0),
         divergence_(0.0),
         sigma_divergence_(0.0),
         polarization_normal_(0.0, 1.0, 0.0),

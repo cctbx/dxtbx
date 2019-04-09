@@ -1,12 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.model import Beam
 import pytest
+
+from scitbx import matrix
+from libtbx.phil import parse
+
+from dxtbx.model import Beam
+from dxtbx.model.beam import beam_phil_scope, BeamFactory
 
 
 def test_setting_direction_and_wavelength():
-    from scitbx import matrix
-
     direction = matrix.col((0.013142, 0.002200, 1.450476))
     unit_direction = direction.normalize()
     wavelength = 0.689400
@@ -29,8 +32,6 @@ def test_setting_direction_and_wavelength():
 
 
 def test_setting_s0():
-    from scitbx import matrix
-
     direction = matrix.col((0.013142, 0.002200, 1.450476))
     unit_direction = direction.normalize()
     wavelength = 0.689400
@@ -55,10 +56,6 @@ def test_setting_s0():
 
 
 def test_from_phil():
-    from libtbx.phil import parse
-    from dxtbx.model.beam import beam_phil_scope, BeamFactory
-    from scitbx import matrix
-
     direction = matrix.col((0.013142, 0.002200, 1.450476))
     unit_direction = direction.normalize()
     wavelength = 0.689400
@@ -108,8 +105,6 @@ def test_from_phil():
 
 
 def test_scan_varying():
-    from scitbx import matrix
-
     direction = matrix.col((0.013142, 0.002200, 1.450476))
     unit_direction = direction.normalize()
     wavelength = 0.689400
@@ -152,8 +147,6 @@ def test_scan_varying():
 
 
 def test_beam_object_comparison():
-    from scitbx import matrix
-
     direction = matrix.col((0.013142, 0.002200, 1.450476))
     unit_direction = direction.normalize()
     wavelength = 0.689400
@@ -179,3 +172,8 @@ def test_beam_object_comparison():
     b4.set_s0_at_scan_points([s0 * 1.5] * 5)
     assert b1 != b4
     assert not b1.is_similar_to(b4)
+
+
+def test_beam_self_serialization():
+    beam = Beam()
+    assert beam == BeamFactory.from_dict(beam.to_dict())
