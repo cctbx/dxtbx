@@ -1,17 +1,78 @@
-# We only use travis for syntax validation at this point
+addons:
+  apt:
+    packages:
+      - libjpeg62
 
 language: python
 python:
   - "2.7"
 
+cache:
+  directories:
+    - $HOME/build_dials
+  timeout: 1000
+
 jobs:
   include:
+    - stage: build
+      install:
+         # Setup a base installation
+         - ./.travis/setup-base
+
+         # Inject DXTBX
+         - rm -rf $HOME/build_dials/modules/dxtbx
+         - mv $HOME/build/cctbx/dxtbx $HOME/build_dials/modules/dxtbx
+
+      before_script:
+         # Enter CCTBX environment
+         - cat $HOME/build_dials/build/setpaths.sh
+         - cd $HOME/build_dials/build
+         - . setpaths.sh
+
+         # Prepare for the build step
+         - libtbx.configure .
+
+      script:
+         # Parallel builds do not work. Only spend at most 40 minutes on a build.
+         # This allows incremental building, so if the build can't be finished within the allotted time
+         # it will be resumed from that point in the next build.
+         - $HOME/build_dials/modules/dxtbx/.travis/build-for 40m
+
     - name: "Syntax validation - Python 2.7"
+      addons: false
+      cache: false
       script:
          - python -m compileall -q *
 
     - name: "Syntax validation - Python 3.7"
+      addons: false
+      cache: false
       dist: xenial
       python: 3.7
       script:
          - python3 -m compileall -q *
+
+    - stage: test
+      before_script:
+         # Inject DIALS. Again.
+         - rm -rf $HOME/build_dials/modules/dxtbx
+         - mv $HOME/build/cctbx/dxtbx $HOME/build_dials/modules/dxtbx
+
+         # Enter CCTBX environment
+         - cd $HOME/build_dials/build
+         - . setpaths.sh
+
+         # If needed allow up to further 30 minutes worth of building time
+         - $HOME/build_dials/modules/dxtbx/.travis/build-for 30m if_required
+
+         # Add dials-data to environment
+         # - libtbx.pip install dials-data
+
+      script:
+         # Finally. Do what we are here for. Run tests. Yay.
+         - cd $HOME/build_dials/modules/dxtbx
+         - pytest -ra -n 2 --regression
+
+before_cache:
+  - cd $HOME
+  - rm -rf $HOME/build_dials/modules/dxtbx
