@@ -802,7 +802,7 @@ def compare_experiment(exp1, exp2):
         and exp1.detector == exp2.detector
         and exp1.goniometer == exp2.goniometer
         and exp1.scan == exp2.scan
-        and exp2.profile == exp2.profile
+        and exp1.profile == exp2.profile
         and exp1.scaling_model == exp2.scaling_model
         and exp1.identifier == exp2.identifier
     )
