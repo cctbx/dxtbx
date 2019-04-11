@@ -141,6 +141,10 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("__contains__", experiment_contains_pointers::object())
       .def("__eq__", &Experiment::operator==)
       .def("is_consistent", &Experiment::is_consistent)
+      .def("is_still", &Experiment::is_still,
+           "Check if this experiment represents a still image")
+      .def("is_sweep", &Experiment::is_sweep,
+           "Check if this experiment represents swept rotation image(s)")
       .def_pickle(ExperimentPickleSuite());
   }
 

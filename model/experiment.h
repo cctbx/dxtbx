@@ -152,6 +152,20 @@ namespace dxtbx { namespace model {
     }
 
     /**
+     * Check if this experiment represents a still image
+     */
+    bool is_still() const {
+      return !goniometer_ || !scan_ || scan_->get_oscillation_range()[1] == 0.0;
+    }
+
+    /**
+     * Check if this experiment represents swept rotation image(s)
+     */
+    bool is_sweep() const {
+      return !is_still();
+    }
+
+    /**
      * Set the beam model
      */
     void set_beam(boost::shared_ptr<BeamBase> beam) {

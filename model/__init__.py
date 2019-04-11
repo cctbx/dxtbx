@@ -490,45 +490,12 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         return list(OrderedSet([e.imageset for e in self if e.imageset is not None]))
 
     def all_stills(self):
-        """ Check if all the experiments are stills """
-
-        def is_still(e):
-            if (
-                e.goniometer is None
-                or e.scan is None
-                or e.scan.get_oscillation()[1] == 0
-            ):
-                return True
-            return False
-
-        assert len(self) > 0
-        result = True
-        for e in self:
-            if not is_still(e):
-                result = False
-                break
-
-        return result
+        """Check if all the experiments are stills"""
+        return all(exp.is_still() for exp in self)
 
     def all_sweeps(self):
-        """ Check if all the experiments are from sweeps """
-
-        def is_still(e):
-            if (
-                e.goniometer is None
-                or e.scan is None
-                or e.scan.get_oscillation()[1] == 0
-            ):
-                return True
-            return False
-
-        assert len(self) > 0
-        result = True
-        for e in self:
-            if is_still(e):
-                result = False
-                break
-        return result
+        """Check if all the experiments are from sweeps"""
+        return all(exp.is_sweep() for exp in self)
 
     def to_dict(self):
         """ Serialize the experiment list to dictionary. """
