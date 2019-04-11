@@ -74,8 +74,6 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
         MARImage._read_header_asserts = lambda self: None
         FormatTIFFRayonix.__init__(self, image_file, **kwargs)
 
-        return
-
     ####################################################################
     #                                                                  #
     # Helper methods to get all of the values out of the TIFF header   #
@@ -113,9 +111,6 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
 
     def _get_rayonix_scan_angles(self):
         return check(FormatTIFFRayonix._get_rayonix_scan_angles(self))
-
-    def _get_rayonix_detector_rotations(self):
-        return check(FormatTIFFRayonix._get_rayonix_detector_rotations(self))
 
 
 if __name__ == "__main__":

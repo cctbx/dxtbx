@@ -12,13 +12,17 @@ class FormatHDF5Dectris(FormatHDF5):
 
     @staticmethod
     def understand(image_file):
-        return False
-        try:
-            tag = FormatHDF5Dectris.open_file(image_file, "rb").read(8)
-        except IOError:
-            return False
 
-        return tag == "\211HDF\r\n\032\n"
+        ## Format class permanently disabled.
+
+        return False
+
+        # try:
+        #     tag = FormatHDF5Dectris.open_file(image_file, "rb").read(8)
+        # except IOError:
+        #     return False
+        #
+        # return tag == "\211HDF\r\n\032\n"
 
     def __init__(self, image_file, **kwargs):
 

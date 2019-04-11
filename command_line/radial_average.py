@@ -64,7 +64,6 @@ def distance(a, b):
 def run(args, imageset=None):
     from xfel import radial_average
     from scitbx.array_family import flex
-    import os, sys
     from dxtbx.datablock import DataBlockFactory
     from dxtbx.model.experiment_list import ExperimentListFactory
 
@@ -93,7 +92,7 @@ def run(args, imageset=None):
         if (
             params.file_path is None
             or len(params.file_path) == 0
-            or not all([os.path.isfile(f) for f in params.file_path])
+            or not all(os.path.isfile(f) for f in params.file_path)
         ):
             master_phil.show()
             raise Usage(

@@ -9,6 +9,9 @@
 
 from __future__ import absolute_import, division, print_function
 
+import sys
+import math
+
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 
 # import pycbf
@@ -56,8 +59,6 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
-
-        import libtbx
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
@@ -99,7 +100,6 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
             from dials.util.masking import GoniometerShadowMaskGenerator
             from scitbx.array_family import flex
-            import math
 
             # Simple model of cone around goniometer phi axis
             # Exact values don't matter, only the ratio of height/radius
@@ -121,8 +121,6 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
             coords = flex.vec3_double(zip(x, y, z))
             coords.insert(0, (0, 0, 0))
 
-            if goniometer is None:
-                goniometer = self.get_goniometer()
             return GoniometerShadowMaskGenerator(
                 goniometer, coords, flex.size_t(len(coords), 0)
             )
@@ -134,8 +132,5 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFFullPilatus.understand(arg))

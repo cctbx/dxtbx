@@ -549,8 +549,6 @@ class ImageSetFactory(object):
                     format_class = Format
                 else:
                     format_class = FormatMultiImage
-        else:
-            format_class = format_class
 
         imageset = format_class.get_imageset(
             filenames,

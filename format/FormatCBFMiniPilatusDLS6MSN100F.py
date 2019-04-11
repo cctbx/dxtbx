@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-# FormatCBFMiniPilatusDLS6MSN100.py
-#   Copyright (C) 2014 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
 #
 # An implementation of the CBF image reader for Pilatus images, from the Pilatus
 # 6M SN 100 currently on Diamond I04.
@@ -56,17 +51,17 @@ class FormatCBFMiniPilatusDLS6MSN100F(FormatCBFMiniPilatus):
         """Check to see if this looks like an Pilatus mini CBF format image,
         i.e. we can make sense of it."""
 
-        return False
+        ## Format class permanently disabled.
 
-        header = FormatCBFMiniPilatus.get_cbf_header(image_file)
+        # header = FormatCBFMiniPilatus.get_cbf_header(image_file)
 
-        for record in header.split("\n"):
-            if (
-                "# Detector" in record
-                and "PILATUS" in record
-                and "S/N 60-0100 Diamond" in header
-            ):
-                return True
+        # for record in header.split("\n"):
+        #     if (
+        #         "# Detector" in record
+        #         and "PILATUS" in record
+        #         and "S/N 60-0100 Diamond" in header
+        #     ):
+        #         return True
 
         return False
 
@@ -82,8 +77,6 @@ class FormatCBFMiniPilatusDLS6MSN100F(FormatCBFMiniPilatus):
         FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
 
         self._raw_data = None
-
-        return
 
     # FIXME this beamline has a kappa goniometer so should really be supporting this
     # in here...

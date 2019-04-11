@@ -11,15 +11,15 @@
 #
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.detector_superpose
 #
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+
+import math
+
 from scitbx.array_family import flex
 from scitbx.matrix import col
 from libtbx.phil import parse
 from libtbx.utils import Sorry
 import libtbx.load_env
-import math
 from dxtbx.model.experiment_list import ExperimentListFactory
 from scitbx.array_family import flex
 from scitbx.math.superpose import least_squares_fit
@@ -207,10 +207,6 @@ class Script(object):
                 ori = col(group.get_origin())
 
                 group.set_frame(lsq.r * fast, lsq.r * slow, (lsq.r * ori) + lsq.t)
-
-                fast = col(group.get_fast_axis())
-                slow = col(group.get_slow_axis())
-                ori = col(group.get_origin())
 
             if not params.repeat_until_converged:
                 break

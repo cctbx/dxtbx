@@ -41,7 +41,6 @@ class FormatTIFFBruker(FormatTIFF):
             endian = ">"
 
         _I = endian + "I"
-        _i = endian + "i"
 
         _width = struct.unpack(_I, bytes[1024 + 80 : 1024 + 84])[0]
         _height = struct.unpack(_I, bytes[1024 + 84 : 1024 + 88])[0]
@@ -122,7 +121,7 @@ class FormatTIFFBruker(FormatTIFF):
         that the offsets and rotations are all 0.0."""
 
         starts, ends, offset, width = self._get_bruker_scan_angles()
-        rotations = self._get_bruker_detector_rotations()
+        # rotations = self._get_bruker_detector_rotations()
 
         # in here either (i) use rotations or (ii) assert that they are all small
 
@@ -239,18 +238,20 @@ class FormatTIFFBruker(FormatTIFF):
     def _get_bruker_timestamp(self):
         """Get the image acquisition timestamp."""
 
-        timestamp = self._tiff_header_bytes[2368:2400]
+        return datetime.datetime(1970, 1, 1, 1, 1, 1).timetuple()
 
-        if not timestamp.strip() or True:
-            return datetime.datetime(1970, 1, 1, 1, 1, 1).timetuple()
+        # timestamp = self._tiff_header_bytes[2368:2400]
 
-        month = int(timestamp[:2])
-        day = int(timestamp[2:4])
-        hour = int(timestamp[4:6])
-        minute = int(timestamp[6:8])
-        year = int(timestamp[8:12])
-        second = int(timestamp[13:15])
-        return datetime.datetime(year, month, day, hour, minute, second).timetuple()
+        # if not timestamp.strip():
+        #    return datetime.datetime(1970, 1, 1, 1, 1, 1).timetuple()
+
+        # month = int(timestamp[:2])
+        # day = int(timestamp[2:4])
+        # hour = int(timestamp[4:6])
+        # minute = int(timestamp[6:8])
+        # year = int(timestamp[8:12])
+        # second = int(timestamp[13:15])
+        # return datetime.datetime(year, month, day, hour, minute, second).timetuple()
 
     def _get_bruker_scan_angles(self):
         """Get the scan angles for: twotheta, omega, chi, kappa, phi, delta,

@@ -253,7 +253,6 @@ class DataBlock(object):
             else:
                 imageset = collections.OrderedDict()
                 if isinstance(iset, dxtbx.imageset.ImageGrid):
-                    identifier = "ImageGrid"
                     imageset["__id__"] = "ImageGrid"
                     imageset["grid_size"] = iset.get_grid_size()
                 else:
@@ -869,7 +868,6 @@ class DataBlockDictImporter(object):
                 elif "master" in imageset:
                     template = load_path(imageset["master"], directory=directory)
                     i0, i1 = scan.get_image_range()
-                    indices = imageset["images"]
                     if check_format == False:
                         format_class = FormatMultiImage
                     else:
@@ -1101,7 +1099,6 @@ class DataBlockFactory(object):
     def from_json(string, check_format=True, directory=None):
         """ Decode a datablock from JSON string. """
         from dxtbx.serialize.load import _decode_dict
-        import json
 
         return DataBlockFactory.from_dict(
             json.loads(string, object_hook=_decode_dict),
@@ -1201,9 +1198,7 @@ class DataBlockDumper(object):
 
     def as_json(self, filename=None, compact=False):
         """ Dump datablock as json. """
-        from os.path import splitext
 
-        ext = splitext(filename)[1]
         dictionary = [db.to_dict() for db in self._datablocks]
         if compact:
             json.dump(

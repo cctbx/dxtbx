@@ -30,7 +30,6 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
             image_file
         )
 
-        import struct
         from scitbx.matrix import col
         from dxtbx.format.FormatTIFFHelpers import LITTLE_ENDIAN, BIG_ENDIAN
 
@@ -42,9 +41,9 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
         )
         detector_center_px = 0.5 * detector_size_pixels
 
-        detector_pixel_sz_mm = 1.0e-6 * col(  # convert from nano to milli
-            struct.unpack(format + "ii", bytes[offset + 772 : offset + 780])
-        )
+        # detector_pixel_sz_mm = 1.0e-6 * col(  # convert from nano to milli
+        #     struct.unpack(format + "ii", bytes[offset + 772 : offset + 780])
+        # )
 
         header_beam_center = 0.001 * col(  # Rayonix says this should be pixels
             struct.unpack(format + "ii", bytes[offset + 644 : offset + 652])
@@ -75,7 +74,7 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
         in the image header. In the first instance assume this is a single
         axis annd raise exception otherwise."""
 
-        starts, ends, offset, width = self._get_rayonix_scan_angles()
+        # starts, ends, offset, width = self._get_rayonix_scan_angles()
 
         # not testing as this the CLS images are not properly structured...
         # and also don't have a serial number in (FAIL)

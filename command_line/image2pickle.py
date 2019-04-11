@@ -1,5 +1,4 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.image2pickle
 # LIBTBX_SET_DISPATCHER_NAME cxi.image2pickle
@@ -7,7 +6,11 @@ from __future__ import print_function
 # Convert images of any extant format to pickle files suitable for processing with
 # cxi.index.  Note, oscillation values are not preserved.
 
-import dxtbx, sys, os, math
+import math
+import os
+import sys
+
+import dxtbx
 import libtbx.option_parser
 from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
 from libtbx import easy_pickle
@@ -163,7 +166,6 @@ def run(argv=None):
             img = dxtbx.load(imgpath)
         except IOError:
             img = None
-            pass
 
         if img is None:
             import numpy as np
