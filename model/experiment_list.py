@@ -1,15 +1,47 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
-import pkg_resources
+import json
+from copy import deepcopy
+from os.path import abspath, dirname, splitext
 
-from dxtbx.model import Experiment, ExperimentList
-from dxtbx.datablock import AutoEncoder
-from dxtbx.datablock import BeamComparison  # noqa: F401, exported symbol
-from dxtbx.datablock import DataBlockFactory
-from dxtbx.datablock import DetectorComparison  # noqa: F401, exported symbol
-from dxtbx.datablock import GoniometerComparison  # noqa: F401, exported symbol
-from dxtbx.datablock import SweepDiff  # noqa: F401, exported symbol
+import pkg_resources
+import six.moves.cPickle as pickle
+
+from dxtbx.datablock import (
+    AutoEncoder,
+    BeamComparison,
+    DataBlockFactory,
+    DataBlockTemplateImporter,
+    DetectorComparison,
+    GoniometerComparison,
+    SweepDiff,
+)
+from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.format.image import ImageBool, ImageDouble
+from dxtbx.imageset import ImageGrid, ImageSet, ImageSetFactory, ImageSweep
+from dxtbx.model import (
+    BeamFactory,
+    CrystalFactory,
+    DetectorFactory,
+    Experiment,
+    ExperimentList,
+    GoniometerFactory,
+    ProfileModelFactory,
+    ScanFactory,
+)
+from dxtbx.serialize import xds
+from dxtbx.serialize.filename import load_path
+from dxtbx.serialize.load import _decode_dict
+from dxtbx.sweep_filenames import template_image_range
+
+__all__ = [
+    "BeamComparison",
+    "DetectorComparison",
+    "ExperimentListFactory",
+    "GoniometerComparison",
+    "SweepDiff",
+]
 
 
 class InvalidExperimentListError(RuntimeError):
@@ -28,8 +60,6 @@ class ExperimentListDict(object):
 
     def __init__(self, obj, check_format=True, directory=None):
         """ Initialise. Copy the dictionary. """
-        from copy import deepcopy
-
         # Basic check: This is a dict-like object. This can happen if e.g. we
         # were passed a DataBlock list instead of an ExperimentList dictionary
         if isinstance(obj, list) or not hasattr(obj, "get"):
@@ -62,9 +92,7 @@ class ExperimentListDict(object):
         self._scalelist = self._extract_models("scaling_model")
 
         # Go through all the imagesets and make sure the dictionary
-        # references by an index rather than a file path. Experiments
-        # referencing the same imageset will get different objects
-        # due to the fact that we can have different models
+        # references by an index rather than a file path.
         self._ilist = self._extract_imagesets()
 
         # Extract all the experiments
@@ -108,7 +136,22 @@ class ExperimentListDict(object):
         return mlist
 
     def _extract_imagesets(self):
-        """ Helper function, extract the imagesets. """
+        """Extract imageset objects from the source.
+
+        This function does resolving of an (old) method of imageset lookup
+        e.g. it was valid to have a string as the imageset value in an
+        experiment instead of an int - in which case the imageset was
+        loaded from the named file in the target directory.
+
+        If any experiments point to a file in this way, the imageset is
+        loaded and the experiment is rewritted with an integer pointing
+        to the new ImageSet in the returned list.
+
+        Returns:
+            List[ImageSet]:
+                The ordered list of ImageSets that the Experiment index
+                points to.
+        """
 
         # Extract all the model list
         mlist = self._obj.get("imageset", [])
@@ -135,13 +178,31 @@ class ExperimentListDict(object):
         # Return the model list
         return mlist
 
+    def _load_pickle_path(self, imageset_data, param):
+        # type: (Dict, str) -> Tuple[Optional[str], Any]
+        """Read a filename from an imageset dict and load if required.
+
+        Args:
+            imageset_data: The dictionary holding imageset information
+            param: The key name to lookup in the imageset dictionary
+
+        Returns:
+            A tuple of (filename, data) where data has been loaded from
+            the pickle file. If there is no key entry then (None, None)
+            is returned. If the configuration parameter check_format is
+            False then (filename, None) will be returned.
+        """
+        if param not in imageset_data:
+            return None, None
+
+        filename = load_path(imageset_data[param], directory=self._directory)
+        if self._check_format and filename:
+            with open(filename, "rb") as fh:
+                return filename, pickle.load(fh)
+        return filename, None
+
     def _extract_experiments(self):
         """ Helper function. Extract the experiments. """
-        from dxtbx.imageset import ImageSweep, ImageSet, ImageGrid
-        from dxtbx.serialize.filename import load_path
-        import six.moves.cPickle as pickle
-        from dxtbx.format.image import ImageBool, ImageDouble
-
         # Map of imageset/scan pairs
         imagesets = {}
 
@@ -166,7 +227,8 @@ class ExperimentListDict(object):
             key = (eobj.get("imageset"), eobj.get("scan"))
             try:
                 imageset = imagesets[key]
-            except Exception:
+            except KeyError:
+                # This imageset hasn't been loaded yet - create it
                 imageset = ExperimentListDict.model_or_none(
                     self._ilist, eobj, "imageset"
                 )
@@ -177,66 +239,16 @@ class ExperimentListDict(object):
                         format_kwargs = imageset["params"]
                     else:
                         format_kwargs = {}
-                    if "mask" in imageset and imageset["mask"] is not None:
-                        mask_filename = load_path(
-                            imageset["mask"], directory=self._directory
-                        )
-                        if self._check_format and mask_filename is not "":
-                            with open(mask_filename, "rb") as fh:
-                                mask = pickle.load(fh)
-                        else:
-                            mask = None
-                    else:
-                        mask_filename = None
-                        mask = None
-                    if "gain" in imageset and imageset["gain"] is not None:
-                        gain_filename = load_path(
-                            imageset["gain"], directory=self._directory
-                        )
-                        if self._check_format and gain_filename is not "":
-                            with open(gain_filename, "rb") as fh:
-                                gain = pickle.load(fh)
-                        else:
-                            gain = None
-                    else:
-                        gain_filename = None
-                        gain = None
-                    if "pedestal" in imageset and imageset["pedestal"] is not None:
-                        pedestal_filename = load_path(
-                            imageset["pedestal"], directory=self._directory
-                        )
-                        if self._check_format and pedestal_filename is not "":
-                            with open(pedestal_filename, "rb") as fh:
-                                pedestal = pickle.load(fh)
-                        else:
-                            pedestal = None
-                    else:
-                        pedestal_filename = None
-                        pedestal = None
-                    if "dx" in imageset and imageset["dx"] is not None:
-                        dx_filename = load_path(
-                            imageset["dx"], directory=self._directory
-                        )
-                        if dx_filename is not "":
-                            with open(dx_filename, "rb") as fh:
-                                dx = pickle.load(fh)
-                        else:
-                            dx = None
-                    else:
-                        dx_filename = None
-                        dx = None
-                    if "dy" in imageset and imageset["dy"] is not None:
-                        dy_filename = load_path(
-                            imageset["dy"], directory=self._directory
-                        )
-                        if dy_filename is not "":
-                            with open(dy_filename, "rb") as fh:
-                                dy = pickle.load(fh)
-                        else:
-                            dy = None
-                    else:
-                        dy_filename = None
-                        dy = None
+
+                    # Load the external lookup data
+                    mask_filename, mask = self._load_pickle_path(imageset, "mask")
+                    gain_filename, gain = self._load_pickle_path(imageset, "gain")
+                    pedestal_filename, pedestal = self._load_pickle_path(
+                        imageset, "pedestal"
+                    )
+                    dx_filename, dx = self._load_pickle_path(imageset, "dx")
+                    dy_filename, dy = self._load_pickle_path(imageset, "dy")
+
                     if imageset["__id__"] == "ImageSet":
                         imageset = self._make_stills(
                             imageset, format_kwargs=format_kwargs
@@ -353,9 +365,6 @@ class ExperimentListDict(object):
 
     def _make_stills(self, imageset, format_kwargs=None):
         """ Make a still imageset. """
-        from dxtbx.imageset import ImageSetFactory
-        from dxtbx.serialize.filename import load_path
-
         filenames = [
             load_path(p, directory=self._directory) for p in imageset["images"]
         ]
@@ -373,8 +382,6 @@ class ExperimentListDict(object):
 
     def _make_grid(self, imageset, format_kwargs=None):
         """ Make a still imageset. """
-        from dxtbx.imageset import ImageGrid
-
         grid_size = imageset["grid_size"]
         return ImageGrid.from_imageset(
             self._make_stills(imageset, format_kwargs=format_kwargs), grid_size
@@ -390,11 +397,6 @@ class ExperimentListDict(object):
         format_kwargs=None,
     ):
         """ Make an image sweep. """
-        from dxtbx.sweep_filenames import template_image_range
-        from dxtbx.imageset import ImageSetFactory
-        from dxtbx.serialize.filename import load_path
-        from dxtbx.format.FormatMultiImage import FormatMultiImage
-
         # Get the template format
         template = load_path(imageset["template"], directory=self._directory)
 
@@ -434,43 +436,31 @@ class ExperimentListDict(object):
     @staticmethod
     def _beam_from_dict(obj):
         """ Get a beam from a dictionary. """
-        from dxtbx.model import BeamFactory
-
         return BeamFactory.from_dict(obj)
 
     @staticmethod
     def _detector_from_dict(obj):
         """ Get the detector from a dictionary. """
-        from dxtbx.model import DetectorFactory
-
         return DetectorFactory.from_dict(obj)
 
     @staticmethod
     def _goniometer_from_dict(obj):
         """ Get the goniometer from a dictionary. """
-        from dxtbx.model import GoniometerFactory
-
         return GoniometerFactory.from_dict(obj)
 
     @staticmethod
     def _scan_from_dict(obj):
         """ Get the scan from a dictionary. """
-        from dxtbx.model import ScanFactory
-
         return ScanFactory.from_dict(obj)
 
     @staticmethod
     def _crystal_from_dict(obj):
         """ Get the crystal from a dictionary. """
-        from dxtbx.model import CrystalFactory
-
         return CrystalFactory.from_dict(obj)
 
     @staticmethod
     def _profile_from_dict(obj):
         """ Get the profile from a dictionary. """
-        from dxtbx.model import ProfileModelFactory
-
         return ProfileModelFactory.from_dict(obj)
 
     @staticmethod
@@ -483,10 +473,6 @@ class ExperimentListDict(object):
     @staticmethod
     def _from_file(filename, directory=None):
         """ Load a model dictionary from a file. """
-        from dxtbx.serialize.load import _decode_dict
-        from dxtbx.serialize.filename import load_path
-        import json
-
         filename = load_path(filename, directory=directory)
         try:
             with open(filename, "r") as infile:
@@ -504,9 +490,6 @@ class ExperimentListDumper(object):
 
     def as_json(self, filename=None, compact=False, split=False):
         """ Dump experiment list as json """
-        import json
-        from os.path import splitext
-
         # Get the dictionary and get the JSON string
         dictionary = self._experiment_list.to_dict()
 
@@ -610,8 +593,6 @@ class ExperimentListDumper(object):
 
     def as_pickle(self, filename=None, **kwargs):
         """ Dump experiment list as pickle. """
-        import six.moves.cPickle as pickle
-
         # Get the pickle string
         text = pickle.dumps(self._experiment_list, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -624,8 +605,6 @@ class ExperimentListDumper(object):
 
     def as_file(self, filename, **kwargs):
         """ Dump experiment list as file. """
-        from os.path import splitext
-
         ext = splitext(filename)[1]
         j_ext = [".json"]
         p_ext = [".p", ".pkl", ".pickle"]
@@ -702,8 +681,6 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_imageset_and_crystal(imageset, crystal, load_models=True):
         """ Load an experiment list from an imageset and crystal. """
-        from dxtbx.imageset import ImageSweep
-
         if isinstance(imageset, ImageSweep):
             return ExperimentListFactory.from_sweep_and_crystal(
                 imageset, crystal, load_models
@@ -788,7 +765,19 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_dict(obj, check_format=True, directory=None):
-        """ Load an experiment list from a dictionary. """
+        """Load an experiment list from a dictionary.
+
+        Args:
+            obj (dict):
+                Dictionary containing either ExperimentList or DataBlock
+                structure.
+            check_format (bool):
+                If True, the file will be read to verify metadata.
+            directory (str):
+
+        Returns:
+            ExperimentList: The dictionary converted
+        """
 
         try:
             experiments = ExperimentList()
@@ -816,9 +805,6 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_json(text, check_format=True, directory=None):
         """ Load an experiment list from JSON. """
-        from dxtbx.serialize.load import _decode_dict
-        import json
-
         return ExperimentListFactory.from_dict(
             json.loads(text, object_hook=_decode_dict),
             check_format=check_format,
@@ -828,8 +814,6 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_json_file(filename, check_format=True):
         """ Load an experiment list from a json file. """
-        from os.path import dirname, abspath
-
         filename = abspath(filename)
         directory = dirname(filename)
         with open(filename, "r") as infile:
@@ -840,8 +824,6 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_pickle_file(filename):
         """ Decode an experiment list from a pickle file. """
-        import six.moves.cPickle as pickle
-
         with open(filename, "rb") as infile:
             obj = pickle.load(infile)
         assert isinstance(obj, ExperimentList)
@@ -850,8 +832,6 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_xds(xds_inp, xds_other):
         """ Generate an experiment list from XDS files. """
-        from dxtbx.serialize import xds
-
         # Get the sweep from the XDS files
         sweep = xds.to_imageset(xds_inp, xds_other)
 
@@ -885,8 +865,6 @@ class ExperimentListTemplateImporter(object):
     """ A class to import an experiment list from a template. """
 
     def __init__(self, templates, verbose=False, **kwargs):
-        from dxtbx.datablock import DataBlockTemplateImporter
-
         importer = DataBlockTemplateImporter(templates, verbose=verbose, **kwargs)
         self.experiments = ExperimentList()
         for db in importer.datablocks:
