@@ -56,11 +56,16 @@ def _generate_all_test_images():
 
         assert h5py.version, "Supress unused import warnings"
     except ImportError:
-        yield pytest.mark.skip(reason="h5py not found")(special_h5), special_h5
+        yield pytest.param(
+            special_h5, marks=pytest.mark.skip(reason="h5py not found")
+        ), special_h5
     else:
-        yield pytest.mark.skipif(
-            not os.path.isfile(special_h5), reason="LBL-only file not present"
-        )(special_h5), special_h5
+        if os.path.isfile(special_h5):
+            yield special_h5, special_h5
+        else:
+            yield pytest.param(
+                special_h5, marks=pytest.mark.skip(reason="LBL-only file not present")
+            ), special_h5
 
     # Filename patterns to ignore completely
     ignore_files = [
@@ -87,8 +92,11 @@ def _generate_all_test_images():
     except RuntimeError:
         # Have one, skipped placeholder test, if there is no dials_regression
         yield (
-            pytest.mark.skip(reason="dials_regression required for image format tests")(
-                "image_examples"
+            pytest.param(
+                "image_examples",
+                marks=pytest.mark.skip(
+                    reason="dials_regression required for image format tests"
+                ),
             ),
             "image_examples",
         )
