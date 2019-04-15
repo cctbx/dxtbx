@@ -1193,12 +1193,12 @@ class DetectorFactoryFromGroup(object):
 
                 # Get the trusted range of pixel values
                 underload = (
-                    float(nx_detector["undefined_value"][()])
+                    float(nx_detector.handle["undefined_value"][()])
                     if "undefined_value" in nx_detector.handle
                     else -400
                 )
                 overload = (
-                    float(nx_detector["saturation_value"][()])
+                    float(nx_detector.handle["saturation_value"][()])
                     if "saturation_value" in nx_detector.handle
                     else 90000
                 )
