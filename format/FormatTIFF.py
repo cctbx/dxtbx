@@ -34,7 +34,7 @@ class FormatTIFF(Format):
         make sense of it."""
 
         try:
-            width, height, depth, header, order = read_basic_tiff_header(image_file)
+            read_basic_tiff_header(image_file)
             return True
 
         except Exception:

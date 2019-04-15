@@ -149,7 +149,7 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
         in the image header. In the first instance assume this is a single
         axis and raise exception otherwise."""
 
-        starts, ends, offset, width = self._get_rayonix_scan_angles()
+        self._get_rayonix_scan_angles()
 
         return self._goniometer_factory.single_axis_reverse()
 

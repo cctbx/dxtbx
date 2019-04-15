@@ -1,17 +1,15 @@
 from __future__ import absolute_import, division
 
+import math
+
 from dials.util.masking import GoniometerShadowMaskGenerator
 
 
 class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
     def __init__(self, goniometer):
         from scitbx.array_family import flex
-        import math
 
         self.goniometer = goniometer
-
-        coords = flex.vec3_double()
-        axis = flex.size_t()
 
         # FACE A: Sample holder
         #   Defined as semi-circle of radius r(A) = 10 mm (centred on PHI axis)

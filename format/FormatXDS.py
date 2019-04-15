@@ -130,18 +130,12 @@ class FormatXDS(Format):
 
     def _scan(self):
         """Return a working scan instance."""
-        import os
-        from dxtbx.model.scan_helpers import scan_helper_image_formats
-
         # Set the scan parameters
         if self._data_range is not None:
             image_range = tuple(self._data_range)
         else:
             image_range = (self._starting_frame, self._starting_frame)
         oscillation = (self._starting_angle, self._oscillation_range)
-        template = "#"
-        directory = os.path.dirname(self._image_file)
-        format = scan_helper_image_formats.FORMAT_CBF
 
         # Create the scan object
         return self._scan_factory.make_scan(
