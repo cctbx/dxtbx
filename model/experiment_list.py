@@ -225,54 +225,56 @@ class ExperimentListDict(object):
                 self._scalelist, eobj, "scaling_model"
             )
             key = (eobj.get("imageset"), eobj.get("scan"))
+
+            imageset = None
             try:
-                imageset = imagesets[key]
+                imageset = imagesets[key]  # type: ImageSet
             except KeyError:
                 # This imageset hasn't been loaded yet - create it
-                imageset = ExperimentListDict.model_or_none(
+                imageset_data = ExperimentListDict.model_or_none(
                     self._ilist, eobj, "imageset"
-                )
+                )  # type: dict
 
                 # Create the imageset from the input data
-                if imageset is not None:
-                    if "params" in imageset:
-                        format_kwargs = imageset["params"]
+                if imageset_data is not None:
+                    if "params" in imageset_data:
+                        format_kwargs = imageset_data["params"]
                     else:
                         format_kwargs = {}
 
                     # Load the external lookup data
-                    mask_filename, mask = self._load_pickle_path(imageset, "mask")
-                    gain_filename, gain = self._load_pickle_path(imageset, "gain")
+                    mask_filename, mask = self._load_pickle_path(imageset_data, "mask")
+                    gain_filename, gain = self._load_pickle_path(imageset_data, "gain")
                     pedestal_filename, pedestal = self._load_pickle_path(
-                        imageset, "pedestal"
+                        imageset_data, "pedestal"
                     )
-                    dx_filename, dx = self._load_pickle_path(imageset, "dx")
-                    dy_filename, dy = self._load_pickle_path(imageset, "dy")
+                    dx_filename, dx = self._load_pickle_path(imageset_data, "dx")
+                    dy_filename, dy = self._load_pickle_path(imageset_data, "dy")
 
-                    if imageset["__id__"] == "ImageSet":
+                    if imageset_data["__id__"] == "ImageSet":
                         imageset = self._make_stills(
-                            imageset, format_kwargs=format_kwargs
+                            imageset_data, format_kwargs=format_kwargs
                         )
-                    elif imageset["__id__"] == "ImageGrid":
+                    elif imageset_data["__id__"] == "ImageGrid":
                         imageset = self._make_grid(
-                            imageset, format_kwargs=format_kwargs
+                            imageset_data, format_kwargs=format_kwargs
                         )
-                    elif imageset["__id__"] == "ImageSweep":
+                    elif imageset_data["__id__"] == "ImageSweep":
                         imageset = self._make_sweep(
-                            imageset,
+                            imageset_data,
                             beam=beam,
                             detector=detector,
                             goniometer=goniometer,
                             scan=scan,
                             format_kwargs=format_kwargs,
                         )
-                    elif imageset["__id__"] == "MemImageSet":
-                        imageset = self._make_mem_imageset(imageset)
+                    elif imageset_data["__id__"] == "MemImageSet":
+                        imageset = self._make_mem_imageset(imageset_data)
                     else:
                         raise RuntimeError("Unknown imageset type")
 
-                    # Set the external lookup
                     if imageset is not None:
+                        # Set the external lookup
                         if mask_filename is None:
                             mask_filename = ""
                         if gain_filename is None:
@@ -314,31 +316,31 @@ class ExperimentListDict(object):
                         imageset.external_lookup.dy.data = dy
                         imageset.external_lookup.dy.filename = dy_filename
 
-                    # Update the imageset models
-                    if isinstance(imageset, ImageSweep):
-                        imageset.set_beam(beam)
-                        imageset.set_detector(detector)
-                        imageset.set_goniometer(goniometer)
-                        imageset.set_scan(scan)
-                    elif isinstance(imageset, ImageSet):
-                        for i in range(len(imageset)):
-                            imageset.set_beam(beam, i)
-                            imageset.set_detector(detector, i)
-                            imageset.set_goniometer(goniometer, i)
-                            imageset.set_scan(scan, i)
-                    elif isinstance(imageset, ImageGrid):
-                        for i in range(len(imageset)):
-                            imageset.set_beam(beam, i)
-                            imageset.set_detector(detector, i)
-                            imageset.set_goniometer(goniometer, i)
-                            imageset.set_scan(scan, i)
-                    else:
-                        pass
+                        # Update the imageset models
+                        if isinstance(imageset, ImageSweep):
+                            imageset.set_beam(beam)
+                            imageset.set_detector(detector)
+                            imageset.set_goniometer(goniometer)
+                            imageset.set_scan(scan)
+                        elif isinstance(imageset, ImageSet):
+                            for i in range(len(imageset)):
+                                imageset.set_beam(beam, i)
+                                imageset.set_detector(detector, i)
+                                imageset.set_goniometer(goniometer, i)
+                                imageset.set_scan(scan, i)
+                        elif isinstance(imageset, ImageGrid):
+                            for i in range(len(imageset)):
+                                imageset.set_beam(beam, i)
+                                imageset.set_detector(detector, i)
+                                imageset.set_goniometer(goniometer, i)
+                                imageset.set_scan(scan, i)
+                        else:
+                            pass
 
-                    if imageset is not None:
                         imageset.update_detector_px_mm_data()
 
-                # Add the imageset to the dict
+                # Add the imageset to the dict - even if empty - as this will
+                # prevent a duplicated attempt at reconstruction
                 imagesets[key] = imageset
 
             # Append the experiment
