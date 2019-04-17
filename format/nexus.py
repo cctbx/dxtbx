@@ -140,7 +140,7 @@ class check_attr(object):
             dtype = type(dset.attrs[self.name])
             if not isinstance(dset.attrs[self.name], self.dtype):
                 raise RuntimeError(
-                    "attribute '%s' has type %s, expected %s"
+                    "attribute '%s' of %s has type %s, expected %s"
                     % (self.name, dset.name, dtype, self.dtype)
                 )
 
@@ -232,7 +232,7 @@ def visit_dependencies(nx_file, item, visitor=None):
         if depends_on in dependency_chain:
             raise RuntimeError("'%s' is a circular dependency" % depends_on)
         try:
-            item = nx_file[depends_on]
+            _ = nx_file[depends_on]
         except Exception:
             raise RuntimeError("'%s' is missing from nx_file" % depends_on)
         dependency_chain.append(depends_on)
@@ -253,8 +253,6 @@ def construct_vector(nx_file, item, vector=None):
             self.vector = matrix.col(vector)
 
         def __call__(self, nx_file, depends_on):
-            from scitbx import matrix
-
             item = nx_file[depends_on]
             value = item[()]
             units = item.attrs["units"]
@@ -312,7 +310,6 @@ def construct_axes(nx_file, item, vector=None):
     """
     Walk the dependency chain and create the absolute vector
     """
-    from scitbx import matrix
     from scitbx.array_family import flex
 
     class Visitor(object):
@@ -826,7 +823,6 @@ class NXmxEntry(object):
 class NXmxReader(object):
     """
     A hacky class to read an NXmx file
-
     """
 
     def __init__(self, filename=None, handle=None):
@@ -908,7 +904,6 @@ class NXmxReader(object):
 def is_nexus_file(filename):
     """
     A hacky function to check if this is a nexus file
-
     """
     import h5py
 
@@ -925,7 +920,6 @@ def is_nexus_file(filename):
 class BeamFactory(object):
     """
     A class to create a beam model from NXmx stuff
-
     """
 
     def __init__(self, obj, index=None):
@@ -955,7 +949,6 @@ class BeamFactory(object):
 def get_change_of_basis(transformation):
     """
     Get the 4x4 homogenous coordinate matrix for a given NXtransformation.
-
     """
     from scitbx.matrix import col, sqr
 
@@ -1044,7 +1037,6 @@ def get_depends_on_chain_using_equipment_components(transformation):
     has.  If there are multiple dependencies in a single 'level', as indicated
     by grouping them using equipment_component, then the dependency chain will
     skip the intermediate dependencies, listing only the first at each level.
-
     """
     chain = []
     current = transformation
@@ -1073,7 +1065,6 @@ def get_cummulative_change_of_basis(transformation):
     Returns (parent, change of basis matrix), where parent is None if the
     transformation's depends_on is ".".  Parent is the tranformation that the
     top level transformation in this chain of transformations depends on.
-
     """
 
     cob = get_change_of_basis(transformation)
@@ -1097,23 +1088,18 @@ def get_cummulative_change_of_basis(transformation):
 class DetectorFactoryFromGroup(object):
     """
     A class to create a detector model from a NXdetector_group
-
     """
 
     def __init__(self, instrument, beam, idx=None):
-        from dxtbx.model import Detector, Panel
+        from dxtbx.model import Detector
         from cctbx.eltbx import attenuation_coefficient
         from dxtbx.model import ParallaxCorrectedPxMmStrategy
         from scitbx import matrix
-
-        if idx is None:
-            idx = 0
 
         assert len(instrument.detector_groups) == 1, "Multiple detectors not supported"
 
         nx_group = instrument.detector_groups[0].handle
         group_names = nx_group["group_names"]
-        group_indices = nx_group["group_index"]
         group_parent = nx_group["group_parent"]
 
         # Verify the NXdetector objects specified by the detector group are present
@@ -1168,7 +1154,6 @@ class DetectorFactoryFromGroup(object):
                 if len(find_class(nx_detector_module.handle, "NXdetector_module")) == 0:
                     modules.append(nx_detector_module)
 
-            n_modules = len(modules)
             # depends_on field for a detector will have NxM entries in it, where
             # N = number of images and M = number of detector modules
 
@@ -1182,8 +1167,9 @@ class DetectorFactoryFromGroup(object):
 
                 # Temporary check for unsupported term. AFAIK undefined_value isn't in any existing nexus files.
                 # See https://github.com/nexusformat/definitions/issues/656 for the proposed replacement.
-                assert "undefined_value" not in nx_detector.handle, \
-                  "undefined_value not an NXmx term. See nexusformat/definitions#656."
+                assert (
+                    "undefined_value" not in nx_detector.handle
+                ), "undefined_value not an NXmx term. See nexusformat/definitions#656."
 
                 # Get the trusted range of pixel values
                 underload = (
@@ -1326,7 +1312,6 @@ def known_backwards(image_size):
 class DetectorFactory(object):
     """
     A class to create a detector model from NXmx stuff
-
     """
 
     def __init__(self, obj, beam):
@@ -1446,7 +1431,6 @@ class DetectorFactory(object):
 class GoniometerFactory(object):
     """
     A class to create a goniometer model from NXmx stuff
-
     """
 
     def __init__(self, obj):
@@ -1483,7 +1467,6 @@ def find_goniometer_rotation(obj):
 class ScanFactory(object):
     """
     A class to create a scan model from NXmx stuff
-
     """
 
     def __init__(self, obj, detector_obj):
@@ -1544,7 +1527,6 @@ class ScanFactory(object):
 class CrystalFactory(object):
     """
     A class to create a crystal model from NXmx stuff
-
     """
 
     def __init__(self, obj):
@@ -1577,7 +1559,6 @@ class DataList(object):
     """
     A class to make it easier to access the data from multiple datasets.
     FIXME The file should be fixed and this should be removed
-
     """
 
     def __init__(self, obj, max_size=0):
@@ -1622,7 +1603,6 @@ class DetectorGroupDataList(object):
     """
     A class to make it easier to access the data from multiple datasets.
     This version brings in all the panels from a detector group with several detectors.
-
     """
 
     def __init__(self, datalists):
@@ -1649,7 +1629,6 @@ def get_detector_module_slices(detector):
     NXdetector.  Returns a list of lists, where each sublist is a list of slices in
     slow to fast order.
     Assumes slices are stored in NeXus in slow to fast order.
-
     """
     # get the set of leaf modules (handles nested modules)
     modules = []
@@ -1686,7 +1665,6 @@ class MultiPanelDataList(object):
     """
     A class to make it easier to access the data from multiple datasets.
     Also handles multi-panel data as described in a series of NXdetector_modules
-
     """
 
     def __init__(self, datasets, detector):
@@ -1796,7 +1774,6 @@ class DetectorGroupDataFactory(DataFactory):
 class MaskFactory(object):
     """
     A class to create an object to hold the pixel mask data
-
     """
 
     def __init__(self, objects, index=None):
