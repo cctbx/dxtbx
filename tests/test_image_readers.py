@@ -154,12 +154,12 @@ def read_multitile_cbf_image(cbf_image):
 
         if types[i] == "signed 32-bit integer":
             array_string = cbf.get_integerarray_as_string()
-            array = flex.int(numpy.fromstring(array_string, numpy.int32))
+            array = flex.int(numpy.frombuffer(array_string, numpy.int32))
             parameters = cbf.get_integerarrayparameters_wdims_fs()
             array_size = (parameters[11], parameters[10], parameters[9])
         elif types[i] == "signed 64-bit real IEEE":
             array_string = cbf.get_realarray_as_string()
-            array = flex.double(numpy.fromstring(array_string, numpy.float))
+            array = flex.double(numpy.frombuffer(array_string, numpy.float))
             parameters = cbf.get_realarrayparameters_wdims_fs()
             array_size = (parameters[7], parameters[6], parameters[5])
         else:

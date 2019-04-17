@@ -9,8 +9,22 @@
 
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from boost.python import streambuf
+from dxtbx import (
+    IncorrectFormatError,
+    is_big_endian,
+    read_uint8,
+    read_uint16,
+    read_uint16_bs,
+    read_uint32,
+    read_uint32_bs,
+)
 from dxtbx.format.FormatBruker import FormatBruker
+from libtbx.utils import Sorry
 from scitbx import matrix
+from scitbx.array_family import flex
 
 
 class FormatBrukerPhotonII(FormatBruker):
@@ -36,8 +50,6 @@ class FormatBrukerPhotonII(FormatBruker):
         """Initialise the image structure from the given file, including a
         proper model of the experiment. Easy from Rigaku Saturn images as
         they contain everything pretty much we need..."""
-
-        from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
@@ -65,9 +77,6 @@ class FormatBrukerPhotonII(FormatBruker):
         # goniometer angles in ANGLES are 2-theta, omega, phi, chi (FIXED)
         # AXIS indexes into this list to define the scan axis (in FORTRAN counting)
         # START and RANGE define the start and step size for each image
-
-        from scitbx import matrix
-        from scitbx.array_family import flex
 
         _, omega, phi, chi = map(float, self.header_dict["ANGLES"].split())
         scan_axis = ["NONE", "2THETA", "OMEGA", "PHI", "CHI", "X", "Y", "Z"]
@@ -124,8 +133,8 @@ class FormatBrukerPhotonII(FormatBruker):
             - slow * pixel_mm * beam_pixel[0]
         )
         # 2theta rotation appears to be around the slow axis
-        origin = origin.rotate(slow, two_theta, deg=True)
-        fast = fast.rotate(slow, two_theta, deg=True)
+        origin = origin.rotate_around_origin(slow, two_theta, deg=True)
+        fast = fast.rotate_around_origin(slow, two_theta, deg=True)
         pixel_size = pixel_mm, pixel_mm
         # ncols is nfast, nrows is nslow
         image_size = (
@@ -178,22 +187,9 @@ class FormatBrukerPhotonII(FormatBruker):
         # the understand method. Otherwise the user gets FormatBruker reading the
         # image improperly but without failing
         if self.header_dict["FORMAT"] != "100":
-            from libtbx.utils import Sorry
-
             raise Sorry(
                 "Only FORMAT 100 images from the Photon II are currently " "supported"
             )
-
-        from boost.python import streambuf
-        from dxtbx import (
-            read_uint8,
-            read_uint16,
-            read_uint16_bs,
-            read_uint32,
-            read_uint32_bs,
-        )
-        from dxtbx import is_big_endian
-        from scitbx.array_family import flex
 
         f = self.open_file(self._image_file, "rb")
         header_size = int(self.header_dict["HDRBLKS"]) * 512
@@ -217,8 +213,6 @@ class FormatBrukerPhotonII(FormatBruker):
         elif npixelb[0] == 2:
             read_data = read_2b
         else:
-            from dxtbx import IncorrectFormatError
-
             raise IncorrectFormatError(
                 "{0} bytes per pixel is not supported".format(npixelb[0])
             )
@@ -284,8 +278,5 @@ class FormatBrukerPhotonII(FormatBruker):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatBrukerPhotonII.understand(arg))
