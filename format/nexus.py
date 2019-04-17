@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import functools
 import os
 
 try:
@@ -10,83 +11,71 @@ except ImportError:
         raise
 
 
-class check_dtype(object):
+def _check_dtype(expected_type, dataset):
     """
-    A class to check whether the dataset data type matches the expected
-    """
-
-    def __init__(self, dtype):
-        self.dtype = dtype
-
-    def __call__(self, dset):
-        dtype = dset.dtype
-        if not dtype in self.dtype:
-            return (
-                False,
-                "%s is type %s, expected %s"
-                % (dset.name, dtype, ", ".join(self.dtype)),
-            )
-        return True, ""
-
-
-class check_dims(object):
-    """
-    A class to check whether the dataset dimensions matches the expected
+    A function to check whether the dataset data type matches the expected
     """
 
-    def __init__(self, dims):
-        self.dims = dims
-
-    def __call__(self, dset):
-        dims = len(dset.shape)
-        if not dims in self.dims:
-            return (
-                False,
-                "%s has dims %s, expected %s"
-                % (dset.name, str(dims), " or ".join([str(d) for d in self.dims])),
-            )
-        return True, ""
+    dataset_type = dataset.dtype
+    if not dataset_type in expected_type:
+        return (
+            False,
+            "%s is type %s, expected %s"
+            % (dataset.name, dataset_type, ", ".join(expected_type)),
+        )
+    return True, ""
 
 
-class check_shape(object):
+def _check_dims(expected_dimensions, dataset):
     """
-    A class to check whether the dataset shape matches the expected
+    A function to check whether the dataset dimensions matches the expected
     """
 
-    def __init__(self, shape):
-        self.shape = shape
+    dataset_dimensions = len(dataset.shape)
+    if not dataset_dimensions in expected_dimensions:
+        return (
+            False,
+            "%s has dims %d, expected %s"
+            % (
+                dataset.name,
+                dataset_dimensions,
+                " or ".join(str(d) for d in expected_dimensions),
+            ),
+        )
+    return True, ""
 
-    def __call__(self, dset):
-        shape = dset.shape
-        if not shape in self.shape:
-            return (
-                False,
-                "%s has shape %s, expected one of %s"
-                % (dset.name, str(shape), str(self.shape)),
-            )
-        return True, ""
 
-
-class check_is_scalar(object):
+def _check_shape(expected_shape, dataset):
     """
-    A class to check whether the dataset is scalar or not
+    A function to check whether the dataset shape matches the expected
     """
 
-    def __init__(self, is_scalar):
-        self.is_scalar = is_scalar
+    if not dataset.shape in expected_shape:
+        return (
+            False,
+            "%s has shape %s, expected one of %s"
+            % (dataset.name, str(dataset.shape), str(expected_shape)),
+        )
+    return True, ""
 
-    def __call__(self, dset):
-        try:
-            data = dset[()]
-            s = True
-        except Exception:
-            s = False
-        if s != self.is_scalar:
-            return (
-                False,
-                "%s == scalar is %s, expected %s" % (dset.name, s, self.is_scalar),
-            )
-        return True, ""
+
+def _check_is_scalar(expected_scalar, dataset):
+    """
+    A function to check whether the dataset is scalar or not
+    """
+
+    try:
+        _ = dataset[()]
+        is_scalar = True
+    except Exception:
+        is_scalar = False
+    if is_scalar != expected_scalar:
+        return (
+            False,
+            "%s == scalar is %s, expected %s"
+            % (dataset.name, is_scalar, expected_scalar),
+        )
+    return True, ""
 
 
 class check_dset(object):
@@ -106,13 +95,13 @@ class check_dset(object):
         if dtype is not None:
             if not isinstance(dtype, list) and not isinstance(dtype, tuple):
                 dtype = [dtype]
-            self.checks.append(check_dtype(dtype))
+            self.checks.append(functools.partial(_check_dtype, dtype))
         if dims is not None:
-            self.checks.append(check_dims(dims))
+            self.checks.append(functools.partial(_check_dims, dims))
         if shape is not None:
-            self.checks.append(check_shape(shape))
+            self.checks.append(functools.partial(_check_shape, shape))
         if is_scalar is not None:
-            self.checks.append(check_is_scalar(is_scalar))
+            self.checks.append(functools.partial(_check_is_scalar, is_scalar))
 
     def __call__(self, dset):
         for check in self.checks:
