@@ -13,49 +13,49 @@ from dxtbx.model import Detector  # import dependency
 from dxtbx.model import Goniometer  # import dependency
 from dxtbx.model import Scan  # import dependency
 
+
 class FormatEiger0MQDump(Format):
     def __init__(self, image_file, **kwargs):
         Format.__init__(self, image_file)
 
     @staticmethod
     def understand(image_file):
-        if os.path.exists(os.path.join(os.path.split(image_file)[0], 'header')):
+        if os.path.exists(os.path.join(os.path.split(image_file)[0], "header")):
             return True
         return False
 
     def _start(self):
-        header = os.path.join(os.path.split(self._image_file)[0], 'header')
+        header = os.path.join(os.path.split(self._image_file)[0], "header")
         data = msgpack.unpackb(self.open_file(header).read())
         self._header = json.loads(data[1])
 
     def _goniometer(self):
-        return None # return self._goniometer_factory.single_axis()
+        return None  # return self._goniometer_factory.single_axis()
 
     def _detector(self):
         """Return a model for a simple detector, presuming no one has
         one of these on a two-theta stage. Assert that the beam centre is
         provided in the Mosflm coordinate frame."""
 
-        distance = self._header['detector_distance']
+        distance = self._header["detector_distance"]
         if distance == 0:
             # XXX hack for development
             distance = 175
 
-        pixel_size_x = self._header['x_pixel_size']
-        pixel_size_y = self._header['y_pixel_size']
-        beam_x = self._header['beam_center_x'] * pixel_size_x
-        beam_y = self._header['beam_center_y'] * pixel_size_y
+        pixel_size_x = self._header["x_pixel_size"]
+        pixel_size_y = self._header["y_pixel_size"]
+        beam_x = self._header["beam_center_x"] * pixel_size_x
+        beam_y = self._header["beam_center_y"] * pixel_size_y
         if beam_x == 0 and beam_y == 0:
             # hack for development
             beam_x = 154.87
             beam_y = 165.66
-        
-        
-        pixel_size_x = 1000 * self._header['x_pixel_size']
-        pixel_size_y = 1000 * self._header['y_pixel_size']
+
+        pixel_size_x = 1000 * self._header["x_pixel_size"]
+        pixel_size_y = 1000 * self._header["y_pixel_size"]
         image_size = (
-            self._header['x_pixels_in_detector'],
-            self._header['y_pixels_in_detector']
+            self._header["x_pixels_in_detector"],
+            self._header["y_pixels_in_detector"],
         )
 
         # XXX fixme hard coded
@@ -73,9 +73,9 @@ class FormatEiger0MQDump(Format):
             (underload, overload),
             [],
         )
-    
+
     def _beam(self, index=None):
-        return self._beam_factory.simple(self._header['wavelength'])
+        return self._beam_factory.simple(self._header["wavelength"])
 
     def _scan(self):
         return None
@@ -98,18 +98,18 @@ class FormatEiger0MQDump(Format):
         return scan
 
     def get_raw_data(self):
-        nx = self._header['x_pixels_in_detector']
-        ny = self._header['y_pixels_in_detector']
-        depth = self._header['bit_depth_readout']
+        nx = self._header["x_pixels_in_detector"]
+        ny = self._header["y_pixels_in_detector"]
+        depth = self._header["bit_depth_readout"]
         if depth == 16:
             dtype = numpy.uint16
         elif depth == 32:
             dtype = numpy.uint32
         else:
-            dtype = 1/0
-            
+            dtype = 1 / 0
+
         dt = numpy.dtype(dtype)
-        
+
         data = msgpack.unpackb(self.open_file(self._image_file).read())[2]
 
         blob = numpy.fromstring(data[12:], dtype=numpy.uint8)
@@ -128,10 +128,8 @@ class FormatEiger0MQDump(Format):
 
         sel = image.as_1d() == bad
         image.as_1d().set_selected(sel, -1)
-        
+
         return image
-        
+
     def get_detectorbase(self, index=None):
         raise NotImplementedError
-
-
