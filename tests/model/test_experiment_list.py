@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from __future__ import absolute_import, division, print_function
 
 import os
@@ -784,6 +786,20 @@ def test_partial_missing_model_serialization():
     elist = ExperimentList([Experiment(), Experiment(goniometer=goniometer)])
     elist_ = ExperimentListFactory.from_dict(elist.to_dict())
     check(elist, elist_)
+
+
+def test_experiment_is_still():
+    experiment = Experiment()
+    assert experiment.is_still()
+    experiment.goniometer = Goniometer()
+    assert experiment.is_still()
+    experiment.scan = Scan()
+    assert experiment.is_still()
+    experiment.scan = Scan((1, 1000), (0, 0.05))
+    assert not experiment.is_still()
+    # Specifically test the bug from dxtbx#4 triggered by ending on 0°
+    experiment.scan = Scan((1, 1800), (-90, 0.05))
+    assert not experiment.is_still()
 
 
 def check(el1, el2):
