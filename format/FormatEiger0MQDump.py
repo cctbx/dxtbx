@@ -1,9 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
 try:
-  import bitshuffle
+    import bitshuffle
 except ImportError:
-  pass # not available in conda
+    pass  # not available in conda
 import os
 import json
 import msgpack
