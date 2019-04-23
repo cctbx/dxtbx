@@ -62,7 +62,7 @@ class FormatEiger0MQDump(Format):
         )
 
         # XXX fixme hard coded
-        overload = 65535
+        overload = 0xFFFF
         underload = -1
 
         return self._detector_factory.simple(
@@ -105,6 +105,8 @@ class FormatEiger0MQDump(Format):
         ny = self._header["y_pixels_in_detector"]
         depth = self._header["bit_depth_image"]
 
+        assert self._header["pixel_mask_applied"] is True
+
         if depth == 16:
             dtype = numpy.uint16
         elif depth == 32:
@@ -125,13 +127,11 @@ class FormatEiger0MQDump(Format):
 
         image = flex.int(image.astype("int32"))
 
-        if dtype == numpy.uint32:
-            bad = 2 ** 24 - 1
-        else:
+        # only need to overwrite values if read and used in 16-bit mode
+        if dtype == numpy.uint16:
             bad = 2 ** 16 - 1
-
-        sel = image.as_1d() >= bad
-        image.as_1d().set_selected(sel, -1)
+            sel = image.as_1d() >= bad
+            image.as_1d().set_selected(sel, -1)
 
         return image
 
