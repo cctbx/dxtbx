@@ -113,7 +113,7 @@ class FormatEiger0MQDump(Format):
 
         dt = numpy.dtype(dtype)
 
-        data = msgpack.unpackb(self.open_file(self._image_file).read())[2]
+        data = msgpack.unpackb(self.open_file(self._image_file).read(), raw=False)[2]
 
         blob = numpy.fromstring(data[12:], dtype=numpy.uint8)
         if dtype == numpy.uint32:
