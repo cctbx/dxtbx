@@ -103,7 +103,8 @@ class FormatEiger0MQDump(Format):
     def get_raw_data(self):
         nx = self._header["x_pixels_in_detector"]
         ny = self._header["y_pixels_in_detector"]
-        depth = self._header["bit_depth_readout"]
+        depth = self._header["bit_depth_image"]
+
         if depth == 16:
             dtype = numpy.uint16
         elif depth == 32:
@@ -125,11 +126,11 @@ class FormatEiger0MQDump(Format):
         image = flex.int(image.astype("int32"))
 
         if dtype == numpy.uint32:
-            bad = 2 ** 32 - 1
+            bad = 2 ** 24 - 1
         else:
             bad = 2 ** 16 - 1
 
-        sel = image.as_1d() == bad
+        sel = image.as_1d() >= bad
         image.as_1d().set_selected(sel, -1)
 
         return image
