@@ -1165,16 +1165,10 @@ class DetectorFactoryFromGroup(object):
                     reversed(map(int, nx_detector_module.handle["data_size"][-2:]))
                 )
 
-                # Temporary check for unsupported term. AFAIK undefined_value isn't in any existing nexus files.
-                # See https://github.com/nexusformat/definitions/issues/656 for the proposed replacement.
-                assert (
-                    "undefined_value" not in nx_detector.handle
-                ), "undefined_value not an NXmx term. See nexusformat/definitions#656."
-
                 # Get the trusted range of pixel values
                 underload = (
-                    float(nx_detector.handle["undefined_value"][()])
-                    if "undefined_value" in nx_detector.handle
+                    float(nx_detector.handle["underload_value"][()])
+                    if "underload_value" in nx_detector.handle
                     else -400
                 )
                 overload = (
