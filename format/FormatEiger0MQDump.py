@@ -40,15 +40,15 @@ class FormatEiger0MQDump(Format):
         one of these on a two-theta stage. Assert that the beam centre is
         provided in the Mosflm coordinate frame."""
 
-        distance = self._header["detector_distance"]
+        distance = self._header["detector_distance"] * 1000
         if distance == 0:
             # XXX hack for development
             distance = 175
 
         pixel_size_x = self._header["x_pixel_size"]
         pixel_size_y = self._header["y_pixel_size"]
-        beam_x = self._header["beam_center_x"] * pixel_size_x
-        beam_y = self._header["beam_center_y"] * pixel_size_y
+        beam_x = self._header["beam_center_x"] * pixel_size_x * 1000
+        beam_y = self._header["beam_center_y"] * pixel_size_y * 1000
         if beam_x == 0 and beam_y == 0:
             # hack for development
             beam_x = 154.87
