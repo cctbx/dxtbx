@@ -3,6 +3,11 @@ from __future__ import absolute_import, division, print_function
 import collections
 import os
 
+from dxtbx.format.image import ImageBool, ImageDouble  # noqa: F401, import dependency
+from dxtbx.imageset import ImageSet, ImageSetFactory, ImageSweep
+from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
+from dxtbx.serialize.filename import load_path
+
 
 def filename_to_absolute(filename):
     """ Convert filenames to absolute form. """
@@ -81,12 +86,6 @@ def imageset_to_dict(imageset):
         A dictionary of the parameters
 
     """
-    from dxtbx.imageset import ImageSet, ImageSweep
-    from dxtbx.format.image import (  # noqa: F401, import dependency
-        ImageBool,
-        ImageDouble,
-    )
-
     # If this is an imageset then return a list of filenames
     if isinstance(imageset, ImageSweep):
         return imagesweep_to_dict(imageset)
@@ -98,10 +97,6 @@ def imageset_to_dict(imageset):
 
 def basic_imageset_from_dict(d, directory=None):
     """ Construct an ImageSet class from the dictionary."""
-    from dxtbx.model import BeamFactory, DetectorFactory
-    from dxtbx.imageset import ImageSetFactory
-    from dxtbx.serialize.filename import load_path
-
     # Get the filename list and create the imageset
     filenames = map(
         lambda p: load_path(p, directory=directory), map(str, d["filenames"])
@@ -139,10 +134,6 @@ def basic_imageset_from_dict(d, directory=None):
 
 def imagesweep_from_dict(d, check_format=True, directory=None):
     """Construct and image sweep from the dictionary."""
-    from dxtbx.imageset import ImageSetFactory
-    from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
-    from dxtbx.serialize.filename import load_path
-
     # Get the template (required)
     template = load_path(str(d["template"]), directory=directory)
 

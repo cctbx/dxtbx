@@ -3,10 +3,30 @@ from __future__ import absolute_import, division, print_function
 import collections
 import itertools
 import json
+import operator
+from math import floor, pi
+from os import listdir
+from os.path import abspath, dirname, isdir, isfile, join, normpath, splitext
+
+import six.moves.cPickle as pickle
+from six.moves import range
 
 import dxtbx.imageset
+import libtbx
+from dxtbx.format.Format import Format
+from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.format.image import ImageBool, ImageDouble
+from dxtbx.format.Registry import Registry
+from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
+from dxtbx.serialize import load
+from dxtbx.serialize.filename import load_path
+from dxtbx.sweep_filenames import (
+    locate_files_matching_template_string,
+    template_regex,
+    template_string_number_index,
+)
 from libtbx.utils import Sorry
-import six.moves.cPickle as pickle
+from scitbx import matrix
 
 
 class DataBlock(object):
@@ -98,7 +118,7 @@ class DataBlock(object):
             if isinstance(iset, dxtbx.imageset.ImageSweep):
                 obj[iset.get_beam()] = None
             else:
-                for i in xrange(len(iset)):
+                for i in range(len(iset)):
                     obj[iset.get_beam(i)] = None
         return obj.keys()
 
@@ -113,7 +133,7 @@ class DataBlock(object):
             if isinstance(iset, dxtbx.imageset.ImageSweep):
                 obj[iset.get_detector()] = None
             else:
-                for i in xrange(len(iset)):
+                for i in range(len(iset)):
                     obj[iset.get_detector(i)] = None
         detector_id = 0
         for detector in obj.keys():
@@ -128,7 +148,7 @@ class DataBlock(object):
             if isinstance(iset, dxtbx.imageset.ImageSweep):
                 obj[iset.get_goniometer()] = None
             else:
-                for i in xrange(len(iset)):
+                for i in range(len(iset)):
                     try:
                         model = iset.get_goniometer(i)
                         if model is not None:
@@ -144,7 +164,7 @@ class DataBlock(object):
             if isinstance(iset, dxtbx.imageset.ImageSweep):
                 obj[iset.get_scan()] = None
             else:
-                for i in xrange(len(iset)):
+                for i in range(len(iset)):
                     try:
                         model = iset.get_scan(i)
                         if model is not None:
@@ -155,8 +175,6 @@ class DataBlock(object):
 
     def to_dict(self):
         """ Convert the datablock to a dictionary """
-        from dxtbx.format.FormatMultiImage import FormatMultiImage
-        from os.path import abspath
 
         def abspath_or_none(filename):
             if filename is None or filename == "":
@@ -258,7 +276,7 @@ class DataBlock(object):
                 else:
                     imageset["__id__"] = "ImageSet"
                 image_list = []
-                for i in xrange(len(iset)):
+                for i in range(len(iset)):
                     image_dict = collections.OrderedDict()
                     image_dict["filename"] = abspath(iset.get_path(i))
                     image_dict["gain"] = abspath_or_none(
@@ -331,20 +349,16 @@ class FormatChecker(object):
         class does not have an understand method so we have to check that
         the "understand" method is present in the class dictionary before
         we actually do the call."""
-        from dxtbx.format.Format import Format
-
         mro = self._format_class.mro()[::-1]
         if len(mro) <= 2 or mro[0] != object or mro[1] != Format:
             return False
         for m in mro[2:]:
-            if "understand" in m.__dict__ and m.understand(filename) == False:
+            if "understand" in m.__dict__ and not m.understand(filename):
                 return False
         return True
 
     def __call__(self, filename):
         """ Check the current and child formats, otherwise search the registry. """
-        from dxtbx.format.Registry import Registry
-
         try:
             if self._format_class is None or not self.understand(filename):
                 self._format_class = Registry.find(filename)
@@ -357,8 +371,6 @@ class FormatChecker(object):
 
     def find_format(self, filename):
         """ Check the current and child formats, otherwise search the registry. """
-        from dxtbx.format.Registry import Registry
-
         try:
             if self._format_class is None or not self.understand(filename):
                 self._format_class = Registry.find(filename)
@@ -391,9 +403,6 @@ class DataBlockTemplateImporter(object):
 
     def __init__(self, templates, verbose=False, **kwargs):
         """ Import the datablocks from the given templates. """
-        from dxtbx.sweep_filenames import locate_files_matching_template_string
-        from os.path import normpath
-
         assert len(templates) > 0
 
         self.datablocks = []
@@ -436,8 +445,6 @@ class DataBlockTemplateImporter(object):
 
     def _create_imageset(self, format_class, template, filenames, **kwargs):
         """ Create a multi file sweep or imageset. """
-        from dxtbx.sweep_filenames import template_string_number_index
-
         # Get the image range
         index = slice(*template_string_number_index(template))
         first = int(filenames[0][index])
@@ -503,8 +510,6 @@ class DataBlockFilenameImporter(object):
         format_kwargs=None,
     ):
         """ Import the datablocks from the given filenames. """
-        from dxtbx.format.FormatMultiImage import FormatMultiImage
-
         # Init the datablock list
         self.unhandled = []
         self.datablocks = []
@@ -559,9 +564,6 @@ class DataBlockFilenameImporter(object):
         format_kwargs=None,
     ):
         """ Extract the file meta data in order to sort them. """
-        from dxtbx.sweep_filenames import template_regex
-        import operator
-
         # If no comparison functions are set
         if compare_beam is None:
             compare_beam = operator.__eq__
@@ -679,7 +681,6 @@ class DataBlockFilenameImporter(object):
 
     def _create_multi_file_imageset(self, format_class, records, format_kwargs=None):
         """ Create a multi file sweep or imageset. """
-        from os.path import abspath
 
         # Make either an imageset or sweep
         if len(records) == 1 and records[0].template is not None:
@@ -723,8 +724,6 @@ class DataBlockFilenameImporter(object):
 
     def _create_single_file_imageset(self, format_class, filename, format_kwargs=None):
         """ Create an imageset from a multi image file. """
-        from os.path import abspath
-
         if format_kwargs is None:
             format_kwargs = {}
         return format_class.get_imageset(abspath(filename), format_kwargs=format_kwargs)
@@ -749,11 +748,6 @@ class DataBlockDictImporter(object):
 
     def _load_datablocks(self, obj, check_format=True, directory=None):
         """ Create the datablock from a dictionary. """
-        from dxtbx.model import BeamFactory, DetectorFactory
-        from dxtbx.model import GoniometerFactory, ScanFactory
-        from dxtbx.serialize.filename import load_path
-        from dxtbx.format.image import ImageBool, ImageDouble
-        from dxtbx.format.FormatMultiImage import FormatMultiImage
 
         # If we have a list, extract for each dictionary in the list
         if isinstance(obj, list):
@@ -868,7 +862,7 @@ class DataBlockDictImporter(object):
                 elif "master" in imageset:
                     template = load_path(imageset["master"], directory=directory)
                     i0, i1 = scan.get_image_range()
-                    if check_format == False:
+                    if not check_format:
                         format_class = FormatMultiImage
                     else:
                         format_class = None
@@ -1057,10 +1051,6 @@ class DataBlockFactory(object):
         format_kwargs=None,
     ):
         """ Create a list of data blocks from a list of directory or file names. """
-
-        from os import listdir
-        from os.path import isdir, isfile, join
-
         filelist = []
         for f in sorted(filenames):
             if isfile(f):
@@ -1109,8 +1099,6 @@ class DataBlockFactory(object):
     @staticmethod
     def from_json_file(filename, check_format=True):
         """ Decode a datablock from a JSON file. """
-        from os.path import dirname, abspath
-
         filename = abspath(filename)
         directory = dirname(filename)
         with open(filename, "r") as infile:
@@ -1138,8 +1126,6 @@ class DataBlockFactory(object):
     @staticmethod
     def from_imageset_json_file(filename):
         """ Load a datablock from a sweep file. """
-        from dxtbx.serialize import load
-
         # Load the imageset and create a datablock from the filenames
         imageset = load.imageset(filename)
         return DataBlockFactory.from_imageset(imageset)
@@ -1178,8 +1164,6 @@ class DataBlockFactory(object):
 
 class AutoEncoder(json.JSONEncoder):
     def default(self, obj):
-        import libtbx
-
         if isinstance(obj, libtbx.AutoType):
             return "Auto"
         # Let the base class default method raise the TypeError
@@ -1232,8 +1216,6 @@ class DataBlockDumper(object):
 
     def as_file(self, filename, **kwargs):
         """ Dump datablocks as file. """
-        from os.path import splitext
-
         ext = splitext(filename)[1]
         j_ext = [".json"]
         p_ext = [".p", ".pkl", ".pickle"]
@@ -1356,8 +1338,6 @@ class BeamDiff(object):
         self.polarization_fraction_tolerance = polarization_fraction_tolerance
 
     def __call__(self, a, b):
-        from scitbx import matrix
-
         aw = a.get_wavelength()
         bw = b.get_wavelength()
         ad = matrix.col(a.get_direction())
@@ -1451,8 +1431,6 @@ class GoniometerDiff(object):
         self.setting_rotation_tolerance = setting_rotation_tolerance
 
     def __call__(self, a, b):
-        from scitbx import matrix
-
         a_axis = matrix.col(a.get_rotation_axis())
         b_axis = matrix.col(b.get_rotation_axis())
         a_fixed = a.get_fixed_rotation()
@@ -1490,8 +1468,6 @@ class ScanDiff(object):
         b_osc_range = b.get_oscillation_range()
 
         def mod_2pi(x):
-            from math import pi, floor
-
             return x - 2 * pi * floor(x / (2 * pi))
 
         diff_2pi = abs(mod_2pi(a_osc_range[1]) - mod_2pi(b_osc_range[0]))
