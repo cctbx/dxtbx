@@ -31,7 +31,7 @@ from dxtbx.model import (
     ScanFactory,
 )
 from dxtbx.serialize import xds
-from dxtbx.serialize.filename import load_path
+from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import template_image_range
 
@@ -195,7 +195,7 @@ class ExperimentListDict(object):
         if param not in imageset_data:
             return None, None
 
-        filename = load_path(imageset_data[param], directory=self._directory)
+        filename = resolve_path(imageset_data[param], directory=self._directory)
         if self._check_format and filename:
             with open(filename, "rb") as fh:
                 return filename, pickle.load(fh)
@@ -368,7 +368,7 @@ class ExperimentListDict(object):
     def _make_stills(self, imageset, format_kwargs=None):
         """ Make a still imageset. """
         filenames = [
-            load_path(p, directory=self._directory) for p in imageset["images"]
+            resolve_path(p, directory=self._directory) for p in imageset["images"]
         ]
         indices = None
         if "single_file_indices" in imageset:
@@ -400,7 +400,7 @@ class ExperimentListDict(object):
     ):
         """ Make an image sweep. """
         # Get the template format
-        template = load_path(imageset["template"], directory=self._directory)
+        template = resolve_path(imageset["template"], directory=self._directory)
 
         # Get the number of images (if no scan is given we'll try
         # to find all the images matching the template
@@ -475,7 +475,7 @@ class ExperimentListDict(object):
     @staticmethod
     def _from_file(filename, directory=None):
         """ Load a model dictionary from a file. """
-        filename = load_path(filename, directory=directory)
+        filename = resolve_path(filename, directory=directory)
         try:
             with open(filename, "r") as infile:
                 return json.load(infile, object_hook=_decode_dict)

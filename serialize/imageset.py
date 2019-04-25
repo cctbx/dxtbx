@@ -6,7 +6,7 @@ import os
 from dxtbx.format.image import ImageBool, ImageDouble  # noqa: F401, import dependency
 from dxtbx.imageset import ImageSet, ImageSetFactory, ImageSweep
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
-from dxtbx.serialize.filename import load_path
+from dxtbx.serialize.filename import resolve_path
 
 
 def filename_to_absolute(filename):
@@ -99,23 +99,23 @@ def basic_imageset_from_dict(d, directory=None):
     """ Construct an ImageSet class from the dictionary."""
     # Get the filename list and create the imageset
     filenames = map(
-        lambda p: load_path(p, directory=directory), map(str, d["filenames"])
+        lambda p: resolve_path(p, directory=directory), map(str, d["filenames"])
     )
     imageset = ImageSetFactory.new(filenames)[0]
 
     # Set some external lookups
     if "mask" in d and d["mask"] is not None and d["mask"] is not "":
-        path = load_path(d["mask"], directory=directory)
+        path = resolve_path(d["mask"], directory=directory)
         with open(path) as infile:
             imageset.external_lookup.mask.filename = path
             imageset.external_lookup.mask.data = ImageBool(pickle.load(infile))
     if "gain" in d and d["gain"] is not None and d["gain"] is not "":
-        path = load_path(d["gain"], directory=directory)
+        path = resolve_path(d["gain"], directory=directory)
         with open(path) as infile:
             imageset.external_lookup.gain.filename = path
             imageset.external_lookup.gain.data = ImageDouble(pickle.load(infile))
     if "pedestal" in d and d["pedestal"] is not None and d["pedestal"] is not "":
-        path = load_path(d["pedestal"], directory=directory)
+        path = resolve_path(d["pedestal"], directory=directory)
         with open(path) as infile:
             imageset.external_lookup.pedestal.filename = path
             imageset.external_lookup.pedestal.data = ImageDouble(pickle.load(infile))
@@ -135,7 +135,7 @@ def basic_imageset_from_dict(d, directory=None):
 def imagesweep_from_dict(d, check_format=True, directory=None):
     """Construct and image sweep from the dictionary."""
     # Get the template (required)
-    template = load_path(str(d["template"]), directory=directory)
+    template = resolve_path(str(d["template"]), directory=directory)
 
     # If the scan isn't set, find all available files
     scan_dict = d.get("scan")
@@ -175,17 +175,17 @@ def imagesweep_from_dict(d, check_format=True, directory=None):
 
     # Set some external lookups
     if "mask" in d and d["mask"] is not None and d["mask"] is not "":
-        path = load_path(d["mask"], directory=directory)
+        path = resolve_path(d["mask"], directory=directory)
         with open(path) as infile:
             sweep.external_lookup.mask.filename = path
             sweep.external_lookup.mask.data = ImageBool(pickle.load(infile))
     if "gain" in d and d["gain"] is not None and d["gain"] is not "":
-        path = load_path(d["gain"], directory=directory)
+        path = resolve_path(d["gain"], directory=directory)
         with open(path) as infile:
             sweep.external_lookup.gain.filename = path
             sweep.external_lookup.gain.data = ImageDouble(pickle.load(infile))
     if "pedestal" in d and d["pedestal"] is not None and d["pedestal"] is not "":
-        path = load_path(d["pedestal"], directory=directory)
+        path = resolve_path(d["pedestal"], directory=directory)
         with open(path) as infile:
             sweep.external_lookup.pedestal.filename = path
             sweep.external_lookup.pedestal.data = ImageDouble(pickle.load(infile))
