@@ -1,7 +1,7 @@
 """
 Image reading tests against the dials_regression suite
 """
-from __future__ import division, print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 import re
@@ -9,6 +9,7 @@ import re
 import pytest
 import py.path
 
+import dxtbx.conftest
 from dxtbx.format.Registry import Registry
 import libtbx.load_env
 from iotbx.command_line.detector_image_as_png import convert_image
@@ -16,22 +17,6 @@ from iotbx.command_line.detector_image_as_png import convert_image
 # from iotbx.command_line.detector_image_as_png import run as pngrun
 from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 import scitbx.matrix
-
-
-def _dials_regression():
-    """
-    Duplicate of dials_regression search logic, outside of fixture.
-
-    It is currently not possible to use a fixture value to generate a
-    parametrization for tests. Using the dials_regression fixture directly
-    has issues with a) safely importing and b) skipping outside of tests
-    is prohibited. The downside of this is that the logic is duplicated
-    """
-    try:
-        import dials_regression as dr
-    except ImportError:
-        raise RuntimeError("dials_regression required for this test")
-    return os.path.dirname(dr.__file__)
 
 
 def _generate_all_test_images():
@@ -87,9 +72,8 @@ def _generate_all_test_images():
     ]
 
     # Try to find dials_regression
-    try:
-        dials_regression = _dials_regression()
-    except RuntimeError:
+    dials_regression = dxtbx.conftest.dials_regression_path()
+    if not dials_regression:
         # Have one, skipped placeholder test, if there is no dials_regression
         yield (
             pytest.param(
@@ -126,8 +110,6 @@ _all_images = list(_generate_all_test_images())
 def test_image(request, dials_regression):
     """Fixture to allow tests to be parametrized for every test image"""
 
-    # Validate that our custom dials_regression is the same as the fixture
-    assert _dials_regression() == dials_regression, "dials_regression mismatch"
     return request.param
 
 

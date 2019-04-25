@@ -10,15 +10,37 @@ import os
 import pytest
 
 
+def dials_regression_path():
+    """Return the absolute path to the dials_regression module as a string.
+    This function is used directly by tests/test_regression_images.py"""
+    try:
+        import dials_regression as dr
+
+        return os.path.abspath(os.path.dirname(dr.__file__))
+    except ImportError:
+        pass  # dials_regression not configured
+    try:
+        import socket
+
+        reference_copy = "/dls/science/groups/scisoft/DIALS/repositories/git-reference/dials_regression"
+        if (
+            os.name == "posix"
+            and "diamond.ac.uk" in socket.gethostname()
+            and os.path.exists(reference_copy)
+        ):
+            return reference_copy
+    except ImportError:
+        pass  # can not tell whether in DLS network or not
+
+
 @pytest.fixture(scope="session")
 def dials_regression():
     """Return the absolute path to the dials_regression module as a string.
-    Skip the test if dials_regression is not installed."""
-    try:
-        import dials_regression as dr
-    except ImportError:
-        pytest.skip("dials_regression required for this test")
-    return os.path.abspath(os.path.dirname(dr.__file__))
+    Skip the test if dials_regression is not available."""
+    d_r = dials_regression_path()
+    if d_r:
+        return d_r
+    pytest.skip("dials_regression required for this test")
 
 
 def pytest_addoption(parser):
