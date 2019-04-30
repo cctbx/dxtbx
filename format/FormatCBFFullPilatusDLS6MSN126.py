@@ -88,8 +88,7 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
             goniometer = self.get_goniometer()
 
         if (
-            not self._dynamic_shadowing
-            or not goniometer
+            not goniometer
             or not len(self.get_goniometer().get_names()) == 3
         ):
             return None  # No dynamic shadowing available
