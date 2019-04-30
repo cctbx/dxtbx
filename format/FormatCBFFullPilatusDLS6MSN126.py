@@ -68,7 +68,11 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
 
     def get_mask(self, goniometer=None):
         mask = super(FormatCBFFullPilatusDLS6MSN126, self).get_mask()
-        if self._dynamic_shadowing:
+
+        # when device was installed with SmarGon on I03 this was the signature
+        # now it lives on i02-1 => detect - at the moment device has single 
+        # axis in new home
+        if len(self.get_goniometer().get_names()) == 3 and self._dynamic_shadowing:
             gonio_masker = self.get_goniometer_shadow_masker(goniometer=goniometer)
             scan = self.get_scan()
             detector = self.get_detector()
