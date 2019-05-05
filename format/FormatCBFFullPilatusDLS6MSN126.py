@@ -87,10 +87,7 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
         if goniometer is None:
             goniometer = self.get_goniometer()
 
-        if (
-            not goniometer
-            or not len(self.get_goniometer().get_names()) == 3
-        ):
+        if not goniometer or not len(self.get_goniometer().get_names()) == 3:
             return None  # No dynamic shadowing available
 
         if goniometer.get_names()[1] == "GON_CHI":
