@@ -63,10 +63,7 @@ class FormatSMVADSCSN905(FormatSMVADSCSN):
             float(self._header_dictionary["SIZE1"]),
             float(self._header_dictionary["SIZE2"]),
         )
-        image_pedestal = 40
-
-        overload = 65535 - image_pedestal
-        underload = 1 - image_pedestal
+        trusted_range = self._adsc_trusted_range(pedestal=40)
 
         return self._detector_factory.simple(
             "CCD",
@@ -76,7 +73,7 @@ class FormatSMVADSCSN905(FormatSMVADSCSN):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            (underload, overload),
+            trusted_range,
             [],
             gain=self._adsc_module_gain(),
         )

@@ -54,8 +54,6 @@ class FormatSMVADSCSNAPSID19(FormatSMVADSCSN):
             float(self._header_dictionary["SIZE1"]),
             float(self._header_dictionary["SIZE2"]),
         )
-        overload = 65535
-        underload = 1
 
         key = [
             s for s in self._header_dictionary if s.endswith("_SPATIAL_BEAM_POSITION")
@@ -73,7 +71,7 @@ class FormatSMVADSCSNAPSID19(FormatSMVADSCSN):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            (underload, overload),
+            self._adsc_trusted_range(),
             [],
             gain=self._adsc_module_gain(),
         )

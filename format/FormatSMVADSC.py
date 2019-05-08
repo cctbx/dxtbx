@@ -94,6 +94,20 @@ class FormatSMVADSC(FormatSMV):
         else:
             return self._goniometer_factory.single_axis_reverse()
 
+    def _adsc_trusted_range(self, pedestal=None):
+        """Return a 16 bit trusted range shifted to account for any image
+        pedestal that is present"""
+
+        if "IMAGE_PEDESTAL" in self._header_dictionary:
+            pedestal = int(self._header_dictionary["IMAGE_PEDESTAL"])
+        elif pedestal is None:
+            pedestal = 0
+
+        overload = 65535 - pedestal
+        underload = -1 - pedestal
+
+        return underload, overload
+
     def _adsc_module_gain(self, model=None):
         """Return an appropriate gain value in ADU per captured X-ray for an
         ADSC CCD module. If the model is None (unknown) then make a guess based
@@ -177,13 +191,6 @@ class FormatSMVADSC(FormatSMV):
             float(self._header_dictionary["SIZE1"]),
             float(self._header_dictionary["SIZE2"]),
         )
-        if "IMAGE_PEDESTAL" in self._header_dictionary:
-            pedestal = int(self._header_dictionary["IMAGE_PEDESTAL"])
-        else:
-            pedestal = 0
-
-        overload = 65535 - pedestal
-        underload = pedestal - 1
 
         return self._detector_factory.simple(
             "CCD",
@@ -193,7 +200,7 @@ class FormatSMVADSC(FormatSMV):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            (underload, overload),
+            self._adsc_trusted_range(),
             [],
             gain=self._adsc_module_gain(),
         )

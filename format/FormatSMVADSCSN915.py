@@ -44,37 +44,6 @@ class FormatSMVADSCSN915(FormatSMVADSCSN):
 
         FormatSMVADSCSN.__init__(self, image_file, **kwargs)
 
-    def _detector(self):
-        """Return a model for a simple detector, presuming no one has
-        one of these on a two-theta stage. Assert that the beam centre is
-        provided in the Mosflm coordinate frame. Apply image pedestal."""
-
-        distance = float(self._header_dictionary["DISTANCE"])
-        beam_x = float(self._header_dictionary["BEAM_CENTER_X"])
-        beam_y = float(self._header_dictionary["BEAM_CENTER_Y"])
-        pixel_size = float(self._header_dictionary["PIXEL_SIZE"])
-        image_size = (
-            float(self._header_dictionary["SIZE1"]),
-            float(self._header_dictionary["SIZE2"]),
-        )
-        image_pedestal = int(self._header_dictionary["IMAGE_PEDESTAL"])
-
-        overload = 65535 - image_pedestal
-        underload = 1 - image_pedestal
-
-        return self._detector_factory.simple(
-            "CCD",
-            distance,
-            (beam_y, beam_x),
-            "+x",
-            "-y",
-            (pixel_size, pixel_size),
-            image_size,
-            (underload, overload),
-            [],
-            gain=self._adsc_module_gain(),
-        )
-
     def get_raw_data(self):
         """Get the pixel intensities (i.e. read the image and return as a
         flex array of integers.)"""

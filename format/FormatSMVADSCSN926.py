@@ -66,16 +66,8 @@ class FormatSMVADSCSN926(FormatSMVADSCSN):
             two_theta = float(self._header_dictionary["TWOTHETA"])
         else:
             two_theta = 0
-        if "IMAGE_PEDESTAL" in self._header_dictionary:
-            pedestal = int(self._header_dictionary["IMAGE_PEDESTAL"])
-        else:
-            pedestal = 0
-
-        overload = 65535 - pedestal
-        underload = pedestal - 1
 
         # now correct for some idiosyncracies...
-
         # two-theta included in beam centre - so remove this
         beam_y += distance * math.tan(two_theta * math.pi / 180.0)
 
@@ -89,7 +81,7 @@ class FormatSMVADSCSN926(FormatSMVADSCSN):
             two_theta,
             (pixel_size, pixel_size),
             image_size,
-            (underload, overload),
+            self._adsc_trusted_range(),
             [],
             gain=self._adsc_module_gain(),
         )
