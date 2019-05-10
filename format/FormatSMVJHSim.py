@@ -88,7 +88,8 @@ class FormatSMVJHSim(FormatSMV):
             image_pedestal = float(self._header_dictionary["ADC_OFFSET"])
         except (KeyError):
             pass
-        trusted_range = self._adsc_trusted_range(image_pedestal)
+        overload = 65535 - image_pedestal
+        underload = 1 - image_pedestal
 
         # interpret beam center conventions
         image_width_mm = pixel_size * image_size[0]
@@ -122,7 +123,7 @@ class FormatSMVJHSim(FormatSMV):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            trusted_range,
+            (underload, overload),
             [],
         )
 
