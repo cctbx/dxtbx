@@ -4,17 +4,25 @@
 # LIBTBX_SET_DISPATCHER_NAME cxi.image_average
 #
 
-from __future__ import absolute_import, division, print_function
-
-import sys, copy
-
-import dxtbx
-from scitbx.array_family import flex
-from dxtbx.format.cbf_writer import FullCBFWriter
-
 """
 Average images of any dxtbx-supported format. Handles many individual images or single container files.
 """
+
+from __future__ import absolute_import, division, print_function
+
+import copy
+import os
+import sys
+
+import dxtbx
+import libtbx.load_env
+from dxtbx.datablock import DataBlockFactory
+from dxtbx.format.cbf_writer import FullCBFWriter
+from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.format.Registry import Registry
+from libtbx import easy_mp, option_parser
+from libtbx.utils import Sorry, Usage
+from scitbx.array_family import flex
 
 
 def splitit(l, n):
@@ -135,9 +143,6 @@ class single_image_worker(image_worker):
         if self.command_line.options.verbose:
             print("Processing %s" % path)
 
-        from dxtbx.format.Registry import Registry
-        from dxtbx.format.FormatMultiImage import FormatMultiImage
-
         format_class = Registry.find(path)
         assert not issubclass(
             format_class, FormatMultiImage
@@ -163,10 +168,6 @@ def run(argv=None):
     @return     @c 0 on successful termination, @c 1 on error, and @c 2
                 for command line syntax errors
     """
-    import libtbx.load_env
-
-    from libtbx import option_parser
-
     if argv is None:
         argv = sys.argv
     command_line = (
@@ -261,17 +262,16 @@ def run(argv=None):
 
     if len(paths) == 1:
         # test if the iamge is a multi-image
-        from dxtbx.datablock import DataBlockFactory
-
         datablocks = DataBlockFactory.from_filenames([paths[0]])
+        if not datablocks:
+            raise Sorry("Could not read path {}".format(paths[0]))
+
         assert len(datablocks) == 1
         datablock = datablocks[0]
         imagesets = datablock.extract_imagesets()
         assert len(imagesets) == 1
         imageset = imagesets[0]
         if not imageset.reader().is_single_file_reader():
-            from libtbx.utils import Usage
-
             raise Usage("Supply more than one image")
 
         worker = multi_image_worker(command_line, paths[0], imageset)
@@ -283,8 +283,6 @@ def run(argv=None):
 
     if command_line.options.skip_images is not None:
         if command_line.options.skip_images >= len(iterable):
-            from libtbx.utils import Usage
-
             raise Usage("Skipping all the images")
         iterable = iterable[command_line.options.skip_images :]
     if (
@@ -295,16 +293,12 @@ def run(argv=None):
     assert len(iterable) >= 2, "Need more than one image to average"
 
     if len(paths) > 1:
-        from dxtbx.datablock import DataBlockFactory
-
         datablocks = DataBlockFactory.from_filenames([iterable[0]])
         assert len(datablocks) == 1
         datablock = datablocks[0]
         imagesets = datablock.extract_imagesets()
         assert len(imagesets) == 1
         imageset = imagesets[0]
-
-    from libtbx import easy_mp
 
     if command_line.options.mpi:
         try:
