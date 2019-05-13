@@ -11,10 +11,8 @@ Average images of any dxtbx-supported format. Handles many individual images or 
 from __future__ import absolute_import, division, print_function
 
 import copy
-import os
 import sys
 
-import dxtbx
 import libtbx.load_env
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.cbf_writer import FullCBFWriter
@@ -26,7 +24,7 @@ from scitbx.array_family import flex
 
 
 def splitit(l, n):
-    """Utitlity funciton to evenly split a list. Handles edge cases.
+    """Utility function to evenly split a list. Handles edge cases.
     There is probably a 1-liner list comprehension to do this, but it would be super gnarly.
     @param l list to split (not a generator)
     @param n number of chunks to split the list into
