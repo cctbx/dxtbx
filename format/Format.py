@@ -6,6 +6,7 @@
 # goniometers etc. from the headers and hence a format specific factory.
 
 from __future__ import absolute_import, division, print_function
+from six import with_metaclass
 
 import sys
 
@@ -145,14 +146,12 @@ class Masker(object):
         return self.paths()
 
 
-class Format(object):
+class Format(with_metaclass(_MetaFormat, object)):
     """A base class for the representation and interrogation of diffraction
     image formats, from which all classes for reading the header should be
     inherited. This includes: autoregistration of implementation classes,
     stubs which need to be overridden and links to static factory methods
     which will prove to be useful in other implementations."""
-
-    __metaclass__ = _MetaFormat
 
     @staticmethod
     def understand(image_file):
@@ -618,4 +617,4 @@ class Format(object):
 
         ##  To disable caching logic:
         # return fh_func()
-        return cls.__metaclass__.get_cache_controller().check(filename, fh_func)
+        return cls.get_cache_controller().check(filename, fh_func)
