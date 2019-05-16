@@ -286,8 +286,6 @@ class CrystalAux(boost.python.injector, Crystal):
 
 class MosaicCrystalKabsch2010Aux(CrystalAux, MosaicCrystalKabsch2010):
     def show(self, show_scan_varying=False, out=None):
-        from scitbx import matrix
-
         CrystalAux._show(self, show_scan_varying, out)
 
         if out is None:
@@ -355,8 +353,6 @@ class MosaicCrystalKabsch2010Aux(CrystalAux, MosaicCrystalKabsch2010):
 
 class MosaicCrystalSauter2014Aux(CrystalAux, MosaicCrystalSauter2014):
     def show(self, show_scan_varying=False, out=None):
-        from scitbx import matrix
-
         CrystalAux._show(self, show_scan_varying, out)
 
         if out is None:
@@ -635,3 +631,12 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         for experiment in self:
             if experiment.imageset.reader().is_single_file_reader():
                 experiment.imageset.reader().nullify_format_instance()
+
+
+try:
+    boost.python.inject_into(Crystal)(CrystalAux)
+    boost.python.inject_into(Detector)(DetectorAux)
+    boost.python.inject_into(Experiment)(ExperimentAux)
+    boost.python.inject_into(ExperimentList)(ExperimentListAux)
+except AttributeError:
+    pass

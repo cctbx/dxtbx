@@ -640,3 +640,10 @@ class ImageSetFactory(object):
             return ImageSet(imageset.data(), imageset.indices())
         else:
             assert False, "Unrecognized imageset type: %s" % str(type(imageset))
+
+
+try:
+    boost.python.inject_into(ImageSet)(ImageSetAux)
+    boost.python.inject_into(ImageSweep)(ImageSweepAux)
+except AttributeError:
+    pass
