@@ -248,7 +248,7 @@ class BeamFactory:
         +Y laboratory frame vector."""
 
         cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_widefile(cif_file, pycbf.MSG_DIGEST)
+        cbf_handle.read_widefile(cif_file.encode(), pycbf.MSG_DIGEST)
 
         result = BeamFactory.imgCIF_H(cbf_handle)
 
@@ -264,19 +264,19 @@ class BeamFactory:
 
         d2r = math.pi / 180.0
 
-        cbf_handle.find_category("axis")
+        cbf_handle.find_category(b"axis")
 
         # find record with equipment = source
 
         try:
-            cbf_handle.find_column("equipment")
-            cbf_handle.find_row("source")
+            cbf_handle.find_column(b"equipment")
+            cbf_handle.find_row(b"source")
 
             # then get the vector and offset from this
             direction = []
 
             for j in range(3):
-                cbf_handle.find_column("vector[%d]" % (j + 1))
+                cbf_handle.find_column(b"vector[%d]" % (j + 1))
                 direction.append(cbf_handle.get_doublevalue())
         except Exception as e:
             if str(e).split()[-1] != "CBF_NOTFOUND":

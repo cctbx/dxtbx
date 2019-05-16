@@ -105,14 +105,14 @@ def read_cbf_image(cbf_image):
     slow = 0
     length = 0
 
-    for record in cbf_header.split("\n"):
-        if "X-Binary-Size-Fastest-Dimension" in record:
+    for record in cbf_header.split(b"\n"):
+        if b"X-Binary-Size-Fastest-Dimension" in record:
             fast = int(record.split()[-1])
-        elif "X-Binary-Size-Second-Dimension" in record:
+        elif b"X-Binary-Size-Second-Dimension" in record:
             slow = int(record.split()[-1])
-        elif "X-Binary-Number-of-Elements" in record:
+        elif b"X-Binary-Number-of-Elements" in record:
             length = int(record.split()[-1])
-        elif "X-Binary-Size:" in record:
+        elif b"X-Binary-Size:" in record:
             size = int(record.split()[-1])
 
     assert length == fast * slow
@@ -130,9 +130,9 @@ def read_multitile_cbf_image(cbf_image):
 
     raw_data = []
     cbf = pycbf.cbf_handle_struct()
-    cbf.read_widefile(cbf_image, pycbf.MSG_DIGEST)
-    cbf.find_category("array_structure")
-    cbf.find_column("encoding_type")
+    cbf.read_widefile(cbf_image.encode(), pycbf.MSG_DIGEST)
+    cbf.find_category(b"array_structure")
+    cbf.find_column(b"encoding_type")
     cbf.select_row(0)
     types = []
     for i in range(cbf.count_rows()):
@@ -142,12 +142,12 @@ def read_multitile_cbf_image(cbf_image):
 
     # read the data
     data = {}
-    cbf.find_category("array_data")
+    cbf.find_category(b"array_data")
     for i in range(cbf.count_rows()):
-        cbf.find_column("array_id")
+        cbf.find_column(b"array_id")
         name = cbf.get_value()
 
-        cbf.find_column("data")
+        cbf.find_column(b"data")
         assert cbf.get_typeofvalue().find("bnry") > -1
 
         if types[i] == "signed 32-bit integer":
@@ -169,27 +169,27 @@ def read_multitile_cbf_image(cbf_image):
 
     # extract the data for each panel
     try:
-        cbf.find_category("array_structure_list_section")
+        cbf.find_category(b"array_structure_list_section")
         has_sections = True
     except Exception:
         has_sections = False
     if has_sections:
         section_shapes = {}
         for i in range(cbf.count_rows()):
-            cbf.find_column("id")
+            cbf.find_column(b"id")
             section_name = cbf.get_value()
             if not section_name in section_shapes:
                 section_shapes[section_name] = {}
-            cbf.find_column("array_id")
+            cbf.find_column(b"array_id")
             if not "array_id" in section_shapes[section_name]:
                 section_shapes[section_name]["array_id"] = cbf.get_value()
             else:
                 assert section_shapes[section_name]["array_id"] == cbf.get_value()
-            cbf.find_column("index")
+            cbf.find_column(b"index")
             axis_index = int(cbf.get_value()) - 1
-            cbf.find_column("start")
+            cbf.find_column(b"start")
             axis_start = int(cbf.get_value()) - 1
-            cbf.find_column("end")
+            cbf.find_column(b"end")
             axis_end = int(cbf.get_value())
 
             section_shapes[section_name][axis_index] = slice(axis_start, axis_end)
