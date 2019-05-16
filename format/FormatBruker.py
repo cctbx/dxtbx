@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.Format import Format
+from six.moves import range
 
 
 class FormatBruker(Format):
@@ -78,7 +79,7 @@ class FormatBruker(Format):
         except IOError:
             return False
         matches = []
-        for x in xrange(0, 1024, 80):
+        for x in range(0, 1024, 80):
             word = tag[x : x + 16]
             if word[0:7].isupper() and word[7] == ":":
                 matches.append(word)

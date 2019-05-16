@@ -8,6 +8,7 @@ import pycbf
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
+from six.moves import range
 
 
 class cbf_wrapper(pycbf.cbf_handle_struct):
@@ -105,7 +106,7 @@ class FormatCBFMultiTile(FormatCBFFull):
 
         d = Detector()
 
-        for i in xrange(cbf.count_elements()):
+        for i in range(cbf.count_elements()):
             ele_id = cbf.get_element_id(i)
             cbf.find_category("diffrn_data_frame")
             cbf.find_column("detector_element_id")

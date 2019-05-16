@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 
 from dxtbx.format.FormatPY import FormatPY
+from six.moves import range
 
 
 class FormatPYunspecified(FormatPY):
@@ -188,7 +189,7 @@ class FormatPYunspecified(FormatPY):
         mask = flex.bool(flex.grid(data.focus()))
 
         # set active areas to True so they are not masked
-        for i in xrange(len(tiling) // 4):
+        for i in range(len(tiling) // 4):
             x1, y1, x2, y2 = tiling[4 * i : (4 * i) + 4]
             sub_array = flex.bool(flex.grid(x2 - x1, y2 - y1), True)
             mask.matrix_paste_block_in_place(sub_array, x1, y1)

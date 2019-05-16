@@ -6,13 +6,14 @@
 # $Id:
 #
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFMultiTileHierarchy import FormatCBFMultiTileHierarchyStill
 from dxtbx.format.FormatCBFFull import FormatCBFFullStill
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from scitbx.matrix import col, sqr
 import pycbf
+from six.moves import range
 
 
 class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
@@ -183,15 +184,13 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
             in the table array_structure list, which maps an array_section_id to axis_set_id,
             which can then be matchedup with the axes of the object returned by construct_detector
             """
-            all_cbfdetectors = [
-                cbf.construct_detector(i) for i in xrange(len(detector))
-            ]
+            all_cbfdetectors = [cbf.construct_detector(i) for i in range(len(detector))]
             all_panelnames = [panel.get_name() for panel in detector]
 
             # map the array_section_ids, which match the panel names, to their root axis names
             panel_name_mapping = {}
             cbf.find_category("array_structure_list")
-            for i in xrange(cbf.count_rows()):
+            for i in range(cbf.count_rows()):
                 cbf.find_column("array_section_id")
                 name = cbf.get_value()
                 if name in all_panelnames and name not in panel_name_mapping.values():

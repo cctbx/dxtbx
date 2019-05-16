@@ -12,7 +12,7 @@ import libtbx.phil
 from libtbx import easy_pickle
 from libtbx.utils import Sorry, Usage
 from scitbx.matrix import col
-
+from six.moves import range
 
 master_phil = libtbx.phil.parse(
     """
@@ -147,9 +147,9 @@ def run(args, imageset=None):
         n_images = len(iset)
         if params.image_number is None:
             if params.max_images is None:
-                subiterable = xrange(n_images)
+                subiterable = range(n_images)
             else:
-                subiterable = xrange(0, min(params.max_images, n_images))
+                subiterable = range(0, min(params.max_images, n_images))
         else:
             subiterable = [params.image_number]
         for image_number in subiterable:
@@ -264,7 +264,7 @@ def run(args, imageset=None):
             std_devs = flex.sqrt(std_devs)
 
             twotheta = (
-                flex.double(xrange(len(results))) * extent_two_theta / params.n_bins
+                flex.double(range(len(results))) * extent_two_theta / params.n_bins
             )
             q_vals = (
                 4 * math.pi * flex.sin(math.pi * twotheta / 360) / beam.get_wavelength()
@@ -295,7 +295,7 @@ def run(args, imageset=None):
                 xvals = resolution
                 max_x = resolution[flex.first_index(results, max_result)]
 
-            for i in xrange(len(results)):
+            for i in range(len(results)):
                 val = xvals[i]
                 if params.output_bins and "%.3f" % results[i] != "nan":
                     # logger.write("%9.3f %9.3f\n"%     (val,results[i]))        #.xy  format for Rex.cell.

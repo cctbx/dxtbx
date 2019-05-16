@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import six.moves.cPickle as pickle
 import os
 import json
 
@@ -8,8 +7,9 @@ from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSweep
 from dxtbx.model import Beam, Detector, Goniometer, Scan
-
 import pytest
+import six.moves.cPickle as pickle
+from six.moves import range
 
 
 @pytest.fixture
@@ -156,7 +156,7 @@ def test_json2(multiple_block_filenames):
                 assert im1.get_scan() == im2.get_scan()
             else:
                 assert not isinstance(im2, ImageSweep)
-                for i in xrange(len(im1)):
+                for i in range(len(im1)):
                     assert im1.get_beam(i) == im2.get_beam(i)
                     assert im1.get_detector(i) == im2.get_detector(i)
 

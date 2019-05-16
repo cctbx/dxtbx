@@ -17,6 +17,7 @@ from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model import Detector
 from libtbx.utils import Sorry
 from scitbx.matrix import col, sqr
+from six.moves import range
 
 
 class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
@@ -212,7 +213,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             cbf.find_column("array_id")
 
         panel_names = []
-        for i in xrange(cbf.count_rows()):
+        for i in range(cbf.count_rows()):
             cbf.select_row(i)
             if cbf.get_typeofvalue() == "null":
                 continue
@@ -226,7 +227,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         # detector objects with panel names
         detector_axes = []
 
-        for i in xrange(len(panel_names)):
+        for i in range(len(panel_names)):
             cbf_detector = cbf.construct_detector(i)
             axis0 = cbf_detector.get_detector_surface_axes(0)
             detector_axes.append(axis0)
@@ -326,7 +327,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             cbf.find_column("encoding_type")
             cbf.select_row(0)
             types = []
-            for i in xrange(cbf.count_rows()):
+            for i in range(cbf.count_rows()):
                 types.append(cbf.get_value())
                 cbf.next_row()
             assert len(types) == cbf.count_rows()
@@ -334,7 +335,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             # read the data
             data = collections.OrderedDict()
             cbf.find_category("array_data")
-            for i in xrange(cbf.count_rows()):
+            for i in range(cbf.count_rows()):
                 cbf.find_column("array_id")
                 name = cbf.get_value()
 
@@ -361,7 +362,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             # extract the data for each panel
             if cbf.has_sections():
                 section_shapes = collections.OrderedDict()
-                for i in xrange(cbf.count_rows()):
+                for i in range(cbf.count_rows()):
                     cbf.find_column("id")
                     section_name = cbf.get_value()
                     if not section_name in section_shapes:

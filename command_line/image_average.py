@@ -39,7 +39,7 @@ def splitit(l, n):
     )  # remainder after n chunks of size s = how many chunks of size s+1 are needed
     r = []  # result
     p = 0  # pointer
-    for i in xrange(n):
+    for i in range(n):
         if i < m:
             r.append(l[p : p + s + 1])
             p += s + 1
@@ -82,12 +82,12 @@ class image_worker(object):
                 sum_wavelength = wavelength
 
             else:
-                for p in xrange(len(img)):
-                    sel = (img[p] > max_img[p]).as_1d()
-                    max_img[p].set_selected(sel, img[p].select(sel))
+                for n, image in enumerate(img):
+                    sel = (image > max_img[n]).as_1d()
+                    max_img[n].set_selected(sel, image.select(sel))
 
-                    sum_img[p] += img[p]
-                    ssq_img[p] += flex.pow2(img[p])
+                    sum_img[n] += image
+                    ssq_img[n] += flex.pow2(image)
                 sum_distance += distance
                 sum_wavelength += wavelength
 
@@ -122,7 +122,7 @@ class multi_image_worker(image_worker):
         image_data = self.imageset[n]
         if not isinstance(image_data, tuple):
             image_data = (image_data,)
-        img = tuple([image_data[i].as_1d().as_double() for i in xrange(len(detector))])
+        img = tuple(image_data[i].as_1d().as_double() for i in range(len(detector)))
         wavelength = beam.get_wavelength()
 
         return img, detector.hierarchy().get_distance(), wavelength
@@ -152,7 +152,7 @@ class single_image_worker(image_worker):
         image_data = img_instance.get_raw_data()
         if not isinstance(image_data, tuple):
             image_data = (image_data,)
-        img = tuple([image_data[i].as_1d().as_double() for i in xrange(len(detector))])
+        img = tuple(image_data[i].as_1d().as_double() for i in range(len(detector)))
         wavelength = beam.get_wavelength()
 
         return img, detector.hierarchy().get_distance(), wavelength
@@ -308,9 +308,7 @@ def run(argv=None):
         size = comm.Get_size()
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
-        iterable = [
-            iterable[i] for i in xrange(len(iterable)) if (i + rank) % size == 0
-        ]
+        iterable = [i for n, i in enumerate(iterable) if (n + rank) % size == 0]
         results = [worker(iterable)]
         results = comm.gather(results, root=0)
         if rank != 0:
@@ -351,7 +349,7 @@ def run(argv=None):
             ssq_img = r_ssq_img
             sum_wavelength = r_sum_wavelength
         else:
-            for p in xrange(len(sum_img)):
+            for p in range(len(sum_img)):
                 sel = (r_max_img[p] > max_img[p]).as_1d()
                 max_img[p].set_selected(sel, r_max_img[p].select(sel))
 
@@ -369,7 +367,7 @@ def run(argv=None):
 
     # Calculate averages for measures where other statistics do not make
     # sense.  Note that avg_img is required for stddev_img.
-    avg_img = tuple([sum_img[p].as_double() / nmemb for p in xrange(len(sum_img))])
+    avg_img = tuple(s.as_double() / nmemb for s in sum_img)
     avg_distance = sum_distance / nmemb
     avg_wavelength = sum_wavelength / nmemb
 
@@ -386,9 +384,9 @@ def run(argv=None):
     # Output the average image, maximum projection image, and standard
     # deviation image, if requested.
     if command_line.options.avg_path is not None:
-        for p in xrange(len(detector)):
-            fast, slow = detector[p].get_image_size()
-            avg_img[p].resize(flex.grid(slow, fast))
+        for n, d in enumerate(detector):
+            fast, slow = d.get_image_size()
+            avg_img[n].resize(flex.grid(slow, fast))
 
         writer = FullCBFWriter(imageset=imageset)
         cbf = writer.get_cbf_handle(header_only=True)
@@ -396,9 +394,9 @@ def run(argv=None):
         writer.write_cbf(command_line.options.avg_path, cbf=cbf)
 
     if command_line.options.max_path is not None:
-        for p in xrange(len(detector)):
-            fast, slow = detector[p].get_image_size()
-            max_img[p].resize(flex.grid(slow, fast))
+        for n, d in enumerate(detector):
+            fast, slow = d.get_image_size()
+            max_img[n].resize(flex.grid(slow, fast))
         max_img = tuple(max_img)
 
         writer = FullCBFWriter(imageset=imageset)
@@ -408,22 +406,22 @@ def run(argv=None):
 
     if command_line.options.stddev_path is not None:
         stddev_img = []
-        for p in xrange(len(detector)):
+        for n, d in enumerate(detector):
             stddev_img.append(
-                ssq_img[p].as_double() - sum_img[p].as_double() * avg_img[p]
+                ssq_img[n].as_double() - sum_img[n].as_double() * avg_img[n]
             )
 
             # Accumulating floating-point numbers introduces errors, which may
             # cause negative variances.  Since a two-pass approach is
             # unacceptable, the standard deviation is clamped at zero.
-            stddev_img[p].set_selected(stddev_img[p] < 0, 0)
+            stddev_img[n].set_selected(stddev_img[n] < 0, 0)
             if nmemb == 1:
-                stddev_img[p] = flex.sqrt(stddev_img[p])
+                stddev_img[n] = flex.sqrt(stddev_img[n])
             else:
-                stddev_img[p] = flex.sqrt(stddev_img[p] / (nmemb - 1))
+                stddev_img[n] = flex.sqrt(stddev_img[n] / (nmemb - 1))
 
-            fast, slow = detector[p].get_image_size()
-            stddev_img[p].resize(flex.grid(slow, fast))
+            fast, slow = d.get_image_size()
+            stddev_img[n].resize(flex.grid(slow, fast))
         stddev_img = tuple(stddev_img)
 
         writer = FullCBFWriter(imageset=imageset)

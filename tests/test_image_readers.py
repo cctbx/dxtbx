@@ -4,18 +4,16 @@ import os
 
 import dxtbx.tests.imagelist
 import pytest
+from six.moves import range
 
 
 def get_smv_header(image_file):
-    header_size = int(
-        open(image_file, "rb")
-        .read(45)
-        .split("\n")[1]
-        .split("=")[1]
-        .replace(";", "")
-        .strip()
-    )
-    header_text = open(image_file, "rb").read(header_size)
+    with open(image_file, "rb") as fh:
+        header_size = int(
+            fh.read(45).split("\n")[1].split("=")[1].replace(";", "").strip()
+        )
+        fh.seek(0)
+        header_text = fh.read(header_size)
     header_dictionary = {}
 
     # Check that we have the whole header, contained within { }.  Stop
@@ -137,7 +135,7 @@ def read_multitile_cbf_image(cbf_image):
     cbf.find_column("encoding_type")
     cbf.select_row(0)
     types = []
-    for i in xrange(cbf.count_rows()):
+    for i in range(cbf.count_rows()):
         types.append(cbf.get_value())
         cbf.next_row()
     assert len(types) == cbf.count_rows()
@@ -145,7 +143,7 @@ def read_multitile_cbf_image(cbf_image):
     # read the data
     data = {}
     cbf.find_category("array_data")
-    for i in xrange(cbf.count_rows()):
+    for i in range(cbf.count_rows()):
         cbf.find_column("array_id")
         name = cbf.get_value()
 
@@ -177,7 +175,7 @@ def read_multitile_cbf_image(cbf_image):
         has_sections = False
     if has_sections:
         section_shapes = {}
-        for i in xrange(cbf.count_rows()):
+        for i in range(cbf.count_rows()):
             cbf.find_column("id")
             section_name = cbf.get_value()
             if not section_name in section_shapes:

@@ -16,13 +16,14 @@ from dxtbx.model.goniometer import GoniometerFactory
 from libtbx import easy_pickle
 from libtbx.test_utils import Exception_expected
 from scitbx import matrix
+from six.moves import range
 
 
 def compare_tuples(a, b, tol=1.0e-6):
 
     assert len(a) == len(b)
 
-    for j in xrange(len(a)):
+    for j in range(len(a)):
         if math.fabs(b[j] - a[j]) > tol:
             return False
 

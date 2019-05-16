@@ -45,16 +45,14 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
         """Check to see if this looks like an XPP Rayonix TIFF """
 
         def get(ftype, index, typelen, offset=1024):
-            f = open(image_file, "rb")
             si_format = "<"
-            f.seek(offset + index)
-            rawdata = f.read(typelen)
+            with open(image_file, "rb") as f:
+                f.seek(offset + index)
+                rawdata = f.read(typelen)
             return struct.unpack(si_format + ftype, rawdata)[0]
 
-        data = [get("c", 1152 + i, 1) for i in xrange(128)]
-        filepath = "".join(
-            [c for c in data if c != " " and ord(c) < 127 and ord(c) > 32]
-        )
+        data = [get("c", 1152 + i, 1) for i in range(128)]
+        filepath = "".join(c for c in data if c != " " and ord(c) < 127 and ord(c) > 32)
 
         pattern = re.compile(".*xpp[a-zA-Z][0-9][0-9][0-9][0-9].*")
 

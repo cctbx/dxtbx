@@ -138,7 +138,7 @@ class FormatXTCJungfrau(FormatXTC):
         pg0.set_name("D%d" % (det_num))
 
         # Now deal with Qx
-        for quad_num in xrange(2):
+        for quad_num in range(2):
             pg1 = pg0.add_group()
             Qx = D0.get_list_of_children()[quad_num]
             xx, yy, zz = Qx.get_pixel_coords()
@@ -156,7 +156,7 @@ class FormatXTCJungfrau(FormatXTC):
             pg1.set_name("D%dQ%d" % (det_num, quad_num))
 
             # Now deal with Az
-            for asic_num in xrange(8):
+            for asic_num in range(8):
                 val = "ARRAY_D0Q%dA%d" % (quad_num, asic_num)
                 p = pg1.add_panel()
                 dim_slow = xx.shape[0]

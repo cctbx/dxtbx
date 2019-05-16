@@ -152,7 +152,6 @@ class FormatXTCCspad(FormatXTC):
 
     # XXX Implement recursive version
     def _detector(self, index=None):
-        import psana
         from xfel.cftbx.detector.cspad_cbf_tbx import read_slac_metrology
         from dxtbx.model import Detector
         from scitbx.matrix import col
@@ -181,7 +180,7 @@ class FormatXTCCspad(FormatXTC):
         origin += col((0.0, 0.0, -distance))
         pg0.set_local_frame(fast.elems, slow.elems, origin.elems)
         pg0.set_name("D%d" % (det_num))
-        for quad_num in xrange(4):
+        for quad_num in range(4):
             # Now deal with Qx
             pg1 = pg0.add_group()
             origin = col((cob[(0, quad_num)] * col((0, 0, 0, 1)))[0:3])
@@ -189,7 +188,7 @@ class FormatXTCCspad(FormatXTC):
             slow = col((cob[(0, quad_num)] * col((0, 1, 0, 1)))[0:3]) - origin
             pg1.set_local_frame(fast.elems, slow.elems, origin.elems)
             pg1.set_name("D%dQ%d" % (det_num, quad_num))
-            for sensor_num in xrange(8):
+            for sensor_num in range(8):
                 # Now deal with Sy
                 pg2 = pg1.add_group()
                 origin = col((cob[(0, quad_num, sensor_num)] * col((0, 0, 0, 1)))[0:3])
@@ -204,7 +203,7 @@ class FormatXTCCspad(FormatXTC):
                 pg2.set_local_frame(fast.elems, slow.elems, origin.elems)
                 pg2.set_name("D%dQ%dS%d" % (det_num, quad_num, sensor_num))
                 # Now deal with Az
-                for asic_num in xrange(2):
+                for asic_num in range(2):
                     val = "ARRAY_D0Q%dS%dA%d" % (quad_num, sensor_num, asic_num)
                     p = pg2.add_panel()
                     origin = col(

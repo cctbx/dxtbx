@@ -25,6 +25,7 @@ from scitbx.array_family import flex
 from scitbx.math.superpose import least_squares_fit
 from xfel.command_line.cspad_detector_congruence import iterate_detector_at_level
 from libtbx.test_utils import approx_equal
+from six.moves import range
 
 help_message = (
     """
@@ -130,7 +131,7 @@ class Script(object):
             assert len(a) % 4 == len(b) % 4 == 0
             ca = flex.vec3_double()
             cb = flex.vec3_double()
-            for i in xrange(len(a) // 4):
+            for i in range(len(a) // 4):
                 ca.append(a[i : i + 4].mean())
                 cb.append(b[i : i + 4].mean())
             return 1000 * math.sqrt((ca - cb).sum_sq() / len(ca))
@@ -256,7 +257,7 @@ class Script(object):
         if params.panel_list is not None:
             reference_sites = flex.vec3_double()
             moved_sites = flex.vec3_double()
-            for panel_id in xrange(len(reference)):
+            for panel_id in range(len(reference)):
                 for detector, sites in zip(
                     [reference, moving], [reference_sites, moved_sites]
                 ):

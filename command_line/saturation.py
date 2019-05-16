@@ -13,20 +13,16 @@ def saturation(image_file):
         return (
             0,
             max(
-                [
-                    max(raw_data[pid]) / d[pid].get_trusted_range()[1]
-                    for pid in xrange(len(d))
-                ]
+                max(raw_data[pid]) / detector.get_trusted_range()[1]
+                for pid, detector in enumerate(d)
             ),
         )
     else:
         return (
             i.get_scan().get_image_range()[0],
             max(
-                [
-                    max(raw_data[pid]) / d[pid].get_trusted_range()[1]
-                    for pid in xrange(len(d))
-                ]
+                max(raw_data[pid]) / detector.get_trusted_range()[1]
+                for pid, detector in enumerate(d)
             ),
         )
 

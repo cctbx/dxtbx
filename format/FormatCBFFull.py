@@ -14,6 +14,7 @@ from __future__ import absolute_import, division, print_function
 import pycbf
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatStill import FormatStill
+from six.moves import range
 
 
 class FormatCBFFull(FormatCBF):
@@ -157,7 +158,7 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         cbf.find_column("encoding_type")
         cbf.select_row(0)
         types = []
-        for i in xrange(cbf.count_rows()):
+        for i in range(cbf.count_rows()):
             types.append(cbf.get_value())
             cbf.next_row()
         assert (

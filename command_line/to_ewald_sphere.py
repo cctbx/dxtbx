@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from six.moves import range
+
 
 def to_ewald_sphere(list_of_images):
 
@@ -14,7 +16,7 @@ def to_ewald_sphere(list_of_images):
     start, end = sweep.get_array_range()
     image_to_ewald_sphere = ImageToEwaldSphere(beam, detector, gonio, scan)
 
-    for frame in xrange(start, end):
+    for frame in range(start, end):
         intensity = sweep[frame]
         x_list = image_to_ewald_sphere(frame)
         for k, x in enumerate(x_list):
