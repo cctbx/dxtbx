@@ -42,6 +42,8 @@ from dxtbx.model.detector import Detector, DetectorFactory
 from dxtbx.model.beam import Beam, BeamFactory
 from dxtbx.model.scan import Scan, ScanFactory
 
+from six.moves.urllib.parse import urlparse
+
 
 class _MetaFormat(type):
     """A metaclass for the Format base class (and hence all format classes)
@@ -560,8 +562,6 @@ class Format(object):
     @staticmethod
     def is_url(path):
         """See if the file is a URL."""
-
-        from urlparse import urlparse
 
         # Windows file paths can get caught up in this - check that the
         # first letter is one character (which I think should be safe: all

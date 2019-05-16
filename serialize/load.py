@@ -9,7 +9,9 @@
 #  This code is distributed under the BSD license, a copy of which is
 #  included in the root directory of this package.
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
+
+import os
 
 
 def _decode_list(data):
@@ -29,7 +31,7 @@ def _decode_list(data):
 def _decode_dict(data):
     """ Decode a dict to str from unicode. """
     rv = {}
-    for key, value in data.iteritems():
+    for key, value in data.items():
         if isinstance(key, unicode):
             key = key.encode("utf-8")
         if isinstance(value, unicode):
@@ -70,11 +72,9 @@ def imageset(filename):
         The models
 
     """
-    from os.path import abspath, dirname
-
     # If the input is a string then open and read from that file
-    filename = abspath(filename)
-    directory = dirname(filename)
+    filename = os.path.abspath(filename)
+    directory = os.path.dirname(filename)
     with open(filename, "r") as infile:
         return imageset_from_string(infile.read(), directory=directory)
 
