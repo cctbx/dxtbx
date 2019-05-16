@@ -45,7 +45,7 @@ class FormatCBF(Format):
                 header += add
             else:
                 break
-        return header.split(b"--CIF-BINARY-FORMAT-SECTION--")[0].decode()
+        return header.split(b"--CIF-BINARY-FORMAT-SECTION--")[0]
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
