@@ -361,7 +361,7 @@ class Format(object):
         from os.path import abspath
 
         # Get filename absolute paths
-        filenames = map(abspath, filenames)
+        filenames = tuple(map(abspath, filenames))
 
         # Make it a dict
         if format_kwargs is None:
