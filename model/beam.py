@@ -104,8 +104,10 @@ class BeamFactory:
                 return None
             else:
                 return from_dict(t, None)
-        elif t != None:
-            d = dict(t.items() + d.items())
+        elif t:
+            joined = t.copy()
+            joined.update(d)
+            d = joined
 
         # Create the model from the dictionary
         return Beam.from_dict(d)
