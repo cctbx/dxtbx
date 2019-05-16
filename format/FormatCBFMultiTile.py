@@ -220,7 +220,7 @@ class FormatCBFMultiTileStill(FormatStill, FormatCBFMultiTile):
         # According to ImageCIF, "Data items in the DIFFRN_MEASUREMENT_AXIS
         # category associate axes with goniometers."
         # http://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/Cdiffrn_measurement_axis.html
-        if "diffrn_measurement_axis" in header:
+        if b"diffrn_measurement_axis" in header:
             return False
         return True
 

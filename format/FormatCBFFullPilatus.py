@@ -24,8 +24,8 @@ class FormatCBFFullPilatus(FormatCBFFull):
 
         header = FormatCBFFull.get_cbf_header(image_file)
 
-        for record in header.split("\n"):
-            if "_array_data.header_convention" in record and "PILATUS" in record:
+        for record in header.split(b"\n"):
+            if b"_array_data.header_convention" in record and b"PILATUS" in record:
                 return True
 
         return False

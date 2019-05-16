@@ -28,11 +28,11 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
         header = FormatCBFMiniEiger.get_cbf_header(image_file)
 
-        for record in header.split("\n"):
+        for record in header.split(b"\n"):
             if (
-                "# detector" in record.lower()
-                and "eiger" in record.lower()
-                and "S/N 160-0001" in header
+                b"# detector" in record.lower()
+                and b"eiger" in record.lower()
+                and b"S/N 160-0001" in header
             ):
                 return True
 
