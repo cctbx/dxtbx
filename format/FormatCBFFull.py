@@ -28,7 +28,7 @@ class FormatCBFFull(FormatCBF):
 
         header = FormatCBF.get_cbf_header(image_file)
 
-        if not "_diffrn.id" in header and not "_diffrn_source" in header:
+        if not b"_diffrn.id" in header and not b"_diffrn_source" in header:
             return False
 
         return True
@@ -118,13 +118,13 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
 
         header = FormatCBF.get_cbf_header(image_file)
 
-        if not "_diffrn.id" in header and not "_diffrn_source":
+        if not b"_diffrn.id" in header and not b"_diffrn_source":
             return False
 
         # According to ImageCIF, "Data items in the DIFFRN_MEASUREMENT_AXIS
         # category associate axes with goniometers."
         # http://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/Cdiffrn_measurement_axis.html
-        if "diffrn_measurement_axis" in header:
+        if b"diffrn_measurement_axis" in header:
             return False
 
         # This implementation only supports single panel.

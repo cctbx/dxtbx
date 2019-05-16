@@ -26,11 +26,11 @@ class FormatCBFMiniPilatusXXX(FormatCBFMiniPilatus):
 
         header = FormatCBFMiniPilatus.get_cbf_header(image_file)
 
-        for record in header.split("\n"):
+        for record in header.split(b"\n"):
             if (
-                "# Detector" in record
-                and "PILATUS" in record
-                and "S/N XX-XXX" in header
+                b"# Detector" in record
+                and b"PILATUS" in record
+                and b"S/N XX-XXX" in header
             ):
                 return True
 

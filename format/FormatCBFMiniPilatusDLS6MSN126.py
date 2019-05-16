@@ -27,9 +27,9 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
 
         for record in header.split("\n"):
             if (
-                "# Detector" in record
-                and "PILATUS" in record
-                and "S/N 60-0126" in header
+                b"# Detector" in record
+                and b"PILATUS" in record
+                and b"S/N 60-0126" in header
             ):
                 return True
 

@@ -24,11 +24,11 @@ class FormatCBFMiniEigerPetraP14(FormatCBFMiniEiger):
 
         header = FormatCBFMiniEiger.get_cbf_header(image_file)
 
-        for record in header.split("\n"):
+        for record in header.split(b"\n"):
             if (
-                "# detector" in record.lower()
-                and "eiger" in record.lower()
-                and "E-32-0107" in record
+                b"# detector" in record.lower()
+                and b"eiger" in record.lower()
+                and b"E-32-0107" in record
             ):
                 return True
 

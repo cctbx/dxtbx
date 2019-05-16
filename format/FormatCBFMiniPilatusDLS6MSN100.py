@@ -25,11 +25,11 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
 
         header = FormatCBFMiniPilatus.get_cbf_header(image_file)
 
-        for record in header.split("\n"):
+        for record in header.split(b"\n"):
             if (
-                "# Detector" in record
-                and "PILATUS" in record
-                and "S/N 60-0100 Diamond" in header
+                b"# Detector" in record
+                and b"PILATUS" in record
+                and b"S/N 60-0100 Diamond" in header
             ):
                 return True
 

@@ -23,8 +23,8 @@ class FormatCBFMiniEigerMaxIVBio(FormatCBFMiniEiger):
 
         header = FormatCBFMiniEiger.get_cbf_header(image_file)
 
-        for record in header.split("\n"):
-            if "Detector: Dectris Eiger 16M, S/N E-32-0105" in record:
+        for record in header.split(b"\n"):
+            if b"Detector: Dectris Eiger 16M, S/N E-32-0105" in record:
                 return True
 
         return False
