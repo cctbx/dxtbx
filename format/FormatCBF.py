@@ -23,7 +23,7 @@ class FormatCBF(Format):
         """Check to see if this looks like an CBF format image, i.e. we can
         make sense of it."""
 
-        if "###CBF" in FormatCBF.open_file(image_file, "rb").read(6):
+        if b"###CBF" in FormatCBF.open_file(image_file, "rb").read(6):
             return True
 
         return False
@@ -39,13 +39,13 @@ class FormatCBF(Format):
         header = fin.read(4096)
         # FIXME this is grim as it is searching over longer and longer
         # files
-        while not "--CIF-BINARY-FORMAT-SECTION--" in header:
+        while not b"--CIF-BINARY-FORMAT-SECTION--" in header:
             add = fin.read(4096)
             if add:
                 header += add
             else:
                 break
-        return header.split("--CIF-BINARY-FORMAT-SECTION--")[0]
+        return header.split(b"--CIF-BINARY-FORMAT-SECTION--")[0].decode()
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
@@ -72,9 +72,9 @@ class FormatCBF(Format):
         in_binary_format_section = False
 
         for record in FormatCBF.open_file(self._image_file, "rb"):
-            if "--CIF-BINARY-FORMAT-SECTION--" in record:
+            if b"--CIF-BINARY-FORMAT-SECTION--" in record:
                 in_binary_format_section = True
-            elif in_binary_format_section and record[0] == "X":
+            elif in_binary_format_section and record[0] == b"X":
                 self._mime_header += record
             if in_binary_format_section and len(record.strip()) == 0:
                 # http://sourceforge.net/apps/trac/cbflib/wiki/ARRAY_DATA%20Category
