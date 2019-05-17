@@ -261,7 +261,7 @@ namespace dxtbx {
       } else if (name == "bool") {
         image = Image<bool>(get_image_tile_from_object<bool>(data));
       } else if (name != "NoneType") {
-        throw DXTBX_ERROR("Unknown data type for mask");
+        throw DXTBX_ERROR("Unknown data type " + name + " for mask");
       }
       return image;
     }
@@ -497,7 +497,7 @@ namespace dxtbx {
       } else if (name == "int") {
         buffer = ImageBuffer(get_image_from_tuple<int>(obj));
       } else {
-        throw DXTBX_ERROR("Unknown type");
+        throw DXTBX_ERROR("Unknown type " + name);
       }
       return buffer;
     }
@@ -515,7 +515,7 @@ namespace dxtbx {
       } else if (name == "int") {
         buffer = ImageBuffer(Image<int>(get_image_tile_from_object<int>(obj)));
       } else {
-        throw DXTBX_ERROR("Unknown type");
+        throw DXTBX_ERROR("Unknown type " + name);
       }
       return buffer;
     }
