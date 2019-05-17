@@ -156,9 +156,9 @@ def determine_eiger_mask(xdetector):
 
     size = xdetector[0].get_image_size()
 
-    # Hardcoded module size and gap size
+    # Hardcoded module size and gap size - not sure why len(top line) == 1?
 
-    if size[1] in [2164]:
+    if size[0] in [2164]:
         module_size_fast, module_size_slow = (1030, 514)
         gap_size_fast, gap_size_slow = (10, 36)
     else:
@@ -166,10 +166,10 @@ def determine_eiger_mask(xdetector):
         gap_size_fast, gap_size_slow = (10, 37)
 
     # Edge dead areas not included, only gaps between modules matter
-    n_fast, remainder = divmod(size[0], module_size_fast)
+    n_fast, remainder = divmod(size[1], module_size_fast)
     assert (n_fast - 1) * gap_size_fast == remainder
 
-    n_slow, remainder = divmod(size[1], module_size_slow)
+    n_slow, remainder = divmod(size[0], module_size_slow)
     assert (n_slow - 1) * gap_size_slow == remainder
 
     # Specify the dead areas between the modules, i.e. the rows and columns
