@@ -156,6 +156,12 @@ def determine_eiger_mask(xdetector):
 
     size = xdetector[0].get_image_size()
 
+    # we cannot win - there are instruments in the wild with swapped
+    # fast and slow axes
+    reverse_me = [(3110, 3269)]
+    if size in reverse_me:
+        size = tuple(reversed(size))
+
     # Hardcoded module size and gap size - not sure why len(top line) == 1?
 
     if size[0] in [2164]:
