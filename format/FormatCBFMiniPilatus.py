@@ -31,21 +31,21 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
         header = FormatCBFMini.get_cbf_header(image_file)
 
-        for record in header.split(b"\n"):
-            if b"# Detector" in record:
-                if b"EIGER" in record.upper():
+        for record in header.split("\n"):
+            if "# Detector" in record:
+                if "EIGER" in record.upper():
                     return False
-                if b"TIMEPIX" in record.upper():
+                if "TIMEPIX" in record.upper():
                     return False
 
-        for record in header.split(b"\n"):
-            if b"_array_data.header_convention" in record and b"PILATUS" in record:
+        for record in header.split("\n"):
+            if "_array_data.header_convention" in record and "PILATUS" in record:
                 return True
-            if b"_array_data.header_convention" in record and b"SLS" in record:
+            if "_array_data.header_convention" in record and "SLS" in record:
                 return True
-            if b"_array_data.header_convention" in record and b"?" in record:
+            if "_array_data.header_convention" in record and "?" in record:
                 return True
-            if b"# Detector" in record and b"PILATUS" in record:  # CBFlib v0.8.0 allowed
+            if "# Detector" in record and "PILATUS" in record:  # CBFlib v0.8.0 allowed
                 return True
 
         return False

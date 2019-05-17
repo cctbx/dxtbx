@@ -27,8 +27,8 @@ class FormatCBFMiniPilatusDESY6MSN115(FormatCBFMiniPilatus):
 
         header = FormatCBFMiniPilatus.get_cbf_header(image_file)
 
-        for record in header.split(b"\n"):
-            if b"Detector: PILATUS 6M-F, S/N 60-0115-F" in record:
+        for record in header.split("\n"):
+            if "Detector: PILATUS 6M-F, S/N 60-0115-F" in record:
                 return True
 
         return False

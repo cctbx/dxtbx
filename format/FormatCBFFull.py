@@ -28,7 +28,7 @@ class FormatCBFFull(FormatCBF):
 
         header = FormatCBF.get_cbf_header(image_file)
 
-        if not b"_diffrn.id" in header and not b"_diffrn_source" in header:
+        if not "_diffrn.id" in header and not "_diffrn_source" in header:
             return False
 
         return True
@@ -60,7 +60,7 @@ class FormatCBFFull(FormatCBF):
             return self._cbf_handle
         except AttributeError:
             self._cbf_handle = pycbf.cbf_handle_struct()
-            self._cbf_handle.read_widefile(self._image_file.encode(), pycbf.MSG_DIGEST)
+            self._cbf_handle.read_widefile(self._image_file, pycbf.MSG_DIGEST)
             return self._cbf_handle
 
     def _goniometer(self):
@@ -118,19 +118,19 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
 
         header = FormatCBF.get_cbf_header(image_file)
 
-        if not b"_diffrn.id" in header and not b"_diffrn_source":
+        if not "_diffrn.id" in header and not "_diffrn_source":
             return False
 
         # According to ImageCIF, "Data items in the DIFFRN_MEASUREMENT_AXIS
         # category associate axes with goniometers."
         # http://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/Cdiffrn_measurement_axis.html
-        if b"diffrn_measurement_axis" in header:
+        if "diffrn_measurement_axis" in header:
             return False
 
         # This implementation only supports single panel.
         try:
             cbf_handle = pycbf.cbf_handle_struct()
-            cbf_handle.read_widefile(image_file.encode(), pycbf.MSG_DIGEST)
+            cbf_handle.read_widefile(image_file, pycbf.MSG_DIGEST)
         except Exception as e:
             if "CBFlib Error" in str(e):
                 return False
@@ -154,8 +154,8 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         # relies on cbflib_adaptbx, which in turn expects a gonio
         cbf = self._get_cbf_handle()
 
-        cbf.find_category(b"array_structure")
-        cbf.find_column(b"encoding_type")
+        cbf.find_category("array_structure")
+        cbf.find_column("encoding_type")
         cbf.select_row(0)
         types = []
         for i in range(cbf.count_rows()):
@@ -179,7 +179,7 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         import numpy
         from scitbx.array_family import flex
 
-        cbf.find_column(b"data")
+        cbf.find_column("data")
         assert cbf.get_typeofvalue().find("bnry") > -1
 
         # handle floats vs ints

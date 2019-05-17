@@ -60,19 +60,19 @@ class FormatCBFMiniPilatusDLS6MSN119(FormatCBFMiniPilatus):
 
         year = 0
 
-        for record in header.split(b"\n"):
-            if b"# 20" in record:
-                year = int(record.replace(b"-", b" ").replace(b"/", b" ").split()[1])
+        for record in header.split("\n"):
+            if "# 20" in record:
+                year = int(record.replace("-", " ").replace("/", " ").split()[1])
                 break
 
         if year <= 0:
             return False
 
-        for record in header.split(b"\n"):
+        for record in header.split("\n"):
             if (
-                b"# Detector" in record
-                and b"PILATUS" in record
-                and b"S/N 60-0119" in header
+                "# Detector" in record
+                and "PILATUS" in record
+                and "S/N 60-0119" in header
             ):
                 if year >= 2015:
                     return True

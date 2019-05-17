@@ -32,11 +32,11 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
 
-        for record in header.split(b"\n"):
+        for record in header.split("\n"):
             if (
-                b"# Detector" in record
-                and b"PILATUS 300K" in record
-                and b"S/N 3-0104, Diamond" in record
+                "# Detector" in record
+                and "PILATUS 300K" in record
+                and "S/N 3-0104, Diamond" in record
             ):
                 return True
 

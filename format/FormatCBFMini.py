@@ -34,17 +34,17 @@ class FormatCBFMini(FormatCBF):
 
         header = FormatCBF.get_cbf_header(image_file)
 
-        if b"_diffrn.id" in header and b"_diffrn_source" in header:
+        if "_diffrn.id" in header and "_diffrn_source" in header:
             return False
 
         def one_of_these_in(record):
             these = [
-                b"PILATUS",
-                b"SLS",
-                b"SSRL",
-                b"?",
-                b"XDS special",
-                b"GENERIC_MINI",  # intended for simulated PAD data, non-Pilatus array size
+                "PILATUS",
+                "SLS",
+                "SSRL",
+                "?",
+                "XDS special",
+                "GENERIC_MINI",  # intended for simulated PAD data, non-Pilatus array size
             ]
             for convention in these:
                 if convention in record:
@@ -52,11 +52,11 @@ class FormatCBFMini(FormatCBF):
             return False
 
         for record in header.split("\n"):
-            if b"_array_data.header_convention" in record and one_of_these_in(record):
+            if "_array_data.header_convention" in record and one_of_these_in(record):
                 return True
-            if b"# Detector" in record and b"PILATUS" in record:  # CBFlib v0.8.0 allowed
+            if "# Detector" in record and "PILATUS" in record:  # CBFlib v0.8.0 allowed
                 return True
-            if b"# Detector" in record and b"ADSC" in record and b"HF-4M" in header:
+            if "# Detector" in record and "ADSC" in record and "HF-4M" in header:
                 return True
 
         return False

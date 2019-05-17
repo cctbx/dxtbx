@@ -82,8 +82,8 @@ class FormatCBFMiniEiger(FormatCBFMini):
 
         header = FormatCBFMini.get_cbf_header(image_file)
 
-        for record in header.split(b"\n"):
-            if b"# detector" in record.lower() and b"eiger" in record.lower():
+        for record in header.split("\n"):
+            if "# detector" in record.lower() and "eiger" in record.lower():
                 return True
 
         return False

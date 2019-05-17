@@ -43,10 +43,10 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         header = FormatCBFMini.get_cbf_header(image_file)
 
-        for record in header.split(b"\n"):
-            if b"# Detector" in record and b"ADSC" in record and b"HF-4M" in header:
+        for record in header.split("\n"):
+            if "# Detector" in record and "ADSC" in record and "HF-4M" in header:
                 return True
-            if b"_array_data.header_convention" in record and b"ADSC" in record:
+            if "_array_data.header_convention" in record and "ADSC" in record:
                 return True
 
         return False
