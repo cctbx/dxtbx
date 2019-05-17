@@ -116,8 +116,8 @@ def compute_frame_rotation(original, final):
 def find_undefined_value(cbf_handle):
     """Given a cbf handle, get the value for the undefined pixel."""
 
-    cbf_handle.find_category("array_intensities")
-    cbf_handle.find_column("undefined_value")
+    cbf_handle.find_category(b"array_intensities")
+    cbf_handle.find_column(b"undefined_value")
     return cbf_handle.get_doublevalue()
 
 

@@ -113,7 +113,7 @@ class FormatCBFFullPilatus(FormatCBFFull):
 
         m = re.search("^#\s*Detector:\s+(.*?)\s*$", self._cif_header, re.MULTILINE)
         if m and m.group(1):
-            panel.set_identifier(m.group(1))
+            panel.set_identifier(m.group(1).encode())
 
         size = detector[0].get_image_size()
         if size == (2463, 2527):
@@ -140,14 +140,14 @@ class FormatCBFFullPilatus(FormatCBFFull):
         slow = 0
         length = 0
 
-        for record in cbf_header.split("\n"):
-            if "X-Binary-Size-Fastest-Dimension" in record:
+        for record in cbf_header.split(b"\n"):
+            if b"X-Binary-Size-Fastest-Dimension" in record:
                 fast = int(record.split()[-1])
-            elif "X-Binary-Size-Second-Dimension" in record:
+            elif b"X-Binary-Size-Second-Dimension" in record:
                 slow = int(record.split()[-1])
-            elif "X-Binary-Number-of-Elements" in record:
+            elif b"X-Binary-Number-of-Elements" in record:
                 length = int(record.split()[-1])
-            elif "X-Binary-Size:" in record:
+            elif b"X-Binary-Size:" in record:
                 size = int(record.split()[-1])
 
         assert length == fast * slow

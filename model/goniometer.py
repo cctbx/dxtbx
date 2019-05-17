@@ -401,33 +401,33 @@ class GoniometerFactory:
         axes = flex.vec3_double()
         angles = flex.double()
         scan_axis = None
-        cbf_handle.find_category("axis")
+        cbf_handle.find_category(b"axis")
         for i in range(cbf_handle.count_rows()):
-            cbf_handle.find_column("equipment")
-            if cbf_handle.get_value() == "goniometer":
-                cbf_handle.find_column("id")
+            cbf_handle.find_column(b"equipment")
+            if cbf_handle.get_value() == b"goniometer":
+                cbf_handle.find_column(b"id")
                 axis_names.append(cbf_handle.get_value())
                 axis = []
                 for i in range(3):
-                    cbf_handle.find_column("vector[%i]" % (i + 1))
+                    cbf_handle.find_column(b"vector[%i]" % (i + 1))
                     axis.append(float(cbf_handle.get_value()))
                 axes.append(axis)
-                cbf_handle.find_column("depends_on")
+                cbf_handle.find_column(b"depends_on")
                 depends_on.append(cbf_handle.get_value())
             cbf_handle.next_row()
 
         # find the starting angles of each goniometer axis and figure out which one
         # is the scan axis (i.e. non-zero angle_increment)
-        cbf_handle.find_category("diffrn_scan_axis")
+        cbf_handle.find_category(b"diffrn_scan_axis")
         for i in range(cbf_handle.count_rows()):
-            cbf_handle.find_column("axis_id")
+            cbf_handle.find_column(b"axis_id")
             axis_name = cbf_handle.get_value()
-            if axis_name not in axis_names:
+            if axis_name.decode() not in axis_names:
                 cbf_handle.next_row()
                 continue
-            cbf_handle.find_column("angle_start")
+            cbf_handle.find_column(b"angle_start")
             axis_angle = float(cbf_handle.get_value())
-            cbf_handle.find_column("angle_increment")
+            cbf_handle.find_column(b"angle_increment")
             increment = float(cbf_handle.get_value())
             angles.append(axis_angle)
             if abs(increment) > 0:

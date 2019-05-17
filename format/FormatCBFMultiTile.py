@@ -40,7 +40,7 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
         changes how its data is stored in the binary sections
         """
         try:
-            self.find_category("array_structure_list_section")
+            self.find_category(b"array_structure_list_section")
         except Exception as e:
             if "CBF_NOTFOUND" not in str(e):
                 raise e
@@ -58,7 +58,7 @@ class FormatCBFMultiTile(FormatCBFFull):
 
         try:
             cbf_handle = pycbf.cbf_handle_struct()
-            cbf_handle.read_widefile(image_file, pycbf.MSG_DIGEST)
+            cbf_handle.read_widefile(image_file.encode(), pycbf.MSG_DIGEST)
         except Exception as e:
             if "CBFlib Error" in str(e):
                 return False
@@ -96,7 +96,7 @@ class FormatCBFMultiTile(FormatCBFFull):
             return self._cbf_handle
         except AttributeError:
             self._cbf_handle = cbf_wrapper()
-            self._cbf_handle.read_widefile(self._image_file, pycbf.MSG_DIGEST)
+            self._cbf_handle.read_widefile(self._image_file.encode(), pycbf.MSG_DIGEST)
             return self._cbf_handle
 
     def _detector(self):
@@ -108,10 +108,10 @@ class FormatCBFMultiTile(FormatCBFFull):
 
         for i in range(cbf.count_elements()):
             ele_id = cbf.get_element_id(i)
-            cbf.find_category("diffrn_data_frame")
-            cbf.find_column("detector_element_id")
+            cbf.find_category(b"diffrn_data_frame")
+            cbf.find_column(b"detector_element_id")
             cbf.find_row(ele_id)
-            cbf.find_column("array_id")
+            cbf.find_column(b"array_id")
             array_id = cbf.get_value()
 
             cbf_detector = cbf.construct_detector(i)
@@ -132,8 +132,8 @@ class FormatCBFMultiTile(FormatCBFFull):
             size = tuple(reversed(cbf.get_image_size(0)))
 
             try:
-                cbf.find_category("array_intensities")
-                cbf.find_column("undefined_value")
+                cbf.find_category(b"array_intensities")
+                cbf.find_column(b"undefined_value")
                 underload = cbf.get_doublevalue()
                 overload = cbf.get_overload(0)
                 trusted_range = (underload, overload)
@@ -180,11 +180,11 @@ class FormatCBFMultiTile(FormatCBFFull):
 
             for panel in d:
                 name = panel.get_name()
-                cbf.find_column("array_id")
+                cbf.find_column(b"array_id")
                 assert name == cbf.get_value()
 
-                cbf.find_column("data")
-                assert cbf.get_typeofvalue().find("bnry") > -1
+                cbf.find_column(b"data")
+                assert cbf.get_typeofvalue().find(b"bnry") > -1
 
                 image_string = cbf.get_realarray_as_string()
                 image = flex.double(numpy.fromstring(image_string, numpy.float))

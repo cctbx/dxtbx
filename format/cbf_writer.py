@@ -455,10 +455,10 @@ class FullCBFWriter(object):
             data = (data,)
 
         array_names = []
-        cbf.find_category("diffrn_data_frame")
+        cbf.find_category(b"diffrn_data_frame")
         while True:
             try:
-                cbf.find_column("array_id")
+                cbf.find_column(b"array_id")
                 array_names.append(cbf.get_value())
                 cbf.next_row()
             except Exception as e:

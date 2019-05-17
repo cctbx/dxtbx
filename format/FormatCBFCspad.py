@@ -25,15 +25,15 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
         make sense of it."""
 
         cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_widefile(image_file, pycbf.MSG_DIGEST)
+        cbf_handle.read_widefile(image_file.encode(), pycbf.MSG_DIGEST)
 
-        cbf_handle.find_category("diffrn_detector")
+        cbf_handle.find_category(b"diffrn_detector")
         if cbf_handle.count_rows() > 1:
             return False  # support 1 detector per file for now
 
-        cbf_handle.find_column("type")
+        cbf_handle.find_column(b"type")
 
-        return cbf_handle.get_value() == "CS PAD"
+        return cbf_handle.get_value() == b"CS PAD"
 
     def _detector(self):
         d = FormatCBFMultiTileHierarchyStill._detector(self)
@@ -79,10 +79,10 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
                     cbf_detector = cbf_detectors[group.get_name()]
                 else:
                     # figure out which panel number this panel is by finding it in diffrn_data_frame
-                    cbf.find_category("diffrn_data_frame")
-                    cbf.find_column("array_id")
+                    cbf.find_category(b"diffrn_data_frame")
+                    cbf.find_column(b"array_id")
                     cbf.find_row(group.get_name())
-                    cbf.find_column("binary_id")
+                    cbf.find_column(b"binary_id")
                     array_num = int(cbf.get_value()) - 1
 
                     cbf_detector = cbf.construct_detector(array_num)
@@ -110,19 +110,19 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
                 distance = orig[2]
                 orig = col((0, 0, 0))
 
-            cbf.find_category("axis")
-            cbf.find_column("id")
+            cbf.find_category(b"axis")
+            cbf.find_column(b"id")
             while True:
                 if cbf.get_value() == name:
                     axis_name = cbf.get_value()
                     break
                 cbf.next_row()
 
-            cbf.find_column("offset[1]")
+            cbf.find_column(b"offset[1]")
             cbf.set_value(str(orig[0]))
-            cbf.find_column("offset[2]")
+            cbf.find_column(b"offset[2]")
             cbf.set_value(str(orig[1]))
-            cbf.find_column("offset[3]")
+            cbf.find_column(b"offset[3]")
             cbf.set_value(str(orig[2]))
 
             r3 = sqr(
@@ -147,11 +147,11 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
 
             assert axis.length() > 0
 
-            cbf.find_column("vector[1]")
+            cbf.find_column(b"vector[1]")
             cbf.set_value(str(axis[0]))
-            cbf.find_column("vector[2]")
+            cbf.find_column(b"vector[2]")
             cbf.set_value(str(axis[1]))
-            cbf.find_column("vector[3]")
+            cbf.find_column(b"vector[3]")
             cbf.set_value(str(axis[2]))
 
             cbf.set_axis_setting(axis_name, angle, 0)
@@ -163,7 +163,7 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
                 ):
                     while not axis_id in axis_name:
                         axis_name = cbf.get_axis_depends_on(axis_name)
-                    assert cbf.get_axis_type(axis_name) == "translation"
+                    assert cbf.get_axis_type(axis_name) == b"translation"
                     cbf.set_axis_setting(axis_name, setting_value, 0)
 
             if group.is_group():
@@ -189,12 +189,12 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
 
             # map the array_section_ids, which match the panel names, to their root axis names
             panel_name_mapping = {}
-            cbf.find_category("array_structure_list")
+            cbf.find_category(b"array_structure_list")
             for i in range(cbf.count_rows()):
-                cbf.find_column("array_section_id")
+                cbf.find_column(b"array_section_id")
                 name = cbf.get_value()
                 if name in all_panelnames and name not in panel_name_mapping.values():
-                    cbf.find_column("axis_set_id")
+                    cbf.find_column(b"axis_set_id")
                     panel_name_mapping[cbf.get_value()] = name
                 cbf.next_row()
 
