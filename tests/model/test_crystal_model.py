@@ -305,6 +305,7 @@ Crystal:
         A_min = matrix.sqr(model_minimum.get_A_at_scan_point(i))
         assert approx_equal(A_min, A_orig * M_inv)
 
+def test_MosaicCrystalKabsch2010():
     mosaic_model = MosaicCrystalKabsch2010(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
