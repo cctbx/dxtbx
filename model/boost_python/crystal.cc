@@ -326,10 +326,27 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
   };
 
+  inline
+  void CrystalBase_set_unit_cell_real_space_vectors(
+      CrystalBase &self,
+      scitbx::vec3<double> &real_space_a,
+      scitbx::vec3<double> &real_space_b,
+      scitbx::vec3<double> &real_space_c) {
+        self.set_unit_cell(real_space_a, real_space_b, real_space_c);
+  }
+
+  inline
+  void CrystalBase_set_unit_cell(
+      CrystalBase &self,
+      cctbx::uctbx::unit_cell &unit_cell) {
+        self.set_unit_cell(unit_cell);
+  }
+
   void export_crystal()
   {
     class_ <CrystalBase, boost::noncopyable> ("CrystalBase", no_init)
-      .def("set_unit_cell", &CrystalBase::set_unit_cell)
+      .def("set_unit_cell", CrystalBase_set_unit_cell_real_space_vectors)
+      .def("set_unit_cell", CrystalBase_set_unit_cell)
       .def("update_B", &CrystalBase::update_B)
       .def("set_U", &CrystalBase::set_U)
       .def("get_U", &CrystalBase::get_U)

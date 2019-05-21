@@ -163,6 +163,8 @@ namespace dxtbx { namespace model {
         const vec3<double> &real_space_a,
         const vec3<double> &real_space_b,
         const vec3<double> &real_space_c) = 0;
+    // Set the unit cell parameters
+    virtual void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) = 0;
     // Update the B matrix
     virtual void update_B() = 0;
     // Set the U matrix
@@ -378,6 +380,17 @@ namespace dxtbx { namespace model {
           rad_as_deg(real_space_b.angle(real_space_c)),
           rad_as_deg(real_space_c.angle(real_space_a)),
           rad_as_deg(real_space_a.angle(real_space_b))));
+      update_B();
+    }
+
+    /**
+     * Set the unit cell parameters
+     *
+     * @param unit_cell The updated unit cell
+     */
+    void set_unit_cell(
+        const cctbx::uctbx::unit_cell &unit_cell) {
+      unit_cell_ = unit_cell;
       update_B();
     }
 
