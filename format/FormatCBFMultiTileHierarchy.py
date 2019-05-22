@@ -10,12 +10,14 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+import struct
 
 import pycbf
 from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model import Detector
 from libtbx.utils import Sorry
+from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
 from six.moves import range
 
@@ -317,11 +319,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
     def get_raw_data(self):
         if self._raw_data is None:
-            import numpy
-            from scitbx.array_family import flex
-
             self._raw_data = []
-
             cbf = self._get_cbf_handle()
             cbf.find_category("array_structure")
             cbf.find_column("encoding_type")
@@ -344,12 +342,14 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
                 if types[i] == "signed 32-bit integer":
                     array_string = cbf.get_integerarray_as_string()
-                    array = flex.int(numpy.frombuffer(array_string, numpy.int32))
+                    nelem = int(len(array_string) / 4)
+                    array = flex.int(struct.unpack("%di" % nelem, array_string))
                     parameters = cbf.get_integerarrayparameters_wdims_fs()
                     array_size = (parameters[11], parameters[10], parameters[9])
                 elif types[i] == "signed 64-bit real IEEE":
                     array_string = cbf.get_realarray_as_string()
-                    array = flex.double(numpy.frombuffer(array_string, numpy.float))
+                    nelem = int(len(array_string) / 8)
+                    array = flex.double(struct.unpack("%dd" % nelem, array_string))
                     parameters = cbf.get_realarrayparameters_wdims_fs()
                     array_size = (parameters[7], parameters[6], parameters[5])
                 else:
