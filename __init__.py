@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 import sys
+import warnings
 
 # Invert FPE trap defaults, https://github.com/cctbx/cctbx_project/pull/324
 if "boost.python" in sys.modules:
@@ -18,15 +19,29 @@ elif not os.getenv("BOOST_ADAPTBX_TRAP_FPE") and not os.getenv(
 ):
     os.environ["BOOST_ADAPTBX_FPE_DEFAULT"] = "1"
 
-try:
-    import boost.python
-except Exception:
-    ext = None
-else:
-    ext = boost.python.import_ext("dxtbx_ext", optional=True)
 
-if ext is not None:
-    from dxtbx_ext import *  # noqa: F401,F403
+def _deprecate_function(name, func):
+    def _wrapper(*args, **kwargs):
+        warnings.warn(
+            "Addressing dxtbx extensions as dxtbx.{0} is deprecated. Instead use dxtbx.ext.{0}".format(
+                name
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return func(*args, **kwargs)
+
+    return _wrapper
+
+
+try:
+    import dxtbx.ext as _ext
+
+    for funcname in dir(_ext):
+        if funcname != "ext" and not funcname.startswith("_"):
+            globals()[funcname] = _deprecate_function(funcname, getattr(_ext, funcname))
+except ImportError:
+    pass
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
 
