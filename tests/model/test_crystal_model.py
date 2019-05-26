@@ -304,10 +304,13 @@ Crystal:
         A_orig = matrix.sqr(model.get_A_at_scan_point(i))
         A_min = matrix.sqr(model_minimum.get_A_at_scan_point(i))
         assert approx_equal(A_min, A_orig * M_inv)
-    assert model.get_unit_cell().parameters() == pytest.approx((58.2567, 58.1264, 39.7093, 46.9077, 46.8612, 62.1055))
-    uc = uctbx.unit_cell((10,11,12,91,92,93))
+    assert model.get_unit_cell().parameters() == pytest.approx(
+        (58.2567, 58.1264, 39.7093, 46.9077, 46.8612, 62.1055)
+    )
+    uc = uctbx.unit_cell((10, 11, 12, 91, 92, 93))
     model.set_unit_cell(uc)
     assert model.get_unit_cell().parameters() == pytest.approx(uc.parameters())
+
 
 def test_MosaicCrystalKabsch2010():
     mosaic_model = MosaicCrystalKabsch2010(
