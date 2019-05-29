@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import os
 
+import dxtbx.ext
 import dxtbx.tests.imagelist
 import pytest
 from six.moves import range
@@ -36,7 +37,6 @@ def get_smv_header(image_file):
 
 def read_smv_image(image_file):
     from boost.python import streambuf
-    from dxtbx import read_uint16, read_uint16_bs, is_big_endian
     from scitbx.array_family import flex
 
     header_size, header_dictionary = get_smv_header(image_file)
@@ -51,10 +51,14 @@ def read_smv_image(image_file):
 
         image_size = (int(header_dictionary["SIZE1"]), int(header_dictionary["SIZE2"]))
 
-        if big_endian == is_big_endian():
-            raw_data = read_uint16(streambuf(f), int(image_size[0] * image_size[1]))
+        if big_endian == dxtbx.ext.is_big_endian():
+            raw_data = dxtbx.ext.read_uint16(
+                streambuf(f), int(image_size[0] * image_size[1])
+            )
         else:
-            raw_data = read_uint16_bs(streambuf(f), int(image_size[0] * image_size[1]))
+            raw_data = dxtbx.ext.read_uint16_bs(
+                streambuf(f), int(image_size[0] * image_size[1])
+            )
 
     raw_data.reshape(flex.grid(image_size[1], image_size[0]))
 
@@ -75,7 +79,6 @@ def read_tiff_image(image_file):
     # currently have no non-little-endian machines...
 
     from boost.python import streambuf
-    from dxtbx import read_uint16
     from scitbx.array_family import flex
 
     width, height, depth, order, header_bytes = get_tiff_header(image_file)
@@ -84,7 +87,9 @@ def read_tiff_image(image_file):
 
     with open(image_file, "rb") as fh:
         fh.seek(header_size)
-        raw_data = read_uint16(streambuf(fh), int(image_size[0] * image_size[1]))
+        raw_data = dxtbx.ext.read_uint16(
+            streambuf(fh), int(image_size[0] * image_size[1])
+        )
     raw_data.reshape(flex.grid(image_size[1], image_size[0]))
 
     return raw_data

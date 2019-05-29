@@ -15,6 +15,7 @@ from __future__ import absolute_import, division, print_function
 
 import struct
 
+import dxtbx.ext
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
@@ -118,8 +119,6 @@ class FormatSER(FormatMultiImage, Format):
 
         self._header_dictionary = self._read_metadata(self._image_file)
 
-        return
-
     def get_num_images(self):
         return self._header_dictionary["ValidNumberElements"]
 
@@ -164,15 +163,15 @@ class FormatSER(FormatMultiImage, Format):
             d["DataType"] = struct.unpack("<H", f.read(2))[0]
 
             if d["DataType"] == 6:
-                from dxtbx import read_int32 as read_pixel
+                read_pixel = dxtbx.ext.read_int32
             elif d["DataType"] == 5:
-                from dxtbx import read_int16 as read_pixel
+                read_pixel = dxtbx.ext.read_int16
             elif d["DataType"] == 3:
-                from dxtbx import read_uint32 as read_pixel
+                read_pixel = dxtbx.ext.read_uint32
             elif d["DataType"] == 2:
-                from dxtbx import read_uint16 as read_pixel
+                read_pixel = dxtbx.ext.read_uint16
             elif d["DataType"] == 1:
-                from dxtbx import read_uint8 as read_pixel
+                read_pixel = dxtbx.ext.read_uint8
             else:
                 raise RuntimeError(
                     "Image {0} data is of an unsupported type".format(index + 1)

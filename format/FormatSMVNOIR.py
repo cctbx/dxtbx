@@ -235,7 +235,7 @@ class FormatSMVNOIR(FormatSMVRigaku):
         flex array of integers.)"""
 
         from boost.python import streambuf
-        from dxtbx import read_uint16, read_uint16_bs, is_big_endian
+        from dxtbx.ext import read_uint16, read_uint16_bs, is_big_endian
         from scitbx.array_family import flex
 
         assert len(self.get_detector()) == 1

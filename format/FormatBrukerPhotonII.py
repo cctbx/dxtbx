@@ -12,8 +12,8 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 from boost.python import streambuf
-from dxtbx import (
-    IncorrectFormatError,
+from dxtbx import IncorrectFormatError
+from dxtbx.ext import (
     is_big_endian,
     read_uint8,
     read_uint16,
@@ -70,8 +70,6 @@ class FormatBrukerPhotonII(FormatBruker):
         # https://github.com/cctbx/cctbx_project/issues/65
         # from iotbx.detectors.bruker import BrukerImage
         # self.detectorbase = BrukerImage(self._image_file)
-
-        return
 
     def _goniometer(self):
         # goniometer angles in ANGLES are 2-theta, omega, phi, chi (FIXED)
