@@ -251,5 +251,7 @@ def test_no_multiple_format_understanding(test_image):
 
 
 def test_no_exceptions_from_understand(test_image):
+    Registry.setup()
     for format in Registry._formats:
+        print(format)
         format.understand(test_image)
