@@ -13,8 +13,7 @@ import collections
 import struct
 
 import pycbf
-from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile
-from dxtbx.format.FormatStill import FormatStill
+from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile, FormatCBFMultiTileStill
 from dxtbx.model import Detector
 from libtbx.utils import Sorry
 from scitbx.array_family import flex
@@ -406,7 +405,9 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         return tuple(self._raw_data)
 
 
-class FormatCBFMultiTileHierarchyStill(FormatStill, FormatCBFMultiTileHierarchy):
+class FormatCBFMultiTileHierarchyStill(
+    FormatCBFMultiTileStill, FormatCBFMultiTileHierarchy
+):
     """An image reading class for full CBF format images i.e. those from
     a variety of cameras which support this format. Custom derived from
     the FormatStill to handle images without a gonimeter or scan"""
