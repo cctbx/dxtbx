@@ -1,6 +1,22 @@
 from __future__ import absolute_import, division, print_function
 
 import logging
+import os
+import sys
+
+# Invert FPE trap defaults, https://github.com/cctbx/cctbx_project/pull/324
+if "boost.python" in sys.modules:
+    import boost.python
+
+    boost.python.ext.trap_exceptions(
+        bool(os.getenv("BOOST_ADAPTBX_TRAP_FPE")),
+        bool(os.getenv("BOOST_ADAPTBX_TRAP_INVALID")),
+        bool(os.getenv("BOOST_ADAPTBX_TRAP_OVERFLOW")),
+    )
+elif not os.getenv("BOOST_ADAPTBX_TRAP_FPE") and not os.getenv(
+    "BOOST_ADAPTBX_TRAP_OVERFLOW"
+):
+    os.environ["BOOST_ADAPTBX_FPE_DEFAULT"] = "1"
 
 try:
     import boost.python
@@ -10,7 +26,7 @@ else:
     ext = boost.python.import_ext("dxtbx_ext", optional=True)
 
 if ext is not None:
-    from dxtbx_ext import *
+    from dxtbx_ext import *  # noqa: F401,F403
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
 
