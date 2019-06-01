@@ -34,8 +34,12 @@ class simple_controller:
         Since only a cache controller can run .open() on lazy cache objects,
         the lazy cache object can be told to close as soon as possible.
         File handles can still be open legitimately."""
-        if self._cache is not None and self._pid == os.getpid():
-            self._cache.close()
+        try:
+            if self._cache is not None and self._pid == os.getpid():
+                self._cache.close()
+        except (AttributeError, TypeError):
+            pass
+        self._cache = None
 
     def check(self, tag, open_method):
         """The main cache controller access method. Checks if an object with name
@@ -67,7 +71,7 @@ class simple_controller:
                 try:
                     self._cache_tag = tag
                     self._cache = dxtbx.filecache.lazy_file_cache(open_method())
-                except:  # intentional
+                except:  # noqa: E772
                     # Make sure we leave in a valid state
                     self._cache_tag = None
                     self._cache = None
