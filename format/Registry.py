@@ -4,122 +4,130 @@
 
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.format.RegistryHelpers import LoadFormatClasses
-from libtbx.utils import Sorry
-from .Format import Format
+import pkg_resources
+import warnings
 
 
-class SorryIOError(IOError, Sorry):
-    """Fusion of Sorry and IO Errors.
+def get_format_class_for(format_class_name):
+    """Return the named format class
+    :param format_class_name: Name of the format class
+    :return: The (uninstantiated) class object
+    """
+    return get_format_class_index()[format_class_name]()
 
-    This is so we can send a better user-error, but still allow the simplicity
-    of just catching an IOError in any parent scopes.
+
+def lookup(format_class):
+    warnings.warn(
+        "lookup() has been renamed to get_format_class_for()",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return get_format_class_for(format_class)
+
+
+def get_format_class_index():
+    """Return a dictionary of all known format classes.
+    :return: A dictionary containing entries
+             {format class name: format class factory function}
+             The factory function takes no arguments and returns an
+             uninstantiated format class. This avoids importing all
+             format classes.
+    """
+    if not hasattr(get_format_class_index, "cache"):
+        setattr(
+            get_format_class_index,
+            "cache",
+            {e.name: e.load for e in pkg_resources.iter_entry_points("dxtbx.format")},
+        )
+    register = get_format_class_index.cache.copy()
+    return register
+
+
+def get_format_class_dag():
+    """Return a directed acyclical graph of the format classes.
+    :return: A dictionary with entries
+             {format class name: [subformat class names]}
+    """
+    if not hasattr(get_format_class_dag, "cache"):
+        index = {name: loader() for name, loader in get_format_class_index().items()}
+        dag = {}
+        for name in index:
+            parents = [parent.__name__ for parent in index[name].__bases__]
+            for parent in index[name].__bases__:
+                dag.setdefault(parent.__name__, []).append(name)
+        for key in dag:
+            dag[key].sort()
+        setattr(get_format_class_dag, "cache", dag)
+    dag = get_format_class_dag.cache.copy()
+    return dag
+
+
+_format_dag = get_format_class_dag()
+
+
+def get_format_class_for_file(image_file, format_hint=None):
+    """Find the best format handler in the registry for given image file
+    :param image_file: A string containing the file path to an image
+    :param format_hint: An optional string of a format class name that should
+                        be checked first
+    :return: An uninstantiated format class, if a matching one was found,
+             otherwise None
     """
 
-    def __init__(self, ioerror):
-        self.errno = ioerror.errno
-        self.strerror = ioerror.strerror
-        self.filename = ioerror.filename
-        super(SorryIOError, self).__init__(
-            "{}: {}".format(self.strerror, self.filename)
-        )
+    # If a format hint was given then find all paths through the DAG leading
+    # to this format class. Create a set containing all format class names
+    # on those paths (priority_formats), and use the information whether a
+    # format name is in the set to prioritise it during the format search.
+    priority_formats = set()
+    if format_hint:
+        priority_candidates = set((format_hint,))
+        dagset = {f: set(subf) for f, subf in _format_dag.items()}
+        while priority_candidates:
+            priority_formats.update(priority_candidates)
+            priority_candidates = {
+                f
+                for f, subf in dagset.items()
+                if priority_candidates.intersection(subf)
+            }
 
-    def __str__(self):
-        return self.message
+    def format_sort(format_name):
+        return (0 if format_name in priority_formats else 1, format_name)
+
+    def recurse(format_name, image_file):
+        # Recursively check whether any of the children understand image_file,
+        # in which case they are preferred over the parent format.
+        for child in sorted(_format_dag.get(format_name, []), key=format_sort):
+            format_class = get_format_class_for(child)
+            if format_class.understand(image_file):
+                return recurse(child, image_file)
+        return get_format_class_for(format_name)
+
+    # Starting at "Format" and using any potential prioritisation information
+    # look for any path through the DAG of formats, stopping at the first
+    # accepting leaf node
+    for format in sorted(_format_dag["Format"], key=format_sort):
+        format_class = get_format_class_for(format)
+        if format_class.understand(image_file):
+            return recurse(format, image_file)
+
+    # There is no class accepting this file, so return None instead
+    return None
 
 
 class _Registry:
-    """A class to handle all of the recognised image formats within xia2
-    working towards the generalization project in #1555 and specifically
-    to address the requirements in #1573."""
+    # deprecated class
 
-    def __init__(self):
-        """Set myself up - N.B. this could trigger a directory search for
-        different Format classes to auto-register them."""
+    @staticmethod
+    def get():
+        warnings.warn("Registry.get() is deprecated", DeprecationWarning, stacklevel=2)
+        return tuple(
+            get_format_class_for(format_class) for format_class in _format_dag["Format"]
+        )
 
-        self._formats = []
-
-        self._setup = False
-
-    def setup(self):
-        """Look to import format defining modules from around the place -
-        this will look in dxtbx/format and $HOME/.xia2/ for files starting
-        with Format and ending in .py to allow user extensibility."""
-
-        if self._setup:
-            return
-
-        LoadFormatClasses()
-
-        self._setup = True
-
-    def add(self, format):
-        """Register a new image format with the registry. N.B. to work
-        this object must be inherited from the base Format class."""
-
-        from dxtbx.format.Format import Format
-
-        assert issubclass(format, Format)
-        if not format in self._formats:
-            self._formats.append(format)
-
-    def get(self):
-        """Get a list of image formats registered here."""
-
-        self.setup()
-
-        return tuple(self._formats)
-
-    def find(self, image_file):
-        """More useful - find the best format handler in the registry for your
-        image file. N.B. this is in principle a factory function."""
-
-        self.setup()
-
-        # Recursively check whether any of the children understand
-        # image_file, in which case they are preferred over the parent
-        # format.
-        def recurse(format, image_file):
-            for child in sorted(format._children, key=lambda x: x.__name__):
-                if child.understand(image_file):
-                    return recurse(child, image_file)
-            return format
-
-        for format in sorted(self._formats, key=lambda x: x.__name__):
-            if format.understand(image_file):
-                return recurse(format, image_file)
-
-        # Try opening the file; this could be an easy reason for failure
-        if not Format.is_url(image_file):
-            try:
-                with open(image_file) as f:
-                    pass
-            except IOError as e:
-                # Assume that the OS file error makes sense to the user
-                raise SorryIOError(e)
-
-        raise IOError("no format support found for %s" % image_file)
+    @staticmethod
+    def find(image_file, format_hint=None):
+        warnings.warn("Registry.find() is deprecated", DeprecationWarning, stacklevel=2)
+        return get_format_class_for_file(image_file, format_hint)
 
 
-class Registry:
-    """A class to turn the registry above into a singleton, so that we
-    can work around some of the more knotty dependency loops which come
-    out of things like this. This is something of a boiler plate."""
-
-    __instance = None
-
-    def __init__(self):
-        if Registry.__instance is None:
-            Registry.__instance = _Registry()
-
-    def __call__(self):
-        return self
-
-    def __getattr__(self, attr):
-        return getattr(self.__instance, attr)
-
-    def __setattr__(self, attr, value):
-        return setattr(self.__instance, attr, value)
-
-
-Registry = Registry()
+Registry = _Registry()

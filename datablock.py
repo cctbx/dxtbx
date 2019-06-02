@@ -13,7 +13,6 @@ from six.moves import range
 
 import dxtbx.imageset
 import libtbx
-from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import Registry
@@ -322,61 +321,26 @@ class DataBlock(object):
 
 
 class FormatChecker(object):
-    """A helper class to find the image format by first checking
-    the last format that was used."""
+    """A helper class to speed up identifying the correct image format by first
+    trying the last format that was used."""
 
     def __init__(self, verbose=False):
         """ Set the format class to none. """
         self._format_class = None
         self._verbose = verbose
 
-    def check_child_formats(self, filename):
-        """If a child format understands the file better than return that,
-        otherwise return the current format."""
-        fmt = self._format_class
-        for child in self._format_class._children:
-            if child.understand(filename):
-                fmt = child
-        return fmt
-
-    def understand(self, filename):
-        """Check if the data block format understands the given file. This
-        function checks the method resolution order for the format class and
-        calls the understand methods of each parent down to the bottom level.
-        Just calling the format class understand method directly can result
-        in problems. This is really a workaround for a bug in the way that
-        the format understand method works. Furthermore, the FormatStill
-        class does not have an understand method so we have to check that
-        the "understand" method is present in the class dictionary before
-        we actually do the call."""
-        mro = self._format_class.mro()[::-1]
-        if len(mro) <= 2 or mro[0] != object or mro[1] != Format:
-            return False
-        for m in mro[2:]:
-            if "understand" in m.__dict__ and not m.understand(filename):
-                return False
-        return True
-
-    def __call__(self, filename):
-        """ Check the current and child formats, otherwise search the registry. """
-        try:
-            if self._format_class is None or not self.understand(filename):
-                self._format_class = Registry.find(filename)
-            self._format_class = self.check_child_formats(filename)
-            if self._verbose:
-                print("Using %s for %s" % (self._format_class.__name__, filename))
-        except Exception:
-            return None
-        return self._format_class
-
     def find_format(self, filename):
-        """ Check the current and child formats, otherwise search the registry. """
-        try:
-            if self._format_class is None or not self.understand(filename):
-                self._format_class = Registry.find(filename)
-            self._format_class = self.check_child_formats(filename)
-        except Exception:
-            return None
+        """Search the registry for the image format class.
+        Where possible use the last seen format class as a prioritisation hint.
+        """
+        if self._format_class:
+            self._format_class = Registry.find(
+                filename, format_hint=self._format_class.__name__
+            )
+        else:
+            self._format_class = Registry.find(filename)
+        if self._verbose:
+            print("Using %s for %s" % (self._format_class.__name__, filename))
         return self._format_class
 
     def iter_groups(self, filenames):
@@ -387,14 +351,14 @@ class FormatChecker(object):
             if fmt == group_format:
                 group_fnames.append(filename)
             else:
-                if len(group_fnames) > 0:
+                if group_fnames:
                     yield group_format, group_fnames
                 group_fnames = [filename]
                 group_format = fmt
             if self._verbose:
                 if fmt is not None:
                     print("Using %s for %s" % (fmt.__name__, filename))
-        if len(group_fnames) > 0:
+        if group_fnames:
             yield group_format, group_fnames
 
 
@@ -433,8 +397,7 @@ class DataBlockTemplateImporter(object):
                 raise Sorry('Template "%s" does not match any files' % template)
 
             # Get the format from the first image
-            find_format = FormatChecker(verbose=verbose)
-            fmt = find_format(paths[0])
+            fmt = FormatChecker(verbose=verbose).find_format(paths[0])
             if fmt is None:
                 raise Sorry("Image file %s format is unknown" % paths[0])
             elif fmt.ignore():

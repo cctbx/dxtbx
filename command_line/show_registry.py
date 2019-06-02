@@ -1,23 +1,22 @@
 from __future__ import absolute_import, division, print_function
-from dxtbx.format.Registry import Registry
 
-Registry.setup()
 import sys
 
+import dxtbx.format.Registry
 
-def print_class(classobj, filename=None, depth=1):
+dag = dxtbx.format.Registry.get_format_class_dag()
+
+
+def print_class(class_name, filename=None, depth=1):
     if filename is None:
-        print("% 5d" % depth, "  " * depth, classobj.__name__)
+        print("% 5d" % depth, "  " * depth, class_name)
     else:
-        try:
-            ok = classobj.understand(filename)
-        except Exception:
-            ok = False
-        if ok:
-            print("% 5d" % depth, "  " * depth, classobj.__name__)
+        format_class = dxtbx.format.Registry.get_format_class_for(class_name)
+        if format_class.understand(filename):
+            print("% 5d" % depth, "  " * depth, class_name)
         else:
             return
-    for child in classobj._children:
+    for child in dag.get(class_name, []):
         print_class(child, filename, depth + 1)
 
 
@@ -34,8 +33,8 @@ def show_registry(filename=None):
     print("Depth  Class name")
     print("    0  Format")
 
-    for classobj in Registry._formats:
-        print_class(classobj, filename)
+    for class_name in dag["Format"]:
+        print_class(class_name, filename)
 
 
 if __name__ == "__main__":

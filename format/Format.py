@@ -6,7 +6,6 @@
 # goniometers etc. from the headers and hence a format specific factory.
 
 from __future__ import absolute_import, division, print_function
-from six import with_metaclass
 
 import sys
 
@@ -38,47 +37,14 @@ import dxtbx.filecache_controller
 
 # import access to all of the factories that we will be needing
 
-from dxtbx.model.goniometer import Goniometer, GoniometerFactory
-from dxtbx.model.detector import Detector, DetectorFactory
-from dxtbx.model.beam import Beam, BeamFactory
-from dxtbx.model.scan import Scan, ScanFactory
+from dxtbx.model.goniometer import GoniometerFactory
+from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.beam import BeamFactory
+from dxtbx.model.scan import ScanFactory
 
 from six.moves.urllib.parse import urlparse
 
-
-class _MetaFormat(type):
-    """A metaclass for the Format base class (and hence all format classes)
-    to allow autoregistration of the class implementations."""
-
-    def __init__(self, name, bases, attributes):
-        super(_MetaFormat, self).__init__(name, bases, attributes)
-
-        # Do-nothing until the Format module, defining the base class,
-        # has been loaded.
-        try:
-            sys.modules[Format.__module__]
-        except NameError:
-            return
-
-        # Add the class to the registry if it is directly derived from
-        # Format.
-        self._children = []
-        if Format in bases:
-            from dxtbx.format.Registry import Registry
-
-            Registry.add(self)
-            return
-
-        # Add the class to the list of children of its superclasses.
-        for base in bases:
-            base._children.append(self)
-        return
-
-    _cache_controller = dxtbx.filecache_controller.simple_controller()
-
-    @classmethod
-    def get_cache_controller(cls):
-        return cls._cache_controller
+_cache_controller = dxtbx.filecache_controller.simple_controller()
 
 
 class Reader(object):
@@ -146,7 +112,7 @@ class Masker(object):
         return self.paths()
 
 
-class Format(with_metaclass(_MetaFormat, object)):
+class Format(object):
     """A base class for the representation and interrogation of diffraction
     image formats, from which all classes for reading the header should be
     inherited. This includes: autoregistration of implementation classes,
@@ -215,22 +181,22 @@ class Format(with_metaclass(_MetaFormat, object)):
 
         try:
             goniometer_instance = self._goniometer()
-            # assert(isinstance(goniometer_instance, Goniometer))
             self._goniometer_instance = goniometer_instance
 
             detector_instance = self._detector()
-            # assert(isinstance(detector_instance, Detector))
             self._detector_instance = detector_instance
 
             beam_instance = self._beam()
-            # assert(isinstance(beam_instance, Beam))
             self._beam_instance = beam_instance
 
             scan_instance = self._scan()
-            # assert(isinstance(scan_instance, Scan) or isinstance(scan_instance, list))
             self._scan_instance = scan_instance
         finally:
             self._end()
+
+    @staticmethod
+    def get_cache_controller():
+        return _cache_controller
 
     def get_goniometer(self):
         """Get the standard goniometer instance which was derived from the
