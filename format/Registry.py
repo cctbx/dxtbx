@@ -52,7 +52,6 @@ def get_format_class_dag():
         index = {name: loader() for name, loader in get_format_class_index().items()}
         dag = {}
         for name in index:
-            parents = [parent.__name__ for parent in index[name].__bases__]
             for parent in index[name].__bases__:
                 dag.setdefault(parent.__name__, []).append(name)
         for key in dag:

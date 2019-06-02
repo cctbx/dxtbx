@@ -542,19 +542,21 @@ class Format(object):
     def is_bz2(filename):
         """Check if a file pointed at by filename is bzip2 format."""
 
-        if not ".bz2" in filename[-4:]:
+        if filename[-4:] != ".bz2":
             return False
 
-        return "BZh" in open(filename, "rb").read(3)
+        with open(filename, "rb") as fh:
+            return "BZh" == fh.read(3)
 
     @staticmethod
     def is_gzip(filename):
         """Check if a file pointed at by filename is gzip compressed."""
 
-        if not ".gz" in filename[-3:]:
+        if filename[-3:] != ".gz":
             return False
 
-        magic = open(filename, "rb").read(2)
+        with open(filename, "rb") as fh:
+            magic = fh.read(2)
 
         return ord(magic[0]) == 0x1F and ord(magic[1]) == 0x8B
 
