@@ -14,61 +14,13 @@ import os
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
+from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 if "DXTBX_OVERLOAD_SCALE" in os.environ:
     dxtbx_overload_scale = float(os.environ["DXTBX_OVERLOAD_SCALE"])
 else:
     dxtbx_overload_scale = 1
-
-
-def determine_eiger_mask(xdetector):
-    """Return an appropriate pixel mask for a Eiger detector."""
-
-    size = xdetector[0].get_image_size()
-
-    # Hardcoded module size and gap size - with added technical debt! For Eiger2
-    if size[0] == 4148:
-        module_size_fast, module_size_slow = (1028, 512)
-        gap_size_fast, gap_size_slow = (12, 38)
-    else:
-        module_size_fast, module_size_slow = (1030, 514)
-        gap_size_fast, gap_size_slow = (10, 37)
-
-    # Edge dead areas not included, only gaps between modules matter
-    n_fast, remainder = divmod(size[0], module_size_fast)
-    assert (n_fast - 1) * gap_size_fast == remainder
-
-    n_slow, remainder = divmod(size[1], module_size_slow)
-    assert (n_slow - 1) * gap_size_slow == remainder
-
-    # Specify the dead areas between the modules, i.e. the rows and columns
-    # where there are no active pixels
-    mask = []
-    for i_fast in range(n_fast - 1):
-        mask.append(
-            [
-                (i_fast + 1) * module_size_fast + i_fast * gap_size_fast + 1,
-                (i_fast + 1) * module_size_fast
-                + i_fast * gap_size_fast
-                + gap_size_fast,
-                1,
-                size[1],
-            ]
-        )
-    for i_slow in range(n_slow - 1):
-        mask.append(
-            [
-                1,
-                size[0],
-                (i_slow + 1) * module_size_slow + i_slow * gap_size_slow + 1,
-                (i_slow + 1) * module_size_slow
-                + i_slow * gap_size_slow
-                + gap_size_slow,
-            ]
-        )
-
-    return mask
 
 
 class FormatCBFMiniEiger(FormatCBFMini):
@@ -231,7 +183,6 @@ class FormatCBFMiniEiger(FormatCBFMini):
     def read_cbf_image(self, cbf_image):
         from cbflib_adaptbx import uncompress
         import binascii
-        from scitbx.array_family import flex
 
         start_tag = binascii.unhexlify("0c1a04d5")
 
