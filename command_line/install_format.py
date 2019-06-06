@@ -131,8 +131,9 @@ def run():
         except Exception:
             local_file = False
         if local_file and local_file.check(file=1):
-            local_file.copy(home_location / local_file.basename)
-            print("Copied", local_file.strpath, "to", local_file.strpath)
+            home_location_copy = home_location / local_file.basename
+            local_file.copy(home_location_copy)
+            print("Copied", local_file.strpath, "to", home_location_copy.strpath)
             continue
         # Download the file from `url` and save it locally under `file_name`:
         if "/" in fc:
