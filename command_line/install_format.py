@@ -1,71 +1,158 @@
-#!/usr/bin/env python
-#
-# install_format.py
-#
-#  Copyright (C) 2013 Diamond Light Source
-#
-#  Author: James Parkhurst
-#
-#  This code is distributed under the BSD license, a copy of which is
-#  included in the root directory of this package.
-
 from __future__ import absolute_import, division, print_function
 
-from libtbx.phil import parse
+import ast
+import os
+import optparse
+import procrunner
+import py
+import sys
 
-phil_scope = parse(
-    """
-  local = True
-    .type = bool
-    .help = "Install the format locally. If True, the format class will be"
-            "installed in the users home directory under .dxtbx/filename.py."
-            "If False, the format class will be installed in the system"
-            "path under ./cctbx/sources/dxtbx/format/filename.py."
+from six.moves.urllib import request
 
-"""
+
+def find_format_classes(directory, base_python_path="dxtbx.format"):
+    format_classes = []
+    for name in directory.listdir("Format*.py"):
+        content = name.read()
+        try:
+            parsetree = ast.parse(content)
+        except Exception:
+            print("  *** Could not parse %s" % name.strpath)
+            continue
+        for top_level_def in parsetree.body:
+            if not isinstance(top_level_def, ast.ClassDef):
+                continue
+            base_names = [
+                baseclass.id
+                for baseclass in top_level_def.bases
+                if isinstance(baseclass, ast.Name)
+            ]
+            if any(n.startswith("Format") for n in base_names):
+                classname = top_level_def.name
+                format_classes.append(
+                    "{classname} = {base_python_path}.{modulename}:{classname}".format(
+                        base_python_path=base_python_path,
+                        classname=classname,
+                        modulename=name.purebasename,
+                    )
+                )
+                print("  found", classname, "based on", str(base_names))
+    return format_classes
+
+
+def install_package(home_location, format_classes):
+    setup = (
+        """
+from __future__ import absolute_import, division, print_function
+
+import os
+import sys
+from setuptools import setup
+
+setup(
+    author="Markus Gerstel",
+    author_email="scientificsoftware@diamond.ac.uk",
+    entry_points={
+        "dxtbx.format": """
+        + repr(format_classes)
+        + """,
+    },
+    include_package_data=True,
+    license="BSD license",
+    name="dxtbx_custom",
+    packages=["dxtbx_custom"],
+    version="1.0.0",
+    zip_safe=False,
 )
+"""
+    )
+
+    (home_location / "setup.py").write(setup)
+    (home_location / "__init__.py").ensure()
+    if not (home_location / "dxtbx_custom").check():
+        (home_location / "dxtbx_custom").mksymlinkto(home_location)
+    procrunner.run(
+        ["dxtbx.python", home_location / "setup.py", "develop", "--user"],
+        working_directory=home_location,
+        print_stdout=False,
+    ).check_returncode()
+
+
+def run():
+    parser = optparse.OptionParser(
+        usage="dxtbx.install_format (--user | --global) [/path/to/format/class.py] [URL]",
+        description=(
+            "Updates the dxtbx format class registry and installs format classes "
+            "by copying/downloading them into the format class directory. "
+            "The command must be re-run whenever format classes are added or removed "
+            "manually."
+        ),
+    )
+    parser.add_option("-?", action="help", help=optparse.SUPPRESS_HELP)
+    parser.add_option(
+        "-g",
+        "--global",
+        action="store_true",
+        dest="glob",
+        default=False,
+        help=(
+            "Install format classes globally (requires write access to base python, "
+            "affects everyone using the installation, files go to /build/dxtbx/formats)"
+        ),
+    )
+    parser.add_option(
+        "-u",
+        "--user",
+        action="store_true",
+        dest="user",
+        default=False,
+        help=(
+            "Install format classes for current user only (requires write access to home directory, "
+            "affects all python installations for the current user, files go to ~/.dxtbx)"
+        ),
+    )
+    options, args = parser.parse_args()
+
+    if options.glob:
+        import libtbx.load_env
+
+        home_location = py.path.local(abs(libtbx.env.build_path)) / "dxtbx" / "formats"
+    elif options.user:
+        home_location = py.path.local(os.path.expanduser("~")) / ".dxtbx"
+    else:
+        parser.print_help()
+        print("\nYou must specify --global or --user")
+        sys.exit(1 if args else 0)
+    home_location.ensure(dir=True)
+
+    for fc in args:
+        try:
+            local_file = py.path.local(fc)
+        except Exception:
+            local_file = False
+        if local_file and local_file.check(file=1):
+            local_file.copy(home_location / local_file.basename)
+            print("Copied", local_file.strpath, "to", local_file.strpath)
+            continue
+        # Download the file from `url` and save it locally under `file_name`:
+        if "/" in fc:
+            local_file = home_location / fc.split("/")[-1]
+            if local_file.ext != ".py":
+                local_file = local_file.new(basename=local_file.basename + ".py")
+            try:
+                request.urlretrieve(fc, local_file.strpath)
+            except Exception:
+                raise
+                local_file = False
+            if local_file and local_file.check(file=1):
+                print("Downloaded", fc, "to", local_file.strpath)
+                continue
+        sys.exit("Could not understand " + repr(fc))
+
+    format_classes = find_format_classes(home_location, base_python_path="dxtbx_custom")
+    install_package(home_location, format_classes)
+    print("\nFormat classes installed, format class registry updated.")
+
 
 if __name__ == "__main__":
-    import sys
-    from os.path import expanduser, join, exists
-    from os import makedirs
-    import libtbx.load_env
-    from shutil import copyfile
-
-    # Create the command line interpretro
-    interpretor = phil_scope.command_line_argument_interpreter()
-
-    # Process the phil arguments
-    good = []
-    bad = []
-    for arg in sys.argv[1:]:
-        try:
-            interpretor.process_arg(arg)
-            good.append(arg)
-        except Exception:
-            bad.append(arg)
-    processed = interpretor.process(args=good)
-
-    # Get the phil parameters
-    phil = phil_scope.fetch(sources=processed)
-
-    # Get the parameters
-    params = phil.extract()
-
-    # Make sure we just have the input filenames
-    assert len(bad) == 1
-    filename = bad[0]
-
-    # Get the target directory
-    if params.local == True:
-        target = join(expanduser("~"), ".dxtbx")
-        if not exists(target):
-            makedirs(target)
-    else:
-        dxtbx = libtbx.env.dist_path("dxtbx")
-        target = join(dxtbx, "format")
-    target = join(target, filename)
-
-    # Copy the file
-    print("Copying %s -> %s" % (filename, target))
-    copyfile(filename, target)
+    run()
