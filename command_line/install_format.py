@@ -132,6 +132,8 @@ def run():
             local_file = False
         if local_file and local_file.check(file=1):
             home_location_copy = home_location / local_file.basename
+            if local_file == home_location_copy:
+                continue
             local_file.copy(home_location_copy)
             print("Copied", local_file.strpath, "to", home_location_copy.strpath)
             continue
