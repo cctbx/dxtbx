@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 from cctbx.sgtbx import space_group as SG
 from scitbx import matrix
 
-from dxtbx.model import Crystal
+from dxtbx_model_ext import Crystal
 
 
 class CrystalFactory(object):

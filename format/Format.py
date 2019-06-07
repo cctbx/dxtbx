@@ -22,7 +22,6 @@ import libtbx
 
 import dxtbx.filecache_controller
 from dxtbx.format.image import ImageBool
-from dxtbx.imageset import ImageSet, ImageSetData, ImageSweep
 from dxtbx.model import MultiAxisGoniometer
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
@@ -307,6 +306,9 @@ class Format(object):
         Factory method to create an imageset
 
         """
+        # Import here to avoid cyclic imports
+        from dxtbx.imageset import ImageSet, ImageSetData, ImageSweep
+
         # Get filename absolute paths
         filenames = tuple(map(abspath, filenames))
 

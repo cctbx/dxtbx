@@ -5,9 +5,7 @@ import os
 
 import six
 
-from dxtbx.datablock import DataBlockFactory
 from dxtbx.model.crystal import CrystalFactory
-from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.serialize.imageset import imageset_from_dict
 
 
@@ -87,6 +85,9 @@ def datablock(filename, check_format=True):
       The datablock
 
     """
+    # Resolve recursive import
+    from dxtbx.datablock import DataBlockFactory
+
     return DataBlockFactory.from_serialized_format(filename, check_format=check_format)
 
 
@@ -112,6 +113,9 @@ def crystal(infile):
 
 def experiment_list(infile, check_format=True):
     """ Load an experiment list from a serialzied format. """
+    # Resolve recursive import
+    from dxtbx.model.experiment_list import ExperimentListFactory
+
     return ExperimentListFactory.from_serialized_format(
         infile, check_format=check_format
     )

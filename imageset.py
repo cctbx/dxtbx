@@ -6,8 +6,6 @@ import boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
-from dxtbx.format.Format import Format
-from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.sweep_filenames import group_files_by_imageset, template_image_range
 from dxtbx_imageset_ext import (
     ExternalLookup,
@@ -386,6 +384,9 @@ class ImageSetFactory(object):
             # Create the sweep file list
             filenames = [template_format % (i + 1) for i in array_range]
 
+        # Import here as Format and Imageset have cyclic dependencies
+        from dxtbx.format.Format import Format
+
         # Get the format class
         if check_format:
             format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
@@ -479,6 +480,12 @@ class ImageSetFactory(object):
         format_kwargs=None,
     ):
         """Create an image set"""
+        # Import here as Format and Imageset have cyclic dependencies
+        from dxtbx.format.Format import Format
+
+        # So does FormatMultiImage
+        from dxtbx.format.FormatMultiImage import FormatMultiImage
+
         # Get the format object
         if format_class is None:
             if check_format:
@@ -535,6 +542,9 @@ class ImageSetFactory(object):
 
         # Get the format object and reader
         if format_class is None:
+            # Import here as Format and Imageset have cyclic dependencies
+            from dxtbx.format.Format import Format
+
             if check_format:
                 format_class = dxtbx.format.Registry.get_format_class_for_file(
                     filenames[0]

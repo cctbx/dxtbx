@@ -15,7 +15,6 @@ from libtbx.containers import OrderedSet
 from libtbx.utils import format_float_with_standard_uncertainty
 from scitbx import matrix
 
-from dxtbx.datablock import AutoEncoder, DataBlockFactory
 from dxtbx.imageset import ImageGrid, ImageSet, ImageSweep
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.crystal import CrystalFactory
@@ -637,9 +636,11 @@ class _(object):
     def to_datablocks(self):
         """Return the experiment list as a datablock list.
         This assumes that the experiment contains 1 datablock."""
+        # Datablock depends on model/__init__
+        from dxtbx.datablock import DataBlockFactory
+
         # Convert the experiment list to dict
         obj = self.to_dict()
-
         # Convert the dictionary to a datablock dictionary
         obj["__id__"] = "DataBlock"
         for e in obj["experiment"]:
@@ -751,6 +752,9 @@ class _(object):
             )
         else:
             to_write = [(filename, dictionary)]
+
+        # Datablock depends on model/__init__
+        from dxtbx.datablock import AutoEncoder
 
         for fname, obj in to_write:
             if compact:
