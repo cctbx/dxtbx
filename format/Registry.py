@@ -13,7 +13,7 @@ def get_format_class_for(format_class_name):
     :param format_class_name: Name of the format class
     :return: The (uninstantiated) class object
     """
-    return get_format_class_index()[format_class_name]()
+    return get_format_class_index()[format_class_name][0]()
 
 
 def lookup(format_class):
@@ -28,17 +28,21 @@ def lookup(format_class):
 def get_format_class_index():
     """Return a dictionary of all known format classes.
     :return: A dictionary containing entries
-             {format class name: format class factory function}
+             {format class name: (format class factory function, [base classes])}
              The factory function takes no arguments and returns an
              uninstantiated format class. This avoids importing all
              format classes.
     """
     if not hasattr(get_format_class_index, "cache"):
-        setattr(
-            get_format_class_index,
-            "cache",
-            {e.name: e.load for e in pkg_resources.iter_entry_points("dxtbx.format")},
-        )
+        class_index = {}
+        for e in pkg_resources.iter_entry_points("dxtbx.format"):
+            if ":" in e.name:
+                format_name, base_classes = e.name.split(":", 1)
+                base_classes = tuple(base_classes.split(","))
+            else:
+                format_name, base_classes = e.name, ()
+            class_index[format_name] = (e.load, base_classes)
+        setattr(get_format_class_index, "cache", class_index)
     register = get_format_class_index.cache.copy()
     return register
 
@@ -49,11 +53,13 @@ def get_format_class_dag():
              {format class name: [subformat class names]}
     """
     if not hasattr(get_format_class_dag, "cache"):
-        index = {name: loader() for name, loader in get_format_class_index().items()}
+        index = {
+            name: class_info[1] for name, class_info in get_format_class_index().items()
+        }
         dag = {}
         for name in index:
-            for parent in index[name].__bases__:
-                dag.setdefault(parent.__name__, []).append(name)
+            for parent in index[name]:
+                dag.setdefault(parent, []).append(name)
         for key in dag:
             dag[key].sort()
         setattr(get_format_class_dag, "cache", dag)
@@ -125,7 +131,11 @@ class _Registry:
 
     @staticmethod
     def find(image_file, format_hint=None):
-        warnings.warn("Registry.find() is deprecated", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "Registry.find() is deprecated, use get_format_class_for_file()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return get_format_class_for_file(image_file, format_hint)
 
 

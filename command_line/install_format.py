@@ -16,7 +16,7 @@ def find_format_classes(directory, base_python_path="dxtbx.format"):
         content = name.read()
         try:
             parsetree = ast.parse(content)
-        except Exception:
+        except SyntaxError:
             print("  *** Could not parse %s" % name.strpath)
             continue
         for top_level_def in parsetree.body:
@@ -30,7 +30,8 @@ def find_format_classes(directory, base_python_path="dxtbx.format"):
             if any(n.startswith("Format") for n in base_names):
                 classname = top_level_def.name
                 format_classes.append(
-                    "{classname} = {base_python_path}.{modulename}:{classname}".format(
+                    "{classname}:{baseclasses} = {base_python_path}.{modulename}:{classname}".format(
+                        baseclasses=",".join(base_names),
                         base_python_path=base_python_path,
                         classname=classname,
                         modulename=name.purebasename,
@@ -145,7 +146,6 @@ def run():
             try:
                 request.urlretrieve(fc, local_file.strpath)
             except Exception:
-                raise
                 local_file = False
             if local_file and local_file.check(file=1):
                 print("Downloaded", fc, "to", local_file.strpath)
