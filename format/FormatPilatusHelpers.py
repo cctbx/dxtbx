@@ -55,29 +55,51 @@ def pilatus_300K_mask():
     return [[1, 487, 196, 212], [1, 487, 408, 424]]
 
 
+def get_pad_module_gap(xdetector, size=None):
+    assert xdetector[0].get_type() == "SENSOR_PAD"
+    assert len(xdetector) == 1
+
+    if size is None:
+        size = xdetector[0].get_image_size()
+
+    pilatus_width = 487
+    pilatus_height = 195
+    pilatus_gap = 7
+
+    pilatus_sizes = [pilatus_width * j + pilatus_gap * (j - 1) for j in (1, 3, 5)]
+
+    eiger_x_width = 1030
+    eiger_x_height = 514
+    eiger_x_gap = 10
+
+    eiger_2x_width = 1028
+    eiger_2x_height = 512
+    eiger_2x_gap = 12
+
+    eiger_x_sizes = [eiger_x_width * j + eiger_x_gap * (j - 1) for j in (1, 2, 3, 4)]
+    eiger_2x_sizes = [eiger_2x_width * j + eiger_2x_gap * (j - 1) for j in (1, 2, 3, 4)]
+
+    if size[0] in pilatus_sizes:
+        module_size_fast, module_size_slow = (487, 195)
+        gap_size_fast, gap_size_slow = (7, 17)
+    elif size[0] in eiger_x_sizes:
+        module_size_fast, module_size_slow = (1030, 514)
+        gap_size_fast, gap_size_slow = (10, 37)
+    elif size[0] in eiger_2x_sizes:
+        module_size_fast, module_size_slow = (1028, 512)
+        gap_size_fast, gap_size_slow = (12, 38)
+    else:
+        return None
+
+    return (module_size_fast, module_size_slow, gap_size_fast, gap_size_slow)
+
+
 def sensor_active_areas(xdetector):
     """Return the sensitive areas on the detector for pixel array detectors
     yes, does include hard coded magic numbers; returns [(x0, y0 x1, x1)]"""
 
-    assert xdetector[0].get_type() == "SENSOR_PAD"
-    assert len(xdetector) == 1
-
-    size = xdetector[0].get_image_size()
-
-    pilatus_sizes = [487, 487 * 3 + 7 * 2, 487 * 5 + 7 * 4]
-
-    if size[0] in pilatus_sizes:
-        # is Pilatus
-        module_size_fast, module_size_slow = (487, 195)
-        gap_size_fast, gap_size_slow = (7, 17)
-    else:
-        # is Eiger
-        if size[1] in [2164]:  # because Eiger 2 4M ; list will extend
-            module_size_fast, module_size_slow = (1030, 514)
-            gap_size_fast, gap_size_slow = (10, 36)
-        else:
-            module_size_fast, module_size_slow = (1030, 514)
-            gap_size_fast, gap_size_slow = (10, 37)
+    _ = get_pad_module_gap(xdetector)
+    module_size_fast, module_size_slow, gap_size_fast, gap_size_slow = _
 
     # iterate over these to produce a list of the TLC, BRC of the modules
     # as a list
@@ -156,26 +178,19 @@ def determine_eiger_mask(xdetector):
 
     size = xdetector[0].get_image_size()
 
-    # we cannot win - there are instruments in the wild with swapped
-    # fast and slow axes
-    reverse_me = [(3110, 3269)]
-    if size in reverse_me:
-        size = tuple(reversed(size))
+    _ = get_pad_module_gap(xdetector)
 
-    # Hardcoded module size and gap size - not sure why len(top line) == 1?
+    if _ is None:
+        size = tuple(reversed(xdetector[0].get_image_size()))
+        _ = get_pad_module_gap(xdetector, size=size)
 
-    if size[0] in [2164]:
-        module_size_fast, module_size_slow = (1030, 514)
-        gap_size_fast, gap_size_slow = (10, 36)
-    else:
-        module_size_fast, module_size_slow = (1030, 514)
-        gap_size_fast, gap_size_slow = (10, 37)
+    module_size_fast, module_size_slow, gap_size_fast, gap_size_slow = _
 
     # Edge dead areas not included, only gaps between modules matter
-    n_fast, remainder = divmod(size[1], module_size_fast)
+    n_fast, remainder = divmod(size[0], module_size_fast)
     assert (n_fast - 1) * gap_size_fast == remainder
 
-    n_slow, remainder = divmod(size[0], module_size_slow)
+    n_slow, remainder = divmod(size[1], module_size_slow)
     assert (n_slow - 1) * gap_size_slow == remainder
 
     # Specify the dead areas between the modules, i.e. the rows and columns
@@ -222,6 +237,7 @@ def get_vendortype(xdetector):
     return "Undetermined Pilatus size"
 
 
+# FIXME this contains hard coded information and does not apply to 2X
 def get_vendortype_eiger(xdetector):
     array = xdetector[0].get_image_size()
     # print array,
