@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import os
+import pytest
 from dxtbx.datablock import DataBlockFactory, DataBlockDumper
 
 """
@@ -14,6 +15,7 @@ def get_indices(datablock):
 
 def test_split_single_image_datablock(dials_regression, tmpdir):
     tmpdir.chdir()
+    pytest.importorskip("h5py")
     sacla_file = os.path.join(
         dials_regression,
         "image_examples",

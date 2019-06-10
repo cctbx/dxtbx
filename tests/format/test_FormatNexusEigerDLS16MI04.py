@@ -11,6 +11,7 @@ pytestmark = pytest.mark.skipif(
     reason="Test images not available",
 )
 dials = pytest.importorskip("dials")
+pytest.importorskip("h5py")
 
 
 @pytest.mark.parametrize(

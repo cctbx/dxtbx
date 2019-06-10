@@ -12,6 +12,8 @@ pytestmark = pytest.mark.skipif(
     reason="Test images not available",
 )
 
+pytest.importorskip("h5py")
+
 
 def test_VMXi_rotation_scan():
     master_h5 = "/dls/mx/data/mx21314/mx21314-27/VMXi-AB0816/well_7/images/image_14364_master.h5"

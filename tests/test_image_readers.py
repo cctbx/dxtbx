@@ -323,7 +323,8 @@ def test_hdf5(dials_regression, hdf5_image):
     from dxtbx.format.image import HDF5Reader
     from dxtbx.format.nexus import dataset_as_flex_int
     from scitbx.array_family import flex
-    import h5py
+
+    h5py = pytest.importorskip("h5py")
 
     filename = os.path.join(dials_regression, hdf5_image)
     handle = h5py.File(filename, "r")

@@ -38,12 +38,11 @@ def _generate_all_test_images():
     special_h5 = "/net/viper/raid1/dectris/eiger16MNov2015/2015_11_10/insu6_1_master.h5"
     try:
         import h5py
-
-        assert h5py.version, "Supress unused import warnings"
     except ImportError:
         yield pytest.param(
-            special_h5, marks=pytest.mark.skip(reason="h5py not found")
+            special_h5, marks=pytest.mark.skip(reason="could not import 'h5py'")
         ), special_h5
+        h5py = None
     else:
         if os.path.isfile(special_h5):
             yield special_h5, special_h5
@@ -98,8 +97,14 @@ def _generate_all_test_images():
                 print("Ignoring {}".format(full_path))
                 continue
 
-            # Give this file back
-            yield (full_path, rel_path)
+            # Skip h5 files if h5py is not present
+            if (full_path.endswith(".h5") or full_path.endswith(".nxs")) and not h5py:
+                yield pytest.param(
+                    full_path, marks=pytest.mark.skip(reason="could not import 'h5py'")
+                ), rel_path
+            else:
+                # Give this file back
+                yield (full_path, rel_path)
 
 
 # Generate this list once to use as a fixture

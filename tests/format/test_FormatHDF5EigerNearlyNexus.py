@@ -7,6 +7,8 @@ from dxtbx.format.FormatHDF5EigerNearlyNexus import FormatHDF5EigerNearlyNexus
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.model.goniometer import Goniometer
 
+pytest.importorskip("h5py")
+
 pytestmark = pytest.mark.skipif(
     not os.access("/dls/mx-scratch/rjgildea/zenodo", os.R_OK),
     reason="Test images not available",

@@ -729,6 +729,7 @@ def test_experimentlist_with_identifiers():
 
 
 def test_load_models(dials_regression):
+    pytest.importorskip("h5py")
     filename = os.path.join(
         dials_regression,
         "image_examples",

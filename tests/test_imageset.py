@@ -477,6 +477,7 @@ class TestImageSweep(object):
     reason="This test is broken since the master h5 file is inconsistent with NeXus format after commit dbb0bf7"
 )
 def test_nexus_file(dials_regression):
+    pytest.importorskip("h5py")
     filename = os.path.join(
         dials_regression,
         "image_examples",
@@ -513,6 +514,7 @@ def test_nexus_file(dials_regression):
 
 @pytest.mark.parametrize("lazy", (True, False))
 def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
+    pytest.importorskip("h5py")
     filename = os.path.join(
         dials_regression,
         "image_examples",
