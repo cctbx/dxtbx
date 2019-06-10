@@ -6,6 +6,7 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import socket
 
 import pytest
 
@@ -19,18 +20,17 @@ def dials_regression_path():
         return os.path.abspath(os.path.dirname(dr.__file__))
     except ImportError:
         pass  # dials_regression not configured
-    try:
-        import socket
 
-        reference_copy = "/dls/science/groups/scisoft/DIALS/repositories/git-reference/dials_regression"
-        if (
-            os.name == "posix"
-            and "diamond.ac.uk" in socket.gethostname()
-            and os.path.exists(reference_copy)
-        ):
-            return reference_copy
-    except ImportError:
-        pass  # can not tell whether in DLS network or not
+    # Check if we are in a known location
+    reference_copy = (
+        "/dls/science/groups/scisoft/DIALS/repositories/git-reference/dials_regression"
+    )
+    if (
+        os.name == "posix"
+        and socket.gethostname().endswith(".diamond.ac.uk")
+        and os.path.exists(reference_copy)
+    ):
+        return reference_copy
 
 
 @pytest.fixture(scope="session")
