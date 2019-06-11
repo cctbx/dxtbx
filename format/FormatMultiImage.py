@@ -1,4 +1,11 @@
+# coding: utf-8
 from __future__ import absolute_import, division
+
+import os
+
+from scitbx.array_family import flex
+
+from dxtbx.format.Format import Format
 
 
 class Reader(object):
@@ -87,9 +94,6 @@ class Masker(object):
         return Masker(filenames)
 
 
-from dxtbx.format.Format import Format
-
-
 class FormatMultiImage(Format):
     def __init__(self, **kwargs):
         pass
@@ -119,28 +123,28 @@ class FormatMultiImage(Format):
         raise NotImplementedError
 
     @classmethod
-    def get_reader(Class):
+    def get_reader(cls):
         """
         Return a reader class
 
         """
         obj = Reader
-        obj._format_class_ = Class
+        obj._format_class_ = cls
         return obj
 
     @classmethod
-    def get_masker(Class):
+    def get_masker(cls):
         """
         Return a reader class
 
         """
         obj = Masker
-        obj._format_class_ = Class
+        obj._format_class_ = cls
         return obj
 
     @classmethod
     def get_imageset(
-        Class,
+        cls,
         filenames,
         beam=None,
         detector=None,
@@ -160,8 +164,6 @@ class FormatMultiImage(Format):
         """
         from dxtbx.imageset import ImageSetData
         from dxtbx.imageset import ImageSweep
-        from os.path import abspath
-        from scitbx.array_family import flex
 
         if isinstance(filenames, str):
             filenames = [filenames]
@@ -170,14 +172,14 @@ class FormatMultiImage(Format):
             filenames = filenames[0:1]
 
         # Make filenames absolute
-        filenames = map(abspath, filenames)
+        filenames = [os.path.abspath(x) for x in filenames]
 
         # Make it a dictionary
         if format_kwargs is None:
             format_kwargs = {}
 
         # If get_num_images hasn't been implemented, we need indices for number of images
-        if Class.get_num_images == FormatMultiImage.get_num_images:
+        if cls.get_num_images == FormatMultiImage.get_num_images:
             assert single_file_indices is not None
             assert min(single_file_indices) >= 0
             num_images = max(single_file_indices) + 1
@@ -185,13 +187,13 @@ class FormatMultiImage(Format):
             num_images = None
 
         # Get some information from the format class
-        reader = Class.get_reader()(filenames, num_images=num_images, **format_kwargs)
-        masker = Class.get_masker()(filenames, num_images=num_images, **format_kwargs)
+        reader = cls.get_reader()(filenames, num_images=num_images, **format_kwargs)
+        masker = cls.get_masker()(filenames, num_images=num_images, **format_kwargs)
 
         # Get the format instance
         assert len(filenames) == 1
         if check_format is True:
-            format_instance = Class(filenames[0], **format_kwargs)
+            format_instance = cls(filenames[0], **format_kwargs)
         else:
             format_instance = None
             if not as_sweep:
@@ -253,7 +255,7 @@ class FormatMultiImage(Format):
                         masker=masker,
                         vendor=vendor,
                         params=params,
-                        format=Class,
+                        format=cls,
                     ),
                     indices=single_file_indices,
                 )
@@ -267,7 +269,7 @@ class FormatMultiImage(Format):
                     masker=masker,
                     vendor=vendor,
                     params=params,
-                    format=Class,
+                    format=cls,
                 ),
                 indices=single_file_indices,
             )
@@ -326,7 +328,7 @@ class FormatMultiImage(Format):
                 scan = format_instance.get_scan()
                 if scan is not None:
                     for f in filenames[1:]:
-                        format_instance = Class(f, **format_kwargs)
+                        format_instance = cls(f, **format_kwargs)
                         scan += format_instance.get_scan()
 
             isetdata = ImageSetData(
@@ -334,7 +336,7 @@ class FormatMultiImage(Format):
                 masker=masker,
                 vendor=vendor,
                 params=params,
-                format=Class,
+                format=cls,
                 template=template,
             )
 
