@@ -6,6 +6,9 @@ tests/format/test_FormatNexus.py::test_VMXi_rotation_scan
 tests/format/test_FormatNexusEigerDLS16MI04.py::test_grid_scan
 tests/format/test_FormatNexusEigerDLS16MI04.py::test_rotation_scan[/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw/Thaum/Thau_4/Thau_4_1.nxs]
 tests/format/test_FormatNexusEigerDLS16MI04.py::test_rotation_scan[/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw/Thaum/Thau_4/Thau_4_1_master.h5]
+tests/format/test_FormatNexusEigerDLS16MI04.py::test_screening
+tests/format/test_FormatNexusEigerDLS16MI04.py::test_units
+tests/model/test_crystal_model.py::test_change_basis_mosaic_crystal
 tests/model/test_crystal_model.py::test_crystal_model_from_mosflm_matrix
 tests/model/test_experiment_list.py::test_experiment_consistent
 tests/model/test_experiment_list.py::test_experimentlist_dumper_dump_empty_sweep
@@ -17,8 +20,8 @@ tests/model/test_experiment_list.py::test_experimentlist_factory_from_args
 tests/model/test_experiment_list.py::test_experimentlist_factory_from_json
 tests/model/test_experiment_list.py::test_experimentlist_factory_from_pickle
 tests/model/test_experiment_list.py::test_load_models
-tests/model/test_parallax_correction.py::test_run
-tests/model/test_pixel_to_millimeter.py::test
+tests/model/test_parallax_correction.py::Test::()::test_run
+tests/model/test_pixel_to_millimeter.py::Test::()::test
 tests/serialize/test_crystal_model_serialize.py::test_crystal[True]
 tests/serialize/test_serialize.py::test_goniometer
 tests/serialize/test_serialize.py::test_multi_axis_goniometer
@@ -102,7 +105,8 @@ tests/test_image_readers.py::test_tiff[image_examples-SPring8_BL38B1_MX225HE-bl3
 tests/test_image_readers.py::test_tiff[image_examples-SPring8_BL44XU_MX300HE-bl44xu_lys_000001.img]
 tests/test_image_readers.py::test_tiff[image_examples-SPring8_BL44XU_MX300HE-bl44xu_lys_000002.img]
 tests/test_image_readers.py::test_tiff[image_examples-SRS_101-mar225_001.img]
-tests/test_imageset.py::test
+tests/test_imageset.py::TestImageSet::()::test_imageset
+tests/test_imageset.py::TestImageSweep::()::test
 tests/test_imageset.py::test_SACLA_MPCCD_Cheetah_File[False]
 tests/test_imageset.py::test_SACLA_MPCCD_Cheetah_File[True]
 tests/test_imageset.py::test_format[image_examples-ALS_1231-q315r_lyso_1_001.img]
@@ -168,9 +172,9 @@ tests/test_imageset.py::test_format[image_examples-xia2-merge2cbf_averaged_0001.
 tests/test_imageset.py::test_format[stills_test_data-hit-20111202210224984.cbf]
 tests/test_imageset.py::test_format[stills_test_data-hit-s00-20140306002857363.cbf]
 tests/test_imageset.py::test_format[stills_test_data-hit-s00-20140306002935980.cbf]
-tests/test_imageset.py::test_imageset
 tests/test_imageset.py::test_imagesetdata
 tests/test_imageset.py::test_imagesetfactory
+tests/test_imageset.py::test_nexus_file
 tests/test_imageset.py::test_pickle_imageset
 tests/test_regression_images.py::test_no_exceptions_from_understand[ADSC_CBF/SIM_MX_mod_001.cbf]
 tests/test_regression_images.py::test_no_exceptions_from_understand[ADSC_CBF/thaumatin_die_M1S5_1_asc_0041.cbf]

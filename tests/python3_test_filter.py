@@ -1,36 +1,37 @@
 from __future__ import absolute_import, division, print_function
 
-import os
-import sys
-import xml.etree.ElementTree as ET
+import pytest
 
-import dxtbx
 
-tree = ET.parse("output.xml")
-root = tree.getroot()
-tcs = root.findall("testcase")
-
-with open(os.path.join(dxtbx.__path__[0], ".python3-test-failures")) as fh:
-    known_bad = set(testname.strip() for testname in fh.readlines() if testname.strip())
-revised_bad = set()
-
-acceptable_outcome = True
-
-for test in tcs:
-    test_name = test.attrib["file"] + "::" + test.attrib["name"]
-    failure = test.find("failure") is not None or test.find("error") is not None
-    if failure:
-        if test_name in known_bad:
-            revised_bad.add(test_name)
+class Python3TestFailureExpectationPlugin(object):
+    def __init__(self, config):
+        self.config = config
+        self.known_failures_file = config.rootdir.join(".python3-test-failures")
+        self.known_failures_output = config.rootdir.join(".python3-test-failures.new")
+        if self.known_failures_file.check():
+            self.known_failures = set(self.known_failures_file.readlines(cr=False))
         else:
-            print("Test %s has failed" % test_name)
-            revised_bad.add(test_name)
-            acceptable_outcome = False
+            self.known_failures = set()
+        self.revised_failures = set()
 
-for test in known_bad - revised_bad:
-    print("Test %s did not fail. Please remove from known failure list" % test)
+    def pytest_collectreport(self, report):
+        if not report.nodeid:
+            return
+        passed = report.outcome in ("passed", "skipped")
+        for item in report.result:
+            if not passed:
+                self.revised_failures.add(item.nodeid)
 
-with open("revised-python3-test-failures", "w") as fh:
-    fh.write("\n".join(sorted(revised_bad)))
+    def pytest_collection_modifyitems(self, session, config, items):
+        for item in items:
+            if item.nodeid in self.known_failures:
+                item.add_marker(pytest.mark.xfail)
 
-sys.exit(0 if acceptable_outcome else 1)
+    def pytest_runtest_logreport(self, report):
+        if report.failed:
+            self.revised_failures.add(report.nodeid)
+        if not report.passed and report.skipped and "xfail" in report.keywords:
+            self.revised_failures.add(report.nodeid)
+
+    def pytest_sessionfinish(self, session):
+        self.known_failures_output.write("\n".join(sorted(self.revised_failures)))
