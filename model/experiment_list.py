@@ -93,7 +93,18 @@ class ExperimentListDict(object):
 
         # Go through all the imagesets and make sure the dictionary
         # references by an index rather than a file path.
-        self._ilist = self._extract_imagesets()
+        self._ilist = self._dereference_imagesets()
+
+        self._lookups = {
+            "beam": self._blist,
+            "detector": self._dlist,
+            "goniometer": self._glist,
+            "scan": self._slist,
+            "crystal": self._clist,
+            "profile": self._plist,
+            "scaling_model": self._scalelist,
+            "imageset": self._ilist,
+        }
 
         # Extract all the experiments
         return self._extract_experiments()
@@ -135,7 +146,8 @@ class ExperimentListDict(object):
         # Return the model list
         return mlist
 
-    def _extract_imagesets(self):
+    def _dereference_imagesets(self):
+        # type: () -> List[Dict[str,Any]]
         """Extract imageset objects from the source.
 
         This function does resolving of an (old) method of imageset lookup
@@ -148,9 +160,8 @@ class ExperimentListDict(object):
         to the new ImageSet in the returned list.
 
         Returns:
-            List[ImageSet]:
-                The ordered list of ImageSets that the Experiment index
-                points to.
+                The ordered list of serialized-ImageSet dictionaries
+                that the Experiment list points to.
         """
 
         # Extract all the model list
@@ -213,17 +224,14 @@ class ExperimentListDict(object):
 
             # Get the models
             identifier = eobj.get("identifier", "")
-            beam = ExperimentListDict.model_or_none(self._blist, eobj, "beam")
-            detector = ExperimentListDict.model_or_none(self._dlist, eobj, "detector")
-            goniometer = ExperimentListDict.model_or_none(
-                self._glist, eobj, "goniometer"
-            )
-            scan = ExperimentListDict.model_or_none(self._slist, eobj, "scan")
-            crystal = ExperimentListDict.model_or_none(self._clist, eobj, "crystal")
-            profile = ExperimentListDict.model_or_none(self._plist, eobj, "profile")
-            scaling_model = ExperimentListDict.model_or_none(
-                self._scalelist, eobj, "scaling_model"
-            )
+            beam = self._lookup_model("beam", eobj)
+            detector = self._lookup_model("detector", eobj)
+            goniometer = self._lookup_model("goniometer", eobj)
+            scan = self._lookup_model("scan", eobj)
+            crystal = self._lookup_model("crystal", eobj)
+            profile = self._lookup_model("profile", eobj)
+            scaling_model = self._lookup_model("scaling_model", eobj)
+
             key = (eobj.get("imageset"), eobj.get("scan"))
 
             imageset = None
@@ -231,9 +239,7 @@ class ExperimentListDict(object):
                 imageset = imagesets[key]  # type: ImageSet
             except KeyError:
                 # This imageset hasn't been loaded yet - create it
-                imageset_data = ExperimentListDict.model_or_none(
-                    self._ilist, eobj, "imageset"
-                )  # type: dict
+                imageset_data = self._lookup_model("imageset", eobj)
 
                 # Create the imageset from the input data
                 if imageset_data is not None:
@@ -427,12 +433,26 @@ class ExperimentListDict(object):
             format_kwargs=format_kwargs,
         )
 
-    @staticmethod
-    def model_or_none(mlist, eobj, name):
-        """ Get a model or None. """
-        index = eobj.get(name)
-        if index is not None:
-            return mlist[index]
+    def _lookup_model(self, name, experiment_dict):
+        """
+        Find a model by looking up it's index from a dictionary
+
+        Args:
+            name (str): The model name e.g. 'beam', 'detector'
+            experiment_dict (Dict[str, int]):
+                The experiment dictionary. experiment_dict[name] must
+                exist and be not None to retrieve a model. If this key
+                exists, then there *must* be an item with this index
+                in the ExperimentListDict internal model stores.
+
+        Returns:
+            Optional[Any]:
+                A model by looking up the index pointed to by
+                experiment_dict[name]. If not present or empty,
+                then None is returned.
+        """
+        if name in experiment_dict and experiment_dict[name] is not None:
+            return self._lookups[name][experiment_dict[name]]
         return None
 
     @staticmethod
