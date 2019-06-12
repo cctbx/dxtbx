@@ -217,46 +217,43 @@ def test_read_image(test_image_for_reading):
 
 
 def test_no_multiple_format_understanding(test_image):
-    """for a given image file, walks the whole tree of Format objects.
-    If the file can be understood by multiple Format objects at the same
-    inheiritance level, it will return False, otherwise True."""
+    """For a given image file, walks the whole DAG of Format objects.
+    The file must only be understood by a single leaf node format class."""
 
-    Registry.setup()
+    dag = dxtbx.format.Registry.get_format_class_dag()
 
-    global any_understood, highest_level, found_a_repeat
-
-    any_understood = False
-
-    def recurse(format, image_file, level):
-        global any_understood, highest_level, found_a_repeat
-        for child in format._children:
-            understood = child.understand(image_file)
+    def recurse(parentformat, filename, level=0):
+        known_format_class = None
+        multiple_formats = False
+        for subformat in dag.get(parentformat, []):
+            understood = dxtbx.format.Registry.get_format_class_for(
+                subformat
+            ).understand(filename)
+            print("%s%s: %s" % ("  " * level, subformat, understood))
             if understood:
-                any_understood = True
-                print("level: %d" % (level), child.__name__)
-                found_a_repeat = level == highest_level
-                highest_level = level
-                recurse(child, image_file, level + 1)
+                recursive_format_class, subtree_multiple = recurse(
+                    subformat, filename, level + 1
+                )
+                understood_format_class = recursive_format_class or subformat
+                if known_format_class and known_format_class != understood_format_class:
+                    print(
+                        "File can be understood as %s and %s"
+                        % (known_format_class, understood_format_class)
+                    )
+                    multiple_formats = True
+                known_format_class = understood_format_class
+                multiple_formats |= subtree_multiple
+        return known_format_class, multiple_formats
 
-    level = 1
-    highest_level = 0
-    found_a_repeat = False
-    for format in Registry._formats:
-        understood = format.understand(test_image)
-        if understood:
-            any_understood = True
-            print("level: %d" % (level), format.__name__)
-            found_a_repeat = level == highest_level
-            highest_level = 1
-            recurse(format, test_image, level + 1)
+    understood_format, multiple_formats = recurse("Format", test_image)
 
-    assert not found_a_repeat, "image file understood by multiple Format objects"
+    assert not multiple_formats, "image file understood by multiple Format objects"
     # It's a failure if nothing could understand this file
-    assert any_understood, "No formatter could be found"
+    assert understood_format, "No formatter could be found"
+    print("File understood as", understood_format)
 
 
 def test_no_exceptions_from_understand(test_image):
-    Registry.setup()
-    for format in Registry._formats:
+    for format in Registry.get():
         print(format)
         format.understand(test_image)

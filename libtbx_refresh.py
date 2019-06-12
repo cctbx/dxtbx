@@ -35,7 +35,7 @@ for _, name, _ in pkgutil.iter_modules(dxtbx.format.__path__):
     fid.close()
     try:
         parsetree = ast.parse(content)
-    except Exception:
+    except SyntaxError:
         print("  *** Could not parse %s" % name)
         continue
     for top_level_def in parsetree.body:
@@ -49,8 +49,10 @@ for _, name, _ in pkgutil.iter_modules(dxtbx.format.__path__):
         if any(n.startswith("Format") for n in base_names):
             classname = top_level_def.name
             format_classes.append(
-                "{classname} = dxtbx.format.{modulename}:{classname}".format(
-                    classname=classname, modulename=name
+                "{classname}:{baseclasses} = dxtbx.format.{modulename}:{classname}".format(
+                    classname=classname,
+                    modulename=name,
+                    baseclasses=",".join(base_names),
                 )
             )
             print("  found", classname, " based on ", str(base_names))

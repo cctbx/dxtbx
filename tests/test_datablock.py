@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-import os
 import json
+import os
+from pprint import pprint
 
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
@@ -108,8 +109,9 @@ def test_create_multiple_sweeps(multiple_sweep_filenames):
 
 
 def test_create_multiple_blocks(multiple_block_filenames):
+    pprint(multiple_block_filenames)
     blocks = DataBlockFactory.from_filenames(multiple_block_filenames, verbose=False)
-    assert len(blocks) == 22
+    assert blocks
 
     # Block 1
     assert blocks[0].num_images() == 9
@@ -119,6 +121,10 @@ def test_create_multiple_blocks(multiple_block_filenames):
     sweeps = blocks[0].extract_sweeps()
     assert len(sweeps) == 1
     assert len(sweeps[0]) == 9
+
+    pprint([b.num_images() for b in blocks])
+
+    assert len(blocks) == 22
 
 
 def test_pickling(multiple_block_filenames):
