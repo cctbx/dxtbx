@@ -42,6 +42,11 @@ class XtcReader(Reader):
         """ No-op for XTC streams. No issue with multiprocessing. """
         pass
 
+    def identifiers(self):
+        """ Overloading identifiers function from FormatMultiImage. Will be returning a list of psana timestamps"""
+        format_instance = self.format_class.get_instance(self._filename)
+        return format_instance.get_all_timestamps()
+
 
 class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
@@ -139,6 +144,16 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 run,
             )
             self.times.extend(times)
+
+    def get_all_timestamps(self):
+        """ Return a list of timestamps of all events in the specified run(s)"""
+        from xfel.cxi.cspad_ana import cspad_tbx
+
+        self.populate_events()
+        return [
+            cspad_tbx.evt_timestamp((item.seconds(), item.nanoseconds() / 1e6))
+            for item in self.times
+        ]
 
     def get_run_from_index(self, index=None):
         """ Look up the run number given an index """

@@ -516,18 +516,16 @@ class ExperimentListFactory(object):
     def from_sweep_and_crystal(imageset, crystal, load_models=True):
         """ Create an experiment list from sweep and crystal. """
         if load_models:
-            return ExperimentList(
-                [
-                    Experiment(
-                        imageset=imageset,
-                        beam=imageset.get_beam(),
-                        detector=imageset.get_detector(),
-                        goniometer=imageset.get_goniometer(),
-                        scan=imageset.get_scan(),
-                        crystal=crystal,
-                    )
-                ]
+            experiment = Experiment(
+                imageset=imageset,
+                beam=imageset.get_beam(),
+                detector=imageset.get_detector(),
+                goniometer=imageset.get_goniometer(),
+                scan=imageset.get_scan(),
+                crystal=crystal,
             )
+            experiment.identifier = experiment.imageset.get_template()
+            return ExperimentList([experiment])
         else:
             return ExperimentList([Experiment(imageset=imageset, crystal=crystal)])
 
@@ -537,16 +535,17 @@ class ExperimentListFactory(object):
         experiments = ExperimentList()
         if load_models:
             for i in range(len(imageset)):
-                experiments.append(
-                    Experiment(
-                        imageset=imageset[i : i + 1],
-                        beam=imageset.get_beam(i),
-                        detector=imageset.get_detector(i),
-                        goniometer=imageset.get_goniometer(i),
-                        scan=imageset.get_scan(i),
-                        crystal=crystal,
-                    )
+                experiment = Experiment(
+                    imageset=imageset[i : i + 1],
+                    beam=imageset.get_beam(i),
+                    detector=imageset.get_detector(i),
+                    goniometer=imageset.get_goniometer(i),
+                    scan=imageset.get_scan(i),
+                    crystal=crystal,
                 )
+                # Each experiment has a single imageset in stills
+                experiment.identifier = experiment.imageset.get_image_identifier(0)
+                experiments.append(experiment)
         else:
             for i in range(len(imageset)):
                 experiments.append(
