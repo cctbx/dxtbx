@@ -1,10 +1,4 @@
-#!/usr/bin/env python
-# FormatCBFCspad.py
-#
 # Contains class methods specific to interacting with CSPAD images
-#
-# $Id:
-#
 
 from __future__ import absolute_import, division, print_function
 
@@ -161,7 +155,7 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
                 for axis_id, setting_value in zip(
                     ["_X", "_Y", "_Z"], [dx, dy, distance]
                 ):
-                    while not axis_id in axis_name:
+                    while axis_id not in axis_name:
                         axis_name = cbf.get_axis_depends_on(axis_name)
                     assert cbf.get_axis_type(axis_name) == b"translation"
                     cbf.set_axis_setting(axis_name, setting_value, 0)

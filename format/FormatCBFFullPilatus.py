@@ -9,6 +9,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import re
+
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
@@ -42,15 +44,11 @@ class FormatCBFFullPilatus(FormatCBFFull):
 
         self._raw_data = None
 
-        return
-
     def _start(self):
         """Open the image file as a cbf file handle, and keep this somewhere
         safe."""
 
         FormatCBFFull._start(self)
-
-        return
 
     def _beam(self):
         """Return a working beam instance. Override polarization to be 0.999."""
@@ -67,10 +65,8 @@ class FormatCBFFullPilatus(FormatCBFFull):
         for f0, f1, s0, s1 in determine_pilatus_mask(detector):
             detector[0].add_mask(f0 - 1, s0 - 1, f1, s1)
 
-        import re
-
         m = re.search(
-            "^#\s*(\S+)\ssensor, thickness\s*([0-9.]+)\s*m\s*$",
+            r"^#\s*(\S+)\ssensor, thickness\s*([0-9.]+)\s*m\s*$",
             self._cif_header,
             re.MULTILINE,
         )
@@ -111,7 +107,7 @@ class FormatCBFFullPilatus(FormatCBFFull):
                     )
                     panel.set_mu(mu)
 
-        m = re.search("^#\s*Detector:\s+(.*?)\s*$", self._cif_header, re.MULTILINE)
+        m = re.search(r"^#\s*Detector:\s+(.*?)\s*$", self._cif_header, re.MULTILINE)
         if m and m.group(1):
             panel.set_identifier(m.group(1).encode())
 
@@ -178,7 +174,7 @@ class FormatCBFFullPilatus(FormatCBFFull):
         # returns merged untrusted pixels and active areas using bitwise AND
         # (pixels are accepted if they are inside of the active areas AND inside
         # of the trusted range)
-        return tuple([m & tm for m, tm in zip(mask, trusted_mask)])
+        return tuple(m & tm for m, tm in zip(mask, trusted_mask))
 
     def get_vendortype(self):
         from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv

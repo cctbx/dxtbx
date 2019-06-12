@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import math
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
@@ -48,7 +50,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        import libtbx
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
@@ -59,8 +60,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
 
         self._raw_data = None
-
-        return
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. This should
@@ -82,7 +81,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         else:
             omega_value = 0.0
 
-        from scitbx import matrix
         from scitbx.array_family import flex
 
         phi = (1.0, 0.0, 0.0)
@@ -359,7 +357,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
     def get_goniometer_shadow_masker(self, goniometer=None):
         from dials.util.masking import GoniometerShadowMaskGenerator
         from scitbx.array_family import flex
-        import math
 
         # Simple model of cone around goniometer phi axis
         # Exact values don't matter, only the ratio of height/radius

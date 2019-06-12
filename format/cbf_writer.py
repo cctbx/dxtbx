@@ -272,8 +272,6 @@ class FullCBFWriter(object):
         )
         axis_names.append("%s_X" % dname)
 
-        root_basis = metro[root_key]
-
         axis_settings.append(["AXIS_SOURCE", "FRAME1", "0", "0"])
         axis_settings.append(["AXIS_GRAVITY", "FRAME1", "0", "0"])
         axis_settings.append([dname + "_X", "FRAME1", "0", "0"])

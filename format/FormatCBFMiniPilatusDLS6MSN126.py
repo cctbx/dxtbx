@@ -48,8 +48,6 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
         self._multi_panel = kwargs.get("multi_panel", False)
         FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
 
-        return
-
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. This should
         probably be checked against the image header, though for miniCBF

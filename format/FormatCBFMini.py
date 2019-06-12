@@ -11,16 +11,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+import binascii
 import os
 
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.model import ParallaxCorrectedPxMmStrategy, SimplePxMmStrategy
 
-if "DXTBX_OVERLOAD_SCALE" in os.environ:
-    dxtbx_overload_scale = float(os.environ["DXTBX_OVERLOAD_SCALE"])
-else:
-    dxtbx_overload_scale = 1
+dxtbx_overload_scale = float(os.getenv("DXTBX_OVERLOAD_SCALE", "1"))
 
 
 class FormatCBFMini(FormatCBF):
@@ -73,8 +71,6 @@ class FormatCBFMini(FormatCBF):
 
         self._raw_data = None
 
-        return
-
     def _start(self):
         """Open the image file, read the image header, copy it into a
         dictionary for future reference."""
@@ -86,24 +82,21 @@ class FormatCBFMini(FormatCBF):
         self._cif_header_dictionary = {}
 
         for record in cif_header.split("\n"):
-            if not "#" in record[:1]:
+            if record[:1] != "#":
                 continue
 
             if len(record[1:].split()) <= 2 and record.count(":") == 2:
                 self._cif_header_dictionary["timestamp"] = record[1:].strip()
                 continue
 
-            tokens = record.replace("=", "").replace(":", "").split()[1:]
-
-            self._cif_header_dictionary[tokens[0]] = " ".join(tokens[1:])
+            tokens = record.replace("=", "").replace(":", "").split()
+            self._cif_header_dictionary[tokens[1]] = " ".join(tokens[2:])
 
         for record in self._mime_header.split("\n"):
             if not record.strip():
                 continue
             token, value = record.split(":")
             self._cif_header_dictionary[token.strip()] = value.strip()
-
-        return
 
     def _detector(self):
         """Return a model for a simple detector, presuming no one has
@@ -197,8 +190,8 @@ class FormatCBFMini(FormatCBF):
         probably be checked against the image header, though for miniCBF
         there are limited options for this."""
 
-        if "Phi" in self._cif_header_dictionary:
-            phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
+        #  if "Phi" in self._cif_header_dictionary:
+        #      phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
 
         return self._goniometer_factory.single_axis()
 
@@ -212,17 +205,13 @@ class FormatCBFMini(FormatCBF):
         try:
             flux = float(self._cif_header_dictionary["Flux"].split()[0])
             beam.set_flux(flux)
-        except KeyError:
-            pass
-        except IndexError:
+        except (IndexError, KeyError):
             pass
 
         try:
             transmission = float(self._cif_header_dictionary["Transmission"].split()[0])
             beam.set_transmission(transmission)
-        except KeyError:
-            pass
-        except IndexError:
+        except (IndexError, KeyError):
             pass
 
         return beam
@@ -245,7 +234,6 @@ class FormatCBFMini(FormatCBF):
 
     def _read_cbf_image(self):
         from cbflib_adaptbx import uncompress
-        import binascii
 
         start_tag = binascii.unhexlify("0c1a04d5")
 
@@ -275,7 +263,7 @@ class FormatCBFMini(FormatCBF):
 
         else:
             raise ValueError(
-                "Uncompression of type other than byte_offset or none is not supported (contact authors)"
+                "Compression of type other than byte_offset or none is not supported (contact authors)"
             )
 
         return pixel_values
@@ -288,7 +276,6 @@ class FormatCBFMini(FormatCBF):
         return self._raw_data
 
     def detectorbase_start(self):
-
         from iotbx.detectors.pilatus_minicbf import PilatusImage
 
         self.detectorbase = PilatusImage(self._image_file)
@@ -326,8 +313,8 @@ class FormatCBFMini(FormatCBF):
         cbf_root = os.path.splitext(os.path.basename(path))[0] + ".cbf"
         cbf.new_datablock(os.path.splitext(os.path.basename(path))[0])
 
-        """ Data items in the ARRAY_DATA category are the containers for the array data
-    items described in the category ARRAY_STRUCTURE. """
+        """Data items in the ARRAY_DATA category are the containers for the array data
+        items described in the category ARRAY_STRUCTURE."""
         cbf.add_category("array_data", ["header_convention", "header_contents", "data"])
 
         # get pixel info out of detector object
@@ -448,7 +435,6 @@ class FormatCBFMini(FormatCBF):
 
 
 if __name__ == "__main__":
-
     import sys
 
     for arg in sys.argv[1:]:

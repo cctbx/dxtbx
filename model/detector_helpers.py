@@ -170,10 +170,7 @@ def set_slow_fast_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
 
     # Get data from the chosen panel
     panel = detector[panel_id]
-    f = matrix.col(panel.get_fast_axis())
-    s = matrix.col(panel.get_slow_axis())
     n = matrix.col(panel.get_normal())
-    o = matrix.col(panel.get_origin())
 
     # Attempt to find the axis an angle of an applied 2theta shift
     cos_angle = n.cos_angle(us0)

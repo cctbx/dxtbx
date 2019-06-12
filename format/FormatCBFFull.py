@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# FormatCBFFull.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -28,7 +27,7 @@ class FormatCBFFull(FormatCBF):
 
         header = FormatCBF.get_cbf_header(image_file)
 
-        if not "_diffrn.id" in header and not "_diffrn_source" in header:
+        if "_diffrn.id" not in header and "_diffrn_source" not in header:
             return False
 
         return True
@@ -118,7 +117,7 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
 
         header = FormatCBF.get_cbf_header(image_file)
 
-        if not "_diffrn.id" in header and not "_diffrn_source":
+        if "_diffrn.id" not in header and "_diffrn_source" not in header:
             return False
 
         # According to ImageCIF, "Data items in the DIFFRN_MEASUREMENT_AXIS

@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import math
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
@@ -45,7 +47,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        import libtbx
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
@@ -61,8 +62,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         self._raw_data = None
 
-        return
-
     def _detector(self):
 
         # module positions from detector blueprints - modelling at the moment as
@@ -70,7 +69,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         from dxtbx.model import Detector
         from scitbx import matrix
-        import math
 
         x = matrix.col((-1, 0, 0))
         y = matrix.col((0, 1, 0))
@@ -209,7 +207,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
     def get_goniometer_shadow_masker(self, goniometer=None):
         from dials.util.masking import GoniometerShadowMaskGenerator
         from scitbx.array_family import flex
-        import math
 
         coords = flex.vec3_double(((0, 0, 0),))
 
