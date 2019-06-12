@@ -17,12 +17,15 @@ __all__ = [
     "ExternalLookup",
     "ExternalLookupItemBool",
     "ExternalLookupItemDouble",
+    "FilenameAnalyser",
     "ImageGrid",
     "ImageSet",
     "ImageSetData",
     "ImageSetFactory",
     "ImageSetLazy",
     "ImageSweep",
+    "MemMasker",
+    "MemReader",
 ]
 
 
