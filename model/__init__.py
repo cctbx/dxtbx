@@ -478,6 +478,10 @@ class _(object):
         self.detector = self.imageset.get_detector(index)
         self.goniometer = self.imageset.get_goniometer(index)
         self.scan = self.imageset.get_scan(index)
+        if isinstance(self.imageset, ImageSweep):
+            self.identifier = self.imageset.get_template()
+        else:
+            self.identifier = self.imageset.get_image_identifier(index)
 
 
 @boost.python.inject_into(ExperimentList)
