@@ -337,34 +337,23 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
 
         return d
 
-    def read_cbf_image(self, cbf_image):
+    def _read_cbf_image(self):
         from cbflib_adaptbx import uncompress
         import binascii
 
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        data = self.open_file(cbf_image, "rb").read()
+        with self.open_file(self._image_file, "rb") as fh:
+            data = fh.read()
         data_offset = data.find(start_tag) + 4
-        cbf_header = data[: data_offset - 4]
-
-        fast = 0
-        slow = 0
-        length = 0
-
-        for record in cbf_header.split("\n"):
-            if "X-Binary-Size-Fastest-Dimension" in record:
-                fast = int(record.split()[-1])
-            elif "X-Binary-Size-Second-Dimension" in record:
-                slow = int(record.split()[-1])
-            elif "X-Binary-Number-of-Elements" in record:
-                length = int(record.split()[-1])
-            elif "X-Binary-Size:" in record:
-                size = int(record.split()[-1])
-
-        assert length == fast * slow
+        cbf_header = self._parse_cbf_header(
+            data[: data_offset - 4].decode("ascii", "ignore")
+        )
 
         pixel_values = uncompress(
-            packed=data[data_offset : data_offset + size], fast=fast, slow=slow
+            packed=data[data_offset : data_offset + cbf_header["size"]],
+            fast=cbf_header["fast"],
+            slow=cbf_header["slow"],
         )
 
         return pixel_values
@@ -374,7 +363,7 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
             return super(FormatCBFMiniPilatusDLS6MSN126, self).get_raw_data()
 
         if self._raw_data is None:
-            raw_data = self.read_cbf_image(self._image_file)
+            raw_data = self._read_cbf_image()
             self._raw_data = []
             d = self.get_detector()
             for panel in d:

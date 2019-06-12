@@ -243,53 +243,35 @@ class FormatCBFMini(FormatCBF):
             self._image_file, format, exposure_time, osc_start, osc_range, timestamp
         )
 
-    def read_cbf_image(self, cbf_image):
+    def _read_cbf_image(self):
         from cbflib_adaptbx import uncompress
         import binascii
 
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        data = self.open_file(cbf_image, "rb").read()
+        with self.open_file(self._image_file, "rb") as fh:
+            data = fh.read()
         data_offset = data.find(start_tag) + 4
-        cbf_header = data[: data_offset - 4]
+        cbf_header = self._parse_cbf_header(
+            data[: data_offset - 4].decode("ascii", "ignore")
+        )
 
-        fast = 0
-        slow = 0
-        length = 0
-        byte_offset = False
-        no_compression = False
-
-        for record in cbf_header.split("\n"):
-            if "X-Binary-Size-Fastest-Dimension" in record:
-                fast = int(record.split()[-1])
-            elif "X-Binary-Size-Second-Dimension" in record:
-                slow = int(record.split()[-1])
-            elif "X-Binary-Number-of-Elements" in record:
-                length = int(record.split()[-1])
-            elif "X-Binary-Size:" in record:
-                size = int(record.split()[-1])
-            elif "conversions" in record:
-                if "x-CBF_BYTE_OFFSET" in record:
-                    byte_offset = True
-                elif "x-CBF_NONE" in record:
-                    no_compression = True
-
-        assert length == fast * slow
-
-        if byte_offset:
+        if cbf_header["byte_offset"]:
             pixel_values = uncompress(
-                packed=data[data_offset : data_offset + size], fast=fast, slow=slow
+                packed=data[data_offset : data_offset + cbf_header["size"]],
+                fast=cbf_header["fast"],
+                slow=cbf_header["slow"],
             )
-        elif no_compression:
+        elif cbf_header["no_compression"]:
             from boost.python import streambuf
             from dxtbx import read_int32
             from scitbx.array_family import flex
 
             assert len(self.get_detector()) == 1
-            f = self.open_file(self._image_file)
-            f.read(data_offset)
-            pixel_values = read_int32(streambuf(f), int(slow * fast))
-            pixel_values.reshape(flex.grid(slow, fast))
+            with self.open_file(self._image_file) as f:
+                f.read(data_offset)
+                pixel_values = read_int32(streambuf(f), cbf_header["length"])
+            pixel_values.reshape(flex.grid(cbf_header["slow"], cbf_header["fast"]))
 
         else:
             raise ValueError(
@@ -300,7 +282,7 @@ class FormatCBFMini(FormatCBF):
 
     def get_raw_data(self):
         if self._raw_data is None:
-            data = self.read_cbf_image(self._image_file)
+            data = self._read_cbf_image()
             self._raw_data = data
 
         return self._raw_data
