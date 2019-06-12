@@ -534,6 +534,8 @@ class ImageSetFactory(object):
         check_format=True,
         single_file_indices=None,
         format_kwargs=None,
+        beam=None,
+        detector=None,
     ):
         """Create an image set"""
         from dxtbx.format.Registry import Registry
@@ -556,6 +558,8 @@ class ImageSetFactory(object):
             as_imageset=True,
             format_kwargs=format_kwargs,
             check_format=check_format,
+            beam=beam,
+            detector=detector,
         )
 
         # Return the imageset
