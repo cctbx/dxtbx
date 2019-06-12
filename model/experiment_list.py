@@ -36,7 +36,7 @@ from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import template_image_range
 
 try:
-    from typing import List, Dict, Any, Tuple, Optional
+    from typing import Any, Dict, List, Optional, Tuple
 except ImportError:
     pass
 
