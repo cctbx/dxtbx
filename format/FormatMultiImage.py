@@ -6,6 +6,12 @@ import os
 from scitbx.array_family import flex
 
 from dxtbx.format.Format import Format
+from dxtbx.imageset import ImageSetData, ImageSweep
+
+try:
+    from typing import Dict, Tuple
+except ImportError:
+    pass
 
 
 class Reader(object):
@@ -174,9 +180,6 @@ class FormatMultiImage(Format):
         Factory method to create an imageset
 
         """
-        from dxtbx.imageset import ImageSetData
-        from dxtbx.imageset import ImageSweep
-
         if isinstance(filenames, str):
             filenames = [filenames]
         elif len(filenames) > 1:

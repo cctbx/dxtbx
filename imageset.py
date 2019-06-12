@@ -262,7 +262,7 @@ class ImageSweepAux(boost.python.injector, ImageSweep):
                 stop = len(self)
             else:
                 stop = item.stop
-            if item.step != None:
+            if item.step is not None:
                 raise IndexError("Sweeps must be sequential")
             return self.partial_set(start, stop)
         else:
@@ -373,7 +373,7 @@ class ImageSetFactory(object):
         imagesetlist = []
         for filelist in filelist_per_imageset:
             try:
-                if filelist[2] == True:
+                if filelist[2]:
                     iset = ImageSetFactory._create_sweep(filelist, check_headers)
                 else:
                     iset = ImageSetFactory._create_imageset(filelist, check_headers)

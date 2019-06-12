@@ -35,6 +35,11 @@ from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import template_image_range
 
+try:
+    from typing import List, Dict, Any, Tuple, Optional
+except ImportError:
+    pass
+
 __all__ = [
     "BeamComparison",
     "DetectorComparison",
