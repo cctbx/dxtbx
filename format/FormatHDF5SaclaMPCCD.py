@@ -1,4 +1,8 @@
 from __future__ import absolute_import, division, print_function
+
+import math
+import os
+
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
 
@@ -89,8 +93,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         self.read_metadata()
 
         # Override by environmental variables
-        import os
-
         if "MPCCD_RECONST_MODE" in os.environ:
             reconst_mode = bool(os.environ["MPCCD_RECONST_MODE"])
         self.RECONST_MODE = reconst_mode
@@ -103,12 +105,18 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             try:
                 tmp = map(float, os.environ["MPCCD_GEOMETRY"].split(","))
                 if len(tmp) != 24:
-                    raise
+                    raise EnvironmentError(
+                        "Environment variable MPCCD_GEOMETRY must contain 24 comma-separated parts"
+                    )
                 for i in range(8):
                     self.panel_origins[i] = (-tmp[i * 3], tmp[i * 3 + 1], 0)
                     self.panel_rotations[i] = tmp[i * 3 + 2]
-            except Exception:
-                raise "Invalid MPCCD Geomtry"
+            except Exception as e:
+                raise EnvironmentError(
+                    "Invalid MPCCD Geometry specified in environment variable MPCCD_GEOMETRY: {}".format(
+                        e
+                    )
+                )
         if "MPCCD_DISTANCE" in os.environ:
             self.distance = float(os.environ["MPCCD_DISTANCE"])
 
@@ -163,7 +171,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
     def _detector(self, index=None):
         from dxtbx.model.detector import Detector
         from scitbx import matrix
-        import math
 
         wavelength = self.get_beam(index).get_wavelength()
 
@@ -364,7 +371,9 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                                 ]
                             )
                         else:
-                            raise "Panel angle deviation is too large! Do not use reconst mode!"
+                            raise RuntimeError(
+                                "Panel angle deviation is too large! Do not use reconst mode!"
+                            )
 
             else:
                 size_fast = 1024
@@ -389,7 +398,9 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                         round(origin[0]) : round(origin[0] - size_fast) : -1,
                     ] = source
                 else:
-                    raise "Panel angle deviation is too large! Do not use reconst mode!"
+                    raise RuntimeError(
+                        "Panel angle deviation is too large! Do not use reconst mode!"
+                    )
 
         self.active_areas = map(int, self.active_areas)
         return det
