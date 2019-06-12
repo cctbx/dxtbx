@@ -67,16 +67,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
     def _start(self):
         FormatCBFMini._start(self)
 
-    def _goniometer(self):
-        """Return a model for a simple single-axis goniometer. This should
-        probably be checked against the image header, though for miniCBF
-        there are limited options for this."""
-
-        if "Phi" in self._cif_header_dictionary:
-            phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
-
-        return self._goniometer_factory.single_axis()
-
     def _detector(self):
         """Return a model for a simple detector, presuming no one has
         one of these on a two-theta stage. Assert that the beam centre is

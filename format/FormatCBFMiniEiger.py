@@ -52,16 +52,9 @@ class FormatCBFMiniEiger(FormatCBFMini):
         FormatCBFMini.__init__(self, image_file, **kwargs)
 
         self._raw_data = None
-        return
 
     def _start(self):
         FormatCBFMini._start(self)
-
-    def _goniometer(self):
-        if "Phi" in self._cif_header_dictionary:
-            phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
-
-        return self._goniometer_factory.single_axis()
 
     def _detector(self):
         distance = float(self._cif_header_dictionary["Detector_distance"].split()[0])
