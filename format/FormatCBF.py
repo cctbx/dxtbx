@@ -23,10 +23,8 @@ class FormatCBF(Format):
         """Check to see if this looks like an CBF format image, i.e. we can
         make sense of it."""
 
-        if "###CBF" in FormatCBF.open_file(image_file, "rb").read(6):
-            return True
-
-        return False
+        with FormatCBF.open_file(image_file, "rb") as fh:
+            return b"###CBF" == fh.read(6)
 
     @staticmethod
     def get_cbf_header(image_file):
@@ -34,18 +32,24 @@ class FormatCBF(Format):
         everything before --CIF-BINARY-FORMAT-SECTION-- - N.B. for reasons
         of simplicity will read the file in 4k chunks."""
 
-        fin = FormatCBF.open_file(image_file, "rb")
+        marker = b"--CIF-BINARY-FORMAT-SECTION--"
 
-        header = fin.read(4096)
-        # FIXME this is grim as it is searching over longer and longer
-        # files
-        while not "--CIF-BINARY-FORMAT-SECTION--" in header:
-            add = fin.read(4096)
-            if add:
+        with FormatCBF.open_file(image_file, "rb") as fin:
+            header = fin.read(4096)
+            marker_index = header.find(marker)
+            marker_search_start = len(header) - len(marker) + 1
+            while marker_index <= 0:
+                add = fin.read(4096)
+                if not add:
+                    # If the marker is not contained in the file then we return the
+                    # entire file. This behaviour is enforced by test involving
+                    # dials_regression/image_examples/ADSC_CBF/thaumatin_die_M1S5_1_asc_0041.cbf
+                    marker_index = None
+                    break
                 header += add
-            else:
-                break
-        return header.split("--CIF-BINARY-FORMAT-SECTION--")[0]
+                marker_index = header.find(marker, marker_search_start)
+                marker_search_start += 4096
+            return header[:marker_index].decode("ascii", "ignore")
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
@@ -57,7 +61,33 @@ class FormatCBF(Format):
 
         Format.__init__(self, image_file, **kwargs)
 
-        return
+    @staticmethod
+    def _parse_cbf_header(cbf_header):
+        header = {
+            "fast": 0,
+            "slow": 0,
+            "length": 0,
+            "byte_offset": False,
+            "no_compression": False,
+        }
+        for record in cbf_header.split("\n"):
+            if record.startswith("X-Binary-Size-Fastest-Dimension:"):
+                header["fast"] = int(record.split()[-1])
+            elif record.startswith("X-Binary-Size-Second-Dimension:"):
+                header["slow"] = int(record.split()[-1])
+            elif record.startswith("X-Binary-Number-of-Elements:"):
+                header["length"] = int(record.split()[-1])
+            elif record.startswith("X-Binary-Size:"):
+                header["size"] = int(record.split()[-1])
+            elif "conversions" in record:
+                if "x-CBF_BYTE_OFFSET" in record:
+                    header["byte_offset"] = True
+                elif "x-CBF_NONE" in record:
+                    header["no_compression"] = True
+
+        assert header["length"] == header["fast"] * header["slow"]
+
+        return header
 
     def _start(self):
         """Open the image file, read the image header, copy it into memory
@@ -72,6 +102,7 @@ class FormatCBF(Format):
         in_binary_format_section = False
 
         for record in FormatCBF.open_file(self._image_file, "rb"):
+            record = record.decode()
             if "--CIF-BINARY-FORMAT-SECTION--" in record:
                 in_binary_format_section = True
             elif in_binary_format_section and record[0] == "X":
@@ -81,8 +112,6 @@ class FormatCBF(Format):
                 #    In an imgCIF file, the encoded binary data begins after
                 #    the empty line terminating the header.
                 break
-
-        return
 
 
 if __name__ == "__main__":
