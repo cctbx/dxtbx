@@ -527,15 +527,18 @@ class ExperimentListFactory(object):
     def from_sweep_and_crystal(imageset, crystal, load_models=True):
         """ Create an experiment list from sweep and crystal. """
         if load_models:
-            experiment = Experiment(
-                imageset=imageset,
-                beam=imageset.get_beam(),
-                detector=imageset.get_detector(),
-                goniometer=imageset.get_goniometer(),
-                scan=imageset.get_scan(),
-                crystal=crystal,
+            return ExperimentList(
+                [
+                    Experiment(
+                        imageset=imageset,
+                        beam=imageset.get_beam(),
+                        detector=imageset.get_detector(),
+                        goniometer=imageset.get_goniometer(),
+                        scan=imageset.get_scan(),
+                        crystal=crystal,
+                    )
+                ]
             )
-            return ExperimentList([experiment])
         else:
             return ExperimentList([Experiment(imageset=imageset, crystal=crystal)])
 
