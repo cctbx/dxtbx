@@ -24,7 +24,7 @@ class CrystalFactory(object):
             else:
                 return from_dict(t, None)
         elif t != None:
-            d = dict(t.items() + d.items())
+            d = dict(list(t.items()) + list(d.items()))
 
         # Create the model from the dictionary
         if "ML_half_mosaicity_deg" in d:

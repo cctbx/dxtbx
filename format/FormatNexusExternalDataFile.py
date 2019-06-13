@@ -25,9 +25,9 @@ def find_entries(nx_file):
     """
     if "entry" in nx_file:
         entry = nx_file["entry"]
-        if "NX_class" in entry.attrs.keys():
+        if "NX_class" in list(entry.attrs.keys()):
             if entry.attrs["NX_class"] == "NXentry":
-                if "definition" not in entry.keys():
+                if "definition" not in list(entry.keys()):
                     return entry
     return None
 

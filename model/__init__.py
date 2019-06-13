@@ -549,7 +549,7 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
 
         # Serialize all the imagesets
         result["imageset"] = []
-        for imset in index_lookup["imageset"].keys():
+        for imset in list(index_lookup["imageset"].keys()):
             if isinstance(imset, ImageSweep):
                 # FIXME_HACK
                 template = get_template(imset)
@@ -585,10 +585,10 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
 
         # Extract all the ordered model dictionaries - is important these
         # preserve the same order as used in experiment serialization above
-        for name, models in index_lookup.items():
+        for name, models in list(index_lookup.items()):
             # Only fill out entries not handled above e.g. imageset
             if not name in result:
-                result[name] = [x.to_dict() for x in models.keys()]
+                result[name] = [x.to_dict() for x in list(models.keys())]
 
         # Return the dictionary
         return result

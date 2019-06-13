@@ -297,7 +297,7 @@ class FilenameAnalyser(object):
 
         # Label each group as either an imageset or a sweep.
         file_groups = []
-        for template, indices in filelist_per_imageset.iteritems():
+        for template, indices in filelist_per_imageset.items():
 
             # Check if this imageset is a sweep
             is_sweep = self._is_imageset_a_sweep(template, indices)

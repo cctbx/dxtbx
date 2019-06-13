@@ -13,7 +13,7 @@ class FormatSMVADSCSN(FormatSMVADSC):
 
         size, header = FormatSMVADSC.get_smv_header(image_file)
 
-        if "DATE" not in header.keys():
+        if "DATE" not in list(header.keys()):
             return False
         try:
             int(header["DETECTOR_SN"])

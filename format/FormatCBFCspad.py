@@ -193,7 +193,7 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
             for i in range(cbf.count_rows()):
                 cbf.find_column("array_section_id")
                 name = cbf.get_value()
-                if name in all_panelnames and name not in panel_name_mapping.values():
+                if name in all_panelnames and name not in list(panel_name_mapping.values()):
                     cbf.find_column("axis_set_id")
                     panel_name_mapping[cbf.get_value()] = name
                 cbf.next_row()

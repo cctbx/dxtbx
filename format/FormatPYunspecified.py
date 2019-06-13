@@ -217,7 +217,7 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
             wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]
 
             for header_item in wanted_header_items:
-                if not header_item in image_file.keys():
+                if not header_item in list(image_file.keys()):
                     return False
 
             return True

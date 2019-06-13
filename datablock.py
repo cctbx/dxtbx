@@ -119,11 +119,11 @@ class DataBlock(object):
             else:
                 for i in range(len(iset)):
                     obj[iset.get_beam(i)] = None
-        return obj.keys()
+        return list(obj.keys())
 
     def unique_detectors(self):
         """ Returns a list of detector objects. """
-        return self._unique_detectors_dict().keys()
+        return list(self._unique_detectors_dict().keys())
 
     def _unique_detectors_dict(self):
         """ Returns an ordered dictionary of detector objects. """
@@ -135,7 +135,7 @@ class DataBlock(object):
                 for i in range(len(iset)):
                     obj[iset.get_detector(i)] = None
         detector_id = 0
-        for detector in obj.keys():
+        for detector in list(obj.keys()):
             obj[detector] = detector_id
             detector_id = detector_id + 1
         return obj
@@ -154,7 +154,7 @@ class DataBlock(object):
                             obj[model] = None
                     except Exception:
                         pass
-        return obj.keys()
+        return list(obj.keys())
 
     def unique_scans(self):
         """ Iterate through unique scans. """
@@ -170,7 +170,7 @@ class DataBlock(object):
                             obj[model] = None
                     except Exception:
                         pass
-        return obj.keys()
+        return list(obj.keys())
 
     def to_dict(self):
         """ Convert the datablock to a dictionary """

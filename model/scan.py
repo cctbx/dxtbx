@@ -127,7 +127,7 @@ class ScanFactory:
             else:
                 return from_dict(t, None)
         elif t != None:
-            d = dict(t.items() + d.items())
+            d = dict(list(t.items()) + list(d.items()))
         if not isinstance(d["exposure_time"], list):
             d["exposure_time"] = [d["exposure_time"]]
 

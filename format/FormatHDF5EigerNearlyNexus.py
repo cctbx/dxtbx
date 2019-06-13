@@ -33,9 +33,9 @@ def find_entries(nx_file):
     """
     if "entry" in nx_file:
         entry = nx_file["entry"]
-        if "NX_class" in entry.attrs.keys():
+        if "NX_class" in list(entry.attrs.keys()):
             if entry.attrs["NX_class"] == "NXentry":
-                if "definition" not in entry.keys():
+                if "definition" not in list(entry.keys()):
                     return entry
     return None
 
@@ -134,7 +134,7 @@ class EigerNXmxFixer(object):
         # cope with badly structured chunk information i.e. many more data
         # entries than there are in real life...
         delete = []
-        for k in sorted(handle_orig["/entry/data"].iterkeys()):
+        for k in sorted(handle_orig["/entry/data"].keys()):
             try:
                 shape = handle_orig["/entry/data/%s" % k].shape
             except KeyError:
@@ -266,7 +266,7 @@ class EigerNXmxFixer(object):
                 default_axis = (-1, 0, 0)
 
             num_images = 0
-            for name in sorted(handle["/entry/data"].iterkeys()):
+            for name in sorted(handle["/entry/data"].keys()):
                 num_images += len(handle_orig["/entry/data/%s" % name])
             dataset = group.create_dataset("omega", (num_images,), dtype="float32")
             dataset.attrs["units"] = "degree"
@@ -294,7 +294,7 @@ class EigerNXmxFixer(object):
             )
 
         # Change relative paths to absolute paths
-        for name in handle["/entry/data"].iterkeys():
+        for name in handle["/entry/data"].keys():
             del handle["entry/data"][name]
             filename = handle_orig["entry/data"][name].file.filename
             handle["entry/data"][name] = h5py.ExternalLink(filename, "entry/data/data")
