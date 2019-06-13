@@ -535,7 +535,6 @@ class ExperimentListFactory(object):
                 scan=imageset.get_scan(),
                 crystal=crystal,
             )
-            experiment.identifier = experiment.imageset.get_template()
             return ExperimentList([experiment])
         else:
             return ExperimentList([Experiment(imageset=imageset, crystal=crystal)])
