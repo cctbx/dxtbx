@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from future import standard_library
+standard_library.install_aliases()
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.FormatPYunspecified import FormatPYunspecified
 from dxtbx.format.FormatPYunspecified import FormatPYunspecifiedInMemory
@@ -16,7 +18,7 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
 
         try:
             stream = FormatPYunspecified.open_file(image_file, "rb")
-            import cPickle as pickle
+            import pickle as pickle
 
             data = pickle.load(stream)
         except IOError:
