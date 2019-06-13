@@ -39,7 +39,6 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
             params = FormatXTC.params_from_phil(multiple_locator_scope, image_file)
         except Exception:
             return False
-        ds = FormatXTC._get_datasource(image_file, params)
 
         if params.detector_address is None or len(params.detector_address) <= 1:
             return False
