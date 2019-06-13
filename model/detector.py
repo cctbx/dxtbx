@@ -484,7 +484,7 @@ class DetectorFactory:
                 return None
             else:
                 return from_dict(t, None)
-        elif t != None:
+        elif t is not None:
             if isinstance(d, list):
                 d = {"panels": d}
             d2 = dict(list(t.items()) + list(d.items()))

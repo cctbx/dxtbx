@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-# scan.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -118,7 +116,6 @@ class ScanFactory:
 
         """
         from dxtbx.model import Scan
-        from scitbx.array_family import flex  # import dependency
 
         # If None, return None
         if d is None:
@@ -126,7 +123,7 @@ class ScanFactory:
                 return None
             else:
                 return from_dict(t, None)
-        elif t != None:
+        elif t is not None:
             d = dict(list(t.items()) + list(d.items()))
         if not isinstance(d["exposure_time"], list):
             d["exposure_time"] = [d["exposure_time"]]

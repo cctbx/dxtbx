@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import functools
+import math
 import os
 
 try:
@@ -17,7 +18,7 @@ def _check_dtype(expected_type, dataset):
     """
 
     dataset_type = dataset.dtype
-    if not dataset_type in expected_type:
+    if dataset_type not in expected_type:
         return (
             False,
             "%s is type %s, expected %s"
@@ -32,7 +33,7 @@ def _check_dims(expected_dimensions, dataset):
     """
 
     dataset_dimensions = len(dataset.shape)
-    if not dataset_dimensions in expected_dimensions:
+    if dataset_dimensions not in expected_dimensions:
         return (
             False,
             "%s has dims %d, expected %s"
@@ -50,7 +51,7 @@ def _check_shape(expected_shape, dataset):
     A function to check whether the dataset shape matches the expected
     """
 
-    if not dataset.shape in expected_shape:
+    if dataset.shape not in expected_shape:
         return (
             False,
             "%s has shape %s, expected one of %s"
@@ -106,7 +107,7 @@ class check_dset(object):
     def __call__(self, dset):
         for check in self.checks:
             passed, errors = check(dset)
-            if passed == False:
+            if passed is False:
                 raise RuntimeError(errors)
 
 
@@ -127,7 +128,7 @@ class check_attr(object):
         self.dtype = dtype
 
     def __call__(self, dset):
-        if not self.name in dset.attrs:
+        if self.name not in dset.attrs:
             raise RuntimeError(
                 "'%s' does not have an attribute '%s'" % (dset.name, self.name)
             )

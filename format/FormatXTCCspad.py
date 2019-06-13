@@ -57,8 +57,7 @@ class FormatXTCCspad(FormatXTC):
             params = FormatXTC.params_from_phil(cspad_locator_scope, image_file)
         except Exception:
             return False
-        ds = FormatXTC._get_datasource(image_file, params)
-        return any(["cspad" in src.lower() for src in params.detector_address])
+        return any("cspad" in src.lower() for src in params.detector_address)
 
     def _cache_psana_gain(self):
         """

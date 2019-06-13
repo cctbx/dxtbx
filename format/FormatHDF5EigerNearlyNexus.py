@@ -12,10 +12,6 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
-from dxtbx.model import Beam  # import dependency
-from dxtbx.model import Detector  # import dependency
-from dxtbx.model import Goniometer  # import dependency
-from dxtbx.model import Scan  # import dependency
 from dxtbx.format.nexus import NXmxReader
 from dxtbx.format.nexus import NXdata
 from dxtbx.format.nexus import BeamFactory
@@ -136,7 +132,7 @@ class EigerNXmxFixer(object):
         delete = []
         for k in sorted(handle_orig["/entry/data"]):
             try:
-                shape = handle_orig["/entry/data/%s" % k].shape
+                handle_orig["/entry/data/%s" % k].shape
             except KeyError:
                 delete.append("/entry/data/%s" % k)
 
@@ -242,7 +238,7 @@ class EigerNXmxFixer(object):
         # check for incomplete omega definitions dirty hack...
         if "omega" in group:
             try:
-                data = group["omega"][()]
+                group["omega"][()]
             except AttributeError:
                 del group["omega"]
 
@@ -262,7 +258,7 @@ class EigerNXmxFixer(object):
             try:
                 key = handle["/entry/instrument/detector/detector_number"][()]
                 default_axis = {"E-32-0105": (0, 1, 0)}[key]
-            except KeyError as e:
+            except KeyError:
                 default_axis = (-1, 0, 0)
 
             num_images = 0

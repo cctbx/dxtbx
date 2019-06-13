@@ -1,7 +1,5 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-# goniometer.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -111,7 +109,7 @@ class GoniometerFactory:
             goniometer.set_fixed_rotation(params.goniometer.fixed_rotation)
         if params.goniometer.setting_rotation is not None:
             goniometer.set_setting_rotation(params.goniometer.setting_rotation)
-        if params.goniometer.invert_rotation_axis == True:
+        if params.goniometer.invert_rotation_axis is True:
             rotation_axis = goniometer.get_rotation_axis_datum()
             goniometer.set_rotation_axis_datum(map(lambda x: -x, rotation_axis))
 
@@ -151,7 +149,7 @@ class GoniometerFactory:
             )
 
             # Invert the rotation axis
-            if params.goniometer.invert_rotation_axis == True:
+            if params.goniometer.invert_rotation_axis is True:
                 axes = flex.vec3_double([map(lambda x: -x, v) for v in axes])
 
             # Create the angles
@@ -195,7 +193,7 @@ class GoniometerFactory:
                 goniometer.set_axes(axes)
 
             # Invert rotation axis
-            if params.goniometer.invert_rotation_axis == True:
+            if params.goniometer.invert_rotation_axis is True:
                 axes = flex.vec3_double(
                     [map(lambda x: -x, v) for v in goniometer.get_axes()]
                 )
@@ -270,7 +268,7 @@ class GoniometerFactory:
                 return None
             else:
                 return from_dict(t, None)
-        elif t != None:
+        elif t is not None:
             d = dict(list(t.items()) + list(d.items()))
 
         # Create the model from the dictionary

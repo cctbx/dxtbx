@@ -23,7 +23,7 @@ class CrystalFactory(object):
                 return None
             else:
                 return from_dict(t, None)
-        elif t != None:
+        elif t is not None:
             d = dict(list(t.items()) + list(d.items()))
 
         # Create the model from the dictionary
@@ -71,7 +71,7 @@ class CrystalFactory(object):
                               /------------------------/--!---->X-axis
                              /                     !  / *1!
                           <-/-                     ! /    !
-                           /  \+ve phi             ! Yd  /
+                           / \\+ve phi             ! Yd  /
                           /   /                    ! 2  /
                          /                         ! * /
                         Z-axis                  Ys ^ _/

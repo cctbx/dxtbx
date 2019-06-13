@@ -6,8 +6,6 @@ from collections import OrderedDict
 
 import boost.python
 import cctbx.crystal
-from cctbx import sgtbx  # import dependency
-from cctbx.crystal_orientation import crystal_orientation  # import dependency
 from dxtbx_model_ext import *
 from dxtbx.imageset import ImageSet, ImageSweep, ImageGrid
 from dxtbx.model.beam import *
@@ -145,7 +143,7 @@ class CrystalAux(boost.python.injector, Crystal):
         from six.moves import StringIO
 
         s = StringIO()
-        msg = self.show(out=s)
+        self.show(out=s)
         return s.getvalue()
 
     @staticmethod
@@ -587,7 +585,7 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         # preserve the same order as used in experiment serialization above
         for name, models in index_lookup.items():
             # Only fill out entries not handled above e.g. imageset
-            if not name in result:
+            if name not in result:
                 result[name] = [x.to_dict() for x in models]
 
         # Return the dictionary
