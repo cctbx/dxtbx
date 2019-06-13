@@ -16,6 +16,8 @@ from dxtbx.model.crystal import *
 from dxtbx.model.profile import *
 from libtbx.containers import OrderedSet
 
+from six.moves import StringIO
+
 
 class DetectorAux(boost.python.injector, Detector):
     def iter_panels(self):
@@ -140,8 +142,6 @@ class CrystalAux(boost.python.injector, Crystal):
         print("\n".join(msg), file=out)
 
     def __str__(self):
-        from six.moves import StringIO
-
         s = StringIO()
         self.show(out=s)
         return s.getvalue()
@@ -295,10 +295,8 @@ class MosaicCrystalKabsch2010Aux(CrystalAux, MosaicCrystalKabsch2010):
         print("\n".join(msg), file=out)
 
     def __str__(self):
-        from six.moves import StringIO
-
         s = StringIO()
-        msg = self.show(out=s)
+        self.show(out=s)
         return s.getvalue()
 
     def to_dict(crystal):
@@ -373,10 +371,8 @@ class MosaicCrystalSauter2014Aux(CrystalAux, MosaicCrystalSauter2014):
         return self.get_A_as_sqr().inverse()
 
     def __str__(self):
-        from six.moves import StringIO
-
         s = StringIO()
-        msg = self.show(out=s)
+        self.show(out=s)
         return s.getvalue()
 
     def to_dict(crystal):
