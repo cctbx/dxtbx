@@ -54,7 +54,7 @@ def get_format_class_dag():
     """
     if not hasattr(get_format_class_dag, "cache"):
         index = {
-            name: class_info[1] for name, class_info in list(get_format_class_index().items())
+            name: class_info[1] for name, class_info in get_format_class_index().items()
         }
         dag = {}
         for name in index:
@@ -86,12 +86,12 @@ def get_format_class_for_file(image_file, format_hint=None):
     priority_formats = set()
     if format_hint:
         priority_candidates = set((format_hint,))
-        dagset = {f: set(subf) for f, subf in list(_format_dag.items())}
+        dagset = {f: set(subf) for f, subf in _format_dag.items()}
         while priority_candidates:
             priority_formats.update(priority_candidates)
             priority_candidates = {
                 f
-                for f, subf in list(dagset.items())
+                for f, subf in dagset.items()
                 if priority_candidates.intersection(subf)
             }
 

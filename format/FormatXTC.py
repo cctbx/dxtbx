@@ -125,7 +125,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
         self.times = []
         self.run_mapping = {}
-        for run in list(self._psana_runs.values()):
+        for run in self._psana_runs.values():
             times = run.times()
             self.run_mapping[run.run()] = (
                 len(self.times),

@@ -50,7 +50,7 @@ class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory)
         data = image_file
 
         try:
-            if "OSC_START" not in list(data.keys()) or "OSC_RANGE" not in list(data.keys()):
+            if "OSC_START" not in data or "OSC_RANGE" not in data:
                 return True
         except AttributeError:
             return False

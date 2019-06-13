@@ -127,7 +127,7 @@ class check_attr(object):
         self.dtype = dtype
 
     def __call__(self, dset):
-        if not self.name in list(dset.attrs.keys()):
+        if not self.name in dset.attrs:
             raise RuntimeError(
                 "'%s' does not have an attribute '%s'" % (dset.name, self.name)
             )
@@ -152,9 +152,9 @@ def find_entries(nx_file, entry):
     hits = []
 
     def visitor(name, obj):
-        if "NX_class" in list(obj.attrs.keys()):
+        if "NX_class" in obj.attrs:
             if obj.attrs["NX_class"] in ["NXentry", "NXsubentry"]:
-                if "definition" in list(obj.keys()):
+                if "definition" in obj:
                     if obj["definition"][()] == "NXmx":
                         hits.append(obj)
 
@@ -170,7 +170,7 @@ def find_class(nx_file, nx_class):
     hits = []
 
     def visitor(name, obj):
-        if "NX_class" in list(obj.attrs.keys()):
+        if "NX_class" in obj.attrs:
             if obj.attrs["NX_class"] in [nx_class]:
                 hits.append(obj)
 
@@ -1700,7 +1700,7 @@ class DataFactory(object):
         import h5py
 
         datasets = []
-        for key in sorted(list(obj.handle.keys())):
+        for key in sorted(obj.handle):
             if key.startswith("_filename_"):
                 continue
 

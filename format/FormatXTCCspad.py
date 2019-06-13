@@ -64,9 +64,8 @@ class FormatXTCCspad(FormatXTC):
         """
         checks if user wants gain applied and caches a gain map per run
         """
-        run_numbers = list(self._psana_runs)
         self._gain_masks = {}
-        for r in run_numbers:
+        for r in self._psana_runs:
             if self.params.cspad.apply_gain_mask:
                 self._gain_masks[r] = self._psana_det[r].gain_mask(r) > 0
             else:
@@ -78,7 +77,7 @@ class FormatXTCCspad(FormatXTC):
         import psana
 
         self._psana_det = {}
-        for run_number, run in list(self._psana_runs.items()):
+        for run_number, run in self._psana_runs.items():
             self._psana_det[run_number] = psana.Detector(
                 self.params.detector_address[0], run.env()
             )
