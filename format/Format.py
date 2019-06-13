@@ -7,6 +7,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+from future import standard_library
+standard_library.install_aliases()
 import sys
 
 if sys.hexversion < 0x3040000:
@@ -566,9 +568,9 @@ class Format(object):
         caching transparently if possible."""
 
         if url and Format.is_url(filename):
-            import urllib2
+            import urllib.request, urllib.error, urllib.parse
 
-            fh_func = lambda: urllib2.urlopen(filename)
+            fh_func = lambda: urllib.request.urlopen(filename)
 
         elif Format.is_bz2(filename):
             if bz2 is None:
