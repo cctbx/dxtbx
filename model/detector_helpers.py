@@ -18,7 +18,7 @@ def read_xds_xparm(xds_xparm_file):
     and experimental geometry, to a dictionary."""
 
     with open(xds_xparm_file, "r") as fh:
-        data = [float(i) or i in fh.read().split()]
+        data = [float(i) for i in fh.read().split()]
 
     assert len(data) == 42
 
