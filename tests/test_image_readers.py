@@ -5,41 +5,15 @@ import os
 import dxtbx.ext
 import dxtbx.tests.imagelist
 import pytest
+from dxtbx.format.FormatSMV import FormatSMV
 from six.moves import range
-
-
-def get_smv_header(image_file):
-    with open(image_file, "rb") as fh:
-        header_size = int(
-            fh.read(45).split("\n")[1].split("=")[1].replace(";", "").strip()
-        )
-        fh.seek(0)
-        header_text = fh.read(header_size)
-    header_dictionary = {}
-
-    # Check that we have the whole header, contained within { }.  Stop
-    # extracting data once a record solely composed of a closing curly
-    # brace is seen.  If there is no such character in header_text
-    # either HEADER_BYTES caused a short read of the header or the
-    # header is malformed.
-    for record in header_text.split("\n"):
-        if record == "}":
-            break
-        if not "=" in record:
-            continue
-
-        key, value = record.replace(";", "").split("=")
-
-        header_dictionary[key.strip()] = value.strip()
-
-    return header_size, header_dictionary
+from scitbx.array_family import flex
 
 
 def read_smv_image(image_file):
     from boost.python import streambuf
-    from scitbx.array_family import flex
 
-    header_size, header_dictionary = get_smv_header(image_file)
+    header_size, header_dictionary = FormatSMV.get_smv_header(image_file)
 
     with open(image_file, "rb") as f:
         f.seek(header_size)
@@ -70,7 +44,8 @@ def get_tiff_header(image_file):
 
     width, height, depth, header, order = read_basic_tiff_header(image_file)
 
-    header_bytes = open(image_file, "rb").read(header)
+    with open(image_file, "rb") as fh:
+        header_bytes = fh.read(header)
 
     return width, height, depth // 8, order, header_bytes
 
@@ -79,7 +54,6 @@ def read_tiff_image(image_file):
     # currently have no non-little-endian machines...
 
     from boost.python import streambuf
-    from scitbx.array_family import flex
 
     width, height, depth, order, header_bytes = get_tiff_header(image_file)
     image_size = (width, height)
@@ -130,7 +104,6 @@ def read_cbf_image(cbf_image):
 
 def read_multitile_cbf_image(cbf_image):
     import numpy
-    from scitbx.array_family import flex
     import pycbf
 
     raw_data = []
@@ -222,7 +195,6 @@ def read_multitile_cbf_image(cbf_image):
 )
 def test_smv(dials_regression, smv_image):
     from dxtbx.format.image import SMVReader
-    from scitbx.array_family import flex
 
     filename = os.path.join(dials_regression, smv_image)
 
@@ -246,7 +218,6 @@ def test_smv(dials_regression, smv_image):
     ids=dxtbx.tests.imagelist.tiff_image_ids,
 )
 def test_tiff(dials_regression, tiff_image):
-    from scitbx.array_family import flex
     from dxtbx.format.image import TIFFReader
 
     filename = os.path.join(dials_regression, tiff_image)
@@ -289,7 +260,6 @@ def test_tiff(dials_regression, tiff_image):
     + dxtbx.tests.imagelist.cbf_multitile_image_ids,
 )
 def test_cbf(dials_regression, cbf_image):
-    from scitbx.array_family import flex
     from dxtbx.format.image import CBFReader
 
     filename = os.path.join(dials_regression, cbf_image)
@@ -322,7 +292,6 @@ def test_cbf(dials_regression, cbf_image):
 def test_hdf5(dials_regression, hdf5_image):
     from dxtbx.format.image import HDF5Reader
     from dxtbx.format.nexus import dataset_as_flex_int
-    from scitbx.array_family import flex
 
     h5py = pytest.importorskip("h5py")
 
