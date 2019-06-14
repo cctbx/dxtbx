@@ -628,7 +628,7 @@ class ExperimentListDumper(object):
     def as_file(self, filename, **kwargs):
         """ Dump experiment list as file. """
         ext = splitext(filename)[1]
-        j_ext = [".json"]
+        j_ext = [".json", ".expt"]
         p_ext = [".p", ".pkl", ".pickle"]
         if ext.lower() in j_ext:
             return self.as_json(filename, **kwargs)
