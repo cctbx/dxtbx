@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import math
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
@@ -45,7 +47,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        import libtbx
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
@@ -61,8 +62,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         self._raw_data = None
 
-        return
-
     def _detector(self):
 
         # module positions from detector blueprints - modelling at the moment as
@@ -70,7 +69,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         from dxtbx.model import Detector
         from scitbx import matrix
-        import math
 
         x = matrix.col((-1, 0, 0))
         y = matrix.col((0, 1, 0))
@@ -172,41 +170,30 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         return detector
 
-    def read_cbf_image(self, cbf_image):
+    def _read_cbf_image(self):
         from cbflib_adaptbx import uncompress
         import binascii
 
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        data = self.open_file(cbf_image, "rb").read()
+        with self.open_file(self._image_file, "rb") as fh:
+            data = fh.read()
         data_offset = data.find(start_tag) + 4
-        cbf_header = data[: data_offset - 4]
-
-        fast = 0
-        slow = 0
-        length = 0
-
-        for record in cbf_header.split("\n"):
-            if "X-Binary-Size-Fastest-Dimension" in record:
-                fast = int(record.split()[-1])
-            elif "X-Binary-Size-Second-Dimension" in record:
-                slow = int(record.split()[-1])
-            elif "X-Binary-Number-of-Elements" in record:
-                length = int(record.split()[-1])
-            elif "X-Binary-Size:" in record:
-                size = int(record.split()[-1])
-
-        assert length == fast * slow
+        cbf_header = self._parse_cbf_header(
+            data[: data_offset - 4].decode("ascii", "ignore")
+        )
 
         pixel_values = uncompress(
-            packed=data[data_offset : data_offset + size], fast=fast, slow=slow
+            packed=data[data_offset : data_offset + cbf_header["size"]],
+            fast=cbf_header["fast"],
+            slow=cbf_header["slow"],
         )
 
         return pixel_values
 
     def get_raw_data(self):
         if self._raw_data is None:
-            raw_data = self.read_cbf_image(self._image_file)
+            raw_data = self._read_cbf_image()
             self._raw_data = []
 
             for panel in self.get_detector():
@@ -220,7 +207,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
     def get_goniometer_shadow_masker(self, goniometer=None):
         from dials.util.masking import GoniometerShadowMaskGenerator
         from scitbx.array_family import flex
-        import math
 
         coords = flex.vec3_double(((0, 0, 0),))
 

@@ -272,8 +272,6 @@ class FullCBFWriter(object):
         )
         axis_names.append("%s_X" % dname)
 
-        root_basis = metro[root_key]
-
         axis_settings.append(["AXIS_SOURCE", "FRAME1", "0", "0"])
         axis_settings.append(["AXIS_GRAVITY", "FRAME1", "0", "0"])
         axis_settings.append([dname + "_X", "FRAME1", "0", "0"])
@@ -455,10 +453,10 @@ class FullCBFWriter(object):
             data = (data,)
 
         array_names = []
-        cbf.find_category("diffrn_data_frame")
+        cbf.find_category(b"diffrn_data_frame")
         while True:
             try:
-                cbf.find_column("array_id")
+                cbf.find_column(b"array_id")
                 array_names.append(cbf.get_value())
                 cbf.next_row()
             except Exception as e:

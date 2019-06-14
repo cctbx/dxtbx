@@ -15,39 +15,6 @@ from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 # from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
-def read_cbf_image_as_double(cbf_image):
-    from cbflib_adaptbx import uncompress
-    import binascii
-
-    start_tag = binascii.unhexlify("0c1a04d5")
-
-    data = open(cbf_image, "rb").read()
-    data_offset = data.find(start_tag) + 4
-    cbf_header = data[: data_offset - 4]
-
-    fast = 0
-    slow = 0
-    length = 0
-
-    for record in cbf_header.split("\n"):
-        if "X-Binary-Size-Fastest-Dimension" in record:
-            fast = int(record.split()[-1])
-        elif "X-Binary-Size-Second-Dimension" in record:
-            slow = int(record.split()[-1])
-        elif "X-Binary-Number-of-Elements" in record:
-            length = int(record.split()[-1])
-        elif "X-Binary-Size:" in record:
-            size = int(record.split()[-1])
-
-    assert length == fast * slow
-
-    pixel_values = uncompress(
-        packed=data[data_offset : data_offset + size], fast=fast, slow=slow
-    )
-
-    return pixel_values.as_double()
-
-
 class FormatCBFMiniPilatusSOLEILPX16MSN106(FormatCBFMiniPilatus):
     """A class for reading mini CBF format Pilatus images for 6M SN 106 @
     Synchrotrol Soleil PX1."""
@@ -81,8 +48,6 @@ class FormatCBFMiniPilatusSOLEILPX16MSN106(FormatCBFMiniPilatus):
         FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
 
         self._raw_data = None
-
-        return
 
     def _goniometer(self):
         """Construct a goniometer from the records in the mini CBF header."""

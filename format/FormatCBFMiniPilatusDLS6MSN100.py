@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import math
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
@@ -48,7 +50,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        import libtbx
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
@@ -59,8 +60,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
 
         self._raw_data = None
-
-        return
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. This should
@@ -82,7 +81,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         else:
             omega_value = 0.0
 
-        from scitbx import matrix
         from scitbx.array_family import flex
 
         phi = (1.0, 0.0, 0.0)
@@ -359,7 +357,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
     def get_goniometer_shadow_masker(self, goniometer=None):
         from dials.util.masking import GoniometerShadowMaskGenerator
         from scitbx.array_family import flex
-        import math
 
         # Simple model of cone around goniometer phi axis
         # Exact values don't matter, only the ratio of height/radius
@@ -400,34 +397,23 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
                     m &= sm
         return mask
 
-    def read_cbf_image(self, cbf_image):
+    def _read_cbf_image(self):
         from cbflib_adaptbx import uncompress
         import binascii
 
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        data = self.open_file(cbf_image, "rb").read()
+        with self.open_file(self._image_file, "rb") as fh:
+            data = fh.read()
         data_offset = data.find(start_tag) + 4
-        cbf_header = data[: data_offset - 4]
-
-        fast = 0
-        slow = 0
-        length = 0
-
-        for record in cbf_header.split("\n"):
-            if "X-Binary-Size-Fastest-Dimension" in record:
-                fast = int(record.split()[-1])
-            elif "X-Binary-Size-Second-Dimension" in record:
-                slow = int(record.split()[-1])
-            elif "X-Binary-Number-of-Elements" in record:
-                length = int(record.split()[-1])
-            elif "X-Binary-Size:" in record:
-                size = int(record.split()[-1])
-
-        assert length == fast * slow
+        cbf_header = self._parse_cbf_header(
+            data[: data_offset - 4].decode("ascii", "ignore")
+        )
 
         pixel_values = uncompress(
-            packed=data[data_offset : data_offset + size], fast=fast, slow=slow
+            packed=data[data_offset : data_offset + cbf_header["size"]],
+            fast=cbf_header["fast"],
+            slow=cbf_header["slow"],
         )
 
         return pixel_values
@@ -437,7 +423,7 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
             return super(FormatCBFMiniPilatusDLS6MSN100, self).get_raw_data()
 
         if self._raw_data is None:
-            raw_data = self.read_cbf_image(self._image_file)
+            raw_data = self._read_cbf_image()
             self._raw_data = []
             d = self.get_detector()
             for panel in d:

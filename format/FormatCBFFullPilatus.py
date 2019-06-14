@@ -9,6 +9,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import re
+
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
@@ -42,15 +44,11 @@ class FormatCBFFullPilatus(FormatCBFFull):
 
         self._raw_data = None
 
-        return
-
     def _start(self):
         """Open the image file as a cbf file handle, and keep this somewhere
         safe."""
 
         FormatCBFFull._start(self)
-
-        return
 
     def _beam(self):
         """Return a working beam instance. Override polarization to be 0.999."""
@@ -67,10 +65,8 @@ class FormatCBFFullPilatus(FormatCBFFull):
         for f0, f1, s0, s1 in determine_pilatus_mask(detector):
             detector[0].add_mask(f0 - 1, s0 - 1, f1, s1)
 
-        import re
-
         m = re.search(
-            "^#\s*(\S+)\ssensor, thickness\s*([0-9.]+)\s*m\s*$",
+            r"^#\s*(\S+)\ssensor, thickness\s*([0-9.]+)\s*m\s*$",
             self._cif_header,
             re.MULTILINE,
         )
@@ -111,9 +107,9 @@ class FormatCBFFullPilatus(FormatCBFFull):
                     )
                     panel.set_mu(mu)
 
-        m = re.search("^#\s*Detector:\s+(.*?)\s*$", self._cif_header, re.MULTILINE)
+        m = re.search(r"^#\s*Detector:\s+(.*?)\s*$", self._cif_header, re.MULTILINE)
         if m and m.group(1):
-            panel.set_identifier(m.group(1))
+            panel.set_identifier(m.group(1).encode())
 
         size = detector[0].get_image_size()
         if size == (2463, 2527):
@@ -125,42 +121,30 @@ class FormatCBFFullPilatus(FormatCBFFull):
 
         return detector
 
-    def read_cbf_image(self, cbf_image):
+    def _read_cbf_image(self):
         from cbflib_adaptbx import uncompress
         import binascii
-        from scitbx.array_family import flex
 
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        data = self.open_file(cbf_image, "rb").read()
+        with self.open_file(self._image_file, "rb") as fh:
+            data = fh.read()
         data_offset = data.find(start_tag) + 4
-        cbf_header = data[: data_offset - 4]
-
-        fast = 0
-        slow = 0
-        length = 0
-
-        for record in cbf_header.split("\n"):
-            if "X-Binary-Size-Fastest-Dimension" in record:
-                fast = int(record.split()[-1])
-            elif "X-Binary-Size-Second-Dimension" in record:
-                slow = int(record.split()[-1])
-            elif "X-Binary-Number-of-Elements" in record:
-                length = int(record.split()[-1])
-            elif "X-Binary-Size:" in record:
-                size = int(record.split()[-1])
-
-        assert length == fast * slow
+        cbf_header = self._parse_cbf_header(
+            data[: data_offset - 4].decode("ascii", "ignore")
+        )
 
         pixel_values = uncompress(
-            packed=data[data_offset : data_offset + size], fast=fast, slow=slow
+            packed=data[data_offset : data_offset + cbf_header["size"]],
+            fast=cbf_header["fast"],
+            slow=cbf_header["slow"],
         )
 
         return pixel_values
 
     def get_raw_data(self):
         if self._raw_data is None:
-            data = self.read_cbf_image(self._image_file)
+            data = self._read_cbf_image()
             self._raw_data = data
 
         return self._raw_data
@@ -190,7 +174,7 @@ class FormatCBFFullPilatus(FormatCBFFull):
         # returns merged untrusted pixels and active areas using bitwise AND
         # (pixels are accepted if they are inside of the active areas AND inside
         # of the trusted range)
-        return tuple([m & tm for m, tm in zip(mask, trusted_mask)])
+        return tuple(m & tm for m, tm in zip(mask, trusted_mask))
 
     def get_vendortype(self):
         from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv

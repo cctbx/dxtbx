@@ -11,16 +11,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+import binascii
 import os
 
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.model import ParallaxCorrectedPxMmStrategy, SimplePxMmStrategy
 
-if "DXTBX_OVERLOAD_SCALE" in os.environ:
-    dxtbx_overload_scale = float(os.environ["DXTBX_OVERLOAD_SCALE"])
-else:
-    dxtbx_overload_scale = 1
+dxtbx_overload_scale = float(os.getenv("DXTBX_OVERLOAD_SCALE", "1"))
 
 
 class FormatCBFMini(FormatCBF):
@@ -73,8 +71,6 @@ class FormatCBFMini(FormatCBF):
 
         self._raw_data = None
 
-        return
-
     def _start(self):
         """Open the image file, read the image header, copy it into a
         dictionary for future reference."""
@@ -86,24 +82,21 @@ class FormatCBFMini(FormatCBF):
         self._cif_header_dictionary = {}
 
         for record in cif_header.split("\n"):
-            if not "#" in record[:1]:
+            if record[:1] != "#":
                 continue
 
             if len(record[1:].split()) <= 2 and record.count(":") == 2:
                 self._cif_header_dictionary["timestamp"] = record[1:].strip()
                 continue
 
-            tokens = record.replace("=", "").replace(":", "").split()[1:]
-
-            self._cif_header_dictionary[tokens[0]] = " ".join(tokens[1:])
+            tokens = record.replace("=", "").replace(":", "").split()
+            self._cif_header_dictionary[tokens[1]] = " ".join(tokens[2:])
 
         for record in self._mime_header.split("\n"):
             if not record.strip():
                 continue
             token, value = record.split(":")
             self._cif_header_dictionary[token.strip()] = value.strip()
-
-        return
 
     def _detector(self):
         """Return a model for a simple detector, presuming no one has
@@ -197,8 +190,8 @@ class FormatCBFMini(FormatCBF):
         probably be checked against the image header, though for miniCBF
         there are limited options for this."""
 
-        if "Phi" in self._cif_header_dictionary:
-            phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
+        #  if "Phi" in self._cif_header_dictionary:
+        #      phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
 
         return self._goniometer_factory.single_axis()
 
@@ -212,17 +205,13 @@ class FormatCBFMini(FormatCBF):
         try:
             flux = float(self._cif_header_dictionary["Flux"].split()[0])
             beam.set_flux(flux)
-        except KeyError:
-            pass
-        except IndexError:
+        except (IndexError, KeyError):
             pass
 
         try:
             transmission = float(self._cif_header_dictionary["Transmission"].split()[0])
             beam.set_transmission(transmission)
-        except KeyError:
-            pass
-        except IndexError:
+        except (IndexError, KeyError):
             pass
 
         return beam
@@ -243,70 +232,50 @@ class FormatCBFMini(FormatCBF):
             self._image_file, format, exposure_time, osc_start, osc_range, timestamp
         )
 
-    def read_cbf_image(self, cbf_image):
+    def _read_cbf_image(self):
         from cbflib_adaptbx import uncompress
-        import binascii
 
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        data = self.open_file(cbf_image, "rb").read()
+        with self.open_file(self._image_file, "rb") as fh:
+            data = fh.read()
         data_offset = data.find(start_tag) + 4
-        cbf_header = data[: data_offset - 4]
+        cbf_header = self._parse_cbf_header(
+            data[: data_offset - 4].decode("ascii", "ignore")
+        )
 
-        fast = 0
-        slow = 0
-        length = 0
-        byte_offset = False
-        no_compression = False
-
-        for record in cbf_header.split("\n"):
-            if "X-Binary-Size-Fastest-Dimension" in record:
-                fast = int(record.split()[-1])
-            elif "X-Binary-Size-Second-Dimension" in record:
-                slow = int(record.split()[-1])
-            elif "X-Binary-Number-of-Elements" in record:
-                length = int(record.split()[-1])
-            elif "X-Binary-Size:" in record:
-                size = int(record.split()[-1])
-            elif "conversions" in record:
-                if "x-CBF_BYTE_OFFSET" in record:
-                    byte_offset = True
-                elif "x-CBF_NONE" in record:
-                    no_compression = True
-
-        assert length == fast * slow
-
-        if byte_offset:
+        if cbf_header["byte_offset"]:
             pixel_values = uncompress(
-                packed=data[data_offset : data_offset + size], fast=fast, slow=slow
+                packed=data[data_offset : data_offset + cbf_header["size"]],
+                fast=cbf_header["fast"],
+                slow=cbf_header["slow"],
             )
-        elif no_compression:
+        elif cbf_header["no_compression"]:
             from boost.python import streambuf
             from dxtbx import read_int32
             from scitbx.array_family import flex
 
             assert len(self.get_detector()) == 1
-            f = self.open_file(self._image_file)
-            f.read(data_offset)
-            pixel_values = read_int32(streambuf(f), int(slow * fast))
-            pixel_values.reshape(flex.grid(slow, fast))
+            with self.open_file(self._image_file) as f:
+                f.read(data_offset)
+                pixel_values = read_int32(streambuf(f), cbf_header["length"])
+            pixel_values.reshape(flex.grid(cbf_header["slow"], cbf_header["fast"]))
 
         else:
             raise ValueError(
-                "Uncompression of type other than byte_offset or none is not supported (contact authors)"
+                "Compression of type other than byte_offset or none is not supported (contact authors)"
             )
 
         return pixel_values
 
     def get_raw_data(self):
         if self._raw_data is None:
-            data = self.read_cbf_image(self._image_file)
+            data = self._read_cbf_image()
             self._raw_data = data
 
         return self._raw_data
 
     def detectorbase_start(self):
-
         from iotbx.detectors.pilatus_minicbf import PilatusImage
 
         self.detectorbase = PilatusImage(self._image_file)
@@ -344,8 +313,8 @@ class FormatCBFMini(FormatCBF):
         cbf_root = os.path.splitext(os.path.basename(path))[0] + ".cbf"
         cbf.new_datablock(os.path.splitext(os.path.basename(path))[0])
 
-        """ Data items in the ARRAY_DATA category are the containers for the array data
-    items described in the category ARRAY_STRUCTURE. """
+        """Data items in the ARRAY_DATA category are the containers for the array data
+        items described in the category ARRAY_STRUCTURE."""
         cbf.add_category("array_data", ["header_convention", "header_contents", "data"])
 
         # get pixel info out of detector object
@@ -466,7 +435,6 @@ class FormatCBFMini(FormatCBF):
 
 
 if __name__ == "__main__":
-
     import sys
 
     for arg in sys.argv[1:]:
