@@ -6,6 +6,7 @@ import os
 from dxtbx.format.FormatPY import FormatPY
 from six.moves import range
 import six.moves.cPickle as pickle
+from past.builtins import basestring
 
 
 class FormatPYunspecified(FormatPY):
