@@ -1,8 +1,10 @@
-from __future__ import absolute_import, division, print_function
+"""
+Helpers for the detector class... this time enumerating all of the common
+detector types, hashed by the sensor type, image dimensions and pixel
+dimensions.
+"""
 
-# Helpers for the detector class... this time enumerating all of the common
-# detector types, hashed by the sensor type, image dimensions and pixel
-# dimensions.
+from __future__ import absolute_import, division, print_function
 
 import os
 import sys

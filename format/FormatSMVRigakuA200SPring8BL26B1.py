@@ -11,8 +11,6 @@
 
 from __future__ import absolute_import, division
 
-# from scitbx import matrix
-
 from dxtbx.format.FormatSMVRigakuA200 import FormatSMVRigakuA200
 
 

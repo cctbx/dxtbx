@@ -1,10 +1,11 @@
-from __future__ import absolute_import, division, print_function
-
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.image2pickle
 # LIBTBX_SET_DISPATCHER_NAME cxi.image2pickle
+"""
+Convert images of any extant format to pickle files suitable for processing with
+cxi.index.  Note, oscillation values are not preserved.
+"""
 
-# Convert images of any extant format to pickle files suitable for processing with
-# cxi.index.  Note, oscillation values are not preserved.
+from __future__ import absolute_import, division, print_function
 
 import math
 import os
