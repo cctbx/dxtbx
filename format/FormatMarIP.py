@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 
 
@@ -13,15 +14,13 @@ class FormatMarIP(Format):
     @staticmethod
     def understand(image_file):
         try:
-            tag = FormatMarIP.open_file(image_file, "rb").read(140)
+            with FormatMarIP.open_file(image_file, "rb") as fh:
+                return b"mar research" in fh.read(140)
         except IOError:
             return False
-        return tag.find("mar research") > 0
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
-
-        from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
@@ -41,7 +40,6 @@ class FormatMarIP(Format):
         self.detectorbase.readHeader()
 
     def _goniometer(self):
-
         return self._goniometer_factory.single_axis()
 
     def _detector(self):
