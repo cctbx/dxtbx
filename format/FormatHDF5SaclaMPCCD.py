@@ -103,7 +103,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
 
         if "MPCCD_GEOMETRY" in os.environ:
             try:
-                tmp = list(map(float, os.environ["MPCCD_GEOMETRY"].split(",")))
+                tmp = [float(i) for i in os.environ["MPCCD_GEOMETRY"].split(",")]
                 if len(tmp) != 24:
                     raise EnvironmentError(
                         "Environment variable MPCCD_GEOMETRY must contain 24 comma-separated parts"
@@ -402,7 +402,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                         "Panel angle deviation is too large! Do not use reconst mode!"
                     )
 
-        self.active_areas = list(map(int, self.active_areas))
+        self.active_areas = [int(aa) for aa in self.active_areas]
         return det
 
     def get_detector(self, index=None):

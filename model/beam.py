@@ -137,7 +137,7 @@ class BeamFactory:
         elif unit_s0:
             assert wavelength
             return Beam(
-                tuple(-x for x in map(float, unit_s0)),
+                (-float(x) for x in unit_s0),
                 float(wavelength),
                 float(divergence),
                 float(sigma_divergence),
@@ -187,7 +187,7 @@ class BeamFactory:
         elif unit_s0:
             assert wavelength
             return Beam(
-                tuple([-x for x in list(map(float, unit_s0))]),
+                (-float(x) for x in unit_s0),
                 float(wavelength),
                 float(divergence),
                 float(sigma_divergence),

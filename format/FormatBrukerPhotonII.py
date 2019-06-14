@@ -123,7 +123,7 @@ class FormatBrukerPhotonII(FormatBruker):
         slow = matrix.col((0, 1, 0))
         beam = matrix.col((0, 0, 1))
         pixel_mm = 5.0 / float(self.header_dict["DETTYPE"].split()[1])
-        beam_pixel = list(map(float, self.header_dict["CENTER"].split()[:-3:-1]))
+        beam_pixel = [float(bp) for bp in self.header_dict["CENTER"].split()[:-3:-1]]
         distance_mm = 10.0 * float(self.header_dict["DISTANC"].split()[1])
         origin = (
             -distance_mm * beam
