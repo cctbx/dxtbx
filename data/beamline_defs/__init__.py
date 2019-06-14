@@ -62,7 +62,7 @@ class template(object):
 
         def __lookup(key):
             entry = keys[key]
-            if isinstance(entry, basestring):
+            if isinstance(entry, str):
                 return entry.replace("?", "." if mmCIFsemantics else "_")
             else:
                 return entry[column]
