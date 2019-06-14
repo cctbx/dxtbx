@@ -49,6 +49,7 @@ class FormatXTCRayonix(FormatXTC):
             params = FormatXTC.params_from_phil(rayonix_locator_scope, image_file)
         except Exception:
             return False
+        ds = FormatXTC._get_datasource(image_file, params)
         return any(["rayonix" in src.lower() for src in params.detector_address])
 
     def get_raw_data(self, index):

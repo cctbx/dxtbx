@@ -78,10 +78,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         if params is None:
             return False
 
-        try:
-            FormatXTC._get_datasource(image_file, params)
-        except Exception:
-            return False
+        ds = FormatXTC._get_datasource(image_file, params)
         return True
 
     @staticmethod
