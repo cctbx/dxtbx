@@ -1,13 +1,15 @@
 from __future__ import absolute_import, division
 
 
+from builtins import bytes
+
+
 def get_beamline_definition(detector_id, **kwargs):
     import unicodedata
     import string
-    import types
 
-    if not isinstance(detector_id, types.UnicodeType):
-        detector_id = unicode(detector_id, "utf-8", "ignore")
+    if isinstance(detector_id, bytes):
+        detector_id = detector_id.decode("utf-8", "ignore")
 
     valid_chars = frozenset("_.%s%s" % (string.ascii_letters, string.digits))
     filename = unicodedata.normalize("NFKD", detector_id).encode("ASCII", "ignore")
