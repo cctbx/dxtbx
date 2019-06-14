@@ -36,11 +36,12 @@ class FormatSMV(Format):
     @staticmethod
     def get_smv_header(image_file):
         with FormatSMV.open_file(image_file, "rb") as fh:
+            header_info = fh.read(45).decode("ascii", "ignore")
             header_size = int(
-                fh.read(45).split("\n")[1].split("=")[1].replace(";", "").strip()
+                header_info.split("\n")[1].split("=")[1].replace(";", "").strip()
             )
             fh.seek(0)
-            header_text = fh.read(header_size)
+            header_text = fh.read(header_size).decode("ascii", "ignore")
         header_dictionary = {}
 
         # Check that we have the whole header, contained within { }.  Stop
