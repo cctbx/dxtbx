@@ -94,7 +94,7 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         wavelength = float(self._cif_header_dictionary["Wavelength"].split()[0])
 
-        beam_x, beam_y = list(map(float, beam_xy))
+        beam_x, beam_y = map(float, beam_xy)
 
         pixel_xy = (
             self._cif_header_dictionary["Pixel_size"]
@@ -103,7 +103,7 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
             .split()
         )
 
-        pixel_x, pixel_y = list(map(float, pixel_xy))
+        pixel_x, pixel_y = map(float, pixel_xy)
 
         thickness = float(self._cif_header_dictionary["Silicon"].split()[2]) * 1000.0
 

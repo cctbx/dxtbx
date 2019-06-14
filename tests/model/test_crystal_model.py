@@ -194,7 +194,7 @@ Crystal:
     assert approx_equal(
         model_ref.get_unit_cell().parameters(), (44, 44, 44, 90, 90, 90)
     )
-    a_ref, b_ref, c_ref = list(map(matrix.col, model_ref.get_real_space_vectors()))
+    a_ref, b_ref, c_ref = map(matrix.col, model_ref.get_real_space_vectors())
     cb_op_to_primitive = sgi_ref.change_of_basis_op_to_primitive_setting()
     model_primitive = model_ref.change_basis(cb_op_to_primitive)
     cb_op_to_reference = (
@@ -202,7 +202,7 @@ Crystal:
         .info()
         .change_of_basis_op_to_reference_setting()
     )
-    a_prim, b_prim, c_prim = list(map(matrix.col, model_primitive.get_real_space_vectors()))
+    a_prim, b_prim, c_prim = map(matrix.col, model_primitive.get_real_space_vectors())
     # print cb_op_to_primitive.as_abc()
     ##'-1/2*a+1/2*b+1/2*c,1/2*a-1/2*b+1/2*c,1/2*a+1/2*b-1/2*c'
     assert approx_equal(a_prim, -1 / 2 * a_ref + 1 / 2 * b_ref + 1 / 2 * c_ref)

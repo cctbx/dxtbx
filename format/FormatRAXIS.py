@@ -238,7 +238,7 @@ class FormatRAXIS(Format):
         format = self._scan_factory.format("RAXIS")
         exposure_time = struct.unpack(f, header[536:540])[0]
 
-        y, m, d = list(map(int, header[256:268].strip().split("-")))
+        y, m, d = map(int, header[256:268].strip().split("-"))
 
         epoch = calendar.timegm(datetime.datetime(y, m, d, 0, 0, 0).timetuple())
 

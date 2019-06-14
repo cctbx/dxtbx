@@ -28,7 +28,7 @@ def read_xds_xparm(xds_xparm_file):
     wavelength = data[6]
     beam = data[7:10]
 
-    nx, ny = list(map(int, data[10:12]))
+    nx, ny = map(int, data[10:12])
     px, py = data[12:14]
 
     distance = data[14]

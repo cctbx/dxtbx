@@ -22,7 +22,7 @@ def resolution_corners(frame):
     detector = frame.get_detector()
     beam = frame.get_beam()
 
-    nfast, nslow = list(map(int, detector.get_image_size()))
+    nfast, nslow = map(int, detector.get_image_size())
     dfast, dslow = detector.get_pixel_size()
     F = matrix.col(detector.get_fast_axis())
     S = matrix.col(detector.get_slow_axis())

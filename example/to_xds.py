@@ -60,7 +60,7 @@ class to_xds:
     def XDS(self):
 
         sensor = self.get_detector().get_type()
-        fast, slow = list(map(int, self.get_detector().get_image_size()))
+        fast, slow = map(int, self.get_detector().get_image_size())
         f, s = self.get_detector().get_pixel_size()
         df = int(1000 * f)
         ds = int(1000 * s)

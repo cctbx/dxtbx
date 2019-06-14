@@ -42,7 +42,7 @@ class detector_helpers_types:
             assert len(tokens) == 6
 
             sensor = DetectorFactory.sensor(tokens[0])
-            fast, slow, df, ds = list(map(int, tokens[1:5]))
+            fast, slow, df, ds = map(int, tokens[1:5])
 
             self._detectors[(sensor, fast, slow, df, ds)] = tokens[5]
 
@@ -85,6 +85,6 @@ detector_helpers_types = detector_helpers_types()
 
 if __name__ == "__main__":
     sensor = sys.argv[1]
-    fast, slow, df, ds = list(map(int, sys.argv[2:6]))
+    fast, slow, df, ds = map(int, sys.argv[2:6])
 
     print(detector_helpers_types.get(sensor, fast, slow, df, ds))
