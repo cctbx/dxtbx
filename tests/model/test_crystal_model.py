@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import math
 import random
-import pytest
 
 from cctbx import crystal, sgtbx, uctbx
 from dxtbx.model import (
@@ -13,6 +12,7 @@ from dxtbx.model import (
 )
 from libtbx.test_utils import approx_equal
 from scitbx import matrix
+import pytest
 
 
 def random_rotation():
@@ -22,9 +22,9 @@ def random_rotation():
 
 
 def test_crystal_model_from_mosflm_matrix():
-    mosflm_matrix = list(map(
-        float,
-        """ -0.00495480 -0.01491776  0.00238445
+    mosflm_matrix = [
+        float(v)
+        for v in """ -0.00495480 -0.01491776  0.00238445
   0.01505572 -0.00661190 -0.00149401
   0.00585043  0.00438127  0.00586415
        0.000       0.000       0.000
@@ -32,8 +32,8 @@ def test_crystal_model_from_mosflm_matrix():
    0.8911171  -0.3913446  -0.2296951
    0.3462750   0.2593185   0.9015806
      57.7822     57.7822    150.0931     90.0000     90.0000     90.0000
-       0.000       0.000       0.000""".split(),
-    ))
+       0.000       0.000       0.000""".split()
+    ]
     A = mosflm_matrix[:9]
     unit_cell = uctbx.unit_cell(mosflm_matrix[21:27])
     cm = CrystalFactory.from_mosflm_matrix(A, unit_cell=unit_cell)
