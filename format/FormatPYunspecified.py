@@ -97,17 +97,17 @@ class FormatPYunspecified(FormatPY):
         horizons_phil = params.persist.commands
 
         if is_file:
-            I = NpyImage(file_name)
+            image = NpyImage(file_name)
         else:
             print(
                 "This is not a file; assume the data are in the defined dictionary format"
             )
-            I = NpyImage(file_name, source_data=self._image_file)
-        I.readHeader(horizons_phil)
-        I.translate_tiles(horizons_phil)
+            image = NpyImage(file_name, source_data=self._image_file)
+        image.readHeader(horizons_phil)
+        image.translate_tiles(horizons_phil)
         # necessary to keep the phil parameters for subsequent calls to get_tile_manager()
-        I.horizons_phil_cache = copy.deepcopy(horizons_phil)
-        self.detectorbase = I
+        image.horizons_phil_cache = copy.deepcopy(horizons_phil)
+        self.detectorbase = image
 
     def _goniometer(self):
 
