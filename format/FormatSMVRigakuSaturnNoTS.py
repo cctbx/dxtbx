@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# FormatSMVRigakuSaturn.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -12,7 +11,6 @@ from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
-# import time
 from scitbx import matrix
 
 
@@ -49,9 +47,8 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
             "SIZE2",
         ]
 
-        for header_item in wanted_header_items:
-            if not header_item in header:
-                return False
+        if any(item not in header for item in wanted_header_items):
+            return False
 
         detector_prefix = header["DETECTOR_NAMES"].split()[0].strip()
 
@@ -66,9 +63,11 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
             "SPATIAL_BEAM_POSITION",
         ]
 
-        for header_item in more_wanted_header_items:
-            if not "%s%s" % (detector_prefix, header_item) in header:
-                return False
+        if any(
+            "%s%s" % (detector_prefix, item) not in header
+            for item in more_wanted_header_items
+        ):
+            return False
 
         descriptive_items = ["DETECTOR_IDENTIFICATION", "DETECTOR_DESCRIPTION"]
 
@@ -90,12 +89,6 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
             raise IncorrectFormatError(self, image_file)
 
         FormatSMVRigaku.__init__(self, image_file, **kwargs)
-
-        return
-
-    def _start(self):
-
-        FormatSMVRigaku._start(self)
 
     def detectorbase_start(self):
         from iotbx.detectors.saturn import SaturnImage
@@ -249,4 +242,4 @@ if __name__ == "__main__":
     import sys
 
     for arg in sys.argv[1:]:
-        print(FormatSMVRigakuSaturn.understand(arg))
+        print(FormatSMVRigakuSaturnNoTS.understand(arg))

@@ -15,6 +15,7 @@ import time
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from scitbx import matrix
+from scitbx.array_family import flex
 
 
 class FormatSMVRigakuEiger(FormatSMVRigaku):
@@ -28,12 +29,12 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         size, header = FormatSMVRigaku.get_smv_header(image_file)
 
-        if not "DETECTOR_NAMES" in header:
+        if "DETECTOR_NAMES" not in header:
             return False
 
         name = header["DETECTOR_NAMES"]
 
-        if not "%sDETECTOR_DESCRIPTION" % name in header:
+        if "%sDETECTOR_DESCRIPTION" % name not in header:
             return False
 
         return "Eiger" in header["%sDETECTOR_DESCRIPTION" % name]
@@ -48,10 +49,6 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
             raise IncorrectFormatError(self, image_file)
 
         FormatSMVRigaku.__init__(self, image_file, **kwargs)
-
-    def _start(self):
-
-        FormatSMVRigaku._start(self)
 
     def _goniometer(self):
         """Initialize the structure for the goniometer."""
@@ -80,7 +77,6 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         # Multi-axis gonio requires axes in order as viewed from crystal to gonio
         # base. Assume the SMV header records them in reverse order.
-        from scitbx.array_family import flex
 
         axes = flex.vec3_double(reversed(axes))
         names = flex.std_string(reversed(names))
@@ -231,7 +227,6 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         from boost.python import streambuf
         from dxtbx import read_int32
-        from scitbx.array_family import flex
 
         assert len(self.get_detector()) == 1
         size = self.get_detector()[0].get_image_size()

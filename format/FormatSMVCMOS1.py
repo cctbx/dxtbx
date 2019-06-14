@@ -13,6 +13,7 @@ import calendar
 import time
 
 from dxtbx.format.FormatSMV import FormatSMV
+from scitbx import matrix
 
 
 class FormatSMVCMOS1(FormatSMV):
@@ -36,9 +37,8 @@ class FormatSMVCMOS1(FormatSMV):
             "Data_type",
         ]
 
-        for header_item in wanted_header_items:
-            if not header_item in header:
-                return False
+        if any(item not in header for item in wanted_header_items):
+            return False
 
         detector_prefixes = header["DETECTOR_NAMES"].split()
 
@@ -57,9 +57,11 @@ class FormatSMVCMOS1(FormatSMV):
             "GONIO_VECTORS",
         ]
 
-        for header_item in more_wanted_header_items:
-            if not "%s%s" % (detector_prefix, header_item) in header:
-                return False
+        if any(
+            "%s%s" % (detector_prefix, item) not in header
+            for item in more_wanted_header_items
+        ):
+            return False
 
         det_desc = "%sDETECTOR_DESCRIPTION" % detector_prefix
         if "CMOS-1" in header.get(det_desc, ""):
@@ -91,8 +93,6 @@ class FormatSMVCMOS1(FormatSMV):
         return self._goniometer_factory.known_axis(axis)
 
     def _detector(self):
-        from scitbx import matrix
-
         detector_name = self._header_dictionary["DETECTOR_NAMES"].split()[0].strip()
 
         detector_axes = self.get_detector_axes(detector_name)

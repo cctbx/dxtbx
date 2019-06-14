@@ -34,15 +34,9 @@ class FormatSMVRigakuSaturnSN11480296(FormatSMVRigakuSaturn):
         # event.
 
         detector_prefix = header["DETECTOR_NAMES"].split()[0].strip()
-        try:
-            serial_number = header["%sSERIAL_NUMBER" % detector_prefix]
-        except KeyError:
-            return False
+        serial_number = header.get("%sSERIAL_NUMBER" % detector_prefix)
 
-        if serial_number != "11480296":
-            return False
-
-        return True
+        return serial_number == "11480296"
 
     def _detector(self):
         """Return a model for the detector, allowing for two-theta offsets
@@ -120,4 +114,4 @@ if __name__ == "__main__":
     import sys
 
     for arg in sys.argv[1:]:
-        print(FormatSMVRigakuSaturnSN07400090.understand(arg))
+        print(FormatSMVRigakuSaturnSN11480296.understand(arg))

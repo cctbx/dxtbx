@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# FormatSMV.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -11,7 +9,7 @@
 # readers which really will acquire the full image including header information
 # and generate the experimental model representations.
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.Format import Format
 
@@ -32,23 +30,17 @@ class FormatSMV(Format):
     def understand(image_file):
         """Check to see if this looks like an SMV format image, i.e. we can
         make sense of it."""
-
-        if FormatSMV.open_file(image_file, "rb").read(15) == "{\nHEADER_BYTES=":
-            return True
-
-        return False
+        with FormatSMV.open_file(image_file, "rb") as fh:
+            return fh.read(15) == b"{\nHEADER_BYTES="
 
     @staticmethod
     def get_smv_header(image_file):
-        header_size = int(
-            FormatSMV.open_file(image_file, "rb")
-            .read(45)
-            .split("\n")[1]
-            .split("=")[1]
-            .replace(";", "")
-            .strip()
-        )
-        header_text = FormatSMV.open_file(image_file, "rb").read(header_size)
+        with FormatSMV.open_file(image_file, "rb") as fh:
+            header_size = int(
+                fh.read(45).split("\n")[1].split("=")[1].replace(";", "").strip()
+            )
+            fh.seek(0)
+            header_text = fh.read(header_size)
         header_dictionary = {}
 
         # Check that we have the whole header, contained within { }.  Stop
@@ -59,7 +51,7 @@ class FormatSMV(Format):
         for record in header_text.split("\n"):
             if record == "}":
                 break
-            if not "=" in record:
+            if "=" not in record:
                 continue
 
             key, value = record.replace(";", "").split("=")

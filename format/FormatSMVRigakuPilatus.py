@@ -13,6 +13,7 @@ from __future__ import absolute_import, division, print_function
 import time
 
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
+from scitbx import matrix
 
 
 class FormatSMVRigakuPilatus(FormatSMVRigaku):
@@ -26,7 +27,7 @@ class FormatSMVRigakuPilatus(FormatSMVRigaku):
 
         size, header = FormatSMVRigaku.get_smv_header(image_file)
 
-        if not "DETECTOR_TYPE" in header:
+        if "DETECTOR_TYPE" not in header:
             return False
 
         if header["DETECTOR_TYPE"] not in ["Pilatus 200K", "Pilatus 300K"]:
@@ -45,10 +46,6 @@ class FormatSMVRigakuPilatus(FormatSMVRigaku):
 
         FormatSMVRigaku.__init__(self, image_file, **kwargs)
 
-    def _start(self):
-
-        FormatSMVRigaku._start(self)
-
     def _goniometer(self):
         """Initialize the structure for the goniometer - this will need to
         correctly compose the axes given in the image header. In this case
@@ -63,8 +60,6 @@ class FormatSMVRigakuPilatus(FormatSMVRigaku):
     def _detector(self):
         """Return a model for the detector, allowing for two-theta offsets
         and the detector position. This will be rather more complex..."""
-
-        from scitbx import matrix
 
         detector_name = self._header_dictionary["DETECTOR_NAMES"].split()[0].strip()
 
