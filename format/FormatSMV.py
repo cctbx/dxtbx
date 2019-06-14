@@ -143,3 +143,6 @@ class FormatSMV(Format):
                 "%sSPATIAL_DISTORTION_INFO" % detector_name
             ].split()[2:]
         ]
+
+    def get_rotation(self):
+        return [float(r) for r in self._header_dictionary["ROTATION"].split()]

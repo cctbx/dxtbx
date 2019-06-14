@@ -195,7 +195,7 @@ class FormatSMVNOIR(FormatSMVRigaku):
     def _scan(self):
         """Return the scan information for this image."""
 
-        rotation = list(map(float, self._header_dictionary["ROTATION"].split()))
+        rotation = self.get_rotation()
 
         format = self._scan_factory.format("SMV")
         epoch = time.mktime(

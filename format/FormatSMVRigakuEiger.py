@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import time
+
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from scitbx import matrix
@@ -210,9 +212,7 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
     def _scan(self):
         """Return the scan information for this image."""
 
-        import time
-
-        rotation = list(map(float, self._header_dictionary["ROTATION"].split()))
+        rotation = self.get_rotation()
 
         format = self._scan_factory.format("SMV")
 

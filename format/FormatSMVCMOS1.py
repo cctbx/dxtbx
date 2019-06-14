@@ -9,6 +9,9 @@
 
 from __future__ import absolute_import, division, print_function
 
+import calendar
+import time
+
 from dxtbx.format.FormatSMV import FormatSMV
 
 
@@ -163,10 +166,7 @@ class FormatSMVCMOS1(FormatSMV):
         )
 
     def _scan(self):
-        import calendar
-        import time
-
-        rotation = list(map(float, self._header_dictionary["ROTATION"].split()))
+        rotation = self.get_rotation()
 
         format = self._scan_factory.format("SMV")
 
