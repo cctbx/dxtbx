@@ -10,6 +10,7 @@ import pytest
 import py.path
 
 import dxtbx.conftest
+import dxtbx.format.Registry
 from dxtbx.format.Registry import Registry
 import libtbx.load_env
 from iotbx.command_line.detector_image_as_png import convert_image
@@ -147,7 +148,9 @@ def test_read_image(test_image_for_reading):
         pytest.skip("Ignoring LCLS because xfel missing")
         return
 
-    format_instance = Registry.find(test_image_for_reading)
+    format_instance = dxtbx.format.Registry.get_format_class_for_file(
+        test_image_for_reading
+    )
     instance = format_instance(test_image_for_reading)
 
     print("Reading", test_image_for_reading)

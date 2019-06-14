@@ -4,8 +4,10 @@ import six.moves.cPickle as pickle
 import glob
 import os
 
+import dxtbx.format.Registry
 import dxtbx.tests.imagelist
 import pytest
+from scitbx.array_family import flex
 
 
 @pytest.mark.parametrize(
@@ -22,12 +24,9 @@ import pytest
     ),
 )
 def test_format(dials_regression, image):
-    from dxtbx.format.Registry import Registry
-
-    db_fail_count = 0
     print(image)
     image = os.path.join(dials_regression, *(image.split("/")))
-    format_class = Registry.find(image)
+    format_class = dxtbx.format.Registry.get_format_class_for_file(image)
     reader = format_class.get_reader()([image])
     masker = format_class.get_masker()([image])
 
@@ -37,12 +36,11 @@ def test_format(dials_regression, image):
         data = reader.read(i)
         mask = masker.get(i)
 
-    iset = format_class.get_imageset([image])
+    assert format_class.get_imageset([image])
 
 
 def test_image_tile():
     from dxtbx.format.image import ImageTileInt
-    from scitbx.array_family import flex
 
     data = flex.int(flex.grid(10, 10))
     name = "TileName"
@@ -56,7 +54,6 @@ def test_image_tile():
 
 def test_image():
     import dxtbx.format.image
-    from scitbx.array_family import flex
 
     data = flex.int(flex.grid(10, 10))
     name = "TileName0"
@@ -202,10 +199,8 @@ def centroid_files(dials_regression):
 
 @pytest.fixture
 def centroid_files_and_imageset(centroid_files):
-    from dxtbx.format.Registry import Registry
-
     # Create the format class
-    format_class = Registry.find(centroid_files[0])
+    format_class = dxtbx.format.Registry.get_format_class_for_file(centroid_files[0])
 
     # Create the reader
     imageset = format_class.get_imageset(centroid_files, as_imageset=True)
@@ -325,11 +320,10 @@ class TestImageSet(object):
 
 class TestImageSweep(object):
     def test(self, centroid_files):
-        from dxtbx.imageset import ImageSweep
-        from dxtbx.format.Registry import Registry
-
         # Create the format class
-        format_class = Registry.find(centroid_files[0])
+        format_class = dxtbx.format.Registry.get_format_class_for_file(
+            centroid_files[0]
+        )
 
         # Create the sweep
         sweep = format_class.get_imageset(centroid_files)
@@ -345,14 +339,14 @@ class TestImageSweep(object):
         self.tst_set_models(sweep)
 
     def tst_get_item(self, sweep):
-        image = sweep[0]
+        _ = sweep[0]
         with pytest.raises(Exception):
-            image = sweep[9]
+            _ = sweep[9]
 
         sweep2 = sweep[3:7]
-        image = sweep2[0]
+        _ = sweep2[0]
         with pytest.raises(Exception):
-            image = sweep2[5]
+            _ = sweep2[5]
 
         assert len(sweep2) == 4
         self.tst_get_detectorbase(sweep2, range(0, 4), 5)
@@ -415,8 +409,6 @@ class TestImageSweep(object):
 
     @staticmethod
     def tst_set_models(sweep):
-        from dxtbx.model import Beam, Detector, Panel
-
         # Get some models
         beam = sweep.get_beam()
         gonio = sweep.get_goniometer()
@@ -485,31 +477,28 @@ def test_nexus_file(dials_regression):
         "cxi78513_bslz4_r0014_subset4_master.h5",
     )
 
-    from dxtbx.format.Registry import Registry
-
-    format_class = Registry.find(filename)
+    format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
 
     iset = format_class.get_imageset([filename])
 
     assert len(iset) == 2
-    for i in range(len(iset)):
-        data = iset.get_raw_data(i)
-        mask = iset.get_mask(i)
-        b = iset.get_beam(i)
-        d = iset.get_detector(i)
-        g = iset.get_goniometer(i)
-        s = iset.get_scan(i)
+    for i in range(2):
+        assert iset.get_raw_data(i)
+        assert iset.get_mask(i)
+        assert iset.get_beam(i)
+        assert iset.get_detector(i)
+        assert iset.get_goniometer(i)
+        assert iset.get_scan(i)
 
     iset = format_class.get_imageset([filename], single_file_indices=[1])
     assert len(iset) == 1
 
-    for i in range(len(iset)):
-        data = iset.get_raw_data(i)
-        mask = iset.get_mask(i)
-        b = iset.get_beam(i)
-        d = iset.get_detector(i)
-        g = iset.get_goniometer(i)
-        s = iset.get_scan(i)
+    assert iset.get_raw_data(0)
+    assert iset.get_mask(0)
+    assert iset.get_beam(0)
+    assert iset.get_detector(0)
+    assert iset.get_goniometer(0)
+    assert iset.get_scan(0)
 
 
 @pytest.mark.parametrize("lazy", (True, False))
@@ -522,9 +511,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
         "run266702-0-subset.h5",
     )
 
-    from dxtbx.format.Registry import Registry
-
-    format_class = Registry.find(filename)
+    format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
 
     iset = format_class.get_imageset([filename], lazy=lazy)
 
@@ -582,12 +569,12 @@ def test_imagesetfactory(centroid_files, dials_regression):
 
 
 def test_pickle_imageset(centroid_files):
-    from dxtbx.imageset import ImageSetFactory, ImageSweep
+    from dxtbx.imageset import ImageSetFactory
 
     sweep = ImageSetFactory.new(centroid_files)[0]
 
     # Read the 5th image
-    image = sweep[4]
+    _ = sweep[4]
 
     # Pickle, then unpickle
     sweep2 = pickle.loads(pickle.dumps(sweep))

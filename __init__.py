@@ -65,10 +65,10 @@ def load(filename):
     :returns:         A dxtbx Format-subclass instance for the file type
     :raises IOError:  if the file format could not be determined
     """
-    from dxtbx.format.Registry import Registry
+    import dxtbx.format.Registry
 
     # Unwrap PEP-519-style objects. This covers py.path, pathlib, ...
     if hasattr(filename, "__fspath__"):
         filename = filename.__fspath__()
-    format_instance = Registry.find(filename)
+    format_instance = dxtbx.format.Registry.get_format_class_for_file(filename)
     return format_instance(filename)
