@@ -122,16 +122,15 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
         detector_fast = matrix.col(tuple(detector_axes[:3]))
         detector_slow = matrix.col(tuple(detector_axes[3:]))
 
+        # apply spatial distortion
+        distortion = self.get_distortion(detector_name)
+        detector_fast, detector_slow = (
+            distortion[0] * detector_fast + distortion[1] * detector_slow,
+            distortion[2] * detector_fast + distortion[3] * detector_slow,
+        )
+
         beam_pixels = self.get_beam_pixels(detector_name)
         pixel_size = self.get_pixel_size(detector_name)
-        reindex = self.get_distortion(detector_name)
-        image_size = self.get_image_size(detector_name)
-
-        # apply SPATIAL_DISTORTION_VECTORS
-        _fast = reindex[0] * detector_fast + reindex[1] * detector_slow
-        _slow = reindex[2] * detector_fast + reindex[3] * detector_slow
-
-        detector_fast, detector_slow = _fast, _slow
         detector_origin = -(
             beam_pixels[0] * pixel_size[0] * detector_fast
             + beam_pixels[1] * pixel_size[1] * detector_slow
@@ -143,6 +142,8 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
         gonio_num_axes = int(
             self._header_dictionary["%sGONIO_NUM_VALUES" % detector_name]
         )
+
+        image_size = self.get_image_size(detector_name)
 
         rotations = []
         translations = []

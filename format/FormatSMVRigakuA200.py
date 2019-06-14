@@ -121,10 +121,9 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
         detector_y = matrix.col(tuple(detector_axes[3:]))
 
         # Now map these to real axes
-        detector_remap = self.get_distortion(detector_name)
-
-        detector_fast = detector_x * detector_remap[0] + detector_y * detector_remap[1]
-        detector_slow = detector_x * detector_remap[2] + detector_y * detector_remap[3]
+        distortion = self.get_distortion(detector_name)
+        detector_fast = detector_x * distortion[0] + detector_y * distortion[1]
+        detector_slow = detector_x * distortion[2] + detector_y * distortion[3]
 
         beam_pixels = self.get_beam_pixels(detector_name)
         pixel_size = self.get_pixel_size(detector_name)
