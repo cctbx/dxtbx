@@ -1,9 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
+import copy
 import os
 
 from dxtbx.format.FormatPY import FormatPY
 from six.moves import range
+import six.moves.cPickle as pickle
 
 
 class FormatPYunspecified(FormatPY):
@@ -14,17 +16,15 @@ class FormatPYunspecified(FormatPY):
         item in the file; an entire binary image.  This data is then read again in the
         _start() method and again in the detectorbase constructor."""
         try:
-            stream = FormatPYunspecified.open_file(image_file, "rb")
-            import six.moves.cPickle as pickle
-
-            data = pickle.load(stream)
+            with FormatPYunspecified.open_file(image_file, "rb") as fh:
+                data = pickle.load(fh)
         except IOError:
             return False
 
         wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]
 
         for header_item in wanted_header_items:
-            if not header_item in data:
+            if header_item not in data:
                 return False
 
         return True
@@ -46,15 +46,12 @@ class FormatPYunspecified(FormatPY):
         if isinstance(self._image_file, basestring) and os.path.isfile(
             self._image_file
         ):
-            stream = FormatPYunspecified.open_file(self._image_file, "rb")
-
-            import six.moves.cPickle as pickle
-
-            data = pickle.load(stream)
+            with FormatPYunspecified.open_file(self._image_file, "rb") as fh:
+                data = pickle.load(fh)
         else:
             data = self._image_file
 
-        if not "DETECTOR_ADDRESS" in data:
+        if "DETECTOR_ADDRESS" not in data:
             # legacy format; try to guess the address
             self.LCLS_detector_address = "CxiDs1-0|Cspad-0"
             if "DISTANCE" in data and data["DISTANCE"] > 1000:
@@ -65,11 +62,9 @@ class FormatPYunspecified(FormatPY):
         from iotbx.detectors.cspad_detector_formats import reverse_timestamp
 
         self._timesec = reverse_timestamp(data["TIMESTAMP"])[0]
-        from iotbx.detectors.cspad_detector_formats import (
-            detector_format_version as detector_format_function,
-        )
+        from iotbx.detectors.cspad_detector_formats import detector_format_version
 
-        version_lookup = detector_format_function(
+        version_lookup = detector_format_version(
             self.LCLS_detector_address, self._timesec
         )
         self.start_helper(
@@ -80,7 +75,6 @@ class FormatPYunspecified(FormatPY):
 
         from spotfinder.applications.xfel import cxi_phil
         from iotbx.detectors.npy import NpyImage
-        import copy
 
         is_file = isinstance(self._image_file, basestring) and os.path.isfile(
             self._image_file
@@ -217,7 +211,7 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
             wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]
 
             for header_item in wanted_header_items:
-                if not header_item in image_file.keys():
+                if header_item not in image_file:
                     return False
 
             return True
@@ -228,8 +222,6 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
     def __init__(self, data, **kwargs):
         """ @param data In memory image dictionary, alredy initialized """
         FormatPYunspecified.__init__(self, data, **kwargs)
-
-        import copy
 
         self._image_file = copy.deepcopy(data)
 

@@ -57,16 +57,14 @@ class FormatXTCCspad(FormatXTC):
             params = FormatXTC.params_from_phil(cspad_locator_scope, image_file)
         except Exception:
             return False
-        ds = FormatXTC._get_datasource(image_file, params)
-        return any(["cspad" in src.lower() for src in params.detector_address])
+        return any("cspad" in src.lower() for src in params.detector_address)
 
     def _cache_psana_gain(self):
         """
         checks if user wants gain applied and caches a gain map per run
         """
-        run_numbers = self._psana_runs.keys()
         self._gain_masks = {}
-        for r in run_numbers:
+        for r in self._psana_runs:
             if self.params.cspad.apply_gain_mask:
                 self._gain_masks[r] = self._psana_det[r].gain_mask(r) > 0
             else:
@@ -86,7 +84,7 @@ class FormatXTCCspad(FormatXTC):
     def _cache_psana_pedestals(self):
         """Store a pedestal for each psana detector instance"""
         self._pedestals = {}
-        for run_number, run in self._psana_runs.iteritems():
+        for run_number, run in self._psana_runs.items():
             det = self._psana_det[run_number]
             self._pedestals[run_number] = det.pedestals(run)
 

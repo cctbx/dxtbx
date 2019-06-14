@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import functools
+import math
 import os
 
 try:
@@ -17,7 +18,7 @@ def _check_dtype(expected_type, dataset):
     """
 
     dataset_type = dataset.dtype
-    if not dataset_type in expected_type:
+    if dataset_type not in expected_type:
         return (
             False,
             "%s is type %s, expected %s"
@@ -32,7 +33,7 @@ def _check_dims(expected_dimensions, dataset):
     """
 
     dataset_dimensions = len(dataset.shape)
-    if not dataset_dimensions in expected_dimensions:
+    if dataset_dimensions not in expected_dimensions:
         return (
             False,
             "%s has dims %d, expected %s"
@@ -50,7 +51,7 @@ def _check_shape(expected_shape, dataset):
     A function to check whether the dataset shape matches the expected
     """
 
-    if not dataset.shape in expected_shape:
+    if dataset.shape not in expected_shape:
         return (
             False,
             "%s has shape %s, expected one of %s"
@@ -106,7 +107,7 @@ class check_dset(object):
     def __call__(self, dset):
         for check in self.checks:
             passed, errors = check(dset)
-            if passed == False:
+            if passed is False:
                 raise RuntimeError(errors)
 
 
@@ -127,7 +128,7 @@ class check_attr(object):
         self.dtype = dtype
 
     def __call__(self, dset):
-        if not self.name in dset.attrs.keys():
+        if self.name not in dset.attrs:
             raise RuntimeError(
                 "'%s' does not have an attribute '%s'" % (dset.name, self.name)
             )
@@ -152,9 +153,9 @@ def find_entries(nx_file, entry):
     hits = []
 
     def visitor(name, obj):
-        if "NX_class" in obj.attrs.keys():
+        if "NX_class" in obj.attrs:
             if obj.attrs["NX_class"] in ["NXentry", "NXsubentry"]:
-                if "definition" in obj.keys():
+                if "definition" in obj:
                     if obj["definition"][()] == "NXmx":
                         hits.append(obj)
 
@@ -170,7 +171,7 @@ def find_class(nx_file, nx_class):
     hits = []
 
     def visitor(name, obj):
-        if "NX_class" in obj.attrs.keys():
+        if "NX_class" in obj.attrs:
             if obj.attrs["NX_class"] in [nx_class]:
                 hits.append(obj)
 
@@ -398,7 +399,7 @@ def run_checks(handle, items):
     """
     Run checks for datasets
     """
-    for item, detail in items.iteritems():
+    for item, detail in items.items():
         min_occurs = detail["minOccurs"]
         checks = detail["checks"]
         assert min_occurs in [0, 1]
@@ -1700,7 +1701,7 @@ class DataFactory(object):
         import h5py
 
         datasets = []
-        for key in sorted(list(obj.handle.iterkeys())):
+        for key in sorted(obj.handle):
             if key.startswith("_filename_"):
                 continue
 

@@ -9,13 +9,9 @@
 #  This code is distributed under the BSD license, a copy of which is
 #  included in the root directory of this package.
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
-from dxtbx.model import Beam  # import dependency
-from dxtbx.model import Detector  # import dependency
-from dxtbx.model import Goniometer  # import dependency
-from dxtbx.model import Scan  # import dependency
 
 
 def find_entries(nx_file):
@@ -25,9 +21,9 @@ def find_entries(nx_file):
     """
     if "entry" in nx_file:
         entry = nx_file["entry"]
-        if "NX_class" in entry.attrs.keys():
+        if "NX_class" in entry.attrs:
             if entry.attrs["NX_class"] == "NXentry":
-                if "definition" not in entry.keys():
+                if "definition" not in entry:
                     return entry
     return None
 
@@ -61,10 +57,9 @@ class FormatNexusExternalDataFile(FormatHDF5):
     @staticmethod
     def understand(image_file):
         try:
-            is_nexus = is_nexus_external_data_file(image_file)
+            return is_nexus_external_data_file(image_file)
         except IOError:
             return False
-        return is_nexus
 
     @classmethod
     def ignore(cls):

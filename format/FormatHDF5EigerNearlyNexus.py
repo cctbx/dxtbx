@@ -12,10 +12,6 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
-from dxtbx.model import Beam  # import dependency
-from dxtbx.model import Detector  # import dependency
-from dxtbx.model import Goniometer  # import dependency
-from dxtbx.model import Scan  # import dependency
 from dxtbx.format.nexus import NXmxReader
 from dxtbx.format.nexus import NXdata
 from dxtbx.format.nexus import BeamFactory
@@ -33,9 +29,9 @@ def find_entries(nx_file):
     """
     if "entry" in nx_file:
         entry = nx_file["entry"]
-        if "NX_class" in entry.attrs.keys():
+        if "NX_class" in entry.attrs:
             if entry.attrs["NX_class"] == "NXentry":
-                if "definition" not in entry.keys():
+                if "definition" not in entry:
                     return entry
     return None
 
@@ -134,9 +130,9 @@ class EigerNXmxFixer(object):
         # cope with badly structured chunk information i.e. many more data
         # entries than there are in real life...
         delete = []
-        for k in sorted(handle_orig["/entry/data"].iterkeys()):
+        for k in sorted(handle_orig["/entry/data"]):
             try:
-                shape = handle_orig["/entry/data/%s" % k].shape
+                handle_orig["/entry/data/%s" % k].shape
             except KeyError:
                 delete.append("/entry/data/%s" % k)
 
@@ -242,7 +238,7 @@ class EigerNXmxFixer(object):
         # check for incomplete omega definitions dirty hack...
         if "omega" in group:
             try:
-                data = group["omega"][()]
+                group["omega"][()]
             except AttributeError:
                 del group["omega"]
 
@@ -262,11 +258,11 @@ class EigerNXmxFixer(object):
             try:
                 key = handle["/entry/instrument/detector/detector_number"][()]
                 default_axis = {"E-32-0105": (0, 1, 0)}[key]
-            except KeyError as e:
+            except KeyError:
                 default_axis = (-1, 0, 0)
 
             num_images = 0
-            for name in sorted(handle["/entry/data"].iterkeys()):
+            for name in sorted(handle["/entry/data"]):
                 num_images += len(handle_orig["/entry/data/%s" % name])
             dataset = group.create_dataset("omega", (num_images,), dtype="float32")
             dataset.attrs["units"] = "degree"
@@ -294,11 +290,11 @@ class EigerNXmxFixer(object):
             )
 
         # Change relative paths to absolute paths
-        for name in handle["/entry/data"].iterkeys():
+        for name in handle["/entry/data"]:
             del handle["entry/data"][name]
             filename = handle_orig["entry/data"][name].file.filename
             handle["entry/data"][name] = h5py.ExternalLink(filename, "entry/data/data")
-            handle["entry/data"]["_filename_" + name] = filename  # Store file namesa
+            handle["entry/data"]["_filename_" + name] = filename  # Store file names
 
         self.handle = handle
         self.handle_orig = handle_orig
@@ -315,10 +311,9 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
     @staticmethod
     def understand(image_file):
         try:
-            is_nexus = is_eiger_nearly_nexus_file(image_file)
+            return is_eiger_nearly_nexus_file(image_file)
         except IOError:
             return False
-        return is_nexus
 
     def _start(self):
 

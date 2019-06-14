@@ -6,8 +6,6 @@ from collections import OrderedDict
 
 import boost.python
 import cctbx.crystal
-from cctbx import sgtbx  # import dependency
-from cctbx.crystal_orientation import crystal_orientation  # import dependency
 from dxtbx_model_ext import *
 from dxtbx.imageset import ImageSet, ImageSweep, ImageGrid
 from dxtbx.model.beam import *
@@ -17,6 +15,8 @@ from dxtbx.model.scan import *
 from dxtbx.model.crystal import *
 from dxtbx.model.profile import *
 from libtbx.containers import OrderedSet
+
+from six.moves import StringIO
 
 
 class DetectorAux(boost.python.injector, Detector):
@@ -142,10 +142,8 @@ class CrystalAux(boost.python.injector, Crystal):
         print("\n".join(msg), file=out)
 
     def __str__(self):
-        from six.moves import StringIO
-
         s = StringIO()
-        msg = self.show(out=s)
+        self.show(out=s)
         return s.getvalue()
 
     @staticmethod
@@ -297,10 +295,8 @@ class MosaicCrystalKabsch2010Aux(CrystalAux, MosaicCrystalKabsch2010):
         print("\n".join(msg), file=out)
 
     def __str__(self):
-        from six.moves import StringIO
-
         s = StringIO()
-        msg = self.show(out=s)
+        self.show(out=s)
         return s.getvalue()
 
     def to_dict(crystal):
@@ -375,10 +371,8 @@ class MosaicCrystalSauter2014Aux(CrystalAux, MosaicCrystalSauter2014):
         return self.get_A_as_sqr().inverse()
 
     def __str__(self):
-        from six.moves import StringIO
-
         s = StringIO()
-        msg = self.show(out=s)
+        self.show(out=s)
         return s.getvalue()
 
     def to_dict(crystal):
@@ -549,7 +543,7 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
 
         # Serialize all the imagesets
         result["imageset"] = []
-        for imset in index_lookup["imageset"].keys():
+        for imset in index_lookup["imageset"]:
             if isinstance(imset, ImageSweep):
                 # FIXME_HACK
                 template = get_template(imset)
@@ -587,8 +581,8 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         # preserve the same order as used in experiment serialization above
         for name, models in index_lookup.items():
             # Only fill out entries not handled above e.g. imageset
-            if not name in result:
-                result[name] = [x.to_dict() for x in models.keys()]
+            if name not in result:
+                result[name] = [x.to_dict() for x in models]
 
         # Return the dictionary
         return result
