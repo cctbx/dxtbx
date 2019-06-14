@@ -78,8 +78,6 @@ class FormatSMV(Format):
 
         Format.__init__(self, image_file, **kwargs)
 
-        return
-
     def _start(self):
         """Open the image file, read the image header, copy the key / value
         pairs into an internal dictionary self._header_dictionary along with
@@ -89,4 +87,59 @@ class FormatSMV(Format):
             self._image_file
         )
 
-        return
+    def get_beam_direction(self):
+        return [
+            float(sv) for sv in self._header_dictionary["SOURCE_VECTORS"].split()[:3]
+        ]
+
+    def get_beam_pixels(self, detector_name):
+        return [
+            float(bp)
+            for bp in self._header_dictionary[
+                "%sSPATIAL_DISTORTION_INFO" % detector_name
+            ].split()[:2]
+        ]
+
+    def get_beam_polarization(self):
+        polarization = [
+            float(sp) for sp in self._header_dictionary["SOURCE_POLARZ"].split()
+        ]
+        p_fraction = polarization[0]
+        p_plane = polarization[1:]
+        return p_fraction, p_plane
+
+    def get_detector_axes(self, detector_name):
+        return [
+            float(v)
+            for v in self._header_dictionary[
+                "%sDETECTOR_VECTORS" % detector_name
+            ].split()
+        ]
+
+    def get_gonio_axes(self, detector_name):
+        return [
+            float(gv)
+            for gv in self._header_dictionary["%sGONIO_VECTORS" % detector_name].split()
+        ]
+
+    def get_gonio_values(self, detector_name):
+        return [
+            float(gv)
+            for gv in self._header_dictionary["%sGONIO_VALUES" % detector_name].split()
+        ]
+
+    def get_image_size(self, detector_name):
+        return [
+            int(dd)
+            for dd in self._header_dictionary[
+                "%sDETECTOR_DIMENSIONS" % detector_name
+            ].split()
+        ]
+
+    def get_pixel_size(self, detector_name):
+        return [
+            float(ps)
+            for ps in self._header_dictionary[
+                "%sSPATIAL_DISTORTION_INFO" % detector_name
+            ].split()[2:]
+        ]

@@ -202,18 +202,14 @@ At this moment it's good at least that the reference frame is consistent.
             detector_name = self._header_dictionary[
                 'DETECTOR_NAMES'].split()[0].strip()
 
-            detector_axes = map(float, self._header_dictionary[
-                '%sDETECTOR_VECTORS' % detector_name].split())
+            detector_axes = self.get_detector_axes(detector_name)
 
             detector_fast = matrix.col(tuple(detector_axes[:3]))
             detector_slow = matrix.col(tuple(detector_axes[3:]))
 
-            beam_pixels = map(float, self._header_dictionary[
-                '%sSPATIAL_DISTORTION_INFO' % detector_name].split()[:2])
-            pixel_size = map(float, self._header_dictionary[
-                '%sSPATIAL_DISTORTION_INFO' % detector_name].split()[2:])
-            image_size = map(int, self._header_dictionary[
-                '%sDETECTOR_DIMENSIONS' % detector_name].split())
+            beam_pixels = self.get_beam_pixels(detector_name)
+            pixel_size = self.get_pixel_size(detector_name)
+            image_size = self.get_image_size(detector_name)
 
             detector_origin = - (
                 beam_pixels[0] * pixel_size[0] * detector_fast + \
@@ -224,10 +220,8 @@ rotations and translations which are applied to this to determine where
 it will actually be in the laboratory frame. N.B. we compute the list of R's
 and T's then apply them in reverse.
 
-            gonio_axes = map(float, self._header_dictionary[
-                '%sGONIO_VECTORS' % detector_name].split())
-            gonio_values = map(float, self._header_dictionary[
-                '%sGONIO_VALUES' % detector_name].split())
+            gonio_axes = self.get_gonio_axes(detector_name)
+            gonio_values = self.get_gonio_values(detector_name)
             gonio_units = self._header_dictionary[
                 '%sGONIO_UNITS' % detector_name].split()
             gonio_num_axes = int(self._header_dictionary[
@@ -273,14 +267,8 @@ This is relatively simple as everything we need is already in place...
         def _xbeam(self):
             '''Return a simple model for the beam.'''
 
-            beam_direction = map(float, self._header_dictionary[
-                'SOURCE_VECTORS'].split()[:3])
-
-            polarization = map(float, self._header_dictionary[
-                'SOURCE_POLARZ'].split())
-
-            p_fraction = polarization[0]
-            p_plane = polarization[1:]
+            beam_direction = self.get_beam_direction()
+            p_fraction, p_plane = self.get_beam_polarization()
 
             wavelength = float(self._header_dictionary['SCAN_WAVELENGTH'])
 

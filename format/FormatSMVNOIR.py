@@ -106,47 +106,35 @@ class FormatSMVNOIR(FormatSMVRigaku):
 
         return self._goniometer_factory.known_axis(axis)
 
+    def get_beam_pixels(self, detector_name):
+        return [
+            float(bp)
+            for bp in self._header_dictionary[
+                "%sSPATIAL_BEAM_POSITION" % detector_name
+            ].split()[:2]
+        ]
+
     def _detector(self):
         """Return a model for the detector, allowing for two-theta offsets
         and the detector position. This will be rather more complex..."""
 
         detector_name = self._header_dictionary["DETECTOR_NAMES"].split()[0].strip()
 
-        detector_axes = list(map(
-            float, self._header_dictionary["%sDETECTOR_VECTORS" % detector_name].split()
-        ))
-
+        detector_axes = self.get_detector_axes(detector_name)
         detector_fast = matrix.col(tuple(detector_axes[:3]))
         detector_slow = matrix.col(tuple(detector_axes[3:]))
 
-        beam_pixels = list(map(
-            float,
-            self._header_dictionary["%sSPATIAL_BEAM_POSITION" % detector_name].split()[
-                :2
-            ],
-        ))
-        pixel_size = list(map(
-            float,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_INFO" % detector_name
-            ].split()[2:],
-        ))
-        image_size = list(map(
-            int,
-            self._header_dictionary["%sDETECTOR_DIMENSIONS" % detector_name].split(),
-        ))
+        beam_pixels = self.get_beam_pixels(detector_name)
+        pixel_size = self.get_pixel_size(detector_name)
+        image_size = self.get_image_size(detector_name)
 
         detector_origin = -(
             beam_pixels[0] * pixel_size[0] * detector_fast
             + beam_pixels[1] * pixel_size[1] * detector_slow
         )
 
-        gonio_axes = list(map(
-            float, self._header_dictionary["%sGONIO_VECTORS" % detector_name].split()
-        ))
-        gonio_values = list(map(
-            float, self._header_dictionary["%sGONIO_VALUES" % detector_name].split()
-        ))
+        gonio_axes = self.get_gonio_axes(detector_name)
+        gonio_values = self.get_gonio_values(detector_name)
         gonio_units = self._header_dictionary["%sGONIO_UNITS" % detector_name].split()
         gonio_num_axes = int(
             self._header_dictionary["%sGONIO_NUM_VALUES" % detector_name]
@@ -195,14 +183,8 @@ class FormatSMVNOIR(FormatSMVRigaku):
     def _beam(self):
         """Return a simple model for the beam."""
 
-        beam_direction = list(map(
-            float, self._header_dictionary["SOURCE_VECTORS"].split()[:3]
-        ))
-
-        polarization = list(map(float, self._header_dictionary["SOURCE_POLARZ"].split()))
-
-        p_fraction = polarization[0]
-        p_plane = polarization[1:]
+        beam_direction = self.get_beam_direction()
+        p_fraction, p_plane = self.get_beam_polarization()
 
         wavelength = float(self._header_dictionary["SOURCE_WAVELENGTH"].split()[-1])
 
