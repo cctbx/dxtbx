@@ -22,7 +22,7 @@ def random_rotation():
 
 
 def test_crystal_model_from_mosflm_matrix():
-    mosflm_matrix = map(
+    mosflm_matrix = list(map(
         float,
         """ -0.00495480 -0.01491776  0.00238445
   0.01505572 -0.00661190 -0.00149401
@@ -33,7 +33,7 @@ def test_crystal_model_from_mosflm_matrix():
    0.3462750   0.2593185   0.9015806
      57.7822     57.7822    150.0931     90.0000     90.0000     90.0000
        0.000       0.000       0.000""".split(),
-    )
+    ))
     A = mosflm_matrix[:9]
     unit_cell = uctbx.unit_cell(mosflm_matrix[21:27])
     cm = CrystalFactory.from_mosflm_matrix(A, unit_cell=unit_cell)
@@ -194,7 +194,7 @@ Crystal:
     assert approx_equal(
         model_ref.get_unit_cell().parameters(), (44, 44, 44, 90, 90, 90)
     )
-    a_ref, b_ref, c_ref = map(matrix.col, model_ref.get_real_space_vectors())
+    a_ref, b_ref, c_ref = list(map(matrix.col, model_ref.get_real_space_vectors()))
     cb_op_to_primitive = sgi_ref.change_of_basis_op_to_primitive_setting()
     model_primitive = model_ref.change_basis(cb_op_to_primitive)
     cb_op_to_reference = (
@@ -202,7 +202,7 @@ Crystal:
         .info()
         .change_of_basis_op_to_reference_setting()
     )
-    a_prim, b_prim, c_prim = map(matrix.col, model_primitive.get_real_space_vectors())
+    a_prim, b_prim, c_prim = list(map(matrix.col, model_primitive.get_real_space_vectors()))
     # print cb_op_to_primitive.as_abc()
     ##'-1/2*a+1/2*b+1/2*c,1/2*a-1/2*b+1/2*c,1/2*a+1/2*b-1/2*c'
     assert approx_equal(a_prim, -1 / 2 * a_ref + 1 / 2 * b_ref + 1 / 2 * c_ref)

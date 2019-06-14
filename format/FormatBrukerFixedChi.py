@@ -62,7 +62,7 @@ class FormatBrukerFixedChi(FormatBruker):
 
         from scitbx import matrix
 
-        angles = map(float, self.header_dict["ANGLES"])
+        angles = list(map(float, self.header_dict["ANGLES"]))
 
         beam = matrix.col((0, 0, 1))
         phi = matrix.col((1, 0, 0)).rotate(-beam, angles[3], deg=True)
@@ -92,7 +92,7 @@ class FormatBrukerFixedChi(FormatBruker):
         slow = matrix.col((0, 1, 0))
         beam = matrix.col((0, 0, 1))
         pixel_mm = 5.0 / float(self.header_dict["DETTYPE"][1])
-        beam_pixel = map(float, self.header_dict["CENTER"][:2])
+        beam_pixel = list(map(float, self.header_dict["CENTER"][:2]))
         distance_mm = 10.0 * float(self.header_dict["DISTANC"][1])
         origin = (
             -distance_mm * beam

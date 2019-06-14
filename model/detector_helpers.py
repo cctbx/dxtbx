@@ -17,7 +17,7 @@ def read_xds_xparm(xds_xparm_file):
     """Parse the XDS XPARM file, which contains a description of the detector
     and experimental geometry, to a dictionary."""
 
-    data = map(float, open(xds_xparm_file, "r").read().split())
+    data = list(map(float, open(xds_xparm_file, "r").read().split()))
 
     assert len(data) == 42
 
@@ -28,7 +28,7 @@ def read_xds_xparm(xds_xparm_file):
     wavelength = data[6]
     beam = data[7:10]
 
-    nx, ny = map(int, data[10:12])
+    nx, ny = list(map(int, data[10:12]))
     px, py = data[12:14]
 
     distance = data[14]

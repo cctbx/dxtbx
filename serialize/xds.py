@@ -165,7 +165,7 @@ class to_xds(object):
         self._sweep = sweep
 
         # detector dimensions in pixels
-        self.detector_size = map(
+        self.detector_size = list(map(
             int,
             (
                 max(
@@ -177,7 +177,7 @@ class to_xds(object):
                     for panel in self.get_detector()
                 ),
             ),
-        )
+        ))
         self.fast, self.slow = self.detector_size
 
         if len(self.get_detector()) > 1:

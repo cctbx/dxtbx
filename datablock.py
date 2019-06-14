@@ -666,7 +666,7 @@ class DataBlockFilenameImporter(object):
 
             # make an imageset
             imageset = dxtbx.imageset.ImageSetFactory.make_imageset(
-                map(abspath, filenames), format_class, format_kwargs=format_kwargs
+                list(map(abspath, filenames)), format_class, format_kwargs=format_kwargs
             )
             for i, r in enumerate(records):
                 imageset.set_beam(r.beam, i)
@@ -1271,11 +1271,11 @@ class GoniometerComparison(object):
 
 
 def all_equal(a, b):
-    return all(map(lambda x: x[0] == x[1], zip(a, b)))
+    return all([x[0] == x[1] for x in zip(a, b)])
 
 
 def all_approx_equal(a, b, tol):
-    return all(map(lambda x: abs(x[0] - x[1]) < tol, zip(a, b)))
+    return all([abs(x[0] - x[1]) < tol for x in zip(a, b)])
 
 
 class BeamDiff(object):

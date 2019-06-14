@@ -76,7 +76,7 @@ class FormatBrukerPhotonII(FormatBruker):
         # AXIS indexes into this list to define the scan axis (in FORTRAN counting)
         # START and RANGE define the start and step size for each image
 
-        _, omega, phi, chi = map(float, self.header_dict["ANGLES"].split())
+        _, omega, phi, chi = list(map(float, self.header_dict["ANGLES"].split()))
         scan_axis = ["NONE", "2THETA", "OMEGA", "PHI", "CHI", "X", "Y", "Z"]
         scan_axis = scan_axis[int(self.header_dict["AXIS"])]
         names = flex.std_string(("PHI", "CHI", "OMEGA"))
@@ -123,7 +123,7 @@ class FormatBrukerPhotonII(FormatBruker):
         slow = matrix.col((0, 1, 0))
         beam = matrix.col((0, 0, 1))
         pixel_mm = 5.0 / float(self.header_dict["DETTYPE"].split()[1])
-        beam_pixel = map(float, self.header_dict["CENTER"].split()[:-3:-1])
+        beam_pixel = list(map(float, self.header_dict["CENTER"].split()[:-3:-1]))
         distance_mm = 10.0 * float(self.header_dict["DISTANC"].split()[1])
         origin = (
             -distance_mm * beam

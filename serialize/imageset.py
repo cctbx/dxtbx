@@ -98,9 +98,7 @@ def imageset_to_dict(imageset):
 def basic_imageset_from_dict(d, directory=None):
     """ Construct an ImageSet class from the dictionary."""
     # Get the filename list and create the imageset
-    filenames = map(
-        lambda p: resolve_path(p, directory=directory), map(str, d["filenames"])
-    )
+    filenames = [resolve_path(p, directory=directory) for p in list(map(str, d["filenames"]))]
     imageset = ImageSetFactory.new(filenames)[0]
 
     # Set some external lookups

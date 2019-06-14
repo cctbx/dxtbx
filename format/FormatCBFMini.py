@@ -122,7 +122,7 @@ class FormatCBFMini(FormatCBF):
 
         wavelength = float(self._cif_header_dictionary["Wavelength"].split()[0])
 
-        beam_x, beam_y = map(float, beam_xy)
+        beam_x, beam_y = list(map(float, beam_xy))
 
         pixel_xy = (
             self._cif_header_dictionary["Pixel_size"]
@@ -131,7 +131,7 @@ class FormatCBFMini(FormatCBF):
             .split()
         )
 
-        pixel_x, pixel_y = map(float, pixel_xy)
+        pixel_x, pixel_y = list(map(float, pixel_xy))
 
         if "Silicon" in self._cif_header_dictionary:
             thickness = (

@@ -226,7 +226,7 @@ class FormatCBFMiniPilatusDLS6MSN100F(FormatCBFMiniPilatus):
             .split()[:2]
         )
 
-        beam_x, beam_y = map(float, beam_xy)
+        beam_x, beam_y = list(map(float, beam_xy))
 
         wavelength = float(self._cif_header_dictionary["Wavelength"].split()[0])
 
@@ -237,7 +237,7 @@ class FormatCBFMiniPilatusDLS6MSN100F(FormatCBFMiniPilatus):
             .split()
         )
 
-        pixel_x, pixel_y = map(float, pixel_xy)
+        pixel_x, pixel_y = list(map(float, pixel_xy))
 
         thickness = float(self._cif_header_dictionary["Silicon"].split()[2]) * 1000.0
 
