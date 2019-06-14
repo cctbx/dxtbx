@@ -116,6 +116,14 @@ class FormatSMV(Format):
             ].split()
         ]
 
+    def get_distortion(self, detector_name):
+        return [
+            float(sdv)
+            for sdv in self._header_dictionary[
+                "%sSPATIAL_DISTORTION_VECTORS" % detector_name
+            ].split()
+        ]
+
     def get_gonio_axes(self, detector_name):
         return [
             float(gv)

@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import calendar
 import time
 
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
@@ -89,8 +90,6 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
 
         FormatSMVRigaku.__init__(self, image_file, **kwargs)
 
-        return
-
     def _start(self):
 
         FormatSMVRigaku._start(self)
@@ -125,12 +124,7 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
 
         beam_pixels = self.get_beam_pixels(detector_name)
         pixel_size = self.get_pixel_size(detector_name)
-        reindex = list(map(
-            float,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_VECTORS" % detector_name
-            ].split(),
-        ))
+        reindex = self.get_distortion(detector_name)
         image_size = self.get_image_size(detector_name)
 
         # apply SPATIAL_DISTORTION_VECTORS
@@ -206,7 +200,6 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
 
     def _scan(self):
         """Return the scan information for this image."""
-        import calendar
 
         rotation = self.get_rotation()
 

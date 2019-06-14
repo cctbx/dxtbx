@@ -71,13 +71,8 @@ class FormatSMVRigakuPilatus(FormatSMVRigaku):
         detector_axes = self.get_detector_axes(detector_name)
         fast = matrix.col(tuple(detector_axes[:3]))
         slow = matrix.col(tuple(detector_axes[3:]))
-
-        distortion = list(map(
-            int,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_VECTORS" % detector_name
-            ].split(),
-        ))
+        distortion = self.get_distortion(detector_name)
+        distortion = [int(_) for _ in distortion]  #  sure?
 
         # multiply through by the distortion to get the true detector fast, slow
 
