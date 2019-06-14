@@ -1271,11 +1271,11 @@ class GoniometerComparison(object):
 
 
 def all_equal(a, b):
-    return all([x[0] == x[1] for x in zip(a, b)])
+    return all(x[0] == x[1] for x in zip(a, b))
 
 
 def all_approx_equal(a, b, tol):
-    return all([abs(x[0] - x[1]) < tol for x in zip(a, b)])
+    return all(abs(x[0] - x[1]) < tol for x in zip(a, b))
 
 
 class BeamDiff(object):
