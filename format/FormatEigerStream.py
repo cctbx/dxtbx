@@ -1,11 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
+import json
+
+import numpy as np
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx.model import Beam  # import dependency
-from dxtbx.model import Detector  # import dependency
-from dxtbx.model import Goniometer  # import dependency
-from dxtbx.model import Scan  # import dependency
 
 injected_data = {}
 # import dlstbx.eiger_stream.data
@@ -30,8 +29,6 @@ class FormatEigerStream(FormatMultiImage, Format):
 
         if not injected_data:
             raise IncorrectFormatError(self, image_file)
-
-        import json
 
         self.header = {
             "configuration": json.loads(injected_data.get("header2", "")),
@@ -62,14 +59,11 @@ class FormatEigerStream(FormatMultiImage, Format):
         #   pprint(configuration)
 
         # Set the trusted range
-        #   trusted_range = 0, configuration['countrate_correction_count_cutoff']
         trusted_range = 0, 2 ** configuration["bit_depth_readout"] - 1
 
         # Get the sensor material and thickness
         sensor_material = str(configuration["sensor_material"])
         sensor_thickness = configuration["sensor_thickness"]
-
-        beam_center = configuration["beam_center_x"], configuration["beam_center_y"]
         distance = configuration["detector_distance"]
 
         # Get the pixel and image sizes
@@ -78,11 +72,6 @@ class FormatEigerStream(FormatMultiImage, Format):
         image_size = (info["shape"][0], info["shape"][1])
 
         # Get the detector axes
-        # TODO Spec doesn't have detector_orientation
-        # TODO THIS NEEDS FIXING
-        # fast_axis = (1, 0, 0)
-        # slow_axis = (0, 1, 0)
-        # origin = (0, 0, -1)
         fast_axis = configuration["detector_orientation"][0:3]
         slow_axis = configuration["detector_orientation"][3:6]
         origin = matrix.col(configuration["detector_translation"]) + matrix.col(
@@ -128,24 +117,8 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         from dxtbx.model.scan import ScanFactory
 
-        configuration = self.header["configuration"]
-        #   kappa_start = configuration['kappa_start']
-        #   kappa_increment = configuration['kappa_increment']
-        #   phi_start = configuration['phi_start']
-        #   phi_increment = configuration['phi_increment']
-        #   omega_start = configuration['omega_start']
-        #   omega_increment = configuration['omega_increment']
-        #   two_theta_start = configuration['two_theta_start']
-        #   two_theta_increment = configuration['two_theta_increment']
-        kappa_start = 0
-        kappa_increment = 0
         phi_start = 0
         phi_increment = 0
-        omega_start = 0
-        omega_increment = 0
-        two_theta_start = 0
-        two_theta_increment = 0
-        #   nimages = configuration['nimages']
         nimages = 1
         return ScanFactory.make_scan(
             image_range=(1, nimages),
@@ -160,7 +133,6 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         #   if hasattr(self, 'raw_data_cache'):
         #     return self.raw_data_cache
-        import numpy as np
         from scitbx.array_family import flex
 
         info = self.header["info"]
@@ -196,7 +168,6 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Unpack bitshuffle-lz4 compressed frame and return np array image data
         """
-        import numpy as np
         import bitshuffle
 
         blob = np.fromstring(data[12:], dtype=np.uint8)
@@ -212,16 +183,14 @@ class FormatEigerStream(FormatMultiImage, Format):
         Unpack bitshuffle-lz4 compressed 16 bit frame and return np array image data
         """
         import bitshuffle
-        import numpy
 
-        blob = numpy.fromstring(data[12:], dtype=numpy.uint8)
-        return bitshuffle.decompress_lz4(blob, shape[::-1], numpy.dtype(dtype))
+        blob = np.fromstring(data[12:], dtype=np.uint8)
+        return bitshuffle.decompress_lz4(blob, shape[::-1], np.dtype(dtype))
 
     def readLZ4(self, data, shape, dtype, size):
         """
         Unpack lz4 compressed frame and return np array image data
         """
-        import numpy as np
         import lz4
 
         dtype = np.dtype(dtype)
