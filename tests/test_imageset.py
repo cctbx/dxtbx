@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-import six.moves.cPickle as pickle
 import glob
 import os
+import six.moves.cPickle as pickle
 
 import dxtbx.format.Registry
 import dxtbx.tests.imagelist
@@ -73,7 +73,6 @@ def test_image():
 
 def test_image_buffer():
     import dxtbx.format.image
-    from scitbx.array_family import flex
 
     data = flex.int(flex.grid(10, 10))
     name = "TileName0"
@@ -89,7 +88,6 @@ def test_image_buffer():
 def test_external_lookup():
     import dxtbx.format.image
     from dxtbx.imageset import ExternalLookup
-    from scitbx.array_family import flex
 
     mask = flex.bool(flex.grid(10, 10), True)
     gain = flex.double(flex.grid(10, 10), 1)
@@ -123,7 +121,6 @@ def test_imagesetdata(dials_regression):
         ImageDouble,
         ImageTileDouble,
     )
-    from scitbx.array_family import flex
     from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 
     filenames = sorted(
@@ -208,6 +205,11 @@ def centroid_files_and_imageset(centroid_files):
     return centroid_files, imageset
 
 
+def assert_is_iterable(iterator):
+    for element in iterator:
+        pass
+
+
 class TestImageSet(object):
     def test_imageset(self, centroid_files_and_imageset):
         filenames, imageset = centroid_files_and_imageset
@@ -215,42 +217,37 @@ class TestImageSet(object):
         # Run a load of tests
         self.tst_get_item(imageset)
         assert len(imageset) == len(filenames)
-        self.tst_iter(imageset)
+        assert_is_iterable(imageset)
         self.tst_paths(imageset, filenames)
         self.tst_get_detectorbase(imageset, range(len(filenames)), 9)
         self.tst_get_models(imageset, range(len(filenames)), 9)
 
     def tst_get_item(self, imageset):
         image = imageset[0]
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             image = imageset[9]
 
         imageset2 = imageset[3:7]
         image = imageset2[0]
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             image = imageset2[5]
 
         assert len(imageset2) == 4
         self.tst_get_detectorbase(imageset2, range(0, 4), 5)
         self.tst_get_models(imageset2, range(0, 4), 5)
         self.tst_paths(imageset2, imageset.paths()[3:7])
-        self.tst_iter(imageset2)
+        assert_is_iterable(imageset2)
 
         imageset2 = imageset[3:5]
         image = imageset2[0]
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             image = imageset2[2]
 
         assert len(imageset2) == 2
         self.tst_get_detectorbase(imageset2, range(0, 2), 2)
         self.tst_get_models(imageset2, range(0, 2), 2)
         self.tst_paths(imageset2, imageset.paths()[3:5])
-        self.tst_iter(imageset2)
-
-    @staticmethod
-    def tst_iter(imageset):
-        for image in imageset:
-            pass
+        assert_is_iterable(imageset2)
 
     @staticmethod
     def tst_paths(imageset, filenames1):
@@ -263,14 +260,14 @@ class TestImageSet(object):
         for i in indices:
             imageset.get_detectorbase(i)
 
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             imageset.get_detectorbase(outside_index)
 
     def tst_get_models(self, imageset, indices, outside_index):
         for i in indices:
             self.tst_get_models_index(imageset, i)
 
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             self.tst_get_models_index(imageset, outside_index)
 
     @staticmethod
@@ -331,7 +328,7 @@ class TestImageSweep(object):
         # Run a load of tests
         self.tst_get_item(sweep)
         assert len(sweep) == len(centroid_files)
-        self.tst_iter(sweep)
+        assert_is_iterable(sweep)
         self.tst_paths(sweep, centroid_files)
         self.tst_get_detectorbase(sweep, range(len(centroid_files)), 9)
         self.tst_get_models(sweep, range(len(centroid_files)), 9)
@@ -340,28 +337,23 @@ class TestImageSweep(object):
 
     def tst_get_item(self, sweep):
         _ = sweep[0]
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             _ = sweep[9]
 
         sweep2 = sweep[3:7]
         _ = sweep2[0]
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             _ = sweep2[5]
 
         assert len(sweep2) == 4
         self.tst_get_detectorbase(sweep2, range(0, 4), 5)
         self.tst_get_models(sweep2, range(0, 4), 5)
         self.tst_paths(sweep2, sweep.paths()[3:7])
-        self.tst_iter(sweep2)
+        assert_is_iterable(sweep2)
         self.tst_get_array_range(sweep2, (3, 7))
 
         with pytest.raises(IndexError):
             sweep2 = sweep[3:7:2]
-
-    @staticmethod
-    def tst_iter(sweep):
-        for image in sweep:
-            pass
 
     @staticmethod
     def tst_paths(sweep, filenames1):
@@ -374,7 +366,7 @@ class TestImageSweep(object):
         for i in indices:
             sweep.get_detectorbase(i)
 
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             sweep.get_detectorbase(outside_index)
 
     def tst_get_models(self, sweep, indices, outside_index):

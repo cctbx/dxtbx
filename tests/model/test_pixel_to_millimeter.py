@@ -1,151 +1,125 @@
 from __future__ import absolute_import, division, print_function
 
+import math
 import os
+import random
 
+import dxtbx
+import pytest
 import six.moves.cPickle as pickle
+from cctbx.eltbx import attenuation_coefficient
+from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from libtbx.test_utils import approx_equal
+from scitbx import matrix
+from scitbx.array_family import flex
 
 
-class Test(object):
-    def test(self, dials_regression):
-        filename = os.path.join(dials_regression, "image_examples", "XDS", "XPARM.XDS")
+@pytest.fixture
+def model(dials_regression):
+    filename = os.path.join(dials_regression, "image_examples", "XDS", "XPARM.XDS")
 
-        import dxtbx
+    models = dxtbx.load(filename)
+    detector = models.get_detector()
+    assert len(detector) == 1
+    detector = detector[0]
+    t0 = 0.320
 
-        models = dxtbx.load(filename)
-        self.detector = models.get_detector()
-        self.beam = models.get_beam()
-        assert len(self.detector) == 1
-        self.t0 = 0.320
-        from cctbx.eltbx import attenuation_coefficient
+    table = attenuation_coefficient.get_table("Si")
+    mu = table.mu_at_angstrom(models.get_beam().get_wavelength()) / 10.0
+    pixel_size = detector.get_pixel_size()
 
-        table = attenuation_coefficient.get_table("Si")
-        self.mu = table.mu_at_angstrom(self.beam.get_wavelength()) / 10.0
-        self.distance = self.detector[0].get_distance()
-        self.origin = self.detector[0].get_ray_intersection(
-            self.detector[0].get_normal()
-        )[1]
-        self.pixel_size = self.detector[0].get_pixel_size()
+    return {"mu": mu, "t0": t0, "detector": detector, "pixel_size": pixel_size}
 
-        from random import uniform
 
-        # Generate some random coordinates and do the correction
-        random_coord = lambda: (uniform(-1000, 1000), uniform(-1000, 1000))
-        for i in range(10000):
-            xy = random_coord()
-            self.tst_single(xy)
+def correct_gold(model, xy):
+    mu = model["mu"]
+    t0 = model["t0"]
+    s1 = matrix.col(model["detector"].get_lab_coord(xy)).normalize()
+    d0 = matrix.col(model["detector"].get_origin())
+    d1 = matrix.col(model["detector"].get_fast_axis())
+    d2 = matrix.col(model["detector"].get_slow_axis())
+    dn = d1.cross(d2)
+    cos_theta = s1.dot(dn)
+    t = t0 / cos_theta
+    o = (1.0 / mu) - (t + 1.0 / mu) * math.exp(-mu * t)
+    cx = xy[0] + s1.dot(d1) * o
+    cy = xy[1] + s1.dot(d2) * o
+    return (cx / model["pixel_size"][0], cy / model["pixel_size"][1])
 
-        from scitbx.array_family import flex
 
-        xy = flex.vec2_double([random_coord() for i in range(100)])
-        self.tst_array(xy)
-
-        self.tst_inverted_axis()
-
-    def tst_single(self, xy):
-        from scitbx import matrix
-
-        xy = matrix.col(xy)
+def test_correction_on_random_coordinates(model):
+    convert = ParallaxCorrectedPxMmStrategy(model["mu"], model["t0"])
+    for i in range(10000):
+        xy = matrix.col((random.uniform(-1000, 1000), random.uniform(-1000, 1000)))
 
         # Do the forward and reverse corrections
-        xy_corr_gold = matrix.col(self.correct_gold(xy))
-        xy_corr = matrix.col(self.correct(xy))
-        xy_corr_inv = matrix.col(self.correct_inv(xy_corr))
+        xy_corr_gold = matrix.col(correct_gold(model, xy))
+        xy_corr = matrix.col(convert.to_pixel(model["detector"], xy))
+        xy_corr_inv = matrix.col(convert.to_millimeter(model["detector"], xy_corr))
 
         # Check the values
         assert abs(xy_corr_gold - xy_corr) < 1e-7
         assert abs(xy_corr_inv - xy) < 1e-3
 
-    def tst_array(self, xy):
-        from libtbx.test_utils import approx_equal
 
-        xy_corr = self.detector[0].get_lab_coord(xy)
-        xy_corr_panel = self.detector[0].get_lab_coord(xy)
-        xy_corr_gold = [self.detector[0].get_lab_coord(xy_single) for xy_single in xy]
-        assert approx_equal(xy_corr, xy_corr_gold)
-        assert approx_equal(xy_corr_panel, xy_corr_gold)
+def test_array(model):
+    random_coord = lambda: (random.uniform(-1000, 1000), random.uniform(-1000, 1000))
+    xy = flex.vec2_double([random_coord() for i in range(100)])
+    xy_corr = model["detector"].get_lab_coord(xy)
+    xy_corr_panel = model["detector"].get_lab_coord(xy)
+    xy_corr_gold = [model["detector"].get_lab_coord(xy_single) for xy_single in xy]
+    assert approx_equal(xy_corr, xy_corr_gold)
+    assert approx_equal(xy_corr_panel, xy_corr_gold)
 
-    def tst_inverted_axis(self):
-        def get_values(invert_y):
-            from dxtbx.model.beam import BeamFactory
 
-            beam = BeamFactory.simple(wavelength=1)
+def test_inverted_axis():
+    def get_values(invert_y):
+        from dxtbx.model.beam import BeamFactory
 
-            if invert_y:
-                y_direction = "-y"
-            else:
-                y_direction = "+y"
+        beam = BeamFactory.simple(wavelength=1)
 
-            from dxtbx.model.detector import DetectorFactory
+        if invert_y:
+            y_direction = "-y"
+        else:
+            y_direction = "+y"
 
-            detector = DetectorFactory.simple(
-                sensor=DetectorFactory.sensor("PAD"),
-                distance=100,
-                beam_centre=[50, 50],
-                fast_direction="+x",
-                slow_direction=y_direction,
-                pixel_size=[0.1, 0.1],
-                image_size=[1000, 1000],
-            )
+        from dxtbx.model.detector import DetectorFactory
 
-            from dxtbx.model import ParallaxCorrectedPxMmStrategy
-            from cctbx.eltbx import attenuation_coefficient
+        detector = DetectorFactory.simple(
+            sensor=DetectorFactory.sensor("PAD"),
+            distance=100,
+            beam_centre=[50, 50],
+            fast_direction="+x",
+            slow_direction=y_direction,
+            pixel_size=[0.1, 0.1],
+            image_size=[1000, 1000],
+        )[0]
 
-            wavelength = beam.get_wavelength()
-            thickness = 0.5
-            table = attenuation_coefficient.get_table("Si")
-            mu = table.mu_at_angstrom(wavelength) / 10.0
-            t0 = thickness
+        wavelength = beam.get_wavelength()
+        thickness = 0.5
+        table = attenuation_coefficient.get_table("Si")
+        mu = table.mu_at_angstrom(wavelength) / 10.0
+        t0 = thickness
 
-            for panel in detector:
-                panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, t0))
-            v1 = detector[0].pixel_to_millimeter((0, 0))
-            v2 = detector[0].pixel_to_millimeter((1000, 1000))
+        for panel in detector:
+            panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, t0))
+        v1 = detector.pixel_to_millimeter((0, 0))
+        v2 = detector.pixel_to_millimeter((1000, 1000))
 
-            return v1, v2
+        return v1, v2
 
-        v11, v12 = get_values(False)
-        v21, v22 = get_values(False)
+    v11, v12 = get_values(False)
+    v21, v22 = get_values(False)
 
-        assert abs(v11[0] - v21[0]) < 1e-7
-        assert abs(v11[1] - v21[1]) < 1e-7
-        assert abs(v12[0] - v22[0]) < 1e-7
-        assert abs(v12[1] - v22[1]) < 1e-7
-
-    def correct_gold(self, xy):
-        from scitbx import matrix
-        from math import exp
-
-        mu = self.mu
-        t0 = self.t0
-        s1 = matrix.col(self.detector[0].get_lab_coord(xy)).normalize()
-        d0 = matrix.col(self.detector[0].get_origin())
-        d1 = matrix.col(self.detector[0].get_fast_axis())
-        d2 = matrix.col(self.detector[0].get_slow_axis())
-        dn = d1.cross(d2)
-        cos_theta = s1.dot(dn)
-        t = t0 / cos_theta
-        o = (1.0 / mu) - (t + 1.0 / mu) * exp(-mu * t)
-        cx = xy[0] + s1.dot(d1) * o
-        cy = xy[1] + s1.dot(d2) * o
-        return (cx / self.pixel_size[0], cy / self.pixel_size[1])
-
-    def correct(self, xy):
-        from dxtbx.model import ParallaxCorrectedPxMmStrategy
-
-        convert = ParallaxCorrectedPxMmStrategy(self.mu, self.t0)
-        return convert.to_pixel(self.detector[0], xy)
-
-    def correct_inv(self, xy):
-        from dxtbx.model import ParallaxCorrectedPxMmStrategy
-
-        convert = ParallaxCorrectedPxMmStrategy(self.mu, self.t0)
-        return convert.to_millimeter(self.detector[0], xy)
+    assert abs(v11[0] - v21[0]) < 1e-7
+    assert abs(v11[1] - v21[1]) < 1e-7
+    assert abs(v12[0] - v22[0]) < 1e-7
+    assert abs(v12[1] - v22[1]) < 1e-7
 
 
 def test_offset_px_mm_strategy():
     from dxtbx.model import Panel
     from dxtbx.model import OffsetParallaxCorrectedPxMmStrategy
-    from scitbx.array_family import flex
 
     # for future reference this is the array the same shape
     # as the image in pixels with offsets in pixels
