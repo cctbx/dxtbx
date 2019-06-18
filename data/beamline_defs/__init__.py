@@ -1,13 +1,16 @@
 from __future__ import absolute_import, division
 
+import importlib
+
+from builtins import bytes
+
 
 def get_beamline_definition(detector_id, **kwargs):
     import unicodedata
     import string
-    import types
 
-    if not isinstance(detector_id, types.UnicodeType):
-        detector_id = unicode(detector_id, "utf-8", "ignore")
+    if isinstance(detector_id, bytes):
+        detector_id = detector_id.decode("utf-8", "ignore")
 
     valid_chars = frozenset("_.%s%s" % (string.ascii_letters, string.digits))
     filename = unicodedata.normalize("NFKD", detector_id).encode("ASCII", "ignore")
@@ -17,8 +20,6 @@ def get_beamline_definition(detector_id, **kwargs):
         # http://stackoverflow.com/questions/1546226/a-simple-way-to-remove-multiple-spaces-in-a-string-in-python/15913564#15913564
 
     try:
-        import importlib
-
         beamline = importlib.import_module("dxtbx.data.beamline_defs.%s" % filename)
         generator_object = beamline.get_definition(**kwargs)
     except ImportError:
@@ -62,7 +63,7 @@ class template(object):
 
         def __lookup(key):
             entry = keys[key]
-            if isinstance(entry, basestring):
+            if isinstance(entry, str):
                 return entry.replace("?", "." if mmCIFsemantics else "_")
             else:
                 return entry[column]
