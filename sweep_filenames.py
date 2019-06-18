@@ -1,9 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
-from collections import defaultdict
-from glob import glob
 import os
 import re
+
+from collections import defaultdict
+from glob import glob
 
 
 def template_regex(filename):
@@ -36,16 +37,16 @@ def template_regex(filename):
         # These are reversed patterns.
 
         patterns = [
-            "()([0-9]+)(\..*)",
+            r"()([0-9]+)(\..*)",
             # filename ends with numbers
             #  img.0815
-            "([a-zA-Z-]+\.)([0-9]+)(\..*)",
+            r"([a-zA-Z-]+\.)([0-9]+)(\..*)",
             # filename ends with numbers followed by simple extension
             #  img.0815.cbf
-            "(.*?\.)([0-9]+)(_.*)",
+            r"(.*?\.)([0-9]+)(_.*)",
             # last number in the filename standing between _ and .
             #  NO2_0100.sweep.18keV
-            "(.*?\.)([0-9]+)(.*)",
+            r"(.*?\.)([0-9]+)(.*)",
         ]
         # last number in the filename before a .
         #  NO2.00100.sweep.18keV or image-00001.cbf
@@ -176,11 +177,6 @@ def replace_template_format_with_hash(match):
     return "#" * len(match.group(0) % 0)
 
 
-def template_format_to_string(template):
-    """Convert the template format to the template string."""
-    return re.sub(r"%0[0-9]+d", replace_template_format_with_hash, template)
-
-
 def template_string_to_glob_expr(template):
     """Convert the template to a glob expression."""
     pfx = template.split("#")[0]
@@ -208,7 +204,7 @@ def template_image_range(template):
 
     # Check that the template matches some files
     if len(filenames) == 0:
-        raise ValueError("Template {0} doesn't match any files.".format(template))
+        raise ValueError("Template {} doesn't match any files.".format(template))
 
     # Get the templete format
     index = slice(*template_string_number_index(template))

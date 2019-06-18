@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-# LIBTBX_SET_DISPATCHER_NAME dxtbx.plot_detector_models
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export BOOST_ADAPTBX_FPE_DEFAULT=1
 
@@ -8,9 +7,11 @@ usage = """Plot dxtbx detector models. Provide multiple json files if desired
 Example: dxtbx.plot_detector_models datablock1.json datablock2.json
 """
 
-import numpy as np
+import os
+import sys
+
 import matplotlib.pyplot as plt
-import sys, os
+import numpy as np
 from scitbx.matrix import col
 from libtbx.phil import parse
 from libtbx.utils import Sorry
@@ -122,8 +123,6 @@ def run(args):
             except Exception:
                 raise Sorry("Unrecognized argument %s" % arg)
     params = phil_scope.fetch(sources=user_phil).extract()
-    if not params.orthographic:
-        from mpl_toolkits.mplot3d import proj3d
 
     fig = plt.figure()
     colormap = plt.cm.gist_ncar
