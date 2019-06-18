@@ -8,12 +8,12 @@ import boost.python
 import cctbx.crystal
 from dxtbx_model_ext import *
 from dxtbx.imageset import ImageSet, ImageSweep, ImageGrid
-from dxtbx.model.beam import *
-from dxtbx.model.goniometer import *
-from dxtbx.model.detector import *
-from dxtbx.model.scan import *
-from dxtbx.model.crystal import *
-from dxtbx.model.profile import *
+from dxtbx.model.beam import BeamFactory
+from dxtbx.model.crystal import CrystalFactory
+from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.goniometer import GoniometerFactory
+from dxtbx.model.profile import ProfileModelFactory
+from dxtbx.model.scan import ScanFactory
 from libtbx.containers import OrderedSet
 
 from six.moves import StringIO
