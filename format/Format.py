@@ -7,7 +7,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+from future import standard_library
+
+standard_library.install_aliases()
+
 import sys
+import urllib.parse
+import urllib.request
 
 if sys.hexversion < 0x3040000:
     # try Python3.3 backport bz2 pypi module first.
@@ -41,8 +47,6 @@ from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.scan import ScanFactory
-
-from six.moves.urllib.parse import urlparse
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -531,12 +535,8 @@ class Format(object):
         # Windows file paths can get caught up in this - check that the
         # first letter is one character (which I think should be safe: all
         # URL types are longer than this right?)
-
-        scheme = urlparse(path).scheme
-        if scheme and len(scheme) != 1:
-            return True
-
-        return False
+        scheme = urllib.parse.urlparse(path).scheme
+        return scheme and len(scheme) != 1
 
     @staticmethod
     def is_bz2(filename):
@@ -566,9 +566,7 @@ class Format(object):
         caching transparently if possible."""
 
         if url and Format.is_url(filename):
-            import urllib2
-
-            fh_func = lambda: urllib2.urlopen(filename)
+            fh_func = lambda: urllib.request.urlopen(filename)
 
         elif Format.is_bz2(filename):
             if bz2 is None:
