@@ -1,5 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
+from future import standard_library
+
+standard_library.install_aliases()
+
+import copy
+import pickle
+
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.FormatPYunspecified import FormatPYunspecified
 from dxtbx.format.FormatPYunspecified import FormatPYunspecifiedInMemory
@@ -15,10 +22,8 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
         """
 
         try:
-            stream = FormatPYunspecified.open_file(image_file, "rb")
-            import cPickle as pickle
-
-            data = pickle.load(stream)
+            with FormatPYunspecified.open_file(image_file, "rb") as fh:
+                data = pickle.load(fh)
         except IOError:
             return False
 
@@ -60,8 +65,6 @@ class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory)
     def __init__(self, data, **kwargs):
         """ @param data In memory image dictionary, alredy initialized """
         FormatPYunspecifiedInMemory.__init__(self, data, **kwargs)
-
-        import copy
 
         self._image_file = copy.deepcopy(data)
 
