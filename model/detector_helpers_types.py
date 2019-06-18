@@ -7,6 +7,7 @@ dimensions.
 from __future__ import absolute_import, division, print_function
 
 from builtins import object
+import io
 import os
 import sys
 
@@ -29,7 +30,7 @@ class detector_helpers_types(object):
 
         self._detectors = {}
 
-        with open(detector_lib, "r", encoding="ascii") as fh:
+        with io.open(detector_lib, "r", encoding="ascii") as fh:
             for record in fh:
                 if record.startswith(("Sensor", "-----")):
                     continue
