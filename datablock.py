@@ -4,8 +4,8 @@ import collections
 import itertools
 import json
 import operator
-from math import floor, pi
-from os import listdir
+import math
+import os.path
 from os.path import abspath, dirname, isdir, isfile, join, normpath, splitext
 
 import six.moves.cPickle as pickle
@@ -666,7 +666,7 @@ class DataBlockFilenameImporter(object):
 
             # make an imageset
             imageset = dxtbx.imageset.ImageSetFactory.make_imageset(
-                map(abspath, filenames), format_class, format_kwargs=format_kwargs
+                list(map(abspath, filenames)), format_class, format_kwargs=format_kwargs
             )
             for i, r in enumerate(records):
                 imageset.set_beam(r.beam, i)
@@ -1015,7 +1015,9 @@ class DataBlockFactory(object):
             if isfile(f):
                 filelist.append(f)
             elif isdir(f):
-                subdir = sorted(join(f, sf) for sf in listdir(f) if isfile(join(f, sf)))
+                subdir = sorted(
+                    join(f, sf) for sf in os.listdir(f) if isfile(join(f, sf))
+                )
                 filelist.extend(subdir)
                 if verbose:
                     print("Added %d files from %s" % (len(subdir), f))
@@ -1270,12 +1272,12 @@ class GoniometerComparison(object):
         )
 
 
-def all_equal(a, b):
-    return all(map(lambda x: x[0] == x[1], zip(a, b)))
+def _all_equal(a, b):
+    return all(x[0] == x[1] for x in zip(a, b))
 
 
-def all_approx_equal(a, b, tol):
-    return all(map(lambda x: abs(x[0] - x[1]) < tol, zip(a, b)))
+def _all_approx_equal(a, b, tolerance):
+    return all(abs(x[0] - x[1]) < tolerance for x in zip(a, b))
 
 
 class BeamDiff(object):
@@ -1351,19 +1353,19 @@ class DetectorDiff(object):
             a_origin = aa.get_origin()
             b_origin = bb.get_origin()
             temp_text = []
-            if not all_equal(a_image_size, b_image_size):
+            if not _all_equal(a_image_size, b_image_size):
                 temp_text.append("  Image size: %s, %s" % (a_image_size, b_image_size))
-            if not all_approx_equal(a_pixel_size, b_pixel_size, 1e-7):
+            if not _all_approx_equal(a_pixel_size, b_pixel_size, 1e-7):
                 temp_text.append("  Pixel size: %s, %s" % (a_pixel_size, b_pixel_size))
-            if not all_approx_equal(a_trusted_range, b_trusted_range, 1e-7):
+            if not _all_approx_equal(a_trusted_range, b_trusted_range, 1e-7):
                 temp_text.append(
                     "  Trusted Range: %s, %s" % (a_trusted_range, b_trusted_range)
                 )
-            if not all_approx_equal(a_fast, b_fast, self.fast_axis_tolerance):
+            if not _all_approx_equal(a_fast, b_fast, self.fast_axis_tolerance):
                 temp_text.append("  Fast axis: %s, %s" % (a_fast, b_fast))
-            if not all_approx_equal(a_slow, b_slow, self.slow_axis_tolerance):
+            if not _all_approx_equal(a_slow, b_slow, self.slow_axis_tolerance):
                 temp_text.append("  Slow axis: %s, %s" % (a_slow, b_slow))
-            if not all_approx_equal(a_origin, b_origin, self.origin_tolerance):
+            if not _all_approx_equal(a_origin, b_origin, self.origin_tolerance):
                 temp_text.append("  Origin: %s, %s" % (a_origin, b_origin))
             if len(temp_text) > 0:
                 text.append(" panel %d:" % i)
@@ -1399,9 +1401,9 @@ class GoniometerDiff(object):
         text = []
         if abs(a_axis.angle(b_axis)) > self.rotation_axis_tolerance:
             text.append(" Rotation axis: %s, %s" % (tuple(a_axis), tuple(b_axis)))
-        if not all_approx_equal(a_fixed, b_fixed, self.fixed_rotation_tolerance):
+        if not _all_approx_equal(a_fixed, b_fixed, self.fixed_rotation_tolerance):
             text.append(" Fixed rotation: %s, %s" % (a_fixed, b_fixed))
-        if not all_approx_equal(a_setting, b_setting, self.setting_rotation_tolerance):
+        if not _all_approx_equal(a_setting, b_setting, self.setting_rotation_tolerance):
             text.append(" Setting rotation: %s, %s" % (a_setting, b_setting))
         if len(text) > 0:
             text = ["Goniometer:"] + text
@@ -1427,7 +1429,7 @@ class ScanDiff(object):
         b_osc_range = b.get_oscillation_range()
 
         def mod_2pi(x):
-            return x - 2 * pi * floor(x / (2 * pi))
+            return x - 2 * math.pi * math.floor(x / (2 * math.pi))
 
         diff_2pi = abs(mod_2pi(a_osc_range[1]) - mod_2pi(b_osc_range[0]))
         diff_abs = abs(a_osc_range[1] - b_osc_range[0])

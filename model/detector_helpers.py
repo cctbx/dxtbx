@@ -17,7 +17,8 @@ def read_xds_xparm(xds_xparm_file):
     """Parse the XDS XPARM file, which contains a description of the detector
     and experimental geometry, to a dictionary."""
 
-    data = map(float, open(xds_xparm_file, "r").read().split())
+    with open(xds_xparm_file, "r") as fh:
+        data = [float(i) for i in fh.read().split()]
 
     assert len(data) == 42
 

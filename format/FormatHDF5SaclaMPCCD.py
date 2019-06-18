@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import math
 import os
 
+import h5py
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
 
@@ -31,8 +32,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
 
     @staticmethod
     def understand(image_file):
-        import h5py
-
         h5_handle = h5py.File(image_file, "r")
         if "metadata/detector" in h5_handle:
             if "Rayonix" in h5_handle["metadata/detector"][()]:
@@ -103,7 +102,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
 
         if "MPCCD_GEOMETRY" in os.environ:
             try:
-                tmp = map(float, os.environ["MPCCD_GEOMETRY"].split(","))
+                tmp = [float(i) for i in os.environ["MPCCD_GEOMETRY"].split(",")]
                 if len(tmp) != 24:
                     raise EnvironmentError(
                         "Environment variable MPCCD_GEOMETRY must contain 24 comma-separated parts"
@@ -121,8 +120,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             self.distance = float(os.environ["MPCCD_DISTANCE"])
 
     def _start(self):
-        import h5py
-
         h5_handle = h5py.File(self.image_filename, "r")
 
         self._images = sorted([tag for tag in h5_handle if tag.startswith("tag-")])
@@ -130,12 +127,11 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         h5_handle.close()
 
     def read_metadata(self):
-        import h5py
         import numpy
 
         h5_handle = h5py.File(self.image_filename, "r")
 
-        if not "metadata" in h5_handle:
+        if "metadata" not in h5_handle:
             return
         try:
             distance = h5_handle["metadata/distance_in_mm"][()]
@@ -205,7 +201,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             angle = math.pi * self.panel_rotations[i] / 180.0
             fast = matrix.col((math.cos(angle), math.sin(angle), 0))
             slow = matrix.col((-math.sin(angle), math.cos(angle), 0))
-            normal = fast.cross(slow)
 
             origin = (
                 matrix.col(
@@ -231,8 +226,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         return detector
 
     def _beam(self):
-        import h5py
-
         h5_handle = h5py.File(self.image_filename, "r")
         eV = h5_handle[self.tag]["photon_energy_ev"][()]
         h5_handle.close()
@@ -272,8 +265,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                 self._raw_data = flex.int(self.reconst_image())
 
             else:
-                import h5py
-
                 h5_handle = h5py.File(self.image_filename, "r")
 
                 data = h5_handle[self.tag]["data"][()]  # .astype(numpy.int32)
@@ -293,8 +284,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
     def reconst_image(self):
         import numpy
         from scitbx import matrix
-        import math
-        import h5py
 
         det = numpy.empty((self.RECONST_SIZE, self.RECONST_SIZE), dtype="int32")
         det.fill(-1)
@@ -402,7 +391,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                         "Panel angle deviation is too large! Do not use reconst mode!"
                     )
 
-        self.active_areas = map(int, self.active_areas)
+        self.active_areas = [int(aa) for aa in self.active_areas]
         return det
 
     def get_detector(self, index=None):

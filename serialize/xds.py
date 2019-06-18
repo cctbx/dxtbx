@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import dxtbx
 from scitbx import matrix
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
 from dxtbx.model.detector_helpers_types import detector_helpers_types
@@ -18,7 +19,6 @@ def to_imageset(input_filename, extra_filename=None):
     """
     from iotbx.xds import xds_inp
     from dxtbx.imageset import ImageSetFactory
-    import dxtbx
 
     # Read the input filename
     handle = xds_inp.reader()
@@ -165,19 +165,20 @@ class to_xds(object):
         self._sweep = sweep
 
         # detector dimensions in pixels
-        self.detector_size = map(
-            int,
-            (
+        self.detector_size = [
+            int(
                 max(
                     panel.get_raw_image_offset()[0] + panel.get_image_size()[0]
                     for panel in self.get_detector()
-                ),
+                )
+            ),
+            int(
                 max(
                     panel.get_raw_image_offset()[1] + panel.get_image_size()[1]
                     for panel in self.get_detector()
-                ),
+                )
             ),
-        )
+        ]
         self.fast, self.slow = self.detector_size
 
         if len(self.get_detector()) > 1:

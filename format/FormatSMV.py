@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# FormatSMV.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -11,7 +9,7 @@
 # readers which really will acquire the full image including header information
 # and generate the experimental model representations.
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.Format import Format
 
@@ -32,23 +30,18 @@ class FormatSMV(Format):
     def understand(image_file):
         """Check to see if this looks like an SMV format image, i.e. we can
         make sense of it."""
-
-        if FormatSMV.open_file(image_file, "rb").read(15) == "{\nHEADER_BYTES=":
-            return True
-
-        return False
+        with FormatSMV.open_file(image_file, "rb") as fh:
+            return fh.read(15) == b"{\nHEADER_BYTES="
 
     @staticmethod
     def get_smv_header(image_file):
-        header_size = int(
-            FormatSMV.open_file(image_file, "rb")
-            .read(45)
-            .split("\n")[1]
-            .split("=")[1]
-            .replace(";", "")
-            .strip()
-        )
-        header_text = FormatSMV.open_file(image_file, "rb").read(header_size)
+        with FormatSMV.open_file(image_file, "rb") as fh:
+            header_info = fh.read(45).decode("ascii", "ignore")
+            header_size = int(
+                header_info.split("\n")[1].split("=")[1].replace(";", "").strip()
+            )
+            fh.seek(0)
+            header_text = fh.read(header_size).decode("ascii", "ignore")
         header_dictionary = {}
 
         # Check that we have the whole header, contained within { }.  Stop
@@ -59,7 +52,7 @@ class FormatSMV(Format):
         for record in header_text.split("\n"):
             if record == "}":
                 break
-            if not "=" in record:
+            if "=" not in record:
                 continue
 
             key, value = record.replace(";", "").split("=")
@@ -78,8 +71,6 @@ class FormatSMV(Format):
 
         Format.__init__(self, image_file, **kwargs)
 
-        return
-
     def _start(self):
         """Open the image file, read the image header, copy the key / value
         pairs into an internal dictionary self._header_dictionary along with
@@ -89,4 +80,70 @@ class FormatSMV(Format):
             self._image_file
         )
 
-        return
+    def get_beam_direction(self):
+        return [
+            float(sv) for sv in self._header_dictionary["SOURCE_VECTORS"].split()[:3]
+        ]
+
+    def get_beam_pixels(self, detector_name):
+        return [
+            float(bp)
+            for bp in self._header_dictionary[
+                "%sSPATIAL_DISTORTION_INFO" % detector_name
+            ].split()[:2]
+        ]
+
+    def get_beam_polarization(self):
+        polarization = [
+            float(sp) for sp in self._header_dictionary["SOURCE_POLARZ"].split()
+        ]
+        p_fraction = polarization[0]
+        p_plane = polarization[1:]
+        return p_fraction, p_plane
+
+    def get_detector_axes(self, detector_name):
+        return [
+            float(v)
+            for v in self._header_dictionary[
+                "%sDETECTOR_VECTORS" % detector_name
+            ].split()
+        ]
+
+    def get_distortion(self, detector_name):
+        return [
+            float(sdv)
+            for sdv in self._header_dictionary[
+                "%sSPATIAL_DISTORTION_VECTORS" % detector_name
+            ].split()
+        ]
+
+    def get_gonio_axes(self, detector_name):
+        return [
+            float(gv)
+            for gv in self._header_dictionary["%sGONIO_VECTORS" % detector_name].split()
+        ]
+
+    def get_gonio_values(self, detector_name):
+        return [
+            float(gv)
+            for gv in self._header_dictionary["%sGONIO_VALUES" % detector_name].split()
+        ]
+
+    def get_image_size(self, detector_name):
+        return [
+            int(dd)
+            for dd in self._header_dictionary[
+                "%sDETECTOR_DIMENSIONS" % detector_name
+            ].split()
+        ]
+
+    def get_pixel_size(self, detector_name):
+        return [
+            float(ps)
+            for ps in self._header_dictionary[
+                "%sSPATIAL_DISTORTION_INFO" % detector_name
+            ].split()[2:]
+        ]
+
+    def get_rotation(self):
+        return [float(r) for r in self._header_dictionary["ROTATION"].split()]

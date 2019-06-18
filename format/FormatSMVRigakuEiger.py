@@ -10,9 +10,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+import time
+
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from scitbx import matrix
+from scitbx.array_family import flex
 
 
 class FormatSMVRigakuEiger(FormatSMVRigaku):
@@ -26,12 +29,12 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         size, header = FormatSMVRigaku.get_smv_header(image_file)
 
-        if not "DETECTOR_NAMES" in header:
+        if "DETECTOR_NAMES" not in header:
             return False
 
         name = header["DETECTOR_NAMES"]
 
-        if not "%sDETECTOR_DESCRIPTION" % name in header:
+        if "%sDETECTOR_DESCRIPTION" % name not in header:
             return False
 
         return "Eiger" in header["%sDETECTOR_DESCRIPTION" % name]
@@ -46,10 +49,6 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
             raise IncorrectFormatError(self, image_file)
 
         FormatSMVRigaku.__init__(self, image_file, **kwargs)
-
-    def _start(self):
-
-        FormatSMVRigaku._start(self)
 
     def _goniometer(self):
         """Initialize the structure for the goniometer."""
@@ -78,7 +77,6 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         # Multi-axis gonio requires axes in order as viewed from crystal to gonio
         # base. Assume the SMV header records them in reverse order.
-        from scitbx.array_family import flex
 
         axes = flex.vec3_double(reversed(axes))
         names = flex.std_string(reversed(names))
@@ -103,19 +101,10 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         detector_name = self._header_dictionary["DETECTOR_NAMES"].split()[0].strip()
 
-        detector_axes = map(
-            float, self._header_dictionary["%sDETECTOR_VECTORS" % detector_name].split()
-        )
-
+        detector_axes = self.get_detector_axes(detector_name)
         fast = matrix.col(tuple(detector_axes[:3]))
         slow = matrix.col(tuple(detector_axes[3:]))
-
-        distortion = map(
-            int,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_VECTORS" % detector_name
-            ].split(),
-        )
+        distortion = self.get_distortion(detector_name)
 
         # multiply through by the distortion to get the true detector fast, slow
 
@@ -124,34 +113,17 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
             distortion[2] * fast + distortion[3] * slow,
         )
 
-        beam_pixels = map(
-            float,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_INFO" % detector_name
-            ].split()[:2],
-        )
-        pixel_size = map(
-            float,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_INFO" % detector_name
-            ].split()[2:],
-        )
-        image_size = map(
-            int,
-            self._header_dictionary["%sDETECTOR_DIMENSIONS" % detector_name].split(),
-        )
+        beam_pixels = self.get_beam_pixels(detector_name)
+        pixel_size = self.get_pixel_size(detector_name)
+        image_size = self.get_image_size(detector_name)
 
         detector_origin = -(
             beam_pixels[0] * pixel_size[0] * detector_fast
             + beam_pixels[1] * pixel_size[1] * detector_slow
         )
 
-        gonio_axes = map(
-            float, self._header_dictionary["%sGONIO_VECTORS" % detector_name].split()
-        )
-        gonio_values = map(
-            float, self._header_dictionary["%sGONIO_VALUES" % detector_name].split()
-        )
+        gonio_axes = self.get_gonio_axes(detector_name)
+        gonio_values = self.get_gonio_values(detector_name)
         gonio_units = self._header_dictionary["%sGONIO_UNITS" % detector_name].split()
         gonio_num_axes = int(
             self._header_dictionary["%sGONIO_NUM_VALUES" % detector_name]
@@ -218,14 +190,8 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
     def _beam(self):
         """Return a simple model for the beam."""
 
-        beam_direction = map(
-            float, self._header_dictionary["SOURCE_VECTORS"].split()[:3]
-        )
-
-        polarization = map(float, self._header_dictionary["SOURCE_POLARZ"].split())
-
-        p_fraction = polarization[0]
-        p_plane = polarization[1:]
+        beam_direction = self.get_beam_direction()
+        p_fraction, p_plane = self.get_beam_polarization()
 
         wavelength = float(self._header_dictionary["SCAN_WAVELENGTH"])
 
@@ -236,9 +202,7 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
     def _scan(self):
         """Return the scan information for this image."""
 
-        import time
-
-        rotation = map(float, self._header_dictionary["ROTATION"].split())
+        rotation = self.get_rotation()
 
         format = self._scan_factory.format("SMV")
 
@@ -262,7 +226,6 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         from boost.python import streambuf
         from dxtbx import read_int32
-        from scitbx.array_family import flex
 
         assert len(self.get_detector()) == 1
         size = self.get_detector()[0].get_image_size()

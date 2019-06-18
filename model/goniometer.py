@@ -111,7 +111,7 @@ class GoniometerFactory:
             goniometer.set_setting_rotation(params.goniometer.setting_rotation)
         if params.goniometer.invert_rotation_axis is True:
             rotation_axis = goniometer.get_rotation_axis_datum()
-            goniometer.set_rotation_axis_datum(map(lambda x: -x, rotation_axis))
+            goniometer.set_rotation_axis_datum([-x for x in rotation_axis])
 
         # Return the model
         return goniometer
@@ -150,7 +150,7 @@ class GoniometerFactory:
 
             # Invert the rotation axis
             if params.goniometer.invert_rotation_axis is True:
-                axes = flex.vec3_double([map(lambda x: -x, v) for v in axes])
+                axes = flex.vec3_double([[-x for x in v] for v in axes])
 
             # Create the angles
             if params.goniometer.angles is not None:
@@ -195,7 +195,7 @@ class GoniometerFactory:
             # Invert rotation axis
             if params.goniometer.invert_rotation_axis is True:
                 axes = flex.vec3_double(
-                    [map(lambda x: -x, v) for v in goniometer.get_axes()]
+                    [[-x for x in v] for v in goniometer.get_axes()]
                 )
                 goniometer.set_axes(axes)
 

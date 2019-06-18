@@ -44,9 +44,8 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
             "SIZE2",
         ]
 
-        for header_item in wanted_header_items:
-            if not header_item in header:
-                return False
+        if any(item not in header for item in wanted_header_items):
+            return False
 
         detector_prefix = header["DETECTOR_NAMES"].split()[0].strip()
 
@@ -62,9 +61,11 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
             "SPATIAL_DISTORTION_VECTORS",
         ]
 
-        for header_item in more_wanted_header_items:
-            if not "%s%s" % (detector_prefix, header_item) in header:
-                return False
+        if any(
+            "%s%s" % (detector_prefix, item) not in header
+            for item in more_wanted_header_items
+        ):
+            return False
 
         descriptive_items = ["DETECTOR_IDENTIFICATION", "DETECTOR_DESCRIPTION"]
 
@@ -89,10 +90,6 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
 
         FormatSMVRigaku.__init__(self, image_file, **kwargs)
 
-    def _start(self):
-
-        FormatSMVRigaku._start(self)
-
     def detectorbase_start(self):
         from iotbx.detectors.dtrek import DTREKImage
 
@@ -116,53 +113,26 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
 
         detector_name = self._header_dictionary["DETECTOR_NAMES"].split()[0].strip()
 
-        detector_axes = map(
-            float, self._header_dictionary["%sDETECTOR_VECTORS" % detector_name].split()
-        )
-
+        detector_axes = self.get_detector_axes(detector_name)
         detector_x = matrix.col(tuple(detector_axes[:3]))
         detector_y = matrix.col(tuple(detector_axes[3:]))
 
         # Now map these to real axes
+        distortion = self.get_distortion(detector_name)
+        detector_fast = detector_x * distortion[0] + detector_y * distortion[1]
+        detector_slow = detector_x * distortion[2] + detector_y * distortion[3]
 
-        detector_remap = map(
-            float,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_VECTORS" % detector_name
-            ].split(),
-        )
-
-        detector_fast = detector_x * detector_remap[0] + detector_y * detector_remap[1]
-        detector_slow = detector_x * detector_remap[2] + detector_y * detector_remap[3]
-
-        beam_pixels = map(
-            float,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_INFO" % detector_name
-            ].split()[:2],
-        )
-        pixel_size = map(
-            float,
-            self._header_dictionary[
-                "%sSPATIAL_DISTORTION_INFO" % detector_name
-            ].split()[2:],
-        )
-        image_size = map(
-            int,
-            self._header_dictionary["%sDETECTOR_DIMENSIONS" % detector_name].split(),
-        )
+        beam_pixels = self.get_beam_pixels(detector_name)
+        pixel_size = self.get_pixel_size(detector_name)
+        image_size = self.get_image_size(detector_name)
 
         detector_origin = -(
             beam_pixels[0] * pixel_size[0] * detector_fast
             + beam_pixels[1] * pixel_size[1] * detector_slow
         )
 
-        gonio_axes = map(
-            float, self._header_dictionary["%sGONIO_VECTORS" % detector_name].split()
-        )
-        gonio_values = map(
-            float, self._header_dictionary["%sGONIO_VALUES" % detector_name].split()
-        )
+        gonio_axes = self.get_gonio_axes(detector_name)
+        gonio_values = self.get_gonio_values(detector_name)
         gonio_units = self._header_dictionary["%sGONIO_UNITS" % detector_name].split()
         gonio_num_axes = int(
             self._header_dictionary["%sGONIO_NUM_VALUES" % detector_name]
@@ -211,14 +181,8 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
     def _beam(self):
         """Return a simple model for the beam."""
 
-        beam_direction = map(
-            float, self._header_dictionary["SOURCE_VECTORS"].split()[:3]
-        )
-
-        polarization = map(float, self._header_dictionary["SOURCE_POLARZ"].split())
-
-        p_fraction = polarization[0]
-        p_plane = polarization[1:]
+        beam_direction = self.get_beam_direction()
+        p_fraction, p_plane = self.get_beam_polarization()
 
         wavelength = float(self._header_dictionary["SCAN_WAVELENGTH"])
 
@@ -229,7 +193,7 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
     def _scan(self):
         """Return the scan information for this image."""
 
-        rotation = map(float, self._header_dictionary["ROTATION"].split())
+        rotation = self.get_rotation()
 
         format = self._scan_factory.format("SMV")
         epoch = 0

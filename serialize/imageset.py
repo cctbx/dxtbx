@@ -98,23 +98,21 @@ def imageset_to_dict(imageset):
 def basic_imageset_from_dict(d, directory=None):
     """ Construct an ImageSet class from the dictionary."""
     # Get the filename list and create the imageset
-    filenames = map(
-        lambda p: resolve_path(p, directory=directory), map(str, d["filenames"])
-    )
+    filenames = [resolve_path(str(p), directory=directory) for p in d["filenames"]]
     imageset = ImageSetFactory.new(filenames)[0]
 
     # Set some external lookups
-    if "mask" in d and d["mask"] is not None and d["mask"] is not "":
+    if "mask" in d and d["mask"] is not None and d["mask"] != "":
         path = resolve_path(d["mask"], directory=directory)
         with open(path) as infile:
             imageset.external_lookup.mask.filename = path
             imageset.external_lookup.mask.data = ImageBool(pickle.load(infile))
-    if "gain" in d and d["gain"] is not None and d["gain"] is not "":
+    if "gain" in d and d["gain"] is not None and d["gain"] != "":
         path = resolve_path(d["gain"], directory=directory)
         with open(path) as infile:
             imageset.external_lookup.gain.filename = path
             imageset.external_lookup.gain.data = ImageDouble(pickle.load(infile))
-    if "pedestal" in d and d["pedestal"] is not None and d["pedestal"] is not "":
+    if "pedestal" in d and d["pedestal"] is not None and d["pedestal"] != "":
         path = resolve_path(d["pedestal"], directory=directory)
         with open(path) as infile:
             imageset.external_lookup.pedestal.filename = path
@@ -174,17 +172,17 @@ def imagesweep_from_dict(d, check_format=True, directory=None):
         )
 
     # Set some external lookups
-    if "mask" in d and d["mask"] is not None and d["mask"] is not "":
+    if "mask" in d and d["mask"] is not None and d["mask"] != "":
         path = resolve_path(d["mask"], directory=directory)
         with open(path) as infile:
             sweep.external_lookup.mask.filename = path
             sweep.external_lookup.mask.data = ImageBool(pickle.load(infile))
-    if "gain" in d and d["gain"] is not None and d["gain"] is not "":
+    if "gain" in d and d["gain"] is not None and d["gain"] != "":
         path = resolve_path(d["gain"], directory=directory)
         with open(path) as infile:
             sweep.external_lookup.gain.filename = path
             sweep.external_lookup.gain.data = ImageDouble(pickle.load(infile))
-    if "pedestal" in d and d["pedestal"] is not None and d["pedestal"] is not "":
+    if "pedestal" in d and d["pedestal"] is not None and d["pedestal"] != "":
         path = resolve_path(d["pedestal"], directory=directory)
         with open(path) as infile:
             sweep.external_lookup.pedestal.filename = path
