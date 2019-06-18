@@ -41,12 +41,13 @@
 # Any further access attempts will then result in an exception.
 
 from __future__ import absolute_import, division, print_function
+from builtins import object
 import io
 import os
 from threading import Lock
 
 
-class lazy_file_cache:
+class lazy_file_cache(object):
     """An object providing shared cached access to files"""
 
     def __init__(self, file_object):
@@ -340,7 +341,7 @@ class lazy_file_cache:
                 )
 
 
-class pseudo_file:
+class pseudo_file(object):
     """A file-like object that serves as frontend to a dxtbx lazy file cache."""
 
     def __init__(self, lazy_cache_object):

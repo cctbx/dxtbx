@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import object
 import pkg_resources
 import warnings
 
@@ -119,7 +120,7 @@ def get_format_class_for_file(image_file, format_hint=None):
     return None
 
 
-class _Registry:
+class _Registry(object):
     # deprecated class
 
     @staticmethod

@@ -11,6 +11,7 @@ from __future__ import absolute_import, division
 # in internal ticket #1555. This is not designed to be used outside of the
 # XSweep classes.
 
+from builtins import object
 import math
 import pycbf
 from dxtbx_model_ext import Beam
@@ -47,7 +48,7 @@ beam_phil_scope = libtbx.phil.parse(
 )
 
 
-class BeamFactory:
+class BeamFactory(object):
     """A factory class for beam objects, which encapsulate standard beam
     models. In cases where a full cbf description is available this
     will be used, otherwise simplified descriptions can be applied."""

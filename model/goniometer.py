@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 # documented in internal ticket #1555. This is not designed to be used outside
 # of the XSweep classes.
 
+from builtins import object
 import pycbf
 from dxtbx_model_ext import KappaGoniometer  # noqa: F401, import dependency
 from dxtbx_model_ext import Goniometer, MultiAxisGoniometer
@@ -67,7 +68,7 @@ goniometer_phil_scope = libtbx.phil.parse(
 )
 
 
-class GoniometerFactory:
+class GoniometerFactory(object):
     """A factory class for goniometer objects, which will encapsulate
     some standard goniometer designs to make it a little easier to get
     started with all of this - for cases when we are not using a CBF.

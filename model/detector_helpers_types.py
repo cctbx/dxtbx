@@ -6,6 +6,7 @@ dimensions.
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import object
 import os
 import sys
 
@@ -14,7 +15,7 @@ from dxtbx.model.detector_helpers import detector_helper_sensors
 from dxtbx.model.detector import DetectorFactory
 
 
-class detector_helpers_types:
+class detector_helpers_types(object):
     """A singleton class to help with identifying specific detectors used for
     macromolecular crystallography."""
 

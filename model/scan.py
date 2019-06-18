@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 # in internal ticket #1555. This is not designed to be used outside of the
 # XSweep classes.
 
+from builtins import object
 import pycbf
 from dxtbx_model_ext import Scan
 
@@ -47,7 +48,7 @@ scan_phil_scope = libtbx.phil.parse(
 )
 
 
-class ScanFactory:
+class ScanFactory(object):
     """A factory for scan instances, to help with constructing the classes
     in a set of common circumstances."""
 

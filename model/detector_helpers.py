@@ -9,6 +9,7 @@ from __future__ import absolute_import, division
 #
 # Helpers for the detector class...
 
+from builtins import object
 import math
 from scitbx import matrix
 
@@ -122,7 +123,7 @@ def find_undefined_value(cbf_handle):
     return cbf_handle.get_doublevalue()
 
 
-class detector_helper_sensors:
+class detector_helper_sensors(object):
     """A helper class which allows enumeration of detector sensor technologies
     which should help in identifying specific detectors when needed. These are
     currently limited to IMAGE_PLATE CCD PAD."""

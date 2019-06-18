@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 # flat detectors, or composite detectors constructed from a number of flat
 # elements.
 
+from builtins import object
 import pycbf
 from scitbx import matrix
 from dxtbx_model_ext import Panel, Detector
@@ -184,7 +185,7 @@ detector_phil_scope = libtbx.phil.parse(
 )
 
 
-class DetectorFactory:
+class DetectorFactory(object):
     """A factory class for detector objects, which will encapsulate standard
     detector designs to make it a little easier to get started with these. In
     cases where a CBF image is provided a full description can be used, in

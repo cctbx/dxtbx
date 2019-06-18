@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 # Helpers for the scan class, which are things for handling e.g. filenames,
 # templates and so on.
 
+from builtins import object
 import os
 import re
 import math
@@ -147,7 +148,7 @@ def template_number2image(template, number):
     return image
 
 
-class scan_helper_image_files:
+class scan_helper_image_files(object):
     """A helper class which handles things like image names, making templates,
     finding matching images and so on. Currently this just provides aliases
     to existing functions elsewhere, but ultimately it would be good if they
@@ -188,7 +189,7 @@ class scan_helper_image_files:
         return template_number2image(template, index)
 
 
-class scan_helper_image_formats:
+class scan_helper_image_formats(object):
     """A helper class which enxapsulates the allowed and supported image
     formats namely CBF, TIFF, SMV, RAXIS, MAR. N.B. there will be some
     crosstalk between this class and the _image_format classes."""
