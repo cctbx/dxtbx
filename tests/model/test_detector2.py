@@ -143,7 +143,7 @@ def test_get_valid_D_matrix(detector):
         assert abs(fast - matrix.col((1, 0, 0))) < 1e-7
         assert abs(slow - matrix.col((0, 1, 0))) < 1e-7
         assert abs(orig - matrix.col((0, 0, 100))) < 1e-7
-        D = obj.get_D_matrix()
+        assert obj.get_D_matrix()
 
     # Get the quadrants and set their frames
     q1, q2 = detector.hierarchy().children()
