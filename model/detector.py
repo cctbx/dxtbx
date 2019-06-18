@@ -1,26 +1,23 @@
 from __future__ import absolute_import, division, print_function
 
 # A model for the detector for the "updated experimental model" project
-# documented in internal ticket #1555. This is not designed to be used outside
-# of the XSweep classes. N.B. this should probably be generalized for non
+# N.B. this should probably be generalized for non
 # flat detectors, or composite detectors constructed from a number of flat
 # elements.
 
 from builtins import object
+
+import os
+
+import libtbx.phil
 import pycbf
 from scitbx import matrix
 from dxtbx_model_ext import Panel, Detector
 from dxtbx_model_ext import SimplePxMmStrategy, ParallaxCorrectedPxMmStrategy
 from dxtbx.model.detector_helpers import detector_helper_sensors
 from dxtbx.model.detector_helpers import find_undefined_value
-import libtbx.phil
 
-import os
-
-if "DXTBX_OVERLOAD_SCALE" in os.environ:
-    dxtbx_overload_scale = float(os.environ["DXTBX_OVERLOAD_SCALE"])
-else:
-    dxtbx_overload_scale = 1
+dxtbx_overload_scale = float(os.getenv("DXTBX_OVERLOAD_SCALE", "1"))
 
 detector_phil_scope = libtbx.phil.parse(
     """
@@ -191,9 +188,6 @@ class DetectorFactory(object):
     cases where a CBF image is provided a full description can be used, in
     other cases assumptions will be made about the experiment configuration.
     In all cases information is provided in the CBF coordinate frame."""
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def generate_from_phil(params, beam=None):
@@ -451,7 +445,7 @@ class DetectorFactory(object):
             if panel_id >= len(detector):
                 from libtbx.utils import Sorry
 
-                raise Sorry("Detector does not have panel index {0}".format(panel_id))
+                raise Sorry("Detector does not have panel index {}".format(panel_id))
             px_size_f, px_size_s = detector[0].get_pixel_size()
             slow_fast_beam_centre_mm = (
                 params.detector.slow_fast_beam_centre[0] * px_size_s,

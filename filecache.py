@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-#
-#   Copyright (C) 2015 Diamond Light Source, Markus Gerstel
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # A shared caching layer for file-like objects.
 # pseudo_file objects can be used as drop-in replacements for actual file
 # handles to provide a transparent caching layer to avoid reading multiple

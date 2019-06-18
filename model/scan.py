@@ -1,21 +1,17 @@
 from __future__ import absolute_import, division, print_function
 
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# A model for the scan for the "updated experimental model" project documented
-# in internal ticket #1555. This is not designed to be used outside of the
-# XSweep classes.
+# A model for the scan for the "updated experimental model" project
 
 from builtins import object
+
+import os
+
+import libtbx.phil
 import pycbf
 from dxtbx_model_ext import Scan
-
 from dxtbx.model.scan_helpers import scan_helper_image_files
 from dxtbx.model.scan_helpers import scan_helper_image_formats
-import libtbx.phil
+from scitbx.array_family import flex
 
 scan_phil_scope = libtbx.phil.parse(
     """
@@ -139,8 +135,6 @@ class ScanFactory(object):
     def make_scan(
         image_range, exposure_times, oscillation, epochs, batch_offset=0, deg=True
     ):
-        from scitbx.array_family import flex
-
         if not isinstance(exposure_times, list):
             num_images = image_range[1] - image_range[0] + 1
             exposure_times = [exposure_times for i in range(num_images)]
@@ -169,8 +163,6 @@ class ScanFactory(object):
     @staticmethod
     def single(filename, format, exposure_times, osc_start, osc_width, epoch):
         """Construct an scan instance for a single image."""
-
-        import os
 
         index = scan_helper_image_files.image_to_index(os.path.split(filename)[-1])
         if epoch is None:

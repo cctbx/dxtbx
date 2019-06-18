@@ -12,8 +12,10 @@ from __future__ import absolute_import, division, print_function
 # classes.
 
 from builtins import object
-import sys
+
 import math
+import sys
+
 from scitbx import matrix
 
 from dxtbx.model.detector_helpers_types import detector_helpers_types

@@ -4,9 +4,10 @@ from __future__ import absolute_import, division, print_function
 # templates and so on.
 
 from builtins import object
+
+import math
 import os
 import re
-import math
 
 # N.B. these are reversed patterns...
 
@@ -27,8 +28,6 @@ def template_regex(filename):
 
     rfilename = filename[::-1]
 
-    global patterns, compiled_patterns
-
     for j, cp in enumerate(compiled_patterns):
         match = cp.match(rfilename)
         if not match:
@@ -44,7 +43,7 @@ def template_regex(filename):
             digits = groups[0][::-1]
             prefix = groups[1][::-1] + joiners[j]
 
-        template = prefix + "".join(["#" for d in digits]) + exten
+        template = prefix + ("#" * len(digits)) + exten
         return template, int(digits)
 
     # What is supposed to happen otherwise?
@@ -53,15 +52,15 @@ def template_regex(filename):
     raise Sorry("Could not determine filename template")
 
 
-def image2template(filename):
+def _image2template(filename):
     return template_regex(filename)[0]
 
 
-def image2image(filename):
+def _image2image(filename):
     return template_regex(filename)[1]
 
 
-def image2template_directory(filename):
+def _image2template_directory(filename):
     """Separate out the template and directory from an image name."""
 
     directory = os.path.dirname(filename)
@@ -72,7 +71,7 @@ def image2template_directory(filename):
         directory = os.getcwd()
 
     image = os.path.split(filename)[-1]
-    template = image2template(image)
+    template = _image2template(image)
 
     return template, directory
 
@@ -112,23 +111,8 @@ def template_directory_number2image(template, directory, number):
     """Construct the full path to an image from the template, directory
     and image number."""
 
-    # FIXME why does this duplicate code shown below??
-
-    length = template.count("#")
-
-    # check that the number will fit in the template
-
-    if (math.pow(10, length) - 1) < number:
-        raise RuntimeError("number too big for template")
-
-    # construct a format statement to give the number part of the
-    # template
-    format = "%%0%dd" % length
-
     # construct the full image name
-    image = os.path.join(directory, template.replace("#" * length, format % number))
-
-    return image
+    return os.path.join(directory, template_number2image(template, number))
 
 
 def template_number2image(template, number):
@@ -143,9 +127,7 @@ def template_number2image(template, number):
 
     format = "%%0%dd" % length
 
-    image = template.replace("#" * length, format % number)
-
-    return image
+    return template.replace("#" * length, format % number)
 
 
 class scan_helper_image_files(object):
@@ -157,19 +139,19 @@ class scan_helper_image_files(object):
     @staticmethod
     def image_to_template(filename):
         """From an image name, return a file template which should match."""
-        return image2template(filename)
+        return _image2template(filename)
 
     @staticmethod
     def image_to_index(filename):
         """From an image name, determine the index within the scan for this
         image, complementary to the image_to_template method above."""
-        return image2image(filename)
+        return _image2image(filename)
 
     @staticmethod
     def image_to_template_directory(filename):
         """From a full path to an image, return the filename template and
         directory."""
-        return image2template_directory(filename)
+        return _image2template_directory(filename)
 
     @staticmethod
     def template_directory_to_indices(template, directory):

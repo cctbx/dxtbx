@@ -29,25 +29,24 @@ class detector_helpers_types(object):
 
         self._detectors = {}
 
-        for record in open(detector_lib):
-            if "Sensor" in record[:6]:
-                continue
-            if "------" in record[:6]:
-                continue
+        with open(detector_lib, "r", encoding="ascii") as fh:
+            for record in fh:
+                if record.startswith(("Sensor", "-----")):
+                    continue
 
-            text = record.split("#")[0].strip()
+                text = record.split("#")[0].strip()
 
-            if not text:
-                continue
+                if not text:
+                    continue
 
-            tokens = text.split()
+                tokens = text.split()
 
-            assert len(tokens) == 6
+                assert len(tokens) == 6
 
-            sensor = DetectorFactory.sensor(tokens[0])
-            fast, slow, df, ds = map(int, tokens[1:5])
+                sensor = DetectorFactory.sensor(tokens[0])
+                fast, slow, df, ds = map(int, tokens[1:5])
 
-            self._detectors[(sensor, fast, slow, df, ds)] = tokens[5]
+                self._detectors[(sensor, fast, slow, df, ds)] = tokens[5]
 
     def get(self, sensor, fast, slow, df, ds):
         """Look up a name for a detector with this sensor type (listed in
@@ -62,10 +61,10 @@ class detector_helpers_types(object):
             for s in detector_helper_sensors.all():
                 try:
                     return self.get(s, fast, slow, df, ds)
-                except Exception:
+                except ValueError:
                     pass
 
-            raise RuntimeError(
+            raise ValueError(
                 "detector %s %d %d %d %d unknown" % (sensor, fast, slow, df, ds)
             )
 
@@ -79,7 +78,7 @@ class detector_helpers_types(object):
                 if (sensor, fast, slow, df + ddf, ds + dds) in self._detectors:
                     return self._detectors[(sensor, fast, slow, df + ddf, ds + dds)]
 
-        raise RuntimeError(
+        raise ValueError(
             "detector %s %d %d %d %d unknown" % (sensor, fast, slow, df, ds)
         )
 

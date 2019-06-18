@@ -1,18 +1,11 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-# beam.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# A model for the beam for the "updated experimental model" project documented
-# in internal ticket #1555. This is not designed to be used outside of the
-# XSweep classes.
+# A model for the beam for the "updated experimental model" project
 
 from builtins import object
+
 import math
+
 import pycbf
 from dxtbx_model_ext import Beam
 import libtbx.phil
@@ -52,9 +45,6 @@ class BeamFactory(object):
     """A factory class for beam objects, which encapsulate standard beam
     models. In cases where a full cbf description is available this
     will be used, otherwise simplified descriptions can be applied."""
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def from_phil(params, reference=None):
@@ -161,8 +151,7 @@ class BeamFactory(object):
         transmission=None,
     ):
         assert polarization
-        assert polarization_fraction >= 0.0
-        assert polarization_fraction <= 1.0
+        assert 0.0 <= polarization_fraction <= 1.0
 
         if divergence is None or sigma_divergence is None:
             divergence = 0.0
