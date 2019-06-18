@@ -94,7 +94,7 @@ def plot_group(
         v1 = p1 - p0
         v2 = p3 - p0
         vcen = ((v2 / 2) + (v1 / 2)) + p0
-        z = zip(p0, p1, p2, p3, p0)
+        z = list(zip(p0, p1, p2, p3, p0))
 
         if orthographic:
             ax.plot(z[0], z[1], color=color)

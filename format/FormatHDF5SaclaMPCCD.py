@@ -139,7 +139,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             posx = h5_handle["metadata/posx_in_um"][()]
             posy = h5_handle["metadata/posy_in_um"][()]
             posz = h5_handle["metadata/posz_in_um"][()]
-            panel_origins = zip(posx, posy, posz)
+            panel_origins = list(zip(posx, posy, posz))
             sensor = h5_handle["metadata/sensor_id"][0]
             thickness = 0.050
             if sensor.startswith("MPCCD-8B"):

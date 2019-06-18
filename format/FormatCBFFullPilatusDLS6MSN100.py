@@ -118,7 +118,7 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
             z = radius * flex.sin(theta)  # y
             x = flex.double(theta.size(), height)  # z
 
-            coords = flex.vec3_double(zip(x, y, z))
+            coords = flex.vec3_double(list(zip(x, y, z)))
             coords.insert(0, (0, 0, 0))
 
             return GoniometerShadowMaskGenerator(
