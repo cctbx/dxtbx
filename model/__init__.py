@@ -29,24 +29,20 @@ class DetectorAux(boost.python.injector, Detector):
     def iter_preorder(self):
         """ Iterate through the groups and panels depth-first. """
         stack = [self.hierarchy()]
-        while len(stack) > 0:
+        while stack:
             node = stack.pop()
             yield node
             if node.is_group():
-                for child in reversed(node):
-                    stack.append(child)
+                stack.extend(reversed(node))
 
     def iter_levelorder(self):
-        """ Iterate through the groups and panels depth-first. """
-        from collections import deque
-
-        queue = deque([self.hierarchy()])
-        while len(queue) > 0:
-            node = queue.popleft()
+        """ Iterate through the groups and panels breadth-first. """
+        queue = [self.hierarchy()]
+        while queue:
+            node = queue.pop(0)
             yield node
             if node.is_group():
-                for child in node:
-                    queue.append(child)
+                queue.extend(node)
 
 
 class CrystalAux(boost.python.injector, Crystal):
