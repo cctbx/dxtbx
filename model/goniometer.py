@@ -250,23 +250,16 @@ class GoniometerFactory(object):
 
         Returns:
             The goniometer model
-
         """
-        from dxtbx.model import Goniometer, MultiAxisGoniometer
+        if d is None and t is None:
+            return None
+        joint = t.copy() if t else {}
+        joint.update(d)
 
-        # If None, return None
-        if d is None:
-            if t is None:
-                return None
-            else:
-                return from_dict(t, None)
-        elif t is not None:
-            d = dict(list(t.items()) + list(d.items()))
-
-        # Create the model from the dictionary
-        if "axes" in d and "angles" in d and "scan_axis" in d:
-            return MultiAxisGoniometer.from_dict(d)
-        return Goniometer.from_dict(d)
+        # Create the model from the joint dictionary
+        if {"axes", "angles", "scan_axis"}.issubset(joint):
+            return MultiAxisGoniometer.from_dict(joint)
+        return Goniometer.from_dict(joint)
 
     @staticmethod
     def make_goniometer(rotation_axis, fixed_rotation):

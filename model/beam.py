@@ -85,23 +85,14 @@ class BeamFactory(object):
 
         Returns:
             The beam model
-
         """
-        from dxtbx.model import Beam
+        if d is None and t is None:
+            return None
+        joint = t.copy() if t else {}
+        joint.update(d)
 
-        # If None, return None
-        if d is None:
-            if t is None:
-                return None
-            else:
-                return from_dict(t, None)
-        elif t:
-            joined = t.copy()
-            joined.update(d)
-            d = joined
-
-        # Create the model from the dictionary
-        return Beam.from_dict(d)
+        # Create the model from the joint dictionary
+        return Beam.from_dict(joint)
 
     @staticmethod
     def make_beam(

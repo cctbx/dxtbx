@@ -110,26 +110,19 @@ class ScanFactory(object):
 
         Returns:
             The scan model
-
         """
-        from dxtbx.model import Scan
+        if d is None and t is None:
+            return None
+        joint = t.copy() if t else {}
+        joint.update(d)
 
-        # If None, return None
-        if d is None:
-            if t is None:
-                return None
-            else:
-                return from_dict(t, None)
-        elif t is not None:
-            d = dict(list(t.items()) + list(d.items()))
-        if not isinstance(d["exposure_time"], list):
-            d["exposure_time"] = [d["exposure_time"]]
+        if not isinstance(joint["exposure_time"], list):
+            joint["exposure_time"] = [joint["exposure_time"]]
+        joint.setdefault("batch_offset", 0)  # backwards compatibility 20180205
+        joint.setdefault("valid_image_ranges", {})  # backwards compatibility 20181113
 
-        d.setdefault("batch_offset", 0)  # backwards compatibility 20180205
-        if "valid_image_ranges" not in d:
-            d["valid_image_ranges"] = {}  # backwards compatibility 20181113
-        # Create the model from the dictionary
-        return Scan.from_dict(d)
+        # Create the model from the joint dictionary
+        return Scan.from_dict(joint)
 
     @staticmethod
     def make_scan(

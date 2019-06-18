@@ -469,26 +469,16 @@ class DetectorFactory(object):
 
         Returns:
             The detector model
-
         """
-        from dxtbx.model import Detector
+        if d is None and t is None:
+            return None
+        joint = t.copy() if t else {}
+        if isinstance(d, list):
+            d = {"panels": d}
+        joint.update(d)
 
-        # If None, return None
-        if d is None:
-            if t is None:
-                return None
-            else:
-                return from_dict(t, None)
-        elif t is not None:
-            if isinstance(d, list):
-                d = {"panels": d}
-            d2 = dict(list(t.items()) + list(d.items()))
-        else:
-            if isinstance(d, list):
-                d = {"panels": d}
-
-        # Create the model from the dictionary
-        return Detector.from_dict(d)
+        # Create the model from the joint dictionary
+        return Detector.from_dict(joint)
 
     @staticmethod
     def make_detector(
