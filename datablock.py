@@ -15,7 +15,7 @@ import dxtbx.imageset
 import libtbx
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
-from dxtbx.format.Registry import Registry
+from dxtbx.format.Registry import get_format_class_for_file
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize import load
 from dxtbx.serialize.filename import resolve_path
@@ -326,11 +326,11 @@ class FormatChecker(object):
         Where possible use the last seen format class as a prioritisation hint.
         """
         if self._format_class:
-            self._format_class = Registry.find(
+            self._format_class = get_format_class_for_file(
                 filename, format_hint=self._format_class.__name__
             )
         else:
-            self._format_class = Registry.find(filename)
+            self._format_class = get_format_class_for_file(filename)
         if self._verbose:
             print("Using %s for %s" % (self._format_class.__name__, filename))
         return self._format_class
