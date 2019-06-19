@@ -70,9 +70,8 @@
 # Then some more chunder follows - however I don't think it contains anything
 # useful. So need to read first 1K of the image header.
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
-import time
 import datetime
 import struct
 import math
@@ -88,10 +87,8 @@ class FormatRAXIS(Format):
         """See if this looks like an RAXIS format image - clue is first
         5 letters of file should be RAXIS."""
 
-        if Format.open_file(image_file).read(5) == "RAXIS":
-            return True
-
-        return False
+        with Format.open_file(image_file) as fh:
+            return fh.read(5) == b"RAXIS"
 
     def __init__(self, image_file, **kwargs):
         from dxtbx import IncorrectFormatError
@@ -101,12 +98,11 @@ class FormatRAXIS(Format):
 
         Format.__init__(self, image_file, **kwargs)
 
-        return
-
     def _start(self):
-        self._header_bytes = Format.open_file(self._image_file).read(1024)
+        with Format.open_file(self._image_file) as fh:
+            self._header_bytes = fh.read(1024)
 
-        if self._header_bytes[812:822].strip() in ["SGI", "IRIS"]:
+        if self._header_bytes[812:822].strip() in (b"SGI", b"IRIS"):
             self._f = ">f"
             self._i = ">i"
         else:
@@ -151,7 +147,7 @@ class FormatRAXIS(Format):
 
             axis_start = struct.unpack(f, header[920 + j * 4 : 924 + j * 4])[0]
             axis_end = struct.unpack(f, header[940 + j * 4 : 944 + j * 4])[0]
-            axis_offset = struct.unpack(f, header[960 + j * 4 : 964 + j * 4])[0]
+            # axis_offset = struct.unpack(f, header[960 + j * 4 : 964 + j * 4])[0]
 
             if j == scan_axis:
                 assert math.fabs(axis_x - 1) < 0.001
@@ -238,7 +234,7 @@ class FormatRAXIS(Format):
         format = self._scan_factory.format("RAXIS")
         exposure_time = struct.unpack(f, header[536:540])[0]
 
-        y, m, d = map(int, header[256:268].strip().split("-"))
+        y, m, d = map(int, header[256:268].strip().split(b"-"))
 
         epoch = calendar.timegm(datetime.datetime(y, m, d, 0, 0, 0).timetuple())
 

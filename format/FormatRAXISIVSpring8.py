@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# FormatRAXISIVSPring8.py
-#
 #  Copyright (C) (2015) STFC Rutherford Appleton Laboratory, UK.
 #
 #  Author: David Waterman.
@@ -9,9 +6,10 @@
 #  included in the root directory of this package.
 #
 
-from __future__ import absolute_import, division
-import struct
+from __future__ import absolute_import, division, print_function
+
 import datetime
+import struct
 
 from dxtbx.format.Format import Format
 
@@ -27,20 +25,21 @@ class FormatRAXISIVSPring8(Format):
     @staticmethod
     def understand(image_file):
         try:
-            header = Format.open_file(image_file, "rb").read(1024)
+            with Format.open_file(image_file, "rb") as fh:
+                header = fh.read(1024)
         except IOError:
             return False
 
         # A few items expected to be the same from image to image that we can use
         # as a fingerprint for this instrument
-        if header[0:7] != "R-AXIS4":
+        if header[0:7] != b"R-AXIS4":
             return False
 
         # We expect an invalid goniometer section, indicated by wrong magic number
         if struct.unpack(">i", header[852:856]) == 1:
             return False
 
-        if header[812:822].strip() != "IRIS":
+        if header[812:822].strip() != b"IRIS":
             return False
 
         return True
@@ -54,9 +53,10 @@ class FormatRAXISIVSPring8(Format):
         Format.__init__(self, image_file, **kwargs)
 
     def _start(self):
-        self._header_bytes = Format.open_file(self._image_file).read(1024)
+        with Format.open_file(self._image_file) as fh:
+            self._header_bytes = fh.read(1024)
 
-        if self._header_bytes[812:822].strip() in ["SGI", "IRIS"]:
+        if self._header_bytes[812:822].strip() in (b"SGI", b"IRIS"):
             self._f = ">f"
             self._i = ">i"
         else:
@@ -134,7 +134,7 @@ class FormatRAXISIVSPring8(Format):
         format = self._scan_factory.format("RAXIS")
         exposure_time = struct.unpack(f, header[536:540])[0]
 
-        y, m, d = map(int, header[256:268].strip().split("-"))
+        y, m, d = map(int, header[256:268].strip().split(b"-"))
 
         epoch = calendar.timegm(datetime.datetime(y, m, d, 0, 0, 0).timetuple())
 
