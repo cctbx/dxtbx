@@ -36,6 +36,9 @@ def check(l):
     return ret
 
 
+_xpp_pattern = re.compile(r".*xpp[a-zA-Z][0-9][0-9][0-9][0-9].*")
+
+
 class FormatTIFFRayonixXPP(FormatTIFFRayonix):
     """A class for reading TIFF format Rayonix images, and correctly
     constructing a model for the experiment from this."""
@@ -44,19 +47,19 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
     def understand(image_file):
         """Check to see if this looks like an XPP Rayonix TIFF """
 
-        def get(ftype, index, typelen, offset=1024):
-            si_format = "<"
-            with open(image_file, "rb") as f:
-                f.seek(offset + index)
-                rawdata = f.read(typelen)
-            return struct.unpack(si_format + ftype, rawdata)[0]
+        with open(image_file, "rb") as fh:
 
-        data = [get("c", 1152 + i, 1) for i in range(128)]
-        filepath = "".join(c for c in data if c != " " and ord(c) < 127 and ord(c) > 32)
+            def get(index, typelen, offset=1024):
+                fh.seek(offset + index)
+                rawdata = fh.read(typelen)
+                return struct.unpack("<c", rawdata)[0]
 
-        pattern = re.compile(".*xpp[a-zA-Z][0-9][0-9][0-9][0-9].*")
+            data = [get(1152 + i, 1) for i in range(128)]
+        filepath = b"".join(c for c in data if 32 < ord(c) < 127).decode(
+            "latin-1", "replace"
+        )
 
-        return pattern.match(filepath)
+        return bool(_xpp_pattern.match(filepath))
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file, including a
