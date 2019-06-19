@@ -290,7 +290,7 @@ class lazy_file_cache(object):
 
         end_position = self._cache_object.tell()
 
-        if end_position < self._cache_size or line_candidate.endswith("\n"):
+        if end_position < self._cache_size or line_candidate.endswith(b"\n"):
             # Found a complete line within the cache
             return line_candidate, end_position
 
@@ -301,7 +301,7 @@ class lazy_file_cache(object):
         # Need more data
         while end_position == self._cache_size and not self._cache_limit_reached:
             # Do we have a complete line?
-            if line_candidate.endswith("\n"):
+            if line_candidate.endswith(b"\n"):
                 return line_candidate, end_position
 
             # Ran against cache limit. Extend cache
@@ -317,7 +317,7 @@ class lazy_file_cache(object):
             end_position = self._cache_object.tell()
 
         # Do we have a complete line?
-        if line_candidate.endswith("\n") or self._all_cached:
+        if line_candidate.endswith(b"\n") or self._all_cached:
             return line_candidate, end_position
 
         assert self._cache_limit_reached  # Only legitimate way of reaching here
@@ -371,7 +371,7 @@ class pseudo_file(object):
 
     def next(self):
         data = self.readline()
-        if data == "":
+        if data == b"":
             raise StopIteration()
         return data
 
@@ -384,7 +384,7 @@ class pseudo_file(object):
                 start=self._seek, maxbytes=size
             )
         elif size == 0:
-            data = ""
+            data = b""
         else:
             data, self._seek = self._cache_object.pass_read(start=self._seek)
         return data
