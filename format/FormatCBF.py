@@ -103,8 +103,6 @@ class FormatCBF(Format):
 
         with FormatCBF.open_file(self._image_file, "rb") as fh:
             for record in fh:
-                if not record:
-                    break
                 record = record.decode()
                 if "--CIF-BINARY-FORMAT-SECTION--" in record:
                     in_binary_format_section = True
