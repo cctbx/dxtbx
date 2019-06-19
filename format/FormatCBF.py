@@ -101,17 +101,20 @@ class FormatCBF(Format):
 
         in_binary_format_section = False
 
-        for record in FormatCBF.open_file(self._image_file, "rb"):
-            record = record.decode()
-            if "--CIF-BINARY-FORMAT-SECTION--" in record:
-                in_binary_format_section = True
-            elif in_binary_format_section and record[0] == "X":
-                self._mime_header += record
-            if in_binary_format_section and len(record.strip()) == 0:
-                # http://sourceforge.net/apps/trac/cbflib/wiki/ARRAY_DATA%20Category
-                #    In an imgCIF file, the encoded binary data begins after
-                #    the empty line terminating the header.
-                break
+        with FormatCBF.open_file(self._image_file, "rb") as fh:
+            for record in fh:
+                if not record:
+                    break
+                record = record.decode()
+                if "--CIF-BINARY-FORMAT-SECTION--" in record:
+                    in_binary_format_section = True
+                elif in_binary_format_section and record[0] == "X":
+                    self._mime_header += record
+                if in_binary_format_section and len(record.strip()) == 0:
+                    # http://sourceforge.net/apps/trac/cbflib/wiki/ARRAY_DATA%20Category
+                    #    In an imgCIF file, the encoded binary data begins after
+                    #    the empty line terminating the header.
+                    break
 
 
 if __name__ == "__main__":
