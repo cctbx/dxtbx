@@ -207,7 +207,7 @@ class FormatMultiImage(Format):
 
         # Get the format instance
         assert len(filenames) == 1
-         if check_format:
+        if check_format:
             # HACK: Attempt to see if this was the same as the last file we generated
             # a format instance for. If it was, then give the same instance back. This
             # works around a structural problem with deserializing imagesets

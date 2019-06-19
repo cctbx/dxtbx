@@ -392,9 +392,7 @@ class ExperimentListDict(object):
             assert len(indices) == len(filenames)
 
         # Do we know the format class? Pass it through if we do to save time
-        format_class = None
-        if filenames[0] in self._imageset_format_cache:
-            format_class = self._imageset_format_cache[filenames[0]]
+        format_class = self._imageset_format_cache.get(filenames[0])
 
         imageset = ImageSetFactory.make_imageset(
             filenames,
