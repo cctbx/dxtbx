@@ -29,8 +29,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   void export_experiment();
   void export_experiment_list();
 
-  BOOST_PYTHON_MODULE(dxtbx_model_ext)
-  {
+  BOOST_PYTHON_MODULE(dxtbx_model_ext) {
     export_beam();
     export_goniometer();
     export_kappa_goniometer();
@@ -46,4 +45,4 @@ namespace dxtbx { namespace model { namespace boost_python {
     export_experiment_list();
   }
 
-}}} // namespace dxtbx::model::boost_python
+}}}  // namespace dxtbx::model::boost_python

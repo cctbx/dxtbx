@@ -25,30 +25,27 @@ namespace dxtbx { namespace format {
    */
   class ImageReader {
   public:
-
     typedef scitbx::af::c_grid<2> accessor_type;
 
-    typedef scitbx::af::versa< short,          accessor_type > int16_type;
-    typedef scitbx::af::versa< int,            accessor_type > int32_type;
-    typedef scitbx::af::versa< unsigned short, accessor_type > uint16_type;
-    typedef scitbx::af::versa< unsigned int,   accessor_type > uint32_type;
-    typedef scitbx::af::versa< float,          accessor_type > float32_type;
-    typedef scitbx::af::versa< double,         accessor_type > float64_type;
+    typedef scitbx::af::versa<short, accessor_type> int16_type;
+    typedef scitbx::af::versa<int, accessor_type> int32_type;
+    typedef scitbx::af::versa<unsigned short, accessor_type> uint16_type;
+    typedef scitbx::af::versa<unsigned int, accessor_type> uint32_type;
+    typedef scitbx::af::versa<float, accessor_type> float32_type;
+    typedef scitbx::af::versa<double, accessor_type> float64_type;
 
-    typedef boost::variant<
-      int16_type,
-      int32_type,
-      uint16_type,
-      uint32_type,
-      float32_type,
-      float64_type
-    > variant_type;
+    typedef boost::variant<int16_type,
+                           int32_type,
+                           uint16_type,
+                           uint32_type,
+                           float32_type,
+                           float64_type>
+      variant_type;
 
     /**
      * Initialise with the filename
      */
-    ImageReader(const char *filename)
-      : filename_(filename) {}
+    ImageReader(const char *filename) : filename_(filename) {}
 
     /**
      * Return the filename
@@ -65,18 +62,14 @@ namespace dxtbx { namespace format {
     }
 
   protected:
-
     std::string filename_;
     ImageBuffer buffer_;
   };
 
-
   class MultiImageReader {
   public:
-
     virtual ImageBuffer image(std::size_t index) const = 0;
     virtual std::size_t size() const = 0;
-
   };
 
   /**
@@ -85,7 +78,6 @@ namespace dxtbx { namespace format {
   template <typename ImageReaderType>
   class ImageListReader : public MultiImageReader {
   public:
-
     typedef ImageReaderType image_reader_type;
     typedef typename ImageReaderType::int16_type int16_type;
     typedef typename ImageReaderType::int32_type int32_type;
@@ -98,7 +90,7 @@ namespace dxtbx { namespace format {
      * Initialise with the filename
      */
     ImageListReader(const scitbx::af::const_ref<std::string> &filenames)
-      : filenames_(filenames.begin(), filenames.end()) {}
+        : filenames_(filenames.begin(), filenames.end()) {}
 
     /**
      * Return the filename
@@ -124,11 +116,9 @@ namespace dxtbx { namespace format {
     }
 
   protected:
-
     scitbx::af::shared<std::string> filenames_;
-
   };
 
-}} // namespace dxtbx::format
+}}  // namespace dxtbx::format
 
-#endif // DXTBX_FORMAT_IMAGE_READER_H
+#endif  // DXTBX_FORMAT_IMAGE_READER_H

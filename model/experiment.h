@@ -46,31 +46,29 @@ namespace dxtbx { namespace model {
    */
   class Experiment {
   public:
-
     Experiment() {}
 
     /**
      * Initialise the experiment with models
      */
-    Experiment(
-          boost::shared_ptr<BeamBase> beam,
-          boost::shared_ptr<Detector> detector,
-          boost::shared_ptr<Goniometer> goniometer,
-          boost::shared_ptr<Scan> scan,
-          boost::shared_ptr<CrystalBase> crystal,
-          boost::python::object profile,
-          boost::python::object imageset,
-          boost::python::object scaling_model,
-          std::string identifier)
-      : beam_(beam),
-        detector_(detector),
-        goniometer_(goniometer),
-        scan_(scan),
-        crystal_(crystal),
-        profile_(profile),
-        imageset_(imageset),
-        scaling_model_(scaling_model),
-        identifier_(identifier) {}
+    Experiment(boost::shared_ptr<BeamBase> beam,
+               boost::shared_ptr<Detector> detector,
+               boost::shared_ptr<Goniometer> goniometer,
+               boost::shared_ptr<Scan> scan,
+               boost::shared_ptr<CrystalBase> crystal,
+               boost::python::object profile,
+               boost::python::object imageset,
+               boost::python::object scaling_model,
+               std::string identifier)
+        : beam_(beam),
+          detector_(detector),
+          goniometer_(goniometer),
+          scan_(scan),
+          crystal_(crystal),
+          profile_(profile),
+          imageset_(imageset),
+          scaling_model_(scaling_model),
+          identifier_(identifier) {}
 
     /**
      * Check if the beam model is the same.
@@ -111,11 +109,11 @@ namespace dxtbx { namespace model {
      * Check models are the same.
      */
     bool contains(boost::python::object obj) const {
-      boost::python::extract< boost::shared_ptr<BeamBase> > get_beam(obj);
-      boost::python::extract< boost::shared_ptr<Detector> > get_detector(obj);
-      boost::python::extract< boost::shared_ptr<Goniometer> > get_goniometer(obj);
-      boost::python::extract< boost::shared_ptr<Scan> > get_scan(obj);
-      boost::python::extract< boost::shared_ptr<CrystalBase> > get_crystal(obj);
+      boost::python::extract<boost::shared_ptr<BeamBase> > get_beam(obj);
+      boost::python::extract<boost::shared_ptr<Detector> > get_detector(obj);
+      boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer(obj);
+      boost::python::extract<boost::shared_ptr<Scan> > get_scan(obj);
+      boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal(obj);
       if (get_beam.check()) {
         return contains(get_beam());
       } else if (get_detector.check()) {
@@ -134,21 +132,18 @@ namespace dxtbx { namespace model {
      * Compare this experiment with another
      */
     bool operator==(const Experiment &other) const {
-      return imageset_ == other.imageset_
-          && beam_ == other.beam_
-          && detector_ == other.detector_
-          && goniometer_ == other.goniometer_
-          && scan_ == other.scan_
-          && profile_ == other.profile_
-          && scaling_model_ == other.scaling_model_
-          && identifier_ == other.identifier_;
+      return imageset_ == other.imageset_ && beam_ == other.beam_
+             && detector_ == other.detector_ && goniometer_ == other.goniometer_
+             && scan_ == other.scan_ && profile_ == other.profile_
+             && scaling_model_ == other.scaling_model_
+             && identifier_ == other.identifier_;
     }
 
     /**
      * Check that the experiment is consistent
      */
     bool is_consistent() const {
-      return true; // FIXME
+      return true;  // FIXME
     }
 
     /**
@@ -264,15 +259,15 @@ namespace dxtbx { namespace model {
     }
 
     /**
-    * Set the scaling model
-    */
+     * Set the scaling model
+     */
     void set_scaling_model(boost::python::object scaling_model) {
       scaling_model_ = scaling_model;
     }
 
     /**
-    * Get the scaling model
-    */
+     * Get the scaling model
+     */
     boost::python::object get_scaling_model() const {
       return scaling_model_;
     }
@@ -292,7 +287,6 @@ namespace dxtbx { namespace model {
     }
 
   protected:
-
     boost::shared_ptr<BeamBase> beam_;
     boost::shared_ptr<Detector> detector_;
     boost::shared_ptr<Goniometer> goniometer_;
@@ -302,9 +296,8 @@ namespace dxtbx { namespace model {
     boost::python::object imageset_;
     boost::python::object scaling_model_;
     std::string identifier_;
-
   };
 
-}} // namespace dxtbx::model
+}}  // namespace dxtbx::model
 
-#endif // DXTBX_MODEL_EXPERIMENT_H
+#endif  // DXTBX_MODEL_EXPERIMENT_H

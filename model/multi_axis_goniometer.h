@@ -22,8 +22,8 @@
 
 namespace dxtbx { namespace model {
 
-  using scitbx::vec3;
   using scitbx::mat3;
+  using scitbx::vec3;
   using scitbx::constants::pi;
   using scitbx::math::r3_rotation::axis_and_angle_as_matrix;
 
@@ -36,12 +36,11 @@ namespace dxtbx { namespace model {
    */
   class MultiAxisGoniometer : public Goniometer {
   public:
-
     /* Default constructor */
     MultiAxisGoniometer()
-      : axes_(scitbx::af::shared<vec3<double> >(1, vec3<double>(1.0,0.0,0.0))),
-        angles_(scitbx::af::shared<double>((0.0))),
-        scan_axis_(0) {}
+        : axes_(scitbx::af::shared<vec3<double> >(1, vec3<double>(1.0, 0.0, 0.0))),
+          angles_(scitbx::af::shared<double>((0.0))),
+          scan_axis_(0) {}
 
     /*
      * Initialise the goniometer.
@@ -53,11 +52,10 @@ namespace dxtbx { namespace model {
                         const scitbx::af::const_ref<double> &angles,
                         const scitbx::af::const_ref<std::string> &names,
                         std::size_t scan_axis)
-      : axes_(axes.begin(), axes.end()),
-        angles_(angles.begin(), angles.end()),
-        names_(names.begin(), names.end()),
-        scan_axis_(scan_axis)
-    {
+        : axes_(axes.begin(), axes.end()),
+          angles_(angles.begin(), angles.end()),
+          names_(names.begin(), names.end()),
+          scan_axis_(scan_axis) {
       DXTBX_ASSERT(axes.size() >= 1);
       DXTBX_ASSERT(scan_axis < axes.size());
       init();
@@ -104,10 +102,9 @@ namespace dxtbx { namespace model {
       return scan_axis_;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const MultiAxisGoniometer &g);
+    friend std::ostream &operator<<(std::ostream &os, const MultiAxisGoniometer &g);
 
   protected:
-
     void init() {
       setting_rotation_ = calculate_setting_rotation();
       fixed_rotation_ = calculate_fixed_rotation();
@@ -117,26 +114,20 @@ namespace dxtbx { namespace model {
     }
 
     /* Calculate the fixed rotation */
-    mat3 <double> calculate_fixed_rotation() {
-      mat3<double> fixed_rotation(
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 1.0);
+    mat3<double> calculate_fixed_rotation() {
+      mat3<double> fixed_rotation(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
       for (std::size_t i = 0; i < scan_axis_; i++) {
-        mat3 <double> R = axis_and_angle_as_matrix(axes_[i], angles_[i], true);
+        mat3<double> R = axis_and_angle_as_matrix(axes_[i], angles_[i], true);
         fixed_rotation = R * fixed_rotation;
       }
       return fixed_rotation;
     }
 
     /* Calculate the setting rotation */
-    mat3 <double> calculate_setting_rotation() {
-      mat3<double> setting_rotation(
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 1.0);
-      for (std::size_t i = scan_axis_+1; i < axes_.size(); i++) {
-        mat3 <double> R = axis_and_angle_as_matrix(axes_[i], angles_[i], true);
+    mat3<double> calculate_setting_rotation() {
+      mat3<double> setting_rotation(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+      for (std::size_t i = scan_axis_ + 1; i < axes_.size(); i++) {
+        mat3<double> R = axis_and_angle_as_matrix(axes_[i], angles_[i], true);
         setting_rotation = R * setting_rotation;
       }
       return setting_rotation;
@@ -149,31 +140,30 @@ namespace dxtbx { namespace model {
   };
 
   /* Print goniometer info */
-  inline
-  std::ostream& operator<<(std::ostream& os, const MultiAxisGoniometer &g) {
+  inline std::ostream &operator<<(std::ostream &os, const MultiAxisGoniometer &g) {
     os << "Goniometer:\n";
     os << "    Rotation axis:   " << g.get_rotation_axis().const_ref() << "\n";
     os << "    Fixed rotation:  " << g.get_fixed_rotation().const_ref() << "\n";
     os << "    Setting rotation:" << g.get_setting_rotation().const_ref() << "\n";
-    for (std::size_t i=0; i < g.get_axes().size(); i++) {
-      os << "    Axis #" << i << " (" << g.get_names()[i] << ")" << ":  "
-         << g.get_axes()[i].const_ref() << "\n";
+    for (std::size_t i = 0; i < g.get_axes().size(); i++) {
+      os << "    Axis #" << i << " (" << g.get_names()[i] << ")"
+         << ":  " << g.get_axes()[i].const_ref() << "\n";
     }
     os << "    Angles: ";
-    for (std::size_t i=0; i < g.get_axes().size(); i++) {
+    for (std::size_t i = 0; i < g.get_axes().size(); i++) {
       os << g.get_angles()[i];
-      if ((i+1) < g.get_axes().size()) {
+      if ((i + 1) < g.get_axes().size()) {
         os << ",";
-      }
-      else {
+      } else {
         os << "\n";
       }
     }
-    os << "    scan axis: #" << g.get_scan_axis()
-       << " (" << g.get_names()[g.get_scan_axis()] << ")" << "\n";
+    os << "    scan axis: #" << g.get_scan_axis() << " ("
+       << g.get_names()[g.get_scan_axis()] << ")"
+       << "\n";
     return os;
   }
 
-}} // namespace dxtbx::model
+}}  // namespace dxtbx::model
 
-#endif // DXTBX_MODEL_MULTI_AXIS_GONIOMETER_H
+#endif  // DXTBX_MODEL_MULTI_AXIS_GONIOMETER_H

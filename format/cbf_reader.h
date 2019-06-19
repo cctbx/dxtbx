@@ -30,8 +30,7 @@ namespace dxtbx { namespace format {
     /**
      * trim from end of string (right)
      */
-    inline
-    std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v") {
+    inline std::string &rtrim(std::string &s, const char *t = " \t\n\r\f\v") {
       s.erase(s.find_last_not_of(t) + 1);
       return s;
     }
@@ -39,8 +38,7 @@ namespace dxtbx { namespace format {
     /**
      * trim from beginning of string (left)
      */
-    inline
-    std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v") {
+    inline std::string &ltrim(std::string &s, const char *t = " \t\n\r\f\v") {
       s.erase(0, s.find_first_not_of(t));
       return s;
     }
@@ -48,20 +46,20 @@ namespace dxtbx { namespace format {
     /**
      * trim from both ends of string (left & right)
      */
-    inline
-    std::string& trim(std::string& s, const char* t = " \t\n\r\f\v") {
+    inline std::string &trim(std::string &s, const char *t = " \t\n\r\f\v") {
       return ltrim(rtrim(s, t), t);
     }
 
     /**
      * Get a header item
      */
-    inline
-    bool get_cbf_header_item(std::string item, std::string &name, std::string &value) {
+    inline bool get_cbf_header_item(std::string item,
+                                    std::string &name,
+                                    std::string &value) {
       std::size_t pos1 = item.find(":");
       if (pos1 != std::string::npos) {
         name = item.substr(0, pos1);
-        value = item.substr(pos1+1, item.size());
+        value = item.substr(pos1 + 1, item.size());
         trim(name);
         trim(value);
         return true;
@@ -80,26 +78,20 @@ namespace dxtbx { namespace format {
       return result;
     }
 
-
     template <typename T>
     struct cbf_array_buffer {};
 
     /**
      * Helper struct to read an integer cbf buffer
      */
-    template<>
+    template <>
     struct cbf_array_buffer<int> {
-
       std::vector<int> data;
       std::size_t dimfast;
       std::size_t dimmid;
       std::size_t dimslow;
 
-      cbf_array_buffer(cbf_handle cbf_h)
-        : dimfast(0),
-          dimmid(0),
-          dimslow(0) {
-
+      cbf_array_buffer(cbf_handle cbf_h) : dimfast(0), dimmid(0), dimslow(0) {
         // Get the parameters
         unsigned int compression = 0;
         int binary_id = 0;
@@ -111,21 +103,20 @@ namespace dxtbx { namespace format {
         int maxelement = 0;
         const char *byteorder = 0;
         size_t padding = 0;
-        cbf_get_integerarrayparameters_wdims_fs(
-          cbf_h,
-          &compression,
-          &binary_id,
-          &elsize,
-          &elsigned,
-          &elunsigned,
-          &elements,
-          &minelement,
-          &maxelement,
-          &byteorder,
-          &dimfast,
-          &dimmid,
-          &dimslow,
-          &padding);
+        cbf_get_integerarrayparameters_wdims_fs(cbf_h,
+                                                &compression,
+                                                &binary_id,
+                                                &elsize,
+                                                &elsigned,
+                                                &elunsigned,
+                                                &elements,
+                                                &minelement,
+                                                &maxelement,
+                                                &byteorder,
+                                                &dimfast,
+                                                &dimmid,
+                                                &dimslow,
+                                                &padding);
         DXTBX_ASSERT(elsigned == 1);
         if (dimslow == 0) dimslow = 1;
         DXTBX_ASSERT(std::string(byteorder) == "little_endian");
@@ -138,34 +129,22 @@ namespace dxtbx { namespace format {
         // Read the data
         size_t elements_read;
         cbf_get_integerarray(
-          cbf_h,
-          &binary_id,
-          &data[0],
-          sizeof(int),
-          elsigned,
-          elements,
-          &elements_read);
+          cbf_h, &binary_id, &data[0], sizeof(int), elsigned, elements, &elements_read);
         DXTBX_ASSERT(elements_read == elements);
       }
-
     };
 
     /**
      * Helper struct to read a double cbf buffer
      */
-    template<>
+    template <>
     struct cbf_array_buffer<double> {
-
       std::vector<double> data;
       std::size_t dimfast;
       std::size_t dimmid;
       std::size_t dimslow;
 
-      cbf_array_buffer(cbf_handle cbf_h)
-        : dimfast(0),
-          dimmid(0),
-          dimslow(0) {
-
+      cbf_array_buffer(cbf_handle cbf_h) : dimfast(0), dimmid(0), dimslow(0) {
         // Get parameters
         unsigned int compression = 0;
         int binary_id = 0;
@@ -173,17 +152,16 @@ namespace dxtbx { namespace format {
         size_t elements = 0;
         const char *byteorder = 0;
         size_t padding = 0;
-        cbf_get_realarrayparameters_wdims_fs(
-          cbf_h,
-          &compression,
-          &binary_id,
-          &elsize,
-          &elements,
-          &byteorder,
-          &dimfast,
-          &dimmid,
-          &dimslow,
-          &padding);
+        cbf_get_realarrayparameters_wdims_fs(cbf_h,
+                                             &compression,
+                                             &binary_id,
+                                             &elsize,
+                                             &elements,
+                                             &byteorder,
+                                             &dimfast,
+                                             &dimmid,
+                                             &dimslow,
+                                             &padding);
         if (dimslow == 0) dimslow = 1;
         DXTBX_ASSERT(elsize = sizeof(double));
         DXTBX_ASSERT(std::string(byteorder) == "little_endian");
@@ -196,19 +174,12 @@ namespace dxtbx { namespace format {
         // Read the data
         size_t elements_read;
         cbf_get_realarray(
-          cbf_h,
-          &binary_id,
-          &data[0],
-          sizeof(double),
-          elements,
-          &elements_read);
+          cbf_h, &binary_id, &data[0], sizeof(double), elements, &elements_read);
         DXTBX_ASSERT(elements_read == elements);
       }
-
     };
 
-  }
-
+  }  // namespace detail
 
   /**
    * A class to read a CBF Image (quickly)
@@ -216,22 +187,18 @@ namespace dxtbx { namespace format {
    */
   class CBFFastReader : public ImageReader {
   public:
-
     /**
      * Construct the class with the filename
      */
-    CBFFastReader(const char *filename)
-      : ImageReader(filename) {
+    CBFFastReader(const char *filename) : ImageReader(filename) {
       read_data();
     }
 
   protected:
-
     /**
      * Read the image data
      */
     void read_data() {
-
       // Open the file handle
       std::ifstream handle(filename_.c_str(), std::ifstream::binary);
 
@@ -288,10 +255,9 @@ namespace dxtbx { namespace format {
           } else if (name == "X-Binary-Element-Byte-Order") {
             DXTBX_ASSERT(value == "LITTLE_ENDIAN");
           }
-        } else if (
-          line.find("conversions") != std::string::npos &&
-          line.find("x-CBF_BYTE_OFFSET")) {
-            byte_offset = true;
+        } else if (line.find("conversions") != std::string::npos
+                   && line.find("x-CBF_BYTE_OFFSET")) {
+          byte_offset = true;
         }
       }
 
@@ -304,37 +270,30 @@ namespace dxtbx { namespace format {
 
       // Resize the array
       scitbx::af::c_grid<2> grid(slow_size, fast_size);
-      scitbx::af::versa< int, scitbx::af::c_grid<2> > data(grid);
+      scitbx::af::versa<int, scitbx::af::c_grid<2> > data(grid);
 
       // Uncompress the data
       iotbx::detectors::buffer_uncompress(
-          buffer.c_str() + data_offset,
-          data_size,
-          &data[0]);
+        buffer.c_str() + data_offset, data_size, &data[0]);
 
       // Add to the tiles
       buffer_ = ImageBuffer(Image<int>(ImageTile<int>(data)));
     }
-
   };
-
 
   /**
    * A class to read a CBF Image
    */
   class CBFReader : public ImageReader {
   public:
-
     /**
      * Construct the class with the filename
      */
-    CBFReader(const char *filename)
-      : ImageReader(filename) {
+    CBFReader(const char *filename) : ImageReader(filename) {
       read_data();
     }
 
   protected:
-
     /**
      * Helper struct for multi-tile CBF files
      */
@@ -347,20 +306,19 @@ namespace dxtbx { namespace format {
       int fast_start;
       int fast_end;
 
-      Section():
-        slow_start(-1),
-        slow_end(-1),
-        mid_start(-1),
-        mid_end(-1),
-        fast_start(-1),
-        fast_end(-1) {}
+      Section()
+          : slow_start(-1),
+            slow_end(-1),
+            mid_start(-1),
+            mid_end(-1),
+            fast_start(-1),
+            fast_end(-1) {}
     };
 
     /**
      * Read the data
      */
     void read_data() {
-
       // Open the cbf handle
       cbf_handle cbf_h;
       cbf_check(cbf_make_handle(&cbf_h));
@@ -387,9 +345,8 @@ namespace dxtbx { namespace format {
           cbf_check(cbf_get_value(cbf_h, &type));
           if (i == 0) {
             array_data_type = type;
-            DXTBX_ASSERT(
-                array_data_type == "signed 32-bit integer" ||
-                array_data_type == "signed 64-bit real IEEE");
+            DXTBX_ASSERT(array_data_type == "signed 32-bit integer"
+                         || array_data_type == "signed 64-bit real IEEE");
           } else {
             DXTBX_ASSERT(array_data_type == type);
           }
@@ -416,7 +373,6 @@ namespace dxtbx { namespace format {
      * Read single tile data
      */
     void read_single_tile_data_detail(cbf_handle cbf_h) {
-
       // Get the data
       cbf_check(cbf_find_category(cbf_h, "array_data"));
       cbf_check(cbf_find_column(cbf_h, "data"));
@@ -432,7 +388,7 @@ namespace dxtbx { namespace format {
 
       // Allocate and copy the data
       scitbx::af::c_grid<2> grid(buffer.dimmid, buffer.dimfast);
-      scitbx::af::versa< int, scitbx::af::c_grid<2> > data(grid);
+      scitbx::af::versa<int, scitbx::af::c_grid<2> > data(grid);
       DXTBX_ASSERT(buffer.data.size() == data.size());
       std::copy(buffer.data.begin(), buffer.data.end(), data.begin());
 
@@ -445,20 +401,17 @@ namespace dxtbx { namespace format {
      */
     template <typename T>
     void read_multi_tile_data_detail(cbf_handle &cbf_h) {
-
-      std::map < std::string, std::vector<Section> > section_lookup;
+      std::map<std::string, std::vector<Section> > section_lookup;
       bool has_sections = false;
 
       // Check if the data has sections
       if (cbf_find_category(cbf_h, "array_structure_list_section") == 0) {
-
         has_sections = true;
 
         // Count the number of sections
         unsigned int nsections = 0;
         cbf_check(cbf_count_rows(cbf_h, &nsections));
         for (std::size_t i = 0; i < nsections; ++i) {
-
           // Find the section ID and get the name
           cbf_check(cbf_find_column(cbf_h, "id"));
           const char *section_name = 0;
@@ -538,7 +491,6 @@ namespace dxtbx { namespace format {
       DXTBX_ASSERT(nrows > 0);
       Image<T> image;
       if (nrows == 1) {
-
         // Get the data
         cbf_check(cbf_find_column(cbf_h, "data"));
 
@@ -554,7 +506,7 @@ namespace dxtbx { namespace format {
 
         // Allocate and copy the data
         scitbx::af::c_grid<2> grid(buffer.dimmid, buffer.dimfast);
-        scitbx::af::versa< T, scitbx::af::c_grid<2> > data(grid);
+        scitbx::af::versa<T, scitbx::af::c_grid<2> > data(grid);
         DXTBX_ASSERT(buffer.data.size() == data.size());
         std::copy(buffer.data.begin(), buffer.data.end(), data.begin());
 
@@ -563,7 +515,6 @@ namespace dxtbx { namespace format {
 
       } else {
         for (std::size_t i = 0; i < nrows; ++i) {
-
           // Get the array name
           cbf_check(cbf_find_column(cbf_h, "array_id"));
           const char *name = 0;
@@ -582,13 +533,11 @@ namespace dxtbx { namespace format {
           detail::cbf_array_buffer<T> buffer(cbf_h);
 
           if (has_sections) {
-
             // Get the sections
             std::vector<Section> sections = section_lookup[name];
 
             // Loop through the sections
             for (std::size_t j = 0; j < sections.size(); ++j) {
-
               // Get the section info
               std::string section_name = sections[j].name;
               int slow_start = sections[j].slow_start;
@@ -616,7 +565,7 @@ namespace dxtbx { namespace format {
 
               // Allocate
               scitbx::af::c_grid<2> grid(mid_size, fast_size);
-              scitbx::af::versa< T, scitbx::af::c_grid<2> > data(grid);
+              scitbx::af::versa<T, scitbx::af::c_grid<2> > data(grid);
 
               // Copy the data from the buffer
               std::size_t size1 = buffer.dimfast;
@@ -626,9 +575,9 @@ namespace dxtbx { namespace format {
                   std::size_t xx = x + fast_start;
                   std::size_t yy = y + mid_start;
                   std::size_t zz = slow_start;
-                  std::size_t k = xx + yy*size1 + zz*size2;
+                  std::size_t k = xx + yy * size1 + zz * size2;
                   DXTBX_ASSERT(k < buffer.data.size());
-                  data(y,x) = buffer.data[k];
+                  data(y, x) = buffer.data[k];
                 }
               }
 
@@ -641,7 +590,7 @@ namespace dxtbx { namespace format {
 
             // Allocate and copy the data
             scitbx::af::c_grid<2> grid(buffer.dimmid, buffer.dimfast);
-            scitbx::af::versa< T, scitbx::af::c_grid<2> > data(grid);
+            scitbx::af::versa<T, scitbx::af::c_grid<2> > data(grid);
             DXTBX_ASSERT(buffer.data.size() == data.size());
             std::copy(buffer.data.begin(), buffer.data.end(), data.begin());
 
@@ -656,10 +605,8 @@ namespace dxtbx { namespace format {
 
       buffer_ = ImageBuffer(image);
     }
-
   };
 
+}}  // namespace dxtbx::format
 
-}} // namespace dxtbx::format
-
-#endif // DXTBX_FORMAT_CBF_READER_H
+#endif  // DXTBX_FORMAT_CBF_READER_H

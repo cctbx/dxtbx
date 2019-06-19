@@ -26,36 +26,30 @@ namespace dxtbx { namespace format {
     /**
      * Ignore TIFF warnings (will print stuff about unknown tags otherwise)
      */
-    void tiff_warning_handler(const char* module, const char* fmt, va_list ap) {}
-  }
-
+    void tiff_warning_handler(const char *module, const char *fmt, va_list ap) {}
+  }  // namespace detail
 
   /**
    * A class to read an TIFF Image
    */
   class TIFFReader : public ImageReader {
   public:
-
     /**
      * Construct the class with the filename
      */
     TIFFReader(const char *filename)
-      : ImageReader(filename),
-        slow_size_(0),
-        fast_size_(0) {
+        : ImageReader(filename), slow_size_(0), fast_size_(0) {
       read_data();
     }
 
   protected:
-
     // Helper structs to get types
     template <typename T>
     struct array_type {
-      typedef scitbx::af::versa< T, scitbx::af::c_grid<2> > type;
+      typedef scitbx::af::versa<T, scitbx::af::c_grid<2> > type;
     };
 
     void read_data() {
-
       // Set the warning handler
       TIFFSetWarningHandler(&detail::tiff_warning_handler);
 
@@ -70,10 +64,10 @@ namespace dxtbx { namespace format {
       uint32 bits_per_sample = 1;
       uint32 sample_format = SAMPLEFORMAT_UINT;
       TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &slow_size);
-      TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH,  &fast_size);
-      TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL,  &samples_per_pixel);
-      TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE,  &bits_per_sample);
-      TIFFGetField(tiff, TIFFTAG_SAMPLEFORMAT,  &sample_format);
+      TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &fast_size);
+      TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &samples_per_pixel);
+      TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &bits_per_sample);
+      TIFFGetField(tiff, TIFFTAG_SAMPLEFORMAT, &sample_format);
       DXTBX_ASSERT(samples_per_pixel == 1);
       slow_size_ = slow_size;
       fast_size_ = fast_size;
@@ -119,7 +113,6 @@ namespace dxtbx { namespace format {
 
     template <typename OutputType, typename InputType>
     void read_data_detail(TIFF *tiff) {
-
       typedef typename array_type<InputType>::type input_array_data_type;
       typedef typename array_type<OutputType>::type output_array_data_type;
 
@@ -149,10 +142,8 @@ namespace dxtbx { namespace format {
 
     std::size_t slow_size_;
     std::size_t fast_size_;
-
   };
 
+}}  // namespace dxtbx::format
 
-}} // namespace dxtbx::format
-
-#endif // DXTBX_FORMAT_TIFF_READER_H
+#endif  // DXTBX_FORMAT_TIFF_READER_H

@@ -28,15 +28,11 @@ namespace dxtbx { namespace format {
    */
   class HDF5Reader : public MultiImageReader {
   public:
-
     /**
      * Construct the class with the filename
      */
-    HDF5Reader(
-        hid_t handle,
-        const scitbx::af::const_ref<std::string> &datasets)
-      : handle_(handle),
-        datasets_(datasets.begin(), datasets.end()) {
+    HDF5Reader(hid_t handle, const scitbx::af::const_ref<std::string> &datasets)
+        : handle_(handle), datasets_(datasets.begin(), datasets.end()) {
       generate_lookup();
       first_ = 0;
       last_ = lookup_.size();
@@ -45,15 +41,14 @@ namespace dxtbx { namespace format {
     /**
      * Construct the class with the filename
      */
-    HDF5Reader(
-        hid_t handle,
-        const scitbx::af::const_ref<std::string> &datasets,
-        std::size_t first,
-        std::size_t last)
-      : handle_(handle),
-        datasets_(datasets.begin(), datasets.end()),
-        first_(first),
-        last_(last) {
+    HDF5Reader(hid_t handle,
+               const scitbx::af::const_ref<std::string> &datasets,
+               std::size_t first,
+               std::size_t last)
+        : handle_(handle),
+          datasets_(datasets.begin(), datasets.end()),
+          first_(first),
+          last_(last) {
       DXTBX_ASSERT(first < last);
       generate_lookup();
       DXTBX_ASSERT(last <= lookup_.size());
@@ -115,16 +110,13 @@ namespace dxtbx { namespace format {
     }
 
   protected:
-
     /**
      * An item in the lookup list
      */
     struct Item {
       std::string dataset;
       std::size_t index;
-      Item(std::string d, std::size_t i)
-        : dataset(d),
-          index(i) {}
+      Item(std::string d, std::size_t i) : dataset(d), index(i) {}
     };
 
     /**
@@ -159,7 +151,7 @@ namespace dxtbx { namespace format {
     /**
      * Read the data at the given index
      */
-    scitbx::af::versa< int, scitbx::af::c_grid<2> > read_data(std::size_t index) const {
+    scitbx::af::versa<int, scitbx::af::c_grid<2> > read_data(std::size_t index) const {
       Item item = lookup_[first_ + index];
       return read_data_detail(item.dataset.c_str(), item.index);
     }
@@ -167,9 +159,9 @@ namespace dxtbx { namespace format {
     /**
      * Read the data in the dataset at the given index
      */
-    scitbx::af::versa< int, scitbx::af::c_grid<2> > read_data_detail(
-        const char *dataset, std::size_t index) const {
-
+    scitbx::af::versa<int, scitbx::af::c_grid<2> > read_data_detail(
+      const char *dataset,
+      std::size_t index) const {
       // Get the file space
       hid_t dataset_id = H5Dopen(handle_, dataset, H5P_DEFAULT);
       hid_t file_space_id = H5Dget_space(dataset_id);
@@ -195,12 +187,7 @@ namespace dxtbx { namespace format {
 
       // Create the dataspace id
       herr_t status1 = H5Sselect_hyperslab(
-          file_space_id,
-          H5S_SELECT_SET,
-          &start[0],
-          NULL,
-          &count[0],
-          NULL);
+        file_space_id, H5S_SELECT_SET, &start[0], NULL, &count[0], NULL);
       DXTBX_ASSERT(status1 >= 0);
 
       // Create the memory space size
@@ -208,12 +195,7 @@ namespace dxtbx { namespace format {
 
       // Copy the data
       herr_t status2 = H5Dread(
-          dataset_id,
-          H5T_NATIVE_INT,
-          mem_space_id,
-          file_space_id,
-          H5P_DEFAULT,
-          &data[0]);
+        dataset_id, H5T_NATIVE_INT, mem_space_id, file_space_id, H5P_DEFAULT, &data[0]);
       DXTBX_ASSERT(status2 >= 0);
 
       // Close some stuff
@@ -230,10 +212,8 @@ namespace dxtbx { namespace format {
     std::size_t first_;
     std::size_t last_;
     std::vector<Item> lookup_;
-
   };
 
+}}  // namespace dxtbx::format
 
-}} // namespace dxtbx::format
-
-#endif // DXTBX_FORMAT_HDF5_READER_H
+#endif  // DXTBX_FORMAT_HDF5_READER_H

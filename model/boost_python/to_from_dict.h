@@ -26,31 +26,31 @@ namespace dxtbx { namespace model { namespace boost_python {
   using format::Image;
 
   template <typename T>
-  boost::python::dict to_dict(const T &obj);
+  boost::python::dict to_dict(const T& obj);
 
   template <typename T>
   T* from_dict(boost::python::dict obj);
 
   template <>
-  boost::python::dict to_dict<BeamBase>(const BeamBase &obj);
+  boost::python::dict to_dict<BeamBase>(const BeamBase& obj);
 
   template <>
-  boost::python::dict to_dict<Goniometer>(const Goniometer &obj);
+  boost::python::dict to_dict<Goniometer>(const Goniometer& obj);
 
   template <>
-  boost::python::dict to_dict<VirtualPanel>(const VirtualPanel &obj);
+  boost::python::dict to_dict<VirtualPanel>(const VirtualPanel& obj);
 
   template <>
-  boost::python::dict to_dict<Panel>(const Panel &obj);
+  boost::python::dict to_dict<Panel>(const Panel& obj);
 
   template <>
-  boost::python::dict to_dict<Detector>(const Detector &obj);
+  boost::python::dict to_dict<Detector>(const Detector& obj);
 
   template <>
-  boost::python::dict to_dict<Scan>(const Scan &obj);
+  boost::python::dict to_dict<Scan>(const Scan& obj);
 
   template <>
-  boost::python::dict to_dict<CrystalBase>(const CrystalBase &obj);
+  boost::python::dict to_dict<CrystalBase>(const CrystalBase& obj);
 
   template <>
   BeamBase* from_dict<BeamBase>(boost::python::dict obj);
@@ -64,17 +64,17 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   Panel* from_dict<Panel>(boost::python::dict obj);
 
-  Panel* panel_from_dict_with_offset(boost::python::dict obj,
-      scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
-      scitbx::af::versa<double, scitbx::af::c_grid<2> > dy);
+  Panel* panel_from_dict_with_offset(
+    boost::python::dict obj,
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy);
 
   template <>
   Detector* from_dict<Detector>(boost::python::dict obj);
 
-  Detector* detector_from_dict_with_offset(
-        boost::python::dict obj,
-        const Image<double> &dx,
-        const Image<double> &dy);
+  Detector* detector_from_dict_with_offset(boost::python::dict obj,
+                                           const Image<double>& dx,
+                                           const Image<double>& dy);
 
   template <>
   Scan* from_dict<Scan>(boost::python::dict obj);
@@ -82,6 +82,6 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   CrystalBase* from_dict<CrystalBase>(boost::python::dict obj);
 
-}}} // namespace dxtbx::model::boost_python
+}}}  // namespace dxtbx::model::boost_python
 
 #endif /* DXTBX_MODEL_BOOST_PYTHON_TO_FROM_DICT_H */

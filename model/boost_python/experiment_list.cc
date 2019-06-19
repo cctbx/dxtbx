@@ -23,23 +23,18 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   using namespace boost::python;
 
-  static
-  ExperimentList* make_experiment_list(boost::python::object items) {
-
+  static ExperimentList *make_experiment_list(boost::python::object items) {
     ExperimentList *experiment = new ExperimentList();
 
     for (std::size_t i = 0; i < boost::python::len(items); ++i) {
       experiment->append(boost::python::extract<Experiment>(items[i])());
     }
 
-
     return experiment;
   }
 
-
   struct ExperimentListPickleSuite : boost::python::pickle_suite {
-    static
-    boost::python::tuple getinitargs(const ExperimentList &obj) {
+    static boost::python::tuple getinitargs(const ExperimentList &obj) {
       boost::python::list experiments;
       for (std::size_t i = 0; i < obj.size(); ++i) {
         experiments.append(obj[i]);
@@ -52,13 +47,16 @@ namespace dxtbx { namespace model { namespace boost_python {
    * Return function pointers to overrides for different types
    */
   struct experiment_list_contains_pointers {
-
-    typedef bool (ExperimentList::*beam_type)(const boost::shared_ptr<BeamBase>&)const;
-    typedef bool (ExperimentList::*detector_type)(const boost::shared_ptr<Detector>&)const;
-    typedef bool (ExperimentList::*goniometer_type)(const boost::shared_ptr<Goniometer>&)const;
-    typedef bool (ExperimentList::*scan_type)(const boost::shared_ptr<Scan>&)const;
-    typedef bool (ExperimentList::*crystal_type)(const boost::shared_ptr<CrystalBase>&)const;
-    typedef bool (ExperimentList::*object_type)(boost::python::object)const;
+    typedef bool (ExperimentList::*beam_type)(
+      const boost::shared_ptr<BeamBase> &) const;
+    typedef bool (ExperimentList::*detector_type)(
+      const boost::shared_ptr<Detector> &) const;
+    typedef bool (ExperimentList::*goniometer_type)(
+      const boost::shared_ptr<Goniometer> &) const;
+    typedef bool (ExperimentList::*scan_type)(const boost::shared_ptr<Scan> &) const;
+    typedef bool (ExperimentList::*crystal_type)(
+      const boost::shared_ptr<CrystalBase> &) const;
+    typedef bool (ExperimentList::*object_type)(boost::python::object) const;
 
     static beam_type beam() {
       return &ExperimentList::contains;
@@ -83,32 +81,24 @@ namespace dxtbx { namespace model { namespace boost_python {
     static object_type object() {
       return &ExperimentList::contains;
     }
-
   };
 
   /**
    * Return function pointers to overrides for different types
    */
   struct experiment_list_replace_pointers {
-
-    typedef void (ExperimentList::*beam_type)(
-        boost::shared_ptr<BeamBase>,
-        boost::shared_ptr<BeamBase>);
-    typedef void (ExperimentList::*detector_type)(
-        boost::shared_ptr<Detector>,
-        boost::shared_ptr<Detector>);
-    typedef void (ExperimentList::*goniometer_type)(
-        boost::shared_ptr<Goniometer>,
-        boost::shared_ptr<Goniometer>);
-    typedef void (ExperimentList::*scan_type)(
-        boost::shared_ptr<Scan>,
-        boost::shared_ptr<Scan>);
-    typedef void (ExperimentList::*crystal_type)(
-        boost::shared_ptr<CrystalBase>,
-        boost::shared_ptr<CrystalBase>);
-    typedef void (ExperimentList::*object_type)(
-        boost::python::object,
-        boost::python::object);
+    typedef void (ExperimentList::*beam_type)(boost::shared_ptr<BeamBase>,
+                                              boost::shared_ptr<BeamBase>);
+    typedef void (ExperimentList::*detector_type)(boost::shared_ptr<Detector>,
+                                                  boost::shared_ptr<Detector>);
+    typedef void (ExperimentList::*goniometer_type)(boost::shared_ptr<Goniometer>,
+                                                    boost::shared_ptr<Goniometer>);
+    typedef void (ExperimentList::*scan_type)(boost::shared_ptr<Scan>,
+                                              boost::shared_ptr<Scan>);
+    typedef void (ExperimentList::*crystal_type)(boost::shared_ptr<CrystalBase>,
+                                                 boost::shared_ptr<CrystalBase>);
+    typedef void (ExperimentList::*object_type)(boost::python::object,
+                                                boost::python::object);
 
     static beam_type beam() {
       return &ExperimentList::replace;
@@ -133,26 +123,24 @@ namespace dxtbx { namespace model { namespace boost_python {
     static object_type object() {
       return &ExperimentList::replace;
     }
-
   };
 
   /**
    * Return function pointers to overrides for different types
    */
   struct experiment_list_indices_pointers {
-
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*beam_type)(
-        const boost::shared_ptr<BeamBase>&)const;
+      const boost::shared_ptr<BeamBase> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*detector_type)(
-        const boost::shared_ptr<Detector>&)const;
+      const boost::shared_ptr<Detector> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*goniometer_type)(
-        const boost::shared_ptr<Goniometer>&)const;
+      const boost::shared_ptr<Goniometer> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*scan_type)(
-        const boost::shared_ptr<Scan>&)const;
+      const boost::shared_ptr<Scan> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*crystal_type)(
-        const boost::shared_ptr<CrystalBase>&)const;
+      const boost::shared_ptr<CrystalBase> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*object_type)(
-        boost::python::object)const;
+      boost::python::object) const;
 
     static beam_type beam() {
       return &ExperimentList::indices;
@@ -177,7 +165,6 @@ namespace dxtbx { namespace model { namespace boost_python {
     static object_type object() {
       return &ExperimentList::indices;
     }
-
   };
 
   void experiment_list_setitem(ExperimentList &self, int n, Experiment item) {
@@ -190,7 +177,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     self[n] = item;
   }
 
-  Experiment& experiment_list_getitem(ExperimentList &self, int n) {
+  Experiment &experiment_list_getitem(ExperimentList &self, int n) {
     if (n < 0) {
       n += self.size();
     }
@@ -203,9 +190,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   ExperimentList experiment_list_getitem_slice(const ExperimentList &self, slice s) {
     scitbx::boost_python::adapted_slice as(s, self.size());
     ExperimentList result;
-    for (std::size_t i = as.start;
-         i < as.stop && i < self.size();
-         i += as.step) {
+    for (std::size_t i = as.start; i < as.stop && i < self.size(); i += as.step) {
       result.append(self[i]);
     }
     return result;
@@ -221,13 +206,9 @@ namespace dxtbx { namespace model { namespace boost_python {
     self.erase(n);
   }
 
-  void export_experiment_list()
-  {
-    class_ <ExperimentList> ("ExperimentList")
-      .def("__init__",
-          make_constructor(
-          &make_experiment_list,
-          default_call_policies()))
+  void export_experiment_list() {
+    class_<ExperimentList>("ExperimentList")
+      .def("__init__", make_constructor(&make_experiment_list, default_call_policies()))
       .def("identifiers", &ExperimentList::identifiers)
       .def("find", &ExperimentList::find)
       .def("append", &ExperimentList::append)
@@ -257,20 +238,23 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("indices", experiment_list_indices_pointers::scan())
       .def("indices", experiment_list_indices_pointers::crystal())
       .def("indices", experiment_list_indices_pointers::object())
-      .def("remove_on_experiment_identifiers", &ExperimentList::remove_on_experiment_identifiers)
-      .def("select_on_experiment_identifiers", &ExperimentList::select_on_experiment_identifiers)
-      .def("where", &ExperimentList::where, (
-        arg("beam") = boost::shared_ptr<BeamBase>(),
-        arg("detector") = boost::shared_ptr<Detector>(),
-        arg("goniometer") = boost::shared_ptr<Goniometer>(),
-        arg("scan") = boost::shared_ptr<Scan>(),
-        arg("crystal") = boost::shared_ptr<CrystalBase>(),
-        arg("profile") = boost::python::object(),
-        arg("imageset") = boost::python::object(),
-        arg("scaling_model") = boost::python::object()))
+      .def("remove_on_experiment_identifiers",
+           &ExperimentList::remove_on_experiment_identifiers)
+      .def("select_on_experiment_identifiers",
+           &ExperimentList::select_on_experiment_identifiers)
+      .def("where",
+           &ExperimentList::where,
+           (arg("beam") = boost::shared_ptr<BeamBase>(),
+            arg("detector") = boost::shared_ptr<Detector>(),
+            arg("goniometer") = boost::shared_ptr<Goniometer>(),
+            arg("scan") = boost::shared_ptr<Scan>(),
+            arg("crystal") = boost::shared_ptr<CrystalBase>(),
+            arg("profile") = boost::python::object(),
+            arg("imageset") = boost::python::object(),
+            arg("scaling_model") = boost::python::object()))
       .def("is_consistent", &ExperimentList::is_consistent)
       .def("__len__", &ExperimentList::size)
       .def_pickle(ExperimentListPickleSuite());
   }
 
-}}} // namespace = dxtbx::model::boost_python
+}}}  // namespace dxtbx::model::boost_python

@@ -29,9 +29,9 @@
 
 namespace dxtbx { namespace model {
 
+  using scitbx::mat3;
   using scitbx::vec2;
   using scitbx::vec3;
-  using scitbx::mat3;
 
   /**
    * A class to manage the panel virtual detector frame. This class holds
@@ -40,21 +40,20 @@ namespace dxtbx { namespace model {
    */
   class VirtualPanelFrame {
   public:
-
     /**
      * Initialise the local and parent frames along x, y with a zero origin
      * vector. The d matrix will not be invertable and so calling the
      * get_D_matrix() method at this stage will result in an exception.
      */
     VirtualPanelFrame()
-      : local_origin_    (0.0, 0.0, 0.0),
-        local_fast_axis_ (1.0, 0.0, 0.0),
-        local_slow_axis_ (0.0, 1.0, 0.0),
-        local_normal_    (0.0, 0.0, 1.0),
-        parent_origin_   (0.0, 0.0, 0.0),
-        parent_fast_axis_(1.0, 0.0, 0.0),
-        parent_slow_axis_(0.0, 1.0, 0.0),
-        parent_normal_   (0.0, 0.0, 1.0) {
+        : local_origin_(0.0, 0.0, 0.0),
+          local_fast_axis_(1.0, 0.0, 0.0),
+          local_slow_axis_(0.0, 1.0, 0.0),
+          local_normal_(0.0, 0.0, 1.0),
+          parent_origin_(0.0, 0.0, 0.0),
+          parent_fast_axis_(1.0, 0.0, 0.0),
+          parent_slow_axis_(0.0, 1.0, 0.0),
+          parent_normal_(0.0, 0.0, 1.0) {
       update_global_frame();
     }
 
@@ -121,18 +120,28 @@ namespace dxtbx { namespace model {
 
     /** @return The local d matrix  */
     mat3<double> get_local_d_matrix() const {
-      return mat3<double>(
-        local_fast_axis_[0], local_slow_axis_[0], local_origin_[0],
-        local_fast_axis_[1], local_slow_axis_[1], local_origin_[1],
-        local_fast_axis_[2], local_slow_axis_[2], local_origin_[2]);
+      return mat3<double>(local_fast_axis_[0],
+                          local_slow_axis_[0],
+                          local_origin_[0],
+                          local_fast_axis_[1],
+                          local_slow_axis_[1],
+                          local_origin_[1],
+                          local_fast_axis_[2],
+                          local_slow_axis_[2],
+                          local_origin_[2]);
     }
 
     /** @return The parent d matrix */
     mat3<double> get_parent_d_matrix() const {
-      return mat3<double>(
-        parent_fast_axis_[0], parent_slow_axis_[0], parent_origin_[0],
-        parent_fast_axis_[1], parent_slow_axis_[1], parent_origin_[1],
-        parent_fast_axis_[2], parent_slow_axis_[2], parent_origin_[2]);
+      return mat3<double>(parent_fast_axis_[0],
+                          parent_slow_axis_[0],
+                          parent_origin_[0],
+                          parent_fast_axis_[1],
+                          parent_slow_axis_[1],
+                          parent_origin_[1],
+                          parent_fast_axis_[2],
+                          parent_slow_axis_[2],
+                          parent_origin_[2]);
     }
 
     /** @returns The local origin vector. */
@@ -243,7 +252,7 @@ namespace dxtbx { namespace model {
      */
     vec2<double> get_ray_intersection(vec3<double> s1) const {
       DXTBX_ASSERT(D_);
-      vec3 <double> v = D_.get() * s1;
+      vec3<double> v = D_.get() * s1;
       DXTBX_ASSERT(v[2] > 0);
       return vec2<double>(v[0] / v[2], v[1] / v[2]);
     }
@@ -254,7 +263,7 @@ namespace dxtbx { namespace model {
      */
     vec2<double> get_bidirectional_ray_intersection(vec3<double> s1) const {
       DXTBX_ASSERT(D_);
-      vec3 <double> v = D_.get() * s1;
+      vec3<double> v = D_.get() * s1;
       DXTBX_ASSERT(v[2] != 0);
       return vec2<double>(v[0] / v[2], v[1] / v[2]);
     }
@@ -262,7 +271,9 @@ namespace dxtbx { namespace model {
     /** @returns True/False This and the other frame are the same */
     bool operator==(const VirtualPanelFrame &rhs) const {
       double eps = 1.0e-3;
-      if (true) { return true; }
+      if (true) {
+        return true;
+      }
       return d_.const_ref().all_approx_equal(rhs.d_.const_ref(), eps);
     }
 
@@ -272,7 +283,6 @@ namespace dxtbx { namespace model {
     }
 
   protected:
-
     /**
      * Update the global frame. Construct a matrix of the parent orientation
      * and multiply the origin, fast and slow vectors of the local frame
@@ -284,12 +294,16 @@ namespace dxtbx { namespace model {
      * vector) without immediately failing.
      */
     void update_global_frame() {
-
       // Construct the parent orientation matrix
-      mat3<double> parent_orientation(
-        parent_fast_axis_[0], parent_slow_axis_[0], parent_normal_[0],
-        parent_fast_axis_[1], parent_slow_axis_[1], parent_normal_[1],
-        parent_fast_axis_[2], parent_slow_axis_[2], parent_normal_[2]);
+      mat3<double> parent_orientation(parent_fast_axis_[0],
+                                      parent_slow_axis_[0],
+                                      parent_normal_[0],
+                                      parent_fast_axis_[1],
+                                      parent_slow_axis_[1],
+                                      parent_normal_[1],
+                                      parent_fast_axis_[2],
+                                      parent_slow_axis_[2],
+                                      parent_normal_[2]);
 
       // Calculate the d matrix
       d_ = parent_orientation * get_local_d_matrix();
@@ -300,7 +314,7 @@ namespace dxtbx { namespace model {
       // Update the D matrix
       try {
         D_ = d_.inverse();
-      } catch(scitbx::error) {
+      } catch (scitbx::error) {
         D_ = boost::none;
       }
 
@@ -309,7 +323,7 @@ namespace dxtbx { namespace model {
       distance_ = get_origin() * get_normal();
       try {
         normal_origin_ = get_bidirectional_ray_intersection(get_normal());
-      } catch(dxtbx::error) {
+      } catch (dxtbx::error) {
         normal_origin_ = vec2<double>(0, 0);
       }
     }
@@ -319,18 +333,19 @@ namespace dxtbx { namespace model {
     void update_local_frame(const vec3<double> &d1,
                             const vec3<double> &d2,
                             const vec3<double> &d0) {
-
       // Construct the parent orientation matrix
-      mat3<double> parent_orientation(
-        parent_fast_axis_[0], parent_slow_axis_[0], parent_normal_[0],
-        parent_fast_axis_[1], parent_slow_axis_[1], parent_normal_[1],
-        parent_fast_axis_[2], parent_slow_axis_[2], parent_normal_[2]);
+      mat3<double> parent_orientation(parent_fast_axis_[0],
+                                      parent_slow_axis_[0],
+                                      parent_normal_[0],
+                                      parent_fast_axis_[1],
+                                      parent_slow_axis_[1],
+                                      parent_normal_[1],
+                                      parent_fast_axis_[2],
+                                      parent_slow_axis_[2],
+                                      parent_normal_[2]);
 
       // The new global d matrix
-      mat3<double> d(
-        d1[0], d2[0], d0[0],
-        d1[1], d2[1], d0[1],
-        d1[2], d2[2], d0[2]);
+      mat3<double> d(d1[0], d2[0], d0[0], d1[1], d2[1], d0[1], d1[2], d2[2], d0[2]);
 
       // Calculate the new local d matrix
       d[2] -= parent_origin_[0];
@@ -358,19 +373,17 @@ namespace dxtbx { namespace model {
     vec3<double> parent_slow_axis_;
     vec3<double> parent_normal_;
     mat3<double> d_;
-    boost::optional< mat3<double> > D_;
+    boost::optional<mat3<double> > D_;
     vec3<double> normal_;
     double distance_;
     vec2<double> normal_origin_;
   };
-
 
   /**
    * A panel base class. Specifies everything except pixel related stuff.
    */
   class VirtualPanel : public VirtualPanelFrame {
   public:
-
     virtual ~VirtualPanel() {}
 
     /** @returns The name of the panel */
@@ -395,9 +408,8 @@ namespace dxtbx { namespace model {
 
     /** @returns True/False this is the same as the other */
     bool operator==(const VirtualPanel &other) const {
-      return VirtualPanelFrame::operator==(other)
-          && name_ == other.name_
-          && type_ == other.type_;
+      return VirtualPanelFrame::operator==(other) && name_ == other.name_
+             && type_ == other.type_;
     }
 
     /** @returns True/False this is not the same as the other */
@@ -406,11 +418,10 @@ namespace dxtbx { namespace model {
     }
 
   protected:
-
     std::string type_;
     std::string name_;
   };
 
-}} // namespace dxtbx::model
+}}  // namespace dxtbx::model
 
-#endif // DXTBX_MODEL_VIRTUAL_PANEL_H
+#endif  // DXTBX_MODEL_VIRTUAL_PANEL_H

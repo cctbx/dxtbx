@@ -1,13 +1,13 @@
 /*
-* detector.h
-*
-*  Copyright (C) 2013 Diamond Light Source
-*
-*  Author: James Parkhurst
-*
-*  This code is distributed under the BSD license, a copy of which is
-*  included in the root directory of this package.
-*/
+ * detector.h
+ *
+ *  Copyright (C) 2013 Diamond Light Source
+ *
+ *  Author: James Parkhurst
+ *
+ *  This code is distributed under the BSD license, a copy of which is
+ *  included in the root directory of this package.
+ */
 #ifndef DXTBX_MODEL_DETECTOR_H
 #define DXTBX_MODEL_DETECTOR_H
 
@@ -32,21 +32,21 @@
 
 namespace dxtbx { namespace model {
 
+  using scitbx::mat3;
   using scitbx::vec2;
   using scitbx::vec3;
-  using scitbx::mat3;
   using scitbx::af::double6;
   using scitbx::af::int4;
-
 
   namespace detail {
 
     /**
      * @return True/False is point p of the left of the line between a and b
      */
-    inline
-    bool is_left(const vec2<double> &a, const vec2<double> &b, const vec2<double> &p) {
-      return ((b[0] - a[0])*(p[1] - a[1]) - (b[1] - a[1])*(p[0] - a[0])) > 0;
+    inline bool is_left(const vec2<double> &a,
+                        const vec2<double> &b,
+                        const vec2<double> &p) {
+      return ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) > 0;
     }
 
     /**
@@ -54,16 +54,15 @@ namespace dxtbx { namespace model {
      * @param x The set of input points
      * @return The points in the convex hull
      */
-    inline
-    scitbx::af::shared< vec2<double> > convex_hull(const scitbx::af::const_ref< vec2<double> > &x) {
-
+    inline scitbx::af::shared<vec2<double> > convex_hull(
+      const scitbx::af::const_ref<vec2<double> > &x) {
       DXTBX_ASSERT(x.size() > 2);
 
-      scitbx::af::shared< vec2<double> > result;
+      scitbx::af::shared<vec2<double> > result;
 
       // Find the leftmost point
       std::size_t current = 0;
-      for (std::size_t i = 1 ; i < x.size(); ++i) {
+      for (std::size_t i = 1; i < x.size(); ++i) {
         if (x[i][0] < x[current][0]) {
           current = i;
         }
@@ -72,7 +71,6 @@ namespace dxtbx { namespace model {
       // Save the starting index
       std::size_t first = current;
       while (true) {
-
         // Add the current point to the results
         result.push_back(x[current]);
 
@@ -99,8 +97,9 @@ namespace dxtbx { namespace model {
      * Compute the distance from a point P to a line segment defined by points a
      * and b
      */
-    inline
-    double distance_to_line_segment(const vec2<double> &a, const vec2<double> &b, const vec2<double> &p) {
+    inline double distance_to_line_segment(const vec2<double> &a,
+                                           const vec2<double> &b,
+                                           const vec2<double> &p) {
       vec2<double> l = (b - a);
       double t = l * (p - a) / l.length_sq();
       double distance = 0.0;
@@ -114,7 +113,7 @@ namespace dxtbx { namespace model {
       return distance;
     }
 
-  }
+  }  // namespace detail
 
   /**
    * A class representing a multi-panel hierarchical detector.
@@ -126,9 +125,6 @@ namespace dxtbx { namespace model {
    */
   class Detector {
   public:
-
-
-
     /**
      * A class representing a node in the detector hierarchy. The node class
      * inherits from the panel class and adds some methods for adding children,
@@ -137,9 +133,8 @@ namespace dxtbx { namespace model {
      */
     class Node : public Panel {
     public:
-
-      typedef Node* pointer;
-      typedef const Node* const_pointer;
+      typedef Node *pointer;
+      typedef const Node *const_pointer;
       typedef boost::ptr_vector<Node>::iterator iterator;
       typedef boost::ptr_vector<Node>::const_iterator const_iterator;
 
@@ -148,10 +143,7 @@ namespace dxtbx { namespace model {
        * hold of the flat array of panels so that when the hierarchy is built, the
        * panels are added automatically to the flat array of panels.
        */
-      Node(Detector *detector)
-        : detector_(detector),
-          parent_(NULL),
-          is_panel_(false) {}
+      Node(Detector *detector) : detector_(detector), parent_(NULL), is_panel_(false) {}
 
       /**
        * Construct using a parent detector reference. The detector reference keeps
@@ -159,10 +151,7 @@ namespace dxtbx { namespace model {
        * panels are added automatically to the flat array of panels.
        */
       Node(Detector *detector, const Panel &panel)
-        : Panel(panel),
-          detector_(detector),
-          parent_(NULL),
-          is_panel_(false) {}
+          : Panel(panel), detector_(detector), parent_(NULL), is_panel_(false) {}
 
       /**
        * Add a group to the detector node.
@@ -172,10 +161,7 @@ namespace dxtbx { namespace model {
         Node *node = new Node(detector_);
         node->parent_ = this;
         node->is_panel_ = false;
-        node->set_parent_frame(
-            get_fast_axis(),
-            get_slow_axis(),
-            get_origin());
+        node->set_parent_frame(get_fast_axis(), get_slow_axis(), get_origin());
         children_.push_back(node);
         return node;
       }
@@ -188,10 +174,7 @@ namespace dxtbx { namespace model {
         Node *node = new Node(detector_, group);
         node->parent_ = this;
         node->is_panel_ = false;
-        node->set_parent_frame(
-            get_fast_axis(),
-            get_slow_axis(),
-            get_origin());
+        node->set_parent_frame(get_fast_axis(), get_slow_axis(), get_origin());
         children_.push_back(node);
         return node;
       }
@@ -204,10 +187,7 @@ namespace dxtbx { namespace model {
         Node *node = new Node(detector_);
         node->parent_ = this;
         node->is_panel_ = true;
-        node->set_parent_frame(
-            get_fast_axis(),
-            get_slow_axis(),
-            get_origin());
+        node->set_parent_frame(get_fast_axis(), get_slow_axis(), get_origin());
         children_.push_back(node);
         detector_->data_->panels.push_back(node);
         return node;
@@ -221,10 +201,7 @@ namespace dxtbx { namespace model {
         Node *node = new Node(detector_, panel);
         node->parent_ = this;
         node->is_panel_ = true;
-        node->set_parent_frame(
-            get_fast_axis(),
-            get_slow_axis(),
-            get_origin());
+        node->set_parent_frame(get_fast_axis(), get_slow_axis(), get_origin());
         children_.push_back(node);
         detector_->data_->panels.push_back(node);
         return node;
@@ -238,13 +215,10 @@ namespace dxtbx { namespace model {
         Node *node = new Node(detector_, panel);
         node->parent_ = this;
         node->is_panel_ = true;
-        node->set_parent_frame(
-            get_fast_axis(),
-            get_slow_axis(),
-            get_origin());
+        node->set_parent_frame(get_fast_axis(), get_slow_axis(), get_origin());
         children_.push_back(node);
         if (detector_->data_->panels.size() <= index) {
-          detector_->data_->panels.resize(index+1, NULL);
+          detector_->data_->panels.resize(index + 1, NULL);
         }
         DXTBX_ASSERT(detector_->data_->panels[index] == NULL);
         detector_->data_->panels[index] = node;
@@ -374,10 +348,7 @@ namespace dxtbx { namespace model {
                      const vec3<double> &d0) {
         Panel::set_frame(d1, d2, d0);
         for (std::size_t i = 0; i < children_.size(); ++i) {
-          children_[i].set_parent_frame(
-              get_fast_axis(),
-              get_slow_axis(),
-              get_origin());
+          children_[i].set_parent_frame(get_fast_axis(), get_slow_axis(), get_origin());
         }
       }
 
@@ -393,10 +364,7 @@ namespace dxtbx { namespace model {
                            const vec3<double> &d0) {
         Panel::set_local_frame(d1, d2, d0);
         for (std::size_t i = 0; i < children_.size(); ++i) {
-          children_[i].set_parent_frame(
-              get_fast_axis(),
-              get_slow_axis(),
-              get_origin());
+          children_[i].set_parent_frame(get_fast_axis(), get_slow_axis(), get_origin());
         }
       }
 
@@ -412,10 +380,7 @@ namespace dxtbx { namespace model {
                             const vec3<double> &d0) {
         Panel::set_parent_frame(d1, d2, d0);
         for (std::size_t i = 0; i < children_.size(); ++i) {
-          children_[i].set_parent_frame(
-              get_fast_axis(),
-              get_slow_axis(),
-              get_origin());
+          children_[i].set_parent_frame(get_fast_axis(), get_slow_axis(), get_origin());
         }
       }
 
@@ -448,30 +413,27 @@ namespace dxtbx { namespace model {
       /**
        * Check that the nodes are similar
        */
-      bool is_similar_to(
-          const Node &rhs,
-          double fast_axis_tolerance,
-          double slow_axis_tolerance,
-          double origin_tolerance,
-          bool static_only,
-          bool ignore_trusted_range=false) const {
-        if (Panel::is_similar_to(
-              rhs,
-              fast_axis_tolerance,
-              slow_axis_tolerance,
-              origin_tolerance,
-              static_only,
-              ignore_trusted_range)) {
+      bool is_similar_to(const Node &rhs,
+                         double fast_axis_tolerance,
+                         double slow_axis_tolerance,
+                         double origin_tolerance,
+                         bool static_only,
+                         bool ignore_trusted_range = false) const {
+        if (Panel::is_similar_to(rhs,
+                                 fast_axis_tolerance,
+                                 slow_axis_tolerance,
+                                 origin_tolerance,
+                                 static_only,
+                                 ignore_trusted_range)) {
           if (size() == rhs.size()) {
             bool all_eq = true;
             for (std::size_t i = 0; i < size(); ++i) {
-              if (!children_[i].is_similar_to(
-                    rhs.children_[i],
-                    fast_axis_tolerance,
-                    slow_axis_tolerance,
-                    origin_tolerance,
-                    static_only,
-                    ignore_trusted_range)) {
+              if (!children_[i].is_similar_to(rhs.children_[i],
+                                              fast_axis_tolerance,
+                                              slow_axis_tolerance,
+                                              origin_tolerance,
+                                              static_only,
+                                              ignore_trusted_range)) {
                 all_eq = false;
                 break;
               }
@@ -483,33 +445,28 @@ namespace dxtbx { namespace model {
       }
 
     protected:
-
       Detector *detector_;
       pointer parent_;
       boost::ptr_vector<Node> children_;
       bool is_panel_;
     };
 
-
-
     typedef std::pair<int, vec2<double> > coord_type;
     typedef Node::pointer node_pointer;
     typedef Node::const_pointer const_node_pointer;
     typedef Panel panel_type;
     typedef boost::indirect_iterator<std::vector<Node::pointer>::iterator> iterator;
-    typedef boost::indirect_iterator<std::vector<Node::pointer>::const_iterator> const_iterator;
+    typedef boost::indirect_iterator<std::vector<Node::pointer>::const_iterator>
+      const_iterator;
 
     /**
      * A helper class to contain the data
      */
     class DetectorData {
     public:
+      DetectorData(Detector *detector) : root(detector) {}
 
-      DetectorData(Detector *detector)
-        : root(detector) {}
-
-      DetectorData(Detector *detector, const Panel &panel)
-        : root(detector, panel) {}
+      DetectorData(Detector *detector, const Panel &panel) : root(detector, panel) {}
 
       Node root;
       std::vector<Node::pointer> panels;
@@ -518,8 +475,7 @@ namespace dxtbx { namespace model {
     /**
      * Initialise the detector
      */
-    Detector()
-      : data_(boost::make_shared<DetectorData>(this)) {}
+    Detector() : data_(boost::make_shared<DetectorData>(this)) {}
 
     /**
      * Copy another detector
@@ -538,8 +494,7 @@ namespace dxtbx { namespace model {
     /**
      * Construct with a single panel
      */
-    Detector(const Panel &panel)
-      : data_(boost::make_shared<DetectorData>(this)) {
+    Detector(const Panel &panel) : data_(boost::make_shared<DetectorData>(this)) {
       add_panel(panel);
     }
 
@@ -588,19 +543,19 @@ namespace dxtbx { namespace model {
     /**
      * Get the panel at the current position
      */
-    panel_type& operator[](std::size_t i) {
+    panel_type &operator[](std::size_t i) {
       DXTBX_ASSERT(i < data_->panels.size());
       return *(data_->panels[i]);
     }
 
     /** Return a const reference to a panel */
-    const panel_type& operator[](std::size_t i) const {
-     DXTBX_ASSERT(i < size());
+    const panel_type &operator[](std::size_t i) const {
+      DXTBX_ASSERT(i < size());
       return *(data_->panels[i]);
     }
 
     /** Return a pointer to a panel */
-    panel_type* at(std::size_t i) {
+    panel_type *at(std::size_t i) {
       DXTBX_ASSERT(i < size());
       return data_->panels[i];
     }
@@ -648,28 +603,28 @@ namespace dxtbx { namespace model {
 
     /** Check if the detectors are similar */
     bool is_similar_to(const Detector &rhs,
-                        double fast_axis_tolerance,
-                        double slow_axis_tolerance,
-                        double origin_tolerance,
-                        bool static_only,
-                        bool ignore_trusted_range=false) const {
+                       double fast_axis_tolerance,
+                       double slow_axis_tolerance,
+                       double origin_tolerance,
+                       bool static_only,
+                       bool ignore_trusted_range = false) const {
       bool similar = false;
-      if (data_->root.is_similar_to(
-            rhs.data_->root,
-            fast_axis_tolerance,
-            slow_axis_tolerance,
-            origin_tolerance,
-            static_only,
-            ignore_trusted_range) && size() == rhs.size()) {
+      if (data_->root.is_similar_to(rhs.data_->root,
+                                    fast_axis_tolerance,
+                                    slow_axis_tolerance,
+                                    origin_tolerance,
+                                    static_only,
+                                    ignore_trusted_range)
+          && size() == rhs.size()) {
         similar = true;
         for (std::size_t i = 0; i < size(); ++i) {
-          similar = similar && (data_->panels[i]->is_similar_to(
-            *rhs.data_->panels[i],
-            fast_axis_tolerance,
-            slow_axis_tolerance,
-            origin_tolerance,
-            static_only,
-            ignore_trusted_range));
+          similar = similar
+                    && (data_->panels[i]->is_similar_to(*rhs.data_->panels[i],
+                                                        fast_axis_tolerance,
+                                                        slow_axis_tolerance,
+                                                        origin_tolerance,
+                                                        static_only,
+                                                        ignore_trusted_range));
         }
       }
       return similar;
@@ -697,7 +652,6 @@ namespace dxtbx { namespace model {
      * @returns The maximum resolution
      */
     double get_max_inscribed_resolution(vec3<double> s0) const {
-
       // If only 1 panel then use simple method
       try {
         if (size() == 1) {
@@ -712,42 +666,41 @@ namespace dxtbx { namespace model {
 
       // Choose some axes orthogonal s0
       vec3<double> za = -s0.normalize();
-      vec3<double> ya = ((za * vec3<double>(1,0,0) < 0.9)
-        ? za.cross(vec3<double>(1,0,0))
-        : za.cross(vec3<double>(0,1,0))).normalize();
+      vec3<double> ya =
+        ((za * vec3<double>(1, 0, 0) < 0.9) ? za.cross(vec3<double>(1, 0, 0))
+                                            : za.cross(vec3<double>(0, 1, 0)))
+          .normalize();
       vec3<double> xa = za.cross(ya).normalize();
 
       // Compute the stereographic projection of panel corners
-      scitbx::af::shared< vec2<double> > points;
+      scitbx::af::shared<vec2<double> > points;
       for (std::size_t i = 0; i < size(); ++i) {
         std::size_t width = (*this)[i].get_image_size()[0];
         std::size_t height = (*this)[i].get_image_size()[1];
-        scitbx::af::tiny< vec2<double>, 4 > corners;
-        corners[0] = vec2<double>(0,0);
-        corners[1] = vec2<double>(width,0);
-        corners[2] = vec2<double>(0,height);
-        corners[3] = vec2<double>(width,height);
+        scitbx::af::tiny<vec2<double>, 4> corners;
+        corners[0] = vec2<double>(0, 0);
+        corners[1] = vec2<double>(width, 0);
+        corners[2] = vec2<double>(0, height);
+        corners[3] = vec2<double>(width, height);
         for (std::size_t j = 0; j < 4; ++j) {
           vec3<double> p = (*this)[i].get_pixel_lab_coord(corners[j]).normalize();
           double pdotx = p * xa;
           double pdoty = p * ya;
           double pdotz = p * za;
           points.push_back(
-              vec2<double>(
-                2.0 * pdotx / (1.0 - pdotz),
-                2.0 * pdoty / (1.0 - pdotz)));
+            vec2<double>(2.0 * pdotx / (1.0 - pdotz), 2.0 * pdoty / (1.0 - pdotz)));
         }
       }
 
       // Compute the convex hull of points
-      scitbx::af::shared< vec2<double> > hull = detail::convex_hull(points.const_ref());
+      scitbx::af::shared<vec2<double> > hull = detail::convex_hull(points.const_ref());
       DXTBX_ASSERT(hull.size() >= 4);
 
       // Compute the minimum distance to the line segments
       double min_distance = -1;
       std::size_t first = hull.size() - 1;
       for (std::size_t last = 0; last < hull.size(); ++last) {
-        vec2<double> zero(0,0);
+        vec2<double> zero(0, 0);
         double d = detail::distance_to_line_segment(hull[first], hull[last], zero);
         if (min_distance < 0 || d < min_distance) {
           min_distance = d;
@@ -774,7 +727,7 @@ namespace dxtbx { namespace model {
       // If the coordinate is valid, then set this coordinate as the current
       // best bet.
       for (std::size_t i = 0; i < size(); ++i) {
-        vec3 <double> v = (*this)[i].get_D_matrix() * s1;
+        vec3<double> v = (*this)[i].get_D_matrix() * s1;
         if (v[2] > w_max) {
           vec2<double> xy_temp(v[0] / v[2], v[1] / v[2]);
           if ((*this)[i].is_coord_valid_mm(xy_temp)) {
@@ -800,25 +753,24 @@ namespace dxtbx { namespace model {
             found_panel = (int)i;
             break;
           }
-        } catch(dxtbx::error) {
+        } catch (dxtbx::error) {
           // pass
         }
       }
       return found_panel;
     }
 
-
     /** Check if any panels intersect */
-//    bool do_panels_intersect() const {
-//      for (std::size_t j = 0; j < panel_list_->size()-1; ++j) {
-//        for (std::size_t i = j+1; i < panel_list_->size(); ++i) {
-//          if (panels_intersect((*panel_list_)[j], (*panel_list_)[i])) {
-//            return true;
-//          }
-//        }
-//      }
-//      return false;
-//    }
+    //    bool do_panels_intersect() const {
+    //      for (std::size_t j = 0; j < panel_list_->size()-1; ++j) {
+    //        for (std::size_t i = j+1; i < panel_list_->size(); ++i) {
+    //          if (panels_intersect((*panel_list_)[j], (*panel_list_)[i])) {
+    //            return true;
+    //          }
+    //        }
+    //      }
+    //      return false;
+    //    }
 
     /** Rotate the detector about an axis */
     void rotate_around_origin(vec3<double> axis, double angle) {
@@ -827,36 +779,33 @@ namespace dxtbx { namespace model {
       }
     }
 
-
   protected:
-    friend std::ostream& operator<<(std::ostream &os, const Detector &d);
+    friend std::ostream &operator<<(std::ostream &os, const Detector &d);
 
     boost::shared_ptr<DetectorData> data_;
 
   private:
-   /**
-    * Copy the child panels and groups, recursively, of a detector node.
-    *
-    * Note that this doesn't touch the Panel/detector contents of the
-    * destination node.
-    *
-    * Panel children are assumed to be leafs without further hierarchy.
-    */
+    /**
+     * Copy the child panels and groups, recursively, of a detector node.
+     *
+     * Note that this doesn't touch the Panel/detector contents of the
+     * destination node.
+     *
+     * Panel children are assumed to be leafs without further hierarchy.
+     */
     void copy_node_subtree(Node::pointer dest, Node::const_pointer source) {
-     for (Node::const_iterator it = source->begin(); it != source->end(); ++it) {
-       if (it->is_panel()) {
-         dest->add_panel(*it, it->index());
-       } else {
-         copy_node_subtree(dest->add_group(*it), &*it);
-       }
-     }
+      for (Node::const_iterator it = source->begin(); it != source->end(); ++it) {
+        if (it->is_panel()) {
+          dest->add_panel(*it, it->index());
+        } else {
+          copy_node_subtree(dest->add_group(*it), &*it);
+        }
+      }
     }
   };
 
-
   /** Print detector information */
-  inline
-  std::ostream& operator<<(std::ostream &os, const Detector &d) {
+  inline std::ostream &operator<<(std::ostream &os, const Detector &d) {
     os << "Detector:\n";
     for (std::size_t i = 0; i < d.size(); ++i) {
       os << d[i];
@@ -864,6 +813,6 @@ namespace dxtbx { namespace model {
     return os;
   }
 
-}} // namespace dxtbx::model
+}}  // namespace dxtbx::model
 
-#endif // DXTBX_MODEL_DETECTOR_H
+#endif  // DXTBX_MODEL_DETECTOR_H

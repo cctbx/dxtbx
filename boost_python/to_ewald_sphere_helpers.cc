@@ -21,27 +21,25 @@ namespace dxtbx { namespace boost_python {
 
   using namespace boost::python;
 
-  using scitbx::vec2;
-  using scitbx::vec3;
-  using scitbx::af::flex_grid;
   using dxtbx::model::Beam;
   using dxtbx::model::Detector;
   using dxtbx::model::Goniometer;
   using dxtbx::model::Scan;
+  using scitbx::vec2;
+  using scitbx::vec3;
+  using scitbx::af::flex_grid;
 
   typedef scitbx::af::flex<vec3<double> >::type flex_vec3_double;
 
   class ImageToEwaldSphere {
   public:
-    ImageToEwaldSphere(const Beam &beam, const Detector &detector,
-                       const Goniometer &gonio, const Scan &scan)
-      : beam_(beam),
-        detector_(detector),
-        gonio_(gonio),
-        scan_(scan) {}
+    ImageToEwaldSphere(const Beam &beam,
+                       const Detector &detector,
+                       const Goniometer &gonio,
+                       const Scan &scan)
+        : beam_(beam), detector_(detector), gonio_(gonio), scan_(scan) {}
 
     flex_vec3_double operator()(int frame, std::size_t panel) {
-
       // Check panel
       DXTBX_ASSERT(panel < detector_.size());
 
@@ -57,8 +55,9 @@ namespace dxtbx { namespace boost_python {
       for (std::size_t j = 0; j < slow_size; ++j) {
         for (std::size_t i = 0; i < fast_size; ++i) {
           vec3<double> s1 = detector_[panel].get_pixel_lab_coord(vec2<double>(i, j));
-          x(j, i) = s1.normalize().unit_rotate_around_origin(
-            gonio_.get_rotation_axis(), phi) / beam_.get_wavelength();
+          x(j, i) =
+            s1.normalize().unit_rotate_around_origin(gonio_.get_rotation_axis(), phi)
+            / beam_.get_wavelength();
         }
       }
 
@@ -72,19 +71,11 @@ namespace dxtbx { namespace boost_python {
     Scan scan_;
   };
 
-
-  void export_to_ewald_sphere_helpers()
-  {
+  void export_to_ewald_sphere_helpers() {
     class_<ImageToEwaldSphere>("ImageToEwaldSphere", no_init)
-      .def(init<const Beam&,
-                const Detector&,
-                const Goniometer&,
-                const Scan&>((
-          arg("beam"),
-          arg("detector"),
-          arg("goniometer"),
-          arg("scan"))))
+      .def(init<const Beam &, const Detector &, const Goniometer &, const Scan &>(
+        (arg("beam"), arg("detector"), arg("goniometer"), arg("scan"))))
       .def("__call__", &ImageToEwaldSphere::operator());
   }
 
-}} // namespace dxtbx::boost_python
+}}  // namespace dxtbx::boost_python

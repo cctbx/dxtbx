@@ -31,20 +31,20 @@ namespace dxtbx { namespace format {
     /**
      * Check is a string starts with a substring
      */
-    inline
-    bool startswith(const std::string s, const std::string prefix) {
+    inline bool startswith(const std::string s, const std::string prefix) {
       return s.substr(0, prefix.size()) == prefix;
     }
 
     /**
      * Get a header item
      */
-    inline
-    bool get_header_item(std::string item, std::string &name, std::string &value) {
+    inline bool get_header_item(std::string item,
+                                std::string &name,
+                                std::string &value) {
       std::size_t pos1 = item.find("=");
       if (pos1 != std::string::npos) {
         name = item.substr(0, pos1);
-        item = item.substr(pos1+1,item.size());
+        item = item.substr(pos1 + 1, item.size());
         std::size_t pos2 = item.find(";");
         if (pos2 != std::string::npos) {
           value = item.substr(0, pos2);
@@ -68,19 +68,16 @@ namespace dxtbx { namespace format {
     /**
      * Check if the system is big endian
      */
-    inline
-    bool is_big_endian()
-    {
+    inline bool is_big_endian() {
       uint32_t val = 1;
-      char * buff = (char *) & val;
+      char *buff = (char *)&val;
       return (buff[0] == 0);
     }
 
     /**
      * Check if the byte order string is big endian
      */
-    inline
-    bool is_big_endian(std::string byte_order) {
+    inline bool is_big_endian(std::string byte_order) {
       if (byte_order == "big_endian") {
         return true;
       } else if (byte_order != "little_endian") {
@@ -92,8 +89,7 @@ namespace dxtbx { namespace format {
     /**
      * Swap bytes for an array of shorts
      */
-    inline
-    void swap_bytes(short *first, short *last) {
+    inline void swap_bytes(short *first, short *last) {
       for (short *it = first; it != last; ++it) {
         short x = *it;
         *it = x >> 8 | x << 8;
@@ -103,8 +99,7 @@ namespace dxtbx { namespace format {
     /**
      * Swap bytes for an array of unsigned shorts
      */
-    inline
-    void swap_bytes(unsigned short *first, unsigned short *last) {
+    inline void swap_bytes(unsigned short *first, unsigned short *last) {
       for (unsigned short *it = first; it != last; ++it) {
         unsigned short x = *it;
         *it = x >> 8 | x << 8;
@@ -114,47 +109,35 @@ namespace dxtbx { namespace format {
     /**
      * Swap bytes for an array of longs
      */
-    inline
-    void swap_bytes(int *first, int *last) {
+    inline void swap_bytes(int *first, int *last) {
       for (int *it = first; it != last; ++it) {
         int x = *it;
-        *it = (x << 24) |
-              (x << 8 & 0xff0000) |
-              (x >> 8 & 0xff00) |
-              (x >> 24);
+        *it = (x << 24) | (x << 8 & 0xff0000) | (x >> 8 & 0xff00) | (x >> 24);
       }
     }
 
     /**
      * Swap bytes for an array of unsigned longs
      */
-    inline
-    void swap_bytes(unsigned int *first, unsigned int *last) {
+    inline void swap_bytes(unsigned int *first, unsigned int *last) {
       for (unsigned int *it = first; it != last; ++it) {
         unsigned int x = *it;
-        *it = (x << 24) |
-              (x << 8 & 0xff0000) |
-              (x >> 8 & 0xff00) |
-              (x >> 24);
+        *it = (x << 24) | (x << 8 & 0xff0000) | (x >> 8 & 0xff00) | (x >> 24);
       }
     }
 
-  }
-
+  }  // namespace detail
 
   /**
    * A class to read an SMV Image
    */
   class SMVReader : public ImageReader {
   public:
-
     /**
      * Construct the class with the filename
      */
     SMVReader(const char *filename)
-      : ImageReader(filename),
-        slow_size_(0),
-        fast_size_(0) {
+        : ImageReader(filename), slow_size_(0), fast_size_(0) {
       std::ifstream handle(filename, std::ifstream::binary);
       read_header(handle);
       read_data(handle);
@@ -167,20 +150,17 @@ namespace dxtbx { namespace format {
       return byte_order_;
     }
 
-
   protected:
-
     // Helper structs to get types
     template <typename T>
     struct array_type {
-      typedef scitbx::af::versa< T, scitbx::af::c_grid<2> > type;
+      typedef scitbx::af::versa<T, scitbx::af::c_grid<2> > type;
     };
 
     /**
      * Read the number of bytes in the header
      */
     std::size_t read_header_nbytes(std::ifstream &handle) {
-
       // Read first couple of lines and check
       std::string line;
       std::getline(handle, line);
@@ -206,7 +186,6 @@ namespace dxtbx { namespace format {
      * Read the image header
      */
     void read_header(std::ifstream &handle) {
-
       // Open the file and check is open
       DXTBX_ASSERT(handle.is_open());
 
@@ -223,7 +202,6 @@ namespace dxtbx { namespace format {
       std::stringstream header(&buffer[0]);
       std::string line;
       while (std::getline(header, line)) {
-
         // End of the header
         if (detail::startswith(line, "}")) {
           break;
@@ -256,11 +234,9 @@ namespace dxtbx { namespace format {
               type_ = "uint16";
             }
           } else if (name == "BYTE_ORDER") {
-            DXTBX_ASSERT(
-                value == "big_endian" ||
-                value == "little_endian");
+            DXTBX_ASSERT(value == "big_endian" || value == "little_endian");
             byte_order_ = value;
-                  } else if (name == "SIZE1") {
+          } else if (name == "SIZE1") {
             slow_size_ = detail::get_value<std::size_t>(value);
           } else if (name == "SIZE2") {
             fast_size_ = detail::get_value<std::size_t>(value);
@@ -281,7 +257,6 @@ namespace dxtbx { namespace format {
      * Read the image data
      */
     void read_data(std::ifstream &handle) {
-
       // Get the element size
       if (type_ == "int16") {
         read_data_detail<int, short>(handle);
@@ -298,7 +273,6 @@ namespace dxtbx { namespace format {
 
     template <typename OutputType, typename InputType>
     void read_data_detail(std::ifstream &handle) {
-
       typedef typename array_type<InputType>::type input_array_data_type;
       typedef typename array_type<OutputType>::type output_array_data_type;
 
@@ -313,7 +287,7 @@ namespace dxtbx { namespace format {
       input_array_data_type data(grid);
 
       // Read the data
-      handle.read(reinterpret_cast<char*>(&data[0]), nbytes);
+      handle.read(reinterpret_cast<char *>(&data[0]), nbytes);
 
       // Swap bytes if necessary
       if (detail::is_big_endian(byte_order_) != detail::is_big_endian()) {
@@ -335,7 +309,6 @@ namespace dxtbx { namespace format {
     std::string byte_order_;
   };
 
+}}  // namespace dxtbx::format
 
-}} // namespace dxtbx::format
-
-#endif // DXTBX_FORMAT_SMV_READER_H
+#endif  // DXTBX_FORMAT_SMV_READER_H

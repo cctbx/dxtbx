@@ -18,9 +18,9 @@
 
 namespace dxtbx { namespace model {
 
-  using std::sqrt;
   using scitbx::vec2;
   using scitbx::vec3;
+  using std::sqrt;
 
   /**
    * Function to perform a parallax correction on a given coordinate. Find the
@@ -31,9 +31,10 @@ namespace dxtbx { namespace model {
    * @param xy0 The detector (mm) coordinate of the origin at the normal
    * @param xy The coordinate to correct
    */
-  inline
-  vec2<double> parallax_correction(double d, double la, vec2<double> xy0,
-      vec2<double> xy) {
+  inline vec2<double> parallax_correction(double d,
+                                          double la,
+                                          vec2<double> xy0,
+                                          vec2<double> xy) {
     vec2<double> xyp = xy - xy0;
     return xy + la * xyp / sqrt(d * d + xyp.length_sq());
   }
@@ -58,9 +59,10 @@ namespace dxtbx { namespace model {
    * @param xy0 The detector (mm) coordinate of the origin at the normal
    * @param xy The coordinate to correct
    */
-  inline
-  vec2<double> parallax_correction_inv(double d, double la, vec2<double> xy0,
-      vec2<double> xy) {
+  inline vec2<double> parallax_correction_inv(double d,
+                                              double la,
+                                              vec2<double> xy0,
+                                              vec2<double> xy) {
     vec2<double> xyp = xy - xy0;
     return xy - la * xyp / sqrt(d * d + xyp.length_sq());
   }
@@ -75,12 +77,12 @@ namespace dxtbx { namespace model {
    * @param slow Detector slow direction
    * @param origin Direction of detector origin
    */
-  inline
-  double attenuation_length(double mu, double t0,
-                            vec3<double> s1,
-                            vec3<double> fast,
-                            vec3<double> slow,
-                            vec3<double> origin) {
+  inline double attenuation_length(double mu,
+                                   double t0,
+                                   vec3<double> s1,
+                                   vec3<double> fast,
+                                   vec3<double> slow,
+                                   vec3<double> origin) {
     vec3<double> normal = fast.cross(slow);
     double distance = origin * normal;
     if (distance < 0) {
@@ -88,7 +90,7 @@ namespace dxtbx { namespace model {
     }
     double cos_t = s1 * normal;
     DXTBX_ASSERT(mu > 0 && cos_t > 0);
-    return (1.0 / mu) - (t0 / cos_t + 1.0 / mu) * exp(- mu * t0 / cos_t);
+    return (1.0 / mu) - (t0 / cos_t + 1.0 / mu) * exp(-mu * t0 / cos_t);
   }
 
   /**
@@ -102,12 +104,12 @@ namespace dxtbx { namespace model {
    * @param slow Detector slow direction
    * @param origin Direction of detector origin
    */
-  inline
-  vec2<double> parallax_correction2(double mu, double t0,
-                                    vec2<double> xy,
-                                    vec3<double> fast,
-                                    vec3<double> slow,
-                                    vec3<double> origin) {
+  inline vec2<double> parallax_correction2(double mu,
+                                           double t0,
+                                           vec2<double> xy,
+                                           vec3<double> fast,
+                                           vec3<double> slow,
+                                           vec3<double> origin) {
     double o;
     vec2<double> c_xy;
     vec3<double> s1 = origin + xy[0] * fast + xy[1] * slow;
@@ -130,12 +132,12 @@ namespace dxtbx { namespace model {
    * @param slow Detector slow direction
    * @param origin Direction of detector origin
    */
-  inline
-  vec2<double> parallax_correction_inv2(double mu, double t0,
-                                    vec2<double> xy,
-                                    vec3<double> fast,
-                                    vec3<double> slow,
-                                    vec3<double> origin) {
+  inline vec2<double> parallax_correction_inv2(double mu,
+                                               double t0,
+                                               vec2<double> xy,
+                                               vec3<double> fast,
+                                               vec3<double> slow,
+                                               vec3<double> origin) {
     double o;
     vec2<double> c_xy;
     vec3<double> s1 = origin + xy[0] * fast + xy[1] * slow;
@@ -146,6 +148,6 @@ namespace dxtbx { namespace model {
     return c_xy;
   }
 
-}} // namespace dxtbx::model
+}}  // namespace dxtbx::model
 
 #endif /* DXTBX_MODEL_PARALLAX_CORRECTION_H */

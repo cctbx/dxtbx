@@ -1,13 +1,13 @@
 /*
-* pixel_to_millimeter.h
-*
-*  Copyright (C) 2013 Diamond Light Source
-*
-*  Author: James Parkhurst
-*
-*  This code is distributed under the BSD license, a copy of which is
-*  included in the root directory of this package.
-*/
+ * pixel_to_millimeter.h
+ *
+ *  Copyright (C) 2013 Diamond Light Source
+ *
+ *  Author: James Parkhurst
+ *
+ *  This code is distributed under the BSD license, a copy of which is
+ *  included in the root directory of this package.
+ */
 #ifndef DXTBX_MODEL_PIXEL_TO_MILLIMETER_H
 #define DXTBX_MODEL_PIXEL_TO_MILLIMETER_H
 
@@ -26,7 +26,6 @@ namespace dxtbx { namespace model {
    */
   class PxMmStrategy {
   public:
-
     /** Virtual desctructor */
     virtual ~PxMmStrategy() {}
 
@@ -40,7 +39,7 @@ namespace dxtbx { namespace model {
      * @return The (x, y) millimeter coordinate
      */
     virtual vec2<double> to_millimeter(const PanelData &panel,
-      vec2<double> xy) const = 0;
+                                       vec2<double> xy) const = 0;
 
     /**
      * Convert a millimeter coordinate to a pixel coordinate
@@ -48,10 +47,9 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) millimeter coordinate
      * @return The (x, y) pixel coordinate
      */
-    virtual vec2<double> to_pixel(const PanelData &panel,
-      vec2<double> xy) const = 0;
+    virtual vec2<double> to_pixel(const PanelData &panel, vec2<double> xy) const = 0;
 
-    virtual std::string strategy_name() const{
+    virtual std::string strategy_name() const {
       throw DXTBX_ERROR("Overload me");
       return std::string();
     }
@@ -63,7 +61,6 @@ namespace dxtbx { namespace model {
    */
   class SimplePxMmStrategy : public PxMmStrategy {
   public:
-
     /** Virtual desctructor */
     virtual ~SimplePxMmStrategy() {}
 
@@ -78,10 +75,9 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) pixel coordinate
      * @return The (x, y) millimeter coordinate
      */
-    vec2<double> to_millimeter(const PanelData &panel,
-        vec2<double> xy) const {
+    vec2<double> to_millimeter(const PanelData &panel, vec2<double> xy) const {
       vec2<double> pixel_size = panel.get_pixel_size();
-      return vec2<double> (xy[0] * pixel_size[0], xy[1] * pixel_size[1]);
+      return vec2<double>(xy[0] * pixel_size[0], xy[1] * pixel_size[1]);
     }
 
     /**
@@ -90,16 +86,14 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) millimeter coordinate
      * @return The (x, y) pixel coordinate
      */
-    vec2<double> to_pixel(const PanelData &panel,
-        vec2<double> xy) const {
+    vec2<double> to_pixel(const PanelData &panel, vec2<double> xy) const {
       vec2<double> pixel_size = panel.get_pixel_size();
-      return vec2<double> (xy[0] / pixel_size[0], xy[1] / pixel_size[1]);
+      return vec2<double>(xy[0] / pixel_size[0], xy[1] / pixel_size[1]);
     }
 
-    std::string strategy_name() const{
+    std::string strategy_name() const {
       return std::string("SimplePxMmStrategy\n");
     }
-
   };
 
   /**
@@ -108,9 +102,7 @@ namespace dxtbx { namespace model {
    */
   class ParallaxCorrectedPxMmStrategy : public SimplePxMmStrategy {
   public:
-    ParallaxCorrectedPxMmStrategy(double mu, double t0)
-      : mu_(mu),
-        t0_(t0) {
+    ParallaxCorrectedPxMmStrategy(double mu, double t0) : mu_(mu), t0_(t0) {
       DXTBX_ASSERT(mu > 0);
       DXTBX_ASSERT(t0 > 0);
     }
@@ -139,14 +131,13 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) pixel coordinate
      * @return The (x, y) millimeter coordinate
      */
-    vec2<double> to_millimeter(const PanelData &panel,
-        vec2<double> xy) const {
-      return parallax_correction_inv2(
-          mu_, t0_,
-          SimplePxMmStrategy::to_millimeter(panel, xy),
-          panel.get_fast_axis(),
-          panel.get_slow_axis(),
-          panel.get_origin());
+    vec2<double> to_millimeter(const PanelData &panel, vec2<double> xy) const {
+      return parallax_correction_inv2(mu_,
+                                      t0_,
+                                      SimplePxMmStrategy::to_millimeter(panel, xy),
+                                      panel.get_fast_axis(),
+                                      panel.get_slow_axis(),
+                                      panel.get_origin());
     }
 
     /**
@@ -155,25 +146,24 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) millimeter coordinate
      * @return The (x, y) pixel coordinate
      */
-    vec2<double> to_pixel(const PanelData &panel,
-        vec2<double> xy) const {
+    vec2<double> to_pixel(const PanelData &panel, vec2<double> xy) const {
       return SimplePxMmStrategy::to_pixel(panel,
-        parallax_correction2(
-          mu_, t0_,
-          xy,
-          panel.get_fast_axis(),
-          panel.get_slow_axis(),
-          panel.get_origin()));
+                                          parallax_correction2(mu_,
+                                                               t0_,
+                                                               xy,
+                                                               panel.get_fast_axis(),
+                                                               panel.get_slow_axis(),
+                                                               panel.get_origin()));
     }
 
     std::string mu_t0() const {
       std::ostringstream stringStream;
-      stringStream <<"    mu: "<< mu_ << "\n    t0: " << t0_ << "\n";
+      stringStream << "    mu: " << mu_ << "\n    t0: " << t0_ << "\n";
       return stringStream.str();
     }
 
-    std::string strategy_name() const{
-      return std::string("ParallaxCorrectedPxMmStrategy\n")+mu_t0();
+    std::string strategy_name() const {
+      return std::string("ParallaxCorrectedPxMmStrategy\n") + mu_t0();
     }
 
   protected:
@@ -186,7 +176,6 @@ namespace dxtbx { namespace model {
    */
   class OffsetPxMmStrategy : public SimplePxMmStrategy {
   public:
-
     /*
      * dx, dy here are pixel offsets in fast, slow directions to map
      * ideal readout position to true readout position - these are
@@ -194,12 +183,9 @@ namespace dxtbx { namespace model {
      * to pixel
      */
 
-    OffsetPxMmStrategy(
-          scitbx::af::versa< double, scitbx::af::c_grid<2> > dx,
-          scitbx::af::versa< double, scitbx::af::c_grid<2> > dy)
-      : SimplePxMmStrategy(),
-        dx_(dx),
-        dy_(dy) {
+    OffsetPxMmStrategy(scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
+                       scitbx::af::versa<double, scitbx::af::c_grid<2> > dy)
+        : SimplePxMmStrategy(), dx_(dx), dy_(dy) {
       DXTBX_ASSERT(dx_.accessor().all_eq(dy_.accessor()));
     }
 
@@ -212,12 +198,12 @@ namespace dxtbx { namespace model {
     }
 
     /** @returns the x correction */
-    scitbx::af::versa< double, scitbx::af::c_grid<2> > dx() const {
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx() const {
       return dx_;
     }
 
     /** @returns the y correction */
-    scitbx::af::versa< double, scitbx::af::c_grid<2> > dy() const {
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy() const {
       return dy_;
     }
 
@@ -227,9 +213,7 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) pixel coordinate
      * @return The (x, y) millimeter coordinate
      */
-    vec2<double> to_millimeter(const PanelData &panel,
-        vec2<double> xy) const {
-
+    vec2<double> to_millimeter(const PanelData &panel, vec2<double> xy) const {
       // Check map size
       DXTBX_ASSERT(dx_.accessor().all_eq(dy_.accessor()));
       DXTBX_ASSERT(dx_.accessor()[0] == panel.get_image_size()[1]);
@@ -240,10 +224,10 @@ namespace dxtbx { namespace model {
       int j = (int)std::floor(xy[1]);
       if (i < 0) i = 0;
       if (j < 0) j = 0;
-      if (i >= dx_.accessor()[1]) i = dx_.accessor()[1]-1;
-      if (j >= dx_.accessor()[0]) j = dx_.accessor()[0]-1;
-      double dx = dx_(j,i);
-      double dy = dy_(j,i);
+      if (i >= dx_.accessor()[1]) i = dx_.accessor()[1] - 1;
+      if (j >= dx_.accessor()[0]) j = dx_.accessor()[0] - 1;
+      double dx = dx_(j, i);
+      double dy = dy_(j, i);
 
       xy[0] -= dx;
       xy[1] -= dy;
@@ -260,9 +244,7 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) millimeter coordinate
      * @return The (x, y) pixel coordinate
      */
-    vec2<double> to_pixel(const PanelData &panel,
-        vec2<double> xy) const {
-
+    vec2<double> to_pixel(const PanelData &panel, vec2<double> xy) const {
       // Check map size
       DXTBX_ASSERT(dx_.accessor().all_eq(dy_.accessor()));
       DXTBX_ASSERT(dx_.accessor()[0] == panel.get_image_size()[1]);
@@ -276,23 +258,23 @@ namespace dxtbx { namespace model {
       int j = (int)std::floor(px[1]);
       if (i < 0) i = 0;
       if (j < 0) j = 0;
-      if (i >= dx_.accessor()[1]) i = dx_.accessor()[1]-1;
-      if (j >= dx_.accessor()[0]) j = dx_.accessor()[0]-1;
-      double dx = dx_(j,i);
-      double dy = dy_(j,i);
+      if (i >= dx_.accessor()[1]) i = dx_.accessor()[1] - 1;
+      if (j >= dx_.accessor()[0]) j = dx_.accessor()[0] - 1;
+      double dx = dx_(j, i);
+      double dy = dy_(j, i);
       px[0] += dx;
       px[1] += dy;
 
       return px;
     }
 
-    std::string strategy_name() const{
+    std::string strategy_name() const {
       return std::string("OffsetPxMmStrategy");
     }
 
   protected:
-    scitbx::af::versa< double, scitbx::af::c_grid<2> > dx_;
-    scitbx::af::versa< double, scitbx::af::c_grid<2> > dy_;
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx_;
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy_;
   };
 
   /**
@@ -308,13 +290,11 @@ namespace dxtbx { namespace model {
      */
 
     OffsetParallaxCorrectedPxMmStrategy(
-          double mu,
-          double t0,
-          scitbx::af::versa< double, scitbx::af::c_grid<2> > dx,
-          scitbx::af::versa< double, scitbx::af::c_grid<2> > dy)
-      : ParallaxCorrectedPxMmStrategy(mu, t0),
-        dx_(dx),
-        dy_(dy) {
+      double mu,
+      double t0,
+      scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
+      scitbx::af::versa<double, scitbx::af::c_grid<2> > dy)
+        : ParallaxCorrectedPxMmStrategy(mu, t0), dx_(dx), dy_(dy) {
       DXTBX_ASSERT(mu > 0);
       DXTBX_ASSERT(t0 > 0);
       DXTBX_ASSERT(dx_.accessor().all_eq(dy_.accessor()));
@@ -329,12 +309,12 @@ namespace dxtbx { namespace model {
     }
 
     /** @returns the x correction */
-    scitbx::af::versa< double, scitbx::af::c_grid<2> > dx() const {
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx() const {
       return dx_;
     }
 
     /** @returns the y correction */
-    scitbx::af::versa< double, scitbx::af::c_grid<2> > dy() const {
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy() const {
       return dy_;
     }
 
@@ -344,9 +324,7 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) pixel coordinate
      * @return The (x, y) millimeter coordinate
      */
-    vec2<double> to_millimeter(const PanelData &panel,
-        vec2<double> xy) const {
-
+    vec2<double> to_millimeter(const PanelData &panel, vec2<double> xy) const {
       // Check map size
       DXTBX_ASSERT(dx_.accessor().all_eq(dy_.accessor()));
       DXTBX_ASSERT(dx_.accessor()[0] == panel.get_image_size()[1]);
@@ -357,10 +335,10 @@ namespace dxtbx { namespace model {
       int j = (int)std::floor(xy[1]);
       if (i < 0) i = 0;
       if (j < 0) j = 0;
-      if (i >= dx_.accessor()[1]) i = dx_.accessor()[1]-1;
-      if (j >= dx_.accessor()[0]) j = dx_.accessor()[0]-1;
-      double dx = dx_(j,i);
-      double dy = dy_(j,i);
+      if (i >= dx_.accessor()[1]) i = dx_.accessor()[1] - 1;
+      if (j >= dx_.accessor()[0]) j = dx_.accessor()[0] - 1;
+      double dx = dx_(j, i);
+      double dy = dy_(j, i);
 
       xy[0] -= dx;
       xy[1] -= dy;
@@ -377,9 +355,7 @@ namespace dxtbx { namespace model {
      * @param xy The (x, y) millimeter coordinate
      * @return The (x, y) pixel coordinate
      */
-    vec2<double> to_pixel(const PanelData &panel,
-        vec2<double> xy) const {
-
+    vec2<double> to_pixel(const PanelData &panel, vec2<double> xy) const {
       // Check map size
       DXTBX_ASSERT(dx_.accessor().all_eq(dy_.accessor()));
       DXTBX_ASSERT(dx_.accessor()[0] == panel.get_image_size()[1]);
@@ -393,25 +369,25 @@ namespace dxtbx { namespace model {
       int j = (int)std::floor(px[1]);
       if (i < 0) i = 0;
       if (j < 0) j = 0;
-      if (i >= dx_.accessor()[1]) i = dx_.accessor()[1]-1;
-      if (j >= dx_.accessor()[0]) j = dx_.accessor()[0]-1;
-      double dx = dx_(j,i);
-      double dy = dy_(j,i);
+      if (i >= dx_.accessor()[1]) i = dx_.accessor()[1] - 1;
+      if (j >= dx_.accessor()[0]) j = dx_.accessor()[0] - 1;
+      double dx = dx_(j, i);
+      double dy = dy_(j, i);
       px[0] += dx;
       px[1] += dy;
 
       return px;
     }
 
-    std::string strategy_name() const{
-      return std::string("OffsetParallaxCorrectedPxMmStrategy\n")+mu_t0();
+    std::string strategy_name() const {
+      return std::string("OffsetParallaxCorrectedPxMmStrategy\n") + mu_t0();
     }
 
   protected:
-    scitbx::af::versa< double, scitbx::af::c_grid<2> > dx_;
-    scitbx::af::versa< double, scitbx::af::c_grid<2> > dy_;
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx_;
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy_;
   };
 
-}} // namespace dxtbx::model
+}}  // namespace dxtbx::model
 
 #endif /* DXTBX_MODEL_PIXEL_TO_MILLIMETER_H */
