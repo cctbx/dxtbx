@@ -1,17 +1,10 @@
-#!/usr/bin/env python
-# FormatTIFF.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # Implementation of an ImageFormat class to read TIFF format image but not -
 # in the first instance - actually provide a full image representation. This
 # is simply there to set everything up for the Mar / Rayonix CCD readers
 # which really will acquire the full image including header information
 # and generate the experimental model representations.
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatTIFFHelpers import read_basic_tiff_header
@@ -33,14 +26,7 @@ class FormatTIFF(Format):
         """Check to see if this looks like an TIFF format image, i.e. we can
         make sense of it."""
 
-        try:
-            read_basic_tiff_header(image_file)
-            return True
-
-        except Exception:
-            pass
-
-        return False
+        return bool(read_basic_tiff_header(image_file))
 
     @staticmethod
     def get_tiff_header(image_file):
