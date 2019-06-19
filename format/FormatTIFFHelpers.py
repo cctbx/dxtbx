@@ -58,7 +58,7 @@ def read_basic_tiff_header(filename):
         start += 2
         type_type = struct.unpack(_H, tiff_header[start : start + 2])[0]
         start += 2
-        type_size = struct.unpack(_I, tiff_header[start : start + 4])[0]
+        # type_size = struct.unpack(_I, tiff_header[start : start + 4])[0]
         start += 4
         if type_type == 4:
             type_offset_or_value = struct.unpack(_I, tiff_header[start : start + 4])[0]
