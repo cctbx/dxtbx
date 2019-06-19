@@ -35,6 +35,11 @@ from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import template_image_range
 
+try:
+    from typing import Any, Dict, List, Optional, Tuple
+except ImportError:
+    pass
+
 __all__ = [
     "BeamComparison",
     "DetectorComparison",
@@ -70,6 +75,8 @@ class ExperimentListDict(object):
         self._obj = deepcopy(obj)
         self._check_format = check_format
         self._directory = directory
+        # To keep track of file->format mapping to speed up stills importing
+        self._imageset_format_cache = {}
 
     def decode(self):
         """ Decode the dictionary into a list of experiments. """
@@ -259,7 +266,10 @@ class ExperimentListDict(object):
 
                     if imageset_data["__id__"] == "ImageSet":
                         imageset = self._make_stills(
-                            imageset_data, format_kwargs=format_kwargs
+                            imageset_data,
+                            beam=beam,
+                            detector=detector,
+                            format_kwargs=format_kwargs,
                         )
                     elif imageset_data["__id__"] == "ImageGrid":
                         imageset = self._make_grid(
@@ -371,8 +381,8 @@ class ExperimentListDict(object):
         """ Can't make a mem imageset from dict. """
         return None
 
-    def _make_stills(self, imageset, format_kwargs=None):
-        """ Make a still imageset. """
+    def _make_stills(self, imageset, beam=None, detector=None, format_kwargs=None):
+        """Make a still imageset."""
         filenames = [
             resolve_path(p, directory=self._directory) for p in imageset["images"]
         ]
@@ -380,13 +390,22 @@ class ExperimentListDict(object):
         if "single_file_indices" in imageset:
             indices = imageset["single_file_indices"]
             assert len(indices) == len(filenames)
-        return ImageSetFactory.make_imageset(
+
+        # Do we know the format class? Pass it through if we do to save time
+        format_class = self._imageset_format_cache.get(filenames[0])
+
+        imageset = ImageSetFactory.make_imageset(
             filenames,
-            None,
+            format_class=format_class,
+            beam=beam,
+            detector=detector,
             check_format=self._check_format,
             single_file_indices=indices,
             format_kwargs=format_kwargs,
         )
+        # Save this format-filename association for the next imageset
+        self._imageset_format_cache[filenames[0]] = imageset.get_format_class()
+        return imageset
 
     def _make_grid(self, imageset, format_kwargs=None):
         """ Make a still imageset. """
