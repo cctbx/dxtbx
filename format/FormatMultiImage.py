@@ -207,7 +207,7 @@ class FormatMultiImage(Format):
 
         # Get the format instance
         assert len(filenames) == 1
-        if check_format is True:
+         if check_format:
             # HACK: Attempt to see if this was the same as the last file we generated
             # a format instance for. If it was, then give the same instance back. This
             # works around a structural problem with deserializing imagesets
@@ -317,7 +317,7 @@ class FormatMultiImage(Format):
                 single_file_index = single_file_indices[0]
                 # If we don't have a beam and detector provided we need
                 # to read it - but only for this image
-                if all(x is None for x in (beam, detector)):
+                if not beam and not detector:
                     beam = format_instance.get_beam(single_file_index)
                     detector = format_instance.get_detector(single_file_index)
                     goniometer = format_instance.get_goniometer(single_file_index)

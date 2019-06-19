@@ -382,7 +382,7 @@ class ExperimentListDict(object):
         return None
 
     def _make_stills(self, imageset, beam=None, detector=None, format_kwargs=None):
-        """ Make a still imageset."""
+        """Make a still imageset."""
         filenames = [
             resolve_path(p, directory=self._directory) for p in imageset["images"]
         ]
