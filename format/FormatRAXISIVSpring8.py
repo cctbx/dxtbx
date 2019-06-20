@@ -8,10 +8,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+import calendar
 import datetime
 import struct
 
 from dxtbx.format.Format import Format
+from iotbx.detectors.raxis import RAXISImage
 
 
 class FormatRAXISIVSPring8(Format):
@@ -64,8 +66,6 @@ class FormatRAXISIVSPring8(Format):
             self._i = "<i"
 
     def detectorbase_start(self):
-        from iotbx.detectors.raxis import RAXISImage
-
         self.detectorbase = RAXISImage(self._image_file)
         self.detectorbase.readHeader()
 
@@ -125,8 +125,6 @@ class FormatRAXISIVSPring8(Format):
 
     def _scan(self):
         """Return the scan information for this image."""
-        import calendar
-
         i = self._i
         f = self._f
         header = self._header_bytes

@@ -7,11 +7,10 @@ class FormatRAXISII(Format):
     @staticmethod
     def understand(image_file):
         try:
-            tag = FormatRAXISII.open_file(image_file, "rb").read(7)
+            with FormatRAXISII.open_file(image_file, "rb") as fh:
+                return fh.read(7) == b"R-AXIS2"
         except IOError:
             return False
-
-        return tag == "R-AXIS2"
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
