@@ -28,14 +28,14 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
         describe the size of the image match with the TIFF records which do
         the same."""
 
-        width, height, depth, order, bytes = FormatTIFFRayonix.get_tiff_header(
+        width, height, depth, order, rawbytes = FormatTIFFRayonix.get_tiff_header(
             image_file
         )
 
         serial_number = -1
 
-        for record in bytes[2464 : 2464 + 512].strip().split("\n"):
-            if "detector serial number" in record.lower():
+        for record in rawbytes[2464 : 2464 + 512].strip().split(b"\n"):
+            if b"detector serial number" in record.lower():
                 serial_number = int(record.split()[-1])
 
         # only understand a square image
@@ -87,8 +87,6 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
             raise IncorrectFormatError(self, image_file)
         FormatTIFFRayonix.__init__(self, image_file, **kwargs)
 
-        return
-
     def _detector(self):
         """Return a model for a simple detector, which at the moment insists
         that the offsets and rotations are all 0.0."""
@@ -116,8 +114,8 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
 
         beam = beam_x * pixel_size[0], beam_y * pixel_size[1]
 
-        for record in self._tiff_header_bytes[2464 : 2464 + 512].strip().split("\n"):
-            if "detector serial number" in record.lower():
+        for record in self._tiff_header_bytes[2464 : 2464 + 512].strip().split(b"\n"):
+            if b"detector serial number" in record.lower():
                 serial_number = int(record.split()[-1])
                 break
         serial_to_model = {

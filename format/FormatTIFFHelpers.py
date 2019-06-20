@@ -11,20 +11,17 @@ LITTLE_ENDIAN = 1234
 BIG_ENDIAN = 4321
 
 
-def tiff_byte_order(filename):
+def _tiff_byte_order(four_bytes):
     """Determine the byte order for the file from the magic numbers at the
     very start of the file."""
 
-    four_bytes = Format.open_file(filename, "rb").read(4)
-
-    if "II" in four_bytes[:2]:
-        assert struct.unpack("<H", four_bytes[2:])[0] == 42
-        return LITTLE_ENDIAN
-    elif "MM" in four_bytes[:2]:
-        assert struct.unpack(">H", four_bytes[2:])[0] == 42
-        return BIG_ENDIAN
-
-    raise RuntimeError("%s not recognised as TIFF" % filename)
+    if b"II" == four_bytes[:2]:
+        if struct.unpack("<H", four_bytes[2:])[0] == 42:
+            return LITTLE_ENDIAN
+    elif b"MM" == four_bytes[:2]:
+        if struct.unpack(">H", four_bytes[2:])[0] == 42:
+            return BIG_ENDIAN
+    return False
 
 
 def read_basic_tiff_header(filename):
@@ -37,12 +34,12 @@ def read_basic_tiff_header(filename):
     image_height = None
     image_depth = None
     header_size = None
-    byte_order = None
 
-    # OK then let's get started - and let's assume that the size is > 1 kb
-
-    byte_order = tiff_byte_order(filename)
-    tiff_header = Format.open_file(filename, "rb").read(1024)
+    with Format.open_file(filename, "rb") as fh:
+        tiff_header = fh.read(1024)
+    byte_order = _tiff_byte_order(tiff_header[:4])
+    if not byte_order:
+        return False
 
     if byte_order == LITTLE_ENDIAN:
         _I = "<I"
@@ -61,7 +58,7 @@ def read_basic_tiff_header(filename):
         start += 2
         type_type = struct.unpack(_H, tiff_header[start : start + 2])[0]
         start += 2
-        type_size = struct.unpack(_I, tiff_header[start : start + 4])[0]
+        # type_size = struct.unpack(_I, tiff_header[start : start + 4])[0]
         start += 4
         if type_type == 4:
             type_offset_or_value = struct.unpack(_I, tiff_header[start : start + 4])[0]
@@ -82,7 +79,7 @@ def read_basic_tiff_header(filename):
     return image_width, image_height, image_depth, header_size, byte_order
 
 
-def read_tiff_image_description(tiff_header, byte_order):
+def _read_tiff_image_description(tiff_header, byte_order):
     """Search the TIFF header for an image description."""
 
     # OK then let's get started - and let's assume that the size is > 1 kb
@@ -132,7 +129,7 @@ if __name__ == "__main__":
         width, height, depth, header, order = read_basic_tiff_header(arg)
         print("(%d x %d) @ %d + %d" % (width, height, depth, header))
         tiff_header = Format.open_file(arg, "rb").read(header)
-        text = read_tiff_image_description(tiff_header, order)
+        text = _read_tiff_image_description(tiff_header, order)
         if text:
             print(text)
         else:
