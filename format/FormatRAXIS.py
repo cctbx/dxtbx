@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-# FormatRAXIS.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Implementation of an ImageFormat class to read RAXIS format image which,
-# since it is only really used for one brand of detector, will be the only
-# class in the pile.
-#
 # Following taken from:
 #
 # http://www.rigaku.com/downloads/software/readimage.html
@@ -73,8 +62,8 @@
 from __future__ import absolute_import, division, print_function
 
 import datetime
-import struct
 import math
+import struct
 
 from dxtbx.format.Format import Format
 
