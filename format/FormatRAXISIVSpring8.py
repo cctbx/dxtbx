@@ -13,7 +13,6 @@ import datetime
 import struct
 
 from dxtbx.format.Format import Format
-from iotbx.detectors.raxis import RAXISImage
 from dxtbx.format.FormatRAXIS import RAXISHelper
 
 
