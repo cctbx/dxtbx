@@ -62,6 +62,6 @@ for _, name, _ in pkgutil.iter_modules(dxtbx.format.__path__):
 assert not any(
     x.endswith("cctbx_project/dxtbx") for x in dxtbx.__path__
 ), "dxtbx found inside cctbx_project. Please remove modules/cctbx_project/dxtbx contents"
-assert format_classes, "No format classes found; something went wrong ¯\_(ツ)_/¯"
+assert format_classes, "No format classes found; something went wrong ¯\\_(ツ)_/¯"
 
 libtbx.pkg_utils.define_entry_points({"dxtbx.format": sorted(format_classes)})
