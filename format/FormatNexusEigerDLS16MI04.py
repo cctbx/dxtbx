@@ -4,6 +4,7 @@ import h5py
 import libtbx
 from scitbx.array_family import flex
 from dxtbx.format.FormatNexus import FormatNexus
+from dxtbx.model import MultiAxisGoniometer
 
 try:
     from dials.util.masking import GoniometerShadowMaskGenerator
@@ -43,6 +44,9 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
 
     def has_dynamic_shadowing(self, **kwargs):
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
+        if not isinstance(self.get_goniometer(), MultiAxisGoniometer):
+            # Single-axis goniometer, no goniometer shadows
+            return False
         if dynamic_shadowing in (libtbx.Auto, "Auto"):
             return True
         return dynamic_shadowing
