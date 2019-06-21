@@ -6,12 +6,6 @@ import os
 from scitbx.array_family import flex
 
 from dxtbx.format.Format import Format
-from dxtbx.imageset import ImageSetData, ImageSweep
-
-try:
-    from typing import Dict, Tuple
-except ImportError:
-    pass
 
 
 class Reader(object):
@@ -101,18 +95,6 @@ class Masker(object):
 
 
 class FormatMultiImage(Format):
-    # HACK: Store information about the last imageset generated. This allows
-    # us to avoid reopening the file over and over in e.g. still cases where
-    # this can number over the tens of thousands of images.
-    # Fields: (key, format-instance, data-object)
-    # where key is (filename, kwargs) to ensure that we have exactly the
-    #       same file requirements.
-    _last_imageset_info = (
-        (None, None),
-        None,
-        None,
-    )  # type: Tuple[Tuple[str, Dict], Format, ImageSetData]
-
     def __init__(self, **kwargs):
         pass
 
@@ -180,6 +162,9 @@ class FormatMultiImage(Format):
         Factory method to create an imageset
 
         """
+        from dxtbx.imageset import ImageSetData
+        from dxtbx.imageset import ImageSweep
+
         if isinstance(filenames, str):
             filenames = [filenames]
         elif len(filenames) > 1:
@@ -207,19 +192,10 @@ class FormatMultiImage(Format):
 
         # Get the format instance
         assert len(filenames) == 1
-        if check_format:
-            # HACK: Attempt to see if this was the same as the last file we generated
-            # a format instance for. If it was, then give the same instance back. This
-            # works around a structural problem with deserializing imagesets
-            key, instance, isetdata = cls._last_imageset_info
-            if key == (filenames, format_kwargs):
-                format_instance = instance
-            else:
-                format_instance = cls(filenames[0], **format_kwargs)
-                isetdata = None
+        if check_format is True:
+            format_instance = cls(filenames[0], **format_kwargs)
         else:
             format_instance = None
-            isetdata = None
             if not as_sweep:
                 lazy = True
 
@@ -287,56 +263,40 @@ class FormatMultiImage(Format):
             # Create the imageset
             from dxtbx.imageset import ImageSet
 
-            # HACK: If we've another imageset for this file, then reuse the ImageSetData
-            # This is because otherwise we waste immense amounts of memory on pointers
-            # - 8*8*N² bytes through redundant ImageSetData objects
-            if isetdata is None:
-                isetdata = ImageSetData(
+            iset = ImageSet(
+                ImageSetData(
                     reader=reader,
                     masker=masker,
                     vendor=vendor,
                     params=params,
                     format=cls,
-                )
+                ),
+                indices=single_file_indices,
+            )
 
-            iset = ImageSet(isetdata, indices=single_file_indices)
+            # If any are None then read from format
+            if [beam, detector, goniometer, scan].count(None) != 0:
 
-            # We'd like to assume that single_file_indices is only a
-            # single value at the moment, but there are old datablock
-            # tests that violate this. Check.
+                # Get list of models
+                beam = []
+                detector = []
+                goniometer = []
+                scan = []
+                for i in range(format_instance.get_num_images()):
+                    beam.append(format_instance.get_beam(i))
+                    detector.append(format_instance.get_detector(i))
+                    goniometer.append(format_instance.get_goniometer(i))
+                    scan.append(format_instance.get_scan(i))
+
             if single_file_indices is None:
-                assert (
-                    not beam and not detector
-                ), "Don't know how to handle provided beam"
                 single_file_indices = list(range(format_instance.get_num_images()))
-            else:
-                # Asking for multiple indices AND providing a model makes no sense
-                assert len(single_file_indices) == 1 or (not beam and not detector)
 
-            if len(single_file_indices) == 1:
-                single_file_index = single_file_indices[0]
-                # If we don't have a beam and detector provided we need
-                # to read it - but only for this image
-                if not beam and not detector:
-                    beam = format_instance.get_beam(single_file_index)
-                    detector = format_instance.get_detector(single_file_index)
-                    goniometer = format_instance.get_goniometer(single_file_index)
-                    scan = format_instance.get_scan(single_file_index)
-
-                # Set the list of models
-                iset.set_beam(beam)
-                iset.set_detector(detector)
-                iset.set_goniometer(goniometer)
-                iset.set_scan(scan)
-            else:
-                # breakpoint()
-                # Legacy case, multiple images. Read the model from the
-                # file and write to the per-imageset index
-                for i, index in enumerate(single_file_indices):
-                    iset.set_beam(format_instance.get_beam(index), i)
-                    iset.set_detector(format_instance.get_detector(index), i)
-                    iset.set_goniometer(format_instance.get_goniometer(index), i)
-                    iset.set_scan(format_instance.get_scan(index), i)
+            # Set the list of models
+            for i in range(len(single_file_indices)):
+                iset.set_beam(beam[single_file_indices[i]], i)
+                iset.set_detector(detector[single_file_indices[i]], i)
+                iset.set_goniometer(goniometer[single_file_indices[i]], i)
+                iset.set_scan(scan[single_file_indices[i]], i)
 
         else:
 
@@ -389,12 +349,6 @@ class FormatMultiImage(Format):
                 scan=scan,
                 indices=single_file_indices,
             )
-
-        cls._last_imageset_info = (
-            (filenames, format_kwargs),
-            format_instance,
-            isetdata,
-        )
 
         # Return the imageset
         return iset

@@ -1,32 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
 import boost.python
-
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
-from dxtbx_imageset_ext import (
-    ExternalLookup,
-    ExternalLookupItemBool,
-    ExternalLookupItemDouble,
-    ImageGrid,
-    ImageSet,
-    ImageSetData,
-    ImageSweep,
-)
 
-__all__ = [
-    "ExternalLookup",
-    "ExternalLookupItemBool",
-    "ExternalLookupItemDouble",
-    "FilenameAnalyser",
-    "ImageGrid",
-    "ImageSet",
-    "ImageSetData",
-    "ImageSetFactory",
-    "ImageSetLazy",
-    "ImageSweep",
-    "MemMasker",
-    "MemReader",
-]
+ext = boost.python.import_ext("dxtbx_ext")
+from dxtbx_imageset_ext import *
 
 
 class MemReader(object):
@@ -284,7 +262,7 @@ class ImageSweepAux(boost.python.injector, ImageSweep):
                 stop = len(self)
             else:
                 stop = item.stop
-            if item.step is not None:
+            if item.step != None:
                 raise IndexError("Sweeps must be sequential")
             return self.partial_set(start, stop)
         else:
@@ -395,7 +373,7 @@ class ImageSetFactory(object):
         imagesetlist = []
         for filelist in filelist_per_imageset:
             try:
-                if filelist[2]:
+                if filelist[2] == True:
                     iset = ImageSetFactory._create_sweep(filelist, check_headers)
                 else:
                     iset = ImageSetFactory._create_imageset(filelist, check_headers)
@@ -556,8 +534,6 @@ class ImageSetFactory(object):
         check_format=True,
         single_file_indices=None,
         format_kwargs=None,
-        beam=None,
-        detector=None,
     ):
         """Create an image set"""
         from dxtbx.format.Registry import Registry
@@ -580,8 +556,6 @@ class ImageSetFactory(object):
             as_imageset=True,
             format_kwargs=format_kwargs,
             check_format=check_format,
-            beam=beam,
-            detector=detector,
         )
 
         # Return the imageset
