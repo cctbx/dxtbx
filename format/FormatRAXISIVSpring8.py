@@ -97,7 +97,7 @@ class FormatRAXISIVSPring8(Format):
         dy = struct.unpack(f, header[780:784])[0]
 
         distance = struct.unpack(f, header[344:348])[0]
-        two_theta = struct.unpack(f, header[556:560])[0]
+        # two_theta = struct.unpack(f, header[556:560])[0]
 
         beam_x = struct.unpack(f, header[540:544])[0]
         beam_y = struct.unpack(f, header[544:548])[0]
@@ -125,11 +125,10 @@ class FormatRAXISIVSPring8(Format):
 
     def _scan(self):
         """Return the scan information for this image."""
-        i = self._i
         f = self._f
         header = self._header_bytes
 
-        format = self._scan_factory.format("RAXIS")
+        scanformat = self._scan_factory.format("RAXIS")
         exposure_time = struct.unpack(f, header[536:540])[0]
 
         y, m, d = map(int, header[256:268].strip().split(b"-"))
@@ -147,7 +146,7 @@ class FormatRAXISIVSPring8(Format):
         osc_range = osc_end - osc_start
 
         return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+            self._image_file, scanformat, exposure_time, osc_start, osc_range, epoch
         )
 
     def get_raw_data(self):
