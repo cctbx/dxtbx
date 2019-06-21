@@ -1,7 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
+import h5py
+import libtbx
 from scitbx.array_family import flex
 from dxtbx.format.FormatNexus import FormatNexus
+
+try:
+    from dials.util.masking import GoniometerShadowMaskGenerator
+except ImportError:
+    GoniometerShadowMaskGenerator = False
 
 
 class FormatNexusEigerDLS16MI04(FormatNexus):
@@ -21,12 +28,8 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
 
-        try:
-            from dials.util.masking import GoniometerShadowMaskGenerator  # test import
-        except ImportError:
+        if not GoniometerShadowMaskGenerator:
             return False
-
-        import h5py
 
         # Get the file handle
         handle = h5py.File(image_file, "r")
@@ -36,12 +39,9 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
         ):
             return False
 
-        return FormatNexus.understand(image_file)
+        return True
 
-    @staticmethod
-    def has_dynamic_shadowing(**kwargs):
-        import libtbx
-
+    def has_dynamic_shadowing(self, **kwargs):
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
         if dynamic_shadowing in (libtbx.Auto, "Auto"):
             return True
@@ -49,15 +49,13 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
-
-        import libtbx
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         super(FormatNexusEigerDLS16MI04, self).__init__(image_file, **kwargs)
+        self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
 
     def get_mask(self, index, goniometer=None):
         mask = super(FormatNexusEigerDLS16MI04, self).get_mask()
