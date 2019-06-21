@@ -4,8 +4,10 @@ import math
 import os
 
 import h5py
+import numpy
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
+from scitbx.array_family import flex
 
 # 151028: deepcopying this class causes crash in h5py
 #         temporary fix by closing the file in every methods(!)
@@ -127,8 +129,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         h5_handle.close()
 
     def read_metadata(self):
-        import numpy
-
         h5_handle = h5py.File(self.image_filename, "r")
 
         if "metadata" not in h5_handle:
@@ -139,7 +139,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             posx = h5_handle["metadata/posx_in_um"][()]
             posy = h5_handle["metadata/posy_in_um"][()]
             posz = h5_handle["metadata/posz_in_um"][()]
-            panel_origins = zip(posx, posy, posz)
+            panel_origins = list(zip(posx, posy, posz))
             sensor = h5_handle["metadata/sensor_id"][0]
             thickness = 0.050
             if sensor.startswith("MPCCD-8B"):
@@ -236,9 +236,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         return len(self._images)
 
     def split_panels(self, img, bool=False):
-        import numpy
-        from scitbx.array_family import flex
-
         tmp = []
 
         for i in range(8):
@@ -282,7 +279,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         return self.active_areas
 
     def reconst_image(self):
-        import numpy
         from scitbx import matrix
 
         det = numpy.empty((self.RECONST_SIZE, self.RECONST_SIZE), dtype="int32")

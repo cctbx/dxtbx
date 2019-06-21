@@ -1,22 +1,16 @@
 #!/usr/bin/env python
-# FormatCBFFullPilatus.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Pilatus implementation of fullCBF format, for use with Dectris detectors.
 
 from __future__ import absolute_import, division, print_function
 
-import sys
 import math
+import sys
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 
-# import pycbf
-
-# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
+try:
+    from dials.util.masking import GoniometerShadowMaskGenerator
+except ImportError:
+    GoniometerShadowMaskGenerator = False
 
 
 class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
@@ -31,9 +25,7 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
 
-        try:
-            from dials.util.masking import GoniometerShadowMaskGenerator
-        except ImportError:
+        if not GoniometerShadowMaskGenerator:
             return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
@@ -86,9 +78,6 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
         assert goniometer is not None
 
-        # avoid a module-level import from the DIALS namespace that kills LABELIT
-        from dials.util.masking import GoniometerShadowMaskGenerator
-
         if goniometer.get_names()[1] == "GON_CHI":
             # SmarGon
             from dxtbx.format.SmarGonShadowMask import SmarGonShadowMaskGenerator
@@ -98,7 +87,6 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
         elif goniometer.get_names()[1] == "GON_KAPPA":
             # mini Kappa
 
-            from dials.util.masking import GoniometerShadowMaskGenerator
             from scitbx.array_family import flex
 
             # Simple model of cone around goniometer phi axis

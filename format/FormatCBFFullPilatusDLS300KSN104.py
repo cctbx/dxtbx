@@ -5,12 +5,18 @@
 #
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
-#
-# Pilatus implementation of fullCBF format, for use with Dectris detectors.
 
 from __future__ import absolute_import, division, print_function
 
+import math
+
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
+from scitbx.array_family import flex
+
+try:
+    from dials.util.masking import GoniometerShadowMaskGenerator
+except ImportError:
+    GoniometerShadowMaskGenerator = False
 
 
 class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
@@ -25,9 +31,7 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
 
-        try:
-            from dials.util.masking import GoniometerShadowMaskGenerator
-        except ImportError:
+        if not GoniometerShadowMaskGenerator:
             return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
@@ -54,8 +58,6 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        import libtbx
-
         assert self.understand(image_file)
 
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
@@ -77,10 +79,6 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
     def get_goniometer_shadow_masker(self, goniometer=None):
         if goniometer is None:
             goniometer = self.get_goniometer()
-
-        from dials.util.masking import GoniometerShadowMaskGenerator
-        from scitbx.array_family import flex
-        import math
 
         # Simple model of cone around goniometer phi axis
         # Exact values don't matter, only the ratio of height/radius
