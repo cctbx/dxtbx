@@ -45,9 +45,9 @@ for _, name, _ in pkgutil.iter_modules(dxtbx.format.__path__):
         base_names = [
             baseclass.id
             for baseclass in top_level_def.bases
-            if isinstance(baseclass, ast.Name)
+            if isinstance(baseclass, ast.Name) and baseclass.id.startswith("Format")
         ]
-        if any(n.startswith("Format") for n in base_names):
+        if base_names:
             classname = top_level_def.name
             format_classes.append(
                 "{classname}:{baseclasses} = dxtbx.format.{modulename}:{classname}".format(
