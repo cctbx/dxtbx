@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
 from builtins import range
-import glob
 import os
 import six.moves.cPickle as pickle
 
+import dxtbx.format.image
 import dxtbx.format.Registry
 import dxtbx.tests.imagelist
 import pytest
@@ -41,12 +41,10 @@ def test_format(dials_regression, image):
 
 
 def test_image_tile():
-    from dxtbx.format.image import ImageTileInt
-
     data = flex.int(flex.grid(10, 10))
     name = "TileName"
 
-    tile = ImageTileInt(data, name)
+    tile = dxtbx.format.image.ImageTileInt(data, name)
 
     assert tile.data().all_eq(data)
     assert tile.name() == name
@@ -54,8 +52,6 @@ def test_image_tile():
 
 
 def test_image():
-    import dxtbx.format.image
-
     data = flex.int(flex.grid(10, 10))
     name = "TileName0"
     tile0 = dxtbx.format.image.ImageTileInt(data, name)
@@ -73,8 +69,6 @@ def test_image():
 
 
 def test_image_buffer():
-    import dxtbx.format.image
-
     data = flex.int(flex.grid(10, 10))
     name = "TileName0"
     tile0 = dxtbx.format.image.ImageTileInt(data, name)
@@ -87,7 +81,6 @@ def test_image_buffer():
 
 
 def test_external_lookup():
-    import dxtbx.format.image
     from dxtbx.imageset import ExternalLookup
 
     mask = flex.bool(flex.grid(10, 10), True)
@@ -114,25 +107,17 @@ def test_external_lookup():
     assert pedestal2.all_eq(pedestal)
 
 
-def test_imagesetdata(dials_regression):
+def test_imagesetdata(centroid_files):
     from dxtbx.imageset import ImageSetData
-    from dxtbx.format.image import (
-        ImageBool,
-        ImageTileBool,
-        ImageDouble,
-        ImageTileDouble,
-    )
     from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 
-    filenames = sorted(
-        glob.glob(os.path.join(dials_regression, "centroid_test_data", "*.cbf"))
-    )
+    centroid_files = centroid_files
 
     ReaderClass = FormatClass.get_reader()
     MaskerClass = FormatClass.get_masker()
 
-    reader = ReaderClass(filenames)
-    masker = MaskerClass(filenames)
+    reader = ReaderClass(centroid_files)
+    masker = MaskerClass(centroid_files)
 
     handle = ImageSetData(reader, masker)
 
@@ -142,18 +127,18 @@ def test_imagesetdata(dials_regression):
     assert handle.has_single_file_reader() is False
 
     path = handle.get_path(0)
-    assert path == filenames[0]
+    assert path == centroid_files[0]
 
     master_path = handle.get_master_path()
     assert master_path == ""
 
     identifier = handle.get_image_identifier(0)
-    assert identifier == filenames[0]
+    assert identifier == centroid_files[0]
 
-    beam = FormatClass(filenames[0]).get_beam()
-    detector = FormatClass(filenames[0]).get_detector()
-    goniometer = FormatClass(filenames[0]).get_goniometer()
-    scan = FormatClass(filenames[0]).get_scan()
+    beam = FormatClass(centroid_files[0]).get_beam()
+    detector = FormatClass(centroid_files[0]).get_detector()
+    goniometer = FormatClass(centroid_files[0]).get_goniometer()
+    scan = FormatClass(centroid_files[0]).get_scan()
 
     handle.set_beam(beam, 0)
     handle.set_detector(detector, 0)
@@ -174,9 +159,15 @@ def test_imagesetdata(dials_regression):
     gain = flex.double(flex.grid(10, 10), 1)
     pedestal = flex.double(flex.grid(10, 10), 2)
 
-    handle.external_lookup.mask.data = ImageBool(ImageTileBool(mask))
-    handle.external_lookup.gain.data = ImageDouble(ImageTileDouble(gain))
-    handle.external_lookup.pedestal.data = ImageDouble(ImageTileDouble(pedestal))
+    handle.external_lookup.mask.data = dxtbx.format.image.ImageBool(
+        dxtbx.format.image.ImageTileBool(mask)
+    )
+    handle.external_lookup.gain.data = dxtbx.format.image.ImageDouble(
+        dxtbx.format.image.ImageTileDouble(gain)
+    )
+    handle.external_lookup.pedestal.data = dxtbx.format.image.ImageDouble(
+        dxtbx.format.image.ImageTileDouble(pedestal)
+    )
 
     mask2 = handle.external_lookup.mask.data.tile(0).data()
     gain2 = handle.external_lookup.gain.data.tile(0).data()
@@ -207,8 +198,15 @@ def centroid_files_and_imageset(centroid_files):
 
 
 def assert_is_iterable(iterator):
-    for element in iterator:
-        pass
+    list(iterator)
+
+
+def assert_can_get_detectorbase(obj, indices, outside_index):
+    for i in indices:
+        obj.get_detectorbase(i)
+
+    with pytest.raises(RuntimeError):
+        obj.get_detectorbase(outside_index)
 
 
 class TestImageSet(object):
@@ -220,7 +218,7 @@ class TestImageSet(object):
         assert len(imageset) == len(filenames)
         assert_is_iterable(imageset)
         self.tst_paths(imageset, filenames)
-        self.tst_get_detectorbase(imageset, list(range(len(filenames))), 9)
+        assert_can_get_detectorbase(imageset, list(range(len(filenames))), 9)
         self.tst_get_models(imageset, list(range(len(filenames))), 9)
 
     def tst_get_item(self, imageset):
@@ -234,8 +232,8 @@ class TestImageSet(object):
             image = imageset2[5]
 
         assert len(imageset2) == 4
-        self.tst_get_detectorbase(imageset2, list(range(0, 4)), 5)
-        self.tst_get_models(imageset2, list(range(0, 4)), 5)
+        assert_can_get_detectorbase(imageset2, range(0, 4), 5)
+        self.tst_get_models(imageset2, range(0, 4), 5)
         self.tst_paths(imageset2, imageset.paths()[3:7])
         assert_is_iterable(imageset2)
 
@@ -245,8 +243,8 @@ class TestImageSet(object):
             image = imageset2[2]
 
         assert len(imageset2) == 2
-        self.tst_get_detectorbase(imageset2, list(range(0, 2)), 2)
-        self.tst_get_models(imageset2, list(range(0, 2)), 2)
+        assert_can_get_detectorbase(imageset2, range(0, 2), 2)
+        self.tst_get_models(imageset2, range(0, 2), 2)
         self.tst_paths(imageset2, imageset.paths()[3:5])
         assert_is_iterable(imageset2)
 
@@ -255,14 +253,6 @@ class TestImageSet(object):
         filenames2 = imageset.paths()
         for f1, f2 in zip(filenames1, filenames2):
             assert f1 == f2
-
-    @staticmethod
-    def tst_get_detectorbase(imageset, indices, outside_index):
-        for i in indices:
-            imageset.get_detectorbase(i)
-
-        with pytest.raises(RuntimeError):
-            imageset.get_detectorbase(outside_index)
 
     def tst_get_models(self, imageset, indices, outside_index):
         for i in indices:
@@ -331,8 +321,8 @@ class TestImageSweep(object):
         assert len(sweep) == len(centroid_files)
         assert_is_iterable(sweep)
         self.tst_paths(sweep, centroid_files)
-        self.tst_get_detectorbase(sweep, list(range(len(centroid_files))), 9)
-        self.tst_get_models(sweep, list(range(len(centroid_files))), 9)
+        assert_can_get_detectorbase(sweep, range(len(centroid_files)), 9)
+        self.tst_get_models(sweep, range(len(centroid_files)), 9)
         self.tst_get_array_range(sweep, (0, 9))
         self.tst_set_models(sweep)
 
@@ -347,8 +337,8 @@ class TestImageSweep(object):
             _ = sweep2[5]
 
         assert len(sweep2) == 4
-        self.tst_get_detectorbase(sweep2, list(range(0, 4)), 5)
-        self.tst_get_models(sweep2, list(range(0, 4)), 5)
+        assert_can_get_detectorbase(sweep2, range(0, 4), 5)
+        self.tst_get_models(sweep2, range(0, 4), 5)
         self.tst_paths(sweep2, sweep.paths()[3:7])
         assert_is_iterable(sweep2)
         self.tst_get_array_range(sweep2, (3, 7))
@@ -362,14 +352,6 @@ class TestImageSweep(object):
         for f1, f2 in zip(filenames1, filenames2):
             assert f1 == f2
 
-    @staticmethod
-    def tst_get_detectorbase(sweep, indices, outside_index):
-        for i in indices:
-            sweep.get_detectorbase(i)
-
-        with pytest.raises(RuntimeError):
-            sweep.get_detectorbase(outside_index)
-
     def tst_get_models(self, sweep, indices, outside_index):
         self.tst_get_models_index(sweep)
         for i in indices:
@@ -377,16 +359,16 @@ class TestImageSweep(object):
 
     @staticmethod
     def tst_get_models_index(sweep, index=None):
-        if index is not None:
-            sweep.get_detector(index)
-            sweep.get_beam(index)
-            sweep.get_goniometer(index)
-            sweep.get_scan(index)
-        else:
+        if index is None:
             sweep.get_detector()
             sweep.get_beam()
             sweep.get_goniometer()
             sweep.get_scan()
+        else:
+            sweep.get_detector(index)
+            sweep.get_beam(index)
+            sweep.get_goniometer(index)
+            sweep.get_scan(index)
 
         # Ensure state at zero
         sweep[0]
@@ -531,8 +513,6 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
 
 def test_imagesetfactory(centroid_files, dials_regression):
     from dxtbx.imageset import ImageSetFactory, ImageSweep
-
-    filenames = centroid_files
 
     sweep = ImageSetFactory.new(filenames)
 

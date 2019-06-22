@@ -10,7 +10,6 @@ import os.path
 from os.path import abspath, dirname, isdir, isfile, join, normpath, splitext
 
 import six.moves.cPickle as pickle
-from six.moves import range
 
 import dxtbx.imageset
 import libtbx
@@ -77,7 +76,7 @@ class DataBlock(object):
 
     def num_images(self):
         """ Get the number of images. """
-        return sum([len(iset) for iset in self._imagesets])
+        return sum(len(iset) for iset in self._imagesets)
 
     def __len__(self):
         """ The number of image sets. """

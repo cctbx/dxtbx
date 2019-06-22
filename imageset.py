@@ -55,7 +55,6 @@ class MemMasker(object):
 class ImageSetAux(boost.python.injector, ImageSet):
     """
     A class to inject additional methods into the imageset class
-
     """
 
     def __getitem__(self, item):
@@ -70,17 +69,10 @@ class ImageSetAux(boost.python.injector, ImageSet):
 
         Returns:
             An image or new ImageSet object
-
         """
         if isinstance(item, slice):
-            if item.start is None:
-                start = 0
-            else:
-                start = item.start
-            if item.stop is None:
-                stop = len(self)
-            else:
-                stop = item.stop
+            start = item.start or 0
+            stop = item.stop or len(self)
             if item.step is not None and item.step != 1:
                 raise IndexError("Step must be 1")
             return self.partial_set(start, stop)
@@ -107,7 +99,6 @@ class ImageSetAux(boost.python.injector, ImageSet):
     def get_detectorbase(self, index):
         """
         A function to be injected into the imageset to get the detectorbase instance
-
         """
         kwargs = self.params()
         if self.data().has_single_file_reader():
@@ -124,27 +115,23 @@ class ImageSetAux(boost.python.injector, ImageSet):
     def reader(self):
         """
         Return the reader
-
         """
         return self.data().reader()
 
     def masker(self):
         """
         Return the masker
-
         """
         return self.data().masker()
 
     def paths(self):
         """
         Return the list of paths
-
         """
         return [self.get_path(i) for i in range(len(self))]
 
 
 class ImageSetLazy(ImageSet):
-
     """
     Lazy ImageSet class that doesn't necessitate setting the models ahead of time.
     Only when a particular model (like detector or beam) for an image is requested,
@@ -255,15 +242,9 @@ class ImageSweepAux(boost.python.injector, ImageSweep):
 
         """
         if isinstance(item, slice):
-            if item.start is None:
-                start = 0
-            else:
-                start = item.start
-            if item.stop is None:
-                stop = len(self)
-            else:
-                stop = item.stop
-            if item.step != None:
+            start = item.start or 0
+            stop = item.stop or len(self)
+            if item.step is not None:
                 raise IndexError("Sweeps must be sequential")
             return self.partial_set(start, stop)
         else:
@@ -276,10 +257,6 @@ class ImageSweepAux(boost.python.injector, ImageSweep):
 
 class FilenameAnalyser(object):
     """Group images by filename into image sets."""
-
-    def __init__(self):
-        """Initialise the class."""
-        pass
 
     def __call__(self, filenames):
         """Group the filenames by imageset.
@@ -358,7 +335,7 @@ class ImageSetFactory(object):
         """
         # Ensure we have enough images
         if isinstance(filenames, list):
-            assert len(filenames) > 0
+            assert filenames
         elif isinstance(filenames, str):
             filenames = [filenames]
         else:
@@ -432,10 +409,10 @@ class ImageSetFactory(object):
                 image_range = template_image_range(template)
 
             # Set the image range
-            array_range = (image_range[0] - 1, image_range[1])
+            array_range = range(image_range[0] - 1, image_range[1])
 
             # Create the sweep file list
-            filenames = [template_format % (i + 1) for i in range(*array_range)]
+            filenames = [template_format % (i + 1) for i in array_range]
 
         # Get the format class
         if check_format:
@@ -482,11 +459,8 @@ class ImageSetFactory(object):
         # Get the format object
         format_class = Registry.find(filenames[0])
 
-        # Create the imageset
-        imageset = format_class.get_imageset(filenames, as_imageset=True)
-
-        # Return the image set
-        return imageset
+        # Create and return the imageset
+        return format_class.get_imageset(filenames, as_imageset=True)
 
     @staticmethod
     def _create_sweep(filelist, check_headers):
@@ -518,7 +492,7 @@ class ImageSetFactory(object):
         template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
 
         # Set the image range
-        array_range = list(range(min(indices) - 1, max(indices)))
+        array_range = range(min(indices) - 1, max(indices))
 
         # Create the sweep file list
         filenames = [template_format % (i + 1) for i in array_range]
@@ -551,16 +525,13 @@ class ImageSetFactory(object):
                 else:
                     format_class = FormatMultiImage
 
-        imageset = format_class.get_imageset(
+        return format_class.get_imageset(
             filenames,
             single_file_indices=single_file_indices,
             as_imageset=True,
             format_kwargs=format_kwargs,
             check_format=check_format,
         )
-
-        # Return the imageset
-        return imageset
 
     @staticmethod
     def make_sweep(
@@ -606,14 +577,6 @@ class ImageSetFactory(object):
             else:
                 format_class = Format
 
-        # Done require template to be vaid if not checking format
-        # try:
-        #   filenames = [template_format % (i+1) for i in range(*array_range)]
-        # except Exception:
-        #   if check_format:
-        #     raise
-        #   else:
-        #     filenames = []
         sweep = format_class.get_imageset(
             filenames,
             beam=beam,

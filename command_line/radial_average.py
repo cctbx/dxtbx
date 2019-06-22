@@ -1,6 +1,5 @@
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.radial_average
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export BOOST_ADAPTBX_FPE_DEFAULT=1
 
 from __future__ import absolute_import, division, print_function
 
@@ -9,11 +8,11 @@ import math
 import os
 import sys
 
+import dxtbx.datablock
 import libtbx.phil
 from libtbx import easy_pickle
 from libtbx.utils import Sorry, Usage
 from scitbx.matrix import col
-from six.moves import range
 
 master_phil = libtbx.phil.parse(
     """
@@ -58,14 +57,9 @@ master_phil = libtbx.phil.parse(
 )
 
 
-def distance(a, b):
-    return math.sqrt((math.pow(b[0] - a[0], 2) + math.pow(b[1] - a[1], 2)))
-
-
 def run(args, imageset=None):
     from xfel import radial_average
     from scitbx.array_family import flex
-    from dxtbx.datablock import DataBlockFactory
     from dxtbx.model.experiment_list import ExperimentListFactory
 
     # Parse input
@@ -125,22 +119,25 @@ def run(args, imageset=None):
     if imageset is None:
         iterable = params.file_path
 
-        def loader(x):
+        def load_func(x):
             try:
-                obj = DataBlockFactory.from_filenames([x])[0].extract_imagesets()[0]
+                obj = dxtbx.datablock.DataBlockFactory.from_filenames([x])[
+                    0
+                ].extract_imagesets()[0]
             except IndexError:
-                import dxtbx.datablock
-
                 try:
-                    obj = DataBlockFactory.from_json_file(x)[0].extract_imagesets()[0]
+                    obj = dxtbx.datablock.DataBlockFactory.from_json_file(x)[
+                        0
+                    ].extract_imagesets()[0]
                 except dxtbx.datablock.InvalidDataBlockError:
                     obj = ExperimentListFactory.from_json_file(x)[0].imageset
             return obj
 
-        load_func = loader
     else:
         iterable = [imageset]
-        load_func = lambda x: x
+
+        def load_func(x):
+            return x
 
     # Iterate over each file provided
     for item in iterable:
@@ -148,9 +145,9 @@ def run(args, imageset=None):
         n_images = len(iset)
         if params.image_number is None:
             if params.max_images is None:
-                subiterable = list(range(n_images))
+                subiterable = range(n_images)
             else:
-                subiterable = list(range(0, min(params.max_images, n_images)))
+                subiterable = range(0, min(params.max_images, n_images))
         else:
             subiterable = [params.image_number]
         for image_number in subiterable:
@@ -158,8 +155,10 @@ def run(args, imageset=None):
             detector = iset.get_detector(image_number)
             s0 = col(beam.get_s0())
 
-            # Search the detector for the panel farthest from the beam. The number of bins in the radial average will be
-            # equal to the farthest point from the beam on the detector, in pixels, unless overridden at the command line
+            # Search the detector for the panel farthest from the beam. The
+            # number of bins in the radial average will be equal to the
+            # farthest point from the beam on the detector, in pixels, unless
+            # overridden at the command line
             panel_res = [p.get_max_resolution_at_corners(s0) for p in detector]
             farthest_panel = detector[panel_res.index(min(panel_res))]
             size2, size1 = farthest_panel.get_image_size()
@@ -241,7 +240,7 @@ def run(args, imageset=None):
 
             if params.median_filter_size is not None:
                 logger.write(
-                    "WARNING, the median filter is not fully propogated to the variances\n"
+                    "WARNING, the median filter is not fully propagated to the variances\n"
                 )
                 from scipy.ndimage.filters import median_filter
 
@@ -265,7 +264,7 @@ def run(args, imageset=None):
             std_devs = flex.sqrt(std_devs)
 
             twotheta = (
-                flex.double(list(range(len(results)))) * extent_two_theta / params.n_bins
+                flex.double(range(len(results))) * extent_two_theta / params.n_bins
             )
             q_vals = (
                 4 * math.pi * flex.sin(math.pi * twotheta / 360) / beam.get_wavelength()
@@ -296,14 +295,14 @@ def run(args, imageset=None):
                 xvals = resolution
                 max_x = resolution[flex.first_index(results, max_result)]
 
-            for i in range(len(results)):
+            for i, r in enumerate(results):
                 val = xvals[i]
-                if params.output_bins and "%.3f" % results[i] != "nan":
-                    # logger.write("%9.3f %9.3f\n"%     (val,results[i]))        #.xy  format for Rex.cell.
+                if params.output_bins and "%.3f" % r != "nan":
+                    # logger.write("%9.3f %9.3f\n"%     (val,r))        #.xy  format for Rex.cell.
                     logger.write(
-                        "%9.3f %9.3f %9.3f\n" % (val, results[i], std_devs[i])
+                        "%9.3f %9.3f %9.3f\n" % (val, r, std_devs[i])
                     )  # .xye format for GSASII
-                # logger.write("%.3f %.3f %.3f\n"%(val,results[i],ds[i]))  # include calculated d spacings
+                # logger.write("%.3f %.3f %.3f\n"%(val,r,ds[i]))  # include calculated d spacings
             logger.write(
                 "Maximum %s: %f, value: %f\n" % (params.x_axis, max_x, max_result)
             )

@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-
 from builtins import range
+
+
 def test_beam():
     from dxtbx.model import Beam
 
@@ -44,8 +45,8 @@ def test_scan():
     s1 = Scan(
         image_range=(1, 20),
         oscillation=(5.0, 0.1),
-        exposure_times=flex.double(list(range(20))),
-        epochs=flex.double(list(range(20, 40))),
+        exposure_times=flex.double(range(20)),
+        epochs=flex.double(range(20, 40)),
     )
     s1.set_valid_image_ranges("0", [(1, 20)])
 
@@ -55,7 +56,7 @@ def test_scan():
 
 
 def test_detector():
-    from dxtbx.model import Detector, Panel  # import dependency
+    from dxtbx.model import Detector
 
     d1 = Detector()
     p = d1.add_panel()

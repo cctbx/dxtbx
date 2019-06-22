@@ -1,8 +1,5 @@
-# -*- mode: python; coding: utf-8; indent-tabs-mode: nil; python-indent: 2 -*-
-#
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.image_average
 # LIBTBX_SET_DISPATCHER_NAME cxi.image_average
-#
 
 """
 Average images of any dxtbx-supported format. Handles many individual images or single container files.
