@@ -9,6 +9,7 @@ from __future__ import absolute_import, division
 #
 # Tests for the goniometer class.
 
+from builtins import range
 import math
 
 from dxtbx.model.goniometer import Goniometer, MultiAxisGoniometer

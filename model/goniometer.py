@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 # documented in internal ticket #1555. This is not designed to be used outside
 # of the XSweep classes.
 
+from builtins import range
 import pycbf
 from dxtbx_model_ext import KappaGoniometer  # noqa: F401, import dependency
 from dxtbx_model_ext import Goniometer, MultiAxisGoniometer

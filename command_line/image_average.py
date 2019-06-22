@@ -10,6 +10,7 @@ Average images of any dxtbx-supported format. Handles many individual images or 
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import copy
 import sys
 
@@ -273,7 +274,7 @@ def run(argv=None):
             raise Usage("Supply more than one image")
 
         worker = multi_image_worker(command_line, paths[0], imageset)
-        iterable = range(len(imageset))
+        iterable = list(range(len(imageset)))
     else:
         # Multiple images provided
         worker = single_image_worker(command_line)

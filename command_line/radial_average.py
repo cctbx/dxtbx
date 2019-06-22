@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import math
 import os
 import sys
@@ -147,9 +148,9 @@ def run(args, imageset=None):
         n_images = len(iset)
         if params.image_number is None:
             if params.max_images is None:
-                subiterable = range(n_images)
+                subiterable = list(range(n_images))
             else:
-                subiterable = range(0, min(params.max_images, n_images))
+                subiterable = list(range(0, min(params.max_images, n_images)))
         else:
             subiterable = [params.image_number]
         for image_number in subiterable:
@@ -264,7 +265,7 @@ def run(args, imageset=None):
             std_devs = flex.sqrt(std_devs)
 
             twotheta = (
-                flex.double(range(len(results))) * extent_two_theta / params.n_bins
+                flex.double(list(range(len(results)))) * extent_two_theta / params.n_bins
             )
             q_vals = (
                 4 * math.pi * flex.sin(math.pi * twotheta / 360) / beam.get_wavelength()

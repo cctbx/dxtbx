@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import math
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
@@ -365,7 +366,7 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
 
         steps_per_degree = 1
         theta = (
-            flex.double([range(360 * steps_per_degree)])
+            flex.double([list(range(360 * steps_per_degree))])
             * math.pi
             / 180
             * 1

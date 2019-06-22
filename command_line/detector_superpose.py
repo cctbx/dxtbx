@@ -13,6 +13,7 @@
 #
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import math
 
 from scitbx.array_family import flex
@@ -108,7 +109,7 @@ class Script(object):
         # Get list of panels to compare
         if params.panel_list is None or len(params.panel_list) == 0:
             assert len(reference) == len(moving), "Detectors not same length"
-            panel_ids = range(len(reference))
+            panel_ids = list(range(len(reference)))
         else:
             max_p_id = max(params.panel_list)
             assert max_p_id < len(reference), (

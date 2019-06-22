@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 # flat detectors, or composite detectors constructed from a number of flat
 # elements.
 
+from builtins import range
 import pycbf
 from scitbx import matrix
 from dxtbx_model_ext import Panel, Detector

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import boost.python
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 
@@ -517,7 +518,7 @@ class ImageSetFactory(object):
         template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
 
         # Set the image range
-        array_range = range(min(indices) - 1, max(indices))
+        array_range = list(range(min(indices) - 1, max(indices)))
 
         # Create the sweep file list
         filenames = [template_format % (i + 1) for i in array_range]
@@ -623,7 +624,7 @@ class ImageSetFactory(object):
             template=template,
             as_sweep=True,
             check_format=check_format,
-            single_file_indices=range(*array_range),
+            single_file_indices=list(range(*array_range)),
         )
 
         # Return the sweep

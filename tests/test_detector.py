@@ -9,6 +9,7 @@ from __future__ import absolute_import, division
 #
 # Tests for the detector class.
 
+from builtins import range
 from scitbx import matrix
 
 from dxtbx.model.detector import DetectorFactory

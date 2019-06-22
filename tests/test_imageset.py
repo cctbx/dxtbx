@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import glob
 import os
 import six.moves.cPickle as pickle
@@ -219,8 +220,8 @@ class TestImageSet(object):
         assert len(imageset) == len(filenames)
         assert_is_iterable(imageset)
         self.tst_paths(imageset, filenames)
-        self.tst_get_detectorbase(imageset, range(len(filenames)), 9)
-        self.tst_get_models(imageset, range(len(filenames)), 9)
+        self.tst_get_detectorbase(imageset, list(range(len(filenames))), 9)
+        self.tst_get_models(imageset, list(range(len(filenames))), 9)
 
     def tst_get_item(self, imageset):
         image = imageset[0]
@@ -233,8 +234,8 @@ class TestImageSet(object):
             image = imageset2[5]
 
         assert len(imageset2) == 4
-        self.tst_get_detectorbase(imageset2, range(0, 4), 5)
-        self.tst_get_models(imageset2, range(0, 4), 5)
+        self.tst_get_detectorbase(imageset2, list(range(0, 4)), 5)
+        self.tst_get_models(imageset2, list(range(0, 4)), 5)
         self.tst_paths(imageset2, imageset.paths()[3:7])
         assert_is_iterable(imageset2)
 
@@ -244,8 +245,8 @@ class TestImageSet(object):
             image = imageset2[2]
 
         assert len(imageset2) == 2
-        self.tst_get_detectorbase(imageset2, range(0, 2), 2)
-        self.tst_get_models(imageset2, range(0, 2), 2)
+        self.tst_get_detectorbase(imageset2, list(range(0, 2)), 2)
+        self.tst_get_models(imageset2, list(range(0, 2)), 2)
         self.tst_paths(imageset2, imageset.paths()[3:5])
         assert_is_iterable(imageset2)
 
@@ -330,8 +331,8 @@ class TestImageSweep(object):
         assert len(sweep) == len(centroid_files)
         assert_is_iterable(sweep)
         self.tst_paths(sweep, centroid_files)
-        self.tst_get_detectorbase(sweep, range(len(centroid_files)), 9)
-        self.tst_get_models(sweep, range(len(centroid_files)), 9)
+        self.tst_get_detectorbase(sweep, list(range(len(centroid_files))), 9)
+        self.tst_get_models(sweep, list(range(len(centroid_files))), 9)
         self.tst_get_array_range(sweep, (0, 9))
         self.tst_set_models(sweep)
 
@@ -346,8 +347,8 @@ class TestImageSweep(object):
             _ = sweep2[5]
 
         assert len(sweep2) == 4
-        self.tst_get_detectorbase(sweep2, range(0, 4), 5)
-        self.tst_get_models(sweep2, range(0, 4), 5)
+        self.tst_get_detectorbase(sweep2, list(range(0, 4)), 5)
+        self.tst_get_models(sweep2, list(range(0, 4)), 5)
         self.tst_paths(sweep2, sweep.paths()[3:7])
         assert_is_iterable(sweep2)
         self.tst_get_array_range(sweep2, (3, 7))

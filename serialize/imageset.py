@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import collections
 import os
 
@@ -160,7 +161,7 @@ def imagesweep_from_dict(d, check_format=True, directory=None):
             check_format=check_format,
         )[0]
     except Exception:
-        indices = range(image_range[0], image_range[1] + 1)
+        indices = list(range(image_range[0], image_range[1] + 1))
         sweep = ImageSetFactory.make_sweep(
             template,
             indices,

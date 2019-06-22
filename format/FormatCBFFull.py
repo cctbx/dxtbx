@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import pycbf
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatStill import FormatStill

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import json
 import os
 from pprint import pprint
@@ -21,7 +22,7 @@ def centroid_test_data(dials_regression):
 @pytest.fixture
 def single_sweep_filenames(centroid_test_data):
     filenames = []
-    image_indices = range(1, 10)
+    image_indices = list(range(1, 10))
     for i in image_indices:
         filenames.append(
             os.path.join(centroid_test_data, "centroid_000{}.cbf".format(i))

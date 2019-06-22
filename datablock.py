@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import collections
 import itertools
 import json
@@ -438,7 +439,7 @@ class DataBlockTemplateImporter(object):
         # Create the sweep
         imageset = dxtbx.imageset.ImageSetFactory.make_sweep(
             template,
-            range(*image_range),
+            list(range(*image_range)),
             format_class,
             b,
             d,
@@ -647,7 +648,7 @@ class DataBlockFilenameImporter(object):
             # Create the sweep
             imageset = dxtbx.imageset.ImageSetFactory.make_sweep(
                 abspath(records[0].template),
-                range(*image_range),
+                list(range(*image_range)),
                 format_class,
                 records[0].beam,
                 records[0].detector,
@@ -760,7 +761,7 @@ class DataBlockDictImporter(object):
                     i0, i1 = scan.get_image_range()
                     iset = dxtbx.imageset.ImageSetFactory.make_sweep(
                         template,
-                        range(i0, i1 + 1),
+                        list(range(i0, i1 + 1)),
                         None,
                         beam,
                         detector,

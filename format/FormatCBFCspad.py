@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 from dxtbx.format.FormatCBFMultiTileHierarchy import FormatCBFMultiTileHierarchyStill
 from dxtbx.format.FormatCBFFull import FormatCBFFullStill
 from dxtbx.model import ParallaxCorrectedPxMmStrategy

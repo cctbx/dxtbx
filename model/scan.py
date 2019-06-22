@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 # in internal ticket #1555. This is not designed to be used outside of the
 # XSweep classes.
 
+from builtins import range
 import pycbf
 from dxtbx_model_ext import Scan
 

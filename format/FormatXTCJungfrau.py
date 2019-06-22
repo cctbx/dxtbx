@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+from builtins import range
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from libtbx.phil import parse
 import numpy as np
