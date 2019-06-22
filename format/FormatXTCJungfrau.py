@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+
 from builtins import range
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from libtbx.phil import parse
@@ -223,7 +224,7 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
         import psana
         from scitbx.array_family import flex
 
-        d = self.get_detector(index)
+        self.get_detector(index)  # is this line required?
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         if run.run() not in self._cached_psana_detectors:

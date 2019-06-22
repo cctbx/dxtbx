@@ -13,7 +13,7 @@ def main():
     powers = [2 ** n for n in range(20)]
 
     for j in range(powers[-1] + 1):
-        i = dxtbx.load(frame)
+        dxtbx.load(frame)
         mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         if j in powers:
             print(j, mem)

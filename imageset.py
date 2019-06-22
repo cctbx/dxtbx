@@ -345,7 +345,7 @@ class ImageSetFactory(object):
         imagesetlist = []
         for filelist in filelist_per_imageset:
             try:
-                if filelist[2] == True:
+                if filelist[2] is True:
                     iset = ImageSetFactory._create_sweep(filelist, check_headers)
                 else:
                     iset = ImageSetFactory._create_imageset(filelist, check_headers)

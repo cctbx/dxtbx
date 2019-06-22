@@ -8,6 +8,7 @@ from dxtbx.format.image import ImageBool, ImageDouble  # noqa: F401, import depe
 from dxtbx.imageset import ImageSet, ImageSetFactory, ImageSweep
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize.filename import resolve_path
+import six.moves.cPickle as pickle
 
 
 def filename_to_absolute(filename):

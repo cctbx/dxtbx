@@ -17,7 +17,6 @@ import libtbx.option_parser
 from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
 from libtbx import easy_pickle
 from libtbx.utils import Usage
-from six.moves import range
 
 
 def crop_image_pickle(

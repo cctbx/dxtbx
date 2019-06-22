@@ -1,7 +1,5 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-# FormatPilatusHelpers.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -12,9 +10,11 @@ from __future__ import absolute_import, division
 
 
 from builtins import range
+
+
 def pilatus_6M_mask():
     """Hard coded mask regions for a Pilatus 6M instrument."""
-    # FIX me, the paramters are listed here as f0, f1, s0, s1 but the prototype specifies f0, s0, f1, s1
+    # FIX me, the parameters are listed here as f0, f1, s0, s1 but the prototype specifies f0, s0, f1, s1
     return [
         [488, 494, 1, 2527],
         [982, 988, 1, 2527],

@@ -7,7 +7,6 @@ import dxtbx.ext
 import dxtbx.tests.imagelist
 import pytest
 from dxtbx.format.FormatSMV import FormatSMV
-from six.moves import range
 from scitbx.array_family import flex
 
 
@@ -19,10 +18,7 @@ def read_smv_image(image_file):
     with open(image_file, "rb") as f:
         f.seek(header_size)
 
-        if header_dictionary["BYTE_ORDER"] == "big_endian":
-            big_endian = True
-        else:
-            big_endian = False
+        big_endian = header_dictionary["BYTE_ORDER"] == "big_endian"
 
         image_size = (int(header_dictionary["SIZE1"]), int(header_dictionary["SIZE2"]))
 
@@ -157,13 +153,13 @@ def read_multitile_cbf_image(cbf_image):
         for i in range(cbf.count_rows()):
             cbf.find_column("id")
             section_name = cbf.get_value()
-            if not section_name in section_shapes:
+            if section_name not in section_shapes:
                 section_shapes[section_name] = {}
             cbf.find_column("array_id")
-            if not "array_id" in section_shapes[section_name]:
-                section_shapes[section_name]["array_id"] = cbf.get_value()
-            else:
+            if "array_id" in section_shapes[section_name]:
                 assert section_shapes[section_name]["array_id"] == cbf.get_value()
+            else:
+                section_shapes[section_name]["array_id"] = cbf.get_value()
             cbf.find_column("index")
             axis_index = int(cbf.get_value()) - 1
             cbf.find_column("start")
@@ -235,23 +231,6 @@ def test_tiff(dials_regression, tiff_image):
 
     diff = flex.abs(data1 - data2)
     assert flex.max(diff) < 1e-7
-
-
-# @pytest.mark.skip(reason="test unused")
-# @pytest.mark.parametrize('cbf_image', dxtbx.tests.imagelist.cbf_images, ids=dxtbx.tests.imagelist.cbf_image_ids)
-# def test_cbf_fast(dials_regression, cbf_image):
-#  from scitbx.array_family import flex
-#  from dxtbx.format.image import CBFFastReader
-#  filename = os.path.join(dials_regression, cbf_image)
-#
-#  image = CBFFastReader(filename).image()
-#  assert image.n_tiles() == 1
-#  data1 = image.tile(0).as_int()
-#
-#  data2 = read_cbf_image(filename)
-#
-#  diff = flex.abs(data1 - data2)
-#  assert flex.max(diff) < 1e-7
 
 
 @pytest.mark.parametrize(

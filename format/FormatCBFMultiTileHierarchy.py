@@ -19,7 +19,6 @@ from dxtbx.model import Detector
 from libtbx.utils import Sorry
 from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
-from six.moves import range
 
 
 class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
@@ -44,8 +43,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         except Exception as e:
             if "CBF_NOTFOUND" in str(e):
                 return False
-            else:
-                raise e
+            raise e
         return True
 
     def __init__(self, image_file, **kwargs):

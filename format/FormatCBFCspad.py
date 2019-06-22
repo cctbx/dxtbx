@@ -8,7 +8,6 @@ from dxtbx.format.FormatCBFFull import FormatCBFFullStill
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from scitbx.matrix import col, sqr
 import pycbf
-from six.moves import range
 
 
 class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
@@ -37,9 +36,9 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
             # a header only CBF file will not have a beam object
             beam = self._beam()
         except Exception as e:
-            if "CBF_NOTFOUND" not in str(e):
-                raise e
-            return d
+            if "CBF_NOTFOUND" in str(e):
+                return d
+            raise e
 
         # take into consideration here the thickness of the sensor also the
         # wavelength of the radiation (which we have in the same file...)

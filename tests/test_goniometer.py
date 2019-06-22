@@ -1,23 +1,14 @@
-from __future__ import absolute_import, division
-
-#!/usr/bin/env python
-# test_goniometer.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Tests for the goniometer class.
+from __future__ import absolute_import, division, print_function
 
 from builtins import range
 import math
 
+import pytest
 from dxtbx.model.goniometer import Goniometer, MultiAxisGoniometer
 from dxtbx.model.goniometer import GoniometerFactory
 from libtbx import easy_pickle
 from libtbx.test_utils import Exception_expected
 from scitbx import matrix
-from six.moves import range
 
 
 def compare_tuples(a, b, tol=1.0e-6):
@@ -289,10 +280,8 @@ def test_scan_varying():
 
     assert g.get_num_scan_points() == 0
     assert g.get_setting_rotation_at_scan_points().size() == 0
-    try:
-        g.get_setting_rotation_at_scan_point(0)  # should raise RuntimeError
-    except RuntimeError:
-        pass
+    with pytest.raises(RuntimeError):
+        g.get_setting_rotation_at_scan_point(0)
 
     # set varying beam
     num_scan_points = 11
@@ -346,12 +335,3 @@ def test_comparison():
 
     assert g1 != g3
     assert not g1.is_similar_to(g3)
-
-
-if __name__ == "__main__":
-
-    test_goniometer()
-    test_multi_axis_goniometer()
-    test_goniometer_from_phil()
-    test_scan_varying()
-    test_comparison()

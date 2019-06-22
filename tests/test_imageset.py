@@ -34,8 +34,8 @@ def test_format(dials_regression, image):
     N = len(reader)
 
     for i in range(N):
-        data = reader.read(i)
-        mask = masker.get(i)
+        reader.read(i)
+        masker.get(i)
 
     assert format_class.get_imageset([image])
 
@@ -121,8 +121,8 @@ def test_imagesetdata(centroid_files):
 
     handle = ImageSetData(reader, masker)
 
-    data = handle.get_data(0).as_int().tile(0).data()
-    mask = handle.get_mask(0).tile(0).data()
+    assert handle.get_data(0).as_int().tile(0).data()
+    assert handle.get_mask(0).tile(0).data()
 
     assert handle.has_single_file_reader() is False
 
@@ -222,14 +222,14 @@ class TestImageSet(object):
         self.tst_get_models(imageset, list(range(len(filenames))), 9)
 
     def tst_get_item(self, imageset):
-        image = imageset[0]
+        assert imageset[0]
         with pytest.raises(RuntimeError):
-            image = imageset[9]
+            _ = imageset[9]
 
         imageset2 = imageset[3:7]
-        image = imageset2[0]
+        assert imageset2[0]
         with pytest.raises(RuntimeError):
-            image = imageset2[5]
+            _ = imageset2[5]
 
         assert len(imageset2) == 4
         assert_can_get_detectorbase(imageset2, range(0, 4), 5)
@@ -238,9 +238,9 @@ class TestImageSet(object):
         assert_is_iterable(imageset2)
 
         imageset2 = imageset[3:5]
-        image = imageset2[0]
+        assert imageset2[0]
         with pytest.raises(RuntimeError):
-            image = imageset2[2]
+            _ = imageset2[2]
 
         assert len(imageset2) == 2
         assert_can_get_detectorbase(imageset2, range(0, 2), 2)

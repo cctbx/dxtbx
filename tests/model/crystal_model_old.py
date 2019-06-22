@@ -155,7 +155,7 @@ class crystal_model_old(object):
         from six.moves import StringIO
 
         s = StringIO()
-        msg = self.show(out=s)
+        self.show(out=s)
         return s.getvalue()
 
     def set_unit_cell(self, real_space_a, real_space_b, real_space_c):
@@ -230,7 +230,7 @@ class crystal_model_old(object):
 
         from scitbx.math.lefebvre import matrix_inverse_error_propagation
         from scitbx.math import angle_derivative_wrt_vectors
-        from math import pi, acos, sqrt
+        from math import pi, sqrt
 
         # self._cov_B is the covariance matrix of elements of the B matrix. We
         # need to construct the covariance matrix of elements of the
@@ -339,9 +339,9 @@ class crystal_model_old(object):
 
         # So the unit cell parameters are
         a, b, c = vec_a.length(), vec_b.length(), vec_c.length()
-        alpha = acos(vec_b.dot(vec_c) / (b * c))
-        beta = acos(vec_a.dot(vec_c) / (a * c))
-        gamma = acos(vec_a.dot(vec_b) / (a * b))
+        # alpha = acos(vec_b.dot(vec_c) / (b * c))
+        # beta = acos(vec_a.dot(vec_c) / (a * c))
+        # gamma = acos(vec_a.dot(vec_b) / (a * b))
 
         # The estimated errors are calculated by error propagation from cov_O. In
         # each case we define a function F(O) that converts the matrix O into the
@@ -392,7 +392,7 @@ class crystal_model_old(object):
             ),
             (1, 9),
         )
-        jacobian_t = jacobian.transpose()
+        # jacobian_t = jacobian.transpose()
         var_V = (jacobian * cov_O * jacobian.transpose())[0]
         self._cell_volume_sd = sqrt(var_V)
 
@@ -460,8 +460,6 @@ class crystal_model_old(object):
         var_beta = max(0, var_beta)
         var_gamma = max(0, var_gamma)
 
-        from math import pi
-
         rad2deg = 180.0 / pi
         self._cell_sd = (
             sqrt(var_a),
@@ -471,7 +469,6 @@ class crystal_model_old(object):
             sqrt(var_beta) * rad2deg,
             sqrt(var_gamma) * rad2deg,
         )
-        return
 
     def get_cell_parameter_sd(self):
         """Return the estimated standard deviations of unit cell parameters in
@@ -633,7 +630,7 @@ class crystal_model_old(object):
         """
         from math import pi
 
-        if deg == True:
+        if deg is True:
             return self._mosaicity * 180.0 / pi
 
         return self._mosaicity
@@ -652,7 +649,7 @@ class crystal_model_old(object):
         """
         from math import pi
 
-        if deg == True:
+        if deg is True:
             self._mosaicity = mosaicity * pi / 180.0
         else:
             self._mosaicity = mosaicity
@@ -661,25 +658,7 @@ class crystal_model_old(object):
         return self._U * self._B
 
     def __eq__(self, other, eps=1e-7):
-        if isinstance(other, crystal_model):
-            d_mosaicity = abs(self._mosaicity - other._mosaicity)
-            d_U = sum([abs(u1 - u2) for u1, u2 in zip(self._U, other._U)])
-            d_B = sum([abs(b1 - b2) for b1, b2 in zip(self._B, other._B)])
-            if self.num_scan_points > 0:
-                if other.num_scan_points != self.num_scan_points:
-                    return False
-                for i in range(self.num_scan_points):
-                    A1, A2 = self.get_A_at_scan_point(i), other.get_A_at_scan_point(i)
-                    d_A = sum([abs(a1 - a2) for a1, a2 in zip(A1, A2)])
-                    if d_A > eps:
-                        return False
-            return (
-                d_mosaicity <= eps
-                and d_U <= eps
-                and d_B <= eps
-                and self._sg == other._sg
-            )
-        return NotImplemented
+        raise NotImplementedError("this piece of code was broken")
 
     def is_similar_to(
         self,

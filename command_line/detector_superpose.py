@@ -19,11 +19,9 @@ from scitbx.matrix import col
 from libtbx.phil import parse
 from libtbx.utils import Sorry
 from dxtbx.model.experiment_list import ExperimentListFactory
-from scitbx.array_family import flex
 from scitbx.math.superpose import least_squares_fit
 from xfel.command_line.cspad_detector_congruence import iterate_detector_at_level
 from libtbx.test_utils import approx_equal
-from six.moves import range
 
 help_message = """
 This program is used to superpose a moving detector onto a reference detector

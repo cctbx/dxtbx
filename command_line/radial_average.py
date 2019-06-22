@@ -64,24 +64,24 @@ def run(args, imageset=None):
 
     # Parse input
     try:
-        n = len(args)
+        len(args)
     except Exception:
         params = args
     else:
         user_phil = []
         for arg in args:
-            if not "=" in arg:
-                try:
-                    user_phil.append(libtbx.phil.parse("""file_path=%s""" % arg))
-                except ValueError:
-                    raise Sorry("Unrecognized argument '%s'" % arg)
-            else:
+            if "=" in arg:
                 try:
                     user_phil.append(libtbx.phil.parse(arg))
                 except RuntimeError as e:
                     raise Sorry(
                         "Unrecognized argument '%s' (error: %s)" % (arg, str(e))
                     )
+            else:
+                try:
+                    user_phil.append(libtbx.phil.parse("""file_path=%s""" % arg))
+                except ValueError:
+                    raise Sorry("Unrecognized argument '%s'" % arg)
         params = master_phil.fetch(sources=user_phil).extract()
     if imageset is None:
         if (
@@ -324,7 +324,7 @@ def run(args, imageset=None):
                 elif params.x_axis == "q":
                     plt.xlabel("q")
                 elif params.x_axis == "resolution":
-                    plt.xlabel("Resolution ($\AA$)")
+                    plt.xlabel("Resolution ($\\AA$)")
                     plt.gca().set_xscale("log")
                     plt.gca().invert_xaxis()
                     plt.xlim(0, 50)

@@ -14,7 +14,6 @@ from builtins import range
 import pycbf
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatStill import FormatStill
-from six.moves import range
 
 
 class FormatCBFFull(FormatCBF):
