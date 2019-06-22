@@ -27,10 +27,12 @@ class MemReader(object):
         format_instance = self._images[index]
         return format_instance.get_raw_data()
 
-    def is_single_file_reader(self):
+    @staticmethod
+    def is_single_file_reader():
         return False
 
-    def master_path(self):
+    @staticmethod
+    def master_path():
         return ""
 
 
@@ -255,56 +257,23 @@ class ImageSweepAux(boost.python.injector, ImageSweep):
         return self.data().get_template()
 
 
-class FilenameAnalyser(object):
-    """Group images by filename into image sets."""
+def _analyse_files(filenames):
+    """Group images by filename into image sets.
 
-    def __call__(self, filenames):
-        """Group the filenames by imageset.
+    Params:
+        filenames The list of filenames
 
-        Params:
-            filenames The list of filenames
+    Returns:
+        A list of (template, [indices], is_sweep)
 
-        Returns:
-            A list of (template, [indices], is_sweep)
+    """
+    from dxtbx.sweep_filenames import group_files_by_imageset
 
-        """
-        from dxtbx.sweep_filenames import group_files_by_imageset
+    # Analyse filenames to figure out how many imagesets we have
+    filelist_per_imageset = group_files_by_imageset(filenames)
 
-        # Analyse filenames to figure out how many imagesets we have
-        filelist_per_imageset = group_files_by_imageset(filenames)
-
-        # Label each group as either an imageset or a sweep.
-        file_groups = []
-        for template, indices in filelist_per_imageset.items():
-
-            # Check if this imageset is a sweep
-            is_sweep = self._is_imageset_a_sweep(template, indices)
-
-            # Append the items to the group list
-            file_groups.append((template, indices, is_sweep))
-
-        # Return the groups of files
-        return file_groups
-
-    def _is_imageset_a_sweep(self, template, indices):
-        """Return True/False if the imageset is a sweep or not.
-
-        Where more than 1 image that follow sequential numbers are given
-        the images are catagorised as belonging to a sweep, otherwise they
-        belong to an image set.
-
-        """
-        if len(indices) <= 1:
-            return False
-        else:
-            indices = sorted(indices)
-            if self._indices_sequential_ge_zero(indices):
-                return True
-            else:
-                return False
-
-    def _indices_sequential_ge_zero(self, indices):
-        """ Determine if indices are sequential."""
+    def _indices_sequential_ge_zero(indices):
+        """Determine if indices are sequential."""
         prev = indices[0]
         if prev < 0:
             return False
@@ -314,6 +283,32 @@ class FilenameAnalyser(object):
             prev = curr
 
         return True
+
+    def _is_imageset_a_sweep(template, indices):
+        """Return True/False if the imageset is a sweep or not.
+
+        Where more than 1 image that follow sequential numbers are given
+        the images are catagorised as belonging to a sweep, otherwise they
+        belong to an image set.
+
+        """
+        if len(indices) <= 1:
+            return False
+        indices = sorted(indices)
+        return _indices_sequential_ge_zero(indices)
+
+    # Label each group as either an imageset or a sweep.
+    file_groups = []
+    for template, indices in filelist_per_imageset.items():
+
+        # Check if this imageset is a sweep
+        is_sweep = _is_imageset_a_sweep(template, indices)
+
+        # Append the items to the group list
+        file_groups.append((template, indices, is_sweep))
+
+    # Return the groups of files
+    return file_groups
 
 
 # FIXME Lots of duplication in this class, need to tidy up
@@ -342,8 +337,7 @@ class ImageSetFactory(object):
             raise RuntimeError("unknown argument passed to ImageSetFactory")
 
         # Analyse the filenames and group the images into imagesets.
-        analyse_files = FilenameAnalyser()
-        filelist_per_imageset = analyse_files(filenames)
+        filelist_per_imageset = _analyse_files(filenames)
 
         # For each file list denoting an image set, create the imageset
         # and return as a list of imagesets. N.B sweeps and image sets are
