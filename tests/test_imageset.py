@@ -514,7 +514,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
 def test_imagesetfactory(centroid_files, dials_regression):
     from dxtbx.imageset import ImageSetFactory, ImageSweep
 
-    sweep = ImageSetFactory.new(filenames)
+    sweep = ImageSetFactory.new(centroid_files)
 
     assert isinstance(sweep[0], ImageSweep)
 
@@ -528,10 +528,10 @@ def test_imagesetfactory(centroid_files, dials_regression):
     assert sweep[0].paths()[0].endswith("3.cbf")
     assert sweep[0].paths()[-1].endswith("6.cbf")
 
-    imageset = ImageSetFactory.make_imageset(filenames)
+    imageset = ImageSetFactory.make_imageset(centroid_files)
     assert len(imageset) == 9
 
-    imageset = ImageSetFactory.make_imageset(filenames, check_format=False)
+    imageset = ImageSetFactory.make_imageset(centroid_files, check_format=False)
     assert len(imageset) == 9
 
     sweep = ImageSetFactory.make_sweep(template, list(range(1, 9 + 1)))
