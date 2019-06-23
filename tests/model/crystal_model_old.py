@@ -370,7 +370,6 @@ class crystal_model_old(object):
         jacobian = matrix.rec(
             (0, 0, vec_c[0] / c, 0, 0, vec_c[1] / c, 0, 0, vec_c[2] / c), (1, 9)
         )
-        jacobian_t = jacobian.transpose()
         var_c = (jacobian * cov_O * jacobian.transpose())[0]
 
         # For cell volume (a X b).c,
@@ -392,7 +391,6 @@ class crystal_model_old(object):
             ),
             (1, 9),
         )
-        # jacobian_t = jacobian.transpose()
         var_V = (jacobian * cov_O * jacobian.transpose())[0]
         self._cell_volume_sd = sqrt(var_V)
 
@@ -757,55 +755,7 @@ class crystal_model_old(object):
         return (matrix.col(A_inv[:3]), matrix.col(A_inv[3:6]), matrix.col(A_inv[6:9]))
 
     def change_basis(self, change_of_basis_op):
-        """
-        Returns a copy of the current crystal model transformed by the given
-        change of basis operator to the new basis.
-
-        :param change_of_basis_op: The change of basis operator.
-        :type cctbx.sgtbx.change_of_basis_op:
-        :returns: The crystal model transformed to the new basis.
-        :rtype: :py:class:`crystal_model`
-        """
-        # cctbx change of basis matrices and those Giacovazzo are related by
-        # inverse and transpose, i.e. Giacovazzo's "M" is related to the cctbx
-        # cb_op as follows:
-        #   M = cb_op.c_inv().r().transpose()
-        #   M_inverse = cb_op_to_minimum.c().r().transpose()
-
-        # (Giacovazzo calls the direct matrix "A",
-        #  we call the reciprocal matrix "A")
-        # Therefore, from equation 2.19 in Giacovazzo:
-        #   A' = M A
-
-        # and:
-        #   (A')^-1 = (M A)^-1
-        #   (A')^-1 = A^-1 M^-1
-
-        # reciprocal_matrix = self.get_A()
-        # rm_cb = reciprocal_matrix * M.inverse()
-        # dm_cb = rm_cb.inverse()
-        # from libtbx.test_utils import approx_equal
-        # assert approx_equal(dm_cb.elems, new_direct_matrix.elems)
-
-        direct_matrix = self.get_A().inverse()
-        M = matrix.sqr(change_of_basis_op.c_inv().r().transpose().as_double())
-        # equation 2.19 of Giacovazzo
-        new_direct_matrix = M * direct_matrix
-        real_space_a = new_direct_matrix[:3]
-        real_space_b = new_direct_matrix[3:6]
-        real_space_c = new_direct_matrix[6:9]
-        other = crystal_model(
-            real_space_a,
-            real_space_b,
-            real_space_c,
-            space_group=self.get_space_group().change_basis(change_of_basis_op),
-            mosaicity=self.get_mosaicity(),
-        )
-        if self.num_scan_points > 0:
-            M_inv = M.inverse()
-            other.set_A_at_scan_points([At * M_inv for At in self._A_at_scan_points])
-            assert other.num_scan_points == self.num_scan_points
-        return other
+        raise NotImplementedError("this piece of code was broken")
 
     def update(self, other):
         """

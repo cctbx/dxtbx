@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import range
 import math
+import os
 
 import pytest
 from dxtbx.model.goniometer import Goniometer, MultiAxisGoniometer
@@ -76,12 +77,11 @@ def test_goniometer():
     assert not compare_tuples(kappa.get_fixed_rotation(), fixed)
 
     import libtbx.load_env
-    import os
 
     dxtbx_dir = libtbx.env.dist_path("dxtbx")
 
     image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
-    cbf = GoniometerFactory.imgCIF(image)
+    assert GoniometerFactory.imgCIF(image)
 
     kappa = GoniometerFactory.kappa(50.0, -10.0, 30.0, 0.0, "-y", "phi")
 
@@ -90,7 +90,7 @@ def test_goniometer():
     assert kappa == kappa2
 
     image = os.path.join(dxtbx_dir, "tests", "omega_scan.cbf")
-    cbf = GoniometerFactory.imgCIF(image)
+    assert GoniometerFactory.imgCIF(image)
 
     kappa = GoniometerFactory.kappa(50.0, -10.0, 30.0, 20.0, "-y", "omega")
 
@@ -151,8 +151,6 @@ def test_multi_axis_goniometer():
     assert approx_equal(
         multi_axis_phi_scan.get_fixed_rotation(), kappa_phi_scan.get_fixed_rotation()
     )
-    from scitbx import matrix
-
     assert approx_equal(
         matrix.sqr(multi_axis_phi_scan.get_setting_rotation())
         * multi_axis_phi_scan.get_rotation_axis_datum(),

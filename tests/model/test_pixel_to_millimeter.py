@@ -36,7 +36,6 @@ def correct_gold(model, xy):
     mu = model["mu"]
     t0 = model["t0"]
     s1 = matrix.col(model["detector"].get_lab_coord(xy)).normalize()
-    d0 = matrix.col(model["detector"].get_origin())
     d1 = matrix.col(model["detector"].get_fast_axis())
     d2 = matrix.col(model["detector"].get_slow_axis())
     dn = d1.cross(d2)

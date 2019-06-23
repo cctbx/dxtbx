@@ -6,6 +6,7 @@ import copy
 import json
 import os.path
 import pkg_resources
+from typing import Any, Dict, List, Optional, Tuple
 
 from dxtbx.datablock import (
     AutoEncoder,
