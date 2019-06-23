@@ -11,6 +11,53 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import range
 
+import collections
+
+_Detector = collections.namedtuple(
+    "Detector",
+    [
+        "module_size_fast",
+        "module_size_slow",
+        "gap_fast",
+        "gap_slow",
+        "module_configs_fast",
+    ],
+)
+setattr(
+    _Detector,
+    "all_widths",
+    property(
+        lambda self: [
+            self.module_size_fast * j + self.gap_fast * (j - 1)
+            for j in self.module_configs_fast
+        ]
+    ),
+)
+
+_DetectorDatabase = {
+    "Pilatus": _Detector(
+        module_size_fast=487,
+        module_size_slow=195,
+        gap_fast=7,
+        gap_slow=17,
+        module_configs_fast=(1, 3, 5),
+    ),
+    "Eiger X": _Detector(
+        module_size_fast=1030,
+        module_size_slow=514,
+        gap_fast=10,
+        gap_slow=37,
+        module_configs_fast=(1, 2, 3, 4),
+    ),
+    "Eiger 2X": _Detector(
+        module_size_fast=1024,
+        module_size_slow=512,
+        gap_fast=12,
+        gap_slow=38,
+        module_configs_fast=(1, 2, 3, 4),
+    ),
+}
+
 
 def pilatus_6M_mask():
     """Hard coded mask regions for a Pilatus 6M instrument."""
@@ -56,59 +103,32 @@ def pilatus_300K_mask():
     return [[1, 487, 196, 212], [1, 487, 408, 424]]
 
 
-def get_pad_module_gap(xdetector, size=None):
-    assert xdetector[0].get_type() == "SENSOR_PAD"
+def _get_pad_module_gap(xdetector, size=None):
     assert len(xdetector) == 1
+    assert xdetector[0].get_type() == "SENSOR_PAD"
 
     if size is None:
         size = xdetector[0].get_image_size()
 
-    pilatus_width = 487
-    pilatus_height = 195
-    pilatus_gap = 7
-
-    pilatus_sizes = [pilatus_width * j + pilatus_gap * (j - 1) for j in (1, 3, 5)]
-
-    eiger_x_width = 1030
-    eiger_x_height = 514
-    eiger_x_gap = 10
-
-    eiger_2x_width = 1028
-    eiger_2x_height = 512
-    eiger_2x_gap = 12
-
-    eiger_x_sizes = [eiger_x_width * j + eiger_x_gap * (j - 1) for j in (1, 2, 3, 4)]
-    eiger_2x_sizes = [eiger_2x_width * j + eiger_2x_gap * (j - 1) for j in (1, 2, 3, 4)]
-
-    if size[0] in pilatus_sizes:
-        module_size_fast, module_size_slow = (487, 195)
-        gap_size_fast, gap_size_slow = (7, 17)
-    elif size[0] in eiger_x_sizes:
-        module_size_fast, module_size_slow = (1030, 514)
-        gap_size_fast, gap_size_slow = (10, 37)
-    elif size[0] in eiger_2x_sizes:
-        module_size_fast, module_size_slow = (1028, 512)
-        gap_size_fast, gap_size_slow = (12, 38)
-    else:
-        return None
-
-    return (module_size_fast, module_size_slow, gap_size_fast, gap_size_slow)
+    for detector in _DetectorDatabase.values():
+        if size[0] in detector.all_widths:
+            return detector
 
 
 def sensor_active_areas(xdetector):
     """Return the sensitive areas on the detector for pixel array detectors
     yes, does include hard coded magic numbers; returns [(x0, y0 x1, x1)]"""
 
-    _ = get_pad_module_gap(xdetector)
-    module_size_fast, module_size_slow, gap_size_fast, gap_size_slow = _
+    size = xdetector[0].get_image_size()
+    detector = _get_pad_module_gap(xdetector)
 
     # iterate over these to produce a list of the TLC, BRC of the modules
     # as a list
-    n_fast, remainder = divmod(size[0], module_size_fast)
-    assert (n_fast - 1) * gap_size_fast == remainder
+    n_fast, remainder = divmod(size[0], detector.module_size_fast)
+    assert (n_fast - 1) * detector.gap_fast == remainder
 
-    n_slow, remainder = divmod(size[1], module_size_slow)
-    assert (n_slow - 1) * gap_size_slow == remainder
+    n_slow, remainder = divmod(size[1], detector.module_size_slow)
+    assert (n_slow - 1) * detector.gap_slow == remainder
 
     # Specify the dead areas between the modules, i.e. the rows and columns
     # where there are no active pixels
@@ -119,10 +139,10 @@ def sensor_active_areas(xdetector):
         for i_slow in range(n_slow):
             panels.append(
                 (
-                    i_fast * module_size_fast,
-                    i_slow * module_size_slow,
-                    (i_fast + 1) * module_size_fast,
-                    (i_slow + 1) * module_size_slow,
+                    i_fast * detector.module_size_fast,
+                    i_slow * detector.module_size_slow,
+                    (i_fast + 1) * detector.module_size_fast,
+                    (i_slow + 1) * detector.module_size_slow,
                 )
             )
 
@@ -135,15 +155,14 @@ def determine_pilatus_mask(xdetector):
     size = xdetector[0].get_image_size()
 
     # Hardcoded module size and gap size
-    module_size_fast, module_size_slow = (487, 195)
-    gap_size_fast, gap_size_slow = (7, 17)
+    detector = _DetectorDatabase["Pilatus"]
 
     # Edge dead areas not included, only gaps between modules matter
-    n_fast, remainder = divmod(size[0], module_size_fast)
-    assert (n_fast - 1) * gap_size_fast == remainder
+    n_fast, remainder = divmod(size[0], detector.module_size_fast)
+    assert (n_fast - 1) * detector.gap_fast == remainder
 
-    n_slow, remainder = divmod(size[1], module_size_slow)
-    assert (n_slow - 1) * gap_size_slow == remainder
+    n_slow, remainder = divmod(size[1], detector.module_size_slow)
+    assert (n_slow - 1) * detector.gap_slow == remainder
 
     # Specify the dead areas between the modules, i.e. the rows and columns
     # where there are no active pixels
@@ -151,10 +170,12 @@ def determine_pilatus_mask(xdetector):
     for i_fast in range(n_fast - 1):
         mask.append(
             [
-                (i_fast + 1) * module_size_fast + i_fast * gap_size_fast + 1,
-                (i_fast + 1) * module_size_fast
-                + i_fast * gap_size_fast
-                + gap_size_fast,
+                (i_fast + 1) * detector.module_size_fast
+                + i_fast * detector.gap_fast
+                + 1,
+                (i_fast + 1) * detector.module_size_fast
+                + i_fast * detector.gap_fast
+                + detector.gap_fast,
                 1,
                 size[1],
             ]
@@ -164,10 +185,12 @@ def determine_pilatus_mask(xdetector):
             [
                 1,
                 size[0],
-                (i_slow + 1) * module_size_slow + i_slow * gap_size_slow + 1,
-                (i_slow + 1) * module_size_slow
-                + i_slow * gap_size_slow
-                + gap_size_slow,
+                (i_slow + 1) * detector.module_size_slow
+                + i_slow * detector.gap_slow
+                + 1,
+                (i_slow + 1) * detector.module_size_slow
+                + i_slow * detector.gap_slow
+                + detector.gap_slow,
             ]
         )
 
@@ -179,20 +202,18 @@ def determine_eiger_mask(xdetector):
 
     size = xdetector[0].get_image_size()
 
-    _ = get_pad_module_gap(xdetector)
+    detector = _get_pad_module_gap(xdetector)
 
-    if _ is None:
+    if not detector:
         size = tuple(reversed(xdetector[0].get_image_size()))
-        _ = get_pad_module_gap(xdetector, size=size)
-
-    module_size_fast, module_size_slow, gap_size_fast, gap_size_slow = _
+        detector = _get_pad_module_gap(xdetector, size=size)
 
     # Edge dead areas not included, only gaps between modules matter
-    n_fast, remainder = divmod(size[0], module_size_fast)
-    assert (n_fast - 1) * gap_size_fast == remainder
+    n_fast, remainder = divmod(size[0], detector.module_size_fast)
+    assert (n_fast - 1) * detector.gap_fast == remainder
 
-    n_slow, remainder = divmod(size[1], module_size_slow)
-    assert (n_slow - 1) * gap_size_slow == remainder
+    n_slow, remainder = divmod(size[1], detector.module_size_slow)
+    assert (n_slow - 1) * detector.gap_slow == remainder
 
     # Specify the dead areas between the modules, i.e. the rows and columns
     # where there are no active pixels
@@ -200,10 +221,12 @@ def determine_eiger_mask(xdetector):
     for i_fast in range(n_fast - 1):
         mask.append(
             [
-                (i_fast + 1) * module_size_fast + i_fast * gap_size_fast + 1,
-                (i_fast + 1) * module_size_fast
-                + i_fast * gap_size_fast
-                + gap_size_fast,
+                (i_fast + 1) * detector.module_size_fast
+                + i_fast * detector.gap_fast
+                + 1,
+                (i_fast + 1) * detector.module_size_fast
+                + i_fast * detector.gap_fast
+                + detector.gap_fast,
                 1,
                 size[1],
             ]
@@ -213,10 +236,12 @@ def determine_eiger_mask(xdetector):
             [
                 1,
                 size[0],
-                (i_slow + 1) * module_size_slow + i_slow * gap_size_slow + 1,
-                (i_slow + 1) * module_size_slow
-                + i_slow * gap_size_slow
-                + gap_size_slow,
+                (i_slow + 1) * detector.module_size_slow
+                + i_slow * detector.gap_slow
+                + 1,
+                (i_slow + 1) * detector.module_size_slow
+                + i_slow * detector.gap_slow
+                + detector.gap_slow,
             ]
         )
 
