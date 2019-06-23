@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import range
 import boost.python
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
+import dxtbx.format.Registry
 
 ext = boost.python.import_ext("dxtbx_ext")
 from dxtbx_imageset_ext import *
@@ -379,7 +380,6 @@ class ImageSetFactory(object):
             A list of sweeps
 
         """
-        from dxtbx.format.Registry import Registry
         from dxtbx.sweep_filenames import template_image_range
         from dxtbx.format.Format import Format
 
@@ -410,7 +410,7 @@ class ImageSetFactory(object):
 
         # Get the format class
         if check_format:
-            format_class = Registry.find(filenames[0])
+            format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
         else:
             format_class = Format
 
@@ -432,8 +432,6 @@ class ImageSetFactory(object):
     @staticmethod
     def _create_imageset(filelist, check_headers):
         """Create an image set"""
-        from dxtbx.format.Registry import Registry
-
         # Extract info from filelist
         template, indices, is_sweep = filelist
 
@@ -451,7 +449,7 @@ class ImageSetFactory(object):
         filenames = sorted(filenames)
 
         # Get the format object
-        format_class = Registry.find(filenames[0])
+        format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
 
         # Create and return the imageset
         return format_class.get_imageset(filenames, as_imageset=True)
@@ -459,8 +457,6 @@ class ImageSetFactory(object):
     @staticmethod
     def _create_sweep(filelist, check_headers):
         """Create a sweep"""
-        from dxtbx.format.Registry import Registry
-
         # Extract info from filelist
         template, indices, is_sweep = filelist
 
@@ -478,7 +474,7 @@ class ImageSetFactory(object):
         filenames = sorted(filenames)
 
         # Get the format object
-        format_class = Registry.find(filenames[0])
+        format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
 
         # Get the template format
         pfx = template.split("#")[0]
@@ -505,14 +501,15 @@ class ImageSetFactory(object):
         format_kwargs=None,
     ):
         """Create an image set"""
-        from dxtbx.format.Registry import Registry
         from dxtbx.format.Format import Format
         from dxtbx.format.FormatMultiImage import FormatMultiImage
 
         # Get the format object
         if format_class is None:
             if check_format:
-                format_class = Registry.find(filenames[0])
+                format_class = dxtbx.format.Registry.get_format_class_for_file(
+                    filenames[0]
+                )
             else:
                 if single_file_indices is None or len(single_file_indices) == 0:
                     format_class = Format
@@ -540,7 +537,6 @@ class ImageSetFactory(object):
         format_kwargs=None,
     ):
         """Create a sweep"""
-        from dxtbx.format.Registry import Registry
         from dxtbx.format.Format import Format
 
         indices = sorted(indices)
@@ -567,7 +563,9 @@ class ImageSetFactory(object):
         # Get the format object and reader
         if format_class is None:
             if check_format:
-                format_class = Registry.find(filenames[0])
+                format_class = dxtbx.format.Registry.get_format_class_for_file(
+                    filenames[0]
+                )
             else:
                 format_class = Format
 
