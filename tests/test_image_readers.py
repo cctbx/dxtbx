@@ -146,10 +146,10 @@ def read_multitile_cbf_image(cbf_image):
         for i in range(cbf.count_rows()):
             cbf.find_column("id")
             section_name = cbf.get_value()
-            if not section_name in section_shapes:
+            if section_name not in section_shapes:
                 section_shapes[section_name] = {}
             cbf.find_column("array_id")
-            if not "array_id" in section_shapes[section_name]:
+            if "array_id" not in section_shapes[section_name]:
                 section_shapes[section_name]["array_id"] = cbf.get_value()
             else:
                 assert section_shapes[section_name]["array_id"] == cbf.get_value()

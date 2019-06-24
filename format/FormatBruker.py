@@ -120,7 +120,7 @@ class FormatBruker(Format):
     def _detector(self):
         """Return a model for a simple detector"""
 
-        twotheta = self.detectorbase.parameters["TWOTHETA"]
+        # twotheta = self.detectorbase.parameters["TWOTHETA"]
         # At present, ignore non-zero two theta for the dxtbx model
         # XXX Return to this issue later.
 
