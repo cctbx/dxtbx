@@ -95,6 +95,17 @@ class Masker(object):
 
 
 class FormatMultiImage(Format):
+    # HACK: Store information about the last imagesetdata generated.
+    # This allows to to avoid recreating the ImageSetData object for
+    # every image if every image has a separate ImageSet.
+    # Fields: (key, data-object)
+    # where key is (filename, kwargs) to ensure that we have exactly the
+    #       same file requirements.
+    _last_imageset_info = (
+        (None, None),
+        None,
+    )  # type: Tuple[Tuple[str, Dict], ImageSetData]
+
     def __init__(self, **kwargs):
         pass
 
@@ -192,10 +203,17 @@ class FormatMultiImage(Format):
 
         # Get the format instance
         assert len(filenames) == 1
-        if check_format is True:
+        if check_format:
             format_instance = cls(filenames[0], **format_kwargs)
+            # HACK: Attempt to see if this was the same as the last file we generated
+            # a format instance for. If it was, then give the same instance back. This
+            # works around a structural problem with deserializing imagesets
+            key, isetdata = cls._last_imageset_info
+            if not key == (filenames, format_kwargs):
+                isetdata = None
         else:
             format_instance = None
+            isetdata = None
             if not as_sweep:
                 lazy = True
 
@@ -263,16 +281,18 @@ class FormatMultiImage(Format):
             # Create the imageset
             from dxtbx.imageset import ImageSet
 
-            iset = ImageSet(
-                ImageSetData(
+            # HACK: If we've another imageset for this file, then reuse the ImageSetData
+            # This is because otherwise we waste immense amounts of memory on pointers
+            # - 8*8*N² bytes through redundant ImageSetData objects
+            if isetdata is None:
+                isetdata = ImageSetData(
                     reader=reader,
                     masker=masker,
                     vendor=vendor,
                     params=params,
                     format=cls,
-                ),
-                indices=single_file_indices,
-            )
+                )
+            iset = ImageSet(isetdata, indices=single_file_indices)
 
             # If any are None then read from format
             if [beam, detector, goniometer, scan].count(None) != 0:
