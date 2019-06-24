@@ -36,7 +36,7 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
         handle = h5py.File(image_file, "r")
         if (
             "short_name" not in handle["/entry/instrument"].attrs
-            or handle["/entry/instrument"].attrs["short_name"].lower() != "i04"
+            or handle["/entry/instrument"].attrs["short_name"].lower() not in ("i03", "i04")
         ):
             return False
 
