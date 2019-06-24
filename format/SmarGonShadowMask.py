@@ -36,7 +36,7 @@ class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
         y.append(-sqdA)
         z.append(0)
 
-        self.faceA = flex.vec3_double(x, y, z)
+        self.faceA = flex.vec3_double(-x, -y, z)
 
         # FACE B: Lower arm
         sx = -28.50
@@ -49,7 +49,7 @@ class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
         px = -65.50
         py = -29.50
         self.faceB = flex.vec3_double(
-            ((sx, sy, sz), (mx, my, 0), (nx, ny, 0), (px, py, 0))
+            ((-sx, -sy, sz), (-mx, -my, 0), (-nx, -ny, 0), (-px, -py, 0))
         )
 
         # FACE E: Rim of sample holder
@@ -63,23 +63,11 @@ class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
         y = radiusE * flex.cos(phi)
         z = radiusE * flex.sin(phi)
 
-        self.faceE = flex.vec3_double(x, y, z)
+        self.faceE = flex.vec3_double(-x, -y, z)
 
     def extrema_at_scan_angle(self, scan_angle):
         from scitbx.array_family import flex
-
-        # Align end station coordinate system with ImgCIF coordinate system
-        from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
         from scitbx import matrix
-
-        R = align_reference_frame(
-            matrix.col((-1, 0, 0)),
-            matrix.col((1, 0, 0)),
-            matrix.col((0, -1, 0)),
-            matrix.col((0, 1, 0)),
-        )
-        faceA = R.elems * self.faceA
-        faceE = R.elems * self.faceE
 
         axes = self.goniometer.get_axes()
         angles = self.goniometer.get_angles()
@@ -88,7 +76,7 @@ class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
 
         extrema = flex.vec3_double()
 
-        for coords in (faceA, faceE):
+        for coords in (self.faceA, self.faceE):
             coords = coords.deep_copy()
             for i, axis in enumerate(axes):
                 if i == 0:
@@ -105,7 +93,7 @@ class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
         nx, ny, _ = self.faceB[2]
         px, py, _ = self.faceB[3]
 
-        Rchi = (R.inverse() * matrix.col(axes[1])).axis_and_angle_as_r3_rotation_matrix(
+        Rchi = matrix.col(axes[1]).axis_and_angle_as_r3_rotation_matrix(
             angles[1], deg=True
         )
         sk = Rchi * s
@@ -131,7 +119,6 @@ class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
             )
         )
 
-        coords = R.elems * coords
         Romega = matrix.col(axes[2]).axis_and_angle_as_r3_rotation_matrix(
             angles[2], deg=True
         )
