@@ -15,8 +15,6 @@ def SmarGonShadowMaskGenerator(goniometer):
 
 class PySmarGonShadowMaskGenerator(PyGoniometerShadowMaskGenerator):
     def __init__(self, goniometer):
-        self.goniometer = goniometer
-
         # FACE A: Sample holder
         #   Defined as semi-circle of radius r(A) = 10 mm (centred on PHI axis)
         #   with rectangle of size a(A) = 12.8 mm (x 20 mm)
@@ -70,9 +68,11 @@ class PySmarGonShadowMaskGenerator(PyGoniometerShadowMaskGenerator):
 
         self.faceE = flex.vec3_double(-x, -y, z)
 
-        self._extrema_at_datum = self.faceA.deep_copy()
-        self._extrema_at_datum.extend(self.faceE)
-        self.axis = flex.size_t(self._extrema_at_datum.size(), 1)
+        extrema_at_datum = self.faceA.deep_copy()
+        extrema_at_datum.extend(self.faceE)
+        super(PySmarGonShadowMaskGenerator, self).__init__(
+            goniometer, extrema_at_datum, flex.size_t(extrema_at_datum.size(), 1)
+        )
 
     def extrema_at_scan_angle(self, scan_angle):
         extrema = super(PySmarGonShadowMaskGenerator, self).extrema_at_scan_angle(
