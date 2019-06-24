@@ -1,32 +1,26 @@
-# -*- mode: python; coding: utf-8; indent-tabs-mode: nil; python-indent: 2 -*-
-#
-# $Id$
-
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatPY import FormatPY
+
+import six.moves.cPickle as pickle
 
 
 class FormatPYmultitile(FormatPY):
     @staticmethod
     def understand(image_file):
         try:
-            import six.moves.cPickle as pickle
-
-            stream = FormatPYmultitile.open_file(image_file, "rb")
-            data = pickle.load(stream)
+            with FormatPYmultitile.open_file(image_file, "rb") as stream:
+                data = pickle.load(stream)
         except IOError:
             return False
 
         wanted_header_items = ["TILES", "METROLOGY"]
-        for header_item in wanted_header_items:
-            if not header_item in data:
-                return False
+        if any(header_item not in data for header_item in wanted_header_items):
+            return False
 
         unwanted_header_items = ["SIZE1", "SIZE2"]
-        for header_item in unwanted_header_items:
-            if header_item in data:
-                return False
+        if any(header_item in data for header_item in unwanted_header_items):
+            return False
 
         return True
 
@@ -43,7 +37,6 @@ class FormatPYmultitile(FormatPY):
     def _start(self):
         # this Format class depends on stuff from detectorbase
         self.detectorbase_start()
-        return
 
     def detectorbase_start(self):
         from xfel.cftbx.detector.cspad_detector import CSPadDetector
@@ -79,7 +72,6 @@ class FormatPYmultitile(FormatPY):
         xfel.cftbx.detector.metrology.metrology_as_dxtbx_vectors().
         """
 
-        from dxtbx.model import SimplePxMmStrategy
         from dxtbx.model import Detector
         from scitbx.matrix import col
 

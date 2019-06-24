@@ -70,6 +70,7 @@ def read_tiff_image(image_file):
 
 
 def read_cbf_image(cbf_image):
+    import dxtbx.format.FormatCBF
     from cbflib_adaptbx import uncompress
     import binascii
 
@@ -78,27 +79,16 @@ def read_cbf_image(cbf_image):
     with open(cbf_image, "rb") as fh:
         data = fh.read()
     data_offset = data.find(start_tag) + 4
-    cbf_header = data[: data_offset - 4]
-
-    fast = 0
-    slow = 0
-    length = 0
-
-    for record in cbf_header.split("\n"):
-        if "X-Binary-Size-Fastest-Dimension" in record:
-            fast = int(record.split()[-1])
-        elif "X-Binary-Size-Second-Dimension" in record:
-            slow = int(record.split()[-1])
-        elif "X-Binary-Number-of-Elements" in record:
-            length = int(record.split()[-1])
-        elif "X-Binary-Size:" in record:
-            size = int(record.split()[-1])
-
-    assert length == fast * slow
+    cbf_header = dxtbx.format.FormatCBF.FormatCBF._parse_cbf_header(
+        data[: data_offset - 4].decode("ascii", "ignore")
+    )
 
     pixel_values = uncompress(
-        packed=data[data_offset : data_offset + size], fast=fast, slow=slow
+        packed=data[data_offset : data_offset + cbf_header["size"]],
+        fast=cbf_header["fast"],
+        slow=cbf_header["slow"],
     )
+
     return pixel_values
 
 

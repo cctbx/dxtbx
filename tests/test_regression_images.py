@@ -151,10 +151,10 @@ def test_read_image(test_image_for_reading):
     format_instance = dxtbx.format.Registry.get_format_class_for_file(
         test_image_for_reading
     )
-    instance = format_instance(test_image_for_reading)
-
     print("Reading", test_image_for_reading)
     print("Format:", format_instance)
+    assert format_instance, "no matching format class found"
+    instance = format_instance(test_image_for_reading)
 
     # Test metadata reading
     instance.get_goniometer()

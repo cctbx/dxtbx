@@ -15,15 +15,11 @@ class FormatPY(Format):
     @staticmethod
     def understand(image_file):
         try:
-            tag = FormatPY.open_file(image_file, "rb").read(4)
+            with FormatPY.open_file(image_file, "rb") as fh:
+                tag = fh.read(4)
+            return tag[0:2] == b"(d" or tag[0:2] == b"}q" or tag[0:4] == b"\x80\x02}q"
         except IOError:
             return False
-
-        return (
-            tag[0:2] == "(d"
-            or tag[0:2] == "}q"
-            or tag[0:4] == chr(0o200) + chr(0o002) + "}q"
-        )
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""

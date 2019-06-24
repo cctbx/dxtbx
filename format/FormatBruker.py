@@ -34,6 +34,10 @@ class FormatBruker(Format):
                 line = f.read(80)
                 if not line:
                     break
+                try:
+                    line = line.decode("ascii")
+                except UnicodeDecodeError:
+                    break
                 if line.startswith("HDRBLKS"):
                     try:
                         val = int(line.split(":", 1)[1])
@@ -42,17 +46,11 @@ class FormatBruker(Format):
                     except ValueError:
                         pass
 
-                try:
-                    line.decode("ascii")
-                except UnicodeDecodeError:
-                    break
-
                 # looks like a valid line
                 hdr_lines.append(line)
 
-                if max_bytes is not None:
-                    if f.tell() >= max_bytes:
-                        break
+                if max_bytes is not None and f.tell() >= max_bytes:
+                    break
 
         return hdr_lines
 
@@ -61,10 +59,11 @@ class FormatBruker(Format):
         header_dic = {}
 
         for l in header_lines:
-            k_v = l.split(":", 1)
-            if len(k_v) == 1:
+            separator = l.find(":")
+            if separator == -1:
                 continue
-            k, v = [v.strip() for v in k_v]
+            k = l[:separator].strip()
+            v = l[separator + 1 :].strip()
             if k in header_dic:
                 header_dic[k] = header_dic[k] + "\n" + v
             else:
@@ -75,16 +74,20 @@ class FormatBruker(Format):
     @staticmethod
     def understand(image_file):
         try:
-            tag = FormatBruker.open_file(image_file, "rb").read(1024)
+            with FormatBruker.open_file(image_file, "rb") as fh:
+                tag = fh.read(1024).decode("latin-1", "replace")
         except IOError:
             return False
-        matches = []
+        matches = 0
         for x in range(0, 1024, 80):
             word = tag[x : x + 16]
-            if word[0:7].isupper() and word[7] == ":":
-                matches.append(word)
-
-        return len(matches) >= 12
+            if len(word) != 16:
+                return False
+            if word[7] == ":" and word[0:7].isupper():
+                matches += 1
+                if matches >= 12:
+                    return True
+        return False
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
@@ -109,7 +112,6 @@ class FormatBruker(Format):
         # self.detectorbase.readHeader() #unnecessary for the Bruker specialization
 
     def _goniometer(self):
-
         if self.detectorbase.parameters["OSC_RANGE"] > 0:
             return self._goniometer_factory.single_axis()
         else:

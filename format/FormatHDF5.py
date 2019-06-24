@@ -2,10 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx.model import Beam  # import dependency
-from dxtbx.model import Detector  # import dependency
-from dxtbx.model import Goniometer  # import dependency
-from dxtbx.model import Scan  # import dependency
 
 
 class FormatHDF5(FormatMultiImage, Format):
@@ -20,11 +16,10 @@ class FormatHDF5(FormatMultiImage, Format):
     @staticmethod
     def understand(image_file):
         try:
-            tag = FormatHDF5.open_file(image_file, "rb").read(8)
+            with FormatHDF5.open_file(image_file, "rb") as fh:
+                return fh.read(8) == b"\211HDF\r\n\032\n"
         except IOError:
             return False
-
-        return tag == "\211HDF\r\n\032\n"
 
 
 if __name__ == "__main__":
