@@ -50,9 +50,7 @@ def test_flat(detector):
     assert all(t == et for t, et in zip(types, expected_types))
 
 
-def test_iterate_and_index(detector):
-    """ Test iteration and indexing through the detector in various ways. """
-
+def test_child_iteration(detector):
     # Iterate through the detector's children and check output
     expected_types = ["Q", "Q"]
     expected_names = ["Q1", "Q2"]
@@ -64,6 +62,8 @@ def test_iterate_and_index(detector):
     assert all(n == en for n, en in zip(names, expected_names))
     assert all(t == et for t, et in zip(types, expected_types))
 
+
+def test_child_iteration_in_reverse(detector):
     # Iterate through the detector's children in reverse and check output
     expected_types = ["Q", "Q"]
     expected_names = ["Q2", "Q1"]
@@ -75,6 +75,8 @@ def test_iterate_and_index(detector):
     assert all(n == en for n, en in zip(names, expected_names))
     assert all(t == et for t, et in zip(types, expected_types))
 
+
+def test_child_indexing(detector):
     # Use an index to access the detector children
     assert len(detector.hierarchy()) == 2
     group = detector.hierarchy()[1]
@@ -83,6 +85,8 @@ def test_iterate_and_index(detector):
     panel = group[0]
     assert panel.get_name() == "P3" and panel.get_type() == "P"
 
+
+def test_depth_first_iteration(detector):
     # Iterate through the tree pre-order and check output
     expected_types = ["D", "Q", "P", "P", "Q", "P", "P"]
     expected_names = ["D1", "Q1", "P1", "P2", "Q2", "P3", "P4"]
@@ -94,6 +98,8 @@ def test_iterate_and_index(detector):
     assert all(n == en for n, en in zip(names, expected_names))
     assert all(t == et for t, et in zip(types, expected_types))
 
+
+def test_breadth_first_iteration(detector):
     # Iterate through the tree level-order and check output
     expected_types = ["D", "Q", "Q", "P", "P", "P", "P"]
     expected_names = ["D1", "Q1", "Q2", "P1", "P2", "P3", "P4"]
@@ -105,6 +111,8 @@ def test_iterate_and_index(detector):
     assert all(n == en for n, en in zip(names, expected_names))
     assert all(t == et for t, et in zip(types, expected_types))
 
+
+def test_panels_depth_first_iteration(detector):
     # Iterate through the panels in pre-order and check output
     expected_types = ["P", "P", "P", "P"]
     expected_names = ["P1", "P2", "P3", "P4"]
@@ -135,7 +143,7 @@ def test_get_valid_D_matrix(detector):
         assert abs(fast - matrix.col((1, 0, 0))) < 1e-7
         assert abs(slow - matrix.col((0, 1, 0))) < 1e-7
         assert abs(orig - matrix.col((0, 0, 100))) < 1e-7
-        D = obj.get_D_matrix()
+        assert obj.get_D_matrix()
 
     # Get the quadrants and set their frames
     q1, q2 = detector.hierarchy().children()

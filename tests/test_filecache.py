@@ -1,13 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
 from builtins import range
+import io
 import os
+import random
+
+import dxtbx.filecache
 
 
 def test_filecache():
-    import dxtbx.filecache
     import libtbx.load_env
-    from io import BytesIO
 
     dxtbx_dir = libtbx.env.dist_path("dxtbx")
     image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
@@ -19,7 +21,7 @@ def test_filecache():
     cache = dxtbx.filecache.lazy_file_cache(open(image, "rb"))
 
     # read 100 bytes
-    sh = BytesIO(correct_data)
+    sh = io.BytesIO(correct_data)
     with cache.open() as fh:
         actual = fh.read(100)
         expected = sh.read(100)
@@ -32,14 +34,14 @@ def test_filecache():
         assert actual == expected
 
     # readlines
-    sh = BytesIO(correct_data)
+    sh = io.BytesIO(correct_data)
     with cache.open() as fh:
         actual = fh.readlines()
         expected = sh.readlines()
         assert actual == expected
 
     # 5x readline
-    sh = BytesIO(correct_data)
+    sh = io.BytesIO(correct_data)
     with cache.open() as fh:
         actual = [fh.readline() for n in range(5)]
         expected = [sh.readline() for n in range(5)]
@@ -52,7 +54,7 @@ def test_filecache():
     fh = dxtbx.filecache.pseudo_file(cache)
 
     # readline stress test
-    sh = BytesIO(correct_data)
+    sh = io.BytesIO(correct_data)
     with cache.open() as fh:
         actual = fh.readline()
         expected = sh.readline()
@@ -74,9 +76,8 @@ def test_filecache():
     cache.close()
     cache = dxtbx.filecache.lazy_file_cache(open(image, "rb"))
 
-    sh = BytesIO(correct_data)
+    sh = io.BytesIO(correct_data)
     fh = dxtbx.filecache.pseudo_file(cache)
-    import random
 
     random_a, random_b = random.randint(0, 10000), random.randint(0, 150000)
     print("Running test for parameters %d %d" % (random_a, random_b))
@@ -87,8 +88,6 @@ def test_filecache():
 
 
 def test_filecache_more(dials_regression):
-    import dxtbx.filecache
-
     filename = os.path.join(
         dials_regression, "image_examples", "MacScience", "reallysurprise_001.ipf"
     )
@@ -110,3 +109,12 @@ def test_filecache_more(dials_regression):
         fh.read(1024)
         data = fh.read()
         assert len(data) == 3000 * 3000 * 2
+
+
+def test_read_termination_at_end_of_file(tmpdir):
+    testfile = tmpdir.join("test")
+    testfile.write("\n".join(str(n) for n in range(5)))
+    cache = dxtbx.filecache.lazy_file_cache(testfile.open("rb"))
+    with cache.open() as fh:
+        for record in fh:
+            assert record, "Loop should have terminated already"

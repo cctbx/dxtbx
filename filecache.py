@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-#
-#   Copyright (C) 2015 Diamond Light Source, Markus Gerstel
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # A shared caching layer for file-like objects.
 # pseudo_file objects can be used as drop-in replacements for actual file
 # handles to provide a transparent caching layer to avoid reading multiple
@@ -41,12 +34,13 @@
 # Any further access attempts will then result in an exception.
 
 from __future__ import absolute_import, division, print_function
+from builtins import object
 import io
 import os
 from threading import Lock
 
 
-class lazy_file_cache:
+class lazy_file_cache(object):
     """An object providing shared cached access to files"""
 
     def __init__(self, file_object):
@@ -296,7 +290,7 @@ class lazy_file_cache:
 
         end_position = self._cache_object.tell()
 
-        if end_position < self._cache_size or line_candidate.endswith("\n"):
+        if end_position < self._cache_size or line_candidate.endswith(b"\n"):
             # Found a complete line within the cache
             return line_candidate, end_position
 
@@ -307,7 +301,7 @@ class lazy_file_cache:
         # Need more data
         while end_position == self._cache_size and not self._cache_limit_reached:
             # Do we have a complete line?
-            if line_candidate.endswith("\n"):
+            if line_candidate.endswith(b"\n"):
                 return line_candidate, end_position
 
             # Ran against cache limit. Extend cache
@@ -323,7 +317,7 @@ class lazy_file_cache:
             end_position = self._cache_object.tell()
 
         # Do we have a complete line?
-        if line_candidate.endswith("\n") or self._all_cached:
+        if line_candidate.endswith(b"\n") or self._all_cached:
             return line_candidate, end_position
 
         assert self._cache_limit_reached  # Only legitimate way of reaching here
@@ -340,7 +334,7 @@ class lazy_file_cache:
                 )
 
 
-class pseudo_file:
+class pseudo_file(object):
     """A file-like object that serves as frontend to a dxtbx lazy file cache."""
 
     def __init__(self, lazy_cache_object):
@@ -377,7 +371,7 @@ class pseudo_file:
 
     def next(self):
         data = self.readline()
-        if data == "":
+        if data == b"":
             raise StopIteration()
         return data
 
@@ -390,7 +384,7 @@ class pseudo_file:
                 start=self._seek, maxbytes=size
             )
         elif size == 0:
-            data = ""
+            data = b""
         else:
             data, self._seek = self._cache_object.pass_read(start=self._seek)
         return data

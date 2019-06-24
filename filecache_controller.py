@@ -1,19 +1,16 @@
-#!/usr/bin/env python
-#
-#   Copyright (C) 2015 Diamond Light Source, Markus Gerstel
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # A simple cache controller. Caching only one file at a time.
 
 from __future__ import absolute_import, division, print_function
-import dxtbx.filecache
+
+from builtins import object
+
 import os
 import threading
 
+import dxtbx.filecache
 
-class simple_controller:
+
+class simple_controller(object):
     """A simple cache controller. Caching one file at a time."""
 
     def __init__(self):
@@ -81,7 +78,7 @@ class simple_controller:
             return self._cache.open()
 
 
-class non_caching_controller:
+class non_caching_controller(object):
     """A controller that does not do any caching."""
 
     @staticmethod
