@@ -12,7 +12,7 @@ except ImportError:
     GoniometerShadowMaskGenerator = False
 
 
-class FormatNexusEigerDLS16MI04(FormatNexus):
+class FormatNexusEigerDLS16M(FormatNexus):
     @staticmethod
     def understand(image_file):
         """Check to see if this format class can understand the image file.
@@ -58,11 +58,11 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        super(FormatNexusEigerDLS16MI04, self).__init__(image_file, **kwargs)
+        super(FormatNexusEigerDLS16M, self).__init__(image_file, **kwargs)
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
 
     def get_mask(self, index, goniometer=None):
-        mask = super(FormatNexusEigerDLS16MI04, self).get_mask()
+        mask = super(FormatNexusEigerDLS16M, self).get_mask()
         if mask is None:
             # XXX mask really shouldn't be None
             # https://jira.diamond.ac.uk/browse/SCI-8308
@@ -84,7 +84,8 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
         return mask
 
     def get_goniometer_shadow_masker(self, goniometer=None):
-        if not self.has_dynamic_shadowing():
+        if not self._dynamic_shadowing:
+            print("Returning None")
             return None
 
         if goniometer is None:
@@ -109,4 +110,4 @@ if __name__ == "__main__":
     import sys
 
     for arg in sys.argv[1:]:
-        print(FormatNexusEigerDLS16MI04.understand(arg))
+        print(FormatNexusEigerDLS16M.understand(arg))

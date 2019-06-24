@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import pytest
 
-from dxtbx.format.FormatNexusEigerDLS16MI04 import FormatNexusEigerDLS16MI04
+from dxtbx.format.FormatNexusEigerDLS16M import FormatNexusEigerDLS16M
 from dxtbx.datablock import DataBlockFactory
 
 pytestmark = pytest.mark.skipif(
@@ -22,13 +22,13 @@ pytest.importorskip("h5py")
     ],
 )
 def test_rotation_scan(master_h5):
-    assert FormatNexusEigerDLS16MI04.understand(master_h5)
+    assert FormatNexusEigerDLS16M.understand(master_h5)
 
     datablocks = DataBlockFactory.from_filenames(
         [master_h5], format_kwargs={"dynamic_shadowing": True}
     )
     imageset = datablocks[0].extract_imagesets()[0]
-    assert imageset.get_format_class() == FormatNexusEigerDLS16MI04
+    assert imageset.get_format_class() == FormatNexusEigerDLS16M
 
     detector = imageset.get_detector()
     gonio = imageset.get_goniometer()
@@ -61,11 +61,11 @@ def test_rotation_scan(master_h5):
 
 def test_grid_scan():
     master_h5 = "/dls/i04/data/2019/cm23004-1/20190109/Eiger/grid/Thaum/Thau_5/Thau_5_1_master.h5"
-    assert FormatNexusEigerDLS16MI04.understand(master_h5)
+    assert FormatNexusEigerDLS16M.understand(master_h5)
 
     datablocks = DataBlockFactory.from_filenames([master_h5])
     imageset = datablocks[0].extract_imagesets()[0]
-    assert imageset.get_format_class() == FormatNexusEigerDLS16MI04
+    assert imageset.get_format_class() == FormatNexusEigerDLS16M
 
     detector = imageset.get_detector()
     gonio = imageset.get_goniometer()
@@ -98,11 +98,11 @@ def test_grid_scan():
 @pytest.mark.xfail
 def test_units():
     master_h5 = "/dls/i04/data/2019/cm23004-1/20190114/Eiger/grid/Se_Thaum/Se_Thaum_12/Se_Thaum_12_2_master.h5"
-    assert FormatNexusEigerDLS16MI04.understand(master_h5)
+    assert FormatNexusEigerDLS16M.understand(master_h5)
 
     datablocks = DataBlockFactory.from_filenames([master_h5])
     imageset = datablocks[0].extract_imagesets()[0]
-    assert imageset.get_format_class() == FormatNexusEigerDLS16MI04
+    assert imageset.get_format_class() == FormatNexusEigerDLS16M
 
     detector = imageset.get_detector()
     gonio = imageset.get_goniometer()
