@@ -3,13 +3,18 @@ from __future__ import absolute_import, division, print_function
 from builtins import range
 import math
 
-from dials.util.masking import GoniometerShadowMaskGenerator
+from scitbx.array_family import flex
+from scitbx import matrix
+
+from dials.util.masking import PyGoniometerShadowMaskGenerator
 
 
-class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
+def SmarGonShadowMaskGenerator(goniometer):
+    return PySmarGonShadowMaskGenerator(goniometer)
+
+
+class PySmarGonShadowMaskGenerator(PyGoniometerShadowMaskGenerator):
     def __init__(self, goniometer):
-        from scitbx.array_family import flex
-
         self.goniometer = goniometer
 
         # FACE A: Sample holder
@@ -65,28 +70,19 @@ class SmarGonShadowMaskGenerator(GoniometerShadowMaskGenerator):
 
         self.faceE = flex.vec3_double(-x, -y, z)
 
+        self._extrema_at_datum = self.faceA.deep_copy()
+        self._extrema_at_datum.extend(self.faceE)
+        self.axis = flex.size_t(self._extrema_at_datum.size(), 1)
+
     def extrema_at_scan_angle(self, scan_angle):
-        from scitbx.array_family import flex
-        from scitbx import matrix
+        extrema = super(PySmarGonShadowMaskGenerator, self).extrema_at_scan_angle(
+            scan_angle
+        )
 
         axes = self.goniometer.get_axes()
         angles = self.goniometer.get_angles()
         scan_axis = self.goniometer.get_scan_axis()
         angles[scan_axis] = scan_angle
-
-        extrema = flex.vec3_double()
-
-        for coords in (self.faceA, self.faceE):
-            coords = coords.deep_copy()
-            for i, axis in enumerate(axes):
-                if i == 0:
-                    continue  # shadow doesn't change with phi setting
-                sel = flex.bool(len(coords), True)
-                rotation = matrix.col(axis).axis_and_angle_as_r3_rotation_matrix(
-                    angles[i], deg=True
-                )
-                coords.set_selected(sel, rotation.elems * coords.select(sel))
-            extrema.extend(coords)
 
         s = matrix.col(self.faceB[0])
         mx, my, _ = self.faceB[1]
