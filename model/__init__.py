@@ -8,12 +8,12 @@ import boost.python
 import cctbx.crystal
 from dxtbx_model_ext import *
 from dxtbx.imageset import ImageSet, ImageSweep, ImageGrid
-from dxtbx.model.beam import *
-from dxtbx.model.goniometer import *
-from dxtbx.model.detector import *
-from dxtbx.model.scan import *
-from dxtbx.model.crystal import *
-from dxtbx.model.profile import *
+from dxtbx.model.beam import BeamFactory
+from dxtbx.model.crystal import CrystalFactory
+from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.goniometer import GoniometerFactory
+from dxtbx.model.profile import ProfileModelFactory
+from dxtbx.model.scan import ScanFactory
 from libtbx.containers import OrderedSet
 
 from six.moves import StringIO
@@ -29,24 +29,20 @@ class DetectorAux(boost.python.injector, Detector):
     def iter_preorder(self):
         """ Iterate through the groups and panels depth-first. """
         stack = [self.hierarchy()]
-        while len(stack) > 0:
+        while stack:
             node = stack.pop()
             yield node
             if node.is_group():
-                for child in reversed(node):
-                    stack.append(child)
+                stack.extend(reversed(node))
 
     def iter_levelorder(self):
-        """ Iterate through the groups and panels depth-first. """
-        from collections import deque
-
-        queue = deque([self.hierarchy()])
-        while len(queue) > 0:
-            node = queue.popleft()
+        """ Iterate through the groups and panels breadth-first. """
+        queue = [self.hierarchy()]
+        while queue:
+            node = queue.pop(0)
             yield node
             if node.is_group():
-                for child in node:
-                    queue.append(child)
+                queue.extend(node)
 
 
 class CrystalAux(boost.python.injector, Crystal):

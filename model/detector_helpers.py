@@ -1,15 +1,10 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-# detector_helpers.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # Helpers for the detector class...
 
+from builtins import object
 import math
+
 from scitbx import matrix
 
 
@@ -122,7 +117,7 @@ def find_undefined_value(cbf_handle):
     return cbf_handle.get_doublevalue()
 
 
-class detector_helper_sensors:
+class detector_helper_sensors(object):
     """A helper class which allows enumeration of detector sensor technologies
     which should help in identifying specific detectors when needed. These are
     currently limited to IMAGE_PLATE CCD PAD."""
@@ -134,12 +129,12 @@ class detector_helper_sensors:
 
     @staticmethod
     def check_sensor(sensor_type):
-        if sensor_type in [
+        if sensor_type in (
             detector_helper_sensors.SENSOR_CCD,
             detector_helper_sensors.SENSOR_PAD,
             detector_helper_sensors.SENSOR_IMAGE_PLATE,
             detector_helper_sensors.SENSOR_UNKNOWN,
-        ]:
+        ):
             return True
         return False
 
@@ -166,8 +161,8 @@ def set_slow_fast_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
         panel_id = detector.get_panel_intersection(us0)
         if panel_id < 0:
             panel_id = detector.get_panel_intersection(-us0)
-        if panel_id < 0:
-            panel_id = 0
+            if panel_id < 0:
+                panel_id = 0
 
     # Get data from the chosen panel
     panel = detector[panel_id]
@@ -271,10 +266,7 @@ def set_mosflm_beam_centre(detector, beam, mosflm_beam_centre):
 def set_detector_distance(detector, distance):
     """
     Set detector origin from distance along normal
-
     """
-    from scitbx import matrix
-
     assert len(detector) == 1
     normal = matrix.col(detector[0].get_normal())
     origin = matrix.col(detector[0].get_origin())

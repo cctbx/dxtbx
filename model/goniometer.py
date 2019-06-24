@@ -1,20 +1,17 @@
 from __future__ import absolute_import, division, print_function
 
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 # A model for the goniometer for the "updated experimental model" project
-# documented in internal ticket #1555. This is not designed to be used outside
-# of the XSweep classes.
 
+from builtins import object
+
+import math
+
+import libtbx.phil
 import pycbf
+import scitbx.math  # noqa: F401, import dependency
 from dxtbx_model_ext import KappaGoniometer  # noqa: F401, import dependency
 from dxtbx_model_ext import Goniometer, MultiAxisGoniometer
-import libtbx.phil
-import scitbx.math  # noqa: F401, import dependency
-
+from scitbx.array_family import flex
 
 goniometer_phil_scope = libtbx.phil.parse(
     """
@@ -67,15 +64,12 @@ goniometer_phil_scope = libtbx.phil.parse(
 )
 
 
-class GoniometerFactory:
+class GoniometerFactory(object):
     """A factory class for goniometer objects, which will encapsulate
     some standard goniometer designs to make it a little easier to get
     started with all of this - for cases when we are not using a CBF.
     When we have a CBF just use that factory method and everything will be
     peachy."""
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def single_axis_goniometer_from_phil(params, reference=None):
@@ -118,8 +112,6 @@ class GoniometerFactory:
 
     @staticmethod
     def multi_axis_goniometer_from_phil(params, reference=None):
-        from scitbx.array_family import flex
-
         # Check the axes parameter
         if params.goniometer.axes is not None:
             if len(params.goniometer.axes) % 3:
@@ -258,23 +250,16 @@ class GoniometerFactory:
 
         Returns:
             The goniometer model
-
         """
-        from dxtbx.model import Goniometer, MultiAxisGoniometer
+        if d is None and t is None:
+            return None
+        joint = t.copy() if t else {}
+        joint.update(d)
 
-        # If None, return None
-        if d is None:
-            if t is None:
-                return None
-            else:
-                return from_dict(t, None)
-        elif t is not None:
-            d = dict(list(t.items()) + list(d.items()))
-
-        # Create the model from the dictionary
-        if "axes" in d and "angles" in d and "scan_axis" in d:
-            return MultiAxisGoniometer.from_dict(d)
-        return Goniometer.from_dict(d)
+        # Create the model from the joint dictionary
+        if {"axes", "angles", "scan_axis"}.issubset(joint):
+            return MultiAxisGoniometer.from_dict(joint)
+        return Goniometer.from_dict(joint)
 
     @staticmethod
     def make_goniometer(rotation_axis, fixed_rotation):
@@ -284,8 +269,6 @@ class GoniometerFactory:
 
     @staticmethod
     def make_kappa_goniometer(alpha, omega, kappa, phi, direction, scan_axis):
-        import math
-
         omega_axis = (1, 0, 0)
         phi_axis = (1, 0, 0)
 
@@ -306,8 +289,6 @@ class GoniometerFactory:
             scan_axis = 0
         else:
             scan_axis = 2
-
-        from scitbx.array_family import flex
 
         axes = flex.vec3_double((phi_axis, kappa_axis, omega_axis))
         angles = flex.double((phi, kappa, omega))
@@ -392,8 +373,6 @@ class GoniometerFactory:
         it is assumed that the file has already been read."""
 
         # find the goniometer axes and dependencies
-        from scitbx.array_family import flex
-
         axis_names = flex.std_string()
         depends_on = flex.std_string()
         axes = flex.vec3_double()

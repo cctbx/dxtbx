@@ -11,8 +11,11 @@ from __future__ import absolute_import, division, print_function
 # an example XDS.INP file. This should illustrate the usage of the dxtbx
 # classes.
 
-import sys
+from builtins import object
+
 import math
+import sys
+
 from scitbx import matrix
 
 from dxtbx.model.detector_helpers_types import detector_helpers_types
@@ -36,7 +39,7 @@ def xds_detector_name(xia2_name):
     raise RuntimeError("detector %s unknown" % xia2_name)
 
 
-class to_xds:
+class to_xds(object):
     def __init__(self, sweep):
         self._template = sweep.get_template()
         self._start_end = min(sweep.indices()), max(sweep.indices())
