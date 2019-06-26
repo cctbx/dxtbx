@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 from dxtbx.format.Format import Format
-from six.moves import range
 
 
 class FormatBruker(Format):

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division
 
+from builtins import range
 import math
 
 from dials.util.masking import GoniometerShadowMaskGenerator

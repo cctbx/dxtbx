@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-# FormatRAXIS.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Implementation of an ImageFormat class to read RAXIS format image which,
-# since it is only really used for one brand of detector, will be the only
-# class in the pile.
-#
 # Following taken from:
 #
 # http://www.rigaku.com/downloads/software/readimage.html
@@ -70,43 +59,30 @@
 # Then some more chunder follows - however I don't think it contains anything
 # useful. So need to read first 1K of the image header.
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
-import time
+from builtins import range
 import datetime
-import struct
 import math
+import struct
 
 from dxtbx.format.Format import Format
 
 
-class FormatRAXIS(Format):
-    """A class to support the RAXIS detector format from Rigaku."""
-
-    @staticmethod
-    def understand(image_file):
-        """See if this looks like an RAXIS format image - clue is first
-        5 letters of file should be RAXIS."""
-
-        if Format.open_file(image_file).read(5) == "RAXIS":
-            return True
-
-        return False
-
+class RAXISHelper(object):
     def __init__(self, image_file, **kwargs):
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        Format.__init__(self, image_file, **kwargs)
-
-        return
+        super(RAXISHelper, self).__init__(image_file, **kwargs)
 
     def _start(self):
-        self._header_bytes = Format.open_file(self._image_file).read(1024)
+        with Format.open_file(self._image_file) as fh:
+            self._header_bytes = fh.read(1024)
 
-        if self._header_bytes[812:822].strip() in ["SGI", "IRIS"]:
+        if self._header_bytes[812:822].strip() in (b"SGI", b"IRIS"):
             self._f = ">f"
             self._i = ">i"
         else:
@@ -118,6 +94,57 @@ class FormatRAXIS(Format):
 
         self.detectorbase = RAXISImage(self._image_file)
         self.detectorbase.readHeader()
+
+    def get_raw_data(self):
+        """Get the pixel intensities (i.e. read the image and return as a flex array."""
+        self.detectorbase_start()
+        # super() resolves to the other (true) parent class
+        return super(RAXISHelper, self).get_raw_data()
+
+    def _detector_helper(self):
+        """Returns image header values as a dictionary."""
+
+        locations = {
+            "det_h": (self._i, 832),
+            "det_v": (self._i, 836),
+            "det_f": (self._i, 840),
+            "nx": (self._i, 768),
+            "ny": (self._i, 772),
+            "dx": (self._f, 776),
+            "dy": (self._f, 780),
+            "distance": (self._f, 344),
+            "two_theta": (self._f, 556),
+            "beam_x": (self._f, 540),
+            "beam_y": (self._f, 544),
+        }
+        values = {
+            name: struct.unpack(
+                location[0], self._header_bytes[location[1] : location[1] + 4]
+            )[0]
+            for name, location in locations.items()
+        }
+
+        assert values["det_h"] == 0
+        assert values["det_v"] == 0
+        assert values["det_f"] == 0
+
+        values["beam"] = (
+            values["beam_x"] * values["dx"],
+            values["beam_y"] * values["dy"],
+        )
+        return values
+
+
+class FormatRAXIS(RAXISHelper, Format):
+    """A class to support the RAXIS detector format from Rigaku."""
+
+    @staticmethod
+    def understand(image_file):
+        """See if this looks like an RAXIS format image - clue is first
+        5 letters of file should be RAXIS."""
+
+        with Format.open_file(image_file) as fh:
+            return fh.read(5) == b"RAXIS"
 
     def _goniometer(self):
         """Return a model for the goniometer from the values stored in the
@@ -144,14 +171,13 @@ class FormatRAXIS(Format):
         scan_axis = struct.unpack(i, header[980:984])[0]
 
         for j in range(n_axes):
-
             axis_x = struct.unpack(f, header[860 + j * 12 : 864 + j * 12])[0]
             axis_y = struct.unpack(f, header[864 + j * 12 : 868 + j * 12])[0]
             axis_z = struct.unpack(f, header[868 + j * 12 : 872 + j * 12])[0]
 
             axis_start = struct.unpack(f, header[920 + j * 4 : 924 + j * 4])[0]
             axis_end = struct.unpack(f, header[940 + j * 4 : 944 + j * 4])[0]
-            axis_offset = struct.unpack(f, header[960 + j * 4 : 964 + j * 4])[0]
+            # axis_offset = struct.unpack(f, header[960 + j * 4 : 964 + j * 4])[0]
 
             if j == scan_axis:
                 assert math.fabs(axis_x - 1) < 0.001
@@ -174,42 +200,18 @@ class FormatRAXIS(Format):
         # (as well as I can understand) be asserted. Also assuming that the
         # two-theta axis is along (1, 0, 0) which is all that makes sense.
 
-        i = self._i
-        f = self._f
-        header = self._header_bytes
-
-        det_h = struct.unpack(i, header[832:836])[0]
-        det_v = struct.unpack(i, header[836:840])[0]
-        det_f = struct.unpack(i, header[840:844])[0]
-
-        assert det_h == 0
-        assert det_v == 0
-        assert det_f == 0
-
-        nx = struct.unpack(i, header[768:772])[0]
-        ny = struct.unpack(i, header[772:776])[0]
-
-        dx = struct.unpack(f, header[776:780])[0]
-        dy = struct.unpack(f, header[780:784])[0]
-
-        distance = struct.unpack(f, header[344:348])[0]
-        two_theta = struct.unpack(f, header[556:560])[0]
-
-        beam_x = struct.unpack(f, header[540:544])[0]
-        beam_y = struct.unpack(f, header[544:548])[0]
-
-        beam = (beam_x * dx, beam_y * dy)
+        values = self._detector_helper()
 
         return self._detector_factory.two_theta(
             "IMAGE_PLATE",
-            distance,
-            beam,
+            values["distance"],
+            values["beam"],
             "+y",
             "-x",
             "+x",
-            two_theta,
-            (dx, dy),
-            (nx, ny),
+            values["two_theta"],
+            (values["dx"], values["dy"]),
+            (values["nx"], values["ny"]),
             (0, 1000000),
             [],
         )
@@ -238,7 +240,7 @@ class FormatRAXIS(Format):
         format = self._scan_factory.format("RAXIS")
         exposure_time = struct.unpack(f, header[536:540])[0]
 
-        y, m, d = map(int, header[256:268].strip().split("-"))
+        y, m, d = map(int, header[256:268].strip().split(b"-"))
 
         epoch = calendar.timegm(datetime.datetime(y, m, d, 0, 0, 0).timetuple())
 
@@ -257,16 +259,3 @@ class FormatRAXIS(Format):
         return self._scan_factory.single(
             self._image_file, format, exposure_time, osc_start, osc_range, epoch
         )
-
-    def get_raw_data(self):
-        """Get the pixel intensities (i.e. read the image and return as a
-        flex array."""
-        self.detectorbase_start()
-        try:
-            image = self.detectorbase
-            image.read()
-            raw_data = image.get_raw_data()
-
-            return raw_data
-        except Exception:
-            return None

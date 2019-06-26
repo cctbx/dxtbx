@@ -85,6 +85,9 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
         return mask
 
     def get_goniometer_shadow_masker(self, goniometer=None):
+        if not self.has_dynamic_shadowing():
+            return None
+
         if goniometer is None:
             goniometer = self.get_goniometer()
 

@@ -3,12 +3,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import pycbf
 
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
-from six.moves import range
 
 
 class cbf_wrapper(pycbf.cbf_handle_struct):
@@ -41,11 +41,11 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
         """
         try:
             self.find_category(b"array_structure_list_section")
+            return True
         except Exception as e:
-            if "CBF_NOTFOUND" not in str(e):
-                raise e
-            return False
-        return True
+            if "CBF_NOTFOUND" in str(e):
+                return False
+            raise e
 
 
 class FormatCBFMultiTile(FormatCBFFull):
@@ -86,7 +86,7 @@ class FormatCBFMultiTile(FormatCBFFull):
         safe."""
         from dxtbx.format.FormatCBF import FormatCBF
 
-        FormatCBF._start(self)  # Note, skip up an inhieritance level
+        FormatCBF._start(self)  # Note, skip up an inheritance level
 
     def detectorbase_start(self):
         pass

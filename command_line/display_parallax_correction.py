@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 if __name__ == "__main__":
     import sys
     from dxtbx.datablock import DataBlockFactory

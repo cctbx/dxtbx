@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import json
 import os
 from pprint import pprint
@@ -10,33 +11,28 @@ from dxtbx.imageset import ImageSweep
 from dxtbx.model import Beam, Detector, Goniometer, Scan
 import pytest
 import six.moves.cPickle as pickle
-from six.moves import range
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def centroid_test_data(dials_regression):
     return os.path.join(dials_regression, "centroid_test_data")
 
 
 @pytest.fixture
 def single_sweep_filenames(centroid_test_data):
-    filenames = []
-    image_indices = range(1, 10)
-    for i in image_indices:
-        filenames.append(
-            os.path.join(centroid_test_data, "centroid_000{}.cbf".format(i))
-        )
+    filenames = [
+        os.path.join(centroid_test_data, "centroid_000{}.cbf".format(i))
+        for i in range(1, 10)
+    ]
     return filenames
 
 
 @pytest.fixture
 def multiple_sweep_filenames(centroid_test_data):
-    filenames = []
-    image_indices = list(range(1, 4)) + list(range(7, 10))
-    for i in image_indices:
-        filenames.append(
-            os.path.join(centroid_test_data, "centroid_000{0}.cbf".format(i))
-        )
+    filenames = [
+        os.path.join(centroid_test_data, "centroid_000{0}.cbf".format(i))
+        for i in [1, 2, 3, 7, 8, 9]
+    ]
     return filenames
 
 

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import pytest
 
 
@@ -66,7 +67,7 @@ def test_crystal_with_scan_points():
     # all different
     from scitbx.array_family import flex
 
-    cov_B = flex.double(range((9 * 9))) * 1e-5
+    cov_B = flex.double(range(9 * 9)) * 1e-5
     c1.set_B_covariance(cov_B)
     cov_B.reshape(flex.grid(1, 9, 9))
     cov_B_array = flex.double(flex.grid(5, 9, 9))

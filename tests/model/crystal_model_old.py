@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 from scitbx import matrix
 from cctbx.uctbx import unit_cell
 from cctbx.sgtbx import space_group as SG
@@ -154,7 +155,7 @@ class crystal_model_old(object):
         from six.moves import StringIO
 
         s = StringIO()
-        msg = self.show(out=s)
+        self.show(out=s)
         return s.getvalue()
 
     def set_unit_cell(self, real_space_a, real_space_b, real_space_c):
@@ -229,7 +230,7 @@ class crystal_model_old(object):
 
         from scitbx.math.lefebvre import matrix_inverse_error_propagation
         from scitbx.math import angle_derivative_wrt_vectors
-        from math import pi, acos, sqrt
+        from math import pi, sqrt
 
         # self._cov_B is the covariance matrix of elements of the B matrix. We
         # need to construct the covariance matrix of elements of the
@@ -338,9 +339,9 @@ class crystal_model_old(object):
 
         # So the unit cell parameters are
         a, b, c = vec_a.length(), vec_b.length(), vec_c.length()
-        alpha = acos(vec_b.dot(vec_c) / (b * c))
-        beta = acos(vec_a.dot(vec_c) / (a * c))
-        gamma = acos(vec_a.dot(vec_b) / (a * b))
+        # alpha = acos(vec_b.dot(vec_c) / (b * c))
+        # beta = acos(vec_a.dot(vec_c) / (a * c))
+        # gamma = acos(vec_a.dot(vec_b) / (a * b))
 
         # The estimated errors are calculated by error propagation from cov_O. In
         # each case we define a function F(O) that converts the matrix O into the
@@ -369,7 +370,6 @@ class crystal_model_old(object):
         jacobian = matrix.rec(
             (0, 0, vec_c[0] / c, 0, 0, vec_c[1] / c, 0, 0, vec_c[2] / c), (1, 9)
         )
-        jacobian_t = jacobian.transpose()
         var_c = (jacobian * cov_O * jacobian.transpose())[0]
 
         # For cell volume (a X b).c,
@@ -391,7 +391,6 @@ class crystal_model_old(object):
             ),
             (1, 9),
         )
-        jacobian_t = jacobian.transpose()
         var_V = (jacobian * cov_O * jacobian.transpose())[0]
         self._cell_volume_sd = sqrt(var_V)
 
@@ -459,8 +458,6 @@ class crystal_model_old(object):
         var_beta = max(0, var_beta)
         var_gamma = max(0, var_gamma)
 
-        from math import pi
-
         rad2deg = 180.0 / pi
         self._cell_sd = (
             sqrt(var_a),
@@ -470,7 +467,6 @@ class crystal_model_old(object):
             sqrt(var_beta) * rad2deg,
             sqrt(var_gamma) * rad2deg,
         )
-        return
 
     def get_cell_parameter_sd(self):
         """Return the estimated standard deviations of unit cell parameters in
@@ -632,7 +628,7 @@ class crystal_model_old(object):
         """
         from math import pi
 
-        if deg == True:
+        if deg is True:
             return self._mosaicity * 180.0 / pi
 
         return self._mosaicity
@@ -651,7 +647,7 @@ class crystal_model_old(object):
         """
         from math import pi
 
-        if deg == True:
+        if deg is True:
             self._mosaicity = mosaicity * pi / 180.0
         else:
             self._mosaicity = mosaicity
@@ -660,25 +656,7 @@ class crystal_model_old(object):
         return self._U * self._B
 
     def __eq__(self, other, eps=1e-7):
-        if isinstance(other, crystal_model):
-            d_mosaicity = abs(self._mosaicity - other._mosaicity)
-            d_U = sum([abs(u1 - u2) for u1, u2 in zip(self._U, other._U)])
-            d_B = sum([abs(b1 - b2) for b1, b2 in zip(self._B, other._B)])
-            if self.num_scan_points > 0:
-                if other.num_scan_points != self.num_scan_points:
-                    return False
-                for i in range(self.num_scan_points):
-                    A1, A2 = self.get_A_at_scan_point(i), other.get_A_at_scan_point(i)
-                    d_A = sum([abs(a1 - a2) for a1, a2 in zip(A1, A2)])
-                    if d_A > eps:
-                        return False
-            return (
-                d_mosaicity <= eps
-                and d_U <= eps
-                and d_B <= eps
-                and self._sg == other._sg
-            )
-        return NotImplemented
+        raise NotImplementedError("this piece of code was broken")
 
     def is_similar_to(
         self,
@@ -777,55 +755,7 @@ class crystal_model_old(object):
         return (matrix.col(A_inv[:3]), matrix.col(A_inv[3:6]), matrix.col(A_inv[6:9]))
 
     def change_basis(self, change_of_basis_op):
-        """
-        Returns a copy of the current crystal model transformed by the given
-        change of basis operator to the new basis.
-
-        :param change_of_basis_op: The change of basis operator.
-        :type cctbx.sgtbx.change_of_basis_op:
-        :returns: The crystal model transformed to the new basis.
-        :rtype: :py:class:`crystal_model`
-        """
-        # cctbx change of basis matrices and those Giacovazzo are related by
-        # inverse and transpose, i.e. Giacovazzo's "M" is related to the cctbx
-        # cb_op as follows:
-        #   M = cb_op.c_inv().r().transpose()
-        #   M_inverse = cb_op_to_minimum.c().r().transpose()
-
-        # (Giacovazzo calls the direct matrix "A",
-        #  we call the reciprocal matrix "A")
-        # Therefore, from equation 2.19 in Giacovazzo:
-        #   A' = M A
-
-        # and:
-        #   (A')^-1 = (M A)^-1
-        #   (A')^-1 = A^-1 M^-1
-
-        # reciprocal_matrix = self.get_A()
-        # rm_cb = reciprocal_matrix * M.inverse()
-        # dm_cb = rm_cb.inverse()
-        # from libtbx.test_utils import approx_equal
-        # assert approx_equal(dm_cb.elems, new_direct_matrix.elems)
-
-        direct_matrix = self.get_A().inverse()
-        M = matrix.sqr(change_of_basis_op.c_inv().r().transpose().as_double())
-        # equation 2.19 of Giacovazzo
-        new_direct_matrix = M * direct_matrix
-        real_space_a = new_direct_matrix[:3]
-        real_space_b = new_direct_matrix[3:6]
-        real_space_c = new_direct_matrix[6:9]
-        other = crystal_model(
-            real_space_a,
-            real_space_b,
-            real_space_c,
-            space_group=self.get_space_group().change_basis(change_of_basis_op),
-            mosaicity=self.get_mosaicity(),
-        )
-        if self.num_scan_points > 0:
-            M_inv = M.inverse()
-            other.set_A_at_scan_points([At * M_inv for At in self._A_at_scan_points])
-            assert other.num_scan_points == self.num_scan_points
-        return other
+        raise NotImplementedError("this piece of code was broken")
 
     def update(self, other):
         """

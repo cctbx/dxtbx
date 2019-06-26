@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-from six.moves import range
+from builtins import range
 
 
 def to_ewald_sphere(list_of_images):

@@ -1,12 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import collections
+import copy
 import json
-from copy import deepcopy
-from os.path import abspath, dirname, splitext
-
+import os.path
 import pkg_resources
-import six.moves.cPickle as pickle
+from typing import Any, Dict, List, Optional, Tuple
 
 from dxtbx.datablock import (
     AutoEncoder,
@@ -34,6 +34,7 @@ from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import template_image_range
+import six.moves.cPickle as pickle
 
 __all__ = [
     "BeamComparison",
@@ -67,7 +68,7 @@ class ExperimentListDict(object):
                 "Expected dictionary, not {}".format(type(obj))
             )
 
-        self._obj = deepcopy(obj)
+        self._obj = copy.deepcopy(obj)
         self._check_format = check_format
         self._directory = directory
 
@@ -519,7 +520,7 @@ class ExperimentListDumper(object):
         if filename is not None and split:
 
             # Get lists of models by filename
-            basepath = splitext(filename)[0]
+            basepath = os.path.splitext(filename)[0]
             ilist = [
                 ("%s_imageset_%d.json" % (basepath, i), d)
                 for i, d in enumerate(dictionary["imageset"])
@@ -627,7 +628,7 @@ class ExperimentListDumper(object):
 
     def as_file(self, filename, **kwargs):
         """ Dump experiment list as file. """
-        ext = splitext(filename)[1]
+        ext = os.path.splitext(filename)[1]
         j_ext = [".json", ".expt"]
         p_ext = [".p", ".pkl", ".pickle"]
         if ext.lower() in j_ext:
@@ -836,8 +837,8 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_json_file(filename, check_format=True):
         """ Load an experiment list from a json file. """
-        filename = abspath(filename)
-        directory = dirname(filename)
+        filename = os.path.abspath(filename)
+        directory = os.path.dirname(filename)
         with open(filename, "r") as infile:
             return ExperimentListFactory.from_json(
                 infile.read(), check_format=check_format, directory=directory

@@ -9,6 +9,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
 from scitbx import matrix

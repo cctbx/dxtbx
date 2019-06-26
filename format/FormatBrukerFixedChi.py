@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 from dxtbx.format.FormatBruker import FormatBruker
 from scitbx import matrix
 

@@ -1,7 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import boost.python
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
+import dxtbx.format.Registry
 
 ext = boost.python.import_ext("dxtbx_ext")
 from dxtbx_imageset_ext import *
@@ -26,10 +28,12 @@ class MemReader(object):
         format_instance = self._images[index]
         return format_instance.get_raw_data()
 
-    def is_single_file_reader(self):
+    @staticmethod
+    def is_single_file_reader():
         return False
 
-    def master_path(self):
+    @staticmethod
+    def master_path():
         return ""
 
 
@@ -54,7 +58,6 @@ class MemMasker(object):
 class ImageSetAux(boost.python.injector, ImageSet):
     """
     A class to inject additional methods into the imageset class
-
     """
 
     def __getitem__(self, item):
@@ -69,17 +72,10 @@ class ImageSetAux(boost.python.injector, ImageSet):
 
         Returns:
             An image or new ImageSet object
-
         """
         if isinstance(item, slice):
-            if item.start is None:
-                start = 0
-            else:
-                start = item.start
-            if item.stop is None:
-                stop = len(self)
-            else:
-                stop = item.stop
+            start = item.start or 0
+            stop = item.stop or len(self)
             if item.step is not None and item.step != 1:
                 raise IndexError("Step must be 1")
             return self.partial_set(start, stop)
@@ -106,7 +102,6 @@ class ImageSetAux(boost.python.injector, ImageSet):
     def get_detectorbase(self, index):
         """
         A function to be injected into the imageset to get the detectorbase instance
-
         """
         kwargs = self.params()
         if self.data().has_single_file_reader():
@@ -123,27 +118,23 @@ class ImageSetAux(boost.python.injector, ImageSet):
     def reader(self):
         """
         Return the reader
-
         """
         return self.data().reader()
 
     def masker(self):
         """
         Return the masker
-
         """
         return self.data().masker()
 
     def paths(self):
         """
         Return the list of paths
-
         """
         return [self.get_path(i) for i in range(len(self))]
 
 
 class ImageSetLazy(ImageSet):
-
     """
     Lazy ImageSet class that doesn't necessitate setting the models ahead of time.
     Only when a particular model (like detector or beam) for an image is requested,
@@ -254,15 +245,9 @@ class ImageSweepAux(boost.python.injector, ImageSweep):
 
         """
         if isinstance(item, slice):
-            if item.start is None:
-                start = 0
-            else:
-                start = item.start
-            if item.stop is None:
-                stop = len(self)
-            else:
-                stop = item.stop
-            if item.step != None:
+            start = item.start or 0
+            stop = item.stop or len(self)
+            if item.step is not None:
                 raise IndexError("Sweeps must be sequential")
             return self.partial_set(start, stop)
         else:
@@ -273,60 +258,23 @@ class ImageSweepAux(boost.python.injector, ImageSweep):
         return self.data().get_template()
 
 
-class FilenameAnalyser(object):
-    """Group images by filename into image sets."""
+def _analyse_files(filenames):
+    """Group images by filename into image sets.
 
-    def __init__(self):
-        """Initialise the class."""
-        pass
+    Params:
+        filenames The list of filenames
 
-    def __call__(self, filenames):
-        """Group the filenames by imageset.
+    Returns:
+        A list of (template, [indices], is_sweep)
 
-        Params:
-            filenames The list of filenames
+    """
+    from dxtbx.sweep_filenames import group_files_by_imageset
 
-        Returns:
-            A list of (template, [indices], is_sweep)
+    # Analyse filenames to figure out how many imagesets we have
+    filelist_per_imageset = group_files_by_imageset(filenames)
 
-        """
-        from dxtbx.sweep_filenames import group_files_by_imageset
-
-        # Analyse filenames to figure out how many imagesets we have
-        filelist_per_imageset = group_files_by_imageset(filenames)
-
-        # Label each group as either an imageset or a sweep.
-        file_groups = []
-        for template, indices in filelist_per_imageset.items():
-
-            # Check if this imageset is a sweep
-            is_sweep = self._is_imageset_a_sweep(template, indices)
-
-            # Append the items to the group list
-            file_groups.append((template, indices, is_sweep))
-
-        # Return the groups of files
-        return file_groups
-
-    def _is_imageset_a_sweep(self, template, indices):
-        """Return True/False if the imageset is a sweep or not.
-
-        Where more than 1 image that follow sequential numbers are given
-        the images are catagorised as belonging to a sweep, otherwise they
-        belong to an image set.
-
-        """
-        if len(indices) <= 1:
-            return False
-        else:
-            indices = sorted(indices)
-            if self._indices_sequential_ge_zero(indices):
-                return True
-            else:
-                return False
-
-    def _indices_sequential_ge_zero(self, indices):
-        """ Determine if indices are sequential."""
+    def _indices_sequential_ge_zero(indices):
+        """Determine if indices are sequential."""
         prev = indices[0]
         if prev < 0:
             return False
@@ -336,6 +284,32 @@ class FilenameAnalyser(object):
             prev = curr
 
         return True
+
+    def _is_imageset_a_sweep(template, indices):
+        """Return True/False if the imageset is a sweep or not.
+
+        Where more than 1 image that follow sequential numbers are given
+        the images are catagorised as belonging to a sweep, otherwise they
+        belong to an image set.
+
+        """
+        if len(indices) <= 1:
+            return False
+        indices = sorted(indices)
+        return _indices_sequential_ge_zero(indices)
+
+    # Label each group as either an imageset or a sweep.
+    file_groups = []
+    for template, indices in filelist_per_imageset.items():
+
+        # Check if this imageset is a sweep
+        is_sweep = _is_imageset_a_sweep(template, indices)
+
+        # Append the items to the group list
+        file_groups.append((template, indices, is_sweep))
+
+    # Return the groups of files
+    return file_groups
 
 
 # FIXME Lots of duplication in this class, need to tidy up
@@ -357,15 +331,14 @@ class ImageSetFactory(object):
         """
         # Ensure we have enough images
         if isinstance(filenames, list):
-            assert len(filenames) > 0
+            assert filenames
         elif isinstance(filenames, str):
             filenames = [filenames]
         else:
             raise RuntimeError("unknown argument passed to ImageSetFactory")
 
         # Analyse the filenames and group the images into imagesets.
-        analyse_files = FilenameAnalyser()
-        filelist_per_imageset = analyse_files(filenames)
+        filelist_per_imageset = _analyse_files(filenames)
 
         # For each file list denoting an image set, create the imageset
         # and return as a list of imagesets. N.B sweeps and image sets are
@@ -373,7 +346,7 @@ class ImageSetFactory(object):
         imagesetlist = []
         for filelist in filelist_per_imageset:
             try:
-                if filelist[2] == True:
+                if filelist[2] is True:
                     iset = ImageSetFactory._create_sweep(filelist, check_headers)
                 else:
                     iset = ImageSetFactory._create_imageset(filelist, check_headers)
@@ -407,7 +380,6 @@ class ImageSetFactory(object):
             A list of sweeps
 
         """
-        from dxtbx.format.Registry import Registry
         from dxtbx.sweep_filenames import template_image_range
         from dxtbx.format.Format import Format
 
@@ -431,14 +403,14 @@ class ImageSetFactory(object):
                 image_range = template_image_range(template)
 
             # Set the image range
-            array_range = (image_range[0] - 1, image_range[1])
+            array_range = range(image_range[0] - 1, image_range[1])
 
             # Create the sweep file list
-            filenames = [template_format % (i + 1) for i in range(*array_range)]
+            filenames = [template_format % (i + 1) for i in array_range]
 
         # Get the format class
         if check_format:
-            format_class = Registry.find(filenames[0])
+            format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
         else:
             format_class = Format
 
@@ -460,8 +432,6 @@ class ImageSetFactory(object):
     @staticmethod
     def _create_imageset(filelist, check_headers):
         """Create an image set"""
-        from dxtbx.format.Registry import Registry
-
         # Extract info from filelist
         template, indices, is_sweep = filelist
 
@@ -479,19 +449,14 @@ class ImageSetFactory(object):
         filenames = sorted(filenames)
 
         # Get the format object
-        format_class = Registry.find(filenames[0])
+        format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
 
-        # Create the imageset
-        imageset = format_class.get_imageset(filenames, as_imageset=True)
-
-        # Return the image set
-        return imageset
+        # Create and return the imageset
+        return format_class.get_imageset(filenames, as_imageset=True)
 
     @staticmethod
     def _create_sweep(filelist, check_headers):
         """Create a sweep"""
-        from dxtbx.format.Registry import Registry
-
         # Extract info from filelist
         template, indices, is_sweep = filelist
 
@@ -509,7 +474,7 @@ class ImageSetFactory(object):
         filenames = sorted(filenames)
 
         # Get the format object
-        format_class = Registry.find(filenames[0])
+        format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
 
         # Get the template format
         pfx = template.split("#")[0]
@@ -536,30 +501,28 @@ class ImageSetFactory(object):
         format_kwargs=None,
     ):
         """Create an image set"""
-        from dxtbx.format.Registry import Registry
         from dxtbx.format.Format import Format
         from dxtbx.format.FormatMultiImage import FormatMultiImage
 
         # Get the format object
         if format_class is None:
             if check_format:
-                format_class = Registry.find(filenames[0])
+                format_class = dxtbx.format.Registry.get_format_class_for_file(
+                    filenames[0]
+                )
             else:
                 if single_file_indices is None or len(single_file_indices) == 0:
                     format_class = Format
                 else:
                     format_class = FormatMultiImage
 
-        imageset = format_class.get_imageset(
+        return format_class.get_imageset(
             filenames,
             single_file_indices=single_file_indices,
             as_imageset=True,
             format_kwargs=format_kwargs,
             check_format=check_format,
         )
-
-        # Return the imageset
-        return imageset
 
     @staticmethod
     def make_sweep(
@@ -574,7 +537,6 @@ class ImageSetFactory(object):
         format_kwargs=None,
     ):
         """Create a sweep"""
-        from dxtbx.format.Registry import Registry
         from dxtbx.format.Format import Format
 
         indices = sorted(indices)
@@ -601,18 +563,12 @@ class ImageSetFactory(object):
         # Get the format object and reader
         if format_class is None:
             if check_format:
-                format_class = Registry.find(filenames[0])
+                format_class = dxtbx.format.Registry.get_format_class_for_file(
+                    filenames[0]
+                )
             else:
                 format_class = Format
 
-        # Done require template to be vaid if not checking format
-        # try:
-        #   filenames = [template_format % (i+1) for i in range(*array_range)]
-        # except Exception:
-        #   if check_format:
-        #     raise
-        #   else:
-        #     filenames = []
         sweep = format_class.get_imageset(
             filenames,
             beam=beam,
@@ -623,7 +579,7 @@ class ImageSetFactory(object):
             template=template,
             as_sweep=True,
             check_format=check_format,
-            single_file_indices=range(*array_range),
+            single_file_indices=list(range(*array_range)),
         )
 
         # Return the sweep

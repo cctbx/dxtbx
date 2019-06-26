@@ -11,7 +11,6 @@ import py.path
 
 import dxtbx.conftest
 import dxtbx.format.Registry
-from dxtbx.format.Registry import Registry
 import libtbx.load_env
 from iotbx.command_line.detector_image_as_png import convert_image
 
@@ -257,6 +256,6 @@ def test_no_multiple_format_understanding(test_image):
 
 
 def test_no_exceptions_from_understand(test_image):
-    for format in Registry.get():
-        print(format)
-        format.understand(test_image)
+    for format_name in dxtbx.format.Registry.get_format_class_dag()["Format"]:
+        format_class = dxtbx.format.Registry.get_format_class_for(format_name)
+        format_class.understand(test_image)

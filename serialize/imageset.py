@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import collections
 import os
 
@@ -7,6 +8,7 @@ from dxtbx.format.image import ImageBool, ImageDouble  # noqa: F401, import depe
 from dxtbx.imageset import ImageSet, ImageSetFactory, ImageSweep
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize.filename import resolve_path
+import six.moves.cPickle as pickle
 
 
 def filename_to_absolute(filename):
@@ -160,7 +162,7 @@ def imagesweep_from_dict(d, check_format=True, directory=None):
             check_format=check_format,
         )[0]
     except Exception:
-        indices = range(image_range[0], image_range[1] + 1)
+        indices = list(range(image_range[0], image_range[1] + 1))
         sweep = ImageSetFactory.make_sweep(
             template,
             indices,

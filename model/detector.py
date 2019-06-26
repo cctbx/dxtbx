@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function
 # flat detectors, or composite detectors constructed from a number of flat
 # elements.
 
+from builtins import range
 from builtins import object
 
 import os
