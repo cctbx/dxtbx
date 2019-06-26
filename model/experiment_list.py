@@ -170,13 +170,13 @@ class ExperimentListDict(object):
             False then (filename, None) will be returned.
         """
         if param not in imageset_data:
-            return None, None
+            return "", None
 
         filename = resolve_path(imageset_data[param], directory=self._directory)
         if self._check_format and filename:
             with open(filename, "rb") as fh:
                 return filename, pickle.load(fh)
-        return filename, None
+        return filename or "", None
 
     def decode(self):
         """ Decode the dictionary into a list of experiments. """
@@ -249,16 +249,6 @@ class ExperimentListDict(object):
 
                     if imageset is not None:
                         # Set the external lookup
-                        if mask_filename is None:
-                            mask_filename = ""
-                        if gain_filename is None:
-                            gain_filename = ""
-                        if pedestal_filename is None:
-                            pedestal_filename = ""
-                        if dx_filename is None:
-                            dx_filename = ""
-                        if dy_filename is None:
-                            dy_filename = ""
                         if mask is None:
                             mask = ImageBool()
                         else:
