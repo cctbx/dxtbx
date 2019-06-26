@@ -321,8 +321,6 @@ class ExperimentListDict(object):
                                 imageset.set_detector(detector, i)
                                 imageset.set_goniometer(goniometer, i)
                                 imageset.set_scan(scan, i)
-                        else:
-                            pass
 
                         imageset.update_detector_px_mm_data()
 
