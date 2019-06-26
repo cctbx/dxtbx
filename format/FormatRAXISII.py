@@ -1,30 +1,20 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.Format import Format
+from dxtbx.format.FormatRAXIS import RAXISHelper
 
 
-class FormatRAXISII(Format):
+class FormatRAXISII(RAXISHelper, Format):
     @staticmethod
     def understand(image_file):
         try:
-            tag = FormatRAXISII.open_file(image_file, "rb").read(7)
+            with FormatRAXISII.open_file(image_file, "rb") as fh:
+                return fh.read(7) == b"R-AXIS2"
         except IOError:
             return False
 
-        return tag == "R-AXIS2"
-
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file."""
-
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        Format.__init__(self, image_file, **kwargs)
-
     def detectorbase_start(self):
-        pass
+        pass  # override with an empty function
 
     def _start(self):
         from iotbx.detectors.raxis_nonsquare import NonSquareRAXISImage
@@ -33,7 +23,6 @@ class FormatRAXISII(Format):
         self.detectorbase.readHeader()
 
     def _goniometer(self):
-
         return self._goniometer_factory.single_axis()
 
     def _detector(self):
@@ -67,19 +56,6 @@ class FormatRAXISII(Format):
             osc_width=self.detectorbase.parameters["OSC_RANGE"],
             epoch=None,
         )
-
-    def get_raw_data(self):
-        """Get the pixel intensities (i.e. read the image and return as a
-        flex array."""
-        self.detectorbase_start()
-        try:
-            image = self.detectorbase
-            image.read()
-            raw_data = image.get_raw_data()
-
-            return raw_data
-        except Exception:
-            return None
 
 
 if __name__ == "__main__":
