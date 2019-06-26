@@ -6,7 +6,7 @@ import copy
 import json
 import os.path
 import pkg_resources
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from dxtbx.datablock import (
     AutoEncoder,
@@ -89,7 +89,7 @@ class ExperimentListDict(object):
             "crystal": self._extract_models("crystal"),
             "profile": self._extract_models("profile"),
             "scaling_model": self._extract_models("scaling_model"),
-            "imageset": self._dereference_imagesets(),
+            "imageset": self._dereference_imagesets("imageset"),
             # Go through all the imagesets and make sure the dictionary
             # references by an index rather than a file path.
         }
@@ -131,8 +131,7 @@ class ExperimentListDict(object):
         # Return the model list
         return mlist
 
-    def _dereference_imagesets(self):
-        # type: () -> List[Dict[str,Any]]
+    def _dereference_imagesets(self, name):
         """Extract imageset objects from the source.
 
         This function does resolving of an (old) method of imageset lookup
@@ -150,7 +149,7 @@ class ExperimentListDict(object):
         """
 
         # Extract all the model list
-        mlist = self._obj.get("imageset", [])
+        mlist = self._obj.get(name, [])
 
         # Dictionaries for file mappings
         mmap = {}
@@ -160,14 +159,14 @@ class ExperimentListDict(object):
         # and insert it into the list. Replace the path reference
         # with an index
         for eobj in self._obj["experiment"]:
-            value = eobj.get("imageset")
+            value = eobj.get(name)
             if value is None:
                 continue
             elif isinstance(value, str):
                 if value not in mmap:
                     mmap[value] = len(mlist)
                     mlist.append(_experimentlist_from_file(value, self._directory))
-                eobj["imageset"] = mmap[value]
+                eobj[name] = mmap[value]
             elif not isinstance(value, int):
                 raise TypeError("expected int or str, got %s" % type(value))
 
