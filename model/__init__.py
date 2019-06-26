@@ -2,8 +2,10 @@ from __future__ import absolute_import, division, print_function
 
 
 from builtins import range
+import collections
+import json
+import os
 import sys
-from collections import OrderedDict
 
 import boost.python
 import cctbx.crystal
@@ -18,6 +20,7 @@ from dxtbx.model.scan import ScanFactory
 from libtbx.containers import OrderedSet
 
 from six.moves import StringIO
+import six.moves.cPickle as pickle
 
 
 class DetectorAux(boost.python.injector, Detector):
@@ -154,7 +157,6 @@ class CrystalAux(boost.python.injector, Crystal):
             A dictionary of the parameters
 
         """
-        from collections import OrderedDict
         from scitbx import matrix
 
         # Get the real space vectors
@@ -173,7 +175,7 @@ class CrystalAux(boost.python.injector, Crystal):
             identified_isoform = None
 
         # Collect the information as a python dictionary
-        xl_dict = OrderedDict(
+        xl_dict = collections.OrderedDict(
             [
                 ("__id__", "crystal"),
                 ("real_space_a", real_space_a),
@@ -504,7 +506,7 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         ]
         # Generate index lookup tables for each output member collection instance
         index_lookup = {
-            name: OrderedDict(
+            name: collections.OrderedDict(
                 [
                     (model, i)
                     for i, model in enumerate(x for x in models() if x is not None)
@@ -514,13 +516,13 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         }
 
         # Create the output dictionary
-        result = OrderedDict()
+        result = collections.OrderedDict()
         result["__id__"] = "ExperimentList"
         result["experiment"] = []
 
         # Add the experiments to the dictionary
         for e in self:
-            obj = OrderedDict()
+            obj = collections.OrderedDict()
             obj["__id__"] = "Experiment"
             obj["identifier"] = e.identifier
 
@@ -544,18 +546,22 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
             if isinstance(imset, ImageSweep):
                 # FIXME_HACK
                 template = get_template(imset)
-                r = OrderedDict([("__id__", "ImageSweep"), ("template", template)])
+                r = collections.OrderedDict(
+                    [("__id__", "ImageSweep"), ("template", template)]
+                )
                 # elif isinstance(imset, MemImageSet):
-                #   r = OrderedDict([
+                #   r = collections.OrderedDict([
                 #     ('__id__', 'MemImageSet')])
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
             elif isinstance(imset, ImageSet):
-                r = OrderedDict([("__id__", "ImageSet"), ("images", imset.paths())])
+                r = collections.OrderedDict(
+                    [("__id__", "ImageSet"), ("images", imset.paths())]
+                )
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
             elif isinstance(imset, ImageGrid):
-                r = OrderedDict(
+                r = collections.OrderedDict(
                     [
                         ("__id__", "ImageGrid"),
                         ("images", imset.paths()),
@@ -622,6 +628,136 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         for experiment in self:
             if experiment.imageset.reader().is_single_file_reader():
                 experiment.imageset.reader().nullify_format_instance()
+
+    def as_json(self, filename=None, compact=False, split=False):
+        """ Dump experiment list as json """
+        # Get the dictionary and get the JSON string
+        dictionary = self.to_dict()
+
+        # Split into separate files
+        if filename is not None and split:
+
+            # Get lists of models by filename
+            basepath = os.path.splitext(filename)[0]
+            ilist = [
+                ("%s_imageset_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["imageset"])
+            ]
+            blist = [
+                ("%s_beam_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["beam"])
+            ]
+            dlist = [
+                ("%s_detector_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["detector"])
+            ]
+            glist = [
+                ("%s_goniometer_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["goniometer"])
+            ]
+            slist = [
+                ("%s_scan_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["scan"])
+            ]
+            clist = [
+                ("%s_crystal_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["crystal"])
+            ]
+            plist = [
+                ("%s_profile_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["profile"])
+            ]
+            scalelist = [
+                ("%s_scaling_model_%d.json" % (basepath, i), d)
+                for i, d in enumerate(dictionary["scaling_model"])
+            ]
+
+            # Get the list of experiments
+            edict = collections.OrderedDict(
+                [("__id__", "ExperimentList"), ("experiment", dictionary["experiment"])]
+            )
+
+            # Set paths rather than indices
+            for e in edict["experiment"]:
+                if "imageset" in e:
+                    e["imageset"] = ilist[e["imageset"]][0]
+                if "beam" in e:
+                    e["beam"] = blist[e["beam"]][0]
+                if "detector" in e:
+                    e["detector"] = dlist[e["detector"]][0]
+                if "goniometer" in e:
+                    e["goniometer"] = glist[e["goniometer"]][0]
+                if "scan" in e:
+                    e["scan"] = slist[e["scan"]][0]
+                if "crystal" in e:
+                    e["crystal"] = clist[e["crystal"]][0]
+                if "profile" in e:
+                    e["profile"] = plist[e["profile"]][0]
+                if "scaling_model" in e:
+                    e["scaling_model"] = scalelist[e["scaling_model"]][0]
+
+            to_write = (
+                ilist
+                + blist
+                + dlist
+                + glist
+                + slist
+                + clist
+                + plist
+                + scalelist
+                + [(filename, edict)]
+            )
+        else:
+            to_write = [(filename, dictionary)]
+
+        from dxtbx.datablock import AutoEncoder
+
+        for fname, obj in to_write:
+            if compact:
+                separators = (",", ":")
+                indent = None
+            else:
+                separators = None
+                indent = 2
+            text = json.dumps(
+                obj,
+                separators=separators,
+                indent=indent,
+                ensure_ascii=True,
+                cls=AutoEncoder,
+            )
+
+            # If a filename is set then dump to file otherwise return string
+            if fname:
+                with open(fname, "w") as outfile:
+                    outfile.write(text)
+            else:
+                return text
+
+    def as_pickle(self, filename=None, **kwargs):
+        """ Dump experiment list as pickle. """
+        # Get the pickle string
+        text = pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
+
+        # Write the file
+        if filename:
+            with open(filename, "wb") as outfile:
+                outfile.write(text)
+        else:
+            return text
+
+    def as_file(self, filename, **kwargs):
+        """ Dump experiment list as file. """
+        ext = os.path.splitext(filename)[1]
+        j_ext = [".json", ".expt"]
+        p_ext = [".p", ".pkl", ".pickle"]
+        if ext.lower() in j_ext:
+            return self.as_json(filename, **kwargs)
+        elif ext.lower() in p_ext:
+            return self.as_pickle(filename, **kwargs)
+        else:
+            ext_str = "|".join(j_ext + p_ext)
+            raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
 
 
 try:
