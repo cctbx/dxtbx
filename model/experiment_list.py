@@ -128,7 +128,7 @@ class ExperimentListDict(object):
                 if value not in mmap:
                     mmap[value] = len(mlist)
                     mlist.append(
-                        from_dict(ExperimentListDict._from_file(value, self._directory))
+                        from_dict(_experimentlist_from_file(value, self._directory))
                     )
                 eobj[name] = mmap[value]
             elif not isinstance(value, int):
@@ -172,7 +172,7 @@ class ExperimentListDict(object):
             elif isinstance(value, str):
                 if value not in mmap:
                     mmap[value] = len(mlist)
-                    mlist.append(ExperimentListDict._from_file(value, self._directory))
+                    mlist.append(_experimentlist_from_file(value, self._directory))
                 eobj["imageset"] = mmap[value]
             elif not isinstance(value, int):
                 raise TypeError("expected int or str, got %s" % type(value))
@@ -426,7 +426,7 @@ class ExperimentListDict(object):
 
     def _lookup_model(self, name, experiment_dict):
         """
-        Find a model by looking up it's index from a dictionary
+        Find a model by looking up its index from a dictionary
 
         Args:
             name (str): The model name e.g. 'beam', 'detector'
@@ -442,9 +442,9 @@ class ExperimentListDict(object):
                 experiment_dict[name]. If not present or empty,
                 then None is returned.
         """
-        if name in experiment_dict and experiment_dict[name] is not None:
-            return self._lookups[name][experiment_dict[name]]
-        return None
+        if experiment_dict.get(name) is None:
+            return None
+        return self._lookups[name][experiment_dict[name]]
 
     @staticmethod
     def _beam_from_dict(obj):
@@ -483,15 +483,15 @@ class ExperimentListDict(object):
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
 
-    @staticmethod
-    def _from_file(filename, directory=None):
-        """ Load a model dictionary from a file. """
-        filename = resolve_path(filename, directory=directory)
-        try:
-            with open(filename, "r") as infile:
-                return json.load(infile, object_hook=_decode_dict)
-        except IOError:
-            raise IOError("unable to read file, %s" % filename)
+
+def _experimentlist_from_file(filename, directory=None):
+    """ Load a model dictionary from a file. """
+    filename = resolve_path(filename, directory=directory)
+    try:
+        with open(filename, "r") as infile:
+            return json.load(infile, object_hook=_decode_dict)
+    except IOError:
+        raise IOError("unable to read file, %s" % filename)
 
 
 class ExperimentListDumper(object):
