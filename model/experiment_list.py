@@ -113,10 +113,16 @@ class ExperimentListDict(object):
         """
 
         # The from dict function
-        if name == "imageset":
-            from_dict = lambda x: x
-        else:
-            from_dict = getattr(self, "_%s_from_dict" % name)
+        from_dict = {
+            "beam": BeamFactory.from_dict,
+            "detector": DetectorFactory.from_dict,
+            "goniometer": GoniometerFactory.from_dict,
+            "scan": ScanFactory.from_dict,
+            "crystal": CrystalFactory.from_dict,
+            "profile": ProfileModelFactory.from_dict,
+            "imageset": lambda x: x,
+            "scaling_model": self._scaling_model_from_dict,
+        }[name]
 
         # Extract all the model list
         mlist = self._obj.get(name, [])
@@ -408,36 +414,6 @@ class ExperimentListDict(object):
         if experiment_dict.get(name) is None:
             return None
         return self._lookups[name][experiment_dict[name]]
-
-    @staticmethod
-    def _beam_from_dict(obj):
-        """ Get a beam from a dictionary. """
-        return BeamFactory.from_dict(obj)
-
-    @staticmethod
-    def _detector_from_dict(obj):
-        """ Get the detector from a dictionary. """
-        return DetectorFactory.from_dict(obj)
-
-    @staticmethod
-    def _goniometer_from_dict(obj):
-        """ Get the goniometer from a dictionary. """
-        return GoniometerFactory.from_dict(obj)
-
-    @staticmethod
-    def _scan_from_dict(obj):
-        """ Get the scan from a dictionary. """
-        return ScanFactory.from_dict(obj)
-
-    @staticmethod
-    def _crystal_from_dict(obj):
-        """ Get the crystal from a dictionary. """
-        return CrystalFactory.from_dict(obj)
-
-    @staticmethod
-    def _profile_from_dict(obj):
-        """ Get the profile from a dictionary. """
-        return ProfileModelFactory.from_dict(obj)
 
     @staticmethod
     def _scaling_model_from_dict(obj):
