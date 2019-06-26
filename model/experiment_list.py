@@ -527,7 +527,7 @@ class ExperimentListDumper(object):
             )
 
             # If a filename is set then dump to file otherwise return string
-            if fname is not None:
+            if fname:
                 with open(fname, "w") as outfile:
                     outfile.write(text)
             else:
