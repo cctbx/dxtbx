@@ -84,27 +84,17 @@ class ExperimentListDict(object):
             )
 
         # Extract lists of models referenced by experiments
-        self._blist = self._extract_models("beam")
-        self._dlist = self._extract_models("detector")
-        self._glist = self._extract_models("goniometer")
-        self._slist = self._extract_models("scan")
-        self._clist = self._extract_models("crystal")
-        self._plist = self._extract_models("profile")
-        self._scalelist = self._extract_models("scaling_model")
-
-        # Go through all the imagesets and make sure the dictionary
-        # references by an index rather than a file path.
-        self._ilist = self._dereference_imagesets()
-
         self._lookups = {
-            "beam": self._blist,
-            "detector": self._dlist,
-            "goniometer": self._glist,
-            "scan": self._slist,
-            "crystal": self._clist,
-            "profile": self._plist,
-            "scaling_model": self._scalelist,
-            "imageset": self._ilist,
+            "beam": self._extract_models("beam"),
+            "detector": self._extract_models("detector"),
+            "goniometer": self._extract_models("goniometer"),
+            "scan": self._extract_models("scan"),
+            "crystal": self._extract_models("crystal"),
+            "profile": self._extract_models("profile"),
+            "scaling_model": self._extract_models("scaling_model"),
+            "imageset": self._dereference_imagesets(),
+            # Go through all the imagesets and make sure the dictionary
+            # references by an index rather than a file path.
         }
 
         # Extract all the experiments
