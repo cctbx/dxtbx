@@ -94,12 +94,6 @@ class ExperimentListDict(object):
             # references by an index rather than a file path.
         }
 
-    def decode(self):
-        """ Decode the dictionary into a list of experiments. """
-
-        # Extract all the experiments
-        return self._extract_experiments()
-
     def _extract_models(self, name):
         """ Helper function. Extract the models. """
 
@@ -203,8 +197,10 @@ class ExperimentListDict(object):
                 return filename, pickle.load(fh)
         return filename, None
 
-    def _extract_experiments(self):
-        """ Helper function. Extract the experiments. """
+    def decode(self):
+        """ Decode the dictionary into a list of experiments. """
+        # Extract all the experiments
+
         # Map of imageset/scan pairs
         imagesets = {}
 
