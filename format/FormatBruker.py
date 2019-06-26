@@ -120,9 +120,9 @@ class FormatBruker(Format):
     def _detector(self):
         """Return a model for a simple detector"""
 
-        # twotheta = self.detectorbase.parameters["TWOTHETA"]
         # At present, ignore non-zero two theta for the dxtbx model
         # XXX Return to this issue later.
+        # twotheta = self.detectorbase.parameters["TWOTHETA"]
 
         return self._detector_factory.simple(
             sensor="CCD",
@@ -167,7 +167,6 @@ class FormatBruker(Format):
 
 
 if __name__ == "__main__":
-
     import sys
 
     for arg in sys.argv[1:]:

@@ -43,19 +43,19 @@ class FormatSER(FormatMultiImage, Format):
             return False
 
         # SeriesID: 0x0197 indicates ES Vision Series Data File
-        if struct.unpack("<H", tag[2:4])[0] != 407:
+        if struct.unpack("<H", tag[2:4])[0] != 0x0197:
             return False
 
-        # SeriesVersion: 0x0210 or 0x220
-        if struct.unpack("<H", tag[4:6])[0] not in (528, 544):
+        # SeriesVersion: 0x0210 or 0x0220
+        if struct.unpack("<H", tag[4:6])[0] not in (0x0210, 0x0220):
             return False
 
         # DataTypeID: 0x4122 if elements are 2D arrays
-        if struct.unpack("<I", tag[6:10])[0] != 16674:
+        if struct.unpack("<I", tag[6:10])[0] != 0x4122:
             return False
 
         # TagTypeID: 0x4142 or 0x4152
-        if struct.unpack("<I", tag[10:])[0] not in (16706, 16722):
+        if struct.unpack("<I", tag[10:])[0] not in (0x4142, 0x4152):
             return False
 
         return True
