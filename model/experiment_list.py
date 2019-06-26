@@ -4,7 +4,7 @@ from builtins import range
 import collections
 import copy
 import json
-import os.path
+import os
 import pkg_resources
 from typing import Any, Dict, Optional, Tuple
 
@@ -73,7 +73,7 @@ class ExperimentListDict(object):
         self._directory = directory
 
         # If this doesn't claim to be an ExperimentList, don't even try
-        if not self._obj.get("__id__", None) == "ExperimentList":
+        if self._obj.get("__id__") != "ExperimentList":
             raise InvalidExperimentListError(
                 "Expected __id__ 'ExperimentList', but found {}".format(
                     repr(self._obj.get("__id__"))
@@ -81,20 +81,23 @@ class ExperimentListDict(object):
             )
 
         # Extract lists of models referenced by experiments
+        # Go through all the imagesets and make sure the dictionary
+        # references by an index rather than a file path.
         self._lookups = {
-            "beam": self._extract_models("beam"),
-            "detector": self._extract_models("detector"),
-            "goniometer": self._extract_models("goniometer"),
-            "scan": self._extract_models("scan"),
-            "crystal": self._extract_models("crystal"),
-            "profile": self._extract_models("profile"),
-            "scaling_model": self._extract_models("scaling_model"),
-            "imageset": self._extract_models("imageset"),
-            # Go through all the imagesets and make sure the dictionary
-            # references by an index rather than a file path.
+            model: self._extract_models(model, function)
+            for model, function in (
+                ("beam", BeamFactory.from_dict),
+                ("detector", DetectorFactory.from_dict),
+                ("goniometer", GoniometerFactory.from_dict),
+                ("scan", ScanFactory.from_dict),
+                ("crystal", CrystalFactory.from_dict),
+                ("profile", ProfileModelFactory.from_dict),
+                ("imageset", lambda x: x),
+                ("scaling_model", self._scaling_model_from_dict),
+            )
         }
 
-    def _extract_models(self, name):
+    def _extract_models(self, name, from_dict):
         """ Helper function. Extract the models. """
         """if name == imageset: Extract imageset objects from the source.
 
@@ -111,18 +114,6 @@ class ExperimentListDict(object):
                 The ordered list of serialized-ImageSet dictionaries
                 that the Experiment list points to.
         """
-
-        # The from dict function
-        from_dict = {
-            "beam": BeamFactory.from_dict,
-            "detector": DetectorFactory.from_dict,
-            "goniometer": GoniometerFactory.from_dict,
-            "scan": ScanFactory.from_dict,
-            "crystal": CrystalFactory.from_dict,
-            "profile": ProfileModelFactory.from_dict,
-            "imageset": lambda x: x,
-            "scaling_model": self._scaling_model_from_dict,
-        }[name]
 
         # Extract all the model list
         mlist = self._obj.get(name, [])
