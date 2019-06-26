@@ -12,9 +12,7 @@ import py.path
 import dxtbx.conftest
 import dxtbx.format.Registry
 import libtbx.load_env
-from iotbx.command_line.detector_image_as_png import convert_image
 
-# from iotbx.command_line.detector_image_as_png import run as pngrun
 from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 import scitbx.matrix
 
@@ -209,26 +207,6 @@ def test_read_image(test_image_for_reading):
             # NOTE dxtbx and image factory arrays are compared here for identical values.
             for Ip, Rp in zip(I_raw_data, R_raw_data):
                 assert (Ip == Rp).all_eq(True)
-
-            # labelit.png is not Python 3 compatible,
-            # https://github.com/cctbx/cctbx_project/issues/345
-            # so expect a UnicodeDecodeError to be raised when run in Python 3
-            import six
-
-            if six.PY2:
-                convert_image(
-                    test_image_for_reading, graphics_bin=2
-                ).output().getvalue()
-            else:
-                with pytest.raises(UnicodeDecodeError):
-                    convert_image(
-                        test_image_for_reading, graphics_bin=2
-                    ).output().getvalue()
-
-        print()
-
-        # optional test;actually write out the images to PNG files
-        # pngrun([fk,])
 
 
 def test_no_multiple_format_understanding(test_image):
