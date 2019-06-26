@@ -89,16 +89,34 @@ class ExperimentListDict(object):
             "crystal": self._extract_models("crystal"),
             "profile": self._extract_models("profile"),
             "scaling_model": self._extract_models("scaling_model"),
-            "imageset": self._dereference_imagesets("imageset"),
+            "imageset": self._extract_models("imageset"),
             # Go through all the imagesets and make sure the dictionary
             # references by an index rather than a file path.
         }
 
     def _extract_models(self, name):
         """ Helper function. Extract the models. """
+        """if name == imageset: Extract imageset objects from the source.
+
+        This function does resolving of an (old) method of imageset lookup
+        e.g. it was valid to have a string as the imageset value in an
+        experiment instead of an int - in which case the imageset was
+        loaded from the named file in the target directory.
+
+        If any experiments point to a file in this way, the imageset is
+        loaded and the experiment is rewritted with an integer pointing
+        to the new ImageSet in the returned list.
+
+        Returns:
+                The ordered list of serialized-ImageSet dictionaries
+                that the Experiment list points to.
+        """
 
         # The from dict function
-        from_dict = getattr(self, "_%s_from_dict" % name)
+        if name == "imageset":
+            from_dict = lambda x: x
+        else:
+            from_dict = getattr(self, "_%s_from_dict" % name)
 
         # Extract all the model list
         mlist = self._obj.get(name, [])
@@ -124,48 +142,6 @@ class ExperimentListDict(object):
                     mlist.append(
                         from_dict(_experimentlist_from_file(value, self._directory))
                     )
-                eobj[name] = mmap[value]
-            elif not isinstance(value, int):
-                raise TypeError("expected int or str, got %s" % type(value))
-
-        # Return the model list
-        return mlist
-
-    def _dereference_imagesets(self, name):
-        """Extract imageset objects from the source.
-
-        This function does resolving of an (old) method of imageset lookup
-        e.g. it was valid to have a string as the imageset value in an
-        experiment instead of an int - in which case the imageset was
-        loaded from the named file in the target directory.
-
-        If any experiments point to a file in this way, the imageset is
-        loaded and the experiment is rewritted with an integer pointing
-        to the new ImageSet in the returned list.
-
-        Returns:
-                The ordered list of serialized-ImageSet dictionaries
-                that the Experiment list points to.
-        """
-
-        # Extract all the model list
-        mlist = self._obj.get(name, [])
-
-        # Dictionaries for file mappings
-        mmap = {}
-
-        # For each experiment, check the imageset is not specified by
-        # a path, if it is then get the dictionary of the imageset
-        # and insert it into the list. Replace the path reference
-        # with an index
-        for eobj in self._obj["experiment"]:
-            value = eobj.get(name)
-            if value is None:
-                continue
-            elif isinstance(value, str):
-                if value not in mmap:
-                    mmap[value] = len(mlist)
-                    mlist.append(_experimentlist_from_file(value, self._directory))
                 eobj[name] = mmap[value]
             elif not isinstance(value, int):
                 raise TypeError("expected int or str, got %s" % type(value))
