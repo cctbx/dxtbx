@@ -315,13 +315,7 @@ class ExperimentListDict(object):
                             imageset.set_detector(detector)
                             imageset.set_goniometer(goniometer)
                             imageset.set_scan(scan)
-                        elif isinstance(imageset, ImageSet):
-                            for i in range(len(imageset)):
-                                imageset.set_beam(beam, i)
-                                imageset.set_detector(detector, i)
-                                imageset.set_goniometer(goniometer, i)
-                                imageset.set_scan(scan, i)
-                        elif isinstance(imageset, ImageGrid):
+                        elif isinstance(imageset, (ImageSet, ImageGrid)):
                             for i in range(len(imageset)):
                                 imageset.set_beam(beam, i)
                                 imageset.set_detector(detector, i)
