@@ -2,8 +2,10 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import os
 
+import dxtbx
 from dxtbx.model.scan import ScanFactory
 from dxtbx.model.scan_helpers import scan_helper_image_files
 from dxtbx.model.scan_helpers import scan_helper_image_formats
@@ -12,10 +14,7 @@ import pytest
 
 def test_helper_image_files():
     """Test the static methods in scan_helper_image_files."""
-
-    helper = scan_helper_image_files()
-
-    import dxtbx
+    assert scan_helper_image_files()
 
     directory = os.path.join(os.path.split(dxtbx.__file__)[0], "tests")
 
@@ -55,8 +54,6 @@ def test_helper_image_formats():
 
 def test_xScanFactory():
     """Test out the ScanFactory."""
-
-    import dxtbx
 
     directory = os.path.join(os.path.split(dxtbx.__file__)[0], "tests")
 

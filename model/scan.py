@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 # A model for the scan for the "updated experimental model" project
 
+from builtins import range
 from builtins import object
 
 import os

@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import os
 from glob import glob
 
@@ -171,9 +172,6 @@ def test_experimentlist_contains(experiment_list):
 def test_experimentlist_replace(experiment_list):
     # Get the models
     b = [e.beam for e in experiment_list]
-    d = [e.detector for e in experiment_list]
-    g = [e.goniometer for e in experiment_list]
-    s = [e.scan for e in experiment_list]
 
     # Replace some models
     experiment_list.replace(b[0], b[1])
@@ -361,9 +359,6 @@ def test_experimentlist_factory_from_json(dials_regression):
     filename1 = os.path.join(
         dials_regression, "experiment_test_data", "experiment_1.json"
     )
-    filename2 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_2.json"
-    )
     filename3 = os.path.join(
         dials_regression, "experiment_test_data", "experiment_3.json"
     )
@@ -373,13 +368,11 @@ def test_experimentlist_factory_from_json(dials_regression):
 
     # Read all the experiment lists in
     el1 = ExperimentListFactory.from_json_file(filename1)
-    # el2 = ExperimentListFactory.from_json_file(filename2)
     el3 = ExperimentListFactory.from_json_file(filename3)
     el4 = ExperimentListFactory.from_json_file(filename4)
 
     # All the experiment lists should be the same length
     assert len(el1) == 1
-    # assert len(el1) == len(el2)
     assert len(el1) == len(el3)
     assert len(el1) == len(el4)
 

@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import copy
 import os
 
 from dxtbx.format.FormatPY import FormatPY
-from six.moves import range
 import six.moves.cPickle as pickle
 from past.builtins import basestring
 
@@ -24,9 +24,8 @@ class FormatPYunspecified(FormatPY):
 
         wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]
 
-        for header_item in wanted_header_items:
-            if header_item not in data:
-                return False
+        if any(header_item not in data for header_item in wanted_header_items):
+            return False
 
         return True
 
@@ -208,12 +207,12 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
     @staticmethod
     def understand(image_file):
         """ If it's an image dictionary, we understand this """
+        wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]
         try:
-            wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]
-
-            for header_item in wanted_header_items:
-                if header_item not in image_file:
-                    return False
+            if any(
+                header_item not in image_file for header_item in wanted_header_items
+            ):
+                return False
 
             return True
 

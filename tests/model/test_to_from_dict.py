@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
+
 
 def test_beam():
     from dxtbx.model import Beam
@@ -54,7 +56,7 @@ def test_scan():
 
 
 def test_detector():
-    from dxtbx.model import Detector, Panel  # import dependency
+    from dxtbx.model import Detector
 
     d1 = Detector()
     p = d1.add_panel()

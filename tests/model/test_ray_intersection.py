@@ -1,6 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
+import random
+
 import pytest
+from scitbx import matrix
 
 
 def tst_intersection_at_origin(intersection, wavelength, origin):
@@ -18,8 +22,6 @@ def tst_intersection_at_origin(intersection, wavelength, origin):
 
 
 def tst_intersection_at_corners(intersection, panel, wavelength):
-    from scitbx import matrix
-
     eps = 1e-7
 
     # Get parameters from detector
@@ -50,8 +52,6 @@ def tst_intersection_at_corners(intersection, panel, wavelength):
 
 
 def tst_intersection_away_from_panel(intersection, panel, wavelength):
-    from scitbx import matrix
-
     # Set the beam vector to directed away from the detector origin
     s = -(1.0 / wavelength) * matrix.col(panel.get_origin())
 
@@ -62,7 +62,6 @@ def tst_intersection_away_from_panel(intersection, panel, wavelength):
 
 def test_beam_plane_intersection():
     from dxtbx.model import Panel
-    from scitbx import matrix
 
     # The input parameters (from a GXPARM.XDS file)
     fast_axis = (0.000000, -0.939693, -0.342020)
@@ -108,8 +107,6 @@ def tst_transform_at_origin(transform, panel):
 
 
 def tst_transform_at_corners(transform, panel):
-    from scitbx import matrix
-
     eps = 1e-7
 
     # Get parameters from detector
@@ -139,7 +136,6 @@ def tst_transform_at_corners(transform, panel):
 
 def test_plane_to_lab_transform():
     from dxtbx.model import Panel
-    from scitbx import matrix
 
     # The input parameters (from a GXPARM.XDS file)
     fast_axis = (0.000000, -0.939693, -0.342020)
@@ -149,7 +145,6 @@ def test_plane_to_lab_transform():
     pixel_origin = (244.836136, 320.338531)
     image_size = (487, 619)
     distance = 122.124901
-    wavelength = 0.689400
 
     # Calculate the vector to the detector (0, 0) pixel
     origin = (
@@ -172,16 +167,13 @@ def test_plane_to_lab_transform():
 
 
 def tst_fwd_rev_random(intersection, transform, panel):
-    from scitbx import matrix
-    from random import random
-
     eps = 1e-7
 
     # Set the shift parameters
     image_size = panel.get_image_size_mm()
 
     def random_xy():
-        return (random() * image_size[0], random() * image_size[1])
+        return (random.random() * image_size[0], random.random() * image_size[1])
 
     # Loop a number of times
     num = 1000
@@ -202,7 +194,6 @@ def tst_fwd_rev_random(intersection, transform, panel):
 
 def test_forward_and_reverse_transform():
     from dxtbx.model import Panel
-    from scitbx import matrix
 
     # The input parameters (from a GXPARM.XDS file)
     fast_axis = (0.000000, -0.939693, -0.342020)
@@ -212,7 +203,6 @@ def test_forward_and_reverse_transform():
     pixel_origin = (244.836136, 320.338531)
     image_size = (487, 619)
     distance = 122.124901
-    wavelength = 0.689400
 
     # Calculate the vector to the detector (0, 0) pixel
     origin = (

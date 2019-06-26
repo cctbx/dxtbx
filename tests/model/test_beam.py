@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import pytest
 
 from scitbx import matrix
@@ -57,7 +58,6 @@ def test_setting_s0():
 
 def test_from_phil():
     direction = matrix.col((0.013142, 0.002200, 1.450476))
-    unit_direction = direction.normalize()
     wavelength = 0.689400
 
     reference = Beam(direction, wavelength)
@@ -84,8 +84,8 @@ def test_from_phil():
     ).extract()
 
     # Create the beam
-    b1 = BeamFactory.from_phil(params1)
-    b2 = BeamFactory.from_phil(params2, reference)
+    assert BeamFactory.from_phil(params1)
+    assert BeamFactory.from_phil(params2, reference)
     with pytest.raises(RuntimeError):
         b3 = BeamFactory.from_phil(params2)
 

@@ -9,31 +9,24 @@
 #  This code is distributed under the X license, a copy of which is
 #  included in the root directory of this package.
 #
-# LIBTBX_SET_DISPATCHER_NAME dxtbx.detector_superpose
-#
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import math
 
 from scitbx.array_family import flex
 from scitbx.matrix import col
 from libtbx.phil import parse
 from libtbx.utils import Sorry
-import libtbx.load_env
 from dxtbx.model.experiment_list import ExperimentListFactory
-from scitbx.array_family import flex
 from scitbx.math.superpose import least_squares_fit
 from xfel.command_line.cspad_detector_congruence import iterate_detector_at_level
 from libtbx.test_utils import approx_equal
-from six.moves import range
 
-help_message = (
-    """
+help_message = """
 This program is used to superpose a moving detector onto a reference detector
-  %s reference.json moving.json
+  dxtbx.detector_superpose reference.json moving.json
 """
-    % libtbx.env.dispatcher_name
-)
 
 # Create the phil parameters
 phil_scope = parse(
@@ -74,10 +67,9 @@ class Script(object):
     def __init__(self):
         """ Set the expected options. """
         from dials.util.options import OptionParser
-        import libtbx.load_env
 
         # Create the option parser
-        usage = "usage: %s reference.json moving.json " % libtbx.env.dispatcher_name
+        usage = "usage: dxtbx.detector_superpose reference.json moving.json "
         self.parser = OptionParser(
             usage=usage,
             sort_options=True,
@@ -108,7 +100,7 @@ class Script(object):
         # Get list of panels to compare
         if params.panel_list is None or len(params.panel_list) == 0:
             assert len(reference) == len(moving), "Detectors not same length"
-            panel_ids = range(len(reference))
+            panel_ids = list(range(len(reference)))
         else:
             max_p_id = max(params.panel_list)
             assert max_p_id < len(reference), (
@@ -292,10 +284,8 @@ class Script(object):
 
 
 if __name__ == "__main__":
-    from dials.util import halraiser
+    import dials.util
 
-    try:
+    with dials.util.show_mail_on_error():
         script = Script()
         script.run()
-    except Exception as e:
-        halraiser(e)

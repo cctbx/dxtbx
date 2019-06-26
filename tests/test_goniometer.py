@@ -1,22 +1,15 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-# test_goniometer.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Tests for the goniometer class.
-
+from builtins import range
 import math
+import os
 
+import pytest
 from dxtbx.model.goniometer import Goniometer, MultiAxisGoniometer
 from dxtbx.model.goniometer import GoniometerFactory
 from libtbx import easy_pickle
 from libtbx.test_utils import Exception_expected
 from scitbx import matrix
-from six.moves import range
 
 
 def compare_tuples(a, b, tol=1.0e-6):
@@ -84,12 +77,11 @@ def test_goniometer():
     assert not compare_tuples(kappa.get_fixed_rotation(), fixed)
 
     import libtbx.load_env
-    import os
 
     dxtbx_dir = libtbx.env.dist_path("dxtbx")
 
     image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
-    cbf = GoniometerFactory.imgCIF(image)
+    assert GoniometerFactory.imgCIF(image)
 
     kappa = GoniometerFactory.kappa(50.0, -10.0, 30.0, 0.0, "-y", "phi")
 
@@ -98,7 +90,7 @@ def test_goniometer():
     assert kappa == kappa2
 
     image = os.path.join(dxtbx_dir, "tests", "omega_scan.cbf")
-    cbf = GoniometerFactory.imgCIF(image)
+    assert GoniometerFactory.imgCIF(image)
 
     kappa = GoniometerFactory.kappa(50.0, -10.0, 30.0, 20.0, "-y", "omega")
 
@@ -159,8 +151,6 @@ def test_multi_axis_goniometer():
     assert approx_equal(
         multi_axis_phi_scan.get_fixed_rotation(), kappa_phi_scan.get_fixed_rotation()
     )
-    from scitbx import matrix
-
     assert approx_equal(
         matrix.sqr(multi_axis_phi_scan.get_setting_rotation())
         * multi_axis_phi_scan.get_rotation_axis_datum(),
@@ -288,10 +278,8 @@ def test_scan_varying():
 
     assert g.get_num_scan_points() == 0
     assert g.get_setting_rotation_at_scan_points().size() == 0
-    try:
-        g.get_setting_rotation_at_scan_point(0)  # should raise RuntimeError
-    except RuntimeError:
-        pass
+    with pytest.raises(RuntimeError):
+        g.get_setting_rotation_at_scan_point(0)
 
     # set varying beam
     num_scan_points = 11
@@ -345,12 +333,3 @@ def test_comparison():
 
     assert g1 != g3
     assert not g1.is_similar_to(g3)
-
-
-if __name__ == "__main__":
-
-    test_goniometer()
-    test_multi_axis_goniometer()
-    test_goniometer_from_phil()
-    test_scan_varying()
-    test_comparison()

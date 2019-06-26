@@ -11,6 +11,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.nexus import NXmxReader
 from dxtbx.format.nexus import NXdata

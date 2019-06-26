@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import functools
 import math
 import os
@@ -385,8 +386,6 @@ def construct_axes(nx_file, item, vector=None):
                 vector = vector * value[0]
             vector += offset
 
-    else:
-        pass
     visitor = Visitor()
     visitor(nx_file, item)
 

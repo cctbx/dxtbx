@@ -61,6 +61,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from builtins import range
 import datetime
 import math
 import struct
@@ -170,7 +171,6 @@ class FormatRAXIS(RAXISHelper, Format):
         scan_axis = struct.unpack(i, header[980:984])[0]
 
         for j in range(n_axes):
-
             axis_x = struct.unpack(f, header[860 + j * 12 : 864 + j * 12])[0]
             axis_y = struct.unpack(f, header[864 + j * 12 : 868 + j * 12])[0]
             axis_z = struct.unpack(f, header[868 + j * 12 : 872 + j * 12])[0]
