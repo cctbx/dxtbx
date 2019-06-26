@@ -72,9 +72,6 @@ class ExperimentListDict(object):
         self._check_format = check_format
         self._directory = directory
 
-    def decode(self):
-        """ Decode the dictionary into a list of experiments. """
-
         # If this doesn't claim to be an ExperimentList, don't even try
         if not self._obj.get("__id__", None) == "ExperimentList":
             raise InvalidExperimentListError(
@@ -96,6 +93,9 @@ class ExperimentListDict(object):
             # Go through all the imagesets and make sure the dictionary
             # references by an index rather than a file path.
         }
+
+    def decode(self):
+        """ Decode the dictionary into a list of experiments. """
 
         # Extract all the experiments
         return self._extract_experiments()
