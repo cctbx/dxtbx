@@ -218,7 +218,7 @@ class TestImageSet(object):
         assert len(imageset) == len(filenames)
         assert_is_iterable(imageset)
         self.tst_paths(imageset, filenames)
-        assert_can_get_detectorbase(imageset, list(range(len(filenames))), 9)
+        assert_can_get_detectorbase(imageset, range(len(filenames)), 9)
         self.tst_get_models(imageset, list(range(len(filenames))), 9)
 
     def tst_get_item(self, imageset):
@@ -317,13 +317,13 @@ class TestImageSweep(object):
         sweep = format_class.get_imageset(centroid_files)
 
         # Run a load of tests
-        self.tst_get_item(sweep)
         assert len(sweep) == len(centroid_files)
+        assert sweep.get_array_range() == (0, 9)
+        self.tst_get_item(sweep)
         assert_is_iterable(sweep)
         self.tst_paths(sweep, centroid_files)
         assert_can_get_detectorbase(sweep, range(len(centroid_files)), 9)
         self.tst_get_models(sweep, range(len(centroid_files)), 9)
-        self.tst_get_array_range(sweep, (0, 9))
         self.tst_set_models(sweep)
 
     def tst_get_item(self, sweep):
@@ -332,6 +332,7 @@ class TestImageSweep(object):
             _ = sweep[9]
 
         sweep2 = sweep[3:7]
+        assert sweep2.get_array_range() == (3, 7)
         _ = sweep2[0]
         with pytest.raises(RuntimeError):
             _ = sweep2[5]
@@ -341,7 +342,6 @@ class TestImageSweep(object):
         self.tst_get_models(sweep2, range(0, 4), 5)
         self.tst_paths(sweep2, sweep.paths()[3:7])
         assert_is_iterable(sweep2)
-        self.tst_get_array_range(sweep2, (3, 7))
 
         with pytest.raises(IndexError):
             sweep2 = sweep[3:7:2]
@@ -377,10 +377,6 @@ class TestImageSweep(object):
         sweep[len(sweep) - 1]
         scan2 = sweep.get_scan()
         assert scan1 == scan2
-
-    @staticmethod
-    def tst_get_array_range(sweep, array_range):
-        assert sweep.get_array_range() == array_range
 
     @staticmethod
     def tst_set_models(sweep):
