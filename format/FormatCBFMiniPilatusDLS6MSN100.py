@@ -12,7 +12,6 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import range
 import math
-
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
@@ -147,6 +146,10 @@ MODULE_OFFSETS_Y = {
     (11, 3): -0.593992,
     (11, 4): -0.801247,
 }
+try:
+    from dials.util.masking import GoniometerMaskGeneratorFactory
+except ImportError:
+    GoniometerMaskGeneratorFactory = False
 
 
 class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
@@ -356,34 +359,7 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         return d
 
     def get_goniometer_shadow_masker(self, goniometer=None):
-        from dials.util.masking import GoniometerShadowMaskGenerator
-        from scitbx.array_family import flex
-
-        # Simple model of cone around goniometer phi axis
-        # Exact values don't matter, only the ratio of height/radius
-        height = 50  # mm
-        radius = 20  # mm
-
-        steps_per_degree = 1
-        theta = (
-            flex.double([list(range(360 * steps_per_degree))])
-            * math.pi
-            / 180
-            * 1
-            / steps_per_degree
-        )
-        y = radius * flex.cos(theta)  # x
-        z = radius * flex.sin(theta)  # y
-        x = flex.double(theta.size(), height)  # z
-
-        coords = flex.vec3_double(zip(x, y, z))
-        coords.insert(0, (0, 0, 0))
-
-        if goniometer is None:
-            goniometer = self.get_goniometer()
-        return GoniometerShadowMaskGenerator(
-            goniometer, coords, flex.size_t(len(coords), 0)
-        )
+        return GoniometerMaskGeneratorFactory.mini_kappa(goniometer)
 
     def get_mask(self, goniometer=None):
         mask = super(FormatCBFMiniPilatusDLS6MSN100, self).get_mask()
