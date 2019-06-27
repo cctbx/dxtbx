@@ -96,7 +96,7 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
         if goniometer.get_names()[1] == "chi":
             # SmarGon
-            from dxtbx.format.SmarGonShadowMask import SmarGonShadowMaskGenerator
+            from dials.util.masking.SmarGonShadowMask import SmarGonShadowMaskGenerator
 
             return SmarGonShadowMaskGenerator(goniometer)
 

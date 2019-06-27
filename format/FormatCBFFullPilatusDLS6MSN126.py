@@ -25,7 +25,7 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
         # simply return False
 
         try:
-            from dials.util.masking import GoniometerShadowMaskGenerator  # test import
+            import dials.util.masking  # noqa: F401 - test import
         except ImportError:
             return False
 
@@ -52,6 +52,10 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
+<<<<<<< HEAD
+=======
+
+>>>>>>> move SmarGonShadowMask to dials
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
@@ -86,7 +90,7 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
 
         if goniometer.get_names()[1] == "GON_CHI":
             # SmarGon
-            from dxtbx.format.SmarGonShadowMask import SmarGonShadowMaskGenerator
+            from dials.util.masking.SmarGonShadowMask import SmarGonShadowMaskGenerator
 
             return SmarGonShadowMaskGenerator(goniometer)
 

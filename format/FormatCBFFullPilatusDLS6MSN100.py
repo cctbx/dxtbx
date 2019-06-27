@@ -81,7 +81,7 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
         if goniometer.get_names()[1] == "GON_CHI":
             # SmarGon
-            from dxtbx.format.SmarGonShadowMask import SmarGonShadowMaskGenerator
+            from dials.util.masking.SmarGonShadowMask import SmarGonShadowMaskGenerator
 
             return SmarGonShadowMaskGenerator(goniometer)
 
