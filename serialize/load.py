@@ -18,6 +18,8 @@ import six
 
 def _decode_list(data):
     """Decode a list to str from unicode. """
+    if six.PY3:
+        return data
     rv = []
     for item in data:
         if isinstance(item, six.text_type):
@@ -32,6 +34,8 @@ def _decode_list(data):
 
 def _decode_dict(data):
     """ Decode a dict to str from unicode. """
+    if six.PY3:
+        return data
     rv = {}
     for key, value in data.items():
         if isinstance(key, six.text_type):
