@@ -122,7 +122,7 @@ def test_image_for_reading(test_image):
 
     # Explicit list of directories that we expect to fail.
     # References are to original dials_regression commit that added the exclusion
-    expected_fail_dirs = {
+    skipped_tests = {
         "ADSC_CBF": "something wrong with ADSC CBF format reader         [2013:sauter@r12]",
         "APS_19BM": "APS beamline 19; appears to be an uncorrected image [2013:sauter@r16]",
         "SACLA_MPCCD_Cheetah": "MPCCD not supported by iotbx             [2016:nakane@r1540]",
@@ -130,10 +130,10 @@ def test_image_for_reading(test_image):
     }
     # Check that the name is an actual folder in the file path
     path_parts = {x.basename for x in py.path.local(test_image).parts()}
-    is_expected_fail = set(expected_fail_dirs.keys()) & path_parts
-    if is_expected_fail:
-        reason = expected_fail_dirs[is_expected_fail.pop()]
-        pytest.xfail(reason=reason)
+    skip_this_test = set(skipped_tests) & path_parts
+    if skip_this_test:
+        reason = skipped_tests[skip_this_test.pop()]
+        pytest.skip(reason)
 
     return test_image
 
