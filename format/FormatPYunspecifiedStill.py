@@ -1,12 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
 from future import standard_library
+from dxtbx import IncorrectFormatError
+import sys
 
 standard_library.install_aliases()
 
 import copy
 import pickle
-
+import six
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.FormatPYunspecified import FormatPYunspecified
 from dxtbx.format.FormatPYunspecified import FormatPYunspecifiedInMemory
@@ -23,7 +25,11 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
 
         try:
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
-                data = pickle.load(fh)
+                if six.PY3:
+                    data = pickle.load(fh, encoding="bytes")
+                    data = {key.decode("ascii"): value for key, value in data.items()}
+                else:
+                    data = pickle.load(fh)
         except IOError:
             return False
 
@@ -34,8 +40,6 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
-
-        from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
@@ -70,8 +74,5 @@ class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory)
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatPYunspecifiedStill.understand(arg))

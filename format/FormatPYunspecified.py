@@ -5,8 +5,16 @@ import copy
 import os
 
 from dxtbx.format.FormatPY import FormatPY
+import six
 import six.moves.cPickle as pickle
 from past.builtins import basestring
+from iotbx.detectors.cspad_detector_formats import reverse_timestamp
+from iotbx.detectors.cspad_detector_formats import detector_format_version
+from dxtbx import IncorrectFormatError
+from spotfinder.applications.xfel import cxi_phil
+from scitbx.array_family import flex
+from iotbx.detectors.npy import NpyImage
+import sys
 
 
 class FormatPYunspecified(FormatPY):
@@ -18,21 +26,21 @@ class FormatPYunspecified(FormatPY):
         _start() method and again in the detectorbase constructor."""
         try:
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
-                data = pickle.load(fh)
+                if six.PY3:
+                    data = pickle.load(fh, encoding="bytes")
+                    headers = {key.decode("ascii") for key in data}
+                else:
+                    data = pickle.load(fh)
+                    headers = set(data)
         except IOError:
             return False
 
-        wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]
+        wanted_header_items = {"SIZE1", "SIZE2", "TIMESTAMP"}
 
-        if any(header_item not in data for header_item in wanted_header_items):
-            return False
-
-        return True
+        return wanted_header_items.issubset(headers)
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
-
-        from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
@@ -47,7 +55,16 @@ class FormatPYunspecified(FormatPY):
             self._image_file
         ):
             with FormatPYunspecified.open_file(self._image_file, "rb") as fh:
-                data = pickle.load(fh)
+                if six.PY3:
+                    data = pickle.load(fh, encoding="bytes")
+                    data = {
+                        key.decode("ascii"): value.decode("latin-1")
+                        if isinstance(value, bytes)
+                        else value
+                        for key, value in data.items()
+                    }
+                else:
+                    data = pickle.load(fh)
         else:
             data = self._image_file
 
@@ -59,10 +76,8 @@ class FormatPYunspecified(FormatPY):
                 self.LCLS_detector_address = "CxiDsd-0|Cspad-0"
         else:
             self.LCLS_detector_address = data["DETECTOR_ADDRESS"]
-        from iotbx.detectors.cspad_detector_formats import reverse_timestamp
 
         self._timesec = reverse_timestamp(data["TIMESTAMP"])[0]
-        from iotbx.detectors.cspad_detector_formats import detector_format_version
 
         version_lookup = detector_format_version(
             self.LCLS_detector_address, self._timesec
@@ -72,9 +87,6 @@ class FormatPYunspecified(FormatPY):
         )
 
     def start_helper(self, version_token):
-
-        from spotfinder.applications.xfel import cxi_phil
-        from iotbx.detectors.npy import NpyImage
 
         is_file = isinstance(self._image_file, basestring) and os.path.isfile(
             self._image_file
@@ -166,8 +178,6 @@ class FormatPYunspecified(FormatPY):
 
     def get_mask(self, goniometer=None):
         """Creates a mask merging untrusted pixels with active areas."""
-        from scitbx.array_family import flex
-
         detector_base = self.detectorbase
         # get effective active area coordinates
         tile_manager = detector_base.get_tile_manager(detector_base.horizons_phil_cache)
@@ -227,7 +237,5 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatPYunspecified.understand(arg))

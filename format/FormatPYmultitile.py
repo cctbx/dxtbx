@@ -2,15 +2,27 @@ from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatPY import FormatPY
 
+import six
 import six.moves.cPickle as pickle
+from dxtbx import IncorrectFormatError
+from xfel.cftbx.detector.cspad_detector import CSPadDetector
+from dxtbx.model import Detector
+from calendar import timegm
+from scitbx.matrix import col
+from time import strptime
+import sys
 
 
 class FormatPYmultitile(FormatPY):
     @staticmethod
     def understand(image_file):
         try:
-            with FormatPYmultitile.open_file(image_file, "rb") as stream:
-                data = pickle.load(stream)
+            with FormatPYmultitile.open_file(image_file, "rb") as fh:
+                if six.PY3:
+                    data = pickle.load(fh, encoding="bytes")
+                    data = {key.decode("ascii"): value for key, value in data.items()}
+                else:
+                    data = pickle.load(fh)
         except IOError:
             return False
 
@@ -27,8 +39,6 @@ class FormatPYmultitile(FormatPY):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        from dxtbx import IncorrectFormatError
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
@@ -39,23 +49,10 @@ class FormatPYmultitile(FormatPY):
         self.detectorbase_start()
 
     def detectorbase_start(self):
-        from xfel.cftbx.detector.cspad_detector import CSPadDetector
-
         self.detectorbase = CSPadDetector(self._image_file)
         self.detectorbase.readHeader()
         self._metrology_params = self.detectorbase._metrology_params
         self._tiles = self.detectorbase._tiles
-
-        # The lines above could eventually be replaced by the lines
-        # below.
-        """
-    from cPickle import load
-    stream = FormatPYmultitile.open_file(self._image_file)
-    d = load(stream)
-    self._metrology_params = d['METROLOGY'].extract()
-    self._tiles = d['TILES']
-    stream.close()
-    """
 
     def _goniometer(self):
         return self._goniometer_factory.single_axis()
@@ -71,9 +68,6 @@ class FormatPYmultitile(FormatPY):
         Merged from xfel.cftbx.detector.cspad_detector.readHeader() and
         xfel.cftbx.detector.metrology.metrology_as_dxtbx_vectors().
         """
-
-        from dxtbx.model import Detector
-        from scitbx.matrix import col
 
         # XXX Introduces dependency on cctbx.xfel!  Should probably be
         # merged into the code here!
@@ -158,9 +152,6 @@ class FormatPYmultitile(FormatPY):
     def _scan(self):
         """Return the scan information for this image."""
 
-        from calendar import timegm
-        from time import strptime
-
         # Convert textual ISO 8601 timestamp in UTC to
         # millisecond-precision Unix epoch.
         str_min = self._metrology_params.timestamp[:16] + "UTC"
@@ -176,7 +167,5 @@ class FormatPYmultitile(FormatPY):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatPYmultitile.understand(arg))
