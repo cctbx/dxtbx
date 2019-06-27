@@ -543,23 +543,21 @@ class Format(object):
     def is_bz2(filename):
         """Check if a file pointed at by filename is bzip2 format."""
 
-        if filename[-4:] != ".bz2":
+        if not filename.endswith(".bz2"):
             return False
 
         with open(filename, "rb") as fh:
-            return "BZh" == fh.read(3)
+            return fh.read(3) == b"BZh"
 
     @staticmethod
     def is_gzip(filename):
         """Check if a file pointed at by filename is gzip compressed."""
 
-        if filename[-3:] != ".gz":
+        if not filename.endswith(".gz"):
             return False
 
         with open(filename, "rb") as fh:
-            magic = fh.read(2)
-
-        return ord(magic[0]) == 0x1F and ord(magic[1]) == 0x8B
+            return fh.read(2) == b"\x1f\x8b"
 
     @classmethod
     def open_file(cls, filename, mode="rb", url=False):
@@ -570,12 +568,12 @@ class Format(object):
             fh_func = lambda: urllib.request.urlopen(filename)
 
         elif Format.is_bz2(filename):
-            if bz2 is None:
+            if not bz2:
                 raise RuntimeError("bz2 file provided without bz2 module")
             fh_func = lambda: bz2.BZ2File(filename, mode)
 
         elif Format.is_gzip(filename):
-            if gzip is None:
+            if not gzip:
                 raise RuntimeError("gz file provided without gzip module")
             fh_func = lambda: gzip.GzipFile(filename, mode)
 

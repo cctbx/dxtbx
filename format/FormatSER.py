@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# FormatSER.py
 #
 #  Copyright (C) (2017) STFC Rutherford Appleton Laboratory, UK.
 #
@@ -33,37 +32,36 @@ class FormatSER(FormatMultiImage, Format):
 
     @staticmethod
     def understand(image_file):
-
         try:
-            tag = FormatSER.open_file(image_file, "rb").read(14)
+            with FormatSER.open_file(image_file, "rb") as fh:
+                tag = fh.read(14)
         except IOError:
             return False
 
         # File should be little endian
-        if not tag[0:2] == "II":
+        if tag[0:2] != b"II":
             return False
 
         # SeriesID: 0x0197 indicates ES Vision Series Data File
-        if not struct.unpack("<H", tag[2:4])[0] == 407:
+        if struct.unpack("<H", tag[2:4])[0] != 0x0197:
             return False
 
-        # SeriesVersion: 0x0210 or 0x220
-        if not struct.unpack("<H", tag[4:6])[0] in [528, 544]:
+        # SeriesVersion: 0x0210 or 0x0220
+        if struct.unpack("<H", tag[4:6])[0] not in (0x0210, 0x0220):
             return False
 
         # DataTypeID: 0x4122 if elements are 2D arrays
-        if not struct.unpack("<I", tag[6:10])[0] == 16674:
+        if struct.unpack("<I", tag[6:10])[0] != 0x4122:
             return False
 
         # TagTypeID: 0x4142 or 0x4152
-        if not struct.unpack("<I", tag[10:])[0] in [16706, 16722]:
+        if struct.unpack("<I", tag[10:])[0] not in (0x4142, 0x4152):
             return False
 
         return True
 
     @staticmethod
     def _read_metadata(image_file):
-
         hd = {}
         with FormatSER.open_file(image_file, "rb") as f:
             f.seek(4)
@@ -147,7 +145,6 @@ class FormatSER(FormatMultiImage, Format):
         return Format.get_image_file(self)
 
     def get_raw_data(self, index):
-
         from boost.python import streambuf
         from scitbx.array_family import flex
 
@@ -175,7 +172,7 @@ class FormatSER(FormatMultiImage, Format):
                 read_pixel = dxtbx.ext.read_uint8
             else:
                 raise RuntimeError(
-                    "Image {0} data is of an unsupported type".format(index + 1)
+                    "Image {} data is of an unsupported type".format(index + 1)
                 )
 
             d["ArraySizeX"] = struct.unpack("<I", f.read(4))[0]

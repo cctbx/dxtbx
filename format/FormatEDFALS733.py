@@ -13,15 +13,15 @@ class FormatEDFALS733(Format):
     @staticmethod
     def understand(image_file):
         try:
-            tag = FormatEDFALS733.open_file(image_file, "rb").read(10)
+            with FormatEDFALS733.open_file(image_file, "rb") as fh:
+                tag = fh.read(10)
         except IOError:
             return False
 
-        return tag == "{\nHeaderID"
+        return tag == b"{\nHeaderID"
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
-
         from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
@@ -42,14 +42,10 @@ class FormatEDFALS733(Format):
         self.detectorbase.readHeader()
 
     def _goniometer(self):
-
         return self._goniometer_factory.single_axis()
 
     def _detector(self):
         """Return a model for a simple detector"""
-
-        twotheta = 0.0
-
         return self._detector_factory.simple(
             sensor="PAD",
             distance=self.detectorbase.parameters["DISTANCE"],
@@ -73,12 +69,10 @@ class FormatEDFALS733(Format):
 
     def _beam(self):
         """Return a simple model for the beam."""
-
         return self._beam_factory.simple(wavelength=1.0)  # dummy argument
 
     def _scan(self):
         """Return the scan information for this image."""
-
         return self._scan_factory.single(
             filename=self._image_file,
             format="EDF",
@@ -90,7 +84,6 @@ class FormatEDFALS733(Format):
 
 
 if __name__ == "__main__":
-
     import sys
 
     for arg in sys.argv[1:]:

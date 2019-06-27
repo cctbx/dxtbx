@@ -148,10 +148,10 @@ def test_read_image(test_image_for_reading):
     format_instance = dxtbx.format.Registry.get_format_class_for_file(
         test_image_for_reading
     )
-    instance = format_instance(test_image_for_reading)
-
     print("Reading", test_image_for_reading)
     print("Format:", format_instance)
+    assert format_instance, "no matching format class found"
+    instance = format_instance(test_image_for_reading)
 
     # Test metadata reading
     instance.get_goniometer()
@@ -209,10 +209,13 @@ def test_read_image(test_image_for_reading):
                 assert (Ip == Rp).all_eq(True)
 
 
-def test_no_multiple_format_understanding(test_image):
-    """For a given image file, walks the whole DAG of Format objects.
-    The file must only be understood by a single leaf node format class."""
-
+def test_format_class_API_assumptions(test_image):
+    """For a given image file, walk the whole DAG of Format objects, and
+    verify the following basic assumptions for format classes:
+    * Any file must only be understood by a single leaf node format class.
+    * No .understand() call on any top level format class or a child class
+      of another understanding format is allowed to throw an exception.
+    """
     dag = dxtbx.format.Registry.get_format_class_dag()
 
     def recurse(parentformat, filename, level=0):
@@ -244,9 +247,3 @@ def test_no_multiple_format_understanding(test_image):
     # It's a failure if nothing could understand this file
     assert understood_format, "No formatter could be found"
     print("File understood as", understood_format)
-
-
-def test_no_exceptions_from_understand(test_image):
-    for format_name in dxtbx.format.Registry.get_format_class_dag()["Format"]:
-        format_class = dxtbx.format.Registry.get_format_class_for(format_name)
-        format_class.understand(test_image)
