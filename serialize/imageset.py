@@ -4,7 +4,7 @@ from builtins import range
 import collections
 import os
 
-from dxtbx.format.image import ImageBool, ImageDouble  # noqa: F401, import dependency
+from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.imageset import ImageSet, ImageSetFactory, ImageSweep
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize.filename import resolve_path

@@ -9,8 +9,7 @@ import math
 
 import libtbx.phil
 import pycbf
-import scitbx.math  # noqa: F401, import dependency
-from dxtbx_model_ext import KappaGoniometer  # noqa: F401, import dependency
+from dxtbx_model_ext import KappaGoniometer  # noqa: F401, exported symbol
 from dxtbx_model_ext import Goniometer, MultiAxisGoniometer
 from scitbx.array_family import flex
 

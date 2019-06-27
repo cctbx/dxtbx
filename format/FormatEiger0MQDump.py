@@ -11,10 +11,6 @@ import numpy
 
 from scitbx.array_family import flex
 from dxtbx.format.Format import Format
-from dxtbx.model import Beam  # import dependency
-from dxtbx.model import Detector  # import dependency
-from dxtbx.model import Goniometer  # import dependency
-from dxtbx.model import Scan  # import dependency
 
 
 class FormatEiger0MQDump(Format):

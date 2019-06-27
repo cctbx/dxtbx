@@ -1,10 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
-from dxtbx.model import Beam  # import dependency
-from dxtbx.model import Detector  # import dependency
-from dxtbx.model import Goniometer  # import dependency
-from dxtbx.model import Scan  # import dependency
 from dxtbx.format.nexus import is_nexus_file
 from dxtbx.format.nexus import NXmxReader
 from dxtbx.format.nexus import BeamFactory

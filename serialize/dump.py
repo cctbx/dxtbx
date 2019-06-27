@@ -1,15 +1,15 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-#
-# dxtbx.serialize.dump.py
-#
 #  Copyright (C) 2013 Diamond Light Source
 #
 #  Author: James Parkhurst
 #
 #  This code is distributed under the BSD license, a copy of which is
 #  included in the root directory of this package.
+
+import json
+import re
+import textwrap
 
 
 def compact_simple_list(match):
@@ -23,8 +23,6 @@ def compact_simple_list(match):
         The string to replace the expression with
 
     """
-    import textwrap
-
     # Calculate the initial indent as the length of the first match group
     initial_indent = len(match.group(1))
 
@@ -64,8 +62,6 @@ def compact_simple_lists(string):
         The output JSON string
 
     """
-    import re
-
     return re.sub(r'(.*"\w+".*:.*)(\[[^\{\}\[\]]*\])', compact_simple_list, string)
 
 
@@ -80,24 +76,14 @@ def imageset_to_string(obj, compact=False):
         The JSON string
 
     """
-    import json
-    import textwrap
     from dxtbx.serialize.imageset import imageset_to_dict
 
-    # Return as a JSON string
-    if compact == False:
-        string = json.dumps(imageset_to_dict(obj), indent=2, ensure_ascii=True)
-
-        # Hack to make more readable
-        # string = compact_simple_lists(string)
-
-    else:
-        string = json.dumps(
+    if compact:
+        return json.dumps(
             imageset_to_dict(obj), separators=(",", ":"), ensure_ascii=True
         )
-
-    # Return the string
-    return string
+    else:
+        return json.dumps(imageset_to_dict(obj), indent=2, ensure_ascii=True)
 
 
 def imageset(obj, outfile, compact=False):
