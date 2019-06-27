@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# FormatSMVRigaku.py
 #   Copyright (C) 2013 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -34,9 +33,8 @@ class FormatSMVRigaku(FormatSMV):
             "Data_type",
         ]
 
-        for header_item in wanted_header_items:
-            if not header_item in header:
-                return False
+        if any(header_item not in header for header_item in wanted_header_items):
+            return False
 
         # code around CMOS1 on ALS 4.2.2
 

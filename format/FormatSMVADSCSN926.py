@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVADSCSN926.py
 #   Copyright (C) 2013 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -11,6 +9,8 @@
 # of recording the beam centre... which work fine for ADXV...
 
 from __future__ import absolute_import, division, print_function
+
+import math
 
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN
 
@@ -48,8 +48,6 @@ class FormatSMVADSCSN926(FormatSMVADSCSN):
         on on a two-theta stage. Assert that the beam centre is provided in
         the Mosflm coordinate frame."""
 
-        import math
-
         distance = float(self._header_dictionary["DISTANCE"])
         if "DENZO_X_BEAM" in self._header_dictionary:
             beam_x = float(self._header_dictionary["DENZO_X_BEAM"])
@@ -85,11 +83,3 @@ class FormatSMVADSCSN926(FormatSMVADSCSN):
             [],
             gain=self._adsc_module_gain(),
         )
-
-
-if __name__ == "__main__":
-
-    import sys
-
-    for arg in sys.argv[1:]:
-        print(FormatSMVADSC.understand(arg))

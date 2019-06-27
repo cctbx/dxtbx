@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVHamamatsuSPring8BL32XU.py
-#
 #  Copyright (C) (2015) STFC Rutherford Appleton Laboratory, UK.
 #
 #  Author: David Waterman.
@@ -23,7 +20,7 @@ class FormatSMVHamamatsuSPring8BL32XU(FormatSMVHamamatsu):
         wanted_header_items = ["DETECTOR_NAME"]
 
         for header_item in wanted_header_items:
-            if not header_item in header:
+            if header_item not in header:
                 return 0
 
         return header["DETECTOR_NAME"] == "Hamamatsu C10158DK"

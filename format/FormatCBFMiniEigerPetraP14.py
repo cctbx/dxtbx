@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# FormatCBFMiniEigerPetraP14.py
 #   Copyright (C) 2018 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -46,12 +45,8 @@ class FormatCBFMiniEigerPetraP14(FormatCBFMiniEiger):
         FormatCBFMiniEiger.__init__(self, image_file, **kwargs)
 
         self._raw_data = None
-        return
 
     def _goniometer(self):
-        if "Phi" in self._cif_header_dictionary:
-            phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
-
         return self._goniometer_factory.known_axis((0, 1, 0))
 
 

@@ -68,7 +68,6 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
     from rstbx.cftbx import coordinate_frame_helpers
 
     converter = coordinate_frame_helpers.import_xds_xparm("xparm.xds")
-    scan = sweep.get_scan()
     detector = sweep.get_detector()
     goniometer = sweep.get_goniometer()
     beam = sweep.get_beam()

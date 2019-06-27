@@ -6,6 +6,11 @@ from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from libtbx.phil import parse
 
+try:
+    import psana
+except ImportError:
+    psana = None
+
 locator_str = """
   experiment = None
     .type = str
@@ -49,7 +54,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         Format.__init__(self, image_file, **kwargs)
         self.current_index = None
         self.current_event = None
-        self._psana_runs = {}  ## empty container, to prevent breaking other formats
+        self._psana_runs = {}  # empty container, to prevent breaking other formats
         if "locator_scope" in kwargs:
             self.params = FormatXTC.params_from_phil(
                 master_phil=kwargs["locator_scope"], user_phil=image_file, strict=True
@@ -67,9 +72,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         If PSANA fails to read it, then input may not be an xtc/smd file. If success, then OK.
         If detector_address is not provided, a command line promp will try to get the address
         from the user"""
-        try:
-            import psana
-        except ImportError:
+        if not psana:
             return False
         try:
             params = FormatXTC.params_from_phil(locator_scope, image_file)

@@ -22,7 +22,7 @@ def depends_on(in_name):
             for k in thing:
                 try:
                     finder(thing[k], path="%s/%s" % (path, k))
-                except (IOError, TypeError, ValueError, KeyError) as e:
+                except (IOError, TypeError, ValueError, KeyError):
                     pass
 
     # clean up hierarchy to just have sample stuff

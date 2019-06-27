@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export BOOST_ADAPTBX_FPE_DEFAULT=1
 
 usage = """Plot dxtbx detector models. Provide multiple json files if desired
 Example: dxtbx.plot_detector_models datablock1.json datablock2.json
@@ -41,6 +40,7 @@ phil_scope = parse(
     .help = If False, plot only the first detector model found
 """
 )
+
 
 # http://stackoverflow.com/questions/22867620/putting-arrowheads-on-vectors-in-matplotlibs-3d-plot
 class Arrow3D(FancyArrowPatch):

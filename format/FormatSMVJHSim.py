@@ -92,17 +92,8 @@ class FormatSMVJHSim(FormatSMV):
         underload = 1 - image_pedestal
 
         # interpret beam center conventions
-        image_width_mm = pixel_size * image_size[0]
         image_height_mm = pixel_size * image_size[1]
         adxv_beam_center = (beam_x, beam_y)
-        mosflm_beam_center = (
-            image_height_mm - adxv_beam_center[1],
-            adxv_beam_center[0],
-        )
-        xds_beam_center = (
-            adxv_beam_center[0] / pixel_size,
-            (image_height_mm - adxv_beam_center[1]) / pixel_size,
-        )
         cctbx_beam_center = (
             adxv_beam_center[0] + pixel_size,
             image_height_mm - adxv_beam_center[1] + pixel_size,

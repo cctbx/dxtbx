@@ -1,9 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-#!/usr/bin/env python
-#
-# dxtbx.serialize.py
-#
 #  Copyright (C) 2013 Diamond Light Source
 #
 #  Author: James Parkhurst
@@ -12,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 #  included in the root directory of this package.
 
 if __name__ == "__main__":
-
     from optparse import OptionParser
     from dxtbx.serialize import dump
     from dxtbx.imageset import ImageSetFactory

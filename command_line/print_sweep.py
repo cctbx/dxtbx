@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from scitbx import matrix
+
 
 def print_sweep(list_of_images):
 
@@ -17,8 +19,6 @@ def print_sweep(list_of_images):
 
         print("Derived quantities:")
 
-        from scitbx import matrix
-
         d = sweep.get_detector()[0]
         b = sweep.get_beam()
 
@@ -26,8 +26,6 @@ def print_sweep(list_of_images):
         f = matrix.col(d.get_fast_axis())
         s = matrix.col(d.get_slow_axis())
         s0 = matrix.col(b.get_direction())
-
-        n = f.cross(s)
 
         beam_offset = o - o.dot(s0) * s0
         print(

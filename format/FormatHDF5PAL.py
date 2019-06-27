@@ -27,7 +27,7 @@ class FormatHDF5PAL(FormatHDF5):
             if not key.startswith("R"):
                 return False
             try:
-                run = int(key.lstrip("R"))
+                int(key.lstrip("R"))
             except ValueError:
                 return False
             for subkey in h5_handle[key]:

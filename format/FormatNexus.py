@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
+from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
+from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.nexus import is_nexus_file
 from dxtbx.format.nexus import NXmxReader
 from dxtbx.format.nexus import BeamFactory
@@ -22,10 +24,9 @@ class FormatNexus(FormatHDF5):
     @staticmethod
     def understand(image_file):
         try:
-            is_nexus = is_nexus_file(image_file)
+            return is_nexus_file(image_file)
         except IOError:
             return False
-        return is_nexus
 
     def _start(self):
 
@@ -139,10 +140,6 @@ class FormatNexus(FormatHDF5):
 
     def get_detectorbase(self, index=None):
         raise NotImplementedError
-
-
-from dxtbx.format.FormatStill import FormatStill
-from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 
 
 class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):

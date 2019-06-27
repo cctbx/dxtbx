@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# FormatCBFMiniPilatusDLS6MSN100.py
 #   Copyright (C) 2014 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -11,9 +9,6 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
-
-# from dxtbx.model import ParallaxCorrectedPxMmStrategy
-# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 class FormatCBFMiniPilatusXXX(FormatCBFMiniPilatus):
@@ -47,22 +42,9 @@ class FormatCBFMiniPilatusXXX(FormatCBFMiniPilatus):
 
         FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
 
-        return
-
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. This should
         probably be checked against the image header, though for miniCBF
         there are limited options for this."""
 
-        if "Phi" in self._cif_header_dictionary:
-            phi_value = float(self._cif_header_dictionary["Phi"].split()[0])
-
         return self._goniometer_factory.single_axis_reverse()
-
-
-if __name__ == "__main__":
-
-    import sys
-
-    for arg in sys.argv[1:]:
-        print(FormatCBFMiniPilatusDLS6MSN100F.understand(arg))

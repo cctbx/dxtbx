@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import os
+
 from dxtbx.format.FormatSMVADSC import FormatSMVADSC
 
 
@@ -10,25 +12,19 @@ class FormatSMVADSCNoDateStamp(FormatSMVADSC):
     def understand(image_file):
 
         # assert for this that the image file has to be a file not a URL
-
-        import os
-
         if not os.path.exists(image_file):
             return False
 
         size, header = FormatSMVADSC.get_smv_header(image_file)
 
         wanted_header_items = ["TIME"]
-
-        for header_item in wanted_header_items:
-            if not header_item in header:
-                return False
+        if any(item not in header for item in wanted_header_items):
+            return False
 
         unwanted_header_items = ["DATE"]
 
-        for header_item in unwanted_header_items:
-            if header_item in header:
-                return False
+        if any(item in header for item in unwanted_header_items):
+            return False
 
         return True
 
@@ -53,8 +49,6 @@ class FormatSMVADSCNoDateStamp(FormatSMVADSC):
 
         format = self._scan_factory.format("SMV")
         exposure_time = float(self._header_dictionary["TIME"])
-
-        import os
 
         epoch = float(os.stat(self._image_file)[8])
 

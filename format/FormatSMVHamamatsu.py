@@ -10,12 +10,10 @@ class FormatSMVHamamatsu(FormatSMVADSC):
         size, header = FormatSMVHamamatsu.get_smv_header(image_file)
 
         wanted_header_items = ["DETECTOR_NAME"]
+        if any(item not in header for item in wanted_header_items):
+            return False
 
-        for header_item in wanted_header_items:
-            if not header_item in header:
-                return 0
-
-        return header["DETECTOR_NAME"].lower().find("hamamatsu") >= 0
+        return "hamamatsu" in header["DETECTOR_NAME"].lower()
 
     def _start(self):
 
@@ -27,11 +25,3 @@ class FormatSMVHamamatsu(FormatSMVADSC):
         self.detectorbase = HamamatsuImage(self._image_file)
         self.detectorbase.open_file = self.open_file
         self.detectorbase.readHeader()
-
-
-if __name__ == "__main__":
-
-    import sys
-
-    for arg in sys.argv[1:]:
-        print(FormatSMVADSC.understand(arg))

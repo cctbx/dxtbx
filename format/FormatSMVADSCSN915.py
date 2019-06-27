@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVADSCSN915.py
-#
 #  Copyright (C) (2014) STFC Rutherford Appleton Laboratory, UK.
 #
 #  Author: David Waterman.
@@ -28,10 +25,7 @@ class FormatSMVADSCSN915(FormatSMVADSCSN):
 
         size, header = FormatSMVADSCSN.get_smv_header(image_file)
 
-        if int(header["DETECTOR_SN"]) != 915:
-            return False
-
-        return True
+        return int(header["DETECTOR_SN"]) == 915
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file, including a
@@ -83,11 +77,3 @@ class FormatSMVADSCSN915(FormatSMVADSCSN):
         direction."""
 
         return self._goniometer_factory.single_axis_reverse()
-
-
-if __name__ == "__main__":
-
-    import sys
-
-    for arg in sys.argv[1:]:
-        print(FormatSMVADSC.understand(arg))

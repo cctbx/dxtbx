@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import time
+
 
 def read_sweep(list_of_images):
 
@@ -15,13 +17,11 @@ def read_sweep(list_of_images):
         print(sweep.get_detector())
         print(sweep.get_scan())
 
-        import time
-
         indices = sweep.indices()
 
         t0 = time.time()
         for i in indices:
-            data = sweep.get_raw_data(i)
+            sweep.get_raw_data(i)
         t1 = time.time()
 
         print("Reading %d frames took %.2fs" % (len(indices), t1 - t0))

@@ -59,7 +59,6 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
 
         for address in all_addresses:
             self.params.detector_address = [address]
-            sub_d = None
             if "rayonix" in address.lower():
                 data = FormatXTCRayonix.get_raw_data(self, index)
             elif "cspad" in address.lower():

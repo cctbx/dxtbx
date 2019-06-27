@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# FormatSMVADSC.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -50,15 +49,13 @@ class FormatSMVADSC(FormatSMV):
             "BYTE_ORDER",
         ]
 
-        for header_item in wanted_header_items:
-            if not header_item in header:
-                return False
+        if any(item not in header for item in wanted_header_items):
+            return False
 
         unwanted_header_items = ["DTREK_DATE_TIME"]
 
-        for header_item in unwanted_header_items:
-            if header_item in header:
-                return False
+        if any(item in header for item in unwanted_header_items):
+            return False
 
         return True
 

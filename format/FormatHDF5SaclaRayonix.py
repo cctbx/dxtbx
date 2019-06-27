@@ -1,4 +1,7 @@
 from __future__ import absolute_import, division, print_function
+
+import os
+
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
 
@@ -14,13 +17,12 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         import h5py
 
         h5_handle = h5py.File(image_file, "r")
-        if not "metadata/detector" in h5_handle:
+        if "metadata/detector" not in h5_handle:
             return False
         if h5_handle["metadata/detector"].value != "Rayonix MX300HS":
             return False
-        for elem in h5_handle:
-            if elem.startswith("tag-"):
-                return True
+        if any(elem.startswith("tag-") for elem in h5_handle):
+            return True
 
         return False
 
@@ -44,10 +46,9 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
 
         # Read metadata if possible
         self.read_metadata()
-        # Override by environmental variables
-        import os
 
-        if "RAYONIX_DISTANCE" in os.environ:
+        # Override by environmental variables
+        if os.getenv("RAYONIX_DISTANCE"):
             self.distance = float(os.environ["RAYONIX_DISTANCE"])
 
     def _start(self):
@@ -73,8 +74,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         self._raw_data = None
 
     def _detector(self, index=None):
-        wavelength = self.get_beam(index).get_wavelength()
-
         return self._detector_factory.simple(
             sensor="CCD",
             distance=self.distance,

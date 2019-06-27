@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVADSCSN457.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -26,10 +24,7 @@ class FormatSMVADSCSNSN457(FormatSMVADSCSN):
 
         size, header = FormatSMVADSCSN.get_smv_header(image_file)
 
-        if int(header["DETECTOR_SN"]) != 457:
-            return False
-
-        return True
+        return int(header["DETECTOR_SN"]) == 457
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file, including a
@@ -47,11 +42,3 @@ class FormatSMVADSCSNSN457(FormatSMVADSCSN):
         probably be checked against the image header."""
 
         return self._goniometer_factory.single_axis_reverse()
-
-
-if __name__ == "__main__":
-
-    import sys
-
-    for arg in sys.argv[1:]:
-        print(FormatSMVADSC.understand(arg))

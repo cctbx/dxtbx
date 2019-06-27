@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# FormatSEReBIC.py
 #
 #  Copyright (C) (2017) STFC Rutherford Appleton Laboratory, UK.
 #
@@ -12,13 +11,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+from dxtbx import IncorrectFormatError
 from dxtbx.format.FormatSER import FormatSER
 
 
 class FormatSEReBIC(FormatSER):
     def __init__(self, image_file, **kwargs):
-
-        from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)

@@ -39,7 +39,6 @@ class FormatTIFFRayonix(FormatTIFF):
             endian = ">"
 
         _I = endian + "I"
-        _i = endian + "i"
 
         _width = struct.unpack(_I, bytes[1024 + 80 : 1024 + 84])[0]
         _height = struct.unpack(_I, bytes[1024 + 84 : 1024 + 88])[0]
@@ -88,8 +87,6 @@ class FormatTIFFRayonix(FormatTIFF):
             self._ii = ">ii"
 
         FormatTIFF.__init__(self, image_file, **kwargs)
-
-        return
 
     def _start(self):
 
@@ -309,9 +306,6 @@ class FormatTIFFRayonix(FormatTIFF):
         # not be expected to be better than 20% and indeed may be worse than that.
         # Values may refer to gain in ADU per incident photon rather than the
         # more appropriate ADU per captured photon.
-
-        # Is this useful?
-        detector_type = struct.unpack(self._i, self._tiff_header_bytes[1792:1796])
 
         pixel_size = self._get_rayonix_pixel_size()
         image_size = self._tiff_width, self._tiff_height

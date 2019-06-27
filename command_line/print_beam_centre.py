@@ -2,9 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 
-#!/usr/bin/env python
-# print_beam_centre.py
-#
 #   Copyright (C) 2015 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is

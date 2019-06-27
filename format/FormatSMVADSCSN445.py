@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVADSCSN445.py
 #   Copyright (C) 2011 Diamond Light Source, Graeme Winter
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -26,10 +24,7 @@ class FormatSMVADSCSN445(FormatSMVADSCSN):
 
         size, header = FormatSMVADSCSN.get_smv_header(image_file)
 
-        if int(header["DETECTOR_SN"]) != 445:
-            return False
-
-        return True
+        return int(header["DETECTOR_SN"]) == 445
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file, including a
@@ -82,18 +77,18 @@ class FormatSMVADSCSN445(FormatSMVADSCSN):
         image_pedestal = 40
         panel = self.get_detector()[0]
         size = panel.get_image_size()
-        f = FormatSMVADSCSN.open_file(self._image_file, "rb")
-        f.read(self._header_size)
-
         if self._header_dictionary["BYTE_ORDER"] == "big_endian":
             big_endian = True
         else:
             big_endian = False
 
-        if big_endian == is_big_endian():
-            raw_data = read_uint16(streambuf(f), int(size[0] * size[1]))
-        else:
-            raw_data = read_uint16_bs(streambuf(f), int(size[0] * size[1]))
+        with FormatSMVADSCSN.open_file(self._image_file, "rb") as fh:
+            fh.seek(self._header_size)
+
+            if big_endian == is_big_endian():
+                raw_data = read_uint16(streambuf(fh), int(size[0] * size[1]))
+            else:
+                raw_data = read_uint16_bs(streambuf(fh), int(size[0] * size[1]))
 
         # apply image pedestal, will result in *negative pixel values*
 
@@ -103,11 +98,3 @@ class FormatSMVADSCSN445(FormatSMVADSCSN):
         raw_data.reshape(flex.grid(image_size[1], image_size[0]))
 
         return raw_data
-
-
-if __name__ == "__main__":
-
-    import sys
-
-    for arg in sys.argv[1:]:
-        print(FormatSMVADSC.understand(arg))

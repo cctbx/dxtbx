@@ -4,6 +4,7 @@ from builtins import range
 import math
 import random
 
+import pytest
 from cctbx import crystal, sgtbx, uctbx
 from dxtbx.model import (
     Crystal,
@@ -13,12 +14,11 @@ from dxtbx.model import (
 )
 from libtbx.test_utils import approx_equal
 from scitbx import matrix
-import pytest
+from scitbx.math import euler_angles
+from scitbx.math import euler_angles_as_matrix
 
 
 def random_rotation():
-    from scitbx.math import euler_angles_as_matrix
-
     return euler_angles_as_matrix([random.uniform(0, 360) for i in range(3)])
 
 
@@ -204,13 +204,14 @@ Crystal:
         .change_of_basis_op_to_reference_setting()
     )
     a_prim, b_prim, c_prim = map(matrix.col, model_primitive.get_real_space_vectors())
-    # print cb_op_to_primitive.as_abc()
-    ##'-1/2*a+1/2*b+1/2*c,1/2*a-1/2*b+1/2*c,1/2*a+1/2*b-1/2*c'
+    assert (
+        cb_op_to_primitive.as_abc()
+        == "-1/2*a+1/2*b+1/2*c,1/2*a-1/2*b+1/2*c,1/2*a+1/2*b-1/2*c"
+    )
     assert approx_equal(a_prim, -1 / 2 * a_ref + 1 / 2 * b_ref + 1 / 2 * c_ref)
     assert approx_equal(b_prim, 1 / 2 * a_ref - 1 / 2 * b_ref + 1 / 2 * c_ref)
     assert approx_equal(c_prim, 1 / 2 * a_ref + 1 / 2 * b_ref - 1 / 2 * c_ref)
-    # print cb_op_to_reference.as_abc()
-    ##b+c,a+c,a+b
+    assert cb_op_to_reference.as_abc() == "b+c,a+c,a+b"
     assert approx_equal(a_ref, b_prim + c_prim)
     assert approx_equal(b_ref, a_prim + c_prim)
     assert approx_equal(c_ref, a_prim + b_prim)
@@ -267,7 +268,7 @@ Crystal:
         model_ref_recycled.get_unit_cell().parameters(),
     )
     assert model_ref == model_ref_recycled
-    #
+
     uc = uctbx.unit_cell((58.2567, 58.1264, 39.7093, 46.9077, 46.8612, 62.1055))
     sg = sgtbx.space_group_info(symbol="P1").group()
     cs = crystal.symmetry(unit_cell=uc, space_group=sg)
@@ -286,8 +287,6 @@ Crystal:
     assert model_minimum != model
     model_minimum.update(model)
     assert model_minimum == model
-    #
-    from scitbx.math import euler_angles
 
     A_static = matrix.sqr(model.get_A())
     A_as_scan_points = [A_static]

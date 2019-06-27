@@ -9,15 +9,14 @@ class FormatDIP2030b(Format):
         # for MacScience DIP2030b only, file size is exactly 18001024 bytes
         headerstart = 3000 * 3000 * 2
         try:
-            F = FormatDIP2030b.open_file(image_file, "rb")
-            F.seek(headerstart)
-            rawheader = F.read(1024)
-            eof = F.read(1)  # end of file
-            F.close()
+            with FormatDIP2030b.open_file(image_file, "rb") as fh:
+                fh.seek(headerstart)
+                rawheader = fh.read(1024)
+                eof = fh.read(1)  # end of file
         except IOError:
             return False
 
-        return eof == "" and rawheader[0:3] == "DIP"
+        return eof == b"" and rawheader[0:3] == b"DIP"
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
@@ -39,7 +38,6 @@ class FormatDIP2030b(Format):
         self.detectorbase.readHeader()
 
     def _goniometer(self):
-
         return self._goniometer_factory.single_axis()
 
     def _detector(self):

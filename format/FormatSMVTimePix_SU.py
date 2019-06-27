@@ -42,9 +42,8 @@ class FormatSMVTimePix_SU(FormatSMV):
             "BYTE_ORDER",
             "DETECTOR_SN",
         ]
-        for header_item in wanted_header_items:
-            if not header_item in header:
-                return False
+        if any(item not in header for item in wanted_header_items):
+            return False
 
         return True
 
@@ -164,9 +163,7 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
             pixel_size[0] * 3 + (panel_size[0] - 2) * pixel_size[0],
             pixel_size[1] * 3 + (panel_size[1] - 2) * pixel_size[1],
         )
-        image_size_mm = (panel_size_mm[0] * 2, panel_size_mm[1] * 2)
         trusted_range = (-1, 65535)
-        material = "Si"
         thickness = 0.3  # assume 300 mu thick
 
         # Initialise detector frame
@@ -178,10 +175,11 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
         )
 
         bx_px, by_px = beam_centre
-        # the beam centre is in pixels. We want to convert to mm, taking the
-        # different size of outer pixels into account. Use this local function
-        # to do that
+
         def px_to_mm(px, px_size_1d, panel_size_1d):
+            # the beam centre is in pixels. We want to convert to mm, taking the
+            # different size of outer pixels into account. Use this local function
+            # to do that
             mm = 0
             if px > 1:  # add first outer pixel
                 mm += px_size_1d * 3
@@ -217,7 +215,6 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
 
         bx_mm = px_to_mm(bx_px, pixel_size[0], panel_size[0])
         by_mm = px_to_mm(by_px, pixel_size[1], panel_size[1])
-        beam_centre_mm = (bx_mm, by_mm)
 
         # the beam centre is defined from the origin along fast, slow. To determine
         # the lab frame origin we place the beam centre down the -z axis

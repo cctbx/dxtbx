@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVADSCSN905.py
 #   Copyright (C) 2015 Diamond Light Source, Richard Gildea
 #
 #   This code is distributed under the BSD license, a copy of which is
@@ -111,11 +109,3 @@ class FormatSMVADSCSN905(FormatSMVADSCSN):
         raw_data.reshape(flex.grid(image_size[1], image_size[0]))
 
         return raw_data
-
-
-if __name__ == "__main__":
-
-    import sys
-
-    for arg in sys.argv[1:]:
-        print(FormatSMVADSC.understand(arg))
