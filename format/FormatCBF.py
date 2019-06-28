@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import six
 from dxtbx.format.Format import Format
 
 
@@ -49,7 +50,10 @@ class FormatCBF(Format):
                 header += add
                 marker_index = header.find(marker, marker_search_start)
                 marker_search_start += 4096
-            return header[:marker_index].decode("ascii", "ignore")
+            header = header[:marker_index]
+            if six.PY2:
+                return header
+            return header.decode("ascii", "ignore")
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
