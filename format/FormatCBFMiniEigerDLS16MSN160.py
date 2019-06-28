@@ -115,9 +115,9 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
         if goniometer.get_names()[1] == "GON_CHI":
             # SmarGon
-            from dials.util.masking.SmarGonShadowMask import SmarGonShadowMaskGenerator
+            from dials.util.masking.SmarGonShadowMask import SmarGonShadowMasker
 
-            return SmarGonShadowMaskGenerator(goniometer)
+            return SmarGonShadowMasker(goniometer)
 
         else:
             raise RuntimeError(

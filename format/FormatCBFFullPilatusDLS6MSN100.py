@@ -9,9 +9,9 @@ import sys
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 
 try:
-    from dials.util.masking import GoniometerMaskGeneratorFactory
+    from dials.util.masking import GoniometerMaskerFactory
 except ImportError:
-    GoniometerMaskGeneratorFactory = False
+    GoniometerMaskerFactory = False
 
 
 class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
@@ -26,7 +26,7 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
 
-        if not GoniometerMaskGeneratorFactory:
+        if not GoniometerMaskerFactory:
             return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
@@ -79,10 +79,10 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
         assert goniometer is not None
         if goniometer.get_names()[1] == "GON_CHI":
-            return GoniometerMaskGeneratorFactory.smargon(goniometer)
+            return GoniometerMaskerFactory.smargon(goniometer)
 
         elif goniometer.get_names()[1] == "GON_KAPPA":
-            return GoniometerMaskGeneratorFactory.mini_kappa(goniometer)
+            return GoniometerMaskerFactory.mini_kappa(goniometer)
 
         else:
             raise RuntimeError(

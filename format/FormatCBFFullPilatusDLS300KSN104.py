@@ -15,9 +15,9 @@ from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 from scitbx.array_family import flex
 
 try:
-    from dials.util.masking import GoniometerShadowMaskGenerator
+    from dials.util.masking import GoniometerShadowMasker
 except ImportError:
-    GoniometerShadowMaskGenerator = False
+    GoniometerShadowMasker = False
 
 
 class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
@@ -32,7 +32,7 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
 
-        if not GoniometerShadowMaskGenerator:
+        if not GoniometerShadowMasker:
             return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
@@ -109,9 +109,7 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
 
         if goniometer is None:
             goniometer = self.get_goniometer()
-        return GoniometerShadowMaskGenerator(
-            goniometer, coords, flex.size_t(len(coords), 0)
-        )
+        return GoniometerShadowMasker(goniometer, coords, flex.size_t(len(coords), 0))
 
 
 if __name__ == "__main__":
