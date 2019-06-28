@@ -95,6 +95,19 @@ def test_grid_scan():
     assert beam.get_s0() == pytest.approx((0, 0, -1 / beam.get_wavelength()))
 
 
+@pytest.mark.xfail(
+    raises=AssertionError, reason="https://github.com/cctbx/dxtbx/issues/13"
+)
+def test_screening():
+    master_h5 = "/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw-screen/Thaum/Thau_3/Thau_3_1_master.h5"
+    assert FormatNexusEigerDLS16M.understand(master_h5)
+
+    datablocks = DataBlockFactory.from_filenames([master_h5])
+    imagesets = datablocks[0].extract_imagesets()
+    assert len(imagesets) == 3
+    assert imageset.get_format_class() == FormatNexusEigerDLS16M
+
+
 @pytest.mark.xfail
 def test_units():
     master_h5 = "/dls/i04/data/2019/cm23004-1/20190114/Eiger/grid/Se_Thaum/Se_Thaum_12/Se_Thaum_12_2_master.h5"
