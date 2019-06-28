@@ -712,7 +712,7 @@ class DetectorFactory(object):
         """Initialize a detector model from an imgCIF file."""
 
         cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_file(cif_file, pycbf.MSG_DIGEST)
+        cbf_handle.read_file(cif_file.encode(), pycbf.MSG_DIGEST)
 
         return DetectorFactory.imgCIF_H(cbf_handle, sensor)
 

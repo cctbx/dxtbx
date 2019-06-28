@@ -16,9 +16,9 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
 
     def add_category(self, name, columns):
         """ Create a new category and populate it with column names """
-        self.new_category(name)
+        self.new_category(name.encode())
         for column in columns:
-            self.new_column(column)
+            self.new_column(column.encode())
 
     def add_row(self, data):
         """Add a row to the current category.  If data contains more entries than
@@ -27,9 +27,9 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
         self.new_row()
         self.rewind_column()
         for item in data:
-            self.set_value(item)
+            self.set_value(item.encode())
             if item == ".":
-                self.set_typeofvalue("null")
+                self.set_typeofvalue(b"null")
             try:
                 self.next_column()
             except Exception:

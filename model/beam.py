@@ -230,7 +230,7 @@ class BeamFactory(object):
         +Y laboratory frame vector."""
 
         cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_widefile(cif_file, pycbf.MSG_DIGEST)
+        cbf_handle.read_widefile(cif_file.encode(), pycbf.MSG_DIGEST)
 
         result = BeamFactory.imgCIF_H(cbf_handle)
 
