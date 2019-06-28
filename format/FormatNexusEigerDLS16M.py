@@ -34,9 +34,11 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
         # Get the file handle
         handle = h5py.File(image_file, "r")
-        if (
-            "short_name" not in handle["/entry/instrument"].attrs
-            or handle["/entry/instrument"].attrs["short_name"].lower() not in ("i03", "i04")
+        if "short_name" not in handle["/entry/instrument"].attrs:
+            return False
+        if handle["/entry/instrument"].attrs["short_name"].lower() not in (
+            b"i03",
+            b"i04",
         ):
             return False
 
@@ -85,7 +87,6 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
     def get_goniometer_shadow_masker(self, goniometer=None):
         if not self._dynamic_shadowing:
-            print("Returning None")
             return None
 
         if goniometer is None:
