@@ -95,7 +95,7 @@ def test_grid_scan():
     assert beam.get_s0() == pytest.approx((0, 0, -1 / beam.get_wavelength()))
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="https://github.com/cctbx/cctbx_project/issues/280")
 def test_units():
     master_h5 = "/dls/i04/data/2019/cm23004-1/20190114/Eiger/grid/Se_Thaum/Se_Thaum_12/Se_Thaum_12_2_master.h5"
     assert FormatNexusEigerDLS16MI04.understand(master_h5)
