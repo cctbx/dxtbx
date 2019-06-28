@@ -436,42 +436,6 @@ class TestImageSweep(object):
         assert detector2 == detector
 
 
-@pytest.mark.xfail(
-    reason="This test is broken since the master h5 file is inconsistent with NeXus format after commit dbb0bf7"
-)
-def test_nexus_file(dials_regression):
-    pytest.importorskip("h5py")
-    filename = os.path.join(
-        dials_regression,
-        "image_examples",
-        "LCLS_cspad_nexus",
-        "cxi78513_bslz4_r0014_subset4_master.h5",
-    )
-
-    format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
-
-    iset = format_class.get_imageset([filename])
-
-    assert len(iset) == 2
-    for i in range(2):
-        assert iset.get_raw_data(i)
-        assert iset.get_mask(i)
-        assert iset.get_beam(i)
-        assert iset.get_detector(i)
-        assert iset.get_goniometer(i)
-        assert iset.get_scan(i)
-
-    iset = format_class.get_imageset([filename], single_file_indices=[1])
-    assert len(iset) == 1
-
-    assert iset.get_raw_data(0)
-    assert iset.get_mask(0)
-    assert iset.get_beam(0)
-    assert iset.get_detector(0)
-    assert iset.get_goniometer(0)
-    assert iset.get_scan(0)
-
-
 @pytest.mark.parametrize("lazy", (True, False))
 def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
     pytest.importorskip("h5py")
