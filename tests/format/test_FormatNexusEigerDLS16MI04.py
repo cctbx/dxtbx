@@ -96,17 +96,6 @@ def test_grid_scan():
 
 
 @pytest.mark.xfail
-def test_screening():
-    master_h5 = "/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw-screen/Thaum/Thau_3/Thau_3_1_master.h5"
-    assert FormatNexusEigerDLS16MI04.understand(master_h5)
-
-    datablocks = DataBlockFactory.from_filenames([master_h5])
-    imagesets = datablocks[0].extract_imagesets()
-    assert len(imagesets) == 3
-    assert imageset.get_format_class() == FormatNexusEigerDLS16MI04
-
-
-@pytest.mark.xfail
 def test_units():
     master_h5 = "/dls/i04/data/2019/cm23004-1/20190114/Eiger/grid/Se_Thaum/Se_Thaum_12/Se_Thaum_12_2_master.h5"
     assert FormatNexusEigerDLS16MI04.understand(master_h5)
