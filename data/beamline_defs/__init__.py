@@ -1,19 +1,18 @@
 from __future__ import absolute_import, division
 
 import importlib
+import string
+import unicodedata
 
 from builtins import bytes
 
 
 def get_beamline_definition(detector_id, **kwargs):
-    import unicodedata
-    import string
-
     if isinstance(detector_id, bytes):
         detector_id = detector_id.decode("utf-8", "ignore")
 
     valid_chars = frozenset("_.%s%s" % (string.ascii_letters, string.digits))
-    filename = unicodedata.normalize("NFKD", detector_id).encode("ASCII", "ignore")
+    filename = unicodedata.normalize("NFKD", detector_id)
     filename = "".join(c if c in valid_chars else "_" for c in filename)
     while "__" in filename:
         filename = filename.replace("__", "_")
