@@ -7,6 +7,7 @@ import dxtbx.ext
 import dxtbx.tests.imagelist
 import pytest
 from dxtbx.format.FormatSMV import FormatSMV
+from dxtbx.format.image import CBFReader
 from scitbx.array_family import flex
 
 
@@ -225,30 +226,34 @@ def test_tiff(dials_regression, tiff_image):
 
 @pytest.mark.parametrize(
     "cbf_image",
-    dxtbx.tests.imagelist.cbf_images + dxtbx.tests.imagelist.cbf_multitile_images,
-    ids=dxtbx.tests.imagelist.cbf_image_ids
-    + dxtbx.tests.imagelist.cbf_multitile_image_ids,
+    dxtbx.tests.imagelist.cbf_images,
+    ids=dxtbx.tests.imagelist.cbf_image_ids,
 )
 def test_cbf(dials_regression, cbf_image):
-    from dxtbx.format.image import CBFReader
-
     filename = os.path.join(dials_regression, cbf_image)
 
-    image = CBFReader(filename).image()
-    if image.is_double():
-        image = image.as_double()
-    else:
-        image = image.as_int()
+    image = CBFReader(filename).image().as_int()
+    assert image.n_tiles() == 1
 
+    data1 = image.tile(0).data()
+    data2 = read_cbf_image(filename)
+    diff = flex.abs(data1 - data2)
+    assert flex.max(diff) < 1e-7
+
+
+@pytest.mark.parametrize(
+    "cbf_image",
+    dxtbx.tests.imagelist.cbf_multitile_images,
+    ids=dxtbx.tests.imagelist.cbf_multitile_image_ids,
+)
+def test_multitile_cbf(dials_regression, cbf_image):
+    filename = os.path.join(dials_regression, cbf_image)
+
+    image = CBFReader(filename).image().as_int()
     data1 = tuple(image.tile(i).data() for i in range(image.n_tiles()))
-
-    try:
-        data2 = read_multitile_cbf_image(filename)
-    except Exception:
-        data2 = (read_cbf_image(filename),)
+    data2 = read_multitile_cbf_image(filename)
 
     assert len(data1) == len(data2)
-
     for d1, d2 in zip(data1, data2):
         diff = flex.abs(d1 - d2)
         assert flex.max(diff) < 1e-7
