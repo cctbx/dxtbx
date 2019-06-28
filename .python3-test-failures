@@ -1,10 +1,11 @@
 tests/command_line/test_to_xds.py::test_to_xds
 tests/format/test_FormatHDF5EigerNearlyNexus.py::test_soleil_Proxima2A_zenodo_1443110_data03
 tests/format/test_FormatNexus.py::test_VMXi_rotation_scan
-tests/format/test_FormatNexusEigerDLS16MI04.py::test_grid_scan
-tests/format/test_FormatNexusEigerDLS16MI04.py::test_rotation_scan[/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw/Thaum/Thau_4/Thau_4_1.nxs]
-tests/format/test_FormatNexusEigerDLS16MI04.py::test_rotation_scan[/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw/Thaum/Thau_4/Thau_4_1_master.h5]
-tests/format/test_FormatNexusEigerDLS16MI04.py::test_units
+tests/format/test_FormatNexusEigerDLS16M.py::test_grid_scan
+tests/format/test_FormatNexusEigerDLS16M.py::test_rotation_scan[/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw/Thaum/Thau_4/Thau_4_1.nxs]
+tests/format/test_FormatNexusEigerDLS16M.py::test_rotation_scan[/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw/Thaum/Thau_4/Thau_4_1_master.h5]
+tests/format/test_FormatNexusEigerDLS16M.py::test_screening
+tests/format/test_FormatNexusEigerDLS16M.py::test_units
 tests/model/test_crystal_model.py::test_change_basis_mosaic_crystal
 tests/model/test_experiment_list.py::test_experimentlist_dumper_dump_empty_sweep
 tests/model/test_experiment_list.py::test_experimentlist_dumper_dump_formats
