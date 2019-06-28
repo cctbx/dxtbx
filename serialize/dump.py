@@ -97,12 +97,12 @@ def imageset(obj, outfile, compact=False):
     """
     # If the input is a string then open and write to that file
     if isinstance(outfile, str):
-        with open(outfile, "w") as outfile:
-            outfile.write(imageset_to_string(obj, compact))
+        with open(outfile, "wb") as outfile:
+            outfile.write(imageset_to_string(obj, compact).encode())
 
     # Otherwise assume the input is a file and write to it
     else:
-        outfile.write(imageset_to_string(obj, compact))
+        outfile.write(imageset_to_string(obj, compact).encode())
 
 
 def datablock(obj, outfile, **kwargs):
