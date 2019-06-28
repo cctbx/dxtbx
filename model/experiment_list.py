@@ -1,15 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
 from builtins import range
-import collections
 import copy
 import json
-import os.path
+import os
 import pkg_resources
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
+import warnings
 
 from dxtbx.datablock import (
-    AutoEncoder,
     BeamComparison,
     DataBlockFactory,
     DataBlockTemplateImporter,
@@ -72,11 +71,8 @@ class ExperimentListDict(object):
         self._check_format = check_format
         self._directory = directory
 
-    def decode(self):
-        """ Decode the dictionary into a list of experiments. """
-
         # If this doesn't claim to be an ExperimentList, don't even try
-        if not self._obj.get("__id__", None) == "ExperimentList":
+        if self._obj.get("__id__") != "ExperimentList":
             raise InvalidExperimentListError(
                 "Expected __id__ 'ExperimentList', but found {}".format(
                     repr(self._obj.get("__id__"))
@@ -84,37 +80,39 @@ class ExperimentListDict(object):
             )
 
         # Extract lists of models referenced by experiments
-        self._blist = self._extract_models("beam")
-        self._dlist = self._extract_models("detector")
-        self._glist = self._extract_models("goniometer")
-        self._slist = self._extract_models("scan")
-        self._clist = self._extract_models("crystal")
-        self._plist = self._extract_models("profile")
-        self._scalelist = self._extract_models("scaling_model")
-
         # Go through all the imagesets and make sure the dictionary
         # references by an index rather than a file path.
-        self._ilist = self._dereference_imagesets()
-
         self._lookups = {
-            "beam": self._blist,
-            "detector": self._dlist,
-            "goniometer": self._glist,
-            "scan": self._slist,
-            "crystal": self._clist,
-            "profile": self._plist,
-            "scaling_model": self._scalelist,
-            "imageset": self._ilist,
+            model: self._extract_models(model, function)
+            for model, function in (
+                ("beam", BeamFactory.from_dict),
+                ("detector", DetectorFactory.from_dict),
+                ("goniometer", GoniometerFactory.from_dict),
+                ("scan", ScanFactory.from_dict),
+                ("crystal", CrystalFactory.from_dict),
+                ("profile", ProfileModelFactory.from_dict),
+                ("imageset", lambda x: x),
+                ("scaling_model", self._scaling_model_from_dict),
+            )
         }
 
-        # Extract all the experiments
-        return self._extract_experiments()
-
-    def _extract_models(self, name):
+    def _extract_models(self, name, from_dict):
         """ Helper function. Extract the models. """
+        """if name == imageset: Extract imageset objects from the source.
 
-        # The from dict function
-        from_dict = getattr(self, "_%s_from_dict" % name)
+        This function does resolving of an (old) method of imageset lookup
+        e.g. it was valid to have a string as the imageset value in an
+        experiment instead of an int - in which case the imageset was
+        loaded from the named file in the target directory.
+
+        If any experiments point to a file in this way, the imageset is
+        loaded and the experiment is rewritted with an integer pointing
+        to the new ImageSet in the returned list.
+
+        Returns:
+                The ordered list of serialized-ImageSet dictionaries
+                that the Experiment list points to.
+        """
 
         # Extract all the model list
         mlist = self._obj.get(name, [])
@@ -138,52 +136,9 @@ class ExperimentListDict(object):
                 if value not in mmap:
                     mmap[value] = len(mlist)
                     mlist.append(
-                        from_dict(ExperimentListDict._from_file(value, self._directory))
+                        from_dict(_experimentlist_from_file(value, self._directory))
                     )
                 eobj[name] = mmap[value]
-            elif not isinstance(value, int):
-                raise TypeError("expected int or str, got %s" % type(value))
-
-        # Return the model list
-        return mlist
-
-    def _dereference_imagesets(self):
-        # type: () -> List[Dict[str,Any]]
-        """Extract imageset objects from the source.
-
-        This function does resolving of an (old) method of imageset lookup
-        e.g. it was valid to have a string as the imageset value in an
-        experiment instead of an int - in which case the imageset was
-        loaded from the named file in the target directory.
-
-        If any experiments point to a file in this way, the imageset is
-        loaded and the experiment is rewritted with an integer pointing
-        to the new ImageSet in the returned list.
-
-        Returns:
-                The ordered list of serialized-ImageSet dictionaries
-                that the Experiment list points to.
-        """
-
-        # Extract all the model list
-        mlist = self._obj.get("imageset", [])
-
-        # Dictionaries for file mappings
-        mmap = {}
-
-        # For each experiment, check the imageset is not specified by
-        # a path, if it is then get the dictionary of the imageset
-        # and insert it into the list. Replace the path reference
-        # with an index
-        for eobj in self._obj["experiment"]:
-            value = eobj.get("imageset")
-            if value is None:
-                continue
-            elif isinstance(value, str):
-                if value not in mmap:
-                    mmap[value] = len(mlist)
-                    mlist.append(ExperimentListDict._from_file(value, self._directory))
-                eobj["imageset"] = mmap[value]
             elif not isinstance(value, int):
                 raise TypeError("expected int or str, got %s" % type(value))
 
@@ -205,16 +160,18 @@ class ExperimentListDict(object):
             False then (filename, None) will be returned.
         """
         if param not in imageset_data:
-            return None, None
+            return "", None
 
         filename = resolve_path(imageset_data[param], directory=self._directory)
         if self._check_format and filename:
             with open(filename, "rb") as fh:
                 return filename, pickle.load(fh)
-        return filename, None
+        return filename or "", None
 
-    def _extract_experiments(self):
-        """ Helper function. Extract the experiments. """
+    def decode(self):
+        """ Decode the dictionary into a list of experiments. """
+        # Extract all the experiments
+
         # Map of imageset/scan pairs
         imagesets = {}
 
@@ -282,16 +239,6 @@ class ExperimentListDict(object):
 
                     if imageset is not None:
                         # Set the external lookup
-                        if mask_filename is None:
-                            mask_filename = ""
-                        if gain_filename is None:
-                            gain_filename = ""
-                        if pedestal_filename is None:
-                            pedestal_filename = ""
-                        if dx_filename is None:
-                            dx_filename = ""
-                        if dy_filename is None:
-                            dy_filename = ""
                         if mask is None:
                             mask = ImageBool()
                         else:
@@ -329,20 +276,12 @@ class ExperimentListDict(object):
                             imageset.set_detector(detector)
                             imageset.set_goniometer(goniometer)
                             imageset.set_scan(scan)
-                        elif isinstance(imageset, ImageSet):
+                        elif isinstance(imageset, (ImageSet, ImageGrid)):
                             for i in range(len(imageset)):
                                 imageset.set_beam(beam, i)
                                 imageset.set_detector(detector, i)
                                 imageset.set_goniometer(goniometer, i)
                                 imageset.set_scan(scan, i)
-                        elif isinstance(imageset, ImageGrid):
-                            for i in range(len(imageset)):
-                                imageset.set_beam(beam, i)
-                                imageset.set_detector(detector, i)
-                                imageset.set_goniometer(goniometer, i)
-                                imageset.set_scan(scan, i)
-                        else:
-                            pass
 
                         imageset.update_detector_px_mm_data()
 
@@ -436,7 +375,7 @@ class ExperimentListDict(object):
 
     def _lookup_model(self, name, experiment_dict):
         """
-        Find a model by looking up it's index from a dictionary
+        Find a model by looking up its index from a dictionary
 
         Args:
             name (str): The model name e.g. 'beam', 'detector'
@@ -452,39 +391,9 @@ class ExperimentListDict(object):
                 experiment_dict[name]. If not present or empty,
                 then None is returned.
         """
-        if name in experiment_dict and experiment_dict[name] is not None:
-            return self._lookups[name][experiment_dict[name]]
-        return None
-
-    @staticmethod
-    def _beam_from_dict(obj):
-        """ Get a beam from a dictionary. """
-        return BeamFactory.from_dict(obj)
-
-    @staticmethod
-    def _detector_from_dict(obj):
-        """ Get the detector from a dictionary. """
-        return DetectorFactory.from_dict(obj)
-
-    @staticmethod
-    def _goniometer_from_dict(obj):
-        """ Get the goniometer from a dictionary. """
-        return GoniometerFactory.from_dict(obj)
-
-    @staticmethod
-    def _scan_from_dict(obj):
-        """ Get the scan from a dictionary. """
-        return ScanFactory.from_dict(obj)
-
-    @staticmethod
-    def _crystal_from_dict(obj):
-        """ Get the crystal from a dictionary. """
-        return CrystalFactory.from_dict(obj)
-
-    @staticmethod
-    def _profile_from_dict(obj):
-        """ Get the profile from a dictionary. """
-        return ProfileModelFactory.from_dict(obj)
+        if experiment_dict.get(name) is None:
+            return None
+        return self._lookups[name][experiment_dict[name]]
 
     @staticmethod
     def _scaling_model_from_dict(obj):
@@ -493,15 +402,15 @@ class ExperimentListDict(object):
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
 
-    @staticmethod
-    def _from_file(filename, directory=None):
-        """ Load a model dictionary from a file. """
-        filename = resolve_path(filename, directory=directory)
-        try:
-            with open(filename, "r") as infile:
-                return json.load(infile, object_hook=_decode_dict)
-        except IOError:
-            raise IOError("unable to read file, %s" % filename)
+
+def _experimentlist_from_file(filename, directory=None):
+    """ Load a model dictionary from a file. """
+    filename = resolve_path(filename, directory=directory)
+    try:
+        with open(filename, "r") as infile:
+            return json.load(infile, object_hook=_decode_dict)
+    except IOError:
+        raise IOError("unable to read file, %s" % filename)
 
 
 class ExperimentListDumper(object):
@@ -509,135 +418,16 @@ class ExperimentListDumper(object):
 
     def __init__(self, experiment_list):
         """ Initialise """
-        self._experiment_list = experiment_list
-
-    def as_json(self, filename=None, compact=False, split=False):
-        """ Dump experiment list as json """
-        # Get the dictionary and get the JSON string
-        dictionary = self._experiment_list.to_dict()
-
-        # Split into separate files
-        if filename is not None and split:
-
-            # Get lists of models by filename
-            basepath = os.path.splitext(filename)[0]
-            ilist = [
-                ("%s_imageset_%d.json" % (basepath, i), d)
-                for i, d in enumerate(dictionary["imageset"])
-            ]
-            blist = [
-                ("%s_beam_%d.json" % (basepath, i), d)
-                for i, d in enumerate(dictionary["beam"])
-            ]
-            dlist = [
-                ("%s_detector_%d.json" % (basepath, i), d)
-                for i, d in enumerate(dictionary["detector"])
-            ]
-            glist = [
-                ("%s_goniometer_%d.json" % (basepath, i), d)
-                for i, d in enumerate(dictionary["goniometer"])
-            ]
-            slist = [
-                ("%s_scan_%d.json" % (basepath, i), d)
-                for i, d in enumerate(dictionary["scan"])
-            ]
-            clist = [
-                ("%s_crystal_%d.json" % (basepath, i), d)
-                for i, d in enumerate(dictionary["crystal"])
-            ]
-            plist = [
-                ("%s_profile_%d.json" % (basepath, i), d)
-                for i, d in enumerate(dictionary["profile"])
-            ]
-            scalelist = [
-                ("%s_scaling_model_%d.json" % (basepath, i), d)
-                for i, d in enumerate(dictionary["scaling_model"])
-            ]
-
-            # Get the list of experiments
-            edict = collections.OrderedDict(
-                [("__id__", "ExperimentList"), ("experiment", dictionary["experiment"])]
-            )
-
-            # Set paths rather than indices
-            for e in edict["experiment"]:
-                if "imageset" in e:
-                    e["imageset"] = ilist[e["imageset"]][0]
-                if "beam" in e:
-                    e["beam"] = blist[e["beam"]][0]
-                if "detector" in e:
-                    e["detector"] = dlist[e["detector"]][0]
-                if "goniometer" in e:
-                    e["goniometer"] = glist[e["goniometer"]][0]
-                if "scan" in e:
-                    e["scan"] = slist[e["scan"]][0]
-                if "crystal" in e:
-                    e["crystal"] = clist[e["crystal"]][0]
-                if "profile" in e:
-                    e["profile"] = plist[e["profile"]][0]
-                if "scaling_model" in e:
-                    e["scaling_model"] = scalelist[e["scaling_model"]][0]
-
-            to_write = (
-                ilist
-                + blist
-                + dlist
-                + glist
-                + slist
-                + clist
-                + plist
-                + scalelist
-                + [(filename, edict)]
-            )
-        else:
-            to_write = [(filename, dictionary)]
-
-        for fname, obj in to_write:
-            if compact:
-                separators = (",", ":")
-                indent = None
-            else:
-                separators = None
-                indent = 2
-            text = json.dumps(
-                obj,
-                separators=separators,
-                indent=indent,
-                ensure_ascii=True,
-                cls=AutoEncoder,
-            )
-
-            # If a filename is set then dump to file otherwise return string
-            if fname is not None:
-                with open(fname, "w") as outfile:
-                    outfile.write(text)
-            else:
-                return text
-
-    def as_pickle(self, filename=None, **kwargs):
-        """ Dump experiment list as pickle. """
-        # Get the pickle string
-        text = pickle.dumps(self._experiment_list, protocol=pickle.HIGHEST_PROTOCOL)
-
-        # Write the file
-        if filename:
-            with open(filename, "wb") as outfile:
-                outfile.write(text)
-        else:
-            return text
-
-    def as_file(self, filename, **kwargs):
-        """ Dump experiment list as file. """
-        ext = os.path.splitext(filename)[1]
-        j_ext = [".json", ".expt"]
-        p_ext = [".p", ".pkl", ".pickle"]
-        if ext.lower() in j_ext:
-            return self.as_json(filename, **kwargs)
-        elif ext.lower() in p_ext:
-            return self.as_pickle(filename, **kwargs)
-        else:
-            ext_str = "|".join(j_ext + p_ext)
-            raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
+        warnings.warn(
+            "class ExperimentListDumper() is deprecated. "
+            "Use experiment_list.as_json(), experiment_list.as_pickle(), experiment_list.as_file() directly",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        assert experiment_list
+        self.as_json = experiment_list.as_json
+        self.as_pickle = experiment_list.as_pickle
+        self.as_file = experiment_list.as_file
 
 
 class ExperimentListFactory(object):
