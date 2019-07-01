@@ -760,10 +760,7 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
             raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
 
 
-try:
-    boost.python.inject_into(Crystal)(CrystalAux)
-    boost.python.inject_into(Detector)(DetectorAux)
-    boost.python.inject_into(Experiment)(ExperimentAux)
-    boost.python.inject_into(ExperimentList)(ExperimentListAux)
-except AttributeError:
-    pass
+boost.python.inject_into(Crystal)(CrystalAux)
+boost.python.inject_into(Detector)(DetectorAux)
+boost.python.inject_into(Experiment)(ExperimentAux)
+boost.python.inject_into(ExperimentList)(ExperimentListAux)
