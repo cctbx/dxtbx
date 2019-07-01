@@ -45,10 +45,7 @@ class DataBlock(object):
     def append(self, imageset):
         """ Add an imageset to the block. """
         if self._format_class is None:
-            try:
-                self._format_class = imageset.get_format_class()
-            except Exception:
-                pass
+            self._format_class = imageset.get_format_class()
         else:
             assert self._format_class == imageset.get_format_class()
         self._imagesets.append(imageset)
@@ -471,9 +468,12 @@ class DataBlockFilenameImporter(object):
 
         # A function to append or create a new datablock
         def append_to_datablocks(iset):
-            try:
-                self.datablocks[-1].append(iset)
-            except Exception:
+            if self.datablocks:
+                try:
+                    self.datablocks[-1].append(iset)
+                except AssertionError:
+                    self.datablocks.append(DataBlock([iset]))
+            else:
                 self.datablocks.append(DataBlock([iset]))
             if verbose:
                 print("Added imageset to datablock %d" % (len(self.datablocks) - 1))
@@ -950,7 +950,7 @@ class DataBlockImageSetImporter(object):
         for imageset in imagesets:
             try:
                 self.datablocks[-1].append(imageset)
-            except Exception:
+            except (IndexError, AssertionError):
                 self.datablocks.append(DataBlock([imageset]))
 
 
@@ -1080,7 +1080,7 @@ class DataBlockFactory(object):
 
     @staticmethod
     def from_imageset(imagesets):
-        """ Load a datablock from an imageset of list of imagesets. """
+        """ Load a datablock from a list of imagesets. """
         importer = DataBlockImageSetImporter(imagesets)
         return importer.datablocks
 
