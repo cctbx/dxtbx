@@ -232,12 +232,11 @@ class Format(object):
         flex array."""
         try:
             image = self.detectorbase
-            image.read()
-            raw_data = image.get_raw_data()
-
-            return raw_data
-        except Exception:
+        except AttributeError:
             return None
+        image.read()
+        raw_data = image.get_raw_data()
+        return raw_data
 
     def get_vendortype(self):
         return "no dxtbx Format vendortype"
