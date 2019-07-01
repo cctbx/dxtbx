@@ -5,7 +5,6 @@ import copy
 import json
 import os
 import pkg_resources
-from typing import Any, Dict, Optional, Tuple
 import warnings
 
 from dxtbx.datablock import (
@@ -34,6 +33,11 @@ from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import template_image_range
 import six.moves.cPickle as pickle
+
+try:
+    from typing import Any, Dict, Optional, Tuple
+except ImportError:
+    pass
 
 __all__ = [
     "BeamComparison",
