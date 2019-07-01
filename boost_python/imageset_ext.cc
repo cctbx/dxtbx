@@ -1,6 +1,8 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/shared_ptr.hpp>
+#include "Python.h"
+
 #include <scitbx/array_family/shared.h>
 #include <scitbx/array_family/flex_types.h>
 #include <vector>
@@ -15,43 +17,27 @@ namespace dxtbx { namespace boost_python {
 
   namespace detail {
 
-    /**
-     * Pickle a python object to a string
-     */
+    /// Pickle a python object to a string
     std::string pickle_dumps(boost::python::object x) {
-      boost::python::object main = boost::python::import("__main__");
-      boost::python::object global(main.attr("__dict__"));
-      boost::python::object result =
-        exec("def dumps(x):import pickle; return pickle.dumps(x)", global, global);
-      boost::python::object dumps = global["dumps"];
-      return boost::python::extract<std::string>(dumps(x))();
+      return boost::python::extract<std::string>(
+        boost::python::import("pickle").attr("dumps")(x));
     }
 
-    /**
-     * Unpickle a python object from a string
-     */
+    /// Unpickle a python object from a string
     boost::python::object pickle_loads(std::string x) {
       if (x == "") {
         return boost::python::object();
       }
-      boost::python::object main = boost::python::import("__main__");
-      boost::python::object global(main.attr("__dict__"));
-      boost::python::object result =
-        exec("def loads(x):import pickle; return pickle.loads(x)", global, global);
-      boost::python::object loads = global["loads"];
-      return loads(x);
-    }
 
-    /**
-     * Tuple from list
-     */
-    boost::python::tuple list_to_tuple(boost::python::list x) {
-      boost::python::object main = boost::python::import("__main__");
-      boost::python::object global(main.attr("__dict__"));
-      boost::python::object result =
-        exec("def func_list_to_tuple(x):return tuple(x)", global, global);
-      boost::python::object func_list_to_tuple = global["func_list_to_tuple"];
-      return boost::python::extract<boost::python::tuple>(func_list_to_tuple(x))();
+#if PY_MAJOR_VERSION >= 3
+      // Boost::python appears to have no native way to do this conversion
+      boost::python::object data_bytes(
+        boost::python::handle<>(PyBytes_FromStringAndSize(x.data(), x.size())));
+#else
+      std::string &data_bytes = x;
+#endif
+
+      return boost::python::import("pickle").attr("loads")(data_bytes);
     }
   }  // namespace detail
 
@@ -418,7 +404,7 @@ namespace dxtbx { namespace boost_python {
     for (std::size_t i = 0; i < image.n_tiles(); ++i) {
       result.append(image.tile(i).data());
     }
-    return detail::list_to_tuple(result);
+    return boost::python::tuple(result);
   }
 
   boost::python::tuple ImageSet_get_raw_data(ImageSet &self, std::size_t index) {
