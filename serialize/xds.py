@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import warnings
+
 import dxtbx
 from scitbx import matrix
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
@@ -429,6 +431,9 @@ class to_xds(object):
         unit_cell = uctbx.unit_cell(metrical_matrix=metrical_matrix)
         from iotbx.xds import xparm
 
+        from six.moves import StringIO
+
+        b = StringIO()
         writer = xparm.writer(
             self.starting_frame,
             self.starting_angle,
@@ -452,4 +457,38 @@ class to_xds(object):
             segments=None,
             orientation=None,
         )
-        writer.show(out=out)
+        writer.show(out=b)
+        old = b.getvalue()
+
+        new = xparm.write(
+            self.starting_frame,
+            self.starting_angle,
+            self.oscillation_range,
+            self.rotation_axis,
+            self.wavelength,
+            self.beam_vector,
+            space_group,
+            unit_cell.parameters(),
+            unit_cell_a_axis.elems,
+            unit_cell_b_axis.elems,
+            unit_cell_c_axis.elems,
+            None,  # num_segments
+            self.detector_size,
+            self.pixel_size,
+            self.detector_origin,
+            self.detector_distance,
+            self.detector_x_axis,
+            self.detector_y_axis,
+            self.detector_normal,
+            segments=None,
+            orientation=None,
+        )
+        assert old == new
+        if out:
+            warnings.warn(
+                "out= parameter is deprecated. Use return value instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            print(new, end="", file=out)
+        return new

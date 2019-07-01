@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-from six.moves import StringIO
 import glob
 import os
 
@@ -56,15 +55,13 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
         dials_regression, "centroid_test_data", "centroid_????.cbf"
     )
     assert s1 == expected
-    s2 = StringIO()
     real_space_a = (-5.327642, -39.034747, -4.988286)
     real_space_b = (-35.253495, 7.596265, -22.127661)
     real_space_c = (-22.673623, -1.486119, 35.793463)
-    to_xds.xparm_xds(real_space_a, real_space_b, real_space_c, space_group=1, out=s2)
+    s2 = to_xds.xparm_xds(real_space_a, real_space_b, real_space_c, space_group=1)
     # run coordinate frame converter on xparm.xds as a sanity check
     with open("xparm.xds", mode="wb") as fh:
-        s2.seek(0)
-        fh.writelines(s2.readlines())
+        fh.write(s2.encode("ASCII"))
     from rstbx.cftbx import coordinate_frame_helpers
 
     converter = coordinate_frame_helpers.import_xds_xparm("xparm.xds")
