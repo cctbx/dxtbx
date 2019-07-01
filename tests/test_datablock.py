@@ -81,7 +81,7 @@ def pickle_then_unpickle(obj):
 
 
 def test_create_single_sweep(single_sweep_filenames):
-    blocks = DataBlockFactory.from_filenames(single_sweep_filenames)
+    blocks = DataBlockFactory.from_filenames(single_sweep_filenames, verbose=True)
     assert len(blocks) == 1
     assert blocks[0].num_images() == 9
     imageset = blocks[0].extract_imagesets()
@@ -106,7 +106,7 @@ def test_create_multiple_sweeps(multiple_sweep_filenames):
 
 def test_create_multiple_blocks(multiple_block_filenames):
     pprint(multiple_block_filenames)
-    blocks = DataBlockFactory.from_filenames(multiple_block_filenames, verbose=False)
+    blocks = DataBlockFactory.from_filenames(multiple_block_filenames, verbose=True)
     assert blocks
 
     # Block 1
@@ -124,7 +124,7 @@ def test_create_multiple_blocks(multiple_block_filenames):
 
 
 def test_pickling(multiple_block_filenames):
-    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames)
+    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames, verbose=True)
     blocks2 = pickle_then_unpickle(blocks1)
     assert len(blocks2) == len(blocks1)
     for b1, b2 in zip(blocks1, blocks2):
@@ -134,7 +134,7 @@ def test_pickling(multiple_block_filenames):
 
 
 def test_json(multiple_block_filenames):
-    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames)
+    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames, verbose=True)
     blocks2 = encode_json_then_decode(blocks1)
     assert len(blocks2) == len(blocks1)
     for b1, b2 in zip(blocks1, blocks2):
@@ -144,7 +144,7 @@ def test_json(multiple_block_filenames):
 
 
 def test_json2(multiple_block_filenames):
-    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames)
+    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames, verbose=True)
     blocks2 = encode_json_then_decode(blocks1, check_format=False)
     assert len(blocks2) == len(blocks1)
     for b1, b2 in zip(blocks1, blocks2):
