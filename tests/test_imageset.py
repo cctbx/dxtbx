@@ -507,10 +507,11 @@ def test_pickle_imageset(centroid_files):
     sweep = ImageSetFactory.new(centroid_files)[0]
 
     # Read the 5th image
-    _ = sweep[4]
+    assert sweep[4]
 
     # Pickle, then unpickle
-    sweep2 = pickle.loads(pickle.dumps(sweep))
+    pickled_sweep = pickle.dumps(sweep)
+    sweep2 = pickle.loads(pickled_sweep)
 
     assert sweep.get_template() == sweep2.get_template()
     assert sweep.get_array_range() == sweep2.get_array_range()

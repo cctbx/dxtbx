@@ -199,7 +199,7 @@ namespace dxtbx { namespace boost_python {
                                        obj.get_template(),
                                        obj.get_vendor(),
                                        detail::bytes_from_std_string(obj.get_params()),
-                                       obj.get_format());
+                                       detail::bytes_from_std_string(obj.get_format()));
     }
 
     template <typename Model, typename Func>
