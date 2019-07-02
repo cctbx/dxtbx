@@ -30,6 +30,8 @@ def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
         "image_0001.cbf",
     )
 
+    assert datablock.format_class()
+
     datablock2 = DataBlockFactory.from_filenames(["image_0001.cbf"])[0]
     imageset2 = datablock2.extract_imagesets()[0]
 

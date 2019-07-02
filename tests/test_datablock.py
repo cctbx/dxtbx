@@ -84,6 +84,7 @@ def test_create_single_sweep(single_sweep_filenames):
     blocks = DataBlockFactory.from_filenames(single_sweep_filenames, verbose=True)
     assert len(blocks) == 1
     assert blocks[0].num_images() == 9
+    assert blocks[0].format_class()
     imageset = blocks[0].extract_imagesets()
     assert len(imageset) == 1
     assert len(imageset[0]) == 9
@@ -96,6 +97,7 @@ def test_create_multiple_sweeps(multiple_sweep_filenames):
     blocks = DataBlockFactory.from_filenames(multiple_sweep_filenames)
     assert len(blocks) == 1
     assert blocks[0].num_images() == 6
+    assert blocks[0].format_class()
     imageset = blocks[0].extract_imagesets()
     assert len(imageset) == 2
     sweeps = blocks[0].extract_sweeps()
@@ -177,6 +179,7 @@ def test_from_null_sweep():
     datablock = DataBlockFactory.from_imageset(sweep)
     assert len(datablock) == 1
     datablock = datablock[0]
+    assert datablock.format_class()
 
     sweeps = datablock.extract_sweeps()
     assert len(sweeps) == 1

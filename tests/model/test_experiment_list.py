@@ -379,12 +379,12 @@ def test_experimentlist_factory_from_json(dials_regression):
     # Check all the models are the same
     for e in zip(el1, el3, el4):
         e1 = e[0]
-        assert e1.imageset is not None
-        assert e1.beam is not None
-        assert e1.detector is not None
-        assert e1.goniometer is not None
-        assert e1.scan is not None
-        assert e1.crystal is not None
+        assert e1.imageset
+        assert e1.beam
+        assert e1.detector
+        assert e1.goniometer
+        assert e1.scan
+        assert e1.crystal
         for ee in e[1:]:
             assert e1.imageset == ee.imageset
             assert e1.beam == ee.beam
@@ -437,14 +437,13 @@ def test_experimentlist_factory_from_args(dials_regression):
     # Get the experiments from a list of filenames
     experiments = ExperimentListFactory.from_args(filenames, verbose=True)
 
-    # Have 4 experiment
     assert len(experiments) == 3
-    for i in range(3):
-        assert experiments[i].imageset is not None
-        assert experiments[i].beam is not None
-        assert experiments[i].detector is not None
-        assert experiments[i].goniometer is not None
-        assert experiments[i].scan is not None
+    for experiment in experiments:
+        assert experiment.imageset
+        assert experiment.beam
+        assert experiment.detector
+        assert experiment.goniometer
+        assert experiment.scan
 
 
 def test_experimentlist_factory_from_imageset():
@@ -457,10 +456,10 @@ def test_experimentlist_factory_from_imageset():
     experiments = ExperimentListFactory.from_imageset_and_crystal(imageset, crystal)
 
     assert len(experiments) == 1
-    assert experiments[0].imageset is not None
-    assert experiments[0].beam is not None
+    assert experiments[0].imageset
+    assert experiments[0].beam
     assert experiments[0].detector is not None
-    assert experiments[0].crystal is not None
+    assert experiments[0].crystal
 
 
 def test_experimentlist_factory_from_sweep():
@@ -480,12 +479,12 @@ def test_experimentlist_factory_from_sweep():
     experiments = ExperimentListFactory.from_imageset_and_crystal(imageset, crystal)
 
     assert len(experiments) == 1
-    assert experiments[0].imageset is not None
-    assert experiments[0].beam is not None
+    assert experiments[0].imageset
+    assert experiments[0].beam
     assert experiments[0].detector is not None
-    assert experiments[0].goniometer is not None
-    assert experiments[0].scan is not None
-    assert experiments[0].crystal is not None
+    assert experiments[0].goniometer
+    assert experiments[0].scan
+    assert experiments[0].crystal
 
 
 def test_experimentlist_factory_from_datablock():
@@ -503,16 +502,17 @@ def test_experimentlist_factory_from_datablock():
     crystal = Crystal((1, 0, 0), (0, 1, 0), (0, 0, 1), space_group_symbol="P1")
 
     datablock = DataBlockFactory.from_imageset(imageset)
+    assert datablock[0].format_class()
 
     experiments = ExperimentListFactory.from_datablock_and_crystal(datablock, crystal)
 
     assert len(experiments) == 1
-    assert experiments[0].imageset is not None
-    assert experiments[0].beam is not None
+    assert experiments[0].imageset
+    assert experiments[0].beam
     assert experiments[0].detector is not None
-    assert experiments[0].goniometer is not None
-    assert experiments[0].scan is not None
-    assert experiments[0].crystal is not None
+    assert experiments[0].goniometer
+    assert experiments[0].scan
+    assert experiments[0].crystal
 
 
 def test_experimentlist_dumper_dump_formats(dials_regression, tmpdir):
