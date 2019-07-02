@@ -87,6 +87,8 @@ class DataBlock(object):
             and self._imagesets == rhs._imagesets
         )
 
+    __hash__ = None  # datablock objects are mutable and therefore unhashable
+
     def __ne__(self, rhs):
         """ Check if two blocks are not equal. """
         return not self.__eq__(rhs)
@@ -502,8 +504,7 @@ class DataBlockFilenameImporter(object):
                     scan_tolerance,
                     format_kwargs=format_kwargs,
                 )
-                for group, items in itertools.groupby(records, lambda r: r.group):
-                    items = list(items)
+                for _, items in itertools.groupby(records, lambda r: r.group):
                     imageset = self._create_multi_file_imageset(
                         fmt, list(items), format_kwargs=format_kwargs
                     )
