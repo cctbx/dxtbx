@@ -7,7 +7,7 @@ from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.model import MultiAxisGoniometer
 
 try:
-    from dials.util.masking import GoniometerMaskerFactory
+    from dxtbx.util.masking import GoniometerMaskerFactory
 except ImportError:
     GoniometerMaskerFactory = False
 

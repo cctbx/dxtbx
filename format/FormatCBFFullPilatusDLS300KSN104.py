@@ -15,7 +15,7 @@ from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 from scitbx.array_family import flex
 
 try:
-    from dials.util.masking import GoniometerShadowMasker
+    from dxtbx.util.masking import GoniometerShadowMasker
 except ImportError:
     GoniometerShadowMasker = False
 

@@ -147,7 +147,7 @@ MODULE_OFFSETS_Y = {
     (11, 4): -0.801247,
 }
 try:
-    from dials.util.masking import GoniometerMaskerFactory
+    from dxtbx.util.masking import GoniometerMaskerFactory
 except ImportError:
     GoniometerMaskerFactory = False
 

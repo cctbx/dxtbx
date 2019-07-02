@@ -22,7 +22,7 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
         # simply return False
 
         try:
-            import dials.util.masking  # noqa: F401 - test import
+            import dxtbx.util.masking  # noqa: F401 - test import
         except ImportError:
             return False
 
@@ -115,7 +115,7 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
         if goniometer.get_names()[1] == "GON_CHI":
             # SmarGon
-            from dials.util.masking.SmarGonShadowMask import SmarGonShadowMasker
+            from dxtbx.util.masking.SmarGonShadowMask import SmarGonShadowMasker
 
             return SmarGonShadowMasker(goniometer)
 

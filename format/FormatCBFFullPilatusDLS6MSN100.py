@@ -9,7 +9,7 @@ import sys
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 
 try:
-    from dials.util.masking import GoniometerMaskerFactory
+    from dxtbx.util.masking import GoniometerMaskerFactory
 except ImportError:
     GoniometerMaskerFactory = False
 

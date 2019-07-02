@@ -17,7 +17,7 @@ from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 try:
-    from dials.util.masking import GoniometerMaskerFactory
+    from dxtbx.util.masking import GoniometerMaskerFactory
 except ImportError:
     GoniometerMaskerFactory = False
 
