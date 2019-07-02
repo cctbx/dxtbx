@@ -23,7 +23,7 @@ from six.moves import StringIO
 import six.moves.cPickle as pickle
 
 
-class DetectorAux(boost.python.injector, Detector):
+class DetectorAux(object):
     def iter_panels(self):
         """ Iterate through just the panels depth-first. """
         for obj in self.iter_preorder():
@@ -49,7 +49,7 @@ class DetectorAux(boost.python.injector, Detector):
                 queue.extend(node)
 
 
-class CrystalAux(boost.python.injector, Crystal):
+class CrystalAux(object):
     def show(self, show_scan_varying=False, out=None):
         CrystalAux._show(self, show_scan_varying, out)
 
@@ -281,7 +281,7 @@ class CrystalAux(boost.python.injector, Crystal):
         return xl
 
 
-class MosaicCrystalKabsch2010Aux(CrystalAux, MosaicCrystalKabsch2010):
+class MosaicCrystalKabsch2010Aux(object):
     def show(self, show_scan_varying=False, out=None):
         CrystalAux._show(self, show_scan_varying, out)
 
@@ -346,7 +346,7 @@ class MosaicCrystalKabsch2010Aux(CrystalAux, MosaicCrystalKabsch2010):
         return xl
 
 
-class MosaicCrystalSauter2014Aux(CrystalAux, MosaicCrystalSauter2014):
+class MosaicCrystalSauter2014Aux(object):
     def show(self, show_scan_varying=False, out=None):
         CrystalAux._show(self, show_scan_varying, out)
 
@@ -428,7 +428,7 @@ class MosaicCrystalSauter2014Aux(CrystalAux, MosaicCrystalSauter2014):
         return xl
 
 
-class ExperimentAux(boost.python.injector, Experiment):
+class ExperimentAux(object):
     def load_models(self, index=None):
         """ Load the models from the imageset """
         if index is None:
@@ -439,7 +439,7 @@ class ExperimentAux(boost.python.injector, Experiment):
         self.scan = self.imageset.get_scan(index)
 
 
-class ExperimentListAux(boost.python.injector, ExperimentList):
+class ExperimentListAux(object):
     def __repr__(self):
         if len(self):
             return "ExperimentList([{}])".format(", ".join(repr(x) for x in self))
@@ -764,3 +764,5 @@ boost.python.inject_into(Crystal)(CrystalAux)
 boost.python.inject_into(Detector)(DetectorAux)
 boost.python.inject_into(Experiment)(ExperimentAux)
 boost.python.inject_into(ExperimentList)(ExperimentListAux)
+boost.python.inject_into(MosaicCrystalKabsch2010)(MosaicCrystalKabsch2010Aux)
+boost.python.inject_into(MosaicCrystalSauter2014)(MosaicCrystalSauter2014Aux)
