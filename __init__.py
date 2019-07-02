@@ -55,6 +55,7 @@ class IncorrectFormatError(RuntimeError):
         super(IncorrectFormatError, self).__init__(
             "Could not open %s as %s" % (filename, str(format_instance))
         )
+        self.args = (format_instance, filename)
 
 
 def load(filename):
