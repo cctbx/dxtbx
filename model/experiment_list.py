@@ -32,6 +32,7 @@ from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import template_image_range
+import six
 import six.moves.cPickle as pickle
 
 try:
@@ -169,7 +170,11 @@ class ExperimentListDict(object):
         filename = resolve_path(imageset_data[param], directory=self._directory)
         if self._check_format and filename:
             with open(filename, "rb") as fh:
-                return filename, pickle.load(fh)
+                if six.PY3:
+                    return filename, pickle.load(fh, encoding="bytes")
+                else:
+                    return filename, pickle.load(fh)
+
         return filename or "", None
 
     def decode(self):
