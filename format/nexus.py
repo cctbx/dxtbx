@@ -9,7 +9,7 @@ import numpy
 import six
 
 try:
-    from dxtbx_format_nexus_ext import *
+    from dxtbx_format_nexus_ext import dataset_as_flex_int
 except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
     if "SIT_ROOT" not in os.environ:
