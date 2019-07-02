@@ -59,7 +59,7 @@ namespace detail {
 template <typename T>
 class ExternalLookupItem {
 public:
-  /** Construct the exteranal lookup item */
+  /** Construct the external lookup item */
   ExternalLookupItem() {}
 
   /**
