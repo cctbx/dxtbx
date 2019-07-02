@@ -17,6 +17,18 @@ namespace dxtbx { namespace boost_python {
 
   namespace detail {
 
+    /// Returns a byte-data-appropriate object for an std::string
+    boost::python::object bytes_from_std_string(const std::string &data) {
+#if PY_MAJOR_VERSION >= 3
+      // Boost::python appears to have no native way to do this conversion
+      boost::python::object data_bytes(
+        boost::python::handle<>(PyBytes_FromStringAndSize(data.data(), data.size())));
+#else
+      boost::python::str data_bytes(data);
+#endif
+      return data_bytes;
+    }
+
     /// Pickle a python object to a string
     std::string pickle_dumps(boost::python::object x) {
       return boost::python::extract<std::string>(
@@ -29,15 +41,7 @@ namespace dxtbx { namespace boost_python {
         return boost::python::object();
       }
 
-#if PY_MAJOR_VERSION >= 3
-      // Boost::python appears to have no native way to do this conversion
-      boost::python::object data_bytes(
-        boost::python::handle<>(PyBytes_FromStringAndSize(x.data(), x.size())));
-#else
-      std::string &data_bytes = x;
-#endif
-
-      return boost::python::import("pickle").attr("loads")(data_bytes);
+      return boost::python::import("pickle").attr("loads")(bytes_from_std_string(x));
     }
   }  // namespace detail
 
@@ -194,7 +198,7 @@ namespace dxtbx { namespace boost_python {
                                        ImageSetDataPickleSuite::get_lookup_tuple(obj),
                                        obj.get_template(),
                                        obj.get_vendor(),
-                                       obj.get_params(),
+                                       detail::bytes_from_std_string(obj.get_params()),
                                        obj.get_format());
     }
 
