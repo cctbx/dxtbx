@@ -1038,7 +1038,7 @@ def get_change_of_basis(transformation):
             )
         )
     else:
-        raise Sorry("Unrecognized tranformation type: %d" % axis_type)
+        raise ValueError("Unrecognized tranformation type: %d" % axis_type)
 
     return cob
 
@@ -1291,7 +1291,8 @@ class DetectorFactoryFromGroup(object):
                         raise RuntimeError("Unknown material: %s" % material)
                     table = attenuation_coefficient.get_table(material)
                     wavelength = beam.get_wavelength()
-                    p.set_mu(table.mu_at_angstrom(wavelength) / 10.0)
+                    mu = table.mu_at_angstrom(wavelength) / 10.0
+                    p.set_mu(mu)
 
                 if (
                     "sensor_thickness" in nx_detector.handle
