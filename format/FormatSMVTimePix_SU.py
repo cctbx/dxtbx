@@ -134,13 +134,13 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
         size, header = FormatSMVTimePix_SU.get_smv_header(image_file)
 
         # check the pixel size is 55 microns
-        if not float(header["PIXEL_SIZE"]) == 0.055:
+        if float(header["PIXEL_SIZE"]) != 0.055:
             return False
 
         # check there are 512*512 pixels
-        if not (header["SIZE1"]) == "512":
+        if header["SIZE1"] != "512":
             return False
-        if not (header["SIZE2"]) == "512":
+        if header["SIZE2"] != "512":
             return False
 
         return True
@@ -159,10 +159,10 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
         panel_size = tuple([int(e / 2) for e in image_size])
 
         # outer pixels have three times the width
-        panel_size_mm = (
-            pixel_size[0] * 3 + (panel_size[0] - 2) * pixel_size[0],
-            pixel_size[1] * 3 + (panel_size[1] - 2) * pixel_size[1],
-        )
+        # panel_size_mm = (
+        #    pixel_size[0] * 3 + (panel_size[0] - 2) * pixel_size[0],
+        #    pixel_size[1] * 3 + (panel_size[1] - 2) * pixel_size[1],
+        # )
         trusted_range = (-1, 65535)
         thickness = 0.3  # assume 300 mu thick
 
@@ -354,9 +354,9 @@ class FormatSMVTimePix_SU_516x516(FormatSMVTimePix_SU):
         size, header = FormatSMVTimePix_SU.get_smv_header(image_file)
 
         # check there are 516*516 pixels
-        if not (header["SIZE1"]) == "516":
+        if header["SIZE1"] != "516":
             return False
-        if not (header["SIZE2"]) == "516":
+        if header["SIZE2"] != "516":
             return False
 
         return True

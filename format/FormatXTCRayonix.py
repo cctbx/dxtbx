@@ -56,7 +56,7 @@ class FormatXTCRayonix(FormatXTC):
         from scitbx.array_family import flex
 
         assert len(self.params.detector_address) == 1
-        det = psana.Detector(self.params.detector_address[0], self._env)
+        # det = psana.Detector(self.params.detector_address[0], self._env)
         data = rayonix_tbx.get_data_from_psana_event(
             self._get_event(index), self.params.detector_address[0]
         )

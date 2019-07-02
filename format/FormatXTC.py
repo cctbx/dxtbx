@@ -202,7 +202,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
         evt = self._get_event(index)
         time = evt.get(psana.EventId).time()
-        fid = evt.get(psana.EventId).fiducials()
+        # fid = evt.get(psana.EventId).fiducials()
 
         sec = time[0]
         nsec = time[1]

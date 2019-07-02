@@ -118,7 +118,6 @@ def test_units():
     assert imageset.get_format_class() == FormatNexusEigerDLS16M
 
     detector = imageset.get_detector()
-    gonio = imageset.get_goniometer()
     scan = imageset.get_scan()
     beam = imageset.get_beam()
 
