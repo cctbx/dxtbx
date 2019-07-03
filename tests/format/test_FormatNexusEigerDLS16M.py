@@ -105,7 +105,7 @@ def test_screening():
     datablocks = DataBlockFactory.from_filenames([master_h5])
     imagesets = datablocks[0].extract_imagesets()
     assert len(imagesets) == 3
-    assert imageset.get_format_class() == FormatNexusEigerDLS16M
+    assert imagesets[0].get_format_class() == FormatNexusEigerDLS16M
 
 
 @pytest.mark.xfail
