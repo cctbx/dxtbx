@@ -12,7 +12,6 @@ from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.masking import GoniometerMaskerFactory
-from dxtbx.masking import is_inside_polygon
 from dxtbx.masking import mask_untrusted_polygon, is_inside_polygon
 
 
