@@ -51,8 +51,8 @@ def is_eiger_nearly_nexus_file(filename):
     if entry is not None:
         try:
             return (
-                numpy.string_("Dectris Eiger")
-                in entry["instrument"]["detector"]["description"][()]
+                numpy.string_("dectris eiger")
+                in entry["instrument"]["detector"]["description"][()].lower()
             )
         except KeyError:
             pass
