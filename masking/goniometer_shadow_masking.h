@@ -40,10 +40,9 @@ namespace dxtbx { namespace masking {
      * @param beam The beam model
      * @param panel The panel model
      */
-    GoniometerShadowMasker(
-      const MultiAxisGoniometer &goniometer,
-      const scitbx::af::const_ref<vec3<double> > &extrema_at_datum,
-      const scitbx::af::const_ref<std::size_t> &axis)
+    GoniometerShadowMasker(const MultiAxisGoniometer &goniometer,
+                           const scitbx::af::const_ref<vec3<double> > &extrema_at_datum,
+                           const scitbx::af::const_ref<std::size_t> &axis)
         : goniometer_(goniometer),
           extrema_at_datum_(extrema_at_datum.begin(), extrema_at_datum.end()),
           axis_(axis.begin(), axis.end()) {}
@@ -159,7 +158,7 @@ namespace dxtbx { namespace masking {
         if (output.size()) {
           vec2<double> px = panel.get_pixel_size();
           polygon_t hull = output[0];
-          BOOST_FOREACH(point_t const &point, hull.outer()) {
+          BOOST_FOREACH (point_t const &point, hull.outer()) {
             vec2<double> p(boost::geometry::get<0>(point) / px[0],
                            boost::geometry::get<1>(point) / px[1]);
             shadow_points.push_back(p);
@@ -186,8 +185,7 @@ namespace dxtbx { namespace masking {
         ImageTile<bool> mask_tile(mask_data);
 
         if (shadow_boundary[i].size() >= 3) {
-          mask_untrusted_polygon(mask_data.ref(),
-                                 shadow_boundary[i].const_ref());
+          mask_untrusted_polygon(mask_data.ref(), shadow_boundary[i].const_ref());
         }
         mask.push_back(mask_tile);
       }

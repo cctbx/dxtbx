@@ -92,7 +92,9 @@ namespace dxtbx { namespace masking {
    * @param y The y coord
    * @returns True/False the point is inside the polygon
    */
-  bool is_inside_polygon(const scitbx::af::const_ref<vec2<double> > &poly, double x, double y) {
+  bool is_inside_polygon(const scitbx::af::const_ref<vec2<double> > &poly,
+                         double x,
+                         double y) {
     // http://en.wikipedia.org/wiki/Point_in_polygon
     // http://en.wikipedia.org/wiki/Even-odd_rule
     std::size_t num = poly.size();
@@ -155,11 +157,12 @@ namespace dxtbx { namespace masking {
    * @param d_min The high resolution limit
    * @param d_max The low resolution limit
    */
-  void mask_untrusted_resolution_range(scitbx::af::ref<bool, scitbx::af::c_grid<2> > mask,
-                                       const BeamBase &beam,
-                                       const Panel &panel,
-                                       double d_min,
-                                       double d_max) {
+  void mask_untrusted_resolution_range(
+    scitbx::af::ref<bool, scitbx::af::c_grid<2> > mask,
+    const BeamBase &beam,
+    const Panel &panel,
+    double d_min,
+    double d_max) {
     DXTBX_ASSERT(d_min < d_max);
     std::size_t width = panel.get_image_size()[0];
     std::size_t height = panel.get_image_size()[1];
@@ -189,7 +192,7 @@ namespace dxtbx { namespace masking {
      */
     ResolutionMaskGenerator(const BeamBase &beam, const Panel &panel)
         : resolution_(
-            scitbx::af::c_grid<2>(panel.get_image_size()[1], panel.get_image_size()[0])) {
+          scitbx::af::c_grid<2>(panel.get_image_size()[1], panel.get_image_size()[0])) {
       vec3<double> s0 = beam.get_s0();
       for (std::size_t j = 0; j < resolution_.accessor()[0]; ++j) {
         for (std::size_t i = 0; i < resolution_.accessor()[1]; ++i) {
@@ -210,7 +213,9 @@ namespace dxtbx { namespace masking {
      * @param d_min The high resolution of the range
      * @param d_max The low resolution of the range
      */
-    void apply(scitbx::af::ref<bool, scitbx::af::c_grid<2> > mask, double d_min, double d_max) const {
+    void apply(scitbx::af::ref<bool, scitbx::af::c_grid<2> > mask,
+               double d_min,
+               double d_max) const {
       DXTBX_ASSERT(d_min < d_max);
       DXTBX_ASSERT(resolution_.accessor()[0] == mask.accessor()[0]);
       DXTBX_ASSERT(resolution_.accessor()[1] == mask.accessor()[1]);
