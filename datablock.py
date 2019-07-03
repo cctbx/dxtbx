@@ -110,59 +110,38 @@ class DataBlock(object):
             if not isinstance(iset, dxtbx.imageset.ImageSweep):
                 yield iset
 
-    def unique_beams(self):
-        """ Iterate through unique beams. """
-        obj = collections.OrderedDict()
-        for iset in self._imagesets:
-            if isinstance(iset, dxtbx.imageset.ImageSweep):
-                obj[iset.get_beam()] = None
+    def _find_unique_items(self, item_name, filter_none=False):
+        """Return a list of unique beams, detectors, ... in order.
+        Optionally filter out None values (unless they came in via
+        an ImageSweep)."""
+
+        # Use the keys of an ordered dictionary to guaranteeing uniqueness
+        # while keeping the order. Could rewrite to use OrderedSet or wait
+        # for Python 3.7 and use a regular dictionary
+        # (3.7+: all dictionaries are guaranteed to be ordered)
+        items = collections.OrderedDict()
+        for imageset in self._imagesets:
+            getter_function = getattr(imageset, "get_" + item_name)
+            if isinstance(imageset, dxtbx.imageset.ImageSweep):
+                items[getter_function()] = None
             else:
-                for i in range(len(iset)):
-                    obj[iset.get_beam(i)] = None
-        return list(obj)
+                for i in range(len(imageset)):
+                    item = getter_function(i)
+                    if not filter_none or item is not None:
+                        items[item] = None
+        return list(items)
+
+    def unique_beams(self):
+        return self._find_unique_items("beam")
 
     def unique_detectors(self):
-        """ Returns an ordered list of detector objects. """
-        obj = collections.OrderedDict()
-        for iset in self._imagesets:
-            if isinstance(iset, dxtbx.imageset.ImageSweep):
-                obj[iset.get_detector()] = None
-            else:
-                for i in range(len(iset)):
-                    obj[iset.get_detector(i)] = None
-        return list(obj)
+        return self._find_unique_items("detector")
 
     def unique_goniometers(self):
-        """ Iterate through unique goniometers. """
-        obj = collections.OrderedDict()
-        for iset in self._imagesets:
-            if isinstance(iset, dxtbx.imageset.ImageSweep):
-                obj[iset.get_goniometer()] = None
-            else:
-                for i in range(len(iset)):
-                    try:
-                        model = iset.get_goniometer(i)
-                        if model is not None:
-                            obj[model] = None
-                    except Exception:
-                        pass
-        return list(obj)
+        return self._find_unique_items("goniometer", filter_none=True)
 
     def unique_scans(self):
-        """ Iterate through unique scans. """
-        obj = collections.OrderedDict()
-        for iset in self._imagesets:
-            if isinstance(iset, dxtbx.imageset.ImageSweep):
-                obj[iset.get_scan()] = None
-            else:
-                for i in range(len(iset)):
-                    try:
-                        model = iset.get_scan(i)
-                        if model is not None:
-                            obj[model] = None
-                    except Exception:
-                        pass
-        return list(obj)
+        return self._find_unique_items("scan", filter_none=True)
 
     def to_dict(self):
         """ Convert the datablock to a dictionary """
