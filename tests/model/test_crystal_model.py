@@ -78,17 +78,17 @@ def test_crystal_model():
         real_space_c=(0, 0, 12),
         space_group_symbol="P 1",
     )
-    assert model == model2 and not (model != model2)
+    assert model == model2
 
     model2a = Crystal(model.get_A(), model.get_space_group())
-    assert model == model2a and not (model != model2a)
+    assert model == model2a
 
     model2b = Crystal(
         matrix.sqr(model.get_A()).inverse().elems,
         model.get_space_group().type().lookup_symbol(),
         reciprocal=False,
     )
-    assert model == model2b and not (model != model2b)
+    assert model == model2b
 
     # rotate 45 degrees about x-axis
     R1 = matrix.sqr(
@@ -286,7 +286,7 @@ Crystal:
     assert uc_minimum.is_similar_to(model_minimum.get_unit_cell())
     assert model_minimum != model
     model_minimum.update(model)
-    assert model_minimum == model
+    assert model_minimum == model  # lgtm
 
     A_static = matrix.sqr(model.get_A())
     A_as_scan_points = [A_static]
@@ -328,7 +328,7 @@ def test_MosaicCrystalKabsch2010():
     assert approx_equal(mosaic_model.get_mosaicity(), 0)
     assert mosaic_model == mosaic_model2
     mosaic_model2.set_mosaicity(0.01)
-    assert mosaic_model != mosaic_model2
+    assert mosaic_model != mosaic_model2  # lgtm
     # FIXME Crystal == MosaicCrystal gives unexpected result, depending on
     # parameter order
     # model4 = Crystal(real_space_a=(10,0,0),
@@ -356,11 +356,11 @@ def test_MosaicCrystalKabsch2010():
     assert approx_equal(mosaic_model.get_domain_size_ang(), 0)
     assert mosaic_model == mosaic_model2
     mosaic_model2.set_half_mosaicity_deg(0.01)
-    assert mosaic_model != mosaic_model2
+    assert mosaic_model != mosaic_model2  # lgtm
     mosaic_model2.set_half_mosaicity_deg(0)
-    assert mosaic_model == mosaic_model2
+    assert mosaic_model == mosaic_model2  # lgtm
     mosaic_model2.set_domain_size_ang(1000)
-    assert mosaic_model != mosaic_model2
+    assert mosaic_model != mosaic_model2  # lgtm
 
 
 def test_similarity():
@@ -449,13 +449,6 @@ def test_check_old_vs_new():
     model_1.set_A_at_scan_points(A_list)
     model_2.set_A_at_scan_points(A_list)
 
-    cell_sd_1 = model_1.get_cell_parameter_sd()
-    cell_sd_2 = model_2.get_cell_parameter_sd()
-    cell_volume_sd_1 = model_1.get_cell_volume_sd()
-    cell_volume_sd_2 = model_2.get_cell_volume_sd()
-    covB1 = model_1.get_B_covariance()
-    covB2 = model_1.get_B_covariance()
-
     A1 = model_1.get_A()
     A2 = model_2.get_A()
     U1 = model_1.get_U()
@@ -490,13 +483,6 @@ def test_check_old_vs_new():
         model_2.get_U_at_scan_point(i) for i in range(model_1.get_num_scan_points())
     ]
 
-    cell_sd_1 = model_1.get_cell_parameter_sd()
-    cell_sd_2 = model_2.get_cell_parameter_sd()
-    cell_volume_sd_1 = model_1.get_cell_volume_sd()
-    cell_volume_sd_2 = model_2.get_cell_volume_sd()
-    covB1 = model_1.get_B_covariance()
-    covB2 = model_1.get_B_covariance()
-
     assert approx_equal(A1, A2)
     assert approx_equal(B1, B2)
     assert approx_equal(U1, U2)
@@ -510,6 +496,13 @@ def test_check_old_vs_new():
         assert approx_equal(A_list_1[i], A_list_2[i])
         assert approx_equal(B_list_1[i], B_list_2[i])
         assert approx_equal(U_list_1[i], U_list_2[i])
+
+    cell_sd_1 = model_1.get_cell_parameter_sd()
+    cell_sd_2 = model_2.get_cell_parameter_sd()
+    cell_volume_sd_1 = model_1.get_cell_volume_sd()
+    cell_volume_sd_2 = model_2.get_cell_volume_sd()
+    covB1 = model_1.get_B_covariance()
+    covB2 = model_1.get_B_covariance()
 
     assert approx_equal(covB1, covB2)
     assert approx_equal(cell_volume_sd_1, cell_volume_sd_2)
