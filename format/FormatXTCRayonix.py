@@ -52,7 +52,6 @@ class FormatXTCRayonix(FormatXTC):
         return any(["rayonix" in src.lower() for src in params.detector_address])
 
     def get_raw_data(self, index):
-        import psana
         from scitbx.array_family import flex
 
         assert len(self.params.detector_address) == 1
@@ -88,8 +87,6 @@ class FormatXTCRayonix(FormatXTC):
         return None
 
     def _detector(self):
-        import psana
-
         return self._detector_factory.simple(
             sensor="UNKNOWN",
             distance=100.0,
