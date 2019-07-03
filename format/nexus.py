@@ -5,8 +5,11 @@ import functools
 import math
 import os
 
+import numpy
+import six
+
 try:
-    from dxtbx_format_nexus_ext import *
+    from dxtbx_format_nexus_ext import dataset_as_flex_int
 except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
     if "SIT_ROOT" not in os.environ:
@@ -155,9 +158,12 @@ def find_entries(nx_file, entry):
 
     def visitor(name, obj):
         if "NX_class" in obj.attrs:
-            if obj.attrs["NX_class"] in ["NXentry", "NXsubentry"]:
+            if obj.attrs["NX_class"] in [
+                numpy.string_("NXentry"),
+                numpy.string_("NXsubentry"),
+            ]:
                 if "definition" in obj:
-                    if obj["definition"][()] == "NXmx":
+                    if obj["definition"][()] == numpy.string_("NXmx"):
                         hits.append(obj)
 
     visitor(entry, nx_file[entry])
@@ -170,10 +176,11 @@ def find_class(nx_file, nx_class):
     Find a given NXclass
     """
     hits = []
+    nx_class = numpy.string_(nx_class)
 
     def visitor(name, obj):
         if "NX_class" in obj.attrs:
-            if obj.attrs["NX_class"] in [nx_class]:
+            if obj.attrs["NX_class"] == nx_class:
                 hits.append(obj)
 
     nx_file.visititems(visitor)
@@ -184,6 +191,8 @@ def convert_units(value, input_units, output_units):
     """
     Hacky utility function to convert units
     """
+    if six.PY3 and isinstance(input_units, bytes):
+        input_units = input_units.decode("latin-1")
     converters = {
         "m": {
             "mm": lambda x: x * 1e3,
@@ -223,12 +232,12 @@ def visit_dependencies(nx_file, item, visitor=None):
     """
     Walk the dependency chain and call a visitor function
     """
-    dependency_chain = []
+    dependency_chain = set()
     if os.path.basename(item) == "depends_on":
         depends_on = nx_file[item][()]
     else:
         depends_on = nx_file[item].attrs["depends_on"]
-    while not depends_on == ".":
+    while not depends_on == numpy.string_("."):
         if visitor is not None:
             visitor(nx_file, depends_on)
         if depends_on in dependency_chain:
@@ -237,7 +246,7 @@ def visit_dependencies(nx_file, item, visitor=None):
             _ = nx_file[depends_on]
         except Exception:
             raise RuntimeError("'%s' is missing from nx_file" % depends_on)
-        dependency_chain.append(depends_on)
+        dependency_chain.add(depends_on)
         try:
             depends_on = nx_file[depends_on].attrs["depends_on"]
         except Exception:
@@ -260,12 +269,12 @@ def construct_vector(nx_file, item, vector=None):
             units = item.attrs["units"]
             ttype = item.attrs["transformation_type"]
             vector = matrix.col(item.attrs["vector"])
-            if ttype == "translation":
+            if ttype == numpy.string_("translation"):
                 value = convert_units(value, units, "mm")
                 if hasattr(value, "__iter__") and len(value) == 1:
                     value = value[0]
                 self.vector = vector * value + self.vector
-            elif ttype == "rotation":
+            elif ttype == numpy.string_("rotation"):
                 if hasattr(value, "__iter__") and len(value):
                     value = value[0]
                 if units == "rad":
@@ -291,7 +300,7 @@ def construct_vector(nx_file, item, vector=None):
             offset = convert_units(offset, units, "mm")
         else:
             offset = vector * 0.0
-        if ttype == "translation":
+        if ttype == numpy.string_("translation"):
             value = convert_units(value, units, "mm")
             try:
                 vector = vector * value
@@ -327,14 +336,18 @@ def construct_axes(nx_file, item, vector=None):
             units = item.attrs["units"]
             ttype = item.attrs["transformation_type"]
             vector = [float(v) for v in item.attrs["vector"]]
-            if ttype == "translation":
+            if ttype == numpy.string_("translation"):
                 return
-            elif ttype == "rotation":
+            elif ttype == numpy.string_("rotation"):
                 if hasattr(value, "__iter__") and len(value):
                     value = value[0]
-                if units == "rad":
+                if units == numpy.string_("rad"):
                     value *= math.pi / 180
-                elif units not in ["deg", "degree", "degrees"]:
+                elif units not in [
+                    numpy.string_("deg"),
+                    numpy.string_("degree"),
+                    numpy.string_("degrees"),
+                ]:
                     raise RuntimeError("Invalid units: %s" % units)
 
                 # is the axis moving? Check the values for this axis
@@ -378,7 +391,7 @@ def construct_axes(nx_file, item, vector=None):
             offset = nx_file[item].attrs["offset"]
         else:
             offset = vector * 0.0
-        if ttype == "translation":
+        if ttype == numpy.string_("translation"):
             value = convert_units(value, units, "mm")
             try:
                 vector = vector * value
@@ -450,7 +463,7 @@ class NXdetector_module(object):
                     check_attr("transformation_type"),
                     check_attr("vector"),
                     check_attr("offset"),
-                    check_attr("units", dtype=str),
+                    check_attr("units", dtype=(numpy.string_, str)),
                     check_attr("depends_on"),
                 ],
             },
@@ -461,7 +474,7 @@ class NXdetector_module(object):
                     check_attr("transformation_type"),
                     check_attr("vector"),
                     check_attr("offset"),
-                    check_attr("units", dtype=str),
+                    check_attr("units", dtype=(numpy.string_, str)),
                     check_attr("depends_on"),
                 ],
             },
@@ -472,7 +485,7 @@ class NXdetector_module(object):
                     check_attr("transformation_type"),
                     check_attr("vector"),
                     check_attr("offset"),
-                    check_attr("units", dtype=str),
+                    check_attr("units", dtype=(numpy.string_, str)),
                     check_attr("depends_on"),
                 ],
             },
@@ -625,7 +638,7 @@ class NXdetector(object):
                 "minOccurs": 0,
                 "checks": [
                     check_dset(dtype=["float32", "float64"], is_scalar=True),
-                    check_attr("units", dtype=str),
+                    check_attr("units", dtype=numpy.string_),
                 ],
             },
             "threshold_energy": {
@@ -907,14 +920,9 @@ def is_nexus_file(filename):
     """
     import h5py
 
-    # Get the file handle
-    handle = h5py.File(filename, "r")
-
-    # Find the NXmx entries
-    count = 0
-    for entry in find_entries(handle, "/"):
-        count += 1
-    return count > 0
+    with h5py.File(filename, "r") as handle:
+        # Find the NXmx entries
+        return bool(find_entries(handle, "/"))
 
 
 class BeamFactory(object):
@@ -974,10 +982,14 @@ def get_change_of_basis(transformation):
     # 4x4 change of basis matrix (homogeneous coordinates)
     cob = None
 
-    if axis_type == "rotation":
-        if units == "rad":
+    if axis_type == numpy.string_("rotation"):
+        if units == numpy.string_("rad"):
             deg = False
-        elif units in ["deg", "degree", "degrees"]:
+        elif units in [
+            numpy.string_("deg"),
+            numpy.string_("degree"),
+            numpy.string_("degrees"),
+        ]:
             deg = True
         else:
             raise RuntimeError("Invalid units: %s" % units)
@@ -1002,7 +1014,7 @@ def get_change_of_basis(transformation):
                 1,
             )
         )
-    elif axis_type == "translation":
+    elif axis_type == numpy.string_("translation"):
         setting = convert_units(setting, units, "mm")
         translation = offset + (vector * setting)
         cob = sqr(
@@ -1026,7 +1038,7 @@ def get_change_of_basis(transformation):
             )
         )
     else:
-        raise Sorry("Unrecognized tranformation type: %d" % axis_type)
+        raise ValueError("Unrecognized tranformation type: %d" % axis_type)
 
     return cob
 
@@ -1044,7 +1056,7 @@ def get_depends_on_chain_using_equipment_components(transformation):
     while True:
         parent_id = current.attrs["depends_on"]
 
-        if parent_id == ".":
+        if parent_id == numpy.string_("."):
             return chain
         parent = current.parent[parent_id]
 
@@ -1071,7 +1083,7 @@ def get_cummulative_change_of_basis(transformation):
 
     parent_id = transformation.attrs["depends_on"]
 
-    if parent_id == ".":
+    if parent_id == numpy.string_("."):
         return None, cob
     parent = transformation.parent[parent_id]
 
@@ -1279,7 +1291,8 @@ class DetectorFactoryFromGroup(object):
                         raise RuntimeError("Unknown material: %s" % material)
                     table = attenuation_coefficient.get_table(material)
                     wavelength = beam.get_wavelength()
-                    p.set_mu(table.mu_at_angstrom(wavelength) / 10.0)
+                    mu = table.mu_at_angstrom(wavelength) / 10.0
+                    p.set_mu(mu)
 
                 if (
                     "sensor_thickness" in nx_detector.handle
@@ -1336,7 +1349,17 @@ class DetectorFactory(object):
         thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
 
         # Get the detector material
-        material = str(nx_detector["sensor_material"][()])
+        material = {
+            numpy.string_("Si"): "Si",
+            numpy.string_("Silicon"): "Si",
+            numpy.string_("Sillicon"): "Si",
+            numpy.string_("CdTe"): "CdTe",
+            numpy.string_("GaAs"): "GaAs",
+        }.get(nx_detector["sensor_material"][()])
+        if not material:
+            raise RuntimeError(
+                "Unknown material: %s" % nx_detector["sensor_material"][()]
+            )
 
         # Get the fast pixel size and vector
         fast_pixel_direction = nx_module["fast_pixel_direction"]
@@ -1375,18 +1398,6 @@ class DetectorFactory(object):
         # Compute the attenuation coefficient.
         # This will fail for undefined composite materials
         # mu_at_angstrom returns cm^-1, but need mu in mm^-1
-        if material == "Si":
-            pass
-        elif material == "Silicon":
-            material = "Si"
-        elif material == "Sillicon":
-            material = "Si"
-        elif material == "CdTe":
-            pass
-        elif material == "GaAs":
-            pass
-        else:
-            raise RuntimeError("Unknown material: %s" % material)
         table = attenuation_coefficient.get_table(material)
         wavelength = beam.get_wavelength()
         mu = table.mu_at_angstrom(wavelength) / 10.0
@@ -1394,7 +1405,7 @@ class DetectorFactory(object):
         # Construct the detector model
         pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
         # image size stored slow to fast but dxtbx needs fast to slow
-        image_size = tuple(reversed(map(int, nx_module["data_size"][-2:])))
+        image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
 
         if known_backwards(image_size):
             image_size = tuple(reversed(image_size))
@@ -1450,7 +1461,7 @@ def find_goniometer_rotation(obj):
     tree = get_depends_on_chain_using_equipment_components(thing)
     for t in tree:
         o = obj.handle.file[t.name]
-        if o.attrs["transformation_type"] == "rotation":
+        if o.attrs["transformation_type"] == numpy.string_("rotation"):
             # if this is changing, assume is scan axis
             v = o[()]
             if min(v) < max(v):

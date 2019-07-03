@@ -22,16 +22,18 @@ from dxtbx.format.nexus import ScanFactory
 from dxtbx.format.nexus import DataFactory
 from dxtbx.format.nexus import MaskFactory
 
+import h5py
+import numpy
+
 
 def find_entries(nx_file):
     """
     Find NXmx entries
-
     """
     if "entry" in nx_file:
         entry = nx_file["entry"]
         if "NX_class" in entry.attrs:
-            if entry.attrs["NX_class"] == "NXentry":
+            if entry.attrs["NX_class"] == numpy.string_("NXentry"):
                 if "definition" not in entry:
                     return entry
     return None
@@ -40,10 +42,7 @@ def find_entries(nx_file):
 def is_eiger_nearly_nexus_file(filename):
     """
     A hacky function to check if this is an EIGER-flavoured nexus file
-
     """
-    import h5py
-
     # Get the file handle
     handle = h5py.File(filename, "r")
 
@@ -51,7 +50,10 @@ def is_eiger_nearly_nexus_file(filename):
     entry = find_entries(handle)
     if entry is not None:
         try:
-            return "Dectris Eiger" in entry["instrument"]["detector"]["description"][()]
+            return (
+                numpy.string_("dectris eiger")
+                in entry["instrument"]["detector"]["description"][()].lower()
+            )
         except KeyError:
             pass
     return False
@@ -60,11 +62,9 @@ def is_eiger_nearly_nexus_file(filename):
 class EigerNXmxFixer(object):
     """
     A hacky class to read an NXmx file
-
     """
 
     def __init__(self, input_filename, memory_mapped_name):
-        import h5py
         from scitbx import matrix
 
         # Copy the master file to the in memory handle
@@ -80,7 +80,7 @@ class EigerNXmxFixer(object):
             dataset[()] = value
 
         # Add NXmx definition
-        create_scalar(handle["entry"], "definition", "S4", "NXmx")
+        create_scalar(handle["entry"], "definition", "S4", numpy.string_("NXmx"))
 
         # Add saturation value
         try:
@@ -103,7 +103,9 @@ class EigerNXmxFixer(object):
             )
 
         # Add detector type
-        create_scalar(handle["entry/instrument/detector"], "type", "S4", "PIXEL")
+        create_scalar(
+            handle["entry/instrument/detector"], "type", "S4", numpy.string_("PIXEL")
+        )
 
         # Move the beam
         # print "Copying /entry/instrument/beam to /entry/sample/beam"
@@ -113,7 +115,7 @@ class EigerNXmxFixer(object):
         module_path = "/entry/instrument/detector/module"
         # print "Creating detector module %s" % (module_path)
         group = handle.create_group(module_path)
-        group.attrs["NX_class"] = "NXdetector_module"
+        group.attrs["NX_class"] = numpy.string_("NXdetector_module")
 
         # Add a module index
         create_scalar(group, "module_index", "int64", 0)
@@ -139,6 +141,7 @@ class EigerNXmxFixer(object):
 
         for d in delete:
             del handle[d]
+        depends_on = "/entry/instrument/detector/transformations/translation"
 
         # Add fast_pixel_size dataset
         # print "Using /entry/instrument/detector/geometry/orientation/value as fast/slow pixel directions"
@@ -160,13 +163,13 @@ class EigerNXmxFixer(object):
             "float32",
             handle["/entry/instrument/detector/x_pixel_size"][()],
         )
-        group["fast_pixel_direction"].attrs["transformation_type"] = "translation"
+        group["fast_pixel_direction"].attrs["transformation_type"] = numpy.string_(
+            "translation"
+        )
         group["fast_pixel_direction"].attrs["vector"] = fast_axis
         group["fast_pixel_direction"].attrs["offset"] = (0, 0, 0)
-        group["fast_pixel_direction"].attrs["units"] = "m"
-        group["fast_pixel_direction"].attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/transformations/translation"
+        group["fast_pixel_direction"].attrs["units"] = numpy.string_("m")
+        group["fast_pixel_direction"].attrs["depends_on"] = numpy.string_(depends_on)
 
         # Add slow_pixel_size dataset
         create_scalar(
@@ -175,32 +178,31 @@ class EigerNXmxFixer(object):
             "float32",
             handle["/entry/instrument/detector/y_pixel_size"][()],
         )
-        group["slow_pixel_direction"].attrs["transformation_type"] = "translation"
+        group["slow_pixel_direction"].attrs["transformation_type"] = numpy.string_(
+            "translation"
+        )
         group["slow_pixel_direction"].attrs["vector"] = slow_axis
         group["slow_pixel_direction"].attrs["offset"] = (0, 0, 0)
-        group["slow_pixel_direction"].attrs["units"] = "m"
-        group["slow_pixel_direction"].attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/transformations/translation"
+        group["slow_pixel_direction"].attrs["units"] = numpy.string_("m")
+        group["slow_pixel_direction"].attrs["depends_on"] = numpy.string_(depends_on)
 
         # Add module offset dataset
         # print "Set module offset to be zero relative to detector"
         create_scalar(group, "module_offset", "float32", 0)
-        group["module_offset"].attrs["transformation_type"] = "translation"
+        group["module_offset"].attrs["transformation_type"] = numpy.string_(
+            "translation"
+        )
         group["module_offset"].attrs["vector"] = (0, 0, 0)
         group["module_offset"].attrs["offset"] = (0, 0, 0)
-        group["module_offset"].attrs["units"] = "m"
-        group["module_offset"].attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/transformations/translation"
+        group["module_offset"].attrs["units"] = numpy.string_("m")
+        group["module_offset"].attrs["depends_on"] = numpy.string_(depends_on)
 
         # Create detector depends_on
-        depends_on = "/entry/instrument/detector/transformations/translation"
         create_scalar(
             handle["/entry/instrument/detector"],
             "depends_on",
             "S%d" % len(depends_on),
-            depends_on,
+            numpy.string_(depends_on),
         )
 
         # Add detector position
@@ -217,22 +219,22 @@ class EigerNXmxFixer(object):
             )
         )
         group = handle.create_group("/entry/instrument/detector/transformations")
-        group.attrs["NX_class"] = "NXtransformations"
+        group.attrs["NX_class"] = numpy.string_("NXtransformations")
         create_scalar(group, "translation", "float32", detector_offset_vector.length())
-        group["translation"].attrs["transformation_type"] = "translation"
+        group["translation"].attrs["transformation_type"] = numpy.string_("translation")
         if detector_offset_vector.length() > 0:
             group["translation"].attrs["vector"] = detector_offset_vector.normalize()
         else:
             group["translation"].attrs["vector"] = detector_offset_vector
         group["translation"].attrs["offset"] = 0
-        group["translation"].attrs["units"] = "m"
-        group["translation"].attrs["depends_on"] = "."
+        group["translation"].attrs["units"] = numpy.string_("m")
+        group["translation"].attrs["depends_on"] = numpy.string_(".")
 
         # Create goniometer transformations if not found
         if "/entry/sample/transformations" not in handle:
             # print "Creating group /entry/sample/transformation"
             group = handle.create_group("/entry/sample/transformations")
-            group.attrs["NX_class"] = "NXtransformations"
+            group.attrs["NX_class"] = numpy.string_("NXtransformations")
         else:
             group = handle["/entry/sample/transformations"]
 
@@ -266,11 +268,11 @@ class EigerNXmxFixer(object):
             for name in sorted(handle["/entry/data"]):
                 num_images += len(handle_orig["/entry/data/%s" % name])
             dataset = group.create_dataset("omega", (num_images,), dtype="float32")
-            dataset.attrs["units"] = "degree"
-            dataset.attrs["transformation_type"] = "rotation"
+            dataset.attrs["units"] = numpy.string_("degree")
+            dataset.attrs["transformation_type"] = numpy.string_("rotation")
             dataset.attrs["vector"] = default_axis
             dataset.attrs["offset"] = 0
-            dataset.attrs["depends_on"] = "."
+            dataset.attrs["depends_on"] = numpy.string_(".")
             omega_range_average = handle[
                 "/entry/sample/goniometer/omega_range_average"
             ][()]
@@ -287,7 +289,7 @@ class EigerNXmxFixer(object):
                 handle["/entry/sample"],
                 "depends_on",
                 "S%d" % len(dataset.name),
-                str(dataset.name),
+                numpy.string_(dataset.name),
             )
 
         # Change relative paths to absolute paths
