@@ -132,7 +132,7 @@ def run(args):
         # read the data and get the detector models
         try:
             datablocks = DataBlockFactory.from_json_file(file_name, check_format=False)
-            detectors = [datablock.unique_detectors() for datablock in datablocks]
+            detectors = sum((db.unique_detectors() for db in datablocks), [])
         except Exception:
             try:
                 experiments = ExperimentListFactory.from_json_file(
