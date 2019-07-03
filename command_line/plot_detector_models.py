@@ -132,24 +132,17 @@ def run(args):
         # read the data and get the detector models
         try:
             datablocks = DataBlockFactory.from_json_file(file_name, check_format=False)
+            detectors = [datablock.unique_detectors() for datablock in datablocks]
         except Exception:
             try:
                 experiments = ExperimentListFactory.from_json_file(
                     file_name, check_format=False
                 )
-                detectors = experiments.detectors()
             except ValueError:
                 experiments = ExperimentListFactory.from_filenames([file_name])
-            if params.plot_all_detectors:
-                detectors = experiments.detectors()
-            else:
-                detectors = experiments.detectors()[0:1]
-        else:
-            detectors = []
-            for datablock in datablocks:
-                detectors.extend(datablock.unique_detectors())
-            if not params.plot_all_detectors:
-                detectors = detectors[0:1]
+            detectors = experiments.detectors()
+        if not params.plot_all_detectors:
+            detectors = detectors[0:1]
         for detector in detectors:
             # plot the hierarchy
             if params.orthographic:
