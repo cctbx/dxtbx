@@ -193,23 +193,10 @@ class FormatSMVNOIR(FormatSMVRigaku):
 
     def _scan(self):
         """Return the scan information for this image."""
-
-        rotation = self.get_rotation()
-
-        format = self._scan_factory.format("SMV")
-        epoch = time.mktime(
-            time.strptime(
-                self._header_dictionary["NOIR1_CREATED"], "%m/%d/%y  %H:%M:%S"
-            )
+        epoch = time.strptime(
+            self._header_dictionary["NOIR1_CREATED"], "%m/%d/%y  %H:%M:%S"
         )
-
-        exposure_time = rotation[3]
-        osc_start = rotation[0]
-        osc_range = rotation[2]
-
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
-        )
+        return self._create_single_SVM_scan(epoch)
 
     def get_raw_data(self):
         """Get the pixel intensities (i.e. read the image and return as a

@@ -146,24 +146,10 @@ class FormatSMVRigakuPilatus(FormatSMVRigaku):
 
     def _scan(self):
         """Return the scan information for this image."""
-
-        rotation = self.get_rotation()
-
-        format = self._scan_factory.format("SMV")
-
-        epoch = time.mktime(
-            time.strptime(
-                self._header_dictionary["DTREK_DATE_TIME"], "%d-%b-%Y %H:%M:%S"
-            )
+        epoch = time.strptime(
+            self._header_dictionary["DTREK_DATE_TIME"], "%d-%b-%Y %H:%M:%S"
         )
-
-        exposure_time = rotation[3]
-        osc_start = rotation[0]
-        osc_range = rotation[2]
-
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
-        )
+        return self._create_single_SVM_scan(epoch)
 
     def get_raw_data(self):
         """Read the data - assuming it is streaming 4-byte unsigned ints following the

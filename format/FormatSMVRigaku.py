@@ -9,6 +9,9 @@
 
 from __future__ import absolute_import, division, print_function
 
+import calendar
+import time
+
 from dxtbx.format.FormatSMV import FormatSMV
 
 
@@ -91,6 +94,26 @@ class FormatSMVRigaku(FormatSMV):
         long as the result is an scan."""
 
         raise NotImplementedError("overload me")
+
+    def _create_single_SVM_scan(self, epoch_time_struct, local_time=True):
+        """Return the scan information for this image."""
+
+        rotation = self.get_rotation()
+
+        format = self._scan_factory.format("SMV")
+
+        if local_time:
+            epoch = time.mktime(epoch_time_struct)
+        else:
+            epoch = calendar.timegm(epoch_time_struct)
+
+        osc_start = rotation[0]
+        osc_range = rotation[2]
+        exposure_time = rotation[3]
+
+        return self._scan_factory.single(
+            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+        )
 
     def get_raw_data(self):
         """Get the pixel intensities (i.e. read the image and return as a
