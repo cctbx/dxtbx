@@ -10,11 +10,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
-import math
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from dxtbx.util.masking import GoniometerMaskerFactory
+
 
 # Module positional offsets in x, y, in pixels - for the moment ignoring the
 # rotational offsets as these are not well defined. To be honest these
@@ -146,10 +146,6 @@ MODULE_OFFSETS_Y = {
     (11, 3): -0.593992,
     (11, 4): -0.801247,
 }
-try:
-    from dxtbx.util.masking import GoniometerMaskerFactory
-except ImportError:
-    GoniometerMaskerFactory = False
 
 
 class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):

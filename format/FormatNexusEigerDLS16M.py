@@ -5,11 +5,7 @@ import libtbx
 from scitbx.array_family import flex
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.model import MultiAxisGoniometer
-
-try:
-    from dxtbx.util.masking import GoniometerMaskerFactory
-except ImportError:
-    GoniometerMaskerFactory = False
+from dxtbx.util.masking import GoniometerMaskerFactory
 
 
 class FormatNexusEigerDLS16M(FormatNexus):
@@ -28,9 +24,6 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
-
-        if not GoniometerMaskerFactory:
-            return False
 
         # Get the file handle
         handle = h5py.File(image_file, "r")

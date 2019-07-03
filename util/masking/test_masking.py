@@ -5,14 +5,15 @@ import os
 import pytest
 
 from scitbx.array_family import flex
+from scitbx import matrix
+from scitbx.math import principal_axes_of_inertia_2d
 
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
-from dxtbx.util.masking import PyGoniometerShadowMasker
-from dxtbx.util.masking.SmarGonShadowMask import PySmarGonShadowMasker
 from dxtbx.util.masking import GoniometerMaskerFactory
 from dxtbx.util.masking import is_inside_polygon
+from dxtbx.util.masking import mask_untrusted_polygon, is_inside_polygon
 
 
 def test_polygon():
@@ -297,4 +298,279 @@ def test_dls_i23_kappa(dls_i23_experiment, dls_i23_kappa_shadow_masker):
             0,
         ]
         mask = masker.get_mask(detector, scan_angle)
-        assert sum([m.count(False) for m in mask]) == 1898843
+        assert sum(m.count(False) for m in mask) == 1898843
+
+
+class PyGoniometerShadowMasker(object):
+    def __init__(self, goniometer, extrema_at_datum, axis):
+        # axis is an array of size_t the same size as extrema_at_datum,
+        # where each element identifies the axis that that coordinate depends on
+        self.goniometer = goniometer
+        self._extrema_at_datum = extrema_at_datum
+        self.axis = axis
+
+    def extrema_at_scan_angle(self, scan_angle):
+        axes = self.goniometer.get_axes()
+        angles = self.goniometer.get_angles()
+        scan_axis = self.goniometer.get_scan_axis()
+        angles[scan_axis] = scan_angle
+        extrema = self._extrema_at_datum.deep_copy()
+
+        for i in range(len(axes)):
+            sel = self.axis <= i
+            rotation = matrix.col(axes[i]).axis_and_angle_as_r3_rotation_matrix(
+                angles[i], deg=True
+            )
+            extrema.set_selected(sel, rotation.elems * extrema.select(sel))
+
+        return extrema
+
+    def project_extrema(self, detector, scan_angle):
+        coords = self.extrema_at_scan_angle(scan_angle)
+        shadow_boundary = []
+
+        for p_id, p in enumerate(detector):
+            # project coordinates onto panel plane
+            a = p.get_D_matrix() * coords
+            x, y, z = a.parts()
+            valid = z > 0
+            x.set_selected(valid, x.select(valid) / z.select(valid))
+            y.set_selected(valid, y.select(valid) / z.select(valid))
+
+            if valid.count(True) < 3:
+                # no shadow projected onto this panel
+                shadow_boundary.append(flex.vec2_double())
+                continue
+
+            # Compute convex hull of shadow points
+            points = flex.vec2_double(x.select(valid), y.select(valid))
+            shadow = flex.vec2_double(_convex_hull(points))
+            shadow *= 1 / p.get_pixel_size()[0]
+
+            shadow_orig = shadow.deep_copy()
+
+            for i in (0, p.get_image_size()[0]):
+                points = flex.vec2_double(
+                    flex.double(p.get_image_size()[1], i),
+                    flex.double_range(0, p.get_image_size()[1]),
+                )
+                inside = is_inside_polygon(shadow_orig, points)
+                # only add those points needed to define vertices of shadow
+                inside_isel = inside.iselection()
+                outside_isel = (~inside).iselection()
+                while inside_isel.size():
+                    j = inside_isel[0]
+                    shadow.append(points[j])
+                    outside_isel = outside_isel.select(outside_isel > j)
+                    if outside_isel.size() == 0:
+                        shadow.append(points[inside_isel[-1]])
+                        break
+                    sel = inside_isel >= outside_isel[0]
+                    if sel.count(True) == 0:
+                        shadow.append(points[inside_isel[-1]])
+                        break
+                    inside_isel = inside_isel.select(sel)
+
+            for i in (0, p.get_image_size()[1]):
+                points = flex.vec2_double(
+                    flex.double_range(0, p.get_image_size()[0]),
+                    flex.double(p.get_image_size()[0], i),
+                )
+                inside = is_inside_polygon(shadow_orig, points)
+                # only add those points needed to define vertices of shadow
+                inside_isel = inside.iselection()
+                outside_isel = (~inside).iselection()
+                while inside_isel.size():
+                    j = inside_isel[0]
+                    shadow.append(points[j])
+                    outside_isel = outside_isel.select(outside_isel > j)
+                    if outside_isel.size() == 0:
+                        shadow.append(points[inside_isel[-1]])
+                        break
+                    sel = inside_isel >= outside_isel[0]
+                    if sel.count(True) == 0:
+                        shadow.append(points[inside_isel[-1]])
+                        break
+                    inside_isel = inside_isel.select(sel)
+
+            # Select only those vertices that are within the panel dimensions
+            n_px = p.get_image_size()
+            x, y = shadow.parts()
+            valid = (x >= 0) & (x <= n_px[0]) & (y >= 0) & (y <= n_px[1])
+            shadow = shadow.select(valid)
+
+            # sort vertices clockwise from centre of mass
+            com = principal_axes_of_inertia_2d(shadow).center_of_mass()
+            sx, sy = shadow.parts()
+            shadow = shadow.select(
+                flex.sort_permutation(flex.atan2(sy - com[1], sx - com[0]))
+            )
+
+            shadow_boundary.append(shadow)
+
+        return shadow_boundary
+
+    def get_mask(self, detector, scan_angle):
+        shadow_boundary = self.project_extrema(detector, scan_angle)
+
+        mask = []
+        for panel_id, panel in enumerate(detector):
+            m = None
+            if shadow_boundary[panel_id].size() > 3:
+                m = flex.bool(flex.grid(reversed(panel.get_image_size())), True)
+                mask_untrusted_polygon(m, shadow_boundary[panel_id])
+            mask.append(m)
+        return mask
+
+
+# https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain#Python
+# https://github.com/thepracticaldev/orly-full-res/blob/master/copyingandpasting-big.png
+def _convex_hull(points):
+    """Computes the convex hull of a set of 2D points.
+
+    Input: an iterable sequence of (x, y) pairs representing the points.
+    Output: a list of vertices of the convex hull in counter-clockwise order,
+      starting from the vertex with the lexicographically smallest coordinates.
+    Implements Andrew's monotone chain algorithm. O(n log n) complexity.
+    """
+
+    # Sort the points lexicographically (tuples are compared lexicographically).
+    # Remove duplicates to detect the case we have just one unique point.
+    points = sorted(set(points))
+
+    # Boring case: no points or a single point, possibly repeated multiple times.
+    if len(points) <= 1:
+        return points
+
+    # 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
+    # Returns a positive value, if OAB makes a counter-clockwise turn,
+    # negative for clockwise turn, and zero if the points are collinear.
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    # Build lower hull
+    lower = []
+    for p in points:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+
+    # Build upper hull
+    upper = []
+    for p in reversed(points):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+
+    # Concatenation of the lower and upper hulls gives the convex hull.
+    # Last point of each list is omitted because it is repeated at the beginning of the other list.
+    return lower[:-1] + upper[:-1]
+
+
+class PySmarGonShadowMasker(PyGoniometerShadowMasker):
+    def __init__(self, goniometer):
+        # FACE A: Sample holder
+        #   Defined as semi-circle of radius r(A) = 10 mm (centred on PHI axis)
+        #   with rectangle of size a(A) = 12.8 mm (x 20 mm)
+
+        offsetA = 33.0
+        # semi-circle for phi=-90 ... +90
+        radiusA = 10.0
+        phi = flex.double_range(-90, 100, step=10) * math.pi / 180
+        x = flex.double(phi.size(), -offsetA)
+        y = radiusA * flex.cos(phi)
+        z = radiusA * flex.sin(phi)
+
+        # corners of square
+        sqdA = 12.8  # square depth
+        nsteps = 10
+        for i in range(nsteps + 1):
+            for sign in (+1, -1):
+                x.append(-offsetA)
+                y.append(i * -sqdA / nsteps)
+                z.append(sign * radiusA)
+        x.append(-offsetA)
+        y.append(-sqdA)
+        z.append(0)
+
+        self.faceA = flex.vec3_double(-x, -y, z)
+
+        # FACE B: Lower arm
+        sx = -28.50
+        sy = -4.90
+        sz = 8.50
+        mx = -13.80
+        my = -26.00
+        nx = -27.50
+        ny = -29.50
+        px = -65.50
+        py = -29.50
+        self.faceB = flex.vec3_double(
+            ((-sx, -sy, sz), (-mx, -my, 0), (-nx, -ny, 0), (-px, -py, 0))
+        )
+
+        # FACE E: Rim of sample holder
+        #   Defined as circle of radius r(E) = 6 mm (centred on PHI axis) at an
+        #   offset o(E) = 19 mm
+
+        offsetE = 19.0
+        radiusE = 6.0
+        phi = flex.double_range(0, 360, step=15) * math.pi / 180
+        x = flex.double(phi.size(), -offsetE)
+        y = radiusE * flex.cos(phi)
+        z = radiusE * flex.sin(phi)
+
+        self.faceE = flex.vec3_double(-x, -y, z)
+
+        extrema_at_datum = self.faceA.deep_copy()
+        extrema_at_datum.extend(self.faceE)
+        super(PySmarGonShadowMasker, self).__init__(
+            goniometer, extrema_at_datum, flex.size_t(extrema_at_datum.size(), 1)
+        )
+
+    def extrema_at_scan_angle(self, scan_angle):
+        extrema = super(PySmarGonShadowMasker, self).extrema_at_scan_angle(scan_angle)
+
+        axes = self.goniometer.get_axes()
+        angles = self.goniometer.get_angles()
+        scan_axis = self.goniometer.get_scan_axis()
+        angles[scan_axis] = scan_angle
+
+        s = matrix.col(self.faceB[0])
+        mx, my, _ = self.faceB[1]
+        nx, ny, _ = self.faceB[2]
+        px, py, _ = self.faceB[3]
+
+        Rchi = matrix.col(axes[1]).axis_and_angle_as_r3_rotation_matrix(
+            angles[1], deg=True
+        )
+        sk = Rchi * s
+        sxk, syk, szk = sk.elems
+        coords = flex.vec3_double(
+            (
+                (sxk, syk, 0),
+                (sxk, syk, szk),
+                (sxk + mx / 2, syk + my / 2, szk),
+                (sxk + mx, syk + my, szk),
+                (sxk + (mx + nx) / 2, syk + (my + ny) / 2, szk),
+                (sxk + nx, syk + ny, szk),
+                (sxk + (nx + px) / 2, syk + (ny + py) / 2, szk),
+                (sxk + px, syk + py, szk),
+                (sxk + px, syk + py, 0),
+                (sxk + px, syk + py, -szk),
+                (sxk + (nx + px) / 2, syk + (ny + py) / 2, -szk),
+                (sxk + nx, syk + ny, -szk),
+                (sxk + (mx + nx) / 2, syk + (my + ny) / 2, -szk),
+                (sxk + mx, syk + my, -szk),
+                (sxk + mx / 2, syk + my / 2, -szk),
+                (sxk, syk, -szk),
+            )
+        )
+
+        Romega = matrix.col(axes[2]).axis_and_angle_as_r3_rotation_matrix(
+            angles[2], deg=True
+        )
+        coords = Romega.elems * coords
+        extrema.extend(coords)
+
+        return extrema

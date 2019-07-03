@@ -10,6 +10,7 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
+from dxtbx.util.masking import GoniometerMaskerFactory
 
 
 class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
@@ -23,11 +24,6 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
 
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
-
-        try:
-            import dxtbx.util.masking  # noqa: F401 - test import
-        except ImportError:
-            return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
 
@@ -86,9 +82,7 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
 
         if goniometer.get_names()[1] == "GON_CHI":
             # SmarGon
-            from dxtbx.util.masking.SmarGonShadowMask import SmarGonShadowMasker
-
-            return SmarGonShadowMasker(goniometer)
+            return GoniometerMaskerFactory.smargon(goniometer)
 
         else:
             raise RuntimeError(

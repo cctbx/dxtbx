@@ -34,28 +34,13 @@ namespace dxtbx { namespace util { namespace masking { namespace boost_python {
   }
 
   // Copied from dxtbx/boost_python/imageset_ext.cc
-  namespace detail {
-    /**
-     * Tuple from list
-     */
-    boost::python::tuple list_to_tuple(boost::python::list x) {
-      boost::python::object main = boost::python::import("__main__");
-      boost::python::object global(main.attr("__dict__"));
-      boost::python::object result =
-        exec("def func_list_to_tuple(x):return tuple(x)", global, global);
-      boost::python::object func_list_to_tuple = global["func_list_to_tuple"];
-      return boost::python::extract<boost::python::tuple>(func_list_to_tuple(x))();
-    }
-  }  // namespace detail
-
-  // Copied from dxtbx/boost_python/imageset_ext.cc
   template <typename T>
   boost::python::tuple image_as_tuple(const Image<T> &image) {
     boost::python::list result;
     for (std::size_t i = 0; i < image.n_tiles(); ++i) {
       result.append(image.tile(i).data());
     }
-    return detail::list_to_tuple(result);
+    return boost::python::tuple(result);
   }
 
   boost::python::tuple GoniometerShadowMasker_get_mask(

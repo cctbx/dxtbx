@@ -11,13 +11,10 @@ from __future__ import absolute_import, division, print_function
 from builtins import range
 import math
 
-from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 from scitbx.array_family import flex
 
-try:
-    from dxtbx.util.masking import GoniometerShadowMasker
-except ImportError:
-    GoniometerShadowMasker = False
+from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
+from dxtbx.util.masking import GoniometerShadowMasker
 
 
 class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
@@ -31,9 +28,6 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
 
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
-
-        if not GoniometerShadowMasker:
-            return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
 

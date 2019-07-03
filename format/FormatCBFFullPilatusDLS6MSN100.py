@@ -2,16 +2,10 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
-import math
 import sys
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
-
-try:
-    from dxtbx.util.masking import GoniometerMaskerFactory
-except ImportError:
-    GoniometerMaskerFactory = False
+from dxtbx.util.masking import GoniometerMaskerFactory
 
 
 class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
@@ -25,9 +19,6 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
-
-        if not GoniometerMaskerFactory:
-            return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
 
@@ -85,7 +76,7 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
             return GoniometerMaskerFactory.mini_kappa(goniometer)
 
         else:
-            raise RuntimeError(
+            raise ValueError(
                 "Don't understand this goniometer: %s" % list(goniometer.get_names())
             )
 
