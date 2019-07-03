@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from builtins import range
 from dxtbx.model import Scan
@@ -94,15 +94,9 @@ def test_scan_360_append():
     assert scan.get_image_range() == (1, 720)
     assert scan.get_batch_range() == (1, 720)
 
-    from libtbx.test_utils import Exception_expected
-
     scan2.set_batch_offset(10)
-    try:
+    with pytest.raises(RuntimeError):
         scan = scan1 + scan2
-    except Exception:
-        pass
-    else:
-        raise Exception_expected
 
 
 def test_swap():

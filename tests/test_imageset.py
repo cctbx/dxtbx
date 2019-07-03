@@ -111,8 +111,6 @@ def test_imagesetdata(centroid_files):
     from dxtbx.imageset import ImageSetData
     from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 
-    centroid_files = centroid_files
-
     ReaderClass = FormatClass.get_reader()
     MaskerClass = FormatClass.get_masker()
 
@@ -344,7 +342,7 @@ class TestImageSweep(object):
         assert_is_iterable(sweep2)
 
         with pytest.raises(IndexError):
-            sweep2 = sweep[3:7:2]
+            _ = sweep[3:7:2]
 
     @staticmethod
     def tst_paths(sweep, filenames1):

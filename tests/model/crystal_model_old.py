@@ -642,6 +642,11 @@ class crystal_model_old(object):
     def __eq__(self, other, eps=1e-7):
         raise NotImplementedError("this piece of code was broken")
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    __hash__ = None
+
     def is_similar_to(
         self,
         other,

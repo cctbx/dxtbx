@@ -87,7 +87,7 @@ def test_from_phil():
     assert BeamFactory.from_phil(params1)
     assert BeamFactory.from_phil(params2, reference)
     with pytest.raises(RuntimeError):
-        b3 = BeamFactory.from_phil(params2)
+        BeamFactory.from_phil(params2)
 
     params3 = beam_phil_scope.fetch(
         parse(

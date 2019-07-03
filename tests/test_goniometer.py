@@ -12,15 +12,11 @@ from libtbx.test_utils import Exception_expected
 from scitbx import matrix
 
 
-def compare_tuples(a, b, tol=1.0e-6):
-
+def _compare_tuples(a, b, tolerance=1.0e-6):
     assert len(a) == len(b)
 
-    for j in range(len(a)):
-        if math.fabs(b[j] - a[j]) > tol:
-            return False
-
-    return True
+    for va, vb in zip(a, b):
+        assert math.fabs(va - vb) <= tolerance
 
 
 def test_goniometer():
@@ -34,47 +30,48 @@ def test_goniometer():
     assert len(xg.get_rotation_axis()) == 3
     assert len(xg.get_fixed_rotation()) == 9
 
-    assert compare_tuples(xg.get_rotation_axis(), axis)
-    assert compare_tuples(xg.get_fixed_rotation(), fixed)
+    _compare_tuples(xg.get_rotation_axis(), axis)
+    _compare_tuples(xg.get_fixed_rotation(), fixed)
 
     single = GoniometerFactory.single_axis()
 
     assert len(single.get_rotation_axis()) == 3
     assert len(single.get_fixed_rotation()) == 9
 
-    assert compare_tuples(single.get_rotation_axis(), axis)
-    assert compare_tuples(single.get_fixed_rotation(), fixed)
+    _compare_tuples(single.get_rotation_axis(), axis)
+    _compare_tuples(single.get_fixed_rotation(), fixed)
 
     kappa = GoniometerFactory.kappa(50.0, 0.0, 0.0, 0.0, "-y", "omega")
 
     assert len(kappa.get_rotation_axis()) == 3
     assert len(kappa.get_fixed_rotation()) == 9
-    assert compare_tuples(kappa.get_rotation_axis(), axis)
-    assert compare_tuples(kappa.get_fixed_rotation(), fixed)
+    _compare_tuples(kappa.get_rotation_axis(), axis)
+    _compare_tuples(kappa.get_fixed_rotation(), fixed)
 
     kappa = GoniometerFactory.kappa(50.0, 0.0, 0.0, 0.0, "-y", "omega")
 
     assert len(kappa.get_rotation_axis()) == 3
     assert len(kappa.get_fixed_rotation()) == 9
 
-    assert compare_tuples(kappa.get_rotation_axis(), axis)
-    assert compare_tuples(kappa.get_fixed_rotation(), fixed)
+    _compare_tuples(kappa.get_rotation_axis(), axis)
+    _compare_tuples(kappa.get_fixed_rotation(), fixed)
 
     kappa = GoniometerFactory.kappa(50.0, 0.0, 0.0, 0.0, "-y", "phi")
 
     assert len(kappa.get_rotation_axis()) == 3
     assert len(kappa.get_fixed_rotation()) == 9
 
-    assert compare_tuples(kappa.get_rotation_axis(), axis)
-    assert compare_tuples(kappa.get_fixed_rotation(), fixed)
+    _compare_tuples(kappa.get_rotation_axis(), axis)
+    _compare_tuples(kappa.get_fixed_rotation(), fixed)
 
     kappa = GoniometerFactory.kappa(50.0, 0.0, 30.0, 0.0, "-y", "omega")
 
     assert len(kappa.get_rotation_axis()) == 3
     assert len(kappa.get_fixed_rotation()) == 9
 
-    assert compare_tuples(kappa.get_rotation_axis(), axis)
-    assert not compare_tuples(kappa.get_fixed_rotation(), fixed)
+    _compare_tuples(kappa.get_rotation_axis(), axis)
+    with pytest.raises(AssertionError):
+        _compare_tuples(kappa.get_fixed_rotation(), fixed)
 
     import libtbx.load_env
 
@@ -174,11 +171,6 @@ def test_multi_axis_goniometer():
     assert recycle.get_scan_axis() == multi_axis_phi_scan.get_scan_axis()
     recycle.set_angles((0, 90, 180))
     assert approx_equal(recycle.get_angles(), (0, 90, 180))
-    new_axes = (
-        (0.9, 0.1, 0.0),
-        (0.6427876096865394, -0.766044443118978, 0.0),
-        (1.0, 0.0, 0.0),
-    )
     new_axes = flex.vec3_double(
         (
             (0.99996, -0.00647, -0.00659),
@@ -272,7 +264,6 @@ def test_goniometer_from_phil():
 
 
 def test_scan_varying():
-
     axis = (1, 0, 0)
     g = Goniometer(axis)
 
@@ -309,7 +300,6 @@ def test_scan_varying():
 
 
 def test_comparison():
-
     # Setting rotation for small random offset
     offset_ax = matrix.col.random(3, -1.0, 1.0).normalize()
     S = offset_ax.axis_and_angle_as_r3_rotation_matrix(angle=0.01, deg=True)
