@@ -141,11 +141,18 @@ class ImageSetLazy(ImageSet):
     it sets the model using the format class and then returns the model
     """
 
-    def get_detector(self, index=None):
+    def _get_item_from_parent_or_format(self, item_name, index):
+        """
+        Obtain an $item_name (eg. detector, beam, ...) of the given index from
+        the parent class using get_detector, get_beam, ...
+        If the parent class returns None then lookup the item using the format
+        class (if defined) and store a local reference to the item using
+        self.set_detector, set_beam, ..
+        """
         if index is None:
             index = 0
-        detector = super(ImageSetLazy, self).get_detector(index)
-        if detector is None:
+        item = getattr(super(ImageSetLazy, self), "get_" + item_name)(index)
+        if item is None:
             # If check_format=False was used, then _current_instance_ will not be set, so assume a None is correct
             format_class = self.get_format_class()
             if (
@@ -153,57 +160,23 @@ class ImageSetLazy(ImageSet):
                 and format_class._current_instance_ is not None
             ):
                 format_instance = format_class._current_instance_
-                detector = format_instance.get_detector(self.indices()[index])
-                self.set_detector(detector, index)
-        return detector
+                getter_function = getattr(format_instance, "get_" + item_name)
+                item = getter_function(self.indices()[index])
+                setter_function = getattr(self, "set_" + item_name)
+                setter_function(item, index)
+        return item
+
+    def get_detector(self, index=None):
+        return self._get_item_from_parent_or_format("detector", index)
 
     def get_beam(self, index=None):
-        if index is None:
-            index = 0
-        beam = super(ImageSetLazy, self).get_beam(index)
-        if beam is None:
-            # If check_format=False was used, then _current_instance_ will not be set, so assume a None is correct
-            format_class = self.get_format_class()
-            if (
-                hasattr(format_class, "_current_instance_")
-                and format_class._current_instance_ is not None
-            ):
-                format_instance = format_class._current_instance_
-                beam = format_instance.get_beam(self.indices()[index])
-                self.set_beam(beam, index)
-        return beam
+        return self._get_item_from_parent_or_format("beam", index)
 
     def get_goniometer(self, index=None):
-        if index is None:
-            index = 0
-        goniometer = super(ImageSetLazy, self).get_goniometer(index)
-        if goniometer is None:
-            # If check_format=False was used, then _current_instance_ will not be set, so assume a None is correct
-            format_class = self.get_format_class()
-            if (
-                hasattr(format_class, "_current_instance_")
-                and format_class._current_instance_ is not None
-            ):
-                format_instance = format_class._current_instance_
-                goniometer = format_instance.get_goniometer(self.indices()[index])
-                self.set_goniometer(goniometer, index)
-        return goniometer
+        return self._get_item_from_parent_or_format("goniometer", index)
 
     def get_scan(self, index=None):
-        if index is None:
-            index = 0
-        scan = super(ImageSetLazy, self).get_scan(index)
-        if scan is None:
-            # If check_format=False was used, then _current_instance_ will not be set, so assume a None is correct
-            format_class = self.get_format_class()
-            if (
-                hasattr(format_class, "_current_instance_")
-                and format_class._current_instance_ is not None
-            ):
-                format_instance = format_class._current_instance_
-                scan = format_instance.get_scan(self.indices()[index])
-                self.set_scan(scan, index)
-        return scan
+        return self._get_item_from_parent_or_format("scan", index)
 
     def _load_models(self, index):
         if index is None:
