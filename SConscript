@@ -166,4 +166,4 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         LIBPATH=env_etc.dxtbx_lib_paths,
     )
 
-    env.SConscript("util/masking/SConscript", exports={"env": env})
+    env.SConscript("masking/SConscript", exports={"env": env})

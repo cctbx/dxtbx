@@ -11,9 +11,9 @@ from scitbx.math import principal_axes_of_inertia_2d
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
-from dxtbx.util.masking import GoniometerMaskerFactory
-from dxtbx.util.masking import is_inside_polygon
-from dxtbx.util.masking import mask_untrusted_polygon, is_inside_polygon
+from dxtbx.masking import GoniometerMaskerFactory
+from dxtbx.masking import is_inside_polygon
+from dxtbx.masking import mask_untrusted_polygon, is_inside_polygon
 
 
 def test_polygon():

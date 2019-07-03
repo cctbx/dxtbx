@@ -15,7 +15,7 @@ import math
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
-from dxtbx.util.masking import GoniometerMaskerFactory
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):

@@ -14,7 +14,7 @@ import math
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
-from dxtbx.util.masking import GoniometerShadowMasker
+from dxtbx.masking import GoniometerShadowMasker
 
 
 class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):

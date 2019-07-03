@@ -1,5 +1,5 @@
-#ifndef DXTBX_UTIL_MASKING_GONIOMETER_SHADOW_MASKING_H
-#define DXTBX_UTIL_MASKING_GONIOMETER_SHADOW_MASKING_H
+#ifndef DXTBX_MASKING_GONIOMETER_SHADOW_MASKING_H
+#define DXTBX_MASKING_GONIOMETER_SHADOW_MASKING_H
 
 #include <algorithm>
 #include <boost/geometry.hpp>
@@ -9,7 +9,7 @@
 #include <cmath>
 #include <scitbx/array_family/shared.h>
 #include <dxtbx/error.h>
-#include <dxtbx/util/masking/masking.h>
+#include <dxtbx/masking/masking.h>
 #include <dxtbx/format/image.h>
 #include <dxtbx/model/detector.h>
 #include <dxtbx/model/multi_axis_goniometer.h>
@@ -18,7 +18,7 @@
 
 BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(boost::geometry::cs::cartesian)
 
-namespace dxtbx { namespace util { namespace masking {
+namespace dxtbx { namespace masking {
 
   using dxtbx::format::Image;
   using dxtbx::format::ImageTile;
@@ -313,6 +313,6 @@ namespace dxtbx { namespace util { namespace masking {
     scitbx::af::shared<vec3<double> > faceB;
     scitbx::af::shared<vec3<double> > faceE;
   };
-}}}  // namespace dxtbx::util::masking
+}}  // namespace dxtbx::masking
 
-#endif /* DXTBX_UTIL_MASKING_GONIOMETER_SHADOW_MASKING_H */
+#endif /* DXTBX_MASKING_GONIOMETER_SHADOW_MASKING_H */

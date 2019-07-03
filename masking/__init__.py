@@ -6,7 +6,7 @@ from scitbx.array_family import flex
 from scitbx import matrix
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
 
-from dxtbx_util_masking_ext import (  # noqa: F401, exported symbol
+from dxtbx_masking_ext import (  # noqa: F401, exported symbol
     mask_untrusted_rectangle,
     mask_untrusted_circle,
     mask_untrusted_polygon,
@@ -15,8 +15,8 @@ from dxtbx_util_masking_ext import (  # noqa: F401, exported symbol
 
 from dxtbx.model import MultiAxisGoniometer
 
-from dxtbx_util_masking_ext import GoniometerShadowMasker  # noqa: F401
-from dxtbx_util_masking_ext import SmarGonShadowMasker  # noqa: F401
+from dxtbx_masking_ext import GoniometerShadowMasker  # noqa: F401
+from dxtbx_masking_ext import SmarGonShadowMasker  # noqa: F401
 
 __all__ = ["GoniometerShadowMasker", "SmarGonShadowMasker"]
 
@@ -34,7 +34,7 @@ class GoniometerMaskerFactory(object):
             cone_opening_angle (float): The opening angle of the cone (in degrees).
 
         Returns:
-            `dxtbx.util.masking.GoniometerShadowMasker`
+            `dxtbx.masking.GoniometerShadowMasker`
 
         """
         assert isinstance(goniometer, MultiAxisGoniometer)
@@ -71,7 +71,7 @@ class GoniometerMaskerFactory(object):
             goniometer (`dxtbx.model.Goniometer`): The goniometer instance.
 
         Returns:
-            `dxtbx.util.masking.GoniometerShadowMasker`
+            `dxtbx.masking.GoniometerShadowMasker`
 
         """
         coords = flex.vec3_double(((0, 0, 0),))
@@ -174,7 +174,7 @@ class GoniometerMaskerFactory(object):
             goniometer (`dxtbx.model.Goniometer`): The goniometer instance.
 
         Returns:
-            `dxtbx.util.masking.SmarGonShadowMasker`
+            `dxtbx.masking.SmarGonShadowMasker`
 
         """
         return SmarGonShadowMasker(goniometer)

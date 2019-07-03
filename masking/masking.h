@@ -8,8 +8,8 @@
  *  This code is distributed under the BSD license, a copy of which is
  *  included in the root directory of this package.
  */
-#ifndef DXTBX_UTIL_MASKING_H
-#define DXTBX_UTIL_MASKING_H
+#ifndef DXTBX_MASKING_H
+#define DXTBX_MASKING_H
 
 #include <algorithm>
 #include <scitbx/array_family/shared.h>
@@ -17,7 +17,7 @@
 #include <dxtbx/model/panel.h>
 #include <dxtbx/error.h>
 
-namespace dxtbx { namespace util { namespace masking {
+namespace dxtbx { namespace masking {
 
   using dxtbx::model::BeamBase;
   using dxtbx::model::Panel;
@@ -228,6 +228,6 @@ namespace dxtbx { namespace util { namespace masking {
     scitbx::af::versa<double, scitbx::af::c_grid<2> > resolution_;
   };
 
-}}}  // namespace dxtbx::util::masking
+}}  // namespace dxtbx::masking
 
-#endif /* DXTBX_UTIL_MASKING_H */
+#endif /* DXTBX_MASKING_H */

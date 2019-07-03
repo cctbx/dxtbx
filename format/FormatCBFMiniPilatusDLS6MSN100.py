@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
-from dxtbx.util.masking import GoniometerMaskerFactory
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 # Module positional offsets in x, y, in pixels - for the moment ignoring the

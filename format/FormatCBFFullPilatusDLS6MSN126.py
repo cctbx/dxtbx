@@ -10,7 +10,7 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
-from dxtbx.util.masking import GoniometerMaskerFactory
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):

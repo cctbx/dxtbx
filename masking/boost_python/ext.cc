@@ -1,10 +1,10 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
-#include <dxtbx/util/masking/masking.h>
-#include <dxtbx/util/masking/goniometer_shadow_masking.h>
+#include <dxtbx/masking/masking.h>
+#include <dxtbx/masking/goniometer_shadow_masking.h>
 
 
-namespace dxtbx { namespace util { namespace masking { namespace boost_python {
+namespace dxtbx { namespace masking { namespace boost_python {
 
   using scitbx::vec2;
   using scitbx::vec3;
@@ -52,7 +52,7 @@ namespace dxtbx { namespace util { namespace masking { namespace boost_python {
   }
 
   using namespace boost::python;
-  BOOST_PYTHON_MODULE(dxtbx_util_masking_ext) {
+  BOOST_PYTHON_MODULE(dxtbx_masking_ext) {
 
     def("mask_untrusted_rectangle", &mask_untrusted_rectangle);
 
@@ -83,4 +83,4 @@ namespace dxtbx { namespace util { namespace masking { namespace boost_python {
       .def("extrema_at_scan_angle", &SmarGonShadowMasker::extrema_at_scan_angle);
 
   }
-}}}}  // namespace dxtbx::util::masking::boost_python
+}}}  // namespace dxtbx::masking::boost_python

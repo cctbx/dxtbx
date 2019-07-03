@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from scitbx.array_family import flex
 from dxtbx.format.FormatCBFMiniEiger import FormatCBFMiniEiger
-from dxtbx.util.masking import GoniometerMaskerFactory
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):

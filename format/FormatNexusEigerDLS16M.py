@@ -5,7 +5,7 @@ import libtbx
 from scitbx.array_family import flex
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.model import MultiAxisGoniometer
-from dxtbx.util.masking import GoniometerMaskerFactory
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatNexusEigerDLS16M(FormatNexus):
