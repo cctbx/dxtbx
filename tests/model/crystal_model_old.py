@@ -570,22 +570,6 @@ class crystal_model_old(object):
 
         return matrix.sqr(uc.fractionalization_matrix()).transpose()
 
-    def get_unit_cell_at_scan_point(self, t):
-        """
-        Return unit cell with index t.
-
-        :param t: index into the list of scan points.
-        :type t: int
-
-        :returns: The unit cell at index t
-        :rtype: :py:class:`cctbx.uctbx.unit_cell`
-        """
-
-        At = self._A_at_scan_points[t]
-        uc = unit_cell(orthogonalization_matrix=At.transpose().inverse())
-
-        return uc
-
     def reset_scan_points(self):
         self._num_scan_points = 0
         self._A_at_scan_points = None
