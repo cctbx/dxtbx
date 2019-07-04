@@ -230,8 +230,6 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
         return self._detector(index)
 
     def _detector(self, index=None):
-        if index is None:
-            index = 0
         return self._detector_factory.simple(
             sensor="UNKNOWN",
             distance=100.0,
