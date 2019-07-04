@@ -61,6 +61,25 @@ class FormatSMV(Format):
 
         return header_size, header_dictionary
 
+    def _get_endianic_raw_data(self, size):
+        from boost.python import streambuf
+        from dxtbx import read_uint16, read_uint16_bs, is_big_endian
+        from scitbx.array_family import flex
+
+        big_endian = self._header_dictionary["BYTE_ORDER"] == "big_endian"
+
+        with self.open_file(self._image_file, "rb") as fh:
+            fh.seek(self._header_size)
+
+            if big_endian == is_big_endian():
+                raw_data = read_uint16(streambuf(fh), int(size[0] * size[1]))
+            else:
+                raw_data = read_uint16_bs(streambuf(fh), int(size[0] * size[1]))
+
+        # note that x and y are reversed here
+        raw_data.reshape(flex.grid(size[1], size[0]))
+        return raw_data
+
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 

@@ -195,11 +195,10 @@ class FormatSMVCMOS1(FormatSMV):
         from scitbx.array_family import flex
 
         assert len(self.get_detector()) == 1
-        size = self.get_detector()[0].get_image_size()
-        f = FormatSMV.open_file(self._image_file)
-        f.read(self._header_size)
-        raw_data = read_uint16(streambuf(f), int(size[0] * size[1]))
         image_size = self.get_detector()[0].get_image_size()
+        with self.open_file(self._image_file) as fh:
+            fh.seek(self._header_size)
+            raw_data = read_uint16(streambuf(fh), int(image_size[0] * image_size[1]))
         raw_data.reshape(flex.grid(image_size[1], image_size[0]))
 
         return raw_data
