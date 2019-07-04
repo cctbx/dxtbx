@@ -46,32 +46,22 @@ class FormatDIP2030b(Format):
         # twotheta = self.detectorbase.parameters["TWOTHETA"]
         # At present, ignore non-zero two theta for the dxtbx model
         # XXX Return to this issue later.
-
         return self._detector_factory.simple(
             sensor="IMAGE_PLATE",
-            distance=self.detectorbase.parameters["DISTANCE"],
-            beam_centre=(
-                self.detectorbase.parameters["BEAM_CENTER_X"],
-                self.detectorbase.parameters["BEAM_CENTER_Y"],
-            ),
+            distance=self.detectorbase.distance,
+            beam_centre=(self.detectorbase.beamx, self.detectorbase.beamy),
             fast_direction="+x",
             slow_direction="-y",
-            pixel_size=(
-                self.detectorbase.parameters["PIXEL_SIZE"],
-                self.detectorbase.parameters["PIXEL_SIZE"],
-            ),
-            image_size=(
-                self.detectorbase.parameters["SIZE1"],
-                self.detectorbase.parameters["SIZE2"],
-            ),
-            trusted_range=(0, self.detectorbase.parameters["CCD_IMAGE_SATURATION"]),
+            pixel_size=(self.detectorbase.pixel_size, self.detectorbase.pixel_size),
+            image_size=(self.detectorbase.size1, self.detectorbase.size2),
+            trusted_range=(0, self.detectorbase.saturation),
             mask=[],
         )  # a list of dead rectangles
 
     def _beam(self):
         """Return a simple model for the beam."""
 
-        return self._beam_factory.simple(self.detectorbase.parameters["WAVELENGTH"])
+        return self._beam_factory.simple(self.detectorbase.wavelength)
 
     def _scan(self):
         """Return the scan information for this image."""
@@ -80,8 +70,8 @@ class FormatDIP2030b(Format):
             filename=self._image_file,
             format="DIP",
             exposure_times=self.detectorbase.parameters["TIME"],
-            osc_start=self.detectorbase.parameters["OSC_START"],
-            osc_width=self.detectorbase.parameters["OSC_RANGE"],
+            osc_start=self.detectorbase.osc_start,
+            osc_width=self.detectorbase.deltaphi,
             epoch=None,
         )
 
