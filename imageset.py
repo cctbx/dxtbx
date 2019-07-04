@@ -568,7 +568,7 @@ class ImageSetFactory(object):
         elif isinstance(imageset, ImageSweep) or isinstance(imageset, ImageSet):
             return ImageSet(imageset.data(), imageset.indices())
         else:
-            assert False, "Unrecognized imageset type: %s" % str(type(imageset))
+            raise ValueError("Unrecognized imageset type: %s" % str(type(imageset)))
 
 
 boost.python.inject_into(ImageSet)(ImageSetAux)

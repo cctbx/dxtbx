@@ -152,23 +152,6 @@ def test_experimentlist_contains(experiment_list):
     assert s not in experiment_list
 
 
-# def test_experimentlist_index(experiment_list):
-
-#   # Check the indices of exisiting experiments
-#   assert experiment_list.index(experiment_list[0]) is 0
-#   assert experiment_list.index(experiment_list[1]) is 1
-#   assert experiment_list.index(experiment_list[2]) is 2
-#   assert experiment_list.index(experiment_list[3]) is 1
-#   assert experiment_list.index(experiment_list[4]) is 0
-
-#   # Check index of non exisiting experiment
-#   try:
-#     experiment_list.index(Experiment())
-#     assert False
-#   except ValueError:
-#     pass
-
-
 def test_experimentlist_replace(experiment_list):
     # Get the models
     b = [e.beam for e in experiment_list]

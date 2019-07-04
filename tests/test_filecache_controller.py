@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 
 import dxtbx.filecache
 import dxtbx.filecache_controller as fcc
+import pytest
 from mock import Mock, create_autospec
 
 
@@ -23,12 +24,9 @@ def test_invalid_cache(monkeypatch):
     mocklazy.return_value.open.assert_called()
 
     # Now, pass the cache an opener that fails
-    try:
-        badfile = Mock(side_effect=IOError("Testing bad file"))
+    badfile = Mock(side_effect=IOError("Testing bad file"))
+    with pytest.raises(IOError):
         cache.check("not_working", badfile)
-        assert False, "Failed to raise IOError in file cache"
-    except IOError:
-        pass
 
     # The bug: Calling check with the same tag shouldn't use the invalid cache
     # To Test: Do the working test, but with the failed tag. If the invalid
