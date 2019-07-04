@@ -232,11 +232,7 @@ class FormatMultiImage(Format):
 
             iset = ImageSet(
                 ImageSetData(
-                    reader=reader,
-                    masker=None,
-                    vendor=vendor,
-                    params=params,
-                    format=cls,
+                    reader=reader, masker=None, vendor=vendor, params=params, format=cls
                 ),
                 indices=single_file_indices,
             )
@@ -297,7 +293,7 @@ class FormatMultiImage(Format):
                     for f in filenames[1:]:
                         format_instance = cls(f, **format_kwargs)
                         scan += format_instance.get_scan()
-            
+
             # Create the masker
             if format_instance is not None:
                 masker = format_instance.get_masker(goniometer=goniometer)

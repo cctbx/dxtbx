@@ -71,8 +71,6 @@ namespace dxtbx { namespace boost_python {
                                                       std::string vendor,
                                                       boost::python::dict params,
                                                       boost::python::object format) {
-    std::cout << "HHHHHHH" << std::endl;
-
     ImageSetData::masker_ptr masker_ptr = (
         masker == boost::python::object()
           ? NULL

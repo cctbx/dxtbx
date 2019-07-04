@@ -357,7 +357,7 @@ class Format(object):
 
         # Create an imageset or sweep
         if not is_sweep:
-       
+
             # Create the imageset
             iset = ImageSet(
                 ImageSetData(
@@ -422,7 +422,7 @@ class Format(object):
             assert detector is not None, "Can't create Sweep without detector"
             assert goniometer is not None, "Can't create Sweep without goniometer"
             assert scan is not None, "Can't create Sweep without scan"
-            
+
             # Create the masker
             if format_instance is not None:
                 masker = format_instance.get_masker(goniometer=goniometer)
