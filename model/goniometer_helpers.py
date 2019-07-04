@@ -20,7 +20,7 @@ def cbf_gonio_to_effective_axis_fixed(cbf_gonio):
     # that the angles will be correctly inverted in the scan factory
     if increment < 0:
         start = -start
-        increment = -increment
+        increment = -increment  # lgtm
         axis = -axis
 
     x = cbf_gonio.rotate_vector(0.0, 1, 0, 0)
