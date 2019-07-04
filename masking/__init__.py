@@ -48,7 +48,7 @@ class GoniometerMaskerFactory(object):
 
         steps_per_degree = 1
         theta = (
-            flex.double([range(360 * steps_per_degree)])
+            flex.double(range(360 * steps_per_degree))
             * math.pi
             / 180
             * 1
