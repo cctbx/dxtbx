@@ -44,19 +44,22 @@ namespace dxtbx { namespace boost_python {
       return boost::python::import("pickle").attr("loads")(bytes_from_std_string(x));
     }
   }  // namespace detail
+
+
+  ImageSetData::masker_ptr make_masker_pointer(boost::python::object masker) {
+    if (masker == boost::python::object()) {
+      return ImageSetData::masker_ptr();
+    }
+    return boost::python::extract<ImageSetData::masker_ptr>(masker)();
+  }
   
   /**
    * A constructor for the imageset data class
    */
   boost::shared_ptr<ImageSetData> make_imageset_data1(boost::python::object reader,
                                                       boost::python::object masker) {
-    ImageSetData::masker_ptr masker_ptr = (
-        masker == boost::python::object()
-          ? NULL
-          : boost::python::extract<ImageSetData::masker_ptr>(masker)());
-    
     // Create the pointer
-    boost::shared_ptr<ImageSetData> self(new ImageSetData(reader, masker_ptr));
+    boost::shared_ptr<ImageSetData> self(new ImageSetData(reader, make_masker_pointer(masker)));
 
     // Return the imageset data
     return self;
@@ -71,13 +74,8 @@ namespace dxtbx { namespace boost_python {
                                                       std::string vendor,
                                                       boost::python::dict params,
                                                       boost::python::object format) {
-    ImageSetData::masker_ptr masker_ptr = (
-        masker == boost::python::object()
-          ? NULL
-          : boost::python::extract<ImageSetData::masker_ptr>(masker)());
-
     // Create the pointer
-    boost::shared_ptr<ImageSetData> self(new ImageSetData(reader, masker_ptr));
+    boost::shared_ptr<ImageSetData> self(new ImageSetData(reader, make_masker_pointer(masker)));
 
     // Set some stuff
     self->set_template(filename_template);
