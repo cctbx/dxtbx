@@ -48,7 +48,7 @@ namespace dxtbx { namespace boost_python {
 
   ImageSetData::masker_ptr make_masker_pointer(boost::python::object masker) {
     if (masker == boost::python::object()) {
-      return NULL;
+      return ImageSetData::masker_ptr();
     }
     return boost::python::extract<ImageSetData::masker_ptr>(masker)();
   }
