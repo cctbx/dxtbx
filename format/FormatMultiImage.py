@@ -7,6 +7,7 @@ import os
 from scitbx.array_family import flex
 
 from dxtbx.format.Format import Format
+from dxtbx.model import MultiAxisGoniometer
 
 
 class Reader(object):
