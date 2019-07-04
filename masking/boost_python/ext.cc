@@ -24,7 +24,7 @@ namespace dxtbx { namespace masking { namespace boost_python {
     double scan_angle) {
     scitbx::af::shared<scitbx::af::shared<scitbx::vec2<double> > > result =
       masker.project_extrema(detector, scan_angle);
-    typename scitbx::af::shared<scitbx::af::shared<scitbx::vec2<double> > >::iterator
+    scitbx::af::shared<scitbx::af::shared<scitbx::vec2<double> > >::iterator
       iter;
     boost::python::list list;
     for (iter = result.begin(); iter != result.end(); ++iter) {
