@@ -11,7 +11,10 @@
 
 from __future__ import absolute_import, division, print_function
 
+from boost.python import streambuf
 from dxtbx.format.Format import Format
+from dxtbx.ext import read_uint16, read_uint16_bs, is_big_endian
+from scitbx.array_family import flex
 
 
 class FormatSMV(Format):
@@ -62,10 +65,6 @@ class FormatSMV(Format):
         return header_size, header_dictionary
 
     def _get_endianic_raw_data(self, size):
-        from boost.python import streambuf
-        from dxtbx import read_uint16, read_uint16_bs, is_big_endian
-        from scitbx.array_family import flex
-
         big_endian = self._header_dictionary["BYTE_ORDER"] == "big_endian"
 
         with self.open_file(self._image_file, "rb") as fh:
