@@ -1,10 +1,11 @@
 ## Diffraction Experiment Toolbox
 
+![Python 2.7 | 3.5 | 3.6 | 3.7](https://img.shields.io/badge/python-2.7%20%7C%203.5%20%7C%203.6%20%7C%203.7-blue.svg)
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/dials/dxtbx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dials/dxtbx/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/dials/dxtbx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dials/dxtbx/alerts/)
 [![Coverage](https://codecov.io/github/dials/dxtbx/coverage.svg?branch=master)](https://codecov.io/github/dials/dxtbx?branch=master)
-    
+
 A [cctbx](https://cctbx.github.io/)-style toolbox to describe single-crystal diffraction experiments, where
 a monochromatic beam is used to illuminate a sample which is rotated during
 the exposure and diffraction recorded on a flat area detector.
