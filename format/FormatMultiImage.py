@@ -7,6 +7,7 @@ import os
 from scitbx.array_family import flex
 
 from dxtbx.format.Format import Format
+from dxtbx.model import MultiAxisGoniometer
 
 
 class Reader(object):
@@ -57,44 +58,6 @@ class Reader(object):
         return self._filename
 
 
-class Masker(object):
-
-    _format_class_ = None
-
-    def __init__(self, filenames, num_images=None, **kwargs):
-        self.kwargs = kwargs
-        self.format_class = Masker._format_class_
-        assert len(filenames) == 1
-        self._filename = filenames[0]
-        if num_images is None:
-            self._num_images = self.read_num_images()
-        else:
-            self._num_images = num_images
-
-    def get(self, index, goniometer=None):
-        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
-        return format_instance.get_mask(index, goniometer)
-
-    def paths(self):
-        return [self._filename]
-
-    def read_num_images(self):
-        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
-        return format_instance.get_num_images()
-
-    def num_images(self):
-        return self._num_images
-
-    def has_dynamic_mask(self):
-        return self.format_class.has_dynamic_shadowing(**self.kwargs)
-
-    def __len__(self):
-        return self.num_images()
-
-    def copy(self, filenames):
-        return Masker(filenames)
-
-
 class FormatMultiImage(Format):
     def __init__(self, **kwargs):
         pass
@@ -133,15 +96,20 @@ class FormatMultiImage(Format):
         obj._format_class_ = cls
         return obj
 
-    @classmethod
-    def get_masker(cls):
+    def get_masker(self, goniometer=None):
         """
         Return a reader class
 
         """
-        obj = Masker
-        obj._format_class_ = cls
-        return obj
+        if (
+            isinstance(goniometer, MultiAxisGoniometer)
+            and hasattr(self, "_dynamic_shadowing")
+            and self._dynamic_shadowing
+        ):
+            masker = self.get_goniometer_shadow_masker(goniometer=goniometer)
+        else:
+            masker = None
+        return masker
 
     @classmethod
     def get_imageset(
@@ -189,7 +157,6 @@ class FormatMultiImage(Format):
 
         # Get some information from the format class
         reader = cls.get_reader()(filenames, num_images=num_images, **format_kwargs)
-        masker = cls.get_masker()(filenames, num_images=num_images, **format_kwargs)
 
         # Get the format instance
         assert len(filenames) == 1
@@ -253,7 +220,7 @@ class FormatMultiImage(Format):
                 iset = ImageSetLazy(
                     ImageSetData(
                         reader=reader,
-                        masker=masker,
+                        masker=None,
                         vendor=vendor,
                         params=params,
                         format=cls,
@@ -266,11 +233,7 @@ class FormatMultiImage(Format):
 
             iset = ImageSet(
                 ImageSetData(
-                    reader=reader,
-                    masker=masker,
-                    vendor=vendor,
-                    params=params,
-                    format=cls,
+                    reader=reader, masker=None, vendor=vendor, params=params, format=cls
                 ),
                 indices=single_file_indices,
             )
@@ -331,6 +294,12 @@ class FormatMultiImage(Format):
                     for f in filenames[1:]:
                         format_instance = cls(f, **format_kwargs)
                         scan += format_instance.get_scan()
+
+            # Create the masker
+            if format_instance is not None:
+                masker = format_instance.get_masker(goniometer=goniometer)
+            else:
+                masker = None
 
             isetdata = ImageSetData(
                 reader=reader,

@@ -45,17 +45,37 @@ namespace dxtbx { namespace boost_python {
     }
   }  // namespace detail
 
+
+  ImageSetData::masker_ptr make_masker_pointer(boost::python::object masker) {
+    if (masker == boost::python::object()) {
+      return ImageSetData::masker_ptr();
+    }
+    return boost::python::extract<ImageSetData::masker_ptr>(masker)();
+  }
+  
   /**
    * A constructor for the imageset data class
    */
-  boost::shared_ptr<ImageSetData> make_imageset_data(boost::python::object reader,
-                                                     boost::python::object masker,
-                                                     std::string filename_template,
-                                                     std::string vendor,
-                                                     boost::python::dict params,
-                                                     boost::python::object format) {
+  boost::shared_ptr<ImageSetData> make_imageset_data1(boost::python::object reader,
+                                                      boost::python::object masker) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData> self(new ImageSetData(reader, masker));
+    boost::shared_ptr<ImageSetData> self(new ImageSetData(reader, make_masker_pointer(masker)));
+
+    // Return the imageset data
+    return self;
+  }
+
+  /**
+   * A constructor for the imageset data class
+   */
+  boost::shared_ptr<ImageSetData> make_imageset_data2(boost::python::object reader,
+                                                      boost::python::object masker,
+                                                      std::string filename_template,
+                                                      std::string vendor,
+                                                      boost::python::dict params,
+                                                      boost::python::object format) {
+    // Create the pointer
+    boost::shared_ptr<ImageSetData> self(new ImageSetData(reader, make_masker_pointer(masker)));
 
     // Set some stuff
     self->set_template(filename_template);
@@ -550,20 +570,23 @@ namespace dxtbx { namespace boost_python {
                     make_function(&ExternalLookup::dy, return_internal_reference<>()));
 
     class_<ImageSetData, boost::shared_ptr<ImageSetData> >("ImageSetData", no_init)
-      .def(init<boost::python::object, boost::python::object>())
       .def("__init__",
-           make_constructor(&make_imageset_data,
-                            default_call_policies(),
-                            (arg("reader"),
-                             arg("masker"),
-                             arg("template") = "",
-                             arg("vendor") = "",
-                             arg("params") = boost::python::object(),
-                             arg("format") = boost::python::object())))
+          make_constructor(&make_imageset_data1,
+            default_call_policies(),
+            (arg("reader"),
+             arg("masker"))))
+      .def("__init__",
+          make_constructor(&make_imageset_data2,
+            default_call_policies(),
+            (arg("reader"),
+             arg("masker"),
+             arg("template") = "",
+             arg("vendor") = "",
+             arg("params") = boost::python::object(),
+             arg("format") = boost::python::object())))
       .def("reader", &ImageSetData::reader)
       .def("masker", &ImageSetData::masker)
       .def("get_data", &ImageSetData::get_data)
-      .def("get_mask", &ImageSetData::get_mask)
       .def("has_single_file_reader", &ImageSetData::has_single_file_reader)
       .def("get_path", &ImageSetData::get_path)
       .def("get_master_path", &ImageSetData::get_master_path)

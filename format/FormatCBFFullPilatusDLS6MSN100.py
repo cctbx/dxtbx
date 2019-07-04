@@ -2,16 +2,10 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
-import math
 import sys
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
-
-try:
-    from dials.util.masking import GoniometerShadowMaskGenerator
-except ImportError:
-    GoniometerShadowMaskGenerator = False
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
@@ -25,9 +19,6 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
 
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
-
-        if not GoniometerShadowMaskGenerator:
-            return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
 
@@ -78,44 +69,14 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
             goniometer = self.get_goniometer()
 
         assert goniometer is not None
-
         if goniometer.get_names()[1] == "GON_CHI":
-            # SmarGon
-            from dxtbx.format.SmarGonShadowMask import SmarGonShadowMaskGenerator
-
-            return SmarGonShadowMaskGenerator(goniometer)
+            return GoniometerMaskerFactory.smargon(goniometer)
 
         elif goniometer.get_names()[1] == "GON_KAPPA":
-            # mini Kappa
-
-            from scitbx.array_family import flex
-
-            # Simple model of cone around goniometer phi axis
-            # Exact values don't matter, only the ratio of height/radius
-            height = 50  # mm
-            radius = 20  # mm
-
-            steps_per_degree = 1
-            theta = (
-                flex.double([list(range(360 * steps_per_degree))])
-                * math.pi
-                / 180
-                * 1
-                / steps_per_degree
-            )
-            y = radius * flex.cos(theta)  # x
-            z = radius * flex.sin(theta)  # y
-            x = flex.double(theta.size(), height)  # z
-
-            coords = flex.vec3_double(zip(x, y, z))
-            coords.insert(0, (0, 0, 0))
-
-            return GoniometerShadowMaskGenerator(
-                goniometer, coords, flex.size_t(len(coords), 0)
-            )
+            return GoniometerMaskerFactory.mini_kappa(goniometer)
 
         else:
-            raise RuntimeError(
+            raise ValueError(
                 "Don't understand this goniometer: %s" % list(goniometer.get_names())
             )
 

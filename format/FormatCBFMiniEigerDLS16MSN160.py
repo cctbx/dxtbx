@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from scitbx.array_family import flex
 from dxtbx.format.FormatCBFMiniEiger import FormatCBFMiniEiger
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
@@ -20,11 +21,6 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
-
-        try:
-            from dials.util.masking import GoniometerShadowMaskGenerator  # test import
-        except ImportError:
-            return False
 
         header = FormatCBFMiniEiger.get_cbf_header(image_file)
 
@@ -115,12 +111,10 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
         if goniometer.get_names()[1] == "GON_CHI":
             # SmarGon
-            from dxtbx.format.SmarGonShadowMask import SmarGonShadowMaskGenerator
-
-            return SmarGonShadowMaskGenerator(goniometer)
+            return GoniometerMaskerFactory.smargon(goniometer)
 
         else:
-            raise RuntimeError(
+            raise ValueError(
                 "Don't understand this goniometer: %s" % list(goniometer.get_names())
             )
 

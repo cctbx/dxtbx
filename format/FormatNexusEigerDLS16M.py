@@ -5,11 +5,7 @@ import libtbx
 from scitbx.array_family import flex
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.model import MultiAxisGoniometer
-
-try:
-    from dials.util.masking import GoniometerShadowMaskGenerator
-except ImportError:
-    GoniometerShadowMaskGenerator = False
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatNexusEigerDLS16M(FormatNexus):
@@ -28,9 +24,6 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
-
-        if not GoniometerShadowMaskGenerator:
-            return False
 
         # Get the file handle
         handle = h5py.File(image_file, "r")
@@ -95,10 +88,9 @@ class FormatNexusEigerDLS16M(FormatNexus):
         assert goniometer is not None
 
         if goniometer.get_names()[1] == "chi":
-            # SmarGon
-            from dxtbx.format.SmarGonShadowMask import SmarGonShadowMaskGenerator
-
-            return SmarGonShadowMaskGenerator(goniometer)
+            return GoniometerMaskerFactory.smargon(goniometer)
+        elif goniometer.get_names()[1] == "kappa":
+            return GoniometerMaskerFactory.mini_kappa(goniometer)
 
         else:
             raise RuntimeError(
