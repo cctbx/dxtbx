@@ -48,6 +48,7 @@ from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.scan import ScanFactory
+from dxtbx.model import MultiAxisGoniometer
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -84,37 +85,6 @@ class Reader(object):
 
     def master_path(self):
         return ""
-
-
-class Masker(object):
-
-    _format_class_ = None
-
-    def __init__(self, filenames, **kwargs):
-        self._kwargs = kwargs
-        self.format_class = Masker._format_class_
-        self._filenames = filenames
-
-    def get(self, index, goniometer=None):
-        format_instance = self.format_class.get_instance(
-            self._filenames[index], **self._kwargs
-        )
-        return format_instance.get_mask(goniometer=goniometer)
-
-    def has_dynamic_mask(self):
-        return self.format_class.has_dynamic_shadowing(**self._kwargs)
-
-    def paths(self):
-        return self._filenames
-
-    def __len__(self):
-        return len(self._filenames)
-
-    def copy(self, filenames):
-        return Masker(filenames)
-
-    def identifiers(self):
-        return self.paths()
 
 
 class Format(object):
@@ -295,14 +265,19 @@ class Format(object):
         obj._format_class_ = Class
         return obj
 
-    @classmethod
-    def get_masker(Class):
+    def get_masker(self, goniometer=None):
         """
         Return a masker class
         """
-        obj = Masker
-        obj._format_class_ = Class
-        return obj
+        if (
+            isinstance(goniometer, MultiAxisGoniometer)
+            and hasattr(self, "_dynamic_shadowing")
+            and self._dynamic_shadowing
+        ):
+            masker = self.get_goniometer_shadow_masker(goniometer=goniometer)
+        else:
+            masker = None
+        return masker
 
     @classmethod
     def get_imageset(
@@ -338,7 +313,6 @@ class Format(object):
 
         # Get some information from the format class
         reader = Class.get_reader()(filenames, **format_kwargs)
-        masker = Class.get_masker()(filenames, **format_kwargs)
 
         # Get the format instance
         if check_format is True:
@@ -383,12 +357,12 @@ class Format(object):
 
         # Create an imageset or sweep
         if not is_sweep:
-
+       
             # Create the imageset
             iset = ImageSet(
                 ImageSetData(
                     reader=reader,
-                    masker=masker,
+                    masker=None,
                     vendor=vendor,
                     params=params,
                     format=Class,
@@ -448,6 +422,12 @@ class Format(object):
             assert detector is not None, "Can't create Sweep without detector"
             assert goniometer is not None, "Can't create Sweep without goniometer"
             assert scan is not None, "Can't create Sweep without scan"
+            
+            # Create the masker
+            if format_instance is not None:
+                masker = format_instance.get_masker(goniometer=goniometer)
+            else:
+                masker = None
 
             # Create the sweep
             iset = ImageSweep(

@@ -29,13 +29,11 @@ def test_format(dials_regression, image):
     image = os.path.join(dials_regression, *(image.split("/")))
     format_class = dxtbx.format.Registry.get_format_class_for_file(image)
     reader = format_class.get_reader()([image])
-    masker = format_class.get_masker()([image])
 
     N = len(reader)
 
     for i in range(N):
         reader.read(i)
-        masker.get(i)
 
     assert format_class.get_imageset([image])
 
@@ -112,15 +110,13 @@ def test_imagesetdata(centroid_files):
     from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 
     ReaderClass = FormatClass.get_reader()
-    MaskerClass = FormatClass.get_masker()
 
     reader = ReaderClass(centroid_files)
-    masker = MaskerClass(centroid_files)
+    masker = FormatClass(centroid_files[0]).get_masker()
 
     handle = ImageSetData(reader, masker)
 
     assert handle.get_data(0).as_int().tile(0).data()
-    assert handle.get_mask(0).tile(0).data()
 
     assert handle.has_single_file_reader() is False
 

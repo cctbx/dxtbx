@@ -26,6 +26,7 @@
 #include <dxtbx/model/scan.h>
 #include <dxtbx/format/image.h>
 #include <dxtbx/error.h>
+#include <dxtbx/masking/goniometer_shadow_masking.h>
 
 namespace dxtbx {
 
@@ -37,6 +38,7 @@ using model::Detector;
 using model::Goniometer;
 using model::Panel;
 using model::Scan;
+using masking::GoniometerShadowMasker;
 using scitbx::af::int2;
 
 namespace detail {
@@ -154,6 +156,7 @@ public:
   typedef boost::shared_ptr<Detector> detector_ptr;
   typedef boost::shared_ptr<Goniometer> goniometer_ptr;
   typedef boost::shared_ptr<Scan> scan_ptr;
+  typedef boost::shared_ptr<GoniometerShadowMasker> masker_ptr;
 
   ImageSetData() {}
 
@@ -162,7 +165,7 @@ public:
    * @param reader The image reader
    * @param masker The image masker
    */
-  ImageSetData(boost::python::object reader, boost::python::object masker)
+  ImageSetData(boost::python::object reader, masker_ptr masker)
       : reader_(reader),
         masker_(masker),
         beams_(boost::python::len(reader)),
@@ -170,9 +173,6 @@ public:
         goniometers_(boost::python::len(reader)),
         scans_(boost::python::len(reader)),
         reject_(boost::python::len(reader)) {
-    if (boost::python::len(reader) != boost::python::len(masker)) {
-      throw DXTBX_ERROR("Inconsistent # of images in reader and masker");
-    }
   }
 
   /**
@@ -185,7 +185,7 @@ public:
   /**
    * @returns The masker object
    */
-  boost::python::object masker() {
+  masker_ptr masker() {
     return masker_;
   }
 
@@ -193,7 +193,7 @@ public:
    * @returns Does the imageset have a dynamic mask.
    */
   bool has_dynamic_mask() const {
-    return boost::python::extract<bool>(masker_.attr("has_dynamic_mask")())();
+    return masker_ != NULL;
   }
 
   /**
@@ -224,36 +224,6 @@ public:
       buffer = get_image_buffer_from_object(data);
     }
     return buffer;
-  }
-
-  /**
-   * Read the image mask
-   * @param index The image index
-   * @returns The image mask
-   */
-  Image<bool> get_mask(std::size_t index) {
-    typedef scitbx::af::versa<bool, scitbx::af::c_grid<2> > bool_array;
-    typedef scitbx::af::c_grid<2> accessor_type;
-
-    // Create return buffer
-    Image<bool> image;
-
-    // Get the image data object
-    boost::python::object data = masker_.attr("get")(index);
-
-    // Get the class name
-    std::string name =
-      boost::python::extract<std::string>(data.attr("__class__").attr("__name__"))();
-
-    if (name == "tuple") {
-      image = get_image_from_tuple<bool>(
-        boost::python::extract<boost::python::tuple>(data)());
-    } else if (name == "bool") {
-      image = Image<bool>(get_image_tile_from_object<bool>(data));
-    } else if (name != "NoneType") {
-      throw DXTBX_ERROR("Unknown data type " + name + " for mask");
-    }
-    return image;
   }
 
   /**
@@ -525,7 +495,7 @@ protected:
   }
 
   boost::python::object reader_;
-  boost::python::object masker_;
+  boost::shared_ptr<GoniometerShadowMasker> masker_;
   scitbx::af::shared<beam_ptr> beams_;
   scitbx::af::shared<detector_ptr> detectors_;
   scitbx::af::shared<goniometer_ptr> goniometers_;
@@ -906,9 +876,8 @@ public:
    * @param index The image index
    * @returns The image mask
    */
-  Image<bool> get_dynamic_mask(std::size_t index) {
-    Image<bool> dyn_mask = data_.get_mask(indices_[index]);
-    return get_trusted_range_mask(get_static_mask(dyn_mask), index);
+  virtual Image<bool> get_dynamic_mask(std::size_t index) {
+    return get_trusted_range_mask(get_static_mask(), index);
   }
 
   /**
@@ -1271,6 +1240,31 @@ public:
    * Destructor
    */
   virtual ~ImageSweep() {}
+
+  /**
+   * Get the dynamic mask for the requested image
+   * @param index The image index
+   * @returns The image mask
+   */
+  virtual Image<bool> get_dynamic_mask(std::size_t index) {
+    
+    // Get the masker
+    ImageSetData::masker_ptr masker = data_.masker();
+
+    // Create return buffer
+    Image<bool> dyn_mask;
+
+    // Get the image data object
+    if (masker != NULL) {
+      DXTBX_ASSERT(scan_ != NULL);
+      DXTBX_ASSERT(detector_ != NULL);
+      double scan_angle = scan_->get_angle_from_array_index(index);
+      dyn_mask = masker->get_mask(*detector_, scan_angle);
+    }
+
+    // Return the dynamic mask
+    return get_trusted_range_mask(get_static_mask(dyn_mask), index);
+  }
 
   /**
    * @returns the array range
