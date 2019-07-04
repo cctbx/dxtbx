@@ -1,3 +1,4 @@
+#include <boost/foreach.hpp>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <dxtbx/masking/masking.h>
@@ -24,11 +25,9 @@ namespace dxtbx { namespace masking { namespace boost_python {
     double scan_angle) {
     scitbx::af::shared<scitbx::af::shared<scitbx::vec2<double> > > result =
       masker.project_extrema(detector, scan_angle);
-    scitbx::af::shared<scitbx::af::shared<scitbx::vec2<double> > >::iterator
-      iter;
     boost::python::list list;
-    for (iter = result.begin(); iter != result.end(); ++iter) {
-      list.append(*iter);
+    BOOST_FOREACH (scitbx::af::shared<scitbx::vec2<double> > item, result) {
+      list.append(item);
     }
     return list;
   }
