@@ -12,6 +12,7 @@ from future import standard_library
 
 standard_library.install_aliases()
 
+import functools
 import sys
 import urllib.parse
 import urllib.request
@@ -544,20 +545,20 @@ class Format(object):
         caching transparently if possible."""
 
         if url and Format.is_url(filename):
-            fh_func = lambda: urllib.request.urlopen(filename)
+            fh_func = functools.partial(urllib.request.urlopen, filename)
 
         elif Format.is_bz2(filename):
             if not bz2:
                 raise RuntimeError("bz2 file provided without bz2 module")
-            fh_func = lambda: bz2.BZ2File(filename, mode)
+            fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
 
         elif Format.is_gzip(filename):
             if not gzip:
                 raise RuntimeError("gz file provided without gzip module")
-            fh_func = lambda: gzip.GzipFile(filename, mode)
+            fh_func = functools.partial(gzip.GzipFile, filename, mode=mode)
 
         else:
-            fh_func = lambda: open(filename, mode)
+            fh_func = functools.partial(open, filename, mode=mode)
 
         ##  To disable caching logic:
         # return fh_func()

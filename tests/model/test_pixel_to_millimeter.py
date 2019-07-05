@@ -63,8 +63,9 @@ def test_correction_on_random_coordinates(model):
 
 
 def test_array(model):
-    random_coord = lambda: (random.uniform(-1000, 1000), random.uniform(-1000, 1000))
-    xy = flex.vec2_double([random_coord() for i in range(100)])
+    xy = flex.vec2_double(
+        (random.uniform(-1000, 1000), random.uniform(-1000, 1000)) for i in range(100)
+    )
     xy_corr = model["detector"].get_lab_coord(xy)
     xy_corr_panel = model["detector"].get_lab_coord(xy)
     xy_corr_gold = [model["detector"].get_lab_coord(xy_single) for xy_single in xy]
