@@ -329,7 +329,7 @@ class crystal_model_old(object):
         # From B = (O^-1)^T we can convert this
         # to the covariance matrix of the real space orthogonalisation matrix
         Bt = self._B.transpose()
-        O = Bt.inverse()
+        O = Bt.inverse()  # noqa: E741, is name of the matrix
         cov_O = matrix_inverse_error_propagation(Bt, var_cov)
 
         # The real space unit cell vectors are given by
