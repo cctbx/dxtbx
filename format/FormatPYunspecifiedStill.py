@@ -26,7 +26,9 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
         try:
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
                 if six.PY3:
-                    data = pickle.load(fh, encoding="bytes")
+                    data = pickle.load(fh, encoding="bytes")  # lgtm
+                    # the '# lgtm' comment disables an lgtm false positive and
+                    # can be removed once we move to Python 3 only
                     data = {key.decode("ascii"): value for key, value in data.items()}
                 else:
                     data = pickle.load(fh)
