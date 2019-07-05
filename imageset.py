@@ -26,7 +26,6 @@ __all__ = (
     "ImageSetFactory",
     "ImageSetLazy",
     "ImageSweep",
-    "MemMasker",
     "MemReader",
 )
 
