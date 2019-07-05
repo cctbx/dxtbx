@@ -73,11 +73,11 @@ def compute_frame_rotation(original, final):
     x, y, z = original
     _x, _y, _z = final
 
-    O = matrix.sqr(x.elems + y.elems + z.elems).transpose()
-    assert (O.determinant() - 1.0) < 1.0e-7
+    original_matrix = matrix.sqr(x.elems + y.elems + z.elems).transpose()
+    assert (original_matrix.determinant() - 1.0) < 1.0e-7
 
-    F = matrix.sqr(_x.elems + _y.elems + _z.elems).transpose()
-    assert (F.determinant() - 1.0) < 1.0e-7
+    final_matrix = matrix.sqr(_x.elems + _y.elems + _z.elems).transpose()
+    assert (final_matrix.determinant() - 1.0) < 1.0e-7
 
     # #1 rotate about x ^ (1, 0, 0) - if they are not coincident,
     # rotate about _x ^ _y if they are colinear but in opposite
@@ -271,8 +271,8 @@ def set_detector_distance(detector, distance):
     normal = matrix.col(detector[0].get_normal())
     origin = matrix.col(detector[0].get_origin())
     d = origin.dot(normal)
-    l = origin - d * normal
-    origin = distance * normal + l
+    x = origin - d * normal
+    origin = distance * normal + x
     fast_axis = detector[0].get_fast_axis()
     slow_axis = detector[0].get_slow_axis()
     detector[0].set_frame(fast_axis, slow_axis, origin)

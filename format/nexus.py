@@ -1615,7 +1615,7 @@ class DetectorGroupDataList(object):
         lengths = [len(datalist) for datalist in datalists]
         self.num_images = lengths[0]
         assert all(
-            [l == self.num_images for l in lengths]
+            length == self.num_images for length in lengths
         ), "Not all datasets are the same length"
 
     def __len__(self):

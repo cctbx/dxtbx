@@ -30,31 +30,31 @@ class get_definition(dxtbx.data.beamline_defs.template):
         is always true about the detector.
         2. a lookup function for CIF/mmCIF strings."""
         # prepare string lookup table
-        l = self._lookup(mmcif)
+        lookup = self._lookup(mmcif)
 
         import iotbx.cif.model
 
         b = iotbx.cif.model.block()
-        b[l("df.detector")] = "Photon counting pixel array"
-        b[l("df.rad.type")] = "Synchrotron"
+        b[lookup("df.detector")] = "Photon counting pixel array"
+        b[lookup("df.rad.type")] = "Synchrotron"
 
-        return b, l
+        return b, lookup
 
     def _at_I19(self, mmcif=False):
-        b, l = self._base(mmcif)
+        b, lookup = self._base(mmcif)
 
-        b[l("df.m.dev")] = "Fixed \\c 3-circle diffractometer"
-        b[l("df.m.dev_type")] = "Fluid Film Devices"
-        b[l("df.m.method")] = "shutterless scans"
-        b[l("df.m.spec_supp")] = "MiTeGen MicroMount"
-        b[l("df.rad.source")] = "Diamond Light Source Beamline I19-1"
-        b[l("df.rad.mono")] = "Silicon 111"
+        b[lookup("df.m.dev")] = "Fixed \\c 3-circle diffractometer"
+        b[lookup("df.m.dev_type")] = "Fluid Film Devices"
+        b[lookup("df.m.method")] = "shutterless scans"
+        b[lookup("df.m.spec_supp")] = "MiTeGen MicroMount"
+        b[lookup("df.rad.source")] = "Diamond Light Source Beamline I19-1"
+        b[lookup("df.rad.mono")] = "Silicon 111"
 
         return b
 
     def _at_I04_1(self, mmcif=False):
-        b, l = self._base(mmcif)
+        b, lookup = self._base(mmcif)
 
-        b[l("df.rad.source")] = "Diamond Light Source Beamline I04-1"
+        b[lookup("df.rad.source")] = "Diamond Light Source Beamline I04-1"
 
         return b
