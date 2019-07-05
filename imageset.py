@@ -37,24 +37,6 @@ class MemReader(object):
         return ""
 
 
-class MemMasker(object):
-    def __init__(self, images):
-        self._images = images
-
-    def get(self, index, goniometer=None):
-        format_instance = self._images[index]
-        return format_instance.get_mask(goniometer=goniometer)
-
-    def paths(self):
-        return ["" for im in self._images]
-
-    def identifiers(self):
-        return self.paths()
-
-    def __len__(self):
-        return len(self._images)
-
-
 class ImageSetAux(boost.python.injector, ImageSet):
     """
     A class to inject additional methods into the imageset class
