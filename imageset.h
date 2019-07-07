@@ -33,12 +33,12 @@ namespace dxtbx {
 using format::Image;
 using format::ImageBuffer;
 using format::ImageTile;
+using masking::GoniometerShadowMasker;
 using model::BeamBase;
 using model::Detector;
 using model::Goniometer;
 using model::Panel;
 using model::Scan;
-using masking::GoniometerShadowMasker;
 using scitbx::af::int2;
 
 namespace detail {
@@ -172,8 +172,7 @@ public:
         detectors_(boost::python::len(reader)),
         goniometers_(boost::python::len(reader)),
         scans_(boost::python::len(reader)),
-        reject_(boost::python::len(reader)) {
-  }
+        reject_(boost::python::len(reader)) {}
 
   /**
    * @returns The reader object
@@ -1247,7 +1246,6 @@ public:
    * @returns The image mask
    */
   virtual Image<bool> get_dynamic_mask(std::size_t index) {
-    
     // Get the masker
     ImageSetData::masker_ptr masker = data_.masker();
 
