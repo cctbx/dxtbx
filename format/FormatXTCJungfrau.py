@@ -33,7 +33,7 @@ class FormatXTCJungfrau(FormatXTC):
         FormatXTC.__init__(
             self, image_file, locator_scope=jungfrau_locator_scope, **kwargs
         )
-        self._ds = FormatXTCJungfrau._get_datasource(image_file, self.params)
+        self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._env = self._ds.env()
         self.populate_events()
         self.n_images = len(self.times)
@@ -198,18 +198,6 @@ class FormatXTCJungfrau(FormatXTC):
 class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
     """ Monolithic version of the Jungfrau, I.E. use the psana detector image function to assemble a monolithic image """
 
-    def __init__(self, image_file, **kwargs):
-        assert self.understand(image_file)
-        FormatXTC.__init__(
-            self, image_file, locator_scope=jungfrau_locator_scope, **kwargs
-        )
-        self._ds = FormatXTCJungfrauMonolithic._get_datasource(image_file, self.params)
-        self._env = self._ds.env()
-        self.populate_events()
-        self.n_images = len(self.times)
-        self._cached_detector = {}
-        self._cached_psana_detectors = {}
-
     @staticmethod
     def understand(image_file):
         try:
@@ -242,8 +230,6 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
         return self._detector(index)
 
     def _detector(self, index=None):
-        if index is None:
-            index = 0
         return self._detector_factory.simple(
             sensor="UNKNOWN",
             distance=100.0,
