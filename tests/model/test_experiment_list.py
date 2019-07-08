@@ -23,11 +23,7 @@ from dxtbx.model import (
     Goniometer,
     Scan,
 )
-from dxtbx.model.experiment_list import (
-    ExperimentListDict,
-    ExperimentListDumper,
-    ExperimentListFactory,
-)
+from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactory
 
 
 def test_experiment_contains():
@@ -510,24 +506,21 @@ def test_experimentlist_dumper_dump_formats(dials_regression, tmpdir):
     # Read all the experiment lists in
     elist1 = ExperimentListFactory.from_json_file(filename1)
 
-    # Create the experiment list dumper
-    dump = ExperimentListDumper(elist1)
-
     # Dump as JSON file and reload
     filename = "temp1.json"
-    dump.as_json(filename)
+    elist1.as_json(filename)
     elist2 = ExperimentListFactory.from_json_file(filename)
     check(elist1, elist2)
 
     # Dump as split JSON file and reload
     filename = "temp2.json"
-    dump.as_json(filename, split=True)
+    elist1.as_json(filename, split=True)
     elist2 = ExperimentListFactory.from_json_file(filename)
     check(elist1, elist2)
 
     # Dump as pickle and reload
     filename = "temp.pickle"
-    dump.as_pickle(filename)
+    elist1.as_pickle(filename)
     elist2 = ExperimentListFactory.from_pickle_file(filename)
     check(elist1, elist2)
 
@@ -563,12 +556,9 @@ def test_experimentlist_dumper_dump_scan_varying(dials_regression, tmpdir):
         [goniometer.get_setting_rotation()] * 5
     )
 
-    # Create the experiment list dumper
-    dump = ExperimentListDumper(elist1)
-
     # Dump as JSON file and reload
     filename = "temp.json"
-    dump.as_json(filename)
+    elist1.as_json(filename)
     elist2 = ExperimentListFactory.from_json_file(filename)
     check(elist1, elist2)
 
@@ -591,9 +581,8 @@ def test_experimentlist_dumper_dump_empty_sweep(tmpdir):
 
     experiments = ExperimentListFactory.from_imageset_and_crystal(imageset, crystal)
 
-    dump = ExperimentListDumper(experiments)
     filename = "temp.json"
-    dump.as_json(filename)
+    experiments.as_json(filename)
     experiments2 = ExperimentListFactory.from_json_file(filename, check_format=False)
     check(experiments, experiments2)
 
@@ -618,9 +607,8 @@ def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmpdir):
     assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
     assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
 
-    dump = ExperimentListDumper(experiments)
     filename = "temp.json"
-    dump.as_json(filename)
+    experiments.as_json(filename)
 
     experiments = ExperimentListFactory.from_json_file(filename, check_format=True)
 
@@ -653,9 +641,8 @@ def test_experimentlist_dumper_dump_with_bad_lookup(dials_regression, tmpdir):
     assert imageset.external_lookup.gain.filename is not None
     assert imageset.external_lookup.pedestal.filename is not None
 
-    dump = ExperimentListDumper(experiments)
     filename = "temp.json"
-    dump.as_json(filename)
+    experiments.as_json(filename)
 
     experiments = ExperimentListFactory.from_json_file(filename, check_format=False)
 
