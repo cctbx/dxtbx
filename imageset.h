@@ -40,6 +40,7 @@ using model::Goniometer;
 using model::Panel;
 using model::Scan;
 using scitbx::af::int2;
+using scitbx::rad_as_deg;
 
 namespace detail {
 
@@ -1256,7 +1257,7 @@ public:
     if (masker != NULL) {
       DXTBX_ASSERT(scan_ != NULL);
       DXTBX_ASSERT(detector_ != NULL);
-      double scan_angle = scan_->get_angle_from_array_index(index);
+      double scan_angle = rad_as_deg(scan_->get_angle_from_array_index(index));
       dyn_mask = masker->get_mask(*detector_, scan_angle);
     }
 
