@@ -160,39 +160,16 @@ class FormatSMVJHSim(FormatSMV):
         """Get the pixel intensities (i.e. read the image and return as a
         flex array of integers.)"""
 
-        from boost.python import streambuf
-        from dxtbx import read_uint16, read_uint16_bs, is_big_endian
-        from scitbx.array_family import flex
-
         assert len(self.get_detector()) == 1
-        image_pedestal = 1
-        try:
-            image_pedestal = float(self._header_dictionary["ADC_OFFSET"])
-        except KeyError:
-            pass
         panel = self.get_detector()[0]
-        size = panel.get_image_size()
-        f = FormatSMVJHSim.open_file(self._image_file, "rb")
-        f.read(self._header_size)
-
-        if self._header_dictionary["BYTE_ORDER"] == "big_endian":
-            big_endian = True
-        else:
-            big_endian = False
-
-        if big_endian == is_big_endian():
-            raw_data = read_uint16(streambuf(f), int(size[0] * size[1]))
-        else:
-            raw_data = read_uint16_bs(streambuf(f), int(size[0] * size[1]))
+        image_size = panel.get_image_size()
+        raw_data = self._get_endianic_raw_data(size=image_size)
 
         # apply image pedestal, will result in *negative pixel values*
         # this is a horrible idea since raw_data is unsigned
         # see all instances of image_pedestal in dxtbx
-
+        image_pedestal = self._header_dictionary.get("ADC_OFFSET", 1)
         raw_data -= int(image_pedestal)
-
-        image_size = panel.get_image_size()
-        raw_data.reshape(flex.grid(image_size[1], image_size[0]))
 
         return raw_data
 

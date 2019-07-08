@@ -313,25 +313,7 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
         """Get the pixel intensities (i.e. read the image and return as a
         flex array of integers.)"""
 
-        from boost.python import streambuf
-        from dxtbx import read_uint16, read_uint16_bs, is_big_endian
-        from scitbx.array_family import flex
-
-        f = self.open_file(self._image_file, "rb")
-        f.read(self._header_size)
-
-        if self._header_dictionary["BYTE_ORDER"] == "big_endian":
-            big_endian = True
-        else:
-            big_endian = False
-
-        if big_endian == is_big_endian():
-            raw_data = read_uint16(streambuf(f), int(512 * 512))
-        else:
-            raw_data = read_uint16_bs(streambuf(f), int(512 * 512))
-
-        image_size = (512, 512)
-        raw_data.reshape(flex.grid(image_size[1], image_size[0]))
+        raw_data = self._get_endianic_raw_data(size=(512, 512))
 
         # split into separate panels
         self._raw_data = []
@@ -417,28 +399,9 @@ class FormatSMVTimePix_SU_516x516(FormatSMVTimePix_SU):
         """Get the pixel intensities (i.e. read the image and return as a
         flex array of integers.)"""
 
-        from boost.python import streambuf
-        from dxtbx import read_uint16, read_uint16_bs, is_big_endian
-        from scitbx.array_family import flex
-
-        f = self.open_file(self._image_file, "rb")
-        f.read(self._header_size)
-
         nx = int(self._header_dictionary["SIZE1"])  # number of pixels
         ny = int(self._header_dictionary["SIZE2"])  # number of pixels
-
-        if self._header_dictionary["BYTE_ORDER"] == "big_endian":
-            big_endian = True
-        else:
-            big_endian = False
-
-        if big_endian == is_big_endian():
-            raw_data = read_uint16(streambuf(f), int(nx * ny))
-        else:
-            raw_data = read_uint16_bs(streambuf(f), int(nx * ny))
-
-        # note that x and y are reversed here
-        raw_data.reshape(flex.grid(ny, nx))
+        raw_data = self._get_endianic_raw_data(size=(nx, ny))
 
         self._raw_data = raw_data
 
