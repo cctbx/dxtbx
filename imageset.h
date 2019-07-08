@@ -1257,7 +1257,8 @@ public:
     if (masker != NULL) {
       DXTBX_ASSERT(scan_ != NULL);
       DXTBX_ASSERT(detector_ != NULL);
-      double scan_angle = rad_as_deg(scan_->get_angle_from_array_index(index));
+      double scan_angle = rad_as_deg(
+          scan_->get_angle_from_image_index(index+scan_->get_image_range()[0]));
       dyn_mask = masker->get_mask(*detector_, scan_angle);
     }
 
