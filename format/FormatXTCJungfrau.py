@@ -33,7 +33,7 @@ class FormatXTCJungfrau(FormatXTC):
         FormatXTC.__init__(
             self, image_file, locator_scope=jungfrau_locator_scope, **kwargs
         )
-        self._ds = self._get_datasource(image_file, self.params)
+        self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._env = self._ds.env()
         self.populate_events()
         self.n_images = len(self.times)
