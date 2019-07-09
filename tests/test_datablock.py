@@ -30,7 +30,7 @@ def single_sweep_filenames(centroid_test_data):
 @pytest.fixture
 def multiple_sweep_filenames(centroid_test_data):
     filenames = [
-        os.path.join(centroid_test_data, "centroid_000{0}.cbf".format(i))
+        os.path.join(centroid_test_data, "centroid_000{}.cbf".format(i))
         for i in [1, 2, 3, 7, 8, 9]
     ]
     return filenames

@@ -86,7 +86,7 @@ def get_format_class_for_file(image_file, format_hint=None):
     # format name is in the set to prioritise it during the format search.
     priority_formats = set()
     if format_hint:
-        priority_candidates = set((format_hint,))
+        priority_candidates = {format_hint}
         dagset = {f: set(subf) for f, subf in _format_dag.items()}
         while priority_candidates:
             priority_formats.update(priority_candidates)

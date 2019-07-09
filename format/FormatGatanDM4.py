@@ -252,7 +252,7 @@ class FormatGatanDM4(FormatMultiImage, Format):
             if name == "":
                 name = "NONAME"
             if "tags" in tag:  # tag directory
-                print(prefix + "DIR: {0}".format(name))
+                print(prefix + "DIR: {}".format(name))
                 prefix += "  "
                 self._print_tag_hierarchy(tag["tags"], prefix)
                 prefix = prefix[:-2]

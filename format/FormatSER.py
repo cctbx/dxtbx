@@ -183,11 +183,11 @@ class FormatSER(FormatMultiImage, Format):
         # Check image size is as expected (same as the first image)
         if d["ArraySizeX"] != self._header_dictionary["ArraySizeX"]:
             raise RuntimeError(
-                "Image {0} has an unexpected array size in X".format(index + 1)
+                "Image {} has an unexpected array size in X".format(index + 1)
             )
         if d["ArraySizeY"] != self._header_dictionary["ArraySizeY"]:
             raise RuntimeError(
-                "Image {0} has an unexpected array size in Y".format(index + 1)
+                "Image {} has an unexpected array size in Y".format(index + 1)
             )
 
         image_size = (d["ArraySizeX"], d["ArraySizeY"])

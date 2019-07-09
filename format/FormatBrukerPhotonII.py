@@ -212,7 +212,7 @@ class FormatBrukerPhotonII(FormatBruker):
             read_data = read_2b
         else:
             raise IncorrectFormatError(
-                "{0} bytes per pixel is not supported".format(npixelb[0])
+                "{} bytes per pixel is not supported".format(npixelb[0])
             )
 
         nrows = int(self.header_dict["NROWS"].split()[0])

@@ -41,4 +41,4 @@ if __name__ == "__main__":
             print("Error: more than 1 imageset has been specified")
         else:
             dump.imageset(imagesets[0], options.output_file)
-            print("Serialized imageset to {0}".format(options.output_file))
+            print("Serialized imageset to {}".format(options.output_file))
