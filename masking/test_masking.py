@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import math
 import os
 import pytest
+import pickle
 
 from scitbx.array_family import flex
 from scitbx import matrix
@@ -154,6 +155,14 @@ def test_GoniometerShadowMasker_kappa_180_omega_0(
     assert mask[0].all() == tuple(reversed(detector[0].get_image_size()))
     assert mask[0].count(True) == pytest.approx(5570865)
 
+    obj = pickle.dumps(masker)
+    masker2 = pickle.loads(obj)
+
+    mask2 = masker2.get_mask(detector, scan_angle)
+    assert len(mask2) == len(mask)
+    assert mask2[0].all() == mask[0].all()
+    assert mask2[0].count(True) == mask2[0].count(True)
+
 
 def test_GoniometerShadowMasker_kappa_180_omega_m45(
     kappa_goniometer, pilatus_6M, kappa_goniometer_shadow_masker
@@ -175,6 +184,14 @@ def test_GoniometerShadowMasker_kappa_180_omega_m45(
     assert mask[0].all() == tuple(reversed(detector[0].get_image_size()))
     assert mask[0].count(True) == pytest.approx(5467810)
 
+    obj = pickle.dumps(masker)
+    masker2 = pickle.loads(obj)
+
+    mask2 = masker2.get_mask(detector, scan_angle)
+    assert len(mask2) == len(mask)
+    assert mask2[0].all() == mask[0].all()
+    assert mask2[0].count(True) == mask2[0].count(True)
+
 
 def test_GoniometerShadowMasker_kappa_180_omega_p45(
     kappa_goniometer, pilatus_6M, kappa_goniometer_shadow_masker
@@ -193,6 +210,12 @@ def test_GoniometerShadowMasker_kappa_180_omega_p45(
     )
     mask = masker.get_mask(detector, scan_angle)
     assert mask[0] is None or mask[0].count(False) == 0
+
+    obj = pickle.dumps(masker)
+    masker2 = pickle.loads(obj)
+
+    mask2 = masker2.get_mask(detector, scan_angle)
+    assert mask2[0] is None or mask2[0].count(False) == 0
 
 
 def test_GoniometerShadowMasker_kappa_m70_omega_p100(
@@ -214,6 +237,12 @@ def test_GoniometerShadowMasker_kappa_m70_omega_p100(
     mask = masker.get_mask(detector, scan_angle)
     assert mask[0] is None or mask[0].count(False) == 0
 
+    obj = pickle.dumps(masker)
+    masker2 = pickle.loads(obj)
+
+    mask2 = masker2.get_mask(detector, scan_angle)
+    assert mask2[0] is None or mask2[0].count(False) == 0
+
 
 def test_SmarGonShadowMasker_p48_c45_o95(
     smargon_goniometer, pilatus_6M, smargon_shadow_masker
@@ -232,6 +261,14 @@ def test_SmarGonShadowMasker_p48_c45_o95(
     assert len(shadow[0]) in (15, 16)
     mask = masker.get_mask(detector, scan_angle)
     assert mask[0].count(True) == pytest.approx(5716721, 3e-5)
+
+    obj = pickle.dumps(masker)
+    masker2 = pickle.loads(obj)
+
+    mask2 = masker2.get_mask(detector, scan_angle)
+    assert len(mask2) == len(mask)
+    assert mask2[0].all() == mask[0].all()
+    assert mask2[0].count(True) == mask2[0].count(True)
 
 
 def test_SmarGonShadowMasker_p0_c90_o50(
@@ -253,6 +290,14 @@ def test_SmarGonShadowMasker_p0_c90_o50(
         assert len(shadow[0]) == 11
         mask = masker.get_mask(detector, scan_angle)
         assert mask[0].count(True) == pytest.approx(4614865, 2e-4)
+
+        obj = pickle.dumps(masker)
+        masker2 = pickle.loads(obj)
+
+        mask2 = masker2.get_mask(detector, scan_angle)
+        assert len(mask2) == len(mask)
+        assert mask2[0].all() == mask[0].all()
+        assert mask2[0].count(True) == mask2[0].count(True)
 
 
 def test_dls_i23_kappa(dls_i23_experiment, dls_i23_kappa_shadow_masker):
@@ -298,6 +343,14 @@ def test_dls_i23_kappa(dls_i23_experiment, dls_i23_kappa_shadow_masker):
         ]
         mask = masker.get_mask(detector, scan_angle)
         assert sum(m.count(False) for m in mask) == 1898843
+
+        obj = pickle.dumps(masker)
+        masker2 = pickle.loads(obj)
+
+        mask2 = masker2.get_mask(detector, scan_angle)
+        assert len(mask2) == len(mask)
+        assert mask2[0].all() == mask[0].all()
+        assert mask2[0].count(True) == mask2[0].count(True)
 
 
 class PyGoniometerShadowMasker(object):

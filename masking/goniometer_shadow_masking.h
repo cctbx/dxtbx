@@ -50,6 +50,20 @@ namespace dxtbx { namespace masking {
     GoniometerShadowMasker(const MultiAxisGoniometer &goniometer)
         : goniometer_(goniometer) {}
 
+    MultiAxisGoniometer goniometer() const {
+      return goniometer_;
+    } 
+
+    scitbx::af::shared<vec3<double> > extrema_at_datum() const {
+      return scitbx::af::shared< vec3<double> >(
+          extrema_at_datum_.begin(),
+          extrema_at_datum_.end());
+    }
+    
+    scitbx::af::shared<std::size_t> axis() const {
+      return scitbx::af::shared<std::size_t>(axis_.begin(), axis_.end());
+    }
+
     virtual scitbx::af::shared<vec3<double> > extrema_at_scan_angle(
       double scan_angle) const {
       scitbx::af::shared<vec3<double> > axes = goniometer_.get_axes();

@@ -49,6 +49,21 @@ namespace dxtbx { namespace masking { namespace boost_python {
     double scan_angle) {
     return image_as_tuple<bool>(masker.get_mask(detector, scan_angle));
   }
+  
+  struct GoniometerShadowMaskerPickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(const GoniometerShadowMasker &obj) {
+      return boost::python::make_tuple(
+          obj.goniometer(),
+          obj.extrema_at_datum(),
+          obj.axis());
+    }
+  };
+  
+  struct SmarGonShadowMaskerPickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(const SmarGonShadowMasker &obj) {
+      return boost::python::make_tuple(obj.goniometer());
+    }
+  };
 
   using namespace boost::python;
   BOOST_PYTHON_MODULE(dxtbx_masking_ext) {
@@ -71,11 +86,13 @@ namespace dxtbx { namespace masking { namespace boost_python {
       .def("extrema_at_scan_angle", &GoniometerShadowMasker::extrema_at_scan_angle)
       .def("set_goniometer_angles", &GoniometerShadowMasker::set_goniometer_angles)
       .def("project_extrema", GoniometerShadowMasker_project_extrema)
-      .def("get_mask", GoniometerShadowMasker_get_mask);
+      .def("get_mask", GoniometerShadowMasker_get_mask)
+      .def_pickle(GoniometerShadowMaskerPickleSuite());
 
     class_<SmarGonShadowMasker, bases<GoniometerShadowMasker> >("SmarGonShadowMasker",
                                                                 no_init)
       .def(init<const MultiAxisGoniometer &>())
-      .def("extrema_at_scan_angle", &SmarGonShadowMasker::extrema_at_scan_angle);
+      .def("extrema_at_scan_angle", &SmarGonShadowMasker::extrema_at_scan_angle)
+      .def_pickle(SmarGonShadowMaskerPickleSuite());
   }
 }}}  // namespace dxtbx::masking::boost_python
