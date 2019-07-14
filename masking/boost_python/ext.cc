@@ -49,16 +49,14 @@ namespace dxtbx { namespace masking { namespace boost_python {
     double scan_angle) {
     return image_as_tuple<bool>(masker.get_mask(detector, scan_angle));
   }
-  
+
   struct GoniometerShadowMaskerPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const GoniometerShadowMasker &obj) {
       return boost::python::make_tuple(
-          obj.goniometer(),
-          obj.extrema_at_datum(),
-          obj.axis());
+        obj.goniometer(), obj.extrema_at_datum(), obj.axis());
     }
   };
-  
+
   struct SmarGonShadowMaskerPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const SmarGonShadowMasker &obj) {
       return boost::python::make_tuple(obj.goniometer());

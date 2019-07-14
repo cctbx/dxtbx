@@ -52,14 +52,13 @@ namespace dxtbx { namespace masking {
 
     MultiAxisGoniometer goniometer() const {
       return goniometer_;
-    } 
+    }
 
     scitbx::af::shared<vec3<double> > extrema_at_datum() const {
-      return scitbx::af::shared< vec3<double> >(
-          extrema_at_datum_.begin(),
-          extrema_at_datum_.end());
+      return scitbx::af::shared<vec3<double> >(extrema_at_datum_.begin(),
+                                               extrema_at_datum_.end());
     }
-    
+
     scitbx::af::shared<std::size_t> axis() const {
       return scitbx::af::shared<std::size_t>(axis_.begin(), axis_.end());
     }
