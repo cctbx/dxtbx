@@ -125,9 +125,52 @@ def dls_i23_experiment(dials_regression):
 
 
 @pytest.fixture
-def dls_i23_kappa_shadow_masker(request):
+def dls_i23_kappa_shadow_masker():
     def _construct_shadow_masker(goniometer):
         return GoniometerMaskerFactory.dls_i23_kappa(goniometer)
+
+    return _construct_shadow_masker
+
+
+@pytest.fixture
+def dls_i19_2_detector():
+    def _construct_detector(distance):
+        return DetectorFactory.simple(
+            sensor="PAD",
+            distance=distance,
+            beam_centre=(41.20, 51.69),
+            fast_direction="+x",
+            slow_direction="-y",
+            pixel_size=(0.172, 0.172),
+            image_size=(487, 619),
+            trusted_range=(-1, 1e8),
+        )
+
+    return _construct_detector
+
+
+@pytest.fixture
+def dls_i19_2_goniometer():
+    def _construct_goniometer(phi, kappa, omega):
+        phi_axis = (1.0, 0.0, 0.0)
+        kappa_axis = (0.642788, -0.766044, 0)
+        omega_axis = (1.0, 0.0, 0.0)
+        axes = flex.vec3_double((phi_axis, kappa_axis, omega_axis))
+        angles = flex.double((phi, kappa, omega))
+        names = flex.std_string(("GON_PHI", "GON_KAPPA", "GON_OMEGA"))
+        return GoniometerFactory.make_multi_axis_goniometer(
+            axes, angles, names, scan_axis=2
+        )
+
+    return _construct_goniometer
+
+
+@pytest.fixture
+def diamond_anvil_cell_masker():
+    def _construct_shadow_masker(goniometer):
+        return GoniometerMaskerFactory.diamond_anvil_cell(
+            goniometer, cone_opening_angle=2 * 38 * math.pi / 180
+        )
 
     return _construct_shadow_masker
 
@@ -351,6 +394,34 @@ def test_dls_i23_kappa(dls_i23_experiment, dls_i23_kappa_shadow_masker):
         assert len(mask2) == len(mask)
         assert mask2[0].all() == mask[0].all()
         assert mask2[0].count(True) == mask2[0].count(True)
+
+
+def test_dls_i19_2_diamond_anvil_cell(
+    dls_i19_2_detector, dls_i19_2_goniometer, diamond_anvil_cell_masker
+):
+    detector = dls_i19_2_detector(distance=90.29)
+    goniometer = dls_i19_2_goniometer(-35, 0, -90)
+    masker = diamond_anvil_cell_masker(goniometer)
+    scan_angle = -35
+
+    extrema = masker.extrema_at_scan_angle(scan_angle)
+    assert len(extrema) == 721
+    assert extrema[1] == pytest.approx(
+        (7.812856265067172, 3.4202014332566875, -9.396926207859082)
+    )
+    shadow = masker.project_extrema(detector, scan_angle)
+    assert len(shadow) == len(detector)
+    assert len(shadow[0]) == 90
+    mask = masker.get_mask(detector, scan_angle)
+    assert sum(m.count(False) for m in mask) == 84352
+
+    obj = pickle.dumps(masker)
+    masker2 = pickle.loads(obj)
+
+    mask2 = masker2.get_mask(detector, scan_angle)
+    assert len(mask2) == len(mask)
+    assert mask2[0].all() == mask[0].all()
+    assert mask2[0].count(True) == mask2[0].count(True)
 
 
 class PyGoniometerShadowMasker(object):

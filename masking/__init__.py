@@ -178,3 +178,29 @@ class GoniometerMaskerFactory(object):
 
         """
         return SmarGonShadowMasker(goniometer)
+
+    @staticmethod
+    def diamond_anvil_cell(goniometer, cone_opening_angle):
+        radius_height_ratio = math.tan(1 / 2 * cone_opening_angle)
+        height = 10  # mm
+        radius = radius_height_ratio * height
+
+        steps_per_degree = 1
+        theta = (
+            flex.double([list(range(360 * steps_per_degree))])
+            * math.pi
+            / 180
+            * 1
+            / steps_per_degree
+        )
+        x = radius * flex.cos(theta)  # x
+        z = radius * flex.sin(theta)  # y
+        y = flex.double(theta.size(), height)  # z
+
+        coords = flex.vec3_double(zip(x, y, z))
+        coords.extend(flex.vec3_double(zip(x, -y, z)))
+        coords.insert(0, (0, 0, 0))
+
+        return GoniometerShadowMasker(
+            goniometer, coords, flex.size_t(len(coords), 0), True
+        )

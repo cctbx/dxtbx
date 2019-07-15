@@ -42,10 +42,12 @@ namespace dxtbx { namespace masking {
      */
     GoniometerShadowMasker(const MultiAxisGoniometer &goniometer,
                            const scitbx::af::const_ref<vec3<double> > &extrema_at_datum,
-                           const scitbx::af::const_ref<std::size_t> &axis)
+                           const scitbx::af::const_ref<std::size_t> &axis,
+                           bool invert_mask = false)
         : goniometer_(goniometer),
           extrema_at_datum_(extrema_at_datum.begin(), extrema_at_datum.end()),
-          axis_(axis.begin(), axis.end()) {}
+          axis_(axis.begin(), axis.end()),
+          invert_mask_(invert_mask) {}
 
     GoniometerShadowMasker(const MultiAxisGoniometer &goniometer)
         : goniometer_(goniometer) {}
@@ -200,6 +202,11 @@ namespace dxtbx { namespace masking {
         if (shadow_boundary[i].size() >= 3) {
           mask_untrusted_polygon(mask_data.ref(), shadow_boundary[i].const_ref());
         }
+        if (invert_mask_) {
+          for (std::size_t j = 0; j < mask_data.size(); j++) {
+            mask_data[j] = !mask_data[j];
+          }
+        }
         mask.push_back(mask_tile);
       }
 
@@ -214,6 +221,7 @@ namespace dxtbx { namespace masking {
     MultiAxisGoniometer goniometer_;
     scitbx::af::shared<vec3<double> > extrema_at_datum_;
     scitbx::af::shared<std::size_t> axis_;
+    bool invert_mask_ = false;
   };
 
   class SmarGonShadowMasker : public GoniometerShadowMasker {

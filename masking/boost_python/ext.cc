@@ -80,7 +80,8 @@ namespace dxtbx { namespace masking { namespace boost_python {
     class_<GoniometerShadowMasker>("GoniometerShadowMasker", no_init)
       .def(init<const MultiAxisGoniometer &,
                 const scitbx::af::const_ref<scitbx::vec3<double> > &,
-                const scitbx::af::const_ref<std::size_t> &>())
+                const scitbx::af::const_ref<std::size_t> &,
+                optional<bool> >())
       .def("extrema_at_scan_angle", &GoniometerShadowMasker::extrema_at_scan_angle)
       .def("set_goniometer_angles", &GoniometerShadowMasker::set_goniometer_angles)
       .def("project_extrema", GoniometerShadowMasker_project_extrema)

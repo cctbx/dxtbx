@@ -8,13 +8,10 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import math
 
-from scitbx.array_family import flex
-
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
-from dxtbx.masking import GoniometerShadowMasker
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
@@ -75,35 +72,9 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
         if goniometer is None:
             goniometer = self.get_goniometer()
 
-        # Simple model of cone around goniometer phi axis
-        # Exact values don't matter, only the ratio of height/radius
-        height = 10  # mm
-
-        cone_opening_angle = 2 * 38 * math.pi / 180
-        radius_height_ratio = math.tan(1 / 2 * cone_opening_angle)
-        radius = radius_height_ratio * height
-
-        # print 2 * math.atan(radius/height) * 180 / math.pi
-
-        steps_per_degree = 1
-        theta = (
-            flex.double([list(range(360 * steps_per_degree))])
-            * math.pi
-            / 180
-            * 1
-            / steps_per_degree
+        return GoniometerMaskerFactory.diamond_anvil_cell(
+            goniometer, cone_opening_angle=2 * 38 * math.pi / 180
         )
-        x = radius * flex.cos(theta)  # x
-        z = radius * flex.sin(theta)  # y
-        y = flex.double(theta.size(), height)  # z
-
-        coords = flex.vec3_double(zip(x, y, z))
-        coords.extend(flex.vec3_double(zip(x, -y, z)))
-        coords.insert(0, (0, 0, 0))
-
-        if goniometer is None:
-            goniometer = self.get_goniometer()
-        return GoniometerShadowMasker(goniometer, coords, flex.size_t(len(coords), 0))
 
 
 if __name__ == "__main__":
