@@ -50,7 +50,7 @@ namespace dxtbx { namespace masking {
           invert_mask_(invert_mask) {}
 
     GoniometerShadowMasker(const MultiAxisGoniometer &goniometer)
-        : goniometer_(goniometer) {}
+        : goniometer_(goniometer), invert_mask_(false) {}
 
     MultiAxisGoniometer goniometer() const {
       return goniometer_;
@@ -221,7 +221,7 @@ namespace dxtbx { namespace masking {
     MultiAxisGoniometer goniometer_;
     scitbx::af::shared<vec3<double> > extrema_at_datum_;
     scitbx::af::shared<std::size_t> axis_;
-    bool invert_mask_ = false;
+    bool invert_mask_;
   };
 
   class SmarGonShadowMasker : public GoniometerShadowMasker {
