@@ -124,12 +124,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
 
         return self._detector_instance
 
-    def get_mask(self, index=None, goniometer=None):
-        # This means when the pixel mask is present, trusted region is ignored.
-        # The used provided masks (if any) will be automatically merged.
-        # see https://github.com/dials/dials/issues/236
-        return self.mask
-
     def get_beam(self, index=None):
         if index is not None and self.index != index:
             self.set_index(index)

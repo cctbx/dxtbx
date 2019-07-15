@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import h5py
 import libtbx
-from scitbx.array_family import flex
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.model import MultiAxisGoniometer
 from dxtbx.masking import GoniometerMaskerFactory
@@ -55,28 +54,6 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
         super(FormatNexusEigerDLS16M, self).__init__(image_file, **kwargs)
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
-
-    def get_mask(self, index, goniometer=None):
-        mask = super(FormatNexusEigerDLS16M, self).get_mask()
-        if mask is None:
-            # XXX mask really shouldn't be None
-            # https://jira.diamond.ac.uk/browse/SCI-8308
-            mask = tuple(
-                flex.bool(flex.grid(reversed(panel.get_image_size())), True)
-                for panel in self.get_detector()
-            )
-        if self._dynamic_shadowing and self.get_scan():
-            gonio_masker = self.get_goniometer_shadow_masker(goniometer=goniometer)
-            scan = self.get_scan()
-            detector = self.get_detector()
-            shadow_mask = gonio_masker.get_mask(
-                detector, scan.get_angle_from_image_index(index)
-            )
-            assert len(mask) == len(shadow_mask)
-            for m, sm in zip(mask, shadow_mask):
-                if sm is not None:
-                    m &= sm
-        return mask
 
     def get_goniometer_shadow_masker(self, goniometer=None):
         if not self._dynamic_shadowing:

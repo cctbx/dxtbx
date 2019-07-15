@@ -20,7 +20,6 @@ from dxtbx.format.nexus import DetectorFactory
 from dxtbx.format.nexus import GoniometerFactory
 from dxtbx.format.nexus import ScanFactory
 from dxtbx.format.nexus import DataFactory
-from dxtbx.format.nexus import MaskFactory
 
 import h5py
 import numpy
@@ -398,9 +397,6 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
 
     def get_raw_data(self, index):
         return self._raw_data[index]
-
-    def get_mask(self, index=None, goniometer=None):
-        return MaskFactory(self.instrument.detectors, index).mask
 
     def get_num_images(self):
         scan = self._scan()

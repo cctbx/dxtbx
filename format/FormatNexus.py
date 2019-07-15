@@ -10,7 +10,6 @@ from dxtbx.format.nexus import DetectorFactory, DetectorFactoryFromGroup
 from dxtbx.format.nexus import GoniometerFactory
 from dxtbx.format.nexus import ScanFactory
 from dxtbx.format.nexus import DataFactory, DetectorGroupDataFactory
-from dxtbx.format.nexus import MaskFactory
 
 
 class FormatNexus(FormatHDF5):
@@ -126,9 +125,6 @@ class FormatNexus(FormatHDF5):
 
     def get_raw_data(self, index):
         return self._raw_data[index]
-
-    def get_mask(self, index=None, goniometer=None):
-        return MaskFactory(self.instrument.detectors, index).mask
 
     def get_num_images(self):
         if self._scan() is not None:

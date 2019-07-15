@@ -80,9 +80,6 @@ class FormatMultiImage(Format):
     def get_raw_data(self, index=None):
         raise NotImplementedError
 
-    def get_mask(self, index=None, goniometer=None):
-        return None
-
     def get_detectorbase(self, index=None):
         raise NotImplementedError
 
