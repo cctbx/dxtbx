@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+from scitbx.math import five_number_summary
 
 
 def print_total():
@@ -21,6 +22,11 @@ def print_total():
         total = sum([sum(p.select(p >= 0)) for p in d])
         print("Total Counts: %d" % total)
         print("Average Counts: %.2f" % (total / (image_size[0] * image_size[1])))
+
+        flat_d = d[0]
+        for p in d[1:]:
+            flat_d.extend(p)
+        print("Five number summary:", five_number_summary(p))
 
 
 if __name__ == "__main__":
