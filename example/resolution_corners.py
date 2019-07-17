@@ -28,7 +28,7 @@ def resolution_corners(frame):
     S = matrix.col(detector.get_slow_axis())
     origin = matrix.col(detector.get_origin())
 
-    s0 = -1 * matrix.col(beam.get_direction())
+    s0 = -1 * matrix.col(beam.get_sample_to_source_direction())
 
     for ds in 0, 1:
         for df in 0, 1:

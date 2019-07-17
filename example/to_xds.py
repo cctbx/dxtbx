@@ -106,8 +106,10 @@ class to_xds(object):
         origin = R * self.get_detector().get_origin()
         beam = (
             R
-            * self.get_beam().get_direction()
-            / math.sqrt(matrix.col(self.get_beam().get_direction()).dot())
+            * self.get_beam().get_sample_to_source_direction()
+            / math.sqrt(
+                matrix.col(self.get_beam().get_sample_to_source_direction()).dot()
+            )
         )
         centre = -(origin - origin.dot(N) * N)
         x = centre.dot(F)

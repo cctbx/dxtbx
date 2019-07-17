@@ -21,8 +21,8 @@ def test_setting_direction_and_wavelength():
     eps = 1e-7
 
     # Check direction is a unit vector
-    assert matrix.col(b.get_direction()).length() == pytest.approx(1)
-    assert abs(matrix.col(b.get_direction()) - unit_direction) <= eps
+    assert matrix.col(b.get_sample_to_source_direction()).length() == pytest.approx(1)
+    assert abs(matrix.col(b.get_sample_to_source_direction()) - unit_direction) <= eps
 
     # Check wavelength is correct
     assert b.get_wavelength() == pytest.approx(wavelength)
@@ -44,8 +44,8 @@ def test_setting_s0():
     eps = 1e-7
 
     # Check direction is a unit vector
-    assert matrix.col(b.get_direction()).length() == pytest.approx(1)
-    assert abs(matrix.col(b.get_direction()) - unit_direction) <= eps
+    assert matrix.col(b.get_sample_to_source_direction()).length() == pytest.approx(1)
+    assert abs(matrix.col(b.get_sample_to_source_direction()) - unit_direction) <= eps
 
     # Check wavelength is correct
     assert b.get_wavelength() == pytest.approx(wavelength)
