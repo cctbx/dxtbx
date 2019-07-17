@@ -130,8 +130,6 @@ class FormatTIFFRayonixSACLA(FormatPhilLocator, FormatMultiImageLazy, FormatStil
             high_tag = dbpy.read_hightagnumber(self.params.beamline, self.params.run)
         except Exception as e:
             return -1
-        start_tag = run_info['start_tagnumber']
-        end_tag = run_info['end_tagnumber']
 
         tag_list = np.array(dbpy.read_taglist_byrun(self.params.beamline, self.params.run))
         try:
