@@ -18,6 +18,8 @@ The class uses a locator file with the below specification
 to read TIFF images from the SACLA Rayonix detector and
 combine them with per-shot wavelength data from the SACLA
 dbpy stores.
+
+
 """
 
 locator_str = """
@@ -120,6 +122,10 @@ class FormatTIFFRayonixSACLA(FormatPhilLocator, FormatMultiImageLazy, FormatStil
         return obj
 
     def _start(self):
+        """ Specify beamline specific information and use that to sync tags between images and 
+             wavelength read from the SACLA database
+             This code has been adapted from 
+             https://github.com/keitaroyam/cheetah/blob/master/source/cheetah-sacla-api-rayonix/cheetah_marccd.py"""
         import dbpy
 
         sensor_spec = "xfel_bl_%d_tc_spec_1/energy"%self.params.beamline
