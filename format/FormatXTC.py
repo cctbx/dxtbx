@@ -4,6 +4,7 @@ from dxtbx.format.Format import Format
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
+from dxtbx.format.FormatPhilLocator import FormatPhilLocator
 from libtbx.phil import parse
 
 try:
@@ -43,7 +44,7 @@ class XtcReader(Reader):
         pass
 
 
-class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
+class FormatXTC(FormatPhilLocator, FormatMultiImageLazy, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
         from dxtbx import IncorrectFormatError
 
