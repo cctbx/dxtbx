@@ -36,8 +36,12 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         self.image_filename = image_file
         FormatHDF5.__init__(self, image_file, **kwargs)
 
-        self.PIXEL_SIZE = 78.2 / 1000  # um
-        self.RECONST_SIZE = 3840
+        self.bin_size = 2
+        # Override bin size by environment variable
+        if os.getenv("RAYONIX_BINNING"):
+            self.bin_size = int(os.environ["RAYONIX_BINNING"])
+        self.PIXEL_SIZE = self.bin_size*39.1 / 1000  # um
+        self.RECONST_SIZE = 7680//self.bin_size
         # This hard-coded value can be overwritten
         # by RAYONIX_DISTANCE
 
@@ -81,7 +85,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
                 self.RECONST_SIZE / 2 * self.PIXEL_SIZE,
                 self.RECONST_SIZE / 2 * self.PIXEL_SIZE,
             ),
-            fast_direction="-x",
+            fast_direction="+x",
             slow_direction="-y",
             pixel_size=(self.PIXEL_SIZE, self.PIXEL_SIZE),
             image_size=(self.RECONST_SIZE, self.RECONST_SIZE),
