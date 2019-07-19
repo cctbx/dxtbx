@@ -311,7 +311,10 @@ class FormatChecker(object):
         else:
             self._format_class = get_format_class_for_file(filename)
         if self._verbose:
-            print("Using %s for %s" % (self._format_class.__name__, filename))
+            if self._format_class:
+                print("Using %s for %s" % (self._format_class.__name__, filename))
+            else:
+                print("No format class found for %s" % filename)
         return self._format_class
 
     def iter_groups(self, filenames):
