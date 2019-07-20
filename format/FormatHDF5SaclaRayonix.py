@@ -36,12 +36,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         self.image_filename = image_file
         FormatHDF5.__init__(self, image_file, **kwargs)
 
-        self.bin_size = 2
-        # Override bin size by environment variable
-        if os.getenv("RAYONIX_BINNING"):
-            self.bin_size = int(os.environ["RAYONIX_BINNING"])
-        self.PIXEL_SIZE = self.bin_size*39.1 / 1000  # um
-        self.RECONST_SIZE = 7680//self.bin_size
         # This hard-coded value can be overwritten
         # by RAYONIX_DISTANCE
 
@@ -49,7 +43,11 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         self.mask = None
 
         # Read metadata if possible
+        # Read pixel size from the metadata and determine the binning of rayonix
         self.read_metadata()
+        self.PIXEL_SIZE = self.pixelsize_in_um / 1000  # convert um to mm
+        self.bin_size = int(self.pixelsize_in_um / 39.1)
+        self.RECONST_SIZE = 7680 // self.bin_size
 
         # Override by environmental variables
         if os.getenv("RAYONIX_DISTANCE"):
@@ -65,7 +63,11 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         h5_handle.close()
 
     def read_metadata(self):
-        pass
+        import h5py
+
+        h5_handle = h5py.File(self.image_filename, "r")
+        self.pixelsize_in_um = h5_handle["metadata"]["pixelsize_in_um"].value
+        h5_handle.close()
 
     def get_image_file(self, index=None):
         return self.image_filename
