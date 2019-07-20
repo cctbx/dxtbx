@@ -66,7 +66,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         import h5py
 
         h5_handle = h5py.File(self.image_filename, "r")
-        self.pixelsize_in_um = h5_handle["metadata"]["pixelsize_in_um"].value
+        self.pixelsize_in_um = h5_handle["metadata"]["pixelsize_in_um"][()]
         h5_handle.close()
 
     def get_image_file(self, index=None):
