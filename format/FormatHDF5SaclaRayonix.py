@@ -19,7 +19,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         h5_handle = h5py.File(image_file, "r")
         if "metadata/detector" not in h5_handle:
             return False
-        if h5_handle["metadata/detector"].value != "Rayonix MX300HS":
+        if h5_handle["metadata/detector"][()] != "Rayonix MX300HS":
             return False
         if any(elem.startswith("tag-") for elem in h5_handle):
             return True
@@ -100,7 +100,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         import h5py
 
         h5_handle = h5py.File(self.image_filename, "r")
-        eV = h5_handle[self.tag]["photon_energy_ev"].value
+        eV = h5_handle[self.tag]["photon_energy_ev"][()]
         h5_handle.close()
 
         return self._beam_factory.simple(12398.4 / eV)
