@@ -19,7 +19,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         h5_handle = h5py.File(image_file, "r")
         if "metadata/detector" not in h5_handle:
             return False
-        if h5_handle["metadata/detector"].value != "Rayonix MX300HS":
+        if h5_handle["metadata/detector"][()] != "Rayonix MX300HS":
             return False
         if any(elem.startswith("tag-") for elem in h5_handle):
             return True
@@ -36,8 +36,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         self.image_filename = image_file
         FormatHDF5.__init__(self, image_file, **kwargs)
 
-        self.PIXEL_SIZE = 78.2 / 1000  # um
-        self.RECONST_SIZE = 3840
         # This hard-coded value can be overwritten
         # by RAYONIX_DISTANCE
 
@@ -45,7 +43,11 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         self.mask = None
 
         # Read metadata if possible
+        # Read pixel size from the metadata and determine the binning of rayonix
         self.read_metadata()
+        self.PIXEL_SIZE = self.pixelsize_in_um / 1000  # convert um to mm
+        self.bin_size = int(self.pixelsize_in_um / 39.1)
+        self.RECONST_SIZE = 7680 // self.bin_size
 
         # Override by environmental variables
         if os.getenv("RAYONIX_DISTANCE"):
@@ -61,7 +63,11 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         h5_handle.close()
 
     def read_metadata(self):
-        pass
+        import h5py
+
+        h5_handle = h5py.File(self.image_filename, "r")
+        self.pixelsize_in_um = h5_handle["metadata"]["pixelsize_in_um"][()]
+        h5_handle.close()
 
     def get_image_file(self, index=None):
         return self.image_filename
@@ -81,7 +87,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
                 self.RECONST_SIZE / 2 * self.PIXEL_SIZE,
                 self.RECONST_SIZE / 2 * self.PIXEL_SIZE,
             ),
-            fast_direction="-x",
+            fast_direction="+x",
             slow_direction="-y",
             pixel_size=(self.PIXEL_SIZE, self.PIXEL_SIZE),
             image_size=(self.RECONST_SIZE, self.RECONST_SIZE),
@@ -94,7 +100,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         import h5py
 
         h5_handle = h5py.File(self.image_filename, "r")
-        eV = h5_handle[self.tag]["photon_energy_ev"].value
+        eV = h5_handle[self.tag]["photon_energy_ev"][()]
         h5_handle.close()
 
         return self._beam_factory.simple(12398.4 / eV)
