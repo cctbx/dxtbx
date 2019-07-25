@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 import json
 import re
 import textwrap
+import warnings
 
 
 def compact_simple_list(match):
@@ -136,7 +137,10 @@ def crystal(obj, outfile, compact=False):
 
 def experiment_list(obj, outfile):
     """ Dump an experiment list. """
-    from dxtbx.model.experiment_list import ExperimentListDumper
+    warnings.warn(
+        "use .as_file() on the experimentlist directly",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
-    dumper = ExperimentListDumper(obj)
-    dumper.as_file(outfile)
+    obj.as_file(outfile)
