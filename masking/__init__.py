@@ -6,7 +6,7 @@ from scitbx.array_family import flex
 from scitbx import matrix
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
 
-from dxtbx_masking_ext import (  # noqa: F401, exported symbol
+from dxtbx_masking_ext import (
     mask_untrusted_rectangle,
     mask_untrusted_circle,
     mask_untrusted_polygon,
@@ -15,10 +15,17 @@ from dxtbx_masking_ext import (  # noqa: F401, exported symbol
 
 from dxtbx.model import MultiAxisGoniometer
 
-from dxtbx_masking_ext import GoniometerShadowMasker  # noqa: F401
-from dxtbx_masking_ext import SmarGonShadowMasker  # noqa: F401
+from dxtbx_masking_ext import GoniometerShadowMasker
+from dxtbx_masking_ext import SmarGonShadowMasker
 
-__all__ = ["GoniometerShadowMasker", "SmarGonShadowMasker"]
+__all__ = [
+    "GoniometerShadowMasker",
+    "SmarGonShadowMasker",
+    "is_inside_polygon",
+    "mask_untrusted_circle",
+    "mask_untrusted_polygon",
+    "mask_untrusted_rectangle",
+]
 
 
 class GoniometerMaskerFactory(object):
