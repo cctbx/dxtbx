@@ -17,6 +17,9 @@ import six
 from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 import scitbx.matrix
 
+import dials_data.datasets
+from dials_data.download import DataFetcher
+
 
 def _generate_all_test_images():
     """Internal convenience function to generates a list of test images.
@@ -24,6 +27,9 @@ def _generate_all_test_images():
     Along with a custom LBL-only file, iterates over all contents of
     dials_regression/image_examples and yields data for each file, for
     converting to a fixture.
+
+    Additionally iterate over the contents of named datasets from dials.data
+    that contain format test images.
 
     Do not use this function directly for tests - instead use the
     test_image fixture.
@@ -105,6 +111,13 @@ def _generate_all_test_images():
                 # Give this file back
                 yield (full_path, rel_path)
 
+    # Now for images from dials.data rather than dials_regression
+    TEST_DATASETS = ["smv_image_examples"]
+    for dataset in TEST_DATASETS:
+        for definition in dials_data.datasets.definition[dataset]["data"]:
+            short_name = dataset + "/" + os.path.basename(definition["url"])
+            yield (dataset, definition), short_name
+
 
 # Generate this list once to use as a fixture
 _all_images = list(_generate_all_test_images())
@@ -113,6 +126,10 @@ _all_images = list(_generate_all_test_images())
 @pytest.fixture(params=[x[0] for x in _all_images], ids=[x[1] for x in _all_images])
 def test_image(request, dials_regression):
     """Fixture to allow tests to be parametrized for every test image"""
+
+    if isinstance(request.param, tuple):
+        dataset, definition = request.param
+        return DataFetcher()(dataset).join(os.path.basename(definition["url"])).strpath
 
     return request.param
 
