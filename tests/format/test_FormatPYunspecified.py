@@ -11,7 +11,7 @@ from dxtbx.model.experiment_list import ExperimentListFactory
     reason="static mask isn't set correctly when reading experiment list from dictionary"
 )
 # https://github.com/cctbx/dxtbx/issues/70#issuecomment-520060797
-def test_static_mask(dials_regression, tmpdir):
+def test_static_mask(dials_regression):
     filename = os.path.join(
         dials_regression,
         "image_examples/LCLS_CXI/shot-s00-2011-12-02T21_07Z29.723_00569.pickle",
