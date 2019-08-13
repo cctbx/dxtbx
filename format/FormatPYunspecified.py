@@ -141,7 +141,7 @@ class FormatPYunspecified(FormatPY):
             image_size=(self.detectorbase.size2, self.detectorbase.size1),
             trusted_range=trusted_range,
             mask=[],
-        )  # a list of dead rectangles
+        )
 
     def _beam(self):
         """Return a simple model for the beam."""
@@ -176,7 +176,7 @@ class FormatPYunspecified(FormatPY):
                 epochs={1: self._timesec},
             )
 
-    def get_mask(self, goniometer=None):
+    def get_static_mask(self):
         """Creates a mask merging untrusted pixels with active areas."""
         detector_base = self.detectorbase
         # get effective active area coordinates
@@ -184,10 +184,11 @@ class FormatPYunspecified(FormatPY):
         tiling = tile_manager.effective_tiling_as_flex_int(
             reapply_peripheral_margin=True
         )
-        # get the raw data to get the size of the mask
-        data = self.get_raw_data()
         if tiling is None or len(tiling) == 0:
             return None
+
+        # get the raw data to get the size of the mask
+        data = self.get_raw_data()
 
         # set the mask to the same dimensions as the data
         mask = flex.bool(flex.grid(data.focus()))
@@ -197,15 +198,7 @@ class FormatPYunspecified(FormatPY):
             x1, y1, x2, y2 = tiling[4 * i : (4 * i) + 4]
             sub_array = flex.bool(flex.grid(x2 - x1, y2 - y1), True)
             mask.matrix_paste_block_in_place(sub_array, x1, y1)
-
-        # create untrusted pixel mask
-        detector = self.get_detector()
-        assert len(detector) == 1
-        trusted_mask = detector[0].get_trusted_range_mask(data)
-
-        # returns merged untrusted pixels and active areas using bitwise AND (pixels are accepted
-        # if they are inside of the active areas AND inside of the trusted range)
-        return (mask & trusted_mask,)
+        return mask
 
 
 class FormatPYunspecifiedInMemory(FormatPYunspecified):
