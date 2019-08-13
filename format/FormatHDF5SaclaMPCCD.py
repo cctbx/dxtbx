@@ -323,11 +323,11 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                         )
                         if abs(round(self.panel_rotations[i]) + 90) < 1:
                             det[
-                                round(subpanel_origin[1]) : round(
-                                    subpanel_origin[1] + size_slow
+                                int(round(subpanel_origin[1])) : int(
+                                    round(subpanel_origin[1] + size_slow)
                                 ),
-                                round(subpanel_origin[0]) : round(
-                                    subpanel_origin[0] + size_fast
+                                int(round(subpanel_origin[0])) : int(
+                                    round(subpanel_origin[0] + size_fast)
                                 ),
                             ] = source
                             # TODO: Is the border inclusive?
@@ -341,11 +341,11 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                             )
                         elif abs(round(self.panel_rotations[i]) - 90) < 1:
                             det[
-                                round(subpanel_origin[1]) : round(
-                                    subpanel_origin[1] - size_slow
+                                int(round(subpanel_origin[1])) : int(
+                                    round(subpanel_origin[1] - size_slow)
                                 ) : -1,
-                                round(subpanel_origin[0]) : round(
-                                    subpanel_origin[0] - size_fast
+                                int(round(subpanel_origin[0])) : int(
+                                    round(subpanel_origin[0] - size_fast)
                                 ) : -1,
                             ] = source
                             self.active_areas.extend(
