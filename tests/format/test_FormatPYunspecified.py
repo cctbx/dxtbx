@@ -2,8 +2,12 @@ from __future__ import absolute_import, division, print_function
 
 import os
 import pytest
+import six.moves.cPickle as pickle
 
-from dxtbx.format.FormatPYunspecifiedStill import FormatPYunspecifiedStill
+from dxtbx.format.FormatPYunspecifiedStill import (
+    FormatPYunspecifiedStill,
+    FormatPYunspecifiedStillInMemory,
+)
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
@@ -27,3 +31,16 @@ def test_static_mask(dials_regression):
         mask = imageset.get_mask(0)
         assert len(mask) == 1
         assert mask[0].count(False) == 867109
+
+
+@pytest.mark.xfail
+def test_FormatPYunspecifiedStillInMemory(dials_regression):
+    filename = os.path.join(
+        dials_regression,
+        "image_examples/LCLS_CXI/shot-s00-2011-12-02T21_07Z29.723_00569.pickle",
+    )
+    assert not FormatPYunspecifiedStillInMemory.understand(filename)
+    with open(filename, "rb") as f:
+        d = pickle.load(f)
+    assert FormatPYunspecifiedStillInMemory.understand(d)
+    mem_imageset = FormatPYunspecifiedStillInMemory.get_imageset(d)  # noqa F841
