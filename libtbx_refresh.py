@@ -4,8 +4,7 @@ from __future__ import absolute_import, division, print_function
 try:
     import dials.precommitbx.nagger
 
-    if dials.precommitbx.nagger.not_configured(["phenix_regression"]):
-        dials.precommitbx.nagger.nag()
+    dials.precommitbx.nagger.nag()
 except ImportError:
     pass
 
