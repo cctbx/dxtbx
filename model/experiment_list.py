@@ -268,7 +268,16 @@ class ExperimentListDict(object):
                             dy = ImageDouble()
                         else:
                             dy = ImageDouble(dy)
-                        imageset.external_lookup.mask.data = mask
+
+                        if not imageset.external_lookup.mask.data.empty():
+                            if not mask.empty():
+                                for m1, m2 in zip(
+                                    mask, imageset.external_lookup.mask.data
+                                ):
+                                    m1 &= m2.data()
+                                imageset.external_lookup.mask.data = ImageBool(mask)
+                        else:
+                            imageset.external_lookup.mask.data = mask
                         imageset.external_lookup.mask.filename = mask_filename
                         imageset.external_lookup.gain.data = gain
                         imageset.external_lookup.gain.filename = gain_filename

@@ -12,10 +12,6 @@ from dxtbx.imageset import ImageSet, ImageSetData, MemReader
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
-@pytest.mark.xfail(
-    reason="static mask isn't set correctly when reading experiment list from dictionary"
-)
-# https://github.com/cctbx/dxtbx/issues/70#issuecomment-520060797
 def test_static_mask(dials_regression):
     filename = os.path.join(
         dials_regression,

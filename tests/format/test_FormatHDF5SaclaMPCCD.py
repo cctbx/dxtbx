@@ -8,11 +8,6 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 pytest.importorskip("h5py")
 
 
-@pytest.mark.xfail(
-    raises=AssertionError,
-    reason="static mask isn't set correctly when reading experiment list from dictionary",
-)
-# https://github.com/cctbx/dxtbx/issues/70#issuecomment-520060797
 def test_static_mask(dials_data):
     master_h5 = (
         dials_data("sacla_mpccd_phase3").join("MPCCD-Phase3-21528-5images.h5").strpath
