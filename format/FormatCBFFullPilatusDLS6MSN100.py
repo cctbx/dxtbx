@@ -51,19 +51,6 @@ class FormatCBFFullPilatusDLS6MSN100(FormatCBFFullPilatus):
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         FormatCBFFullPilatus.__init__(self, image_file, **kwargs)
 
-    def get_mask(self, goniometer=None):
-        mask = super(FormatCBFFullPilatusDLS6MSN100, self).get_mask()
-        if self._dynamic_shadowing:
-            gonio_masker = self.get_goniometer_shadow_masker(goniometer=goniometer)
-            scan = self.get_scan()
-            detector = self.get_detector()
-            shadow_mask = gonio_masker.get_mask(detector, scan.get_oscillation()[0])
-            assert len(mask) == len(shadow_mask)
-            for m, sm in zip(mask, shadow_mask):
-                if sm is not None:
-                    m &= sm
-        return mask
-
     def get_goniometer_shadow_masker(self, goniometer=None):
         if goniometer is None:
             goniometer = self.get_goniometer()
