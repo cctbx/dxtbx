@@ -8,6 +8,7 @@ from dxtbx.format.FormatPYunspecifiedStill import (
     FormatPYunspecifiedStill,
     FormatPYunspecifiedStillInMemory,
 )
+from dxtbx.imageset import ImageSet, ImageSetData, MemReader
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
@@ -43,4 +44,8 @@ def test_FormatPYunspecifiedStillInMemory(dials_regression):
     with open(filename, "rb") as f:
         d = pickle.load(f)
     assert FormatPYunspecifiedStillInMemory.understand(d)
-    mem_imageset = FormatPYunspecifiedStillInMemory.get_imageset(d)  # noqa F841
+    img = FormatPYunspecifiedStillInMemory(d)
+    imageset = ImageSet(ImageSetData(MemReader([img]), None))
+    mask = imageset.get_mask(0)
+    assert len(mask) == 1
+    assert mask[0].count(False) == 867109
