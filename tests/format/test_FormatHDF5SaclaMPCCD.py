@@ -9,7 +9,8 @@ pytest.importorskip("h5py")
 
 
 @pytest.mark.xfail(
-    reason="static mask isn't set correctly when reading experiment list from dictionary"
+    raises=AssertionError,
+    reason="static mask isn't set correctly when reading experiment list from dictionary",
 )
 # https://github.com/cctbx/dxtbx/issues/70#issuecomment-520060797
 def test_static_mask(dials_data):
@@ -94,3 +95,7 @@ def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
             assert mmm.min == 0
             assert mmm.max == 3610.0
             assert mmm.mean == pytest.approx(3.397266387939453)
+    # Horrible hack to work around format_instance caching
+    # This is needed to prevent an incorrect format_instance affecting
+    # other tests that are run after this one.
+    imageset.reader().nullify_format_instance()
