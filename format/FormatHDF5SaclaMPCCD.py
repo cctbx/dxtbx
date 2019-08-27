@@ -143,7 +143,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             panel_origins = list(zip(posx, posy, posz))
             sensor = h5_handle["metadata/sensor_id"][0]
             thickness = 0.050
-            if sensor.startswith("MPCCD-8B"):
+            if sensor.startswith(b"MPCCD-8B"):
                 thickness = 0.300  # Phase 3 sensor
             orig_mask = numpy.logical_not(h5_handle["metadata/pixelmask"][()])
             mask = self.split_panels(orig_mask, bool=True)
