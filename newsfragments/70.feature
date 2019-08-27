@@ -1,0 +1,1 @@
+Add an optional Format.get_static_mask() method to allow format classes to define a static mask to be used on all images
