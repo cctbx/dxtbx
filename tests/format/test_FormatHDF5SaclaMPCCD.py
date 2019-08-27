@@ -117,7 +117,7 @@ def test_combine_with_user_static_mask(dials_data, tmpdir):
             mask.append(m)
         mask = tuple(mask)
         # exact number of masked pixels varies with wavelength between experiments
-        assert [m.count(False) for m in mask] == pytest.approx(
+        assert [_.count(False) for _ in mask] == pytest.approx(
             [50643, 0, 0, 48003, 48356, 0, 0, 52191], abs=1e3
         )
         mask_file = tmpdir.join("pixel_%i.mask" % i)
@@ -130,7 +130,7 @@ def test_combine_with_user_static_mask(dials_data, tmpdir):
     imageset = expts_from_dict[0].imageset
     mask = imageset.get_mask(0)
     assert len(mask) == 8
-    assert [m.count(False) for m in mask] == [
+    assert [_.count(False) for _ in mask] == [
         65333,
         24296,
         24296,
