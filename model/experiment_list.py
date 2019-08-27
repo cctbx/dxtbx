@@ -271,6 +271,7 @@ class ExperimentListDict(object):
 
                         if not imageset.external_lookup.mask.data.empty():
                             if not mask.empty():
+                                mask = tuple(m.data() for m in mask)
                                 for m1, m2 in zip(
                                     mask, imageset.external_lookup.mask.data
                                 ):

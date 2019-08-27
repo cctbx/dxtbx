@@ -1,9 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
+import six.moves.cPickle as pickle
 import pytest
+
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatHDF5SaclaMPCCD import FormatHDF5SaclaMPCCD
 from dxtbx.model.experiment_list import ExperimentListFactory
+from dxtbx_masking_ext import mask_untrusted_resolution_range
+from dxtbx.format.image import ImageBool
+
 
 pytest.importorskip("h5py")
 
@@ -94,3 +100,43 @@ def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
     # This is needed to prevent an incorrect format_instance affecting
     # other tests that are run after this one.
     imageset.reader().nullify_format_instance()
+
+
+def test_combine_with_user_static_mask(dials_data, tmpdir):
+    master_h5 = (
+        dials_data("sacla_mpccd_phase3").join("MPCCD-Phase3-21528-5images.h5").strpath
+    )
+    assert FormatHDF5SaclaMPCCD.understand(master_h5)
+
+    expts_from_filename = ExperimentListFactory.from_filenames([master_h5])
+    for i, expt in enumerate(expts_from_filename):
+        mask = []
+        for panel in expt.detector:
+            m = flex.bool(flex.grid(reversed(panel.get_image_size())), True)
+            mask_untrusted_resolution_range(m, expt.beam, panel, 0, 2.23)
+            mask.append(m)
+        mask = tuple(mask)
+        # exact number of masked pixels varies with wavelength between experiments
+        assert [m.count(False) for m in mask] == pytest.approx(
+            [50643, 0, 0, 48003, 48356, 0, 0, 52191], abs=1e3
+        )
+        mask_file = tmpdir.join("pixel_%i.mask" % i)
+        with mask_file.open("wb") as f:
+            pickle.dump(mask, f)
+        expt.imageset.external_lookup.mask.filename = mask_file.strpath
+        expt.imageset.external_lookup.mask.data = ImageBool(mask)
+
+    expts_from_dict = ExperimentListFactory.from_dict(expts_from_filename.to_dict())
+    imageset = expts_from_dict[0].imageset
+    mask = imageset.get_mask(0)
+    assert len(mask) == 8
+    assert [m.count(False) for m in mask] == [
+        65333,
+        24296,
+        24296,
+        63336,
+        63661,
+        24296,
+        24296,
+        66691,
+    ]
