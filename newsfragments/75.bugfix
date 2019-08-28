@@ -1,0 +1,1 @@
+Replace h5py `visititems` with `local_visit` implementation to work around using soft links in Eiger / hdf5 files.
