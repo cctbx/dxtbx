@@ -125,7 +125,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
         return cob
 
-    def _get_cummulative_change_of_basis(self, axis_id):
+    def _get_cumulative_change_of_basis(self, axis_id):
         """Get the 4x4 homogenous coordinate matrix for a given axis, combining it with the change of
         basis matrices of parent axes with the same equipment component as the given axis. Assumes
         the cbf handle has been intialized
@@ -145,7 +145,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         eq_comp = cbf.get_axis_equipment_component(axis_id)
         parent_eq_comp = cbf.get_axis_equipment_component(parent_id)
         if eq_comp == parent_eq_comp:
-            non_matching_parent, parent_cob = self._get_cummulative_change_of_basis(
+            non_matching_parent, parent_cob = self._get_cumulative_change_of_basis(
                 parent_id
             )
             return non_matching_parent, parent_cob * cob
@@ -170,7 +170,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             if subobj.get_name().encode() == name:
                 return subobj
 
-        parent, cob = self._get_cummulative_change_of_basis(group_id)
+        parent, cob = self._get_cumulative_change_of_basis(group_id)
 
         if parent is None:
             pg = d.hierarchy()  # root object for the detector
@@ -278,7 +278,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                 else:
                     raise e
 
-            parent, cob = self._get_cummulative_change_of_basis(axis0)
+            parent, cob = self._get_cumulative_change_of_basis(axis0)
 
             pg = self._add_panel_group(parent, d)
 

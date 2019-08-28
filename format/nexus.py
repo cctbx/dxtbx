@@ -1103,7 +1103,7 @@ def get_depends_on_chain_using_equipment_components(transformation):
         current = parent
 
 
-def get_cummulative_change_of_basis(transformation):
+def get_cumulative_change_of_basis(transformation):
     """Get the 4x4 homogenous coordinate matrix for a given NXtransformation,
     combining it with the change of basis matrices of parent transformations
     with the same equipment component as the given transformation.
@@ -1124,7 +1124,7 @@ def get_cummulative_change_of_basis(transformation):
         eq_comp = transformation.attrs["equipment_component"]
         parent_eq_comp = parent.attrs["equipment_component"]
         if eq_comp == parent_eq_comp:
-            non_matching_parent, parent_cob = get_cummulative_change_of_basis(parent)
+            non_matching_parent, parent_cob = get_cumulative_change_of_basis(parent)
             return non_matching_parent, parent_cob * cob
 
     return parent, cob
@@ -1174,7 +1174,7 @@ class DetectorFactoryFromGroup(object):
         def set_frame(pg, transformation):
             """Function to set the local frame of a panel/panel group given an
             NXtransformation"""
-            parent, cob = get_cummulative_change_of_basis(transformation)
+            parent, cob = get_cumulative_change_of_basis(transformation)
             # set up the dxtbx d matrix.  Note use of homogenous coordinates.
             origin = matrix.col((cob * matrix.col((0, 0, 0, 1)))[0:3])
             fast = matrix.col((cob * matrix.col((1, 0, 0, 1)))[0:3]) - origin
@@ -1281,7 +1281,7 @@ class DetectorFactoryFromGroup(object):
                 fast = matrix.col([-fast[0], fast[1], -fast[2]])
                 slow = slow_pixel_direction_handle.attrs["vector"]
                 slow = matrix.col([-slow[0], slow[1], -slow[2]])
-                parent, cob = get_cummulative_change_of_basis(depends_on)
+                parent, cob = get_cumulative_change_of_basis(depends_on)
                 origin = matrix.col((cob * matrix.col((0, 0, 0, 1)))[0:3])
 
                 p.set_local_frame(fast.elems, slow.elems, origin.elems)
