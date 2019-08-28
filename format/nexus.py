@@ -150,6 +150,18 @@ class check_attr(object):
                 )
 
 
+def local_visit(nxfile, visitor):
+    """
+    Implementation of visitor pattern which will dereference soft links but
+    should avoid walking down into external files, I think - not a property
+    that NXgroup.visititems(visitor) has. https://github.com/cctbx/dxtbx/issues/74
+    """
+    visitor(nxfile.name, nxfile)
+    for k in nxfile:
+        if "NX_class" in nxfile[k].attrs:
+            local_visit(nxfile[k], visitor)
+
+
 def find_entries(nx_file, entry):
     """
     Find NXmx entries
@@ -167,7 +179,7 @@ def find_entries(nx_file, entry):
                         hits.append(obj)
 
     visitor(entry, nx_file[entry])
-    nx_file[entry].visititems(visitor)
+    local_visit(nx_file, visitor)
     return hits
 
 
@@ -183,7 +195,7 @@ def find_class(nx_file, nx_class):
             if obj.attrs["NX_class"] == nx_class:
                 hits.append(obj)
 
-    nx_file.visititems(visitor)
+    local_visit(nx_file, visitor)
     return hits
 
 
@@ -1353,7 +1365,10 @@ class DetectorFactory(object):
         detector_name = str(nx_detector.name)
 
         # Get the trusted range of pixel values
-        trusted_range = (-1, float(nx_detector["saturation_value"][()]))
+        if "saturation_value" in nx_detector:
+            trusted_range = (-1, float(nx_detector["saturation_value"][()]))
+        else:
+            trusted_range = (-1, 99999999)
 
         # Get the detector thickness
         thickness = nx_detector["sensor_thickness"]
