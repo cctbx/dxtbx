@@ -153,8 +153,8 @@ class check_attr(object):
 def local_visit(nxfile, visitor):
     """Implementation of visitor to replace node.visititems
 
-    Will dereference soft links but should avoid walking down into external files, 
-    I think - not a property that NXgroup.visititems(visitor) has. 
+    Will dereference soft links but should avoid walking down into external files,
+    I think - not a property that NXgroup.visititems(visitor) has.
     https://github.com/cctbx/dxtbx/issues/74
 
     Args:
@@ -163,8 +163,11 @@ def local_visit(nxfile, visitor):
     """
     visitor(nxfile.name, nxfile)
     for k in nxfile:
-        if "NX_class" in nxfile[k].attrs:
-            local_visit(nxfile[k], visitor)
+        try:
+            if "NX_class" in nxfile[k].attrs:
+                local_visit(nxfile[k], visitor)
+        except KeyError:
+            pass
 
 
 def find_entries(nx_file, entry):
