@@ -1,21 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
-import glob
-import os
-
-from libtbx import easy_run
-
+import procrunner
+import pytest
 from dxtbx.serialize import dump
 from dxtbx.imageset import ImageSetFactory
 
 
-def test_to_xds(dials_regression, tmpdir):
-    tmpdir.chdir()
-
-    template = os.path.join(dials_regression, "centroid_test_data", "centroid_*.cbf")
-    file_names = glob.glob(template)
-
-    expected_output = """\
+@pytest.fixture(scope="session")
+def expected_output(dials_data):
+    return """\
 DETECTOR=PILATUS MINIMUM_VALID_PIXEL_VALUE=0 OVERLOAD=495976
 SENSOR_THICKNESS= 0.320
 DIRECTION_OF_DETECTOR_X-AXIS= 1.00000 0.00000 0.00000
@@ -50,23 +43,30 @@ UNTRUSTED_RECTANGLE= 0 2464 2315 2333
 DATA_RANGE= 1 9
 JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
 """ % (
-        template.replace("*", "????")
+        dials_data("centroid_test_data").join("centroid_????.cbf").strpath
     )
 
-    cmd = " ".join(["dxtbx.to_xds"] + file_names)
-    result = easy_run.fully_buffered(cmd)
+
+def test_to_xds_from_images(dials_data, expected_output, tmpdir):
+    file_names = dials_data("centroid_test_data").listdir("centroid_*.cbf")
+    result = procrunner.run(["dxtbx.to_xds"] + file_names, working_directory=tmpdir)
+    assert not result.returncode and not result.stderr
+
     # allow extra lines to have been added (these may be comments)
     for record in expected_output.split("\n"):
-        assert record.strip() in "\n".join(result.stdout_lines), record
+        assert record.strip().encode("latin-1") in result.stdout, record
+
+
+def test_to_xds_from_json(dials_data, expected_output, tmpdir):
+    file_names = dials_data("centroid_test_data").listdir("centroid_*.cbf")
 
     # now test reading from a json file
-    sweep = ImageSetFactory.new(file_names)[0]
-    with open("sweep.json", mode="wb") as fh:
+    sweep = ImageSetFactory.new([f.strpath for f in file_names])[0]
+    with tmpdir.join("sweep.json").open("wb") as fh:
         dump.imageset(sweep, fh)
-    cmd = " ".join(["dxtbx.to_xds", "sweep.json"])
-    print(cmd)
-    result = easy_run.fully_buffered(cmd)
+    result = procrunner.run(["dxtbx.to_xds", "sweep.json"], working_directory=tmpdir)
+    assert not result.returncode and not result.stderr
 
     # allow extra lines to have been added (these may be comments)
     for record in expected_output.split("\n"):
-        assert record.strip() in "\n".join(result.stdout_lines), record
+        assert record.strip().encode("latin-1") in result.stdout, record
