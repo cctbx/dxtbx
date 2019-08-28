@@ -50,9 +50,6 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
         return False
 
-    def _start(self):
-        FormatCBFMini._start(self)
-
     def _detector(self):
         """Return a model for a simple detector, presuming no one has
         one of these on a two-theta stage. Assert that the beam centre is

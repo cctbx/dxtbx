@@ -69,8 +69,7 @@ class FormatCBFMini(FormatCBF):
         """Open the image file, read the image header, copy it into a
         dictionary for future reference."""
 
-        FormatCBF._start(self)
-
+        super(FormatCBFMini, self)._start()
         cif_header = FormatCBF.get_cbf_header(self._image_file)
 
         self._cif_header_dictionary = {}

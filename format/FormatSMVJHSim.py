@@ -39,10 +39,6 @@ class FormatSMVJHSim(FormatSMV):
         else:
             return False
 
-    def _start(self):
-
-        FormatSMV._start(self)
-
     def detectorbase_start(self):
         if not hasattr(self, "detectorbase") or self.detectorbase is None:
             from iotbx.detectors import SMVImage

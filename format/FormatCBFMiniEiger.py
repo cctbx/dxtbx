@@ -40,9 +40,6 @@ class FormatCBFMiniEiger(FormatCBFMini):
 
         return False
 
-    def _start(self):
-        FormatCBFMini._start(self)
-
     def _detector(self):
         distance = float(self._cif_header_dictionary["Detector_distance"].split()[0])
 

@@ -28,10 +28,6 @@ class FormatSMVADSCNoDateStamp(FormatSMVADSC):
 
         return True
 
-    def _start(self):
-
-        FormatSMVADSC._start(self)
-
     def _scan(self):
         """Return the scan information for this image, using the timestamp
         from the file rather than the header."""

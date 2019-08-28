@@ -69,10 +69,6 @@ class FormatSMVADSCSN(FormatSMVADSC):
             model = self._sn_to_model.get(sn)
         return super(FormatSMVADSCSN, self)._adsc_module_gain(model=model)
 
-    def _start(self):
-
-        FormatSMVADSC._start(self)
-
     def detectorbase_start(self):
 
         from iotbx.detectors.adsc import ADSCImage

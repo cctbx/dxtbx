@@ -15,10 +15,6 @@ class FormatSMVHamamatsu(FormatSMVADSC):
 
         return "hamamatsu" in header["DETECTOR_NAME"].lower()
 
-    def _start(self):
-
-        FormatSMVADSC._start(self)
-
     def detectorbase_start(self):
         from iotbx.detectors.hamamatsu import HamamatsuImage
 

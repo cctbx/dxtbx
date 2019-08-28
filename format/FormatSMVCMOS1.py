@@ -79,7 +79,7 @@ class FormatSMVCMOS1(FormatSMV):
         self._prefix = detector_prefixes[0]
 
     def _start(self):
-        FormatSMV._start(self)
+        super(FormatSMVCMOS1, self)._start()
         self._header_size = int(self._header_dictionary["HEADER_BYTES"])
 
     def _goniometer(self):

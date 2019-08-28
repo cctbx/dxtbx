@@ -42,10 +42,6 @@ class FormatSMVRigakuA200SPring8BL26B1(FormatSMVRigakuA200):
 
         return True
 
-    def _start(self):
-
-        FormatSMVRigakuA200._start(self)
-
     def detectorbase_start(self):
         from iotbx.detectors.dtrek import DTREKImage
 

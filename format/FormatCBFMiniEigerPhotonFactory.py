@@ -37,9 +37,6 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
             return True
         return False
 
-    def _start(self):
-        FormatCBFMini._start(self)
-
     def _goniometer(self):
         return self._goniometer_factory.make_goniometer(
             (1, 0, 0), (1, 0, 0, 0, 1, 0, 0, 0, 1)

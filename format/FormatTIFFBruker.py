@@ -81,10 +81,6 @@ class FormatTIFFBruker(FormatTIFF):
 
         super(FormatTIFFBruker, self).__init__(image_file, **kwargs)
 
-    def _start(self):
-
-        FormatTIFF._start(self)
-
     def detectorbase_start(self):
         from iotbx.detectors.mar import MARImage
 

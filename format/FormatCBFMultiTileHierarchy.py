@@ -46,11 +46,6 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             raise e
         return True
 
-    def _start(self):
-        """Parent class will open the image file as a cbf file handle, and keep
-        the handle somewhere safe."""
-        FormatCBFMultiTile._start(self)
-
     def _get_change_of_basis(self, axis_id):
         """Get the 4x4 homogenous coordinate matrix for a given axis.  Assumes
         the cbf handle has been intialized

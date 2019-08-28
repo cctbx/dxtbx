@@ -96,8 +96,6 @@ class FormatCBF(Format):
         """Open the image file, read the image header, copy it into memory
         for future inspection."""
 
-        Format._start(self)
-
         self._cif_header = FormatCBF.get_cbf_header(self._image_file)
 
         self._mime_header = ""

@@ -42,12 +42,6 @@ class FormatCBFFull(FormatCBF):
     def __del__(self):
         self._cbf_handle.__swig_destroy__(self._cbf_handle)
 
-    def _start(self):
-        """Open the image file as a cbf file handle, and keep this somewhere
-        safe."""
-
-        FormatCBF._start(self)
-
     def _get_cbf_handle(self):
         try:
             return self._cbf_handle

@@ -32,12 +32,6 @@ class FormatCBFFullPilatus(FormatCBFFull):
 
         return False
 
-    def _start(self):
-        """Open the image file as a cbf file handle, and keep this somewhere
-        safe."""
-
-        FormatCBFFull._start(self)
-
     def _beam(self):
         """Return a working beam instance. Override polarization to be 0.999."""
 
