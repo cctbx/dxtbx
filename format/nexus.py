@@ -1397,6 +1397,16 @@ class DetectorFactory(object):
                 "Unknown material: %s" % nx_detector["sensor_material"][()]
             )
 
+        try:
+            x_pixel = nx_detector["x_pixel_size"][()] * 1000.0
+            y_pixel = nx_detector["y_pixel_size"][()] * 1000.0
+
+            legacy_beam_x = float(x_pixel * nx_detector["beam_center_x"][()])
+            legacy_beam_y = float(y_pixel * nx_detector["beam_center_y"][()])
+        except KeyError:
+            legacy_beam_x = 0
+            legacy_beam_y = 0
+
         # Get the fast pixel size and vector
         fast_pixel_direction = nx_module["fast_pixel_direction"]
         fast_pixel_direction_value = float(fast_pixel_direction[()])
@@ -1417,9 +1427,11 @@ class DetectorFactory(object):
         )
         slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
 
-        # Get the origin vector
+        # Get the origin vector - working around if absent
         module_offset = nx_module["module_offset"]
         origin = construct_vector(nx_file, module_offset.name)
+        if origin.elems[0] == 0.0 and origin.elems[1] == 0:
+            origin = -(origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis)
 
         # Change of basis to convert from NeXus to IUCr/ImageCIF convention
         cob = matrix.sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
