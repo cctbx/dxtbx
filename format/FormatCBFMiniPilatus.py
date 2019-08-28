@@ -50,19 +50,6 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
         return False
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file, including a
-        proper model of the experiment."""
-
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatCBFMini.__init__(self, image_file, **kwargs)
-
-        return
-
     def _start(self):
         FormatCBFMini._start(self)
 

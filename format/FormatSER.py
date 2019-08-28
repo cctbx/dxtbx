@@ -18,12 +18,11 @@ import struct
 import dxtbx.ext
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx import IncorrectFormatError
 
 
 class FormatSER(FormatMultiImage, Format):
     def __init__(self, image_file, **kwargs):
-
-        from dxtbx import IncorrectFormatError
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)

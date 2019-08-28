@@ -49,11 +49,8 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
-
-        assert self.understand(image_file)
-
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
-        FormatCBFFullPilatus.__init__(self, image_file, **kwargs)
+        super(FormatCBFFullPilatusDLS300KSN104, self).__init__(image_file, **kwargs)
 
     def get_mask(self, goniometer=None):
         mask = super(FormatCBFFullPilatusDLS300KSN104, self).get_mask()

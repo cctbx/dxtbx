@@ -63,11 +63,6 @@ class FormatTIFFBruker(FormatTIFF):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
         width, height, depth, order, bytes = FormatTIFF.get_tiff_header(image_file)
 
         # comment block - where the detector serial number may (or may not) be stored
@@ -84,9 +79,7 @@ class FormatTIFFBruker(FormatTIFF):
             self._i = ">i"
             self._ii = ">ii"
 
-        FormatTIFF.__init__(self, image_file, **kwargs)
-
-        return
+        super(FormatTIFFBruker, self).__init__(image_file, **kwargs)
 
     def _start(self):
 

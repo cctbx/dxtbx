@@ -41,11 +41,6 @@ class FormatCBFMiniPilatusDLS6MSN114DMM(FormatCBFMiniPilatus, FormatStill):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
         FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
         FormatStill.__init__(self, image_file, **kwargs)
 

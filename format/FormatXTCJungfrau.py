@@ -29,9 +29,8 @@ jungfrau_locator_scope = parse(
 
 class FormatXTCJungfrau(FormatXTC):
     def __init__(self, image_file, **kwargs):
-        assert self.understand(image_file)
-        FormatXTC.__init__(
-            self, image_file, locator_scope=jungfrau_locator_scope, **kwargs
+        super(FormatXTCJungfrau, self).__init__(
+            image_file, locator_scope=jungfrau_locator_scope, **kwargs
         )
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._env = self._ds.env()

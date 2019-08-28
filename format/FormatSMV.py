@@ -13,6 +13,7 @@ from __future__ import absolute_import, division, print_function
 
 from boost.python import streambuf
 from dxtbx.format.Format import Format
+from dxtbx import IncorrectFormatError
 from dxtbx.ext import read_uint16, read_uint16_bs, is_big_endian
 from scitbx.array_family import flex
 
@@ -82,12 +83,9 @@ class FormatSMV(Format):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        from dxtbx import IncorrectFormatError
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-
-        Format.__init__(self, image_file, **kwargs)
+        super(FormatSMV, self).__init__(image_file, **kwargs)
 
     def _start(self):
         """Open the image file, read the image header, copy the key / value

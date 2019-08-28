@@ -27,13 +27,6 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
                 understood = True
         return understood
 
-    def __init__(self, image_file, **kwargs):
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-        FormatHDF5.__init__(self, image_file, **kwargs)
-
     def _start(self):
         import h5py
 

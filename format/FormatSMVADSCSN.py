@@ -26,11 +26,6 @@ class FormatSMVADSCSN(FormatSMVADSC):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
         # Mapping of serial numbers to models for known detectors
         self._sn_to_model = {
             401: "Q4U",
@@ -64,7 +59,7 @@ class FormatSMVADSCSN(FormatSMVADSC):
             933: "Q315R",
         }
 
-        FormatSMVADSC.__init__(self, image_file, **kwargs)
+        super(FormatSMVADSCSN, self).__init__(image_file, **kwargs)
 
     def _adsc_module_gain(self, model=None):
         """Overload to look the model number up from the serial number table"""

@@ -10,6 +10,7 @@ from dxtbx.format.Format import Format
 from dxtbx.format.FormatTIFFHelpers import read_basic_tiff_header
 from dxtbx.format.FormatTIFFHelpers import LITTLE_ENDIAN
 from dxtbx.format.FormatTIFFHelpers import BIG_ENDIAN
+from dxtbx import IncorrectFormatError
 
 
 class FormatTIFF(Format):
@@ -41,12 +42,10 @@ class FormatTIFF(Format):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        from dxtbx import IncorrectFormatError
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        Format.__init__(self, image_file, **kwargs)
+        super(FormatTIFF, self).__init__(image_file, **kwargs)
 
     def _start(self):
         """Open the image file, read the image header, copy it into memory

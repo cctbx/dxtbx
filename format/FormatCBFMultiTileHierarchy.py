@@ -46,15 +46,6 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             raise e
         return True
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file."""
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatCBFMultiTile.__init__(self, image_file, **kwargs)
-
     def _start(self):
         """Parent class will open the image file as a cbf file handle, and keep
         the handle somewhere safe."""

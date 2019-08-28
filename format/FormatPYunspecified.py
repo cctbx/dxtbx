@@ -10,7 +10,6 @@ import six.moves.cPickle as pickle
 from past.builtins import basestring
 from iotbx.detectors.cspad_detector_formats import reverse_timestamp
 from iotbx.detectors.cspad_detector_formats import detector_format_version
-from dxtbx import IncorrectFormatError
 from spotfinder.applications.xfel import cxi_phil
 from scitbx.array_family import flex
 from iotbx.detectors.npy import NpyImage
@@ -38,14 +37,6 @@ class FormatPYunspecified(FormatPY):
         wanted_header_items = {"SIZE1", "SIZE2", "TIMESTAMP"}
 
         return wanted_header_items.issubset(headers)
-
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file."""
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatPY.__init__(self, image_file, **kwargs)
 
     def detectorbase_start(self):
         pass
@@ -231,8 +222,7 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
 
     def __init__(self, data, **kwargs):
         """ @param data In memory image dictionary, alredy initialized """
-        FormatPYunspecified.__init__(self, data, **kwargs)
-
+        super(FormatPYunspecifiedInMemory, self).__init__(data, **kwargs)
         self._image_file = copy.deepcopy(data)
 
 

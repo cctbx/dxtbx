@@ -48,10 +48,6 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
 
         super(FormatNexusEigerDLS16M, self).__init__(image_file, **kwargs)
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)

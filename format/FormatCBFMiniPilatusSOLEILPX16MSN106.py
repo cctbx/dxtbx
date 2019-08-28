@@ -36,19 +36,6 @@ class FormatCBFMiniPilatusSOLEILPX16MSN106(FormatCBFMiniPilatus):
 
         return False
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file, including a
-        proper model of the experiment."""
-
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
-
-        self._raw_data = None
-
     def _goniometer(self):
         """Construct a goniometer from the records in the mini CBF header."""
 

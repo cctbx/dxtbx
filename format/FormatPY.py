@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.Format import Format
+from dxtbx import IncorrectFormatError
 
 
 class FormatPY(Format):
@@ -24,11 +25,9 @@ class FormatPY(Format):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        from dxtbx import IncorrectFormatError
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        Format.__init__(self, image_file, **kwargs)
+        super(FormatPY, self).__init__(image_file, **kwargs)
 
 
 if __name__ == "__main__":
