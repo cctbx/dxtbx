@@ -126,7 +126,8 @@ class _(object):
                 queue.extend(node)
 
 
-class CrystalAux(object):
+@boost.python.inject_into(Crystal)
+class _(object):
     def show(self, show_scan_varying=False, out=None):
         if out is None:
             out = sys.stdout
@@ -292,7 +293,6 @@ class CrystalAux(object):
 
         Returns:
             The crystal model
-
         """
         from dxtbx.model import Crystal
 
@@ -346,9 +346,6 @@ class CrystalAux(object):
         return xl
 
 
-boost.python.inject_into(Crystal)(CrystalAux)
-
-
 @boost.python.inject_into(MosaicCrystalKabsch2010)
 class _(object):
     def as_str(self, show_scan_varying=False):
@@ -376,8 +373,8 @@ class _(object):
 
         return xl_dict
 
-    @staticmethod
-    def from_dict(d):
+    @classmethod
+    def from_dict(cls, d):
         """Convert the dictionary to a crystal model
 
         Params:
@@ -387,7 +384,7 @@ class _(object):
             The crystal model
 
         """
-        xl = MosaicCrystalKabsch2010(CrystalAux.from_dict(d))
+        xl = MosaicCrystalKabsch2010(super(MosaicCrystalKabsch2010, cls).from_dict(d))
 
         # This parameter doesn't survive the Crystal copy constructor so has to be re-set.
         # Isoforms used for stills
@@ -444,8 +441,8 @@ class _(object):
 
         return xl_dict
 
-    @staticmethod
-    def from_dict(d):
+    @classmethod
+    def from_dict(cls, d):
         """Convert the dictionary to a crystal model
 
         Params:
@@ -455,7 +452,7 @@ class _(object):
             The crystal model
 
         """
-        xl = MosaicCrystalSauter2014(CrystalAux.from_dict(d))
+        xl = MosaicCrystalSauter2014(super(MosaicCrystalSauter2014, cls).from_dict(d))
 
         # Parameters for maximum likelihood values
         try:
