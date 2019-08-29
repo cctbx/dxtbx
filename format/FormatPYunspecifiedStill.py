@@ -59,13 +59,10 @@ class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory)
     def understand(image_file):
         """ If it's an image dictionary, we understand this """
         data = image_file
-
-        try:
-            if "OSC_START" not in data or "OSC_RANGE" not in data:
-                return True
-        except AttributeError:
+        if not isinstance(data, dict):
             return False
-
+        if "OSC_START" not in data or "OSC_RANGE" not in data:
+            return True
         return data["OSC_RANGE"] <= 0
 
     def __init__(self, data, **kwargs):

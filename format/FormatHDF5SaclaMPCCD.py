@@ -143,7 +143,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             panel_origins = list(zip(posx, posy, posz))
             sensor = h5_handle["metadata/sensor_id"][0]
             thickness = 0.050
-            if sensor.startswith("MPCCD-8B"):
+            if sensor.startswith(b"MPCCD-8B"):
                 thickness = 0.300  # Phase 3 sensor
             orig_mask = numpy.logical_not(h5_handle["metadata/pixelmask"][()])
             mask = self.split_panels(orig_mask, bool=True)
@@ -323,11 +323,11 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                         )
                         if abs(round(self.panel_rotations[i]) + 90) < 1:
                             det[
-                                round(subpanel_origin[1]) : round(
-                                    subpanel_origin[1] + size_slow
+                                int(round(subpanel_origin[1])) : int(
+                                    round(subpanel_origin[1] + size_slow)
                                 ),
-                                round(subpanel_origin[0]) : round(
-                                    subpanel_origin[0] + size_fast
+                                int(round(subpanel_origin[0])) : int(
+                                    round(subpanel_origin[0] + size_fast)
                                 ),
                             ] = source
                             # TODO: Is the border inclusive?
@@ -341,11 +341,11 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                             )
                         elif abs(round(self.panel_rotations[i]) - 90) < 1:
                             det[
-                                round(subpanel_origin[1]) : round(
-                                    subpanel_origin[1] - size_slow
+                                int(round(subpanel_origin[1])) : int(
+                                    round(subpanel_origin[1] - size_slow)
                                 ) : -1,
-                                round(subpanel_origin[0]) : round(
-                                    subpanel_origin[0] - size_fast
+                                int(round(subpanel_origin[0])) : int(
+                                    round(subpanel_origin[0] - size_fast)
                                 ) : -1,
                             ] = source
                             self.active_areas.extend(
@@ -397,7 +397,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
 
         return self._detector_instance
 
-    def get_mask(self, index=None, goniometer=None):
+    def get_static_mask(self):
         # This means when the pixel mask is present, trusted region is ignored.
         # The used provided masks (if any) will be automatically merged.
         # see https://github.com/dials/dials/issues/236

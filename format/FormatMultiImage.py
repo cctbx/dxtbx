@@ -80,9 +80,6 @@ class FormatMultiImage(Format):
     def get_raw_data(self, index=None):
         raise NotImplementedError
 
-    def get_mask(self, index=None, goniometer=None):
-        return None
-
     def get_detectorbase(self, index=None):
         raise NotImplementedError
 
@@ -131,6 +128,7 @@ class FormatMultiImage(Format):
         Factory method to create an imageset
 
         """
+        from dxtbx.format.image import ImageBool
         from dxtbx.imageset import ImageSetData
         from dxtbx.imageset import ImageSweep
 
@@ -319,6 +317,16 @@ class FormatMultiImage(Format):
                 scan=scan,
                 indices=single_file_indices,
             )
+
+        if format_instance is not None:
+            static_mask = format_instance.get_static_mask()
+            if static_mask is not None:
+                if not iset.external_lookup.mask.data.empty():
+                    for m1, m2 in zip(static_mask, iset.external_lookup.mask.data):
+                        m1 &= m2.data()
+                    iset.external_lookup.mask.data = ImageBool(static_mask)
+                else:
+                    iset.external_lookup.mask.data = ImageBool(static_mask)
 
         # Return the imageset
         return iset

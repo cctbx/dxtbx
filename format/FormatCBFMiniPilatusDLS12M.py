@@ -211,24 +211,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
             goniometer = self.get_goniometer()
         return GoniometerMaskerFactory.dls_i23_kappa(goniometer)
 
-    def get_mask(self, goniometer=None):
-        from dxtbx.model import MultiAxisGoniometer
-
-        mask = super(FormatCBFMiniPilatusDLS12M, self).get_mask()
-        if (
-            isinstance(self.get_goniometer(), MultiAxisGoniometer)
-            and self._dynamic_shadowing
-        ):
-            gonio_masker = self.get_goniometer_shadow_masker(goniometer=goniometer)
-            scan = self.get_scan()
-            detector = self.get_detector()
-            shadow_mask = gonio_masker.get_mask(detector, scan.get_oscillation()[0])
-            assert len(mask) == len(shadow_mask)
-            for m, sm in zip(mask, shadow_mask):
-                if sm is not None:
-                    m &= sm
-        return mask
-
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. This should
         probably be checked against the image header."""

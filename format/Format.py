@@ -299,6 +299,7 @@ class Format(object):
         Factory method to create an imageset
 
         """
+        from dxtbx.format.image import ImageBool
         from dxtbx.imageset import ImageSetData
         from dxtbx.imageset import ImageSet
         from dxtbx.imageset import ImageSweep
@@ -446,6 +447,16 @@ class Format(object):
                 scan=scan,
             )
 
+        if format_instance is not None:
+            static_mask = format_instance.get_static_mask()
+            if static_mask is not None:
+                if not iset.external_lookup.mask.data.empty():
+                    for m1, m2 in zip(static_mask, iset.external_lookup.mask.data):
+                        m1 &= m2.data()
+                    iset.external_lookup.mask.data = ImageBool(static_mask)
+                else:
+                    iset.external_lookup.mask.data = ImageBool(static_mask)
+
         # Return the imageset
         return iset
 
@@ -491,10 +502,8 @@ class Format(object):
         long as the result is an scan."""
         return None
 
-    def get_mask(self, index=None, goniometer=None):
-        """Overload this method to provide dynamic masks to be used during
-        spotfinding or integration."""
-
+    def get_static_mask(self):
+        """Overload this method to override the static mask."""
         return None
 
     def get_goniometer_shadow_masker(self, goniometer=None):
