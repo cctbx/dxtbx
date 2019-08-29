@@ -8,6 +8,8 @@ import sys
 
 import boost.python
 import cctbx.crystal
+from scitbx import matrix
+
 from dxtbx_model_ext import (
     Beam,
     BeamBase,
@@ -50,7 +52,6 @@ from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
 from libtbx.containers import OrderedSet
 
-from six.moves import StringIO
 import six.moves.cPickle as pickle
 
 
@@ -126,7 +127,9 @@ class DetectorAux(object):
 
 class CrystalAux(object):
     def show(self, show_scan_varying=False, out=None):
-        CrystalAux._show(self, show_scan_varying, out)
+        if out is None:
+            out = sys.stdout
+        print(self.as_str(show_scan_varying=show_scan_varying), file=out)
 
     def get_crystal_symmetry(self, assert_is_compatible_unit_cell=True):
         return cctbx.crystal.symmetry(
@@ -135,12 +138,7 @@ class CrystalAux(object):
             assert_is_compatible_unit_cell=assert_is_compatible_unit_cell,
         )
 
-    @staticmethod
-    def _show(self, show_scan_varying=False, out=None):
-        from scitbx import matrix
-
-        if out is None:
-            out = sys.stdout
+    def as_str(self, show_scan_varying=False):
         uc = self.get_unit_cell().parameters()
         uc_sd = self.get_cell_parameter_sd()
         sg = str(self.get_space_group().info())
@@ -214,12 +212,10 @@ class CrystalAux(object):
                     msg.append("    A = UB:    " + amat[0])
                     msg.append("               " + amat[1])
                     msg.append("               " + amat[2])
-        print("\n".join(msg), file=out)
+        return "\n".join(msg)
 
     def __str__(self):
-        s = StringIO()
-        self.show(out=s)
-        return s.getvalue()
+        return self.as_str()
 
     @staticmethod
     def _to_dict(crystal):
@@ -357,21 +353,15 @@ class CrystalAux(object):
 
 
 class MosaicCrystalKabsch2010Aux(object):
-    def show(self, show_scan_varying=False, out=None):
-        CrystalAux._show(self, show_scan_varying, out)
-
-        if out is None:
-            out = sys.stdout
-
-        msg = []
-        msg.append("    Mosaicity:  %.6f" % self.get_mosaicity())
-
-        print("\n".join(msg), file=out)
-
-    def __str__(self):
-        s = StringIO()
-        self.show(out=s)
-        return s.getvalue()
+    def as_str(self, show_scan_varying=False):
+        return "\n".join(
+            (
+                super(MosaicCrystalKabsch2010, self).as_str(
+                    show_scan_varying=show_scan_varying
+                ),
+                "    Mosaicity:  %.6f" % self.get_mosaicity(),
+            )
+        )
 
     def to_dict(crystal):
         """Convert the crystal model to a dictionary
@@ -422,19 +412,17 @@ class MosaicCrystalKabsch2010Aux(object):
 
 
 class MosaicCrystalSauter2014Aux(object):
-    def show(self, show_scan_varying=False, out=None):
-        CrystalAux._show(self, show_scan_varying, out)
-
-        if out is None:
-            out = sys.stdout
-
-        msg = []
-        msg.append(
-            "    Half mosaic angle (degrees):  %.6f" % self.get_half_mosaicity_deg()
+    def as_str(self, show_scan_varying=False):
+        return "\n".join(
+            (
+                super(MosaicCrystalSauter2014, self).as_str(
+                    show_scan_varying=show_scan_varying
+                ),
+                "    Half mosaic angle (degrees):  %.6f"
+                % self.get_half_mosaicity_deg(),
+                "    Domain size (Angstroms):  %.6f" % self.get_domain_size_ang(),
+            )
         )
-        msg.append("    Domain size (Angstroms):  %.6f" % self.get_domain_size_ang())
-
-        print("\n".join(msg), file=out)
 
     def get_A_as_sqr(self):  # required for lunus
         from scitbx.matrix import sqr
@@ -443,11 +431,6 @@ class MosaicCrystalSauter2014Aux(object):
 
     def get_A_inverse_as_sqr(self):
         return self.get_A_as_sqr().inverse()
-
-    def __str__(self):
-        s = StringIO()
-        self.show(out=s)
-        return s.getvalue()
 
     def to_dict(crystal):
         """Convert the crystal model to a dictionary
