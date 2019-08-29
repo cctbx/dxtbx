@@ -158,8 +158,7 @@ Crystal:
                 { 0.0000,  0.0000,  0.0833}}
     A = UB:    {{ 0.0433, -0.0682,  0.0417},
                 { 0.0789,  0.0043, -0.0510},
-                { 0.0436,  0.0600,  0.0510}}
-"""
+                { 0.0436,  0.0600,  0.0510}}"""
     )
     model.set_B((1 / 12, 0, 0, 0, 1 / 12, 0, 0, 0, 1 / 12))
     assert approx_equal(model.get_unit_cell().parameters(), (12, 12, 12, 90, 90, 90))
@@ -325,6 +324,23 @@ def test_MosaicCrystalKabsch2010():
         real_space_c=(0, 0, 12),
         space_group_symbol="P 1",
     )
+    assert (
+        str(mosaic_model).replace("-0.0000", " 0.0000")
+        == """\
+Crystal:
+    Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
+    Space group: P 1
+    U matrix:  {{ 1.0000,  0.0000,  0.0000},
+                { 0.0000,  1.0000,  0.0000},
+                { 0.0000,  0.0000,  1.0000}}
+    B matrix:  {{ 0.1000,  0.0000,  0.0000},
+                { 0.0000,  0.0909,  0.0000},
+                { 0.0000,  0.0000,  0.0833}}
+    A = UB:    {{ 0.1000,  0.0000,  0.0000},
+                { 0.0000,  0.0909,  0.0000},
+                { 0.0000,  0.0000,  0.0833}}
+    Mosaicity:  0.000000"""
+    )
     assert approx_equal(mosaic_model.get_mosaicity(), 0)
     assert mosaic_model == mosaic_model2
     mosaic_model2.set_mosaicity(0.01)
@@ -340,6 +356,8 @@ def test_MosaicCrystalKabsch2010():
     # print "mosaic_model2 == model4", mosaic_model2 == model4 # False
     # print "model4 == mosaic_model2", model4 == mosaic_model2 # True
 
+
+def test_MosaicCrystalSauter2014():
     mosaic_model = MosaicCrystalSauter2014(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
@@ -351,6 +369,24 @@ def test_MosaicCrystalKabsch2010():
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),
         space_group_symbol="P 1",
+    )
+    assert (
+        str(mosaic_model).replace("-0.0000", " 0.0000")
+        == """\
+Crystal:
+    Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
+    Space group: P 1
+    U matrix:  {{ 1.0000,  0.0000,  0.0000},
+                { 0.0000,  1.0000,  0.0000},
+                { 0.0000,  0.0000,  1.0000}}
+    B matrix:  {{ 0.1000,  0.0000,  0.0000},
+                { 0.0000,  0.0909,  0.0000},
+                { 0.0000,  0.0000,  0.0833}}
+    A = UB:    {{ 0.1000,  0.0000,  0.0000},
+                { 0.0000,  0.0909,  0.0000},
+                { 0.0000,  0.0000,  0.0833}}
+    Half mosaic angle (degrees):  0.000000
+    Domain size (Angstroms):  0.000000"""
     )
     assert approx_equal(mosaic_model.get_half_mosaicity_deg(), 0)
     assert approx_equal(mosaic_model.get_domain_size_ang(), 0)

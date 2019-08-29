@@ -1,13 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import collections
 import json
 import os
 import sys
+from builtins import range
 
 import boost.python
 import cctbx.crystal
+from scitbx import matrix
+
 from dxtbx_model_ext import (
     Beam,
     BeamBase,
@@ -50,7 +52,6 @@ from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
 from libtbx.containers import OrderedSet
 
-from six.moves import StringIO
 import six.moves.cPickle as pickle
 
 
@@ -98,7 +99,8 @@ __all__ = (
 )
 
 
-class DetectorAux(object):
+@boost.python.inject_into(Detector)
+class _(object):
     def iter_panels(self):
         """ Iterate through just the panels depth-first. """
         for obj in self.iter_preorder():
@@ -124,9 +126,12 @@ class DetectorAux(object):
                 queue.extend(node)
 
 
-class CrystalAux(object):
+@boost.python.inject_into(Crystal)
+class _(object):
     def show(self, show_scan_varying=False, out=None):
-        CrystalAux._show(self, show_scan_varying, out)
+        if out is None:
+            out = sys.stdout
+        print(self.as_str(show_scan_varying=show_scan_varying), file=out)
 
     def get_crystal_symmetry(self, assert_is_compatible_unit_cell=True):
         return cctbx.crystal.symmetry(
@@ -135,12 +140,7 @@ class CrystalAux(object):
             assert_is_compatible_unit_cell=assert_is_compatible_unit_cell,
         )
 
-    @staticmethod
-    def _show(self, show_scan_varying=False, out=None):
-        from scitbx import matrix
-
-        if out is None:
-            out = sys.stdout
+    def as_str(self, show_scan_varying=False):
         uc = self.get_unit_cell().parameters()
         uc_sd = self.get_cell_parameter_sd()
         sg = str(self.get_space_group().info())
@@ -214,38 +214,29 @@ class CrystalAux(object):
                     msg.append("    A = UB:    " + amat[0])
                     msg.append("               " + amat[1])
                     msg.append("               " + amat[2])
-        print("\n".join(msg), file=out)
+        return "\n".join(msg)
 
     def __str__(self):
-        s = StringIO()
-        self.show(out=s)
-        return s.getvalue()
+        return self.as_str()
 
-    @staticmethod
-    def _to_dict(crystal):
+    def to_dict(self):
         """Convert the crystal model to a dictionary
-
-        Params:
-            crystal The crystal model
 
         Returns:
             A dictionary of the parameters
-
         """
-        from scitbx import matrix
-
         # Get the real space vectors
-        A = matrix.sqr(crystal.get_A()).inverse()
+        A = matrix.sqr(self.get_A()).inverse()
         real_space_a = (A[0], A[1], A[2])
         real_space_b = (A[3], A[4], A[5])
         real_space_c = (A[6], A[7], A[8])
 
         # Get the space group Hall symbol
-        hall = crystal.get_space_group().info().type().hall_symbol()
+        hall = self.get_space_group().info().type().hall_symbol()
 
         # Isoforms used for stills
         try:
-            identified_isoform = crystal.identified_isoform
+            identified_isoform = self.identified_isoform
         except AttributeError:
             identified_isoform = None
 
@@ -264,24 +255,24 @@ class CrystalAux(object):
             xl_dict["identified_isoform"] = identified_isoform
 
         # Add in scan points if present
-        if crystal.num_scan_points > 0:
+        if self.num_scan_points > 0:
             A_at_scan_points = tuple(
-                [crystal.get_A_at_scan_point(i) for i in range(crystal.num_scan_points)]
+                [self.get_A_at_scan_point(i) for i in range(self.num_scan_points)]
             )
             xl_dict["A_at_scan_points"] = A_at_scan_points
 
         # Add in covariance of B if present
-        cov_B = tuple(crystal.get_B_covariance())
+        cov_B = tuple(self.get_B_covariance())
         if len(cov_B) != 0:
             xl_dict["B_covariance"] = cov_B
 
         # Add in covariance of B at scan points if present
-        if crystal.num_scan_points > 0:
+        if self.num_scan_points > 0:
             try:
                 cov_B_at_scan_points = tuple(
                     [
-                        tuple(crystal.get_B_covariance_at_scan_point(i))
-                        for i in range(crystal.num_scan_points)
+                        tuple(self.get_B_covariance_at_scan_point(i))
+                        for i in range(self.num_scan_points)
                     ]
                 )
                 xl_dict["B_covariance_at_scan_points"] = cov_B_at_scan_points
@@ -289,9 +280,6 @@ class CrystalAux(object):
                 pass
 
         return xl_dict
-
-    def to_dict(crystal):
-        return CrystalAux._to_dict(crystal)
 
     @staticmethod
     def from_dict(d):
@@ -302,10 +290,7 @@ class CrystalAux(object):
 
         Returns:
             The crystal model
-
         """
-        from dxtbx.model import Crystal
-
         # If None, return None
         if d is None:
             return None
@@ -356,43 +341,35 @@ class CrystalAux(object):
         return xl
 
 
-class MosaicCrystalKabsch2010Aux(object):
-    def show(self, show_scan_varying=False, out=None):
-        CrystalAux._show(self, show_scan_varying, out)
+@boost.python.inject_into(MosaicCrystalKabsch2010)
+class _(object):
+    def as_str(self, show_scan_varying=False):
+        return "\n".join(
+            (
+                super(MosaicCrystalKabsch2010, self).as_str(
+                    show_scan_varying=show_scan_varying
+                ),
+                "    Mosaicity:  %.6f" % self.get_mosaicity(),
+            )
+        )
 
-        if out is None:
-            out = sys.stdout
-
-        msg = []
-        msg.append("    Mosaicity:  %.6f" % self.get_mosaicity())
-
-        print("\n".join(msg), file=out)
-
-    def __str__(self):
-        s = StringIO()
-        self.show(out=s)
-        return s.getvalue()
-
-    def to_dict(crystal):
+    def to_dict(self):
         """Convert the crystal model to a dictionary
-
-        Params:
-            crystal The crystal model
 
         Returns:
             A dictionary of the parameters
 
         """
-        xl_dict = CrystalAux._to_dict(crystal)
+        xl_dict = super(MosaicCrystalKabsch2010, self).to_dict()
 
         # Get the mosaicity
-        mosaicity = crystal.get_mosaicity()
+        mosaicity = self.get_mosaicity()
         xl_dict["mosaicity"] = mosaicity
 
         return xl_dict
 
-    @staticmethod
-    def from_dict(d):
+    @classmethod
+    def from_dict(cls, d):
         """Convert the dictionary to a crystal model
 
         Params:
@@ -402,7 +379,7 @@ class MosaicCrystalKabsch2010Aux(object):
             The crystal model
 
         """
-        xl = MosaicCrystalKabsch2010(CrystalAux.from_dict(d))
+        xl = MosaicCrystalKabsch2010(super(MosaicCrystalKabsch2010, cls).from_dict(d))
 
         # This parameter doesn't survive the Crystal copy constructor so has to be re-set.
         # Isoforms used for stills
@@ -421,57 +398,46 @@ class MosaicCrystalKabsch2010Aux(object):
         return xl
 
 
-class MosaicCrystalSauter2014Aux(object):
-    def show(self, show_scan_varying=False, out=None):
-        CrystalAux._show(self, show_scan_varying, out)
-
-        if out is None:
-            out = sys.stdout
-
-        msg = []
-        msg.append(
-            "    Half mosaic angle (degrees):  %.6f" % self.get_half_mosaicity_deg()
+@boost.python.inject_into(MosaicCrystalSauter2014)
+class _(object):
+    def as_str(self, show_scan_varying=False):
+        return "\n".join(
+            (
+                super(MosaicCrystalSauter2014, self).as_str(
+                    show_scan_varying=show_scan_varying
+                ),
+                "    Half mosaic angle (degrees):  %.6f"
+                % self.get_half_mosaicity_deg(),
+                "    Domain size (Angstroms):  %.6f" % self.get_domain_size_ang(),
+            )
         )
-        msg.append("    Domain size (Angstroms):  %.6f" % self.get_domain_size_ang())
-
-        print("\n".join(msg), file=out)
 
     def get_A_as_sqr(self):  # required for lunus
-        from scitbx.matrix import sqr
-
-        return sqr(self.get_A())
+        return matrix.sqr(self.get_A())
 
     def get_A_inverse_as_sqr(self):
         return self.get_A_as_sqr().inverse()
 
-    def __str__(self):
-        s = StringIO()
-        self.show(out=s)
-        return s.getvalue()
-
-    def to_dict(crystal):
+    def to_dict(self):
         """Convert the crystal model to a dictionary
-
-        Params:
-            crystal The crystal model
 
         Returns:
             A dictionary of the parameters
 
         """
-        xl_dict = CrystalAux._to_dict(crystal)
+        xl_dict = super(MosaicCrystalSauter2014, self).to_dict()
 
         # Get the mosaic parameters
-        half_mosaicity = crystal.get_half_mosaicity_deg()
+        half_mosaicity = self.get_half_mosaicity_deg()
         xl_dict["ML_half_mosaicity_deg"] = half_mosaicity
 
-        domain_size = crystal.get_domain_size_ang()
+        domain_size = self.get_domain_size_ang()
         xl_dict["ML_domain_size_ang"] = domain_size
 
         return xl_dict
 
-    @staticmethod
-    def from_dict(d):
+    @classmethod
+    def from_dict(cls, d):
         """Convert the dictionary to a crystal model
 
         Params:
@@ -481,7 +447,7 @@ class MosaicCrystalSauter2014Aux(object):
             The crystal model
 
         """
-        xl = MosaicCrystalSauter2014(CrystalAux.from_dict(d))
+        xl = MosaicCrystalSauter2014(super(MosaicCrystalSauter2014, cls).from_dict(d))
 
         # Parameters for maximum likelihood values
         try:
@@ -503,7 +469,8 @@ class MosaicCrystalSauter2014Aux(object):
         return xl
 
 
-class ExperimentAux(object):
+@boost.python.inject_into(Experiment)
+class _(object):
     def load_models(self, index=None):
         """ Load the models from the imageset """
         if index is None:
@@ -514,7 +481,8 @@ class ExperimentAux(object):
         self.scan = self.imageset.get_scan(index)
 
 
-class ExperimentListAux(object):
+@boost.python.inject_into(ExperimentList)
+class _(object):
     def __repr__(self):
         if len(self):
             return "ExperimentList([{}])".format(", ".join(repr(x) for x in self))
@@ -833,11 +801,3 @@ class ExperimentListAux(object):
         else:
             ext_str = "|".join(j_ext + p_ext)
             raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
-
-
-boost.python.inject_into(Crystal)(CrystalAux)
-boost.python.inject_into(Detector)(DetectorAux)
-boost.python.inject_into(Experiment)(ExperimentAux)
-boost.python.inject_into(ExperimentList)(ExperimentListAux)
-boost.python.inject_into(MosaicCrystalKabsch2010)(MosaicCrystalKabsch2010Aux)
-boost.python.inject_into(MosaicCrystalSauter2014)(MosaicCrystalSauter2014Aux)
