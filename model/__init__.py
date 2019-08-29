@@ -218,29 +218,24 @@ class CrystalAux(object):
     def __str__(self):
         return self.as_str()
 
-    @staticmethod
-    def _to_dict(crystal):
+    def _to_dict(self):
         """Convert the crystal model to a dictionary
-
-        Params:
-            crystal The crystal model
 
         Returns:
             A dictionary of the parameters
-
         """
         # Get the real space vectors
-        A = matrix.sqr(crystal.get_A()).inverse()
+        A = matrix.sqr(self.get_A()).inverse()
         real_space_a = (A[0], A[1], A[2])
         real_space_b = (A[3], A[4], A[5])
         real_space_c = (A[6], A[7], A[8])
 
         # Get the space group Hall symbol
-        hall = crystal.get_space_group().info().type().hall_symbol()
+        hall = self.get_space_group().info().type().hall_symbol()
 
         # Isoforms used for stills
         try:
-            identified_isoform = crystal.identified_isoform
+            identified_isoform = self.identified_isoform
         except AttributeError:
             identified_isoform = None
 
@@ -259,24 +254,24 @@ class CrystalAux(object):
             xl_dict["identified_isoform"] = identified_isoform
 
         # Add in scan points if present
-        if crystal.num_scan_points > 0:
+        if self.num_scan_points > 0:
             A_at_scan_points = tuple(
-                [crystal.get_A_at_scan_point(i) for i in range(crystal.num_scan_points)]
+                [self.get_A_at_scan_point(i) for i in range(self.num_scan_points)]
             )
             xl_dict["A_at_scan_points"] = A_at_scan_points
 
         # Add in covariance of B if present
-        cov_B = tuple(crystal.get_B_covariance())
+        cov_B = tuple(self.get_B_covariance())
         if len(cov_B) != 0:
             xl_dict["B_covariance"] = cov_B
 
         # Add in covariance of B at scan points if present
-        if crystal.num_scan_points > 0:
+        if self.num_scan_points > 0:
             try:
                 cov_B_at_scan_points = tuple(
                     [
-                        tuple(crystal.get_B_covariance_at_scan_point(i))
-                        for i in range(crystal.num_scan_points)
+                        tuple(self.get_B_covariance_at_scan_point(i))
+                        for i in range(self.num_scan_points)
                     ]
                 )
                 xl_dict["B_covariance_at_scan_points"] = cov_B_at_scan_points
@@ -286,7 +281,7 @@ class CrystalAux(object):
         return xl_dict
 
     def to_dict(self):
-        return self._to_dict(self)
+        return self._to_dict()
 
     @staticmethod
     def from_dict(d):
@@ -369,14 +364,11 @@ class _(object):
     def to_dict(self):
         """Convert the crystal model to a dictionary
 
-        Params:
-            crystal The crystal model
-
         Returns:
             A dictionary of the parameters
 
         """
-        xl_dict = self._to_dict(self)
+        xl_dict = self._to_dict()
 
         # Get the mosaicity
         mosaicity = self.get_mosaicity()
@@ -437,14 +429,11 @@ class _(object):
     def to_dict(self):
         """Convert the crystal model to a dictionary
 
-        Params:
-            crystal The crystal model
-
         Returns:
             A dictionary of the parameters
 
         """
-        xl_dict = self._to_dict(self)
+        xl_dict = self._to_dict()
 
         # Get the mosaic parameters
         half_mosaicity = self.get_half_mosaicity_deg()
