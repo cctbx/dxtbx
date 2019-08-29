@@ -37,7 +37,8 @@ class MemReader(object):
         return ""
 
 
-class ImageSetAux(boost.python.injector, ImageSet):
+@boost.python.inject_into(ImageSet)
+class _(object):
     """
     A class to inject additional methods into the imageset class
     """
@@ -184,7 +185,8 @@ class ImageSetLazy(ImageSet):
         return super(ImageSetLazy, self).get_gain(index)
 
 
-class ImageSweepAux(boost.python.injector, ImageSweep):
+@boost.python.inject_into(ImageSweep)
+class _(object):
     def __getitem__(self, item):
         """Get an item from the sweep stream.
 
@@ -551,7 +553,3 @@ class ImageSetFactory(object):
             return ImageSet(imageset.data(), imageset.indices())
         else:
             raise ValueError("Unrecognized imageset type: %s" % str(type(imageset)))
-
-
-boost.python.inject_into(ImageSet)(ImageSetAux)
-boost.python.inject_into(ImageSweep)(ImageSweepAux)
