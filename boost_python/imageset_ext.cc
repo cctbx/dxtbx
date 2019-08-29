@@ -19,14 +19,9 @@ namespace dxtbx { namespace boost_python {
 
     /// Returns a byte-data-appropriate object for an std::string
     boost::python::object bytes_from_std_string(const std::string &data) {
-#if PY_MAJOR_VERSION >= 3
       // Boost::python appears to have no native way to do this conversion
-      boost::python::object data_bytes(
+      return boost::python::object(
         boost::python::handle<>(PyBytes_FromStringAndSize(data.data(), data.size())));
-#else
-      boost::python::str data_bytes(data);
-#endif
-      return data_bytes;
     }
 
     /// Pickle a python object to a string
