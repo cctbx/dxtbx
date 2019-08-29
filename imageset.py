@@ -6,7 +6,28 @@ import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
 
 ext = boost.python.import_ext("dxtbx_ext")
-from dxtbx_imageset_ext import *
+from dxtbx_imageset_ext import (
+    ExternalLookup,
+    ExternalLookupItemBool,
+    ExternalLookupItemDouble,
+    ImageGrid,
+    ImageSet,
+    ImageSetData,
+    ImageSweep,
+)
+
+__all__ = (
+    "ExternalLookup",
+    "ExternalLookupItemBool",
+    "ExternalLookupItemDouble",
+    "ImageGrid",
+    "ImageSet",
+    "ImageSetData",
+    "ImageSetFactory",
+    "ImageSetLazy",
+    "ImageSweep",
+    "MemReader",
+)
 
 
 class MemReader(object):
