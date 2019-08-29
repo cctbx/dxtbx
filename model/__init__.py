@@ -285,8 +285,8 @@ class CrystalAux(object):
 
         return xl_dict
 
-    def to_dict(crystal):
-        return CrystalAux._to_dict(crystal)
+    def to_dict(self):
+        return self._to_dict(self)
 
     @staticmethod
     def from_dict(d):
@@ -366,7 +366,7 @@ class _(object):
             )
         )
 
-    def to_dict(crystal):
+    def to_dict(self):
         """Convert the crystal model to a dictionary
 
         Params:
@@ -376,10 +376,10 @@ class _(object):
             A dictionary of the parameters
 
         """
-        xl_dict = CrystalAux._to_dict(crystal)
+        xl_dict = self._to_dict(self)
 
         # Get the mosaicity
-        mosaicity = crystal.get_mosaicity()
+        mosaicity = self.get_mosaicity()
         xl_dict["mosaicity"] = mosaicity
 
         return xl_dict
@@ -434,7 +434,7 @@ class _(object):
     def get_A_inverse_as_sqr(self):
         return self.get_A_as_sqr().inverse()
 
-    def to_dict(crystal):
+    def to_dict(self):
         """Convert the crystal model to a dictionary
 
         Params:
@@ -444,13 +444,13 @@ class _(object):
             A dictionary of the parameters
 
         """
-        xl_dict = CrystalAux._to_dict(crystal)
+        xl_dict = self._to_dict(self)
 
         # Get the mosaic parameters
-        half_mosaicity = crystal.get_half_mosaicity_deg()
+        half_mosaicity = self.get_half_mosaicity_deg()
         xl_dict["ML_half_mosaicity_deg"] = half_mosaicity
 
-        domain_size = crystal.get_domain_size_ang()
+        domain_size = self.get_domain_size_ang()
         xl_dict["ML_domain_size_ang"] = domain_size
 
         return xl_dict
