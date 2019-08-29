@@ -1,4 +1,9 @@
 {
     "modules_required_for_use": ["iotbx", "cbflib_adaptbx"],
-    "python_required": ["dials-data>=2.0", "mock>=2.0", "procrunner>=1.0", "pytest>=3.10.1"]
+    "python_required": [
+        "dials-data>=2.0",
+        "mock>=2.0",
+        "procrunner>=1.0",
+        "pytest>=3.10.1",
+    ],
 }
