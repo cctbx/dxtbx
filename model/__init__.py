@@ -219,7 +219,7 @@ class _(object):
     def __str__(self):
         return self.as_str()
 
-    def _to_dict(self):
+    def to_dict(self):
         """Convert the crystal model to a dictionary
 
         Returns:
@@ -280,9 +280,6 @@ class _(object):
                 pass
 
         return xl_dict
-
-    def to_dict(self):
-        return self._to_dict()
 
     @staticmethod
     def from_dict(d):
@@ -363,7 +360,7 @@ class _(object):
             A dictionary of the parameters
 
         """
-        xl_dict = self._to_dict()
+        xl_dict = super(MosaicCrystalKabsch2010, self).to_dict()
 
         # Get the mosaicity
         mosaicity = self.get_mosaicity()
@@ -428,7 +425,7 @@ class _(object):
             A dictionary of the parameters
 
         """
-        xl_dict = self._to_dict()
+        xl_dict = super(MosaicCrystalSauter2014, self).to_dict()
 
         # Get the mosaic parameters
         half_mosaicity = self.get_half_mosaicity_deg()
