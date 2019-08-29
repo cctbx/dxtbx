@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import collections
 import json
 import os
 import sys
+from builtins import range
 
 import boost.python
 import cctbx.crystal
@@ -99,7 +99,8 @@ __all__ = (
 )
 
 
-class DetectorAux(object):
+@boost.python.inject_into(Detector)
+class _(object):
     def iter_panels(self):
         """ Iterate through just the panels depth-first. """
         for obj in self.iter_preorder():
@@ -228,8 +229,6 @@ class CrystalAux(object):
             A dictionary of the parameters
 
         """
-        from scitbx import matrix
-
         # Get the real space vectors
         A = matrix.sqr(crystal.get_A()).inverse()
         real_space_a = (A[0], A[1], A[2])
@@ -352,7 +351,11 @@ class CrystalAux(object):
         return xl
 
 
-class MosaicCrystalKabsch2010Aux(object):
+boost.python.inject_into(Crystal)(CrystalAux)
+
+
+@boost.python.inject_into(MosaicCrystalKabsch2010)
+class _(object):
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -411,7 +414,8 @@ class MosaicCrystalKabsch2010Aux(object):
         return xl
 
 
-class MosaicCrystalSauter2014Aux(object):
+@boost.python.inject_into(MosaicCrystalSauter2014)
+class _(object):
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -425,9 +429,7 @@ class MosaicCrystalSauter2014Aux(object):
         )
 
     def get_A_as_sqr(self):  # required for lunus
-        from scitbx.matrix import sqr
-
-        return sqr(self.get_A())
+        return matrix.sqr(self.get_A())
 
     def get_A_inverse_as_sqr(self):
         return self.get_A_as_sqr().inverse()
@@ -486,7 +488,8 @@ class MosaicCrystalSauter2014Aux(object):
         return xl
 
 
-class ExperimentAux(object):
+@boost.python.inject_into(Experiment)
+class _(object):
     def load_models(self, index=None):
         """ Load the models from the imageset """
         if index is None:
@@ -497,7 +500,8 @@ class ExperimentAux(object):
         self.scan = self.imageset.get_scan(index)
 
 
-class ExperimentListAux(object):
+@boost.python.inject_into(ExperimentList)
+class _(object):
     def __repr__(self):
         if len(self):
             return "ExperimentList([{}])".format(", ".join(repr(x) for x in self))
@@ -816,11 +820,3 @@ class ExperimentListAux(object):
         else:
             ext_str = "|".join(j_ext + p_ext)
             raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
-
-
-boost.python.inject_into(Crystal)(CrystalAux)
-boost.python.inject_into(Detector)(DetectorAux)
-boost.python.inject_into(Experiment)(ExperimentAux)
-boost.python.inject_into(ExperimentList)(ExperimentListAux)
-boost.python.inject_into(MosaicCrystalKabsch2010)(MosaicCrystalKabsch2010Aux)
-boost.python.inject_into(MosaicCrystalSauter2014)(MosaicCrystalSauter2014Aux)
