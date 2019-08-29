@@ -294,8 +294,6 @@ class _(object):
         Returns:
             The crystal model
         """
-        from dxtbx.model import Crystal
-
         # If None, return None
         if d is None:
             return None
