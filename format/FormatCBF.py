@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import six
 from dxtbx.format.Format import Format
+from dxtbx import IncorrectFormatError
 
 
 class FormatCBF(Format):
@@ -58,12 +59,10 @@ class FormatCBF(Format):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        from dxtbx import IncorrectFormatError
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        Format.__init__(self, image_file, **kwargs)
+        super(FormatCBF, self).__init__(str(image_file), **kwargs)
 
     @staticmethod
     def _parse_cbf_header(cbf_header):
@@ -96,8 +95,6 @@ class FormatCBF(Format):
     def _start(self):
         """Open the image file, read the image header, copy it into memory
         for future inspection."""
-
-        Format._start(self)
 
         self._cif_header = FormatCBF.get_cbf_header(self._image_file)
 

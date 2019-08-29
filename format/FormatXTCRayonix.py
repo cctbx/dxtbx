@@ -24,9 +24,8 @@ class FormatXTCRayonix(FormatXTC):
     def __init__(self, image_file, **kwargs):
         import psana
 
-        assert self.understand(image_file)
-        FormatXTC.__init__(
-            self, image_file, locator_scope=rayonix_locator_scope, **kwargs
+        super(FormatXTCRayonix, self).__init__(
+            image_file, locator_scope=rayonix_locator_scope, **kwargs
         )
         self._ds = FormatXTCRayonix._get_datasource(image_file, self.params)
         self._env = self._ds.env()

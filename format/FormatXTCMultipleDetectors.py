@@ -14,10 +14,6 @@ multiple_locator_scope = parse(
 
 class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJungfrau):
     def __init__(self, image_file, **kwargs):
-        assert self.understand(image_file)
-        FormatXTC.__init__(
-            self, image_file, locator_scope=multiple_locator_scope, **kwargs
-        )
         self._ds = FormatXTCMultipleDetectors._get_datasource(image_file, self.params)
         self._env = self._ds.env()
         self.populate_events()

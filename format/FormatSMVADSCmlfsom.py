@@ -20,17 +20,6 @@ class FormatSMVADSCmlfsom(FormatSMVADSC):
 
         return True
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file, including a
-        proper model of the experiment."""
-
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatSMVADSC.__init__(self, image_file, **kwargs)
-
     def _scan(self):
         """Return the scan information for this image."""
 

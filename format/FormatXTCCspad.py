@@ -39,8 +39,9 @@ cspad_locator_scope = parse(cspad_locator_str + locator_str, process_includes=Tr
 
 class FormatXTCCspad(FormatXTC):
     def __init__(self, image_file, locator_scope=cspad_locator_scope, **kwargs):
-        assert self.understand(image_file)
-        FormatXTC.__init__(self, image_file, locator_scope=locator_scope, **kwargs)
+        super(FormatXTCCspad, self).__init__(
+            image_file, locator_scope=locator_scope, **kwargs
+        )
         assert (
             self.params.cspad.detz_offset is not None
         ), "Supply a detz_offset for the cspad"

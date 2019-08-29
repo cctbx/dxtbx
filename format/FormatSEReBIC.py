@@ -16,12 +16,6 @@ from dxtbx.format.FormatSER import FormatSER
 
 
 class FormatSEReBIC(FormatSER):
-    def __init__(self, image_file, **kwargs):
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-        FormatSER.__init__(self, image_file, **kwargs)
-
     @staticmethod
     def understand(image_file):
 

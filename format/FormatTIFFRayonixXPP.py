@@ -66,15 +66,10 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
         from iotbx.detectors.mar import MARImage
 
         MARImage._read_header_asserts = lambda self: None
-        FormatTIFFRayonix.__init__(self, image_file, **kwargs)
+        super(FormatTIFFRayonixXPP, self).__init__(image_file, **kwargs)
 
     ####################################################################
     #                                                                  #

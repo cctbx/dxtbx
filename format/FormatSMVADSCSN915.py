@@ -27,17 +27,6 @@ class FormatSMVADSCSN915(FormatSMVADSCSN):
 
         return int(header["DETECTOR_SN"]) == 915
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file, including a
-        proper model of the experiment."""
-
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatSMVADSCSN.__init__(self, image_file, **kwargs)
-
     def get_raw_data(self):
         """Get the pixel intensities (i.e. read the image and return as a
         flex array of integers.)"""

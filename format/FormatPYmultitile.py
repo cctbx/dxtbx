@@ -4,7 +4,6 @@ from dxtbx.format.FormatPY import FormatPY
 
 import six
 import six.moves.cPickle as pickle
-from dxtbx import IncorrectFormatError
 from xfel.cftbx.detector.cspad_detector import CSPadDetector
 from dxtbx.model import Detector
 from calendar import timegm
@@ -35,14 +34,6 @@ class FormatPYmultitile(FormatPY):
             return False
 
         return True
-
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file."""
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatPY.__init__(self, image_file, **kwargs)
 
     def _start(self):
         # this Format class depends on stuff from detectorbase

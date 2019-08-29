@@ -39,23 +39,6 @@ class FormatSMVJHSim(FormatSMV):
         else:
             return False
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file, including a
-        proper model of the experiment."""
-
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatSMV.__init__(self, image_file, **kwargs)
-
-        return
-
-    def _start(self):
-
-        FormatSMV._start(self)
-
     def detectorbase_start(self):
         if not hasattr(self, "detectorbase") or self.detectorbase is None:
             from iotbx.detectors import SMVImage

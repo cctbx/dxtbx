@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import range
 from dxtbx.format.Format import Format
+from dxtbx import IncorrectFormatError
 
 
 class FormatBruker(Format):
@@ -92,12 +93,9 @@ class FormatBruker(Format):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        from dxtbx import IncorrectFormatError
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-
-        Format.__init__(self, image_file, **kwargs)
+        super(FormatBruker, self).__init__(str(image_file), **kwargs)
 
     def detectorbase_start(self):
         pass

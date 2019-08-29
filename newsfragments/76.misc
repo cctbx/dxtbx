@@ -1,0 +1,9 @@
+Remove unnecessary `__init__` and `_start` methods from Format classes:
+
+- There is no need for every subclass to redefine the `__init__` method and
+call its parent's `__init__` method. As well as a lot of unnecessary code
+duplication, this also led to the subclass `self.understand()` method
+being called once for every class in the format class hierarchy.
+- There is no need for every subclass to redefine the `_start()` method and
+call its parent's `_start()` method.
+- Use `super()` where applicable.

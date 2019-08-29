@@ -8,13 +8,6 @@ Format class for the PAL XFEL raw data format
 
 
 class FormatHDF5PAL(FormatHDF5):
-    def __init__(self, image_file, **kwargs):
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-        FormatHDF5.__init__(self, image_file, **kwargs)
-
     @staticmethod
     def understand(image_file):
         import h5py

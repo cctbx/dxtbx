@@ -49,20 +49,13 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
         # if multi_panel == False, then interpret data as 24 panels, where each
         # row of 5 panels is grouped as one "panel"
         # elif multi_panel == True, then interpret data as 120 panels,
         # 24 rows * 5 columns
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         self._multi_panel = kwargs.get("multi_panel", False)
-        FormatCBFMiniPilatus.__init__(self, image_file, **kwargs)
-
-        self._raw_data = None
+        super(FormatCBFMiniPilatusDLS12M, self).__init__(image_file, **kwargs)
 
     def _detector(self):
 

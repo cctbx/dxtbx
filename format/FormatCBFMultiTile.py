@@ -70,17 +70,6 @@ class FormatCBFMultiTile(FormatCBFFull):
             if "CBFlib Error" in str(e):
                 return False
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file."""
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatCBFFull.__init__(self, image_file, **kwargs)
-
-        self._raw_data = None
-
     def _start(self):
         """Open the image file as a cbf file handle, and keep this somewhere
         safe."""

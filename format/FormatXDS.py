@@ -10,6 +10,7 @@
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.Format import Format
+from dxtbx import IncorrectFormatError
 
 
 class FormatXDS(Format):
@@ -26,13 +27,9 @@ class FormatXDS(Format):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        Format.__init__(self, image_file, **kwargs)
-
-        from dxtbx import IncorrectFormatError
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        return
+        super(FormatXDS, self).__init__(image_file, **kwargs)
 
     def _start(self):
         """Open the image file as a cbf file handle, and keep this somewhere

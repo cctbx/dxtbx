@@ -62,21 +62,14 @@ class FormatCBFMini(FormatCBF):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatCBF.__init__(self, image_file, **kwargs)
-
         self._raw_data = None
+        super(FormatCBFMini, self).__init__(image_file, **kwargs)
 
     def _start(self):
         """Open the image file, read the image header, copy it into a
         dictionary for future reference."""
 
-        FormatCBF._start(self)
-
+        super(FormatCBFMini, self)._start()
         cif_header = FormatCBF.get_cbf_header(self._image_file)
 
         self._cif_header_dictionary = {}

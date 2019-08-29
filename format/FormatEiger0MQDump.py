@@ -14,9 +14,6 @@ from dxtbx.format.Format import Format
 
 
 class FormatEiger0MQDump(Format):
-    def __init__(self, image_file, **kwargs):
-        Format.__init__(self, image_file)
-
     @staticmethod
     def understand(image_file):
         if os.path.exists(os.path.join(os.path.split(image_file)[0], "header")):

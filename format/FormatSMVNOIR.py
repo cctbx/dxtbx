@@ -77,13 +77,7 @@ class FormatSMVNOIR(FormatSMVRigaku):
         proper model of the experiment. Easy from Rigaku Saturn images as
         they contain everything pretty much we need..."""
 
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatSMVRigaku.__init__(self, image_file, **kwargs)
-
+        super(FormatSMVNOIR, self).__init__(image_file, **kwargs)
         self.detector_class = "NOIR1"
         self.detector = "adsc"
 

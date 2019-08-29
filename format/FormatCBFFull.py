@@ -36,23 +36,11 @@ class FormatCBFFull(FormatCBF):
         """Initialise the image structure from the given file."""
 
         # It appears Pycbf can not handle unicode filenames (see dials/dials#256)
-        image_file = str(image_file)
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatCBF.__init__(self, image_file, **kwargs)
         self._raw_data = None
+        super(FormatCBFFull, self).__init__(str(image_file), **kwargs)
 
     def __del__(self):
         self._cbf_handle.__swig_destroy__(self._cbf_handle)
-
-    def _start(self):
-        """Open the image file as a cbf file handle, and keep this somewhere
-        safe."""
-
-        FormatCBF._start(self)
 
     def _get_cbf_handle(self):
         try:

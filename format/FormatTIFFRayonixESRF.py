@@ -57,18 +57,6 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
         )  # if header was in mm, disagreement should be
         # approximately the pixel size in mm
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file, including a
-        proper model of the experiment."""
-
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-        FormatTIFFRayonix.__init__(self, image_file, **kwargs)
-
-        return
-
     def _goniometer(self):
         """Return a model for goniometer corresponding to the values stored
         in the image header. In the first instance assume this is a single

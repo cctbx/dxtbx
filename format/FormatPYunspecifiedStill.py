@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 from future import standard_library
-from dxtbx import IncorrectFormatError
 import sys
 
 standard_library.install_aliases()
@@ -40,14 +39,6 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
 
         return data["OSC_RANGE"] <= 0
 
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file."""
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatPYunspecified.__init__(self, image_file, **kwargs)
-
 
 class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory):
     """Overrides the Format object's init method to accept an image dictionary
@@ -67,8 +58,7 @@ class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory)
 
     def __init__(self, data, **kwargs):
         """ @param data In memory image dictionary, alredy initialized """
-        FormatPYunspecifiedInMemory.__init__(self, data, **kwargs)
-
+        super(FormatPYunspecifiedStillInMemory, self).__init__(data, **kwargs)
         self._image_file = copy.deepcopy(data)
 
 

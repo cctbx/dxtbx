@@ -27,14 +27,10 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         return False
 
     def __init__(self, image_file, index=0, reconst_mode=False, **kwargs):
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
         self._raw_data = None
         self.index = index
         self.image_filename = image_file
-        FormatHDF5.__init__(self, image_file, **kwargs)
+        super(FormatHDF5SaclaRayonix, self).__init__(image_file, **kwargs)
 
         # This hard-coded value can be overwritten
         # by RAYONIX_DISTANCE

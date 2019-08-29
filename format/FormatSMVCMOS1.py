@@ -74,18 +74,12 @@ class FormatSMVCMOS1(FormatSMV):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        from dxtbx import IncorrectFormatError
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-
-        FormatSMV.__init__(self, image_file, **kwargs)
-
+        super(FormatSMVCMOS1, self).__init__(image_file, **kwargs)
         detector_prefixes = self._header_dictionary["DETECTOR_NAMES"].split()
         self._prefix = detector_prefixes[0]
 
     def _start(self):
-        FormatSMV._start(self)
+        super(FormatSMVCMOS1, self)._start()
         self._header_size = int(self._header_dictionary["HEADER_BYTES"])
 
     def _goniometer(self):
