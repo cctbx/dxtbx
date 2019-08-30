@@ -86,7 +86,11 @@ class lazy_file_cache(object):
 
     def __del__(self):
         """Close file handles and drop cache on garbage collection."""
-        self.force_close()
+        try:
+            self.force_close()
+        except TypeError:
+            # Ignore errors that might happen during interpreter shutdown
+            pass
 
     def _cache_up_to(self, position):
         '''Ensure that the file has been read up to "position"'''
