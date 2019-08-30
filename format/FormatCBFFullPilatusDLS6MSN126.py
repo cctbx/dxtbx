@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-# FormatCBFFullPilatus.py
-#   Copyright (C) 2017 Diamond Light Source, Richard Gildea
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Pilatus implementation of fullCBF format, for use with Dectris detectors.
-
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
@@ -21,9 +12,6 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
     def understand(image_file):
         """Check to see if this looks like an CBF format image, i.e. we can
         make sense of it."""
-
-        # this depends on DIALS for the goniometer shadow model; if missing
-        # simply return False
 
         header = FormatCBFFullPilatus.get_cbf_header(image_file)
 
