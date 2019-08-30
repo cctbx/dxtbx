@@ -4,10 +4,12 @@ from builtins import range
 import collections
 import itertools
 import json
+import logging
 import operator
 import math
 import os.path
 from os.path import abspath, dirname, isdir, isfile, join, normpath, splitext
+import warnings
 
 import six.moves.cPickle as pickle
 
@@ -27,6 +29,9 @@ from dxtbx.sweep_filenames import (
 )
 from libtbx.utils import Sorry
 from scitbx import matrix
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataBlock(object):
@@ -295,9 +300,13 @@ class FormatChecker(object):
     """A helper class to speed up identifying the correct image format by first
     trying the last format that was used."""
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=None):
         """ Set the format class to none. """
         self._format_class = None
+        if verbose is not None:
+            warnings.warn(
+                "The verbose parameter is deprecated.", DeprecationWarning, stacklevel=2
+            )
         self._verbose = verbose
 
     def find_format(self, filename):
@@ -310,11 +319,10 @@ class FormatChecker(object):
             )
         else:
             self._format_class = get_format_class_for_file(filename)
-        if self._verbose:
-            if self._format_class:
-                print("Using %s for %s" % (self._format_class.__name__, filename))
-            else:
-                print("No format class found for %s" % filename)
+        if self._format_class:
+            logger.debug("Using %s for %s", self._format_class.__name__, filename)
+        else:
+            logger.debug("No format class found for %s", filename)
         return self._format_class
 
     def iter_groups(self, filenames):
@@ -329,9 +337,8 @@ class FormatChecker(object):
                     yield group_format, group_fnames
                 group_fnames = [filename]
                 group_format = fmt
-            if self._verbose:
-                if fmt is not None:
-                    print("Using %s for %s" % (fmt.__name__, filename))
+            if fmt is not None:
+                logger.debug("Using %s for %s", fmt.__name__, filename)
         if group_fnames:
             yield group_format, group_fnames
 
@@ -339,8 +346,12 @@ class FormatChecker(object):
 class DataBlockTemplateImporter(object):
     """ A class to import a datablock from a template. """
 
-    def __init__(self, templates, verbose=False, **kwargs):
+    def __init__(self, templates, verbose=None, **kwargs):
         """ Import the datablocks from the given templates. """
+        if verbose is not None:
+            warnings.warn(
+                "The verbose parameter is deprecated.", DeprecationWarning, stacklevel=2
+            )
         assert len(templates) > 0
 
         self.datablocks = []
@@ -351,27 +362,25 @@ class DataBlockTemplateImporter(object):
                 self.datablocks[-1].append(iset)
             except Exception:
                 self.datablocks.append(DataBlock([iset]))
-            if verbose:
-                print("Added imageset to datablock %d" % (len(self.datablocks) - 1))
+            logger.debug("Added imageset to datablock %d", len(self.datablocks) - 1)
 
         # For each template do an import
         for template in templates:
             template = normpath(template)
             paths = sorted(locate_files_matching_template_string(template))
-            if verbose:
-                print("The following files matched the template string:")
-                if len(paths) > 0:
-                    for p in paths:
-                        print(" %s" % p)
-                else:
-                    print(" No files found")
+            logger.debug("The following files matched the template string:")
+            if len(paths) > 0:
+                for p in paths:
+                    logger.debug(" %s", p)
+            else:
+                logger.debug(" No files found")
 
             # Check if we've matched any filenames
             if len(paths) == 0:
                 raise Sorry('Template "%s" does not match any files' % template)
 
             # Get the format from the first image
-            fmt = FormatChecker(verbose=verbose).find_format(paths[0])
+            fmt = FormatChecker().find_format(paths[0])
             if fmt is None:
                 raise Sorry("Image file %s format is unknown" % paths[0])
             elif fmt.ignore():
@@ -439,7 +448,7 @@ class DataBlockFilenameImporter(object):
     def __init__(
         self,
         filenames,
-        verbose=False,
+        verbose=None,
         compare_beam=None,
         compare_detector=None,
         compare_goniometer=None,
@@ -447,6 +456,11 @@ class DataBlockFilenameImporter(object):
         format_kwargs=None,
     ):
         """ Import the datablocks from the given filenames. """
+        if verbose is not None:
+            warnings.warn(
+                "The verbose parameter is deprecated.", DeprecationWarning, stacklevel=2
+            )
+
         # Init the datablock list
         self.unhandled = []
         self.datablocks = []
@@ -460,11 +474,10 @@ class DataBlockFilenameImporter(object):
                     self.datablocks.append(DataBlock([iset]))
             else:
                 self.datablocks.append(DataBlock([iset]))
-            if verbose:
-                print("Added imageset to datablock %d" % (len(self.datablocks) - 1))
+            logger.debug("Added imageset to datablock %d", len(self.datablocks) - 1)
 
         # Iterate through groups of files by format class
-        find_format = FormatChecker(verbose=verbose)
+        find_format = FormatChecker()
         for fmt, group in find_format.iter_groups(filenames):
             if fmt is None or fmt.ignore():
                 self.unhandled.extend(group)
@@ -474,8 +487,7 @@ class DataBlockFilenameImporter(object):
                         fmt, filename, format_kwargs=format_kwargs
                     )
                     append_to_datablocks(imageset)
-                    if verbose:
-                        print("Loaded file: %s" % filename)
+                    logger.debug("Loaded file: %s", filename)
             else:
                 records = self._extract_file_metadata(
                     fmt,
@@ -953,7 +965,7 @@ class DataBlockFactory(object):
     @staticmethod
     def from_args(
         args,
-        verbose=False,
+        verbose=None,
         unhandled=None,
         compare_beam=None,
         compare_detector=None,
@@ -970,8 +982,7 @@ class DataBlockFactory(object):
         # Try as image files
         datablocks = DataBlockFactory.from_filenames(
             args,
-            verbose,
-            unhandled1,
+            unhandled=unhandled1,
             compare_beam=compare_beam,
             compare_detector=compare_detector,
             compare_goniometer=compare_goniometer,
@@ -983,8 +994,7 @@ class DataBlockFactory(object):
         for filename in unhandled1:
             try:
                 datablocks.extend(DataBlockFactory.from_serialized_format(filename))
-                if verbose:
-                    print("Loaded datablocks(s) from %s" % filename)
+                logger.debug("Loaded datablocks(s) from %s", filename)
             except Exception:
                 unhandled.append(filename)
 
@@ -994,7 +1004,7 @@ class DataBlockFactory(object):
     @staticmethod
     def from_filenames(
         filenames,
-        verbose=False,
+        verbose=None,
         unhandled=None,
         compare_beam=None,
         compare_detector=None,
@@ -1012,20 +1022,19 @@ class DataBlockFactory(object):
                     join(f, sf) for sf in os.listdir(f) if isfile(join(f, sf))
                 )
                 filelist.extend(subdir)
-                if verbose:
-                    print("Added %d files from %s" % (len(subdir), f))
+                logger.debug("Added %d files from %s", len(subdir), f)
             else:
-                if verbose:
-                    print("Could not import %s: not a valid file or directory name" % f)
+                logger.debug(
+                    "Could not import %s: not a valid file or directory name", f
+                )
                 if unhandled is not None:
                     unhandled.append(f)
 
         importer = DataBlockFilenameImporter(
             filelist,
-            verbose,
-            compare_beam,
-            compare_detector,
-            compare_goniometer,
+            compare_beam=compare_beam,
+            compare_detector=compare_detector,
+            compare_goniometer=compare_goniometer,
             scan_tolerance=scan_tolerance,
             format_kwargs=format_kwargs,
         )
