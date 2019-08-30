@@ -50,7 +50,7 @@ _DetectorDatabase = {
         module_configs_fast=(1, 2, 3, 4),
     ),
     "Eiger 2X": _Detector(
-        module_size_fast=1024,
+        module_size_fast=1028,
         module_size_slow=512,
         gap_fast=12,
         gap_slow=38,
