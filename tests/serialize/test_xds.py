@@ -8,14 +8,15 @@ from dxtbx.imageset import ImageSetFactory
 from dxtbx.serialize import xds
 
 
-def test_to_xds(dials_regression, tmpdir):
+def test_to_xds(dials_data, tmpdir):
     tmpdir.chdir()
-    template = os.path.join(dials_regression, "centroid_test_data", "centroid_00*.cbf")
+    template = dials_data("centroid_test_data").join("centroid_00*.cbf").strpath
     file_names = glob.glob(template)
     sweep = ImageSetFactory.new(file_names)[0]
     to_xds = xds.to_xds(sweep)
     s1 = to_xds.XDS_INP()
-    expected = """\
+    expected = (
+        """\
 DETECTOR=PILATUS MINIMUM_VALID_PIXEL_VALUE=0 OVERLOAD=495976
 SENSOR_THICKNESS= 0.320
 !SENSOR_MATERIAL / THICKNESS Si 0.320
@@ -51,8 +52,8 @@ UNTRUSTED_RECTANGLE= 0 2464 2103 2121
 UNTRUSTED_RECTANGLE= 0 2464 2315 2333
 DATA_RANGE= 1 9
 JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
-""" % os.path.join(
-        dials_regression, "centroid_test_data", "centroid_????.cbf"
+"""
+        % dials_data("centroid_test_data").join("centroid_????.cbf").strpath
     )
     assert s1 == expected
     real_space_a = (-5.327642, -39.034747, -4.988286)

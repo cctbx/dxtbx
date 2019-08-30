@@ -173,9 +173,9 @@ def test_imagesetdata(centroid_files):
 
 
 @pytest.fixture(scope="session")
-def centroid_files(dials_regression):
+def centroid_files(dials_data):
     return [
-        os.path.join(dials_regression, "centroid_test_data", "centroid_%04d.cbf" % i)
+        dials_data("centroid_test_data").join("centroid_%04d.cbf" % i).strpath
         for i in range(1, 10)
     ]
 
