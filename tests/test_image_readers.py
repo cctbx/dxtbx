@@ -5,10 +5,13 @@ import os
 
 import dxtbx.ext
 import dxtbx.tests.imagelist
+import pycbf
 import pytest
 from dxtbx.format.FormatSMV import FormatSMV
-from dxtbx.format.image import CBFReader
+from dxtbx.format.image import CBFReader, cbf_read_buffer
 from scitbx.array_family import flex
+
+from dxtbx.model.detector import DetectorFactory
 
 
 def read_smv_image(image_file):
@@ -291,3 +294,16 @@ def test_hdf5(dials_regression, hdf5_image):
     assert data1.all()[1] == data2.all()[1]
     diff = flex.abs(data1 - data2)
     assert flex.max(diff) < 1e-7
+
+
+def test_cbf_buffer(dials_regression):
+    filename = os.path.join(
+        dials_regression, "image_examples", "dials-190", "whatev1_01_00001.cbf"
+    )
+    with open(filename, "rb") as f:
+        contents = f.read()
+
+    handle = pycbf.cbf_handle_struct()
+    cbf_read_buffer(handle, contents, pycbf.MSG_DIGEST)
+    det = DetectorFactory.imgCIF_H(handle, "unknown")
+    assert det

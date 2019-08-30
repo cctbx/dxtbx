@@ -11,9 +11,12 @@
 from __future__ import absolute_import, division, print_function
 
 from builtins import range
+
 import pycbf
+from dxtbx.format.Format import bz2, gzip
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatStill import FormatStill
+from dxtbx.format.image import cbf_read_buffer
 
 
 class FormatCBFFull(FormatCBF):
@@ -47,7 +50,23 @@ class FormatCBFFull(FormatCBF):
             return self._cbf_handle
         except AttributeError:
             self._cbf_handle = pycbf.cbf_handle_struct()
-            self._cbf_handle.read_widefile(self._image_file.encode(), pycbf.MSG_DIGEST)
+
+            buffer = None
+            # Reopen to tell if it's a gzip - this should be cached, so fast
+            with FormatCBF.open_file(self._image_file, "rb") as fin:
+                # If this was a gzip or bzip file, read as a buffer
+                if (gzip and isinstance(fin._cache_object._file, gzip.GzipFile)) or (
+                    bz2 and isinstance(fin._cache_object._file, bz2.BZ2File)
+                ):
+                    buffer = fin.read()
+
+            if buffer:
+                cbf_read_buffer(self._cbf_handle, buffer, pycbf.MSG_DIGEST)
+            else:
+                self._cbf_handle.read_widefile(
+                    self._image_file.encode(), pycbf.MSG_DIGEST
+                )
+
             return self._cbf_handle
 
     def _goniometer(self):

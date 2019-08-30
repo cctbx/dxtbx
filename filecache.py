@@ -188,7 +188,6 @@ class lazy_file_cache(object):
                 % self._cache_size
             )
             self._file.close()
-            self._file = None
 
     def open(self):
         """Create and return a new pseudo_file object for this cache."""
