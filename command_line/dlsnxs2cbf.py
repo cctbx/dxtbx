@@ -76,7 +76,7 @@ def get_distance_in_mm(f):
     return d
 
 
-def print_cbf_header(f, nn=0):
+def compute_cbf_header(f, nn=0):
 
     result = []
 
@@ -162,7 +162,7 @@ def make_cbf(in_name, template):
     for j in range(len(f["/entry/sample/transformations/omega"][()])):
         block = 1 + (j // 1000)
         i = j % 1000
-        header = print_cbf_header(f, j)
+        header = compute_cbf_header(f, j)
         depth, height, width = f["/entry/data/data_%06d" % block].shape
         import numpy
 
