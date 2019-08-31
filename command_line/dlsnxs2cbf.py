@@ -1,9 +1,15 @@
 from __future__ import division, print_function
-from dxtbx.format import setup_hdf5_plugin_path
+import binascii
+import sys
 
-setup_hdf5_plugin_path()
-import h5py
+import numpy
+
+from dxtbx.format import setup_hdf5_plugin_path
 from scitbx.array_family import flex
+from cbflib_adaptbx import compress
+
+setup_hdf5_plugin_path()  # must be called before import h5py
+import h5py
 
 sample = None
 datasets = []
@@ -143,19 +149,11 @@ _array_data.header_contents
     return "\n".join(result)
 
 
-def pack(data):
-    from cbflib_adaptbx import compress
-
-    return compress(data)
-
-
 def make_cbf(in_name, template):
     f = h5py.File(in_name, "r")
     depends_on(f)
 
     global datasets
-
-    import binascii
 
     start_tag = binascii.unhexlify("0c1a04d5")
 
@@ -164,7 +162,6 @@ def make_cbf(in_name, template):
         i = j % 1000
         header = compute_cbf_header(f, j)
         depth, height, width = f["/entry/data/data_%06d" % block].shape
-        import numpy
 
         data = flex.int(numpy.int32(f["/entry/data/data_%06d" % block][i]))
         good = data.as_1d() < 65535
@@ -174,7 +171,7 @@ def make_cbf(in_name, template):
         mask = get_mask(width, height)
         data.as_1d().set_selected(mask.as_1d(), -1)
 
-        compressed = pack(data)
+        compressed = compress(data)
 
         mime = """
 
@@ -215,6 +212,5 @@ X-Binary-Size-Padding: 4095
 
 
 if __name__ == "__main__":
-    import sys
 
     make_cbf(sys.argv[1], sys.argv[2])
