@@ -67,9 +67,7 @@ def get_distance_in_mm(f):
     d = D[()]
     if D.attrs["units"] == "m":
         d *= 1000
-    elif D.attrs["units"] == "mm":
-        pass
-    else:
+    elif D.attrs["units"] != "mm":
         raise RuntimeError("unknown distance unit %s" % D.attrs["units"])
     return d
 
