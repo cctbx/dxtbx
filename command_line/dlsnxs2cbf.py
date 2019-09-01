@@ -11,9 +11,6 @@ from cbflib_adaptbx import compress
 setup_hdf5_plugin_path()  # must be called before import h5py
 import h5py
 
-sample = None
-datasets = []
-
 
 def get_mask(nfast, nslow):
     module_size_fast, module_size_slow = (1028, 512)
@@ -37,18 +34,7 @@ def get_mask(nfast, nslow):
 
 
 def depends_on(f):
-
-    global sample
-    global datasets
-
     def finder(thing, path):
-        global datasets
-        datasets.append(path)
-        if hasattr(thing, "attrs"):
-            if thing.attrs.get("NX_class", None) == "NXsample":
-                global sample
-                sample = path
-
         if hasattr(thing, "keys"):
             for k in thing:
                 try:
@@ -144,8 +130,6 @@ def make_cbf(in_name, template):
     depends_on(f)
 
     mask = None
-
-    global datasets
 
     start_tag = binascii.unhexlify("0c1a04d5")
 
