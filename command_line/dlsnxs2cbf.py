@@ -14,15 +14,8 @@ import h5py
 sample = None
 datasets = []
 
-_mask = None
-
 
 def get_mask(nfast, nslow):
-    global _mask
-
-    if _mask:
-        return _mask
-
     module_size_fast, module_size_slow = (1028, 512)
     gap_size_fast, gap_size_slow = (12, 38)
     n_fast, remainder = divmod(nfast, module_size_fast)
@@ -40,8 +33,7 @@ def get_mask(nfast, nslow):
             o_j = j * (module_size_slow + gap_size_slow)
             mask.matrix_paste_block_in_place(blit, i_row=o_j, i_column=o_i)
 
-    _mask = mask
-    return _mask
+    return mask
 
 
 def depends_on(f):
@@ -153,6 +145,8 @@ def make_cbf(in_name, template):
     f = h5py.File(in_name, "r")
     depends_on(f)
 
+    mask = None
+
     global datasets
 
     start_tag = binascii.unhexlify("0c1a04d5")
@@ -168,7 +162,8 @@ def make_cbf(in_name, template):
         data.as_1d().set_selected(~good, -2)
 
         # set the tile join regions to -1 - MOSFLM cares about this apparently
-        mask = get_mask(width, height)
+        if mask is None:
+            mask = get_mask(width, height)
         data.as_1d().set_selected(mask.as_1d(), -1)
 
         compressed = compress(data)
