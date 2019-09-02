@@ -12,9 +12,12 @@ def test_dlsnxs2cbf(dials_data, tmpdir):
     )
     assert not result.returncode and not result.stderr
 
-    # allow extra lines to have been added (these may be comments)
-
-    expected_output = "\n".join(["junk_%04d.cbf" % j for j in (1, 2, 3)])
+    expected_output = "\n".join("junk_%04d.cbf" % j for j in (1, 2, 3))
 
     for record in expected_output.split("\n"):
         assert record.strip().encode("latin-1") in result.stdout, record
+
+    # check files on disk
+
+    for j in (1, 2, 3):
+        assert tmpdir.join("junk_%04d.cbf" % j).check()
