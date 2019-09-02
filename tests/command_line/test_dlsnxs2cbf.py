@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 import procrunner
-import pytest  # noqa
 
 
 def test_dlsnxs2cbf(dials_data, tmpdir):
