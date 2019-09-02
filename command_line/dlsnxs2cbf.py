@@ -51,10 +51,12 @@ def get_distance_in_mm(f):
     except KeyError:
         D = f["/entry/instrument/detector/detector_distance"]
     d = D[()]
-    if D.attrs["units"] == "m":
+    if D.attrs["units"] == numpy.string_("m"):
         d *= 1000
-    elif D.attrs["units"] != "mm":
-        raise RuntimeError("unknown distance unit %s" % D.attrs["units"])
+    elif D.attrs["units"] != numpy.string_("mm"):
+        raise RuntimeError(
+            "unknown distance unit '%s'" % D.attrs["units"].decode("latin-1")
+        )
     return d
 
 
@@ -177,15 +179,17 @@ X-Binary-Size-Padding: 4095
         )
 
         padding = (
-            4095 * chr(0)
-            + """--CIF-BINARY-FORMAT-SECTION----
+            bytearray(4095)
+            + b"""--CIF-BINARY-FORMAT-SECTION----
 ;"""
         )
 
         with open(template % (j + 1), "wb") as fout:
             print(template % (j + 1))
-            fout.write(("".join(header) + mime).replace("\n", "\r\n"))
-            fout.write(start_tag + compressed + padding)
+            fout.write(("".join(header) + mime).replace("\n", "\r\n").encode("latin-1"))
+            fout.write(start_tag)
+            fout.write(compressed)
+            fout.write(padding)
 
     f.close()
 
