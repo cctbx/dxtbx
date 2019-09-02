@@ -4,7 +4,7 @@ import os
 import pytest
 
 from dxtbx.format.FormatHDF5EigerNearlyNexus import FormatHDF5EigerNearlyNexus
-from dxtbx.datablock import DataBlockFactory
+from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.model.goniometer import Goniometer
 
 pytest.importorskip("h5py")
@@ -20,8 +20,8 @@ def test_soleil_Proxima2A_zenodo_1443110_data03():
     master_h5 = "/dls/mx-scratch/rjgildea/zenodo/1221344/200Hz/3_5_200Hz_1_master.h5"
     assert FormatHDF5EigerNearlyNexus.understand(master_h5)
 
-    datablocks = DataBlockFactory.from_filenames([master_h5])
-    imageset = datablocks[0].extract_imagesets()[0]
+    expts = ExperimentListFactory.from_filenames([master_h5])
+    imageset = expts[0].imageset
     assert imageset.get_format_class() == FormatHDF5EigerNearlyNexus
 
     detector = imageset.get_detector()

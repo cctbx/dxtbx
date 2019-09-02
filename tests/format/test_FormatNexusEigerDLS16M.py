@@ -4,7 +4,7 @@ import os
 import pytest
 
 from dxtbx.format.FormatNexusEigerDLS16M import FormatNexusEigerDLS16M
-from dxtbx.datablock import DataBlockFactory
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 dials = pytest.importorskip("dials")
@@ -25,10 +25,10 @@ pytest.importorskip("h5py")
 def test_rotation_scan(master_h5):
     assert FormatNexusEigerDLS16M.understand(master_h5)
 
-    datablocks = DataBlockFactory.from_filenames(
+    expts = ExperimentListFactory.from_filenames(
         [master_h5], format_kwargs={"dynamic_shadowing": True}
     )
-    imageset = datablocks[0].extract_imagesets()[0]
+    imageset = expts[0].imageset
     assert imageset.get_format_class() == FormatNexusEigerDLS16M
 
     detector = imageset.get_detector()
@@ -68,8 +68,8 @@ def test_grid_scan():
     master_h5 = "/dls/i04/data/2019/cm23004-1/20190109/Eiger/grid/Thaum/Thau_5/Thau_5_1_master.h5"
     assert FormatNexusEigerDLS16M.understand(master_h5)
 
-    datablocks = DataBlockFactory.from_filenames([master_h5])
-    imageset = datablocks[0].extract_imagesets()[0]
+    expts = ExperimentListFactory.from_filenames([master_h5])
+    imageset = expts[0].imageset
     assert imageset.get_format_class() == FormatNexusEigerDLS16M
 
     detector = imageset.get_detector()
@@ -107,7 +107,7 @@ def test_screening(dials_data):
     master_h5 = dials_data("thaumatin_eiger_screen").join("Therm_6_1_master.h5").strpath
     assert FormatNexusEigerDLS16M.understand(master_h5)
 
-    datablocks = DataBlockFactory.from_filenames([master_h5])
-    imagesets = datablocks[0].extract_imagesets()
-    assert len(imagesets) == 3
+    expts = ExperimentListFactory.from_filenames([master_h5])
+    assert len(expts) == 3
+    imagesets = expts[0].imageset
     assert imagesets[0].get_format_class() == FormatNexusEigerDLS16M

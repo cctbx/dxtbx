@@ -4,7 +4,7 @@ import os
 import pytest
 
 from dxtbx.format.FormatNexus import FormatNexus
-from dxtbx.datablock import DataBlockFactory
+from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.model.goniometer import Goniometer
 
 pytestmark = pytest.mark.skipif(
@@ -19,8 +19,8 @@ def test_VMXi_rotation_scan():
     master_h5 = "/dls/mx/data/mx21314/mx21314-27/VMXi-AB0816/well_7/images/image_14364_master.h5"
     assert FormatNexus.understand(master_h5)
 
-    datablocks = DataBlockFactory.from_filenames([master_h5])
-    imageset = datablocks[0].extract_imagesets()[0]
+    expts = ExperimentListFactory.from_filenames([master_h5])
+    imageset = expts[0].imageset
     assert imageset.get_format_class() == FormatNexus
 
     detector = imageset.get_detector()
