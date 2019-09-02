@@ -6,10 +6,7 @@ import pytest
 from dxtbx.format.FormatNexusEigerDLS16M import FormatNexusEigerDLS16M
 from dxtbx.datablock import DataBlockFactory
 
-pytestmark = pytest.mark.skipif(
-    not os.access("/dls/i04/data/2019/cm23004-1/20190109/Eiger", os.R_OK),
-    reason="Test images not available",
-)
+
 dials = pytest.importorskip("dials")
 pytest.importorskip("h5py")
 
@@ -20,6 +17,10 @@ pytest.importorskip("h5py")
         "/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw/Thaum/Thau_4/Thau_4_1_master.h5",
         "/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw/Thaum/Thau_4/Thau_4_1.nxs",
     ],
+)
+@pytest.mark.skipif(
+    not os.access("/dls/i04/data/2019/cm23004-1/20190109/Eiger", os.R_OK),
+    reason="Test images not available",
 )
 def test_rotation_scan(master_h5):
     assert FormatNexusEigerDLS16M.understand(master_h5)
@@ -59,6 +60,10 @@ def test_rotation_scan(master_h5):
     assert beam.get_s0() == pytest.approx((0, 0, -1 / beam.get_wavelength()))
 
 
+@pytest.mark.skipif(
+    not os.access("/dls/i04/data/2019/cm23004-1/20190109/Eiger", os.R_OK),
+    reason="Test images not available",
+)
 def test_grid_scan():
     master_h5 = "/dls/i04/data/2019/cm23004-1/20190109/Eiger/grid/Thaum/Thau_5/Thau_5_1_master.h5"
     assert FormatNexusEigerDLS16M.understand(master_h5)
@@ -98,8 +103,8 @@ def test_grid_scan():
 @pytest.mark.xfail(
     raises=AssertionError, reason="https://github.com/cctbx/dxtbx/issues/13"
 )
-def test_screening():
-    master_h5 = "/dls/i04/data/2019/cm23004-1/20190109/Eiger/gw-screen/Thaum/Thau_3/Thau_3_1_master.h5"
+def test_screening(dials_data):
+    master_h5 = dials_data("thaumatin_eiger_screen").join("Therm_6_1_master.h5").strpath
     assert FormatNexusEigerDLS16M.understand(master_h5)
 
     datablocks = DataBlockFactory.from_filenames([master_h5])
