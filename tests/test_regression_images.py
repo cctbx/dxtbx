@@ -4,7 +4,11 @@ Image reading tests against the dials_regression suite
 from __future__ import absolute_import, division, print_function
 
 import os
+import sys
 import re
+import gzip
+import bz2
+import shutil
 
 import pytest
 import py.path
@@ -16,6 +20,11 @@ import six
 
 from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 import scitbx.matrix
+
+if sys.version_info[:2] >= (3, 6):
+    from pathlib import Path
+else:
+    from pathlib2 import Path
 
 
 def _generate_all_test_images():
@@ -254,3 +263,43 @@ def test_format_class_API_assumptions(test_image):
     # It's a failure if nothing could understand this file
     assert understood_format, "No formatter could be found"
     print("File understood as", understood_format)
+
+
+@pytest.mark.regression
+@pytest.mark.parametrize(
+    "image_to_test",
+    # Test miniCBF and a flavour of FullCBF
+    ["DLS_I02/X4_wide_M1S4_1_0001.cbf", "DLS_I04/grid_full_cbf_0005.cbf"],
+)
+@pytest.mark.parametrize(
+    "compression,extension",
+    [(gzip.GzipFile, "gz"), (bz2.BZ2File, "bz2")],
+    ids=["gzip", "bz2"],
+)
+def test_compressed_images(
+    dials_regression, compression, extension, image_to_test, tmp_path
+):
+    path = Path(dials_regression) / "image_examples" / image_to_test
+    if not path.exists():
+        pytest.skip(str(path) + " not present in dials_regression")
+
+    # Compress this file and write to disk
+    test_image_for_reading = str(tmp_path / (path.name + "." + extension))
+    with path.open("rb") as f_in:
+        with compression(test_image_for_reading, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    # Find and instantiate the format class
+    format_class = dxtbx.format.Registry.get_format_class_for_file(
+        test_image_for_reading
+    )
+    assert format_class is not None, "no matching format class found"
+    instance = format_class(test_image_for_reading)
+
+    # Test metadata reading
+    assert instance.get_goniometer()
+    assert instance.get_beam()
+    assert instance.get_scan()
+    assert instance.get_detector()
+    # Test data reading
+    assert instance.get_raw_data()

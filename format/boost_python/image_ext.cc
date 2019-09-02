@@ -25,6 +25,8 @@
 #include <vector>
 #include <hdf5.h>
 
+#include "cbf_read_buffer.h"
+
 namespace dxtbx { namespace format { namespace boost_python {
 
   using namespace boost::python;
@@ -205,6 +207,8 @@ namespace dxtbx { namespace format { namespace boost_python {
     image_list_reader_suite<TIFFReader>("TIFFImageListReader");
     image_list_reader_suite<CBFFastReader>("CBFFastImageListReader");
     image_list_reader_suite<CBFReader>("CBFImageListReader");
+
+    export_cbf_read_buffer();
   }
 
 }}}  // namespace dxtbx::format::boost_python
