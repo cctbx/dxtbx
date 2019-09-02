@@ -19,7 +19,7 @@ def test_beam():
     # Test with a template and partial dictionary
     d2 = {"direction": (0, 1, 0), "divergence": 0.2}
     b3 = BeamFactory.from_dict(d2, d)
-    assert b3.get_direction() == (0, 1, 0)
+    assert b3.get_sample_to_source_direction() == (0, 1, 0)
     assert b3.get_wavelength() == 2
     assert b3.get_divergence() == pytest.approx(0.2)
     assert b3.get_sigma_divergence() == pytest.approx(0.1)

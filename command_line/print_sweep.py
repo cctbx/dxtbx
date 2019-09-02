@@ -25,7 +25,7 @@ def print_sweep(list_of_images):
         o = matrix.col(d.get_origin())
         f = matrix.col(d.get_fast_axis())
         s = matrix.col(d.get_slow_axis())
-        s0 = matrix.col(b.get_direction())
+        s0 = matrix.col(b.get_sample_to_source_direction())
 
         beam_offset = o - o.dot(s0) * s0
         print(

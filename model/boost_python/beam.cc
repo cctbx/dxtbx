@@ -31,7 +31,7 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   struct BeamPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const Beam &obj) {
-      return boost::python::make_tuple(obj.get_direction(),
+      return boost::python::make_tuple(obj.get_sample_to_source_direction(),
                                        obj.get_wavelength(),
                                        obj.get_divergence(),
                                        obj.get_sigma_divergence(),
@@ -177,7 +177,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<Beam>(const Beam &obj) {
     boost::python::dict result;
-    result["direction"] = obj.get_direction();
+    result["direction"] = obj.get_sample_to_source_direction();
     result["wavelength"] = obj.get_wavelength();
     result["divergence"] = rad_as_deg(obj.get_divergence());
     result["sigma_divergence"] = rad_as_deg(obj.get_sigma_divergence());
@@ -221,7 +221,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   void export_beam() {
     // Export BeamBase
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
-      .def("get_direction", &BeamBase::get_direction)
+      .def("get_sample_to_source_direction", &BeamBase::get_sample_to_source_direction)
       .def("set_direction", &BeamBase::set_direction)
       .def("get_wavelength", &BeamBase::get_wavelength)
       .def("set_wavelength", &BeamBase::set_wavelength)

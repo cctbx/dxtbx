@@ -254,7 +254,9 @@ class to_xds(object):
 
         # Beam stuff
         self.wavelength = self.get_beam().get_wavelength()
-        self.beam_vector = Rd * matrix.col(self.get_beam().get_direction())
+        self.beam_vector = Rd * matrix.col(
+            self.get_beam().get_sample_to_source_direction()
+        )
         # just to make sure it is the correct length
         self.beam_vector = self.beam_vector.normalize()  # / self.wavelength
         self.beam_vector = (-self.beam_vector).elems

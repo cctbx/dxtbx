@@ -1303,8 +1303,8 @@ class BeamDiff(object):
     def __call__(self, a, b):
         aw = a.get_wavelength()
         bw = b.get_wavelength()
-        ad = matrix.col(a.get_direction())
-        bd = matrix.col(b.get_direction())
+        ad = matrix.col(a.get_sample_to_source_direction())
+        bd = matrix.col(b.get_sample_to_source_direction())
         an = matrix.col(a.get_polarization_normal())
         bn = matrix.col(b.get_polarization_normal())
         af = a.get_polarization_fraction()
