@@ -810,7 +810,7 @@ class _(object):
 
         warnings.warn(
             "Calling get_direction is deprecated. Please use "
-            "get_sample_to_source_direction instead. "
+            ".get_sample_to_source_direction() instead. "
             "See https://github.com/cctbx/dxtbx/issues/6",
             DeprecationWarning,
             stacklevel=2,
