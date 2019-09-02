@@ -16,7 +16,7 @@ pytest.importorskip("h5py")
 
 def test_static_mask(dials_data):
     master_h5 = (
-        dials_data("sacla_mpccd_phase3").join("MPCCD-Phase3-21528-5images.h5").strpath
+        dials_data("image_examples").join("SACLA-MPCCD-Phase3-21528-5images.h5").strpath
     )
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
 
@@ -33,7 +33,7 @@ def test_static_mask(dials_data):
 
 def test_MPCCD_Phase3_21528(dials_data):
     master_h5 = (
-        dials_data("sacla_mpccd_phase3").join("MPCCD-Phase3-21528-5images.h5").strpath
+        dials_data("image_examples").join("SACLA-MPCCD-Phase3-21528-5images.h5").strpath
     )
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
     expts = ExperimentListFactory.from_filenames([master_h5])
@@ -77,8 +77,8 @@ def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
             monkeypatch.delenv("MPCCD_RECONST_MODE", raising=False)
 
         master_h5 = (
-            dials_data("sacla_mpccd_phase3")
-            .join("MPCCD-Phase3-21528-5images.h5")
+            dials_data("image_examples")
+            .join("SACLA-MPCCD-Phase3-21528-5images.h5")
             .strpath
         )
         expts = ExperimentListFactory.from_filenames([master_h5])
@@ -104,7 +104,7 @@ def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
 
 def test_combine_with_user_static_mask(dials_data, tmpdir):
     master_h5 = (
-        dials_data("sacla_mpccd_phase3").join("MPCCD-Phase3-21528-5images.h5").strpath
+        dials_data("image_examples").join("SACLA-MPCCD-Phase3-21528-5images.h5").strpath
     )
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
 
