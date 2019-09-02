@@ -6,7 +6,7 @@ import pytest  # noqa
 
 
 def test_dlsnxs2cbf(dials_data, tmpdir):
-    screen = dials_data("i04_eiger_screen")
+    screen = dials_data("thaumatin_eiger_screen")
     master = os.path.join(screen, "Therm_6_1_master.h5")
     result = procrunner.run(
         ["dxtbx.dlsnxs2cbf", master, "junk_%04d.cbf"], working_directory=tmpdir
