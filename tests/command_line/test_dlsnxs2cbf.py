@@ -1,13 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
-import os
 import procrunner
 import pytest  # noqa
 
 
 def test_dlsnxs2cbf(dials_data, tmpdir):
     screen = dials_data("thaumatin_eiger_screen")
-    master = os.path.join(screen, "Therm_6_1_master.h5")
+    master = screen.join("Therm_6_1_master.h5")
     result = procrunner.run(
         ["dxtbx.dlsnxs2cbf", master, "junk_%04d.cbf"], working_directory=tmpdir
     )
