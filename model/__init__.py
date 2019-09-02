@@ -801,3 +801,26 @@ class _(object):
         else:
             ext_str = "|".join(j_ext + p_ext)
             raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
+
+
+class BeamDeprecatedMethods(object):
+    def get_direction(self):
+        import warnings
+
+        warnings.warn(
+            "Calling get_direction is deprecated. Please use "
+            "get_sample_to_source_direction instead. "
+            "See https://github.com/cctbx/dxtbx/issues/6",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_sample_to_source_direction()
+
+
+boost.python.inject_into(Beam)(BeamDeprecatedMethods)
+boost.python.inject_into(Crystal)(CrystalAux)
+boost.python.inject_into(Detector)(DetectorAux)
+boost.python.inject_into(Experiment)(ExperimentAux)
+boost.python.inject_into(ExperimentList)(ExperimentListAux)
+boost.python.inject_into(MosaicCrystalKabsch2010)(MosaicCrystalKabsch2010Aux)
+boost.python.inject_into(MosaicCrystalSauter2014)(MosaicCrystalSauter2014Aux)
