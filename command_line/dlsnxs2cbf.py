@@ -63,9 +63,11 @@ def compute_cbf_header(f, nn=0):
     result = []
 
     D = get_distance_in_mm(f)
-    T = f["/entry/instrument/detector/count_time"][()]
-    L = f["/entry/instrument/beam/incident_wavelength"][()]
-    A = f["/entry/instrument/attenuator/attenuator_transmission"][()]
+    instrument = f["/entry/instrument"]
+    name = instrument.attrs.get("short_name", "")
+    T = instrument["detector/count_time"][()]
+    L = instrument["beam/incident_wavelength"][()]
+    A = instrument["attenuator/attenuator_transmission"][()]
 
     omega = f["/entry/sample/transformations/omega"][()]
     omega_increment = f["/entry/sample/transformations/omega_increment_set"][()]
@@ -73,11 +75,11 @@ def compute_cbf_header(f, nn=0):
     phi = f["/entry/sample/transformations/phi"][()]
 
     if "/entry/instrument/detector/beam_centre_x" in f:
-        Bx = f["/entry/instrument/detector/beam_centre_x"][()]
-        By = f["/entry/instrument/detector/beam_centre_y"][()]
+        Bx = instrument["detector/beam_centre_x"][()]
+        By = instrument["detector/beam_centre_y"][()]
     else:
-        Bx = f["/entry/instrument/detector/beam_center_x"][()]
-        By = f["/entry/instrument/detector/beam_center_y"][()]
+        Bx = instrument["detector/beam_center_x"][()]
+        By = instrument["detector/beam_center_y"][()]
 
     result.append("###CBF: VERSION 1.5, CBFlib v0.7.8 - Eiger detectors")
     result.append("")
@@ -88,7 +90,7 @@ def compute_cbf_header(f, nn=0):
 _array_data.header_contents
 ;"""
     )
-    result.append("# Detector: EIGER 2XE 16M S/N 160-0001 Diamond")
+    result.append("# Detector: EIGER 2XE 16M S/N 160-0001 Diamond %s" % name)
     result.append("# %s" % f["/entry/start_time"][()])
     result.append("# Pixel_size 75e-6 m x 75e-6 m")
     result.append("# Silicon sensor, thickness 0.000450 m")
