@@ -1,11 +1,20 @@
 from __future__ import absolute_import, division, print_function
 
+import h5py
+import mock
 import numpy
 import pytest
 
 from scitbx.array_family import flex
+from scitbx import matrix
 from dxtbx.format import nexus
-from dxtbx.model import Goniometer, MultiAxisGoniometer
+from dxtbx.model import BeamFactory, Goniometer, MultiAxisGoniometer
+
+
+def mock_hdf5_dataset(value, **kwargs):
+    dataset = mock.MagicMock(spec=h5py.Dataset, **kwargs)
+    dataset.__getitem__.return_value = value
+    return dataset
 
 
 def test_scan_factory(mocker):
@@ -48,7 +57,7 @@ def test_beam_factory(mocker):
     # Mock the hdf5 object
     obj = mocker.MagicMock()
     wavelength = mocker.MagicMock()
-    wavelength.__getitem__ = lambda self, x: 1.0
+    wavelength.__getitem__.return_value = 1.0
     wavelength.attrs = {"units": "angstrom"}
     obj.handle = {"incident_wavelength": wavelength}
 
@@ -100,3 +109,60 @@ def test_goniometer_factory(mocker):
             0.9995884872867717,
         )
     )
+
+
+def test_detector_factory(mocker):
+    obj = mocker.MagicMock()
+    beam = BeamFactory.simple(0.9802735610373182)
+
+    handle = mocker.MagicMock()
+
+    d = {
+        "type": mock_hdf5_dataset("Pixel"),
+        "saturation_value": mock_hdf5_dataset(65535),
+        "sensor_thickness": mock_hdf5_dataset(0.00045, attrs={"units": "m"}),
+        "sensor_material": mock_hdf5_dataset(numpy.string_("Silicon")),
+        "x_pixel_size": mock_hdf5_dataset(7.5e-05),
+        "y_pixel_size": mock_hdf5_dataset(7.5e-05),
+        "beam_center_x": mock_hdf5_dataset(2214.3285049568203),
+        "beam_center_y": mock_hdf5_dataset(2300.4972375614147),
+    }
+    handle.__getitem__.side_effect = d.__getitem__
+    handle.__contains__.side_effect = d.__contains__
+    handle.name = "/entry/instrument/detector"
+    obj.handle = handle
+
+    module = mocker.MagicMock()
+    module_d = {
+        "fast_pixel_direction": mock_hdf5_dataset(
+            7.5e-05, attrs={"units": "m", "vector": numpy.array([-1.0, 0.0, 0.0])}
+        ),
+        "slow_pixel_direction": mock_hdf5_dataset(
+            7.5e-05, attrs={"units": "m", "vector": numpy.array([0.0, -1.0, 0.0])}
+        ),
+        "module_offset": mock_hdf5_dataset(
+            0.0, name="/entry/instrument/detector/module/module_offset"
+        ),
+        "data_size": mock_hdf5_dataset(numpy.array([4148, 4362])),
+    }
+    module.__getitem__.side_effect = module_d.__getitem__
+    module.__contains__.side_effect = module_d.__contains__
+    obj.modules[0].handle = module
+
+    construct_vector = mocker.patch("dxtbx.format.nexus.construct_vector")
+    construct_vector.return_value = matrix.col(
+        (166.07463787176152, 172.53729281710608, 199.78346957333733)
+    )
+
+    detector = nexus.detector_factory(obj, beam)
+    assert len(detector) == 1
+    panel = detector[0]
+    assert panel.get_thickness() == 0.45
+    assert panel.get_pixel_size() == (0.075, 0.075)
+    assert panel.get_image_size() == (4148, 4362)
+    assert panel.get_fast_axis() == (1, 0, 0)
+    assert panel.get_slow_axis() == (0, -1, 0)
+    assert panel.get_origin() == pytest.approx(
+        (-166.07463787176152, 172.53729281710608, -199.78346957333733)
+    )
+    assert panel.get_distance() == pytest.approx(199.78346957333733)
