@@ -7,7 +7,7 @@ from dxtbx.format import nexus
 
 
 def test_scan_factory(mocker):
-    # Mock various objects
+    # Mock various hdf5 objects
     obj = mocker.Mock()
     detector_obj = mocker.Mock()
     rotation = mocker.MagicMock()
@@ -40,3 +40,16 @@ def test_scan_factory(mocker):
     model = nexus.scan_factory(obj, detector_obj)
     assert list(model.get_exposure_times()) == [0.1, 0.1, 0.1, 0.1]
     assert list(model.get_epochs()) == pytest.approx([0.0, 0.1, 0.2, 0.3])
+
+
+def test_beam_factory(mocker):
+    # Mock the hdf5 object
+    obj = mocker.MagicMock()
+    wavelength = mocker.MagicMock()
+    wavelength.__getitem__ = lambda self, x: 1.0
+    wavelength.attrs = {"units": "angstrom"}
+    obj.handle = {"incident_wavelength": wavelength}
+
+    beam = nexus.beam_factory(obj)
+    assert beam.get_wavelength() == 1.0
+    assert beam.get_s0() == (-0.0, -0.0, -1.0)
