@@ -999,23 +999,23 @@ def get_change_of_basis(transformation):
     Get the 4x4 homogenous coordinate matrix for a given NXtransformation.
     """
     # Change of basis to convert from NeXus to IUCr/ImageCIF convention
-    n2i_cob = sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
+    n2i_cob = matrix.sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
 
     axis_type = transformation.attrs["transformation_type"]
 
-    vector = n2i_cob * col(transformation.attrs["vector"]).normalize()
+    vector = n2i_cob * matrix.col(transformation.attrs["vector"]).normalize()
     setting = transformation[0]
     units = transformation.attrs["units"]
 
     if "offset" in transformation.attrs:
-        offset = n2i_cob * col(transformation.attrs["offset"])
+        offset = n2i_cob * matrix.col(transformation.attrs["offset"])
         if "offset_units" in transformation.attrs:
             offset_units = transformation.attrs["offset_units"]
         else:
             offset_units = units
         offset = convert_units(offset, offset_units, "mm")
     else:
-        offset = col((0, 0, 0))
+        offset = matrix.col((0, 0, 0))
 
     # 4x4 change of basis matrix (homogeneous coordinates)
     cob = None
@@ -1032,7 +1032,7 @@ def get_change_of_basis(transformation):
         else:
             raise RuntimeError("Invalid units: %s" % units)
         r3 = vector.axis_and_angle_as_r3_rotation_matrix(setting, deg=deg)
-        cob = sqr(
+        cob = matrix.sqr(
             (
                 r3[0],
                 r3[1],
@@ -1055,7 +1055,7 @@ def get_change_of_basis(transformation):
     elif axis_type == numpy.string_("translation"):
         setting = convert_units(setting, units, "mm")
         translation = offset + (vector * setting)
-        cob = sqr(
+        cob = matrix.sqr(
             (
                 1,
                 0,
