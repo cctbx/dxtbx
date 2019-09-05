@@ -1502,6 +1502,19 @@ def find_goniometer_rotation(obj):
     raise ValueError("no rotation found")
 
 
+def get_rotation_increment(obj, rotation):
+    try:
+        increment = obj.handle.file[rotation.name + "_increment_set"].value
+        # raise KeyError
+    except KeyError:
+        try:
+            end = obj.handle.file[rotation.name + "_end"]
+            increment = end.value - rotation.value
+        except KeyError:
+            increment = None
+    return increment
+
+
 def scan_factory(obj, detector_obj):
     """
     Create a scan model from NXmx stuff

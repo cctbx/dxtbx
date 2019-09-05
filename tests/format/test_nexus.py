@@ -11,6 +11,36 @@ from dxtbx.format import nexus
 from dxtbx.model import BeamFactory, Goniometer, MultiAxisGoniometer
 
 
+def test_get_rotation_increment(mocker):
+    hdf5_obj = mocker.Mock()
+
+    omega_increment_set = mocker.MagicMock()
+    omega_increment_set.value = numpy.array((0.15, 0.15, 0.15, 0.15))
+
+    rotation = mocker.MagicMock()
+    rotation.name = "/entry/sample/transformations/omega"
+    rotation.value = numpy.array((0, 0.15, 0.3, 0.45))
+
+    hdf5_obj.handle.file = {
+        "/entry/sample/transformations/omega_increment_set": omega_increment_set
+    }
+
+    increment = nexus.get_rotation_increment(hdf5_obj, rotation)
+    assert list(increment) == pytest.approx(list(omega_increment_set.value))
+
+    rotation_end = mocker.MagicMock()
+    rotation_end.value = rotation.value + omega_increment_set.value
+
+    hdf5_obj.handle.file = {"/entry/sample/transformations/omega_end": rotation_end}
+
+    increment = nexus.get_rotation_increment(hdf5_obj, rotation)
+    assert list(increment) == pytest.approx(list(omega_increment_set.value))
+
+    hdf5_obj.handle.file = {}
+    increment = nexus.get_rotation_increment(hdf5_obj, rotation)
+    assert increment is None
+
+
 def mock_hdf5_dataset(value, **kwargs):
     dataset = mock.MagicMock(spec=h5py.Dataset, **kwargs)
     dataset.__getitem__.return_value = value
@@ -36,10 +66,24 @@ def mock_find_goniometer_rotation(mocker):
     return _find_goniometer_rotation
 
 
-def test_scan_factory_no_frame_time(mocker, mock_find_goniometer_rotation):
+@pytest.fixture
+def mock_get_rotation_increment(mocker):
+    def _get_rotation_increment(value):
+        get_rotation_increment = mocker.patch(
+            "dxtbx.format.nexus.get_rotation_increment"
+        )
+        get_rotation_increment.return_value = numpy.array(value)
+
+    return _get_rotation_increment
+
+
+def test_scan_factory_no_frame_time(
+    mocker, mock_find_goniometer_rotation, mock_get_rotation_increment
+):
     obj = mocker.Mock()
     detector_obj = mocker.Mock()
     mock_find_goniometer_rotation((0.0, 0.1, 0.2, 0.3))
+    mock_get_rotation_increment((0.1, 0.1, 0.1, 0.1))
 
     detector_obj.handle = {}
     model = nexus.scan_factory(obj, detector_obj)
@@ -50,10 +94,13 @@ def test_scan_factory_no_frame_time(mocker, mock_find_goniometer_rotation):
     assert list(model.get_epochs()) == [0.0, 0.0, 0.0, 0.0]
 
 
-def test_scan_factory_frame_time(mocker, mock_find_goniometer_rotation):
+def test_scan_factory_frame_time(
+    mocker, mock_find_goniometer_rotation, mock_get_rotation_increment
+):
     obj = mocker.Mock()
     detector_obj = mocker.Mock()
     mock_find_goniometer_rotation((0.0, 0.1, 0.2, 0.3))
+    mock_get_rotation_increment((0.1, 0.1, 0.1, 0.1))
 
     detector_obj.handle = {"frame_time": {(): 0.1}}
     model = nexus.scan_factory(obj, detector_obj)
