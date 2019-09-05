@@ -86,12 +86,14 @@ def test_scan_factory_no_frame_time(
     mock_get_rotation_increment((0.1, 0.1, 0.1, 0.1))
 
     detector_obj.handle = {}
-    model = nexus.scan_factory(obj, detector_obj)
-    assert len(model) == 4
-    assert model.get_image_range() == (1, 4)
-    assert model.get_oscillation() == (0.0, 0.1)
-    assert list(model.get_exposure_times()) == [0.0, 0.0, 0.0, 0.0]
-    assert list(model.get_epochs()) == [0.0, 0.0, 0.0, 0.0]
+    models = nexus.scan_factory(obj, detector_obj)
+    assert len(models) == 1
+    scan = models[0]
+    assert len(scan) == 4
+    assert scan.get_image_range() == (1, 4)
+    assert scan.get_oscillation() == (0.0, 0.1)
+    assert list(scan.get_exposure_times()) == [0.0, 0.0, 0.0, 0.0]
+    assert list(scan.get_epochs()) == [0.0, 0.0, 0.0, 0.0]
 
 
 def test_scan_factory_frame_time(
@@ -103,9 +105,42 @@ def test_scan_factory_frame_time(
     mock_get_rotation_increment((0.1, 0.1, 0.1, 0.1))
 
     detector_obj.handle = {"frame_time": {(): 0.1}}
-    model = nexus.scan_factory(obj, detector_obj)
-    assert list(model.get_exposure_times()) == [0.1, 0.1, 0.1, 0.1]
-    assert list(model.get_epochs()) == pytest.approx([0.0, 0.1, 0.2, 0.3])
+    models = nexus.scan_factory(obj, detector_obj)
+    assert len(models) == 1
+    scan = models[0]
+    assert list(scan.get_exposure_times()) == [0.1, 0.1, 0.1, 0.1]
+    assert list(scan.get_epochs()) == pytest.approx([0.0, 0.1, 0.2, 0.3])
+
+
+def test_scan_factory_multiple_scans(
+    mocker, mock_find_goniometer_rotation, mock_get_rotation_increment
+):
+    obj = mocker.Mock()
+    detector_obj = mocker.Mock()
+    mock_find_goniometer_rotation((0.0, 0.1, 0.0, 0.1))
+    mock_get_rotation_increment((0.1, 0.1, 0.1, 0.1))
+
+    detector_obj.handle = {"frame_time": {(): 0.1}}
+    scans = nexus.scan_factory(obj, detector_obj)
+    assert len(scans) == 2
+    scans[0].get_image_range() == (1, 2)
+    scans[1].get_image_range() == (1, 2)
+
+
+def test_scan_factory_screening(
+    mocker, mock_find_goniometer_rotation, mock_get_rotation_increment
+):
+    obj = mocker.Mock()
+    detector_obj = mocker.Mock()
+    mock_find_goniometer_rotation((0, 45, 90))
+    mock_get_rotation_increment((0.1, 0.1, 0.1))
+
+    detector_obj.handle = {"frame_time": {(): 0.1}}
+    scans = nexus.scan_factory(obj, detector_obj)
+    assert len(scans) == 3
+    scans[0].get_image_range() == (1, 1)
+    scans[1].get_image_range() == (2, 2)
+    scans[2].get_image_range() == (3, 3)
 
 
 def test_beam_factory(mocker):

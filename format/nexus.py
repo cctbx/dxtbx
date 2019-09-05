@@ -1526,29 +1526,64 @@ def scan_factory(obj, detector_obj):
         phi = find_goniometer_rotation(obj)
     except ValueError:
         phi = obj.handle.file[obj.handle["depends_on"][()]]
-    image_range = (1, len(phi))
-    if len(phi) > 1:
-        oscillation = (float(phi[0]), float(phi[1] - phi[0]))
-        is_sequence = True
-    else:
-        oscillation = (float(phi[0]), 0.0)
-        is_sequence = False
 
-    # Get the exposure time
-    num_images = len(phi)
-    if "frame_time" in detector_obj.handle:
-        frame_time = float(detector_obj.handle["frame_time"][()])
-        exposure_time = flex.double(num_images, frame_time)
-        epochs = flex.double(num_images)
-        for i in range(1, len(epochs)):
-            epochs[i] = epochs[i - 1] + exposure_time[i - 1]
-    else:
-        exposure_time = flex.double(num_images, 0)
-        epochs = flex.double(num_images, 0)
+    increment = get_rotation_increment(obj, phi)
 
-    if is_sequence is True:
-        # Construct the model
-        return Scan(image_range, oscillation, exposure_time, epochs)
+    scan_ids = flex.size_t()
+
+    scan_tolerance = 1e-3
+
+    curr_scan_id = 0
+    for i, angle in enumerate(phi):
+        if i > 0:
+            this_osc = angle - prev_angle  # noqa: F821
+            if increment is not None and abs(increment[i] - this_osc) > scan_tolerance:
+                curr_scan_id += 1
+            elif (
+                i > 1
+                and scan_ids[i - 2] == curr_scan_id
+                and abs(this_osc - prev_osc) > scan_tolerance  # noqa: F821
+            ):
+                curr_scan_id += 1
+            prev_osc = this_osc  # noqa: F841
+        prev_angle = angle  # noqa: F841
+        scan_ids.append(curr_scan_id)
+
+    scans = []
+
+    for scan_id in set(scan_ids):
+
+        isel = (scan_ids == scan_id).iselection()
+        phi_sel = [phi[i] for i in isel]
+        image_range = (isel[0] + 1, isel[-1] + 1)
+        if increment is not None and increment[isel[0]]:
+            oscillation = (float(phi_sel[0]), increment[isel[0]])
+            is_sequence = True
+        elif len(phi_sel) > 1:
+            oscillation = (float(phi_sel[0]), float(phi_sel[1] - phi_sel[0]))
+            is_sequence = True
+        else:
+            oscillation = (float(phi_sel[0]), 0.0)
+            is_sequence = False
+
+        # Get the exposure time
+        num_images = len(phi_sel)
+        if "frame_time" in detector_obj.handle:
+            frame_time = float(detector_obj.handle["frame_time"][()])
+            exposure_time = flex.double(num_images, frame_time)
+            epochs = flex.double(num_images)
+            for i in range(1, len(epochs)):
+                epochs[i] = epochs[i - 1] + exposure_time[i - 1]
+        else:
+            exposure_time = flex.double(num_images, 0)
+            epochs = flex.double(num_images, 0)
+
+        if is_sequence is True:
+
+            # Construct the model
+            scans.append(Scan(image_range, oscillation, exposure_time, epochs))
+
+    return scans
 
 
 class crystal_factory(object):

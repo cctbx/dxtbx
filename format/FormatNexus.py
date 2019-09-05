@@ -71,7 +71,11 @@ class FormatNexus(FormatHDF5):
     def _setup_gonio_and_scan(self, sample, detector):
         """ Set up rotation-specific models """
         self._goniometer_model = nexus.goniometer_factory(sample)
-        self._scan_model = nexus.scan_factory(sample, detector)
+        scan_models = nexus.scan_factory(sample, detector)
+        assert (
+            len(scan_models) == 1
+        ), "Multiple scans in a single NeXus file not currently supported"
+        self._scan_model = scan_models[0]
 
     def _end(self):
         return
