@@ -13,16 +13,7 @@ from scitbx import matrix
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
-from dxtbx.format.nexus import (
-    BeamFactory,
-    DataFactory,
-    DetectorFactory,
-    GoniometerFactory,
-    MaskFactory,
-    NXdata,
-    NXmxReader,
-    ScanFactory,
-)
+from dxtbx.format import nexus
 
 
 def find_entries(nx_file):
@@ -312,7 +303,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         # Read the file structure
         temp_file = "tmp_master_%s.nxs" % uuid.uuid1().hex
         fixer = EigerNXmxFixer(self._image_file, temp_file)
-        reader = NXmxReader(handle=fixer.handle)
+        reader = nexus.NXmxReader(handle=fixer.handle)
 
         # Only support 1 set of models at the moment
         assert len(reader.entries) == 1, "Currently only supports 1 NXmx entry"
@@ -339,14 +330,14 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         beam = sample.beams[0]
 
         # Use data from original master file
-        data = NXdata(fixer.handle_orig[entry.data[0].handle.name])
+        data = nexus.NXdata(fixer.handle_orig[entry.data[0].handle.name])
 
         # Construct the models
-        self._beam_model = BeamFactory(beam).model
-        self._detector_model = DetectorFactory(detector, self._beam_model).model
-        self._goniometer_model = GoniometerFactory(sample).model
-        self._scan_model = ScanFactory(sample, detector).model
-        self._raw_data = DataFactory(data).model
+        self._beam_model = nexus.beam_factory(beam)
+        self._detector_model = nexus.detector_factory(detector, self._beam_model)
+        self._goniometer_model = nexus.goniometer_factory(sample)
+        self._scan_model = nexus.scan_factory(sample, detector)
+        self._raw_data = nexus.DataFactory(data).model
 
         # update model for masking Eiger detectors
         for f0, f1, s0, s1 in determine_eiger_mask(self._detector_model):
@@ -385,7 +376,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         return self._raw_data[index]
 
     def get_mask(self, index=None, goniometer=None):
-        return MaskFactory(self.instrument.detectors, index).mask
+        return nexus.mask_factory(self.instrument.detectors, index)
 
     def get_num_images(self):
         scan = self._scan()

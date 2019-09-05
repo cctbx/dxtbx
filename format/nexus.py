@@ -5,11 +5,10 @@ import math
 import os
 from builtins import range
 
-import cctbx.uctbx
+from cctbx import uctbx
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 from scitbx.array_family import flex
-from scitbx.matrix import col, sqr
 
 import dxtbx.model
 import h5py
@@ -969,31 +968,30 @@ def is_nexus_file(filename):
         return bool(find_entries(handle, "/"))
 
 
-class BeamFactory(object):
+def beam_factory(obj, index=None):
     """
-    A class to create a beam model from NXmx stuff
+    Create a beam model from NXmx stuff
     """
 
-    def __init__(self, obj, index=None):
-        # Get the items from the NXbeam class
-        wavelength = obj.handle["incident_wavelength"]
-        wavelength_value = wavelength[()]
-        wavelength_units = wavelength.attrs["units"]
+    # Get the items from the NXbeam class
+    wavelength = obj.handle["incident_wavelength"]
+    wavelength_value = wavelength[()]
+    wavelength_units = wavelength.attrs["units"]
 
-        if (
-            index is not None
-            and hasattr(wavelength_value, "__iter__")
-            and len(wavelength_value) > 1
-        ):
-            wavelength_value = wavelength_value[index]
+    if (
+        index is not None
+        and hasattr(wavelength_value, "__iter__")
+        and len(wavelength_value) > 1
+    ):
+        wavelength_value = wavelength_value[index]
 
-        # Convert wavelength to Angstroms
-        wavelength_value = float(
-            convert_units(wavelength_value, wavelength_units, "angstrom")
-        )
+    # Convert wavelength to Angstroms
+    wavelength_value = float(
+        convert_units(wavelength_value, wavelength_units, "angstrom")
+    )
 
-        # Construct the beam model
-        self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
+    # Construct the beam model
+    return Beam(direction=(0, 0, 1), wavelength=wavelength_value)
 
 
 def get_change_of_basis(transformation):
@@ -1137,205 +1135,200 @@ def get_cumulative_change_of_basis(transformation):
     return parent, cob
 
 
-class DetectorFactoryFromGroup(object):
+def detector_factory_from_group(instrument, beam, idx=None):
     """
-    A class to create a detector model from a NXdetector_group
+    Create a detector model from a NXdetector_group
     """
+    assert len(instrument.detector_groups) == 1, "Multiple detectors not supported"
 
-    def __init__(self, instrument, beam, idx=None):
-        assert len(instrument.detector_groups) == 1, "Multiple detectors not supported"
+    nx_group = instrument.detector_groups[0].handle
+    group_names = nx_group["group_names"]
+    group_parent = nx_group["group_parent"]
 
-        nx_group = instrument.detector_groups[0].handle
-        group_names = nx_group["group_names"]
-        group_parent = nx_group["group_parent"]
+    # Verify the NXdetector objects specified by the detector group are present
+    expected_detectors = []
+    root_name = None
+    for i, parent_id in enumerate(group_parent):
+        assert parent_id in [
+            -1,
+            1,
+        ], "Hierarchy of detectors not supported. Hierarchy of module components within detector elements is supported"
 
-        # Verify the NXdetector objects specified by the detector group are present
-        expected_detectors = []
-        root_name = None
-        for i, parent_id in enumerate(group_parent):
-            assert parent_id in [
-                -1,
-                1,
-            ], "Hierarchy of detectors not supported. Hierarchy of module components within detector elements is supported"
+        if parent_id == -1:
+            assert root_name is None, "Multiple roots not supported"
+            root_name = group_names[i]
+        else:
+            expected_detectors.append(group_names[i])
 
-            if parent_id == -1:
-                assert root_name is None, "Multiple roots not supported"
-                root_name = group_names[i]
-            else:
-                expected_detectors.append(group_names[i])
+    assert root_name is not None, "Detector root not found"
+    assert sorted(
+        [os.path.basename(d.handle.name) for d in instrument.detectors]
+    ) == sorted(
+        expected_detectors
+    ), "Mismatch between detector group names and detectors available"
 
-        assert root_name is not None, "Detector root not found"
-        assert sorted(
-            [os.path.basename(d.handle.name) for d in instrument.detectors]
-        ) == sorted(
-            expected_detectors
-        ), "Mismatch between detector group names and detectors available"
+    root = None
 
-        root = None
+    def set_frame(pg, transformation):
+        """Function to set the local frame of a panel/panel group given an
+        NXtransformation"""
+        parent, cob = get_cumulative_change_of_basis(transformation)
+        # set up the dxtbx d matrix.  Note use of homogenous coordinates.
+        origin = matrix.col((cob * matrix.col((0, 0, 0, 1)))[0:3])
+        fast = matrix.col((cob * matrix.col((1, 0, 0, 1)))[0:3]) - origin
+        slow = matrix.col((cob * matrix.col((0, 1, 0, 1)))[0:3]) - origin
 
-        def set_frame(pg, transformation):
-            """Function to set the local frame of a panel/panel group given an
-            NXtransformation"""
-            parent, cob = get_cumulative_change_of_basis(transformation)
-            # set up the dxtbx d matrix.  Note use of homogenous coordinates.
+        pg.set_local_frame(fast.elems, slow.elems, origin.elems)
+
+        name = str(os.path.basename(transformation.name))
+        pg.set_name(name)
+
+    model = Detector()
+    for nx_detector in instrument.detectors:
+        # Get the detector type
+        if "type" in nx_detector.handle:
+            detector_type = str(nx_detector.handle["type"][()])
+        else:
+            detector_type = "unknown"
+
+        # get the set of leaf modules (handles nested modules)
+        modules = []
+        for nx_detector_module in nx_detector.modules:
+            if len(find_class(nx_detector_module.handle, "NXdetector_module")) == 0:
+                modules.append(nx_detector_module)
+
+        # depends_on field for a detector will have NxM entries in it, where
+        # N = number of images and M = number of detector modules
+
+        for module_number, nx_detector_module in enumerate(modules):
+            # Get the depends_on starting point for this module and for this image
+            panel_name = str(os.path.basename(nx_detector_module.handle.name))
+            # image size stored slow to fast but dxtbx needs fast to slow
+            image_size = tuple(
+                reversed(map(int, nx_detector_module.handle["data_size"][-2:]))
+            )
+
+            # Get the trusted range of pixel values
+            underload = (
+                float(nx_detector.handle["underload_value"][()])
+                if "underload_value" in nx_detector.handle
+                else -400
+            )
+            overload = (
+                float(nx_detector.handle["saturation_value"][()])
+                if "saturation_value" in nx_detector.handle
+                else 90000
+            )
+            trusted_range = underload, overload
+
+            fast_pixel_direction_handle = nx_detector_module.handle[
+                "fast_pixel_direction"
+            ]
+            slow_pixel_direction_handle = nx_detector_module.handle[
+                "slow_pixel_direction"
+            ]
+            assert (
+                fast_pixel_direction_handle.attrs["depends_on"]
+                == slow_pixel_direction_handle.attrs["depends_on"]
+            )
+            depends_on = fast_pixel_direction_handle
+            fast_pixel_direction_value = convert_units(
+                fast_pixel_direction_handle[0],
+                fast_pixel_direction_handle.attrs["units"],
+                "mm",
+            )
+            slow_pixel_direction_value = convert_units(
+                slow_pixel_direction_handle[0],
+                slow_pixel_direction_handle.attrs["units"],
+                "mm",
+            )
+            pixel_size = (
+                float(fast_pixel_direction_value),
+                float(slow_pixel_direction_value),
+            )
+
+            # Set up the hierarchical detector by iteraing through the dependencies,
+            # starting at the root
+            chain = get_depends_on_chain_using_equipment_components(depends_on)
+            pg = None
+            for transform in reversed(chain):
+                name = str(os.path.basename(transform.name))
+                if pg is None:  # The first transform will be the root of the hiearchy
+                    if root is None:
+                        root = model.hierarchy()
+                        set_frame(root, transform)
+                    else:
+                        assert root.get_name() == name, "Found multiple roots"
+                    pg = root
+                    continue
+
+                # subsequent times through the loop, pg will be the parent of the
+                # current transform
+                pg_names = [child.get_name() for child in pg]
+                if name in pg_names:
+                    pg = pg[pg_names.index(name)]
+                else:
+                    pg = pg.add_group()
+                    set_frame(pg, transform)
+
+            # pg is now this panel's parent
+            p = pg.add_panel()
+            fast = fast_pixel_direction_handle.attrs["vector"]
+            fast = matrix.col([-fast[0], fast[1], -fast[2]])
+            slow = slow_pixel_direction_handle.attrs["vector"]
+            slow = matrix.col([-slow[0], slow[1], -slow[2]])
+            parent, cob = get_cumulative_change_of_basis(depends_on)
             origin = matrix.col((cob * matrix.col((0, 0, 0, 1)))[0:3])
-            fast = matrix.col((cob * matrix.col((1, 0, 0, 1)))[0:3]) - origin
-            slow = matrix.col((cob * matrix.col((0, 1, 0, 1)))[0:3]) - origin
 
-            pg.set_local_frame(fast.elems, slow.elems, origin.elems)
+            p.set_local_frame(fast.elems, slow.elems, origin.elems)
 
-            name = str(os.path.basename(transformation.name))
-            pg.set_name(name)
+            p.set_name(panel_name)
+            p.set_pixel_size(pixel_size)
+            p.set_image_size(image_size)
+            p.set_type(detector_type)
+            p.set_trusted_range(trusted_range)
 
-        self.model = Detector()
-        for nx_detector in instrument.detectors:
-            # Get the detector type
-            if "type" in nx_detector.handle:
-                detector_type = str(nx_detector.handle["type"][()])
-            else:
-                detector_type = "unknown"
-
-            # get the set of leaf modules (handles nested modules)
-            modules = []
-            for nx_detector_module in nx_detector.modules:
-                if len(find_class(nx_detector_module.handle, "NXdetector_module")) == 0:
-                    modules.append(nx_detector_module)
-
-            # depends_on field for a detector will have NxM entries in it, where
-            # N = number of images and M = number of detector modules
-
-            for module_number, nx_detector_module in enumerate(modules):
-                # Get the depends_on starting point for this module and for this image
-                panel_name = str(os.path.basename(nx_detector_module.handle.name))
-                # image size stored slow to fast but dxtbx needs fast to slow
-                image_size = tuple(
-                    reversed(map(int, nx_detector_module.handle["data_size"][-2:]))
+            if "sensor_thickness" in nx_detector.handle:
+                # Get the detector thickness
+                thickness = nx_detector.handle["sensor_thickness"]
+                thickness_value = float(thickness[()])
+                thickness_units = thickness.attrs["units"]
+                thickness_value = float(
+                    convert_units(thickness_value, thickness_units, "mm")
                 )
+                p.set_thickness(thickness_value)
 
-                # Get the trusted range of pixel values
-                underload = (
-                    float(nx_detector.handle["underload_value"][()])
-                    if "underload_value" in nx_detector.handle
-                    else -400
-                )
-                overload = (
-                    float(nx_detector.handle["saturation_value"][()])
-                    if "saturation_value" in nx_detector.handle
-                    else 90000
-                )
-                trusted_range = underload, overload
+            # Get the detector material
+            if "sensor_material" in nx_detector.handle:
+                material = str(nx_detector.handle["sensor_material"][()])
+                p.set_material(material)
 
-                fast_pixel_direction_handle = nx_detector_module.handle[
-                    "fast_pixel_direction"
-                ]
-                slow_pixel_direction_handle = nx_detector_module.handle[
-                    "slow_pixel_direction"
-                ]
-                assert (
-                    fast_pixel_direction_handle.attrs["depends_on"]
-                    == slow_pixel_direction_handle.attrs["depends_on"]
-                )
-                depends_on = fast_pixel_direction_handle
-                fast_pixel_direction_value = convert_units(
-                    fast_pixel_direction_handle[0],
-                    fast_pixel_direction_handle.attrs["units"],
-                    "mm",
-                )
-                slow_pixel_direction_value = convert_units(
-                    slow_pixel_direction_handle[0],
-                    slow_pixel_direction_handle.attrs["units"],
-                    "mm",
-                )
-                pixel_size = (
-                    float(fast_pixel_direction_value),
-                    float(slow_pixel_direction_value),
-                )
+                # Compute the attenuation coefficient.
+                # This will fail for undefined composite materials
+                # mu_at_angstrom returns cm^-1, but need mu in mm^-1
+                if material == "Si":
+                    pass
+                elif material == "Silicon":
+                    material = "Si"
+                elif material == "Sillicon":
+                    material = "Si"
+                elif material == "CdTe":
+                    pass
+                elif material == "GaAs":
+                    pass
+                else:
+                    raise RuntimeError("Unknown material: %s" % material)
+                table = attenuation_coefficient.get_table(material)
+                wavelength = beam.get_wavelength()
+                mu = table.mu_at_angstrom(wavelength) / 10.0
+                p.set_mu(mu)
 
-                # Set up the hierarchical detector by iteraing through the dependencies,
-                # starting at the root
-                chain = get_depends_on_chain_using_equipment_components(depends_on)
-                pg = None
-                for transform in reversed(chain):
-                    name = str(os.path.basename(transform.name))
-                    if (
-                        pg is None
-                    ):  # The first transform will be the root of the hiearchy
-                        if root is None:
-                            root = self.model.hierarchy()
-                            set_frame(root, transform)
-                        else:
-                            assert root.get_name() == name, "Found multiple roots"
-                        pg = root
-                        continue
-
-                    # subsequent times through the loop, pg will be the parent of the
-                    # current transform
-                    pg_names = [child.get_name() for child in pg]
-                    if name in pg_names:
-                        pg = pg[pg_names.index(name)]
-                    else:
-                        pg = pg.add_group()
-                        set_frame(pg, transform)
-
-                # pg is now this panel's parent
-                p = pg.add_panel()
-                fast = fast_pixel_direction_handle.attrs["vector"]
-                fast = matrix.col([-fast[0], fast[1], -fast[2]])
-                slow = slow_pixel_direction_handle.attrs["vector"]
-                slow = matrix.col([-slow[0], slow[1], -slow[2]])
-                parent, cob = get_cumulative_change_of_basis(depends_on)
-                origin = matrix.col((cob * matrix.col((0, 0, 0, 1)))[0:3])
-
-                p.set_local_frame(fast.elems, slow.elems, origin.elems)
-
-                p.set_name(panel_name)
-                p.set_pixel_size(pixel_size)
-                p.set_image_size(image_size)
-                p.set_type(detector_type)
-                p.set_trusted_range(trusted_range)
-
-                if "sensor_thickness" in nx_detector.handle:
-                    # Get the detector thickness
-                    thickness = nx_detector.handle["sensor_thickness"]
-                    thickness_value = float(thickness[()])
-                    thickness_units = thickness.attrs["units"]
-                    thickness_value = float(
-                        convert_units(thickness_value, thickness_units, "mm")
-                    )
-                    p.set_thickness(thickness_value)
-
-                # Get the detector material
-                if "sensor_material" in nx_detector.handle:
-                    material = str(nx_detector.handle["sensor_material"][()])
-                    p.set_material(material)
-
-                    # Compute the attenuation coefficient.
-                    # This will fail for undefined composite materials
-                    # mu_at_angstrom returns cm^-1, but need mu in mm^-1
-                    if material == "Si":
-                        pass
-                    elif material == "Silicon":
-                        material = "Si"
-                    elif material == "Sillicon":
-                        material = "Si"
-                    elif material == "CdTe":
-                        pass
-                    elif material == "GaAs":
-                        pass
-                    else:
-                        raise RuntimeError("Unknown material: %s" % material)
-                    table = attenuation_coefficient.get_table(material)
-                    wavelength = beam.get_wavelength()
-                    mu = table.mu_at_angstrom(wavelength) / 10.0
-                    p.set_mu(mu)
-
-                if (
-                    "sensor_thickness" in nx_detector.handle
-                    and "sensor_material" in nx_detector.handle
-                ):
-                    p.set_px_mm_strategy(
-                        ParallaxCorrectedPxMmStrategy(mu, thickness_value)
-                    )
+            if (
+                "sensor_thickness" in nx_detector.handle
+                and "sensor_material" in nx_detector.handle
+            ):
+                p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, thickness_value))
+    return model
 
 
 def known_backwards(image_size):
@@ -1351,153 +1344,149 @@ def known_backwards(image_size):
     return image_size in [(4362, 4148), (4371, 4150), (2162, 2068), (3269, 3110)]
 
 
-class DetectorFactory(object):
+def detector_factory(obj, beam):
     """
-    A class to create a detector model from NXmx stuff
+    Create a detector model from NXmx stuff
     """
+    # Get the handles
+    nx_file = obj.handle.file
+    nx_detector = obj.handle
+    nx_module = obj.modules[0].handle
 
-    def __init__(self, obj, beam):
-        # Get the handles
-        nx_file = obj.handle.file
-        nx_detector = obj.handle
-        nx_module = obj.modules[0].handle
+    # Get the detector name and type
+    if "type" in nx_detector:
+        detector_type = str(nx_detector["type"][()])
+    else:
+        detector_type = "unknown"
+    detector_name = str(nx_detector.name)
 
-        # Get the detector name and type
-        if "type" in nx_detector:
-            detector_type = str(nx_detector["type"][()])
-        else:
-            detector_type = "unknown"
-        detector_name = str(nx_detector.name)
+    # Get the trusted range of pixel values
+    if "saturation_value" in nx_detector:
+        trusted_range = (-1, float(nx_detector["saturation_value"][()]))
+    else:
+        trusted_range = (-1, 99999999)
 
-        # Get the trusted range of pixel values
-        if "saturation_value" in nx_detector:
-            trusted_range = (-1, float(nx_detector["saturation_value"][()]))
-        else:
-            trusted_range = (-1, 99999999)
+    # Get the detector thickness
+    thickness = nx_detector["sensor_thickness"]
+    thickness_value = float(thickness[()])
+    thickness_units = thickness.attrs["units"]
+    thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
 
-        # Get the detector thickness
-        thickness = nx_detector["sensor_thickness"]
-        thickness_value = float(thickness[()])
-        thickness_units = thickness.attrs["units"]
-        thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
+    # Get the detector material
+    material = {
+        numpy.string_("Si"): "Si",
+        numpy.string_("Silicon"): "Si",
+        numpy.string_("Sillicon"): "Si",
+        numpy.string_("CdTe"): "CdTe",
+        numpy.string_("GaAs"): "GaAs",
+    }.get(nx_detector["sensor_material"][()])
+    if not material:
+        raise RuntimeError("Unknown material: %s" % nx_detector["sensor_material"][()])
 
-        # Get the detector material
-        material = {
-            numpy.string_("Si"): "Si",
-            numpy.string_("Silicon"): "Si",
-            numpy.string_("Sillicon"): "Si",
-            numpy.string_("CdTe"): "CdTe",
-            numpy.string_("GaAs"): "GaAs",
-        }.get(nx_detector["sensor_material"][()])
-        if not material:
-            raise RuntimeError(
-                "Unknown material: %s" % nx_detector["sensor_material"][()]
-            )
+    try:
+        x_pixel = nx_detector["x_pixel_size"][()] * 1000.0
+        y_pixel = nx_detector["y_pixel_size"][()] * 1000.0
 
-        try:
-            x_pixel = nx_detector["x_pixel_size"][()] * 1000.0
-            y_pixel = nx_detector["y_pixel_size"][()] * 1000.0
+        legacy_beam_x = float(x_pixel * nx_detector["beam_center_x"][()])
+        legacy_beam_y = float(y_pixel * nx_detector["beam_center_y"][()])
+    except KeyError:
+        legacy_beam_x = 0
+        legacy_beam_y = 0
 
-            legacy_beam_x = float(x_pixel * nx_detector["beam_center_x"][()])
-            legacy_beam_y = float(y_pixel * nx_detector["beam_center_y"][()])
-        except KeyError:
-            legacy_beam_x = 0
-            legacy_beam_y = 0
+    # Get the fast pixel size and vector
+    fast_pixel_direction = nx_module["fast_pixel_direction"]
+    fast_pixel_direction_value = float(fast_pixel_direction[()])
+    fast_pixel_direction_units = fast_pixel_direction.attrs["units"]
+    fast_pixel_direction_vector = fast_pixel_direction.attrs["vector"]
+    fast_pixel_direction_value = convert_units(
+        fast_pixel_direction_value, fast_pixel_direction_units, "mm"
+    )
+    fast_axis = matrix.col(fast_pixel_direction_vector).normalize()
 
-        # Get the fast pixel size and vector
-        fast_pixel_direction = nx_module["fast_pixel_direction"]
-        fast_pixel_direction_value = float(fast_pixel_direction[()])
-        fast_pixel_direction_units = fast_pixel_direction.attrs["units"]
-        fast_pixel_direction_vector = fast_pixel_direction.attrs["vector"]
-        fast_pixel_direction_value = convert_units(
-            fast_pixel_direction_value, fast_pixel_direction_units, "mm"
+    # Get the slow pixel size and vector
+    slow_pixel_direction = nx_module["slow_pixel_direction"]
+    slow_pixel_direction_value = float(slow_pixel_direction[()])
+    slow_pixel_direction_units = slow_pixel_direction.attrs["units"]
+    slow_pixel_direction_vector = slow_pixel_direction.attrs["vector"]
+    slow_pixel_direction_value = convert_units(
+        slow_pixel_direction_value, slow_pixel_direction_units, "mm"
+    )
+    slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
+
+    # Get the origin vector - working around if absent
+    module_offset = nx_module["module_offset"]
+    origin = construct_vector(nx_file, module_offset.name)
+    if origin.elems[0] == 0.0 and origin.elems[1] == 0:
+        origin = -(origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis)
+
+    # Change of basis to convert from NeXus to IUCr/ImageCIF convention
+    cob = matrix.sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
+    origin = cob * matrix.col(origin)
+    fast_axis = cob * fast_axis
+    slow_axis = cob * slow_axis
+
+    # Ensure that fast and slow axis are orthogonal
+    normal = fast_axis.cross(slow_axis)
+    slow_axis = -fast_axis.cross(normal)
+
+    # Compute the attenuation coefficient.
+    # This will fail for undefined composite materials
+    # mu_at_angstrom returns cm^-1, but need mu in mm^-1
+    table = attenuation_coefficient.get_table(material)
+    wavelength = beam.get_wavelength()
+    mu = table.mu_at_angstrom(wavelength) / 10.0
+
+    # Construct the detector model
+    pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
+    # image size stored slow to fast but dxtbx needs fast to slow
+    image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
+
+    if known_backwards(image_size):
+        image_size = tuple(reversed(image_size))
+
+    model = Detector()
+    model.add_panel(
+        Panel(
+            detector_type,
+            detector_name,
+            tuple(fast_axis),
+            tuple(slow_axis),
+            tuple(origin),
+            pixel_size,
+            image_size,
+            trusted_range,
+            thickness_value,
+            material,
+            mu,
         )
-        fast_axis = matrix.col(fast_pixel_direction_vector).normalize()
+    )
 
-        # Get the slow pixel size and vector
-        slow_pixel_direction = nx_module["slow_pixel_direction"]
-        slow_pixel_direction_value = float(slow_pixel_direction[()])
-        slow_pixel_direction_units = slow_pixel_direction.attrs["units"]
-        slow_pixel_direction_vector = slow_pixel_direction.attrs["vector"]
-        slow_pixel_direction_value = convert_units(
-            slow_pixel_direction_value, slow_pixel_direction_units, "mm"
-        )
-        slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
+    # Set the parallax correction
+    for panel in model:
+        panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, thickness_value))
+        panel.set_type("SENSOR_PAD")
 
-        # Get the origin vector - working around if absent
-        module_offset = nx_module["module_offset"]
-        origin = construct_vector(nx_file, module_offset.name)
-        if origin.elems[0] == 0.0 and origin.elems[1] == 0:
-            origin = -(origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis)
-
-        # Change of basis to convert from NeXus to IUCr/ImageCIF convention
-        cob = matrix.sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
-        origin = cob * matrix.col(origin)
-        fast_axis = cob * fast_axis
-        slow_axis = cob * slow_axis
-
-        # Ensure that fast and slow axis are orthogonal
-        normal = fast_axis.cross(slow_axis)
-        slow_axis = -fast_axis.cross(normal)
-
-        # Compute the attenuation coefficient.
-        # This will fail for undefined composite materials
-        # mu_at_angstrom returns cm^-1, but need mu in mm^-1
-        table = attenuation_coefficient.get_table(material)
-        wavelength = beam.get_wavelength()
-        mu = table.mu_at_angstrom(wavelength) / 10.0
-
-        # Construct the detector model
-        pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
-        # image size stored slow to fast but dxtbx needs fast to slow
-        image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
-
-        if known_backwards(image_size):
-            image_size = tuple(reversed(image_size))
-
-        self.model = Detector()
-        self.model.add_panel(
-            Panel(
-                detector_type,
-                detector_name,
-                tuple(fast_axis),
-                tuple(slow_axis),
-                tuple(origin),
-                pixel_size,
-                image_size,
-                trusted_range,
-                thickness_value,
-                material,
-                mu,
-            )
-        )
-
-        # Set the parallax correction
-        for panel in self.model:
-            panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, thickness_value))
-            panel.set_type("SENSOR_PAD")
+    return model
 
 
-class GoniometerFactory(object):
+def goniometer_factory(obj):
     """
-    A class to create a goniometer model from NXmx stuff
+    Create a goniometer model from NXmx stuff
     """
 
-    def __init__(self, obj):
+    axes, angles, axis_names, scan_axis = construct_axes(
+        obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
+    )
 
-        axes, angles, axis_names, scan_axis = construct_axes(
-            obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
+    if len(axes) == 1:
+        model = dxtbx.model.GoniometerFactory.make_goniometer(
+            axes[0], (1, 0, 0, 0, 1, 0, 0, 0, 1)
         )
-
-        if len(axes) == 1:
-            self.model = dxtbx.model.GoniometerFactory.make_goniometer(
-                axes[0], (1, 0, 0, 0, 1, 0, 0, 0, 1)
-            )
-        else:
-            self.model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
-                axes, angles, axis_names, scan_axis
-            )
-        return
+    else:
+        model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
+            axes, angles, axis_names, scan_axis
+        )
+    return model
 
 
 def find_goniometer_rotation(obj):
@@ -1513,64 +1502,43 @@ def find_goniometer_rotation(obj):
     raise ValueError("no rotation found")
 
 
-class ScanFactory(object):
+def scan_factory(obj, detector_obj):
     """
-    A class to create a scan model from NXmx stuff
+    Create a scan model from NXmx stuff
     """
 
-    def __init__(self, obj, detector_obj):
-        # Get the image and oscillation range - need to search for rotations
-        # in dependency tree
-        try:
-            phi = find_goniometer_rotation(obj)
-        except ValueError:
-            phi = obj.handle.file[obj.handle["depends_on"][()]]
-        image_range = (1, len(phi))
-        if len(phi) > 1:
-            oscillation = (float(phi[0]), float(phi[1] - phi[0]))
-            is_sequence = True
-        else:
-            oscillation = (float(phi[0]), 0.0)
-            is_sequence = False
+    # Get the image and oscillation range - need to search for rotations
+    # in dependency tree
+    try:
+        phi = find_goniometer_rotation(obj)
+    except ValueError:
+        phi = obj.handle.file[obj.handle["depends_on"][()]]
+    image_range = (1, len(phi))
+    if len(phi) > 1:
+        oscillation = (float(phi[0]), float(phi[1] - phi[0]))
+        is_sequence = True
+    else:
+        oscillation = (float(phi[0]), 0.0)
+        is_sequence = False
 
-        # Get the exposure time
-        num_images = len(phi)
-        if "frame_time" in detector_obj.handle:
-            frame_time = float(detector_obj.handle["frame_time"][()])
-            exposure_time = flex.double(num_images, frame_time)
-            epochs = flex.double(num_images)
-            for i in range(1, len(epochs)):
-                epochs[i] = epochs[i - 1] + exposure_time[i - 1]
-        else:
-            exposure_time = flex.double(num_images, 0)
-            epochs = flex.double(num_images, 0)
+    # Get the exposure time
+    num_images = len(phi)
+    if "frame_time" in detector_obj.handle:
+        frame_time = float(detector_obj.handle["frame_time"][()])
+        exposure_time = flex.double(num_images, frame_time)
+        epochs = flex.double(num_images)
+        for i in range(1, len(epochs)):
+            epochs[i] = epochs[i - 1] + exposure_time[i - 1]
+    else:
+        exposure_time = flex.double(num_images, 0)
+        epochs = flex.double(num_images, 0)
 
-        if is_sequence is True:
-
-            # Construct the model
-            self.model = Scan(image_range, oscillation, exposure_time, epochs)
-
-        else:
-
-            # if this is not a sequence, then this is stills, in which case... should
-            # we have scans? and, even if we do, we have a small problem in that
-            # this returns a list of scans which even less works...
-
-            self.model = []
-            for i, image in enumerate(range(image_range[0], image_range[1] + 1)):
-                self.model.append(
-                    Scan(
-                        (image, image),
-                        oscillation,
-                        exposure_time[i : i + 1],
-                        epochs[i : i + 1],
-                    )
-                )
-
-            self.model = None
+    if is_sequence is True:
+        # Construct the model
+        return Scan(image_range, oscillation, exposure_time, epochs)
 
 
-class CrystalFactory(object):
+class crystal_factory(object):
     """
     A class to create a crystal model from NXmx stuff
     """
@@ -1578,7 +1546,7 @@ class CrystalFactory(object):
     def __init__(self, obj):
         # Get the crystal parameters
         unit_cell_parameters = list(obj.handle["unit_cell"][0])
-        unit_cell = cctbx.uctbx.unit_cell(unit_cell_parameters)
+        unit_cell = uctbx.unit_cell(unit_cell_parameters)
         U = list(obj.handle["orientation_matrix"][0].flatten())
         U = matrix.sqr(U)
         B = matrix.sqr(unit_cell.fractionalization_matrix()).transpose()
@@ -1592,9 +1560,7 @@ class CrystalFactory(object):
         space_group_symbol = obj.handle["unit_cell_group"][()]
 
         # Create the model
-        self.model = Crystal(
-            real_space_a, real_space_b, real_space_c, space_group_symbol
-        )
+        return Crystal(real_space_a, real_space_b, real_space_c, space_group_symbol)
 
 
 class DataList(object):
@@ -1807,47 +1773,44 @@ class DetectorGroupDataFactory(DataFactory):
         self.model = DetectorGroupDataList(datalists)
 
 
-class MaskFactory(object):
+def mask_factory(objects, index=None):
     """
-    A class to create an object to hold the pixel mask data
+    Create an object to hold the pixel mask data
     """
 
-    def __init__(self, objects, index=None):
-        def make_mask(dset, index):
-            i = index if index is not None else 0
-            mask = []
-            for module_slices in all_slices:
-                assert len(dset.shape) in [len(module_slices), len(module_slices) + 1]
-                if len(dset.shape) == len(module_slices):
-                    slices = []  # single image mask
-                else:
-                    slices = [slice(i, i + 1, 1)]  # multi-image mask
-                slices.extend(module_slices)
-                data_as_flex = dataset_as_flex_int(dset.id.id, tuple(slices))
-                data_as_flex.reshape(
-                    flex.grid(data_as_flex.all()[-2:])
-                )  # handle 3 or 4 dimension arrays
-                mask.append(data_as_flex == 0)
-            return tuple(mask)
+    def make_mask(dset, index):
+        i = index if index is not None else 0
+        mask = []
+        for module_slices in all_slices:
+            assert len(dset.shape) in [len(module_slices), len(module_slices) + 1]
+            if len(dset.shape) == len(module_slices):
+                slices = []  # single image mask
+            else:
+                slices = [slice(i, i + 1, 1)]  # multi-image mask
+            slices.extend(module_slices)
+            data_as_flex = dataset_as_flex_int(dset.id.id, tuple(slices))
+            data_as_flex.reshape(
+                flex.grid(data_as_flex.all()[-2:])
+            )  # handle 3 or 4 dimension arrays
+            mask.append(data_as_flex == 0)
+        return tuple(mask)
 
-        self.mask = None
-        for obj in objects:
-            handle = obj.handle
-            if "pixel_mask_applied" in handle and handle["pixel_mask_applied"]:
-                if self.mask is None:
-                    self.mask = []
-                if "pixel_mask" in handle:
+    mask = None
+    for obj in objects:
+        handle = obj.handle
+        if "pixel_mask_applied" in handle and handle["pixel_mask_applied"]:
+            if mask is None:
+                mask = []
+            if "pixel_mask" in handle:
+                all_slices = get_detector_module_slices(obj)
+                mask.extend(list(make_mask(handle["pixel_mask"], index)))
+            elif "detectorSpecific" in handle:
+                if "pixel_mask" in handle["detectorSpecific"]:
                     all_slices = get_detector_module_slices(obj)
-                    self.mask.extend(list(make_mask(handle["pixel_mask"], index)))
-                elif "detectorSpecific" in handle:
-                    if "pixel_mask" in handle["detectorSpecific"]:
-                        all_slices = get_detector_module_slices(obj)
-                        self.mask.extend(
-                            list(
-                                make_mask(
-                                    handle["detectorSpecific"]["pixel_mask"], index
-                                )
-                            )
-                        )
-        if self.mask is not None:
-            self.mask = tuple(self.mask)
+                    mask.extend(
+                        list(make_mask(handle["detectorSpecific"]["pixel_mask"], index))
+                    )
+    if mask is not None:
+        mask = tuple(mask)
+
+    return mask
