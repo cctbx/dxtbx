@@ -17,27 +17,30 @@ def mock_hdf5_dataset(value, **kwargs):
     return dataset
 
 
-def test_scan_factory(mocker):
-    # Mock various hdf5 objects
+@pytest.fixture
+def mock_find_goniometer_rotation(mocker):
+    def _find_goniometer_rotation(value):
+        rotation = mocker.MagicMock()
+        rotation.name = "/entry/sample/transformations/omega"
+        rotation.value = numpy.array(value)
+        rotation.__len__.side_effect = rotation.value.__len__
+        rotation.__getitem__.side_effect = rotation.value.__getitem__
+        rotation.__iter__.side_effect = rotation.value.__iter__
+
+        # monkeypatch these function return values
+        find_goniometer_rotation = mocker.patch(
+            "dxtbx.format.nexus.find_goniometer_rotation"
+        )
+        find_goniometer_rotation.return_value = rotation
+
+    return _find_goniometer_rotation
+
+
+def test_scan_factory_no_frame_time(mocker, mock_find_goniometer_rotation):
     obj = mocker.Mock()
     detector_obj = mocker.Mock()
-    rotation = mocker.MagicMock()
-    rotation.name = "/entry/sample/transformations/omega"
-    rotation.value = numpy.array((0.0, 0.1, 0.2, 0.3))
-    rotation.__len__.return_value = len(rotation.value)
+    mock_find_goniometer_rotation((0.0, 0.1, 0.2, 0.3))
 
-    def rotation_getitem(self, idx):
-        return self.value[idx]
-
-    rotation.__getitem__ = rotation_getitem
-
-    # monkeypatch these function return values
-    find_goniometer_rotation = mocker.patch(
-        "dxtbx.format.nexus.find_goniometer_rotation"
-    )
-    find_goniometer_rotation.return_value = rotation
-
-    # First test with no "frame_time" set
     detector_obj.handle = {}
     model = nexus.scan_factory(obj, detector_obj)
     assert len(model) == 4
@@ -46,7 +49,12 @@ def test_scan_factory(mocker):
     assert list(model.get_exposure_times()) == [0.0, 0.0, 0.0, 0.0]
     assert list(model.get_epochs()) == [0.0, 0.0, 0.0, 0.0]
 
-    # Now test with "frame_time" set
+
+def test_scan_factory_frame_time(mocker, mock_find_goniometer_rotation):
+    obj = mocker.Mock()
+    detector_obj = mocker.Mock()
+    mock_find_goniometer_rotation((0.0, 0.1, 0.2, 0.3))
+
     detector_obj.handle = {"frame_time": {(): 0.1}}
     model = nexus.scan_factory(obj, detector_obj)
     assert list(model.get_exposure_times()) == [0.1, 0.1, 0.1, 0.1]
