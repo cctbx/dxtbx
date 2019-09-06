@@ -165,17 +165,10 @@ class Format(object):
         self._start()
 
         try:
-            goniometer_instance = self._goniometer()
-            self._goniometer_instance = goniometer_instance
-
-            detector_instance = self._detector()
-            self._detector_instance = detector_instance
-
-            beam_instance = self._beam()
-            self._beam_instance = beam_instance
-
-            scan_instance = self._scan()
-            self._scan_instance = scan_instance
+            self._goniometer_instance = self._goniometer()
+            self._detector_instance = self._detector()
+            self._beam_instance = self._beam()
+            self._scan_instance = self._scan()
         finally:
             self._end()
 
