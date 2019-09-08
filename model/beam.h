@@ -373,7 +373,8 @@ namespace dxtbx { namespace model {
       }
 
       // static model checks
-      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction())) <= eps
+      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
+               <= eps
              && std::abs(wavelength_ - rhs.get_wavelength()) <= eps
              && std::abs(divergence_ - rhs.get_divergence()) <= eps
              && std::abs(sigma_divergence_ - rhs.get_sigma_divergence()) <= eps
@@ -455,7 +456,8 @@ namespace dxtbx { namespace model {
   inline std::ostream &operator<<(std::ostream &os, const Beam &b) {
     os << "Beam:\n";
     os << "    wavelength: " << b.get_wavelength() << "\n";
-    os << "    sample to source direction : " << b.get_sample_to_source_direction().const_ref() << "\n";
+    os << "    sample to source direction : "
+       << b.get_sample_to_source_direction().const_ref() << "\n";
     os << "    divergence: " << b.get_divergence() << "\n";
     os << "    sigma divergence: " << b.get_sigma_divergence() << "\n";
     os << "    polarization normal: " << b.get_polarization_normal().const_ref()
