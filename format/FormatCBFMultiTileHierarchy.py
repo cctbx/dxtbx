@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# FormatCBFMultiTileHierarchy.py
-#
 """
 Reads a multi-tile CBF image, discovering it's detector geometery
 automatically, and builds a hierarchy if present

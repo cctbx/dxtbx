@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVADSCSNID19.py
-#   Copyright (C) 2015 Diamond Light Source, Richard Gildea
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
 """
 An implementation of the SMV image reader for ADSC images. Inherits from
 FormatSMVADSC, customised for example on APS ID19 SN 458 and 914

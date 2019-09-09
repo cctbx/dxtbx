@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.read_sweep
 
 """Tool to benchmark overall time cost for simply reading data"""

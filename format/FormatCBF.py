@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# FormatCBF.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 Base implementation of CBF formats - which is just really a place holder
 which will tell you whether something is a CBF file (or no.)

@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-#
-# cspad_detector_shifts.py
-#
-#  Copyright (C) 2016 Lawrence Berkeley National Laboratory (LBNL)
-#
-#  Author: Aaron Brewster
-#
-#  This code is distributed under the X license, a copy of which is
-#  included in the root directory of this package.
-#
 from __future__ import absolute_import, division, print_function
 
 from builtins import range

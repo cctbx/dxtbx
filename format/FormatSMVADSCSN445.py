@@ -1,8 +1,3 @@
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 An implementation of the SMV image reader for ADSC images. Inherits from
 FormatSMVADSC, customised for example on ALS beamline 8.2.1 from back in the

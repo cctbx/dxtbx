@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVRigakuA200SPring8BL26B1.py
-#
-#  Copyright (C) (2015) STFC Rutherford Appleton Laboratory, UK.
-#
-#  Author: David Waterman.
-#
-#  This code is distributed under the BSD license, a copy of which is
-#  included in the root directory of this package.
-#
-
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatSMVRigakuA200 import FormatSMVRigakuA200

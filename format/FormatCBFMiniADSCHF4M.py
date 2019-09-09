@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# FormatCBFMiniADSCHF4M.py
-#   Copyright (C) 2014 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-
 """
 An implementation of the CBF image reader for ADSC images, from the ADSC
 HF-4M SN H401 currently on APS sector 24 (NE-CAT).

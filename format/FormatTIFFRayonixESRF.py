@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# FormatTIFFRayonixESRF.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 Subclass of FormatTiffRayonix to deal with images who have beam centers
 specified in pixels

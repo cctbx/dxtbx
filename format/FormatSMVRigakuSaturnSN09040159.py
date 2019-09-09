@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVRigakuSaturnSN09040159.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
 """
 An implementation of the SMV image reader for Rigaku Saturn images, for
 the instrument at CSHL, SN 09040159.

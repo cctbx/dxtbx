@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-#
-#  Copyright (C) (2017) STFC Rutherford Appleton Laboratory, UK.
-#
-#  Author: David Waterman.
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """Experimental format for TIA .ser files used by FEI microscope at eBIC."""
 
 from __future__ import absolute_import, division, print_function

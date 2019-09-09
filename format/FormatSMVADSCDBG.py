@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# FormatSMVADSCDBG.py
-#   Copyright (C) 2013 LBNL, Aaron Brewster
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 An implementation of the SMV image reader for pseudo "ADSC" images, converted
 from Pilatus images using iotbx debug_write.

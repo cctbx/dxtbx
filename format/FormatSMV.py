@@ -1,8 +1,3 @@
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 Implementation of an ImageFormat class to read SMV format image
 

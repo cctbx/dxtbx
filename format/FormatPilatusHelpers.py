@@ -1,8 +1,3 @@
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 Helper methods for class for working with Pilatus images, for instance for
 identifying the regions to be masked.

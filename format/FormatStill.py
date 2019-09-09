@@ -1,4 +1,3 @@
-# FormatStill.py
 """
 Root class for still shots.  A still shot has no goniomter and no
 scan in their model, as these constructs are not meaningful.

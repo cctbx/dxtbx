@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-#   Copyright (C) 2013 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
 """
 An implementation of the SMV image reader for Rigaku images.
 Inherits from FormatSMV.

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# FormatTIFFRayonixXPP.py
 """
 Sub class of FormatTIFFRayonix specialized for the XPP Rayonix dectector at LCLS
 

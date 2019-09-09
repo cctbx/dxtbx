@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-#
-#  Copyright (C) (2017) STFC Rutherford Appleton Laboratory, UK.
-#
-#  Author: David Waterman.
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 Experimental format for TIA .ser files used by some FEI microscopes. See
 http://www.er-c.org/cbb/info/TIAformat/

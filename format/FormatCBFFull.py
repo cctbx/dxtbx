@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 Base implementation of fullCBF format - as used with Dectris detectors
 amongst others - this will read the header and construct the full model,

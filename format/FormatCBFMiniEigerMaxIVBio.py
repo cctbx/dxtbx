@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-#  Author: Nick Sauter.
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
 """
 An implementation of the FormatCBFMiniEiger image reader for the Eiger16M
 detector at the MaxIV BioMAX beamline, which has a vertical goniometer.
