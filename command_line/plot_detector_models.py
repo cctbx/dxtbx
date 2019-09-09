@@ -1,6 +1,6 @@
+# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 from __future__ import absolute_import, division, print_function
 
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 
 usage = """Plot dxtbx detector models. Provide multiple json files if desired
 Example: dxtbx.plot_detector_models datablock1.json datablock2.json
