@@ -1,9 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
 
 from scitbx import matrix
 from scitbx.math import r3_rotation_axis_and_angle_from_matrix

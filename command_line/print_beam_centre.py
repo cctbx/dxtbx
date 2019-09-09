@@ -1,16 +1,12 @@
+# LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.print_beam_centre
+"""
+Print out the contents of the dxtbx understanding of a bunch of images to
+an example XDS.INP file. This should illustrate the usage of the dxtbx
+classes.
+"""
 from __future__ import absolute_import, division, print_function
 
 import sys
-
-#   Copyright (C) 2015 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Print out the contents of the dxtbx understanding of a bunch of images to
-# an example XDS.INP file. This should illustrate the usage of the dxtbx
-# classes.
-# LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.print_beam_centre
 
 
 def run(file_names):

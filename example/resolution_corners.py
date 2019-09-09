@@ -1,13 +1,6 @@
-from __future__ import absolute_import, division, print_function
+"""Print out the resolution (two-theta) of the corners of the detector"""
 
-# resolution_corners.py
-#
-#   Copyright (C) 2013 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Print out the resolution (two-theta) of the corners of the detector
+from __future__ import absolute_import, division, print_function
 
 
 def resolution_corners(frame):
