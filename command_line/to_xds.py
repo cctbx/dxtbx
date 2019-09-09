@@ -6,9 +6,12 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# Print out the contents of the dxtbx understanding of a bunch of images to
-# an example XDS.INP file. This should illustrate the usage of the dxtbx
-# classes.
+"""
+Print out the contents of the dxtbx understanding of a bunch of images to
+an example XDS.INP file. This should illustrate the usage of the dxtbx
+classes.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 import sys
