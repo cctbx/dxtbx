@@ -8,6 +8,8 @@ import os
 import numpy
 import six
 
+import dxtbx.model
+
 try:
     from dxtbx_format_nexus_ext import dataset_as_flex_int
 except ImportError:
@@ -1487,18 +1489,17 @@ class GoniometerFactory(object):
     """
 
     def __init__(self, obj):
-        from dxtbx.model import GoniometerFactory
 
         axes, angles, axis_names, scan_axis = construct_axes(
             obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
         )
 
         if len(axes) == 1:
-            self.model = GoniometerFactory.make_goniometer(
+            self.model = dxtbx.model.GoniometerFactory.make_goniometer(
                 axes[0], (1, 0, 0, 0, 1, 0, 0, 0, 1)
             )
         else:
-            self.model = GoniometerFactory.make_multi_axis_goniometer(
+            self.model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
                 axes, angles, axis_names, scan_axis
             )
         return
