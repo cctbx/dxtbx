@@ -2,12 +2,12 @@
 #
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
-#
-# An implementation of the SMV image reader for ADSC images. Inherits from
-# FormatSMVADSC, customised for beamline 8.3.1 at the ALS where J. Holton uses
-# two-theta offsets in the vertical direction, as well as idiosyncratic ways
-# of recording the beam centre... which work fine for ADXV...
-
+"""
+An implementation of the SMV image reader for ADSC images. Inherits from
+FormatSMVADSC, customised for beamline 8.3.1 at the ALS where J. Holton uses
+two-theta offsets in the vertical direction, as well as idiosyncratic ways
+of recording the beam centre... which work fine for ADXV...
+"""
 from __future__ import absolute_import, division, print_function
 
 import math

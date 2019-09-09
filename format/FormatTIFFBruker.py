@@ -5,8 +5,7 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# An implementation of the TIFF image reader for Bruker images. Inherits from
-# FormatTIFF.
+"""An implementation of the TIFF image reader for Bruker images"""
 
 from __future__ import absolute_import, division, print_function
 

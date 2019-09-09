@@ -1,10 +1,9 @@
-from __future__ import absolute_import, division, print_function
-
-from dxtbx.format.FormatHDF5 import FormatHDF5
-
 """
 Format class for the PAL XFEL raw data format
 """
+from __future__ import absolute_import, division, print_function
+
+from dxtbx.format.FormatHDF5 import FormatHDF5
 
 
 class FormatHDF5PAL(FormatHDF5):

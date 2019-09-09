@@ -5,7 +5,7 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# Set up for Soleil PX1, with full kappa goniometer
+"""Set up for Soleil PX1, with full kappa goniometer"""
 
 from __future__ import absolute_import, division, print_function
 

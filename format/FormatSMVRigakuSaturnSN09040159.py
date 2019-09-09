@@ -4,10 +4,10 @@
 #
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
-#
-# An implementation of the SMV image reader for Rigaku Saturn images, for
-# the instrument at CSHL, SN 09040159.
-
+"""
+An implementation of the SMV image reader for Rigaku Saturn images, for
+the instrument at CSHL, SN 09040159.
+"""
 from __future__ import absolute_import, division, print_function
 
 from builtins import range

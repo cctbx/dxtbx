@@ -5,8 +5,10 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# An implementation of the SMV image reader for Rigaku Saturn images.
-# Inherits from FormatSMVRigaku.
+"""
+An implementation of the SMV image reader for Rigaku Saturn images.
+Inherits from FormatSMVRigaku.
+"""
 
 from __future__ import absolute_import, division, print_function
 

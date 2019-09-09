@@ -7,8 +7,10 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# Experimental format for TIA .ser files used by some FEI microscopes. See
-# http://www.er-c.org/cbb/info/TIAformat/
+"""
+Experimental format for TIA .ser files used by some FEI microscopes. See
+http://www.er-c.org/cbb/info/TIAformat/
+"""
 
 from __future__ import absolute_import, division, print_function
 

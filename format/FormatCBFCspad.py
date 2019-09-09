@@ -1,4 +1,4 @@
-# Contains class methods specific to interacting with CSPAD images
+"""Methods specific to interacting with CSPAD images"""
 
 from __future__ import absolute_import, division, print_function
 

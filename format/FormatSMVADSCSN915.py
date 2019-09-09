@@ -5,9 +5,10 @@
 #  This code is distributed under the BSD license, a copy of which is
 #  included in the root directory of this package.
 #
-# ADSC SMV Format for Q315 SN 915, installed at BL38B1 at SPring-8. Resembles
-# but FormatSMVADSCSN920 but returns a reverse phi goniometer
-
+"""
+ADSC SMV Format for Q315 SN 915, installed at BL38B1 at SPring-8. Resembles
+but FormatSMVADSCSN920 but returns a reverse phi goniometer
+"""
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN

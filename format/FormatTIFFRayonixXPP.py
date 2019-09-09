@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # FormatTIFFRayonixXPP.py
-# Sub class of FormatTIFFRayonix specialized for the XPP Rayonix dectector at LCLS
-#
-# Images from the XPP Rayonix detector have several unitialized values, such as
-# distance, wavelength, etc.  Set these values to zero so the images can be at
-# least viewed.
-#
+"""
+Sub class of FormatTIFFRayonix specialized for the XPP Rayonix dectector at LCLS
+
+Images from the XPP Rayonix detector have several unitialized values, such as
+distance, wavelength, etc.  Set these values to zero so the images can be at
+least viewed.
+"""
 
 from __future__ import absolute_import, division, print_function
 

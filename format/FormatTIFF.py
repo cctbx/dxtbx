@@ -1,8 +1,10 @@
-# Implementation of an ImageFormat class to read TIFF format image but not -
-# in the first instance - actually provide a full image representation. This
-# is simply there to set everything up for the Mar / Rayonix CCD readers
-# which really will acquire the full image including header information
-# and generate the experimental model representations.
+"""
+Implementation of an ImageFormat class to read TIFF format image but not -
+in the first instance - actually provide a full image representation. This
+is simply there to set everything up for the Mar / Rayonix CCD readers
+which really will acquire the full image including header information
+and generate the experimental model representations.
+"""
 
 from __future__ import absolute_import, division, print_function
 

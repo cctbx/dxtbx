@@ -1,8 +1,8 @@
 # FormatStill.py
-#
-# Root class for still shots.  A still shot has no goniomter and no
-# scan in their model, as these constructs are not meaningful.
-#
+"""
+Root class for still shots.  A still shot has no goniomter and no
+scan in their model, as these constructs are not meaningful.
+"""
 from __future__ import absolute_import, division, print_function
 from dxtbx.format.Format import Format
 from dxtbx.model.detector import Detector

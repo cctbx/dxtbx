@@ -4,9 +4,10 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# An implementation of the FormatCBFMiniEiger image reader for the Eiger16M
-# detector at the MaxIV BioMAX beamline, which has a vertical goniometer.
-
+"""
+An implementation of the FormatCBFMiniEiger image reader for the Eiger16M
+detector at the MaxIV BioMAX beamline, which has a vertical goniometer.
+"""
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFMiniEiger import FormatCBFMiniEiger

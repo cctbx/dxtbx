@@ -5,10 +5,10 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# Sub class of FormatTiffRayonix to deal with images who have beam centers
-# specified in pixels
-#
-
+"""
+Subclass of FormatTiffRayonix to deal with images who have beam centers
+specified in pixels
+"""
 from __future__ import absolute_import, division, print_function
 
 import struct

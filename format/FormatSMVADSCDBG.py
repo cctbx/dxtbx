@@ -5,9 +5,10 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# An implementation of the SMV image reader for pseudo "ADSC" images, converted
-# from Pilatus images using iotbx debug_write.
-
+"""
+An implementation of the SMV image reader for pseudo "ADSC" images, converted
+from Pilatus images using iotbx debug_write.
+"""
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatSMVADSC import FormatSMVADSC

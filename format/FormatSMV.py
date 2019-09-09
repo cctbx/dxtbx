@@ -3,11 +3,15 @@
 #   This code is distributed under the BSD license, a copy of which is
 #   included in the root directory of this package.
 #
-# Implementation of an ImageFormat class to read SMV format image but not -
-# in the first instance - actually provide a full image representation. This
-# is simply there to set everything up for the ADSC and Rigaku Saturn image
-# readers which really will acquire the full image including header information
-# and generate the experimental model representations.
+"""
+Implementation of an ImageFormat class to read SMV format image
+
+but not - in the first instance - actually provide a full image
+representation. This is simply there to set everything up for the ADSC
+and Rigaku Saturn image readers which really will acquire the full image
+including header information and generate the experimental model
+representations.
+"""
 
 from __future__ import absolute_import, division, print_function
 

@@ -1,12 +1,6 @@
-from __future__ import absolute_import, division, print_function
+"""Helpers for FormatCBFMiniPilatus..."""
 
-# FormatCBFMiniPilatus.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Helpers for FormatCBFMiniPilatus...
+from __future__ import absolute_import, division, print_function
 
 import calendar
 import time
