@@ -105,7 +105,7 @@ def to_crystal(filename):
     real_space_b = cfc.get("real_space_b")
     real_space_c = cfc.get("real_space_c")
     sg = cfc.get("space_group_number")
-    space_group = space_group(space_group_symbols(sg).hall())
+    crystal_space_group = space_group(space_group_symbols(sg).hall())
     mosaicity = cfc.get("mosaicity")
 
     # Return the crystal model
@@ -116,7 +116,7 @@ def to_crystal(filename):
             real_space_a=real_space_a,
             real_space_b=real_space_b,
             real_space_c=real_space_c,
-            space_group=space_group,
+            space_group=crystal_space_group,
         )
     else:
         from dxtbx.model import MosaicCrystalKabsch2010
@@ -125,7 +125,7 @@ def to_crystal(filename):
             real_space_a=real_space_a,
             real_space_b=real_space_b,
             real_space_c=real_space_c,
-            space_group=space_group,
+            space_group=crystal_space_group,
         )
         crystal.set_mosaicity(mosaicity)
     return crystal
