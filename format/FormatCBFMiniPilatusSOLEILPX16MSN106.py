@@ -4,9 +4,6 @@ from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 
-# from dxtbx.model import ParallaxCorrectedPxMmStrategy
-# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
-
 
 class FormatCBFMiniPilatusSOLEILPX16MSN106(FormatCBFMiniPilatus):
     """A class for reading mini CBF format Pilatus images for 6M SN 106 @

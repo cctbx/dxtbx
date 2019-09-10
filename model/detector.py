@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-# A model for the detector for the "updated experimental model" project
 # N.B. this should probably be generalized for non
 # flat detectors, or composite detectors constructed from a number of flat
 # elements.

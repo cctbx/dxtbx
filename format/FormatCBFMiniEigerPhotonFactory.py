@@ -6,8 +6,6 @@ import os
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 
-# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
-
 
 class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
     """A class for reading mini CBF format Eiger images, and correctly

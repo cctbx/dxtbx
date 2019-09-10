@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-# A model for the beam for the "updated experimental model" project
-
 from builtins import object
 
 from builtins import range
