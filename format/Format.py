@@ -11,6 +11,8 @@ from __future__ import absolute_import, division, print_function
 
 from future import standard_library
 
+standard_library.install_aliases()
+
 import functools
 import sys
 import urllib.parse
@@ -28,8 +30,6 @@ from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.sweep_filenames import template_regex
-
-standard_library.install_aliases()
 
 
 if sys.hexversion < 0x3040000:

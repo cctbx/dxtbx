@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 from future import standard_library
 
+standard_library.install_aliases()
+
 import copy
 import pickle
 import sys
@@ -13,8 +15,6 @@ from dxtbx.format.FormatPYunspecified import (
     FormatPYunspecifiedInMemory,
 )
 from dxtbx.format.FormatStill import FormatStill
-
-standard_library.install_aliases()
 
 
 class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
