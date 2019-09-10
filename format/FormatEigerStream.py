@@ -8,7 +8,6 @@ import numpy as np
 from scitbx import matrix
 from scitbx.array_family import flex
 
-import lz4
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
@@ -17,6 +16,11 @@ from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
+
+try:
+    import lz4
+except ImportError:
+    lz4 = None
 
 injected_data = {}
 
@@ -174,6 +178,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Unpack lz4 compressed frame and return np array image data
         """
+        assert lz4 is not None, "No LZ4 module"
         dtype = np.dtype(dtype)
         data = lz4.loads(data)
 
