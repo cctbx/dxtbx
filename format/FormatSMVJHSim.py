@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import calendar
+import sys
 import time
 
 from dxtbx.format.FormatSMV import FormatSMV
@@ -102,8 +104,6 @@ class FormatSMVJHSim(FormatSMV):
 
     def _scan(self):
         """Return the scan information for this image."""
-        import calendar
-
         format = self._scan_factory.format("SMV")
         exposure_time = 1
         epoch = None
@@ -150,8 +150,6 @@ class FormatSMVJHSim(FormatSMV):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatSMVJHSim.understand(arg))

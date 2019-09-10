@@ -1,12 +1,14 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import os
+from builtins import range
 
 from scitbx.array_family import flex
 
 from dxtbx.format.Format import Format
+from dxtbx.format.image import ImageBool
+from dxtbx.imageset import ImageSetData, ImageSweep
 from dxtbx.model import MultiAxisGoniometer
 
 
@@ -128,10 +130,6 @@ class FormatMultiImage(Format):
         Factory method to create an imageset
 
         """
-        from dxtbx.format.image import ImageBool
-        from dxtbx.imageset import ImageSetData
-        from dxtbx.imageset import ImageSweep
-
         if isinstance(filenames, str):
             filenames = [filenames]
         elif len(filenames) > 1:

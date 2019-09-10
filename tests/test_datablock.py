@@ -1,16 +1,17 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import json
 import os
+from builtins import range
 from pprint import pprint
+
+import pytest
+import six.moves.cPickle as pickle
 
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSweep
 from dxtbx.model import Beam, Detector, Goniometer, Scan
-import pytest
-import six.moves.cPickle as pickle
 
 
 @pytest.fixture(scope="session")

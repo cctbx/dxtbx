@@ -11,10 +11,11 @@ representations.
 from __future__ import absolute_import, division, print_function
 
 from boost.python import streambuf
-from dxtbx.format.Format import Format
-from dxtbx import IncorrectFormatError
-from dxtbx.ext import read_uint16, read_uint16_bs, is_big_endian
 from scitbx.array_family import flex
+
+from dxtbx import IncorrectFormatError
+from dxtbx.ext import is_big_endian, read_uint16, read_uint16_bs
+from dxtbx.format.Format import Format
 
 
 class FormatSMV(Format):

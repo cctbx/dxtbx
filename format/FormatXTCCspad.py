@@ -1,8 +1,20 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
-from dxtbx.format.FormatXTC import FormatXTC, locator_str
+
+import numpy as np
+
+from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
+from scitbx.array_family import flex
+from scitbx.matrix import col
+from xfel.cftbx.detector.cspad_cbf_tbx import read_slac_metrology
+from xfel.cxi.cspad_ana.cspad_tbx import env_distance
+
+import psana
+from dxtbx.format.FormatXTC import FormatXTC, locator_str
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 try:
     from xfel.cxi.cspad_ana import cspad_tbx
@@ -75,7 +87,6 @@ class FormatXTCCspad(FormatXTC):
     def _cache_psana_det(self):
         """Store a psana detector instance for each run"""
         assert len(self.params.detector_address) == 1
-        import psana
 
         self._psana_det = {}
         for run_number, run in self._psana_runs.items():
@@ -91,9 +102,6 @@ class FormatXTCCspad(FormatXTC):
             self._pedestals[run_number] = det.pedestals(run)
 
     def get_raw_data(self, index):
-        from scitbx.array_family import flex
-        import numpy as np
-
         assert len(self.params.detector_address) == 1
         d = self.get_detector(index)
         event = self._get_event(index)
@@ -152,12 +160,6 @@ class FormatXTCCspad(FormatXTC):
 
     # XXX Implement recursive version
     def _detector(self, index=None):
-        from xfel.cftbx.detector.cspad_cbf_tbx import read_slac_metrology
-        from dxtbx.model import Detector
-        from scitbx.matrix import col
-        from dxtbx.model import ParallaxCorrectedPxMmStrategy
-        from xfel.cxi.cspad_ana.cspad_tbx import env_distance
-
         if index is None:
             index = 0
 
@@ -254,7 +256,6 @@ class FormatXTCCspad(FormatXTC):
         # wavelength of the radiation (which we have in the same file...)
         wavelength = beam.get_wavelength()
         thickness = 0.5  # mm, see Hart et al. 2012
-        from cctbx.eltbx import attenuation_coefficient
 
         table = attenuation_coefficient.get_table("Si")
         # mu_at_angstrom returns cm^-1
@@ -266,7 +267,5 @@ class FormatXTCCspad(FormatXTC):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatXTCCspad.understand(arg))

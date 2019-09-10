@@ -3,23 +3,23 @@ Image reading tests against the dials_regression suite
 """
 from __future__ import absolute_import, division, print_function
 
-import os
-import sys
-import re
-import gzip
 import bz2
+import gzip
+import os
+import re
 import shutil
+import sys
 
-import pytest
 import py.path
+import pytest
+import six
+
+import libtbx.load_env
+import scitbx.matrix
+from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 
 import dxtbx.conftest
 import dxtbx.format.Registry
-import libtbx.load_env
-import six
-
-from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
-import scitbx.matrix
 
 if sys.version_info[:2] >= (3, 6):
     from pathlib import Path

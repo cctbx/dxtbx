@@ -1,14 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import collections
 import os
+from builtins import range
+
+import six.moves.cPickle as pickle
 
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.imageset import ImageSet, ImageSetFactory, ImageSweep
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize.filename import resolve_path
-import six.moves.cPickle as pickle
 
 
 def filename_to_absolute(filename):

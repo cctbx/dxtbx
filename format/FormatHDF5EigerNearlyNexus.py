@@ -1,18 +1,27 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+import uuid
 from builtins import range
-from dxtbx.format.FormatHDF5 import FormatHDF5
-from dxtbx.format.nexus import NXmxReader
-from dxtbx.format.nexus import NXdata
-from dxtbx.format.nexus import BeamFactory
-from dxtbx.format.nexus import DetectorFactory
-from dxtbx.format.nexus import GoniometerFactory
-from dxtbx.format.nexus import ScanFactory
-from dxtbx.format.nexus import DataFactory
-from dxtbx.format.nexus import MaskFactory
 
 import h5py
 import numpy
+
+from iotbx.detectors.eiger import EIGERImage
+from scitbx import matrix
+
+from dxtbx.format.FormatHDF5 import FormatHDF5
+from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
+from dxtbx.format.nexus import (
+    BeamFactory,
+    DataFactory,
+    DetectorFactory,
+    GoniometerFactory,
+    MaskFactory,
+    NXdata,
+    NXmxReader,
+    ScanFactory,
+)
 
 
 def find_entries(nx_file):
@@ -54,8 +63,6 @@ class EigerNXmxFixer(object):
     """
 
     def __init__(self, input_filename, memory_mapped_name):
-        from scitbx import matrix
-
         # Copy the master file to the in memory handle
         handle_orig = h5py.File(input_filename, "r")
         handle = h5py.File(
@@ -303,8 +310,6 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
     def _start(self):
 
         # Read the file structure
-        import uuid
-
         temp_file = "tmp_master_%s.nxs" % uuid.uuid1().hex
         fixer = EigerNXmxFixer(self._image_file, temp_file)
         reader = NXmxReader(handle=fixer.handle)
@@ -394,8 +399,6 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         return self._image_file
 
     def detectorbase_start(self, index=0):
-        from iotbx.detectors.eiger import EIGERImage
-
         self.detectorbase = EIGERImage(self._image_file, index=index)
         self.detectorbase.readHeader(dxtbx_instance=self)
 
@@ -409,14 +412,10 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         return self.detectorbase
 
     def get_vendortype(self):
-        from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
-
         return gv(self.get_detector())
 
 
 if __name__ == "__main__":
-    import sys
-
     f = FormatHDF5EigerNearlyNexus(sys.argv[1])
     for i in range(10):
         print(f.get_raw_data(i))

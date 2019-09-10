@@ -1,25 +1,26 @@
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 from __future__ import absolute_import, division, print_function
 
-
-usage = """Plot dxtbx detector models. Provide multiple json files if desired
-Example: dxtbx.plot_detector_models datablock1.json datablock2.json
-"""
-
 import os
 import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scitbx.matrix import col
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.patches import FancyArrowPatch
+from mpl_toolkits.mplot3d import proj3d
+
 from libtbx.phil import parse
 from libtbx.utils import Sorry
-
-from matplotlib.patches import FancyArrowPatch
-from matplotlib.backends.backend_pdf import PdfPages
+from scitbx.matrix import col
 
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
+
+usage = """Plot dxtbx detector models. Provide multiple json files if desired
+Example: dxtbx.plot_detector_models datablock1.json datablock2.json
+"""
+
 
 phil_scope = parse(
     """
@@ -49,8 +50,6 @@ class Arrow3D(FancyArrowPatch):
         self._verts3d = xs, ys, zs
 
     def draw(self, renderer):
-        from mpl_toolkits.mplot3d import proj3d
-
         xs3d, ys3d, zs3d = self._verts3d
         xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))

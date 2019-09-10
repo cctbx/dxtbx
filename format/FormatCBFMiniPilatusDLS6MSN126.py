@@ -5,6 +5,12 @@ An implementation of the CBF image reader for Pilatus images, from the Pilatus
 
 from __future__ import absolute_import, division, print_function
 
+import binascii
+import sys
+
+from cbflib_adaptbx import uncompress
+from scitbx import matrix
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
@@ -183,8 +189,6 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
         else:
             kappa_value = 0.0
 
-        from scitbx import matrix
-
         axis = matrix.col((1, 0, 0))
         phi = matrix.col((1, 0, 0))
         kappa = matrix.col((0.914, 0.279, -0.297))
@@ -274,7 +278,6 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
         # got to here means 60-panel version
 
         from dxtbx.model import Detector
-        from scitbx import matrix
 
         d = Detector()
 
@@ -325,9 +328,6 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
         return d
 
     def _read_cbf_image(self):
-        from cbflib_adaptbx import uncompress
-        import binascii
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -361,8 +361,6 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatusDLS6MSN126.understand(arg))

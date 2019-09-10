@@ -1,14 +1,21 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import math
 import os
+import sys
+from builtins import range
 
 import h5py
 import numpy
+
+from cctbx.eltbx import attenuation_coefficient
+from scitbx import matrix
+from scitbx.array_family import flex
+
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
-from scitbx.array_family import flex
+from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from dxtbx.model.detector import Detector
 
 # 151028: deepcopying this class causes crash in h5py
 #         temporary fix by closing the file in every methods(!)
@@ -162,13 +169,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         self._raw_data = None
 
     def _detector(self, index=None):
-        from dxtbx.model.detector import Detector
-        from scitbx import matrix
-
         wavelength = self.get_beam(index).get_wavelength()
-
-        from dxtbx.model import ParallaxCorrectedPxMmStrategy
-        from cctbx.eltbx import attenuation_coefficient
 
         table = attenuation_coefficient.get_table("Si")
         mu = table.mu_at_angstrom(wavelength) / 10.0
@@ -276,8 +277,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         return self.active_areas
 
     def reconst_image(self):
-        from scitbx import matrix
-
         det = numpy.empty((self.RECONST_SIZE, self.RECONST_SIZE), dtype="int32")
         det.fill(-1)
 
@@ -411,7 +410,5 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
 
 
 if __name__ == "__main__":
-    import sys
-
     print(FormatHDF5SaclaMPCCD.understand(sys.argv[1]))
     FormatHDF5SaclaMPCCD(sys.argv[1])

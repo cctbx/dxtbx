@@ -4,8 +4,9 @@ nature binary so we need to mess with things like byte swapping.
 """
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import struct
+import sys
+from builtins import range
 
 from dxtbx.format.Format import Format
 
@@ -125,8 +126,6 @@ def _read_tiff_image_description(tiff_header, byte_order):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         width, height, depth, header, order = read_basic_tiff_header(arg)
         print("(%d x %d) @ %d + %d" % (width, height, depth, header))

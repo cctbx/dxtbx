@@ -4,12 +4,25 @@ import collections
 import json
 import os
 import sys
+import warnings
 from builtins import range
+
+import six.moves.cPickle as pickle
 
 import boost.python
 import cctbx.crystal
+from libtbx.containers import OrderedSet
+from libtbx.utils import format_float_with_standard_uncertainty
 from scitbx import matrix
 
+from dxtbx.datablock import AutoEncoder, DataBlockFactory
+from dxtbx.imageset import ImageGrid, ImageSet, ImageSweep
+from dxtbx.model.beam import BeamFactory
+from dxtbx.model.crystal import CrystalFactory
+from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.goniometer import GoniometerFactory
+from dxtbx.model.profile import ProfileModelFactory
+from dxtbx.model.scan import ScanFactory
 from dxtbx_model_ext import (
     Beam,
     BeamBase,
@@ -43,17 +56,6 @@ from dxtbx_model_ext import (
     parallax_correction,
     parallax_correction_inv,
 )
-from dxtbx.imageset import ImageSet, ImageSweep, ImageGrid
-from dxtbx.model.beam import BeamFactory
-from dxtbx.model.crystal import CrystalFactory
-from dxtbx.model.detector import DetectorFactory
-from dxtbx.model.goniometer import GoniometerFactory
-from dxtbx.model.profile import ProfileModelFactory
-from dxtbx.model.scan import ScanFactory
-from libtbx.containers import OrderedSet
-
-import six.moves.cPickle as pickle
-
 
 __all__ = (
     "Beam",
@@ -161,7 +163,6 @@ class _(object):
         )
 
         msg = ["Crystal:"]
-        from libtbx.utils import format_float_with_standard_uncertainty
 
         if len(uc_sd) != 0:
             cell_str = [
@@ -636,8 +637,6 @@ class _(object):
     def to_datablocks(self):
         """Return the experiment list as a datablock list.
         This assumes that the experiment contains 1 datablock."""
-        from dxtbx.datablock import DataBlockFactory
-
         # Convert the experiment list to dict
         obj = self.to_dict()
 
@@ -753,8 +752,6 @@ class _(object):
         else:
             to_write = [(filename, dictionary)]
 
-        from dxtbx.datablock import AutoEncoder
-
         for fname, obj in to_write:
             if compact:
                 separators = (",", ":")
@@ -806,8 +803,6 @@ class _(object):
 @boost.python.inject_into(Beam)
 class _(object):
     def get_direction(self):
-        import warnings
-
         warnings.warn(
             "Calling get_direction is deprecated. Please use "
             ".get_sample_to_source_direction() instead. "

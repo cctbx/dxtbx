@@ -7,18 +7,19 @@ Average images of any dxtbx-supported format. Handles many individual images or 
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import copy
 import sys
+from builtins import range
 
 import libtbx.load_env
+from libtbx import easy_mp, option_parser
+from libtbx.utils import Sorry, Usage
+from scitbx.array_family import flex
+
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.cbf_writer import FullCBFWriter
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.Registry import Registry
-from libtbx import easy_mp, option_parser
-from libtbx.utils import Sorry, Usage
-from scitbx.array_family import flex
 
 
 def splitit(l, n):

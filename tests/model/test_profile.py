@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.model import ProfileModelFactory
 import pytest
+
+from dxtbx.model import ProfileModelFactory
 
 
 def test_profile_modelling():

@@ -1,4 +1,13 @@
 from __future__ import absolute_import, division, print_function
+
+import sys
+
+import h5py
+import numpy as np
+
+from scitbx import matrix
+from scitbx.array_family import flex
+
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
@@ -17,8 +26,6 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
 
     @staticmethod
     def understand(image_file):
-        import h5py
-
         h5_handle = h5py.File(image_file, "r")
         understood = False
         if "file_info" in h5_handle and "run_number_list" in h5_handle["file_info"]:
@@ -28,8 +35,6 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
         return understood
 
     def _start(self):
-        import h5py
-
         self._h5_handle = h5py.File(self.get_image_file(), "r")
         self._run = FormatHDF5Sacla._get_run_h5group(self._h5_handle)
         event_info = self._run["event_info"]
@@ -45,8 +50,6 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
         return h5_handle[run_str]
 
     def _detector(self, index=None):
-        from scitbx import matrix
-
         # Get the pixel and image size
         detector_2d_assembled_1 = self._run["detector_2d_assembled_1"]
         detector_info = detector_2d_assembled_1["detector_info"]
@@ -87,9 +90,6 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
         return len(self._images)
 
     def get_raw_data(self, index=0):
-        from scitbx.array_family import flex
-        import numpy as np
-
         detector_2d_assembled_1 = self._run["detector_2d_assembled_1"]
         tag = detector_2d_assembled_1[self._images[index]]
         return flex.double(tag["detector_data"].value.astype(np.float64))
@@ -108,7 +108,5 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatHDF5Sacla.understand(arg))

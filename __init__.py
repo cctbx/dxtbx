@@ -5,6 +5,8 @@ import os
 import sys
 import warnings
 
+import dxtbx.format.Registry
+
 # Invert FPE trap defaults, https://github.com/cctbx/cctbx_project/pull/324
 if "boost.python" in sys.modules:
     import boost.python
@@ -66,8 +68,6 @@ def load(filename):
     :returns:         A dxtbx Format-subclass instance for the file type
     :raises IOError:  if the file format could not be determined
     """
-    import dxtbx.format.Registry
-
     # Unwrap PEP-519-style objects. This covers py.path, pathlib, ...
     if hasattr(filename, "__fspath__"):
         filename = filename.__fspath__()

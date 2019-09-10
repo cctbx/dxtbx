@@ -1,9 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
+import dxtbx.data.beamline_defs as dxbd
+
 
 def test_lookup_unknown_detector():
-    import dxtbx.data.beamline_defs as dxbd
-
     n = dxbd.get_beamline_definition(
         "This is a detector serial number that does not exist"
     )
@@ -15,8 +15,6 @@ def test_lookup_unknown_detector():
 
 
 def test_lookup_known_detector():
-    import dxtbx.data.beamline_defs as dxbd
-
     n = dxbd.get_beamline_definition("PILATUS 2M, S/N 24-0107 Diamond")
     assert "Dummy" not in str(n), n
     assert str(n) != ""

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import object
 import math
+from builtins import object
 
 from scitbx import matrix
 

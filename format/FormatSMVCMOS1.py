@@ -2,12 +2,16 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import calendar
+import sys
 import time
+from builtins import range
 
-from dxtbx.format.FormatSMV import FormatSMV
 from scitbx import matrix
+from scitbx.array_family import flex
+
+from dxtbx import read_uint16
+from dxtbx.format.FormatSMV import FormatSMV
 
 
 class FormatSMVCMOS1(FormatSMV):
@@ -178,8 +182,6 @@ class FormatSMVCMOS1(FormatSMV):
         # currently have no non-little-endian machines...
 
         from boost.python import streambuf
-        from dxtbx import read_uint16
-        from scitbx.array_family import flex
 
         assert len(self.get_detector()) == 1
         image_size = self.get_detector()[0].get_image_size()
@@ -192,8 +194,6 @@ class FormatSMVCMOS1(FormatSMV):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatSMVCMOS1.understand(arg))

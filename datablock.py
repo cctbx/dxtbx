@@ -1,35 +1,36 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import collections
 import itertools
 import json
 import logging
-import operator
 import math
+import operator
 import os.path
-from os.path import abspath, dirname, isdir, isfile, join, normpath, splitext
 import warnings
+from builtins import range
+from os.path import abspath, dirname, isdir, isfile, join, normpath, splitext
 
+import six
 import six.moves.cPickle as pickle
 
-import dxtbx.imageset
 import libtbx
-import six
+from libtbx.utils import Sorry
+from scitbx import matrix
+
+import dxtbx.imageset
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import get_format_class_for_file
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize import load
 from dxtbx.serialize.filename import resolve_path
+from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import (
     locate_files_matching_template_string,
     template_regex,
     template_string_number_index,
 )
-from libtbx.utils import Sorry
-from scitbx import matrix
-
 
 logger = logging.getLogger(__name__)
 
@@ -1051,8 +1052,6 @@ class DataBlockFactory(object):
     @staticmethod
     def from_json(string, check_format=True, directory=None):
         """ Decode a datablock from JSON string. """
-        from dxtbx.serialize.load import _decode_dict
-
         return DataBlockFactory.from_dict(
             json.loads(string, object_hook=_decode_dict),
             check_format=check_format,

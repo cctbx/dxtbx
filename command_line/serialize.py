@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
+from optparse import OptionParser
+
 if __name__ == "__main__":
-    from optparse import OptionParser
     from dxtbx.serialize import dump
     from dxtbx.imageset import ImageSetFactory
 

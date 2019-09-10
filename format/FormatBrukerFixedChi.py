@@ -1,8 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
-from dxtbx.format.FormatBruker import FormatBruker
+
+from iotbx.detectors.bruker import BrukerImage
 from scitbx import matrix
+
+from dxtbx.format.FormatBruker import FormatBruker
 
 
 class FormatBrukerFixedChi(FormatBruker):
@@ -32,7 +36,6 @@ class FormatBrukerFixedChi(FormatBruker):
             self.header_dict[key.replace(":", "").strip()] = [
                 v.strip() for v in values.split()
             ]
-        from iotbx.detectors.bruker import BrukerImage
 
         self.detectorbase = BrukerImage(self._image_file)
 
@@ -126,8 +129,6 @@ class FormatBrukerFixedChi(FormatBruker):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatBrukerFixedChi.understand(arg))

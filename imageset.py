@@ -1,11 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
 from builtins import range
+
 import boost.python
+
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
-
-ext = boost.python.import_ext("dxtbx_ext")
+from dxtbx.format.Format import Format
+from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.sweep_filenames import group_files_by_imageset, template_image_range
 from dxtbx_imageset_ext import (
     ExternalLookup,
     ExternalLookupItemBool,
@@ -15,6 +18,8 @@ from dxtbx_imageset_ext import (
     ImageSetData,
     ImageSweep,
 )
+
+ext = boost.python.import_ext("dxtbx_ext")
 
 __all__ = (
     "ExternalLookup",
@@ -246,8 +251,6 @@ def _analyse_files(filenames):
         A list of (template, [indices], is_sweep)
 
     """
-    from dxtbx.sweep_filenames import group_files_by_imageset
-
     # Analyse filenames to figure out how many imagesets we have
     filelist_per_imageset = group_files_by_imageset(filenames)
 
@@ -358,9 +361,6 @@ class ImageSetFactory(object):
             A list of sweeps
 
         """
-        from dxtbx.sweep_filenames import template_image_range
-        from dxtbx.format.Format import Format
-
         if not check_format:
             assert not check_headers
 
@@ -479,9 +479,6 @@ class ImageSetFactory(object):
         format_kwargs=None,
     ):
         """Create an image set"""
-        from dxtbx.format.Format import Format
-        from dxtbx.format.FormatMultiImage import FormatMultiImage
-
         # Get the format object
         if format_class is None:
             if check_format:
@@ -515,8 +512,6 @@ class ImageSetFactory(object):
         format_kwargs=None,
     ):
         """Create a sweep"""
-        from dxtbx.format.Format import Format
-
         indices = sorted(indices)
 
         # Get the template format

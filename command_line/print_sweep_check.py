@@ -1,9 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from dxtbx.sweep import sweep_factory
+
 
 def print_sweep(list_of_images):
-
-    from dxtbx.sweep import sweep_factory
 
     s = sweep_factory.sweep(list_of_images, check_headers=True)
 
@@ -14,6 +16,4 @@ def print_sweep(list_of_images):
 
 
 if __name__ == "__main__":
-    import sys
-
     print_sweep(sys.argv[1:])

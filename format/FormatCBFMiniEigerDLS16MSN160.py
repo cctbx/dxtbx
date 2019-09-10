@@ -1,6 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+import libtbx
 from scitbx.array_family import flex
+
 from dxtbx.format.FormatCBFMiniEiger import FormatCBFMiniEiger
 from dxtbx.masking import GoniometerMaskerFactory
 
@@ -36,8 +40,6 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
     @staticmethod
     def has_dynamic_shadowing(**kwargs):
-        import libtbx
-
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
         if dynamic_shadowing in (libtbx.Auto, "Auto"):
             return True
@@ -103,8 +105,6 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatCBFMiniEigerDLS16MSN160.understand(arg))

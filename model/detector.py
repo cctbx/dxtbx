@@ -1,21 +1,31 @@
 from __future__ import absolute_import, division, print_function
 
+import os
+from builtins import object, range
+
+import libtbx.phil
+from cctbx.eltbx import attenuation_coefficient
+from scitbx import matrix
+
+import pycbf
+from dxtbx.model.detector_helpers import (
+    detector_helper_sensors,
+    find_undefined_value,
+    set_detector_distance,
+    set_mosflm_beam_centre,
+    set_slow_fast_beam_centre_mm,
+)
+from dxtbx_model_ext import (
+    Detector,
+    Panel,
+    ParallaxCorrectedPxMmStrategy,
+    SimplePxMmStrategy,
+)
+
 # N.B. this should probably be generalized for non
 # flat detectors, or composite detectors constructed from a number of flat
 # elements.
 
-from builtins import range
-from builtins import object
-
-import os
-
-import libtbx.phil
-import pycbf
-from scitbx import matrix
-from dxtbx_model_ext import Panel, Detector
-from dxtbx_model_ext import SimplePxMmStrategy, ParallaxCorrectedPxMmStrategy
-from dxtbx.model.detector_helpers import detector_helper_sensors
-from dxtbx.model.detector_helpers import find_undefined_value
 
 dxtbx_overload_scale = float(os.getenv("DXTBX_OVERLOAD_SCALE", "1"))
 
@@ -195,8 +205,6 @@ class DetectorFactory(object):
         Create a new detector model from phil parameters
 
         """
-        from cctbx.eltbx import attenuation_coefficient
-
         detector = Detector()
 
         # Create a list of panels
@@ -307,8 +315,6 @@ class DetectorFactory(object):
         Overwrite from phil parameters
 
         """
-        from cctbx.eltbx import attenuation_coefficient
-
         # Override any panel parameters
         for panel_params in params.detector.panel:
             panel = detector[panel_params.id]
@@ -417,10 +423,6 @@ class DetectorFactory(object):
         Convert phil parameters into detector model
 
         """
-        from dxtbx.model.detector_helpers import set_detector_distance
-        from dxtbx.model.detector_helpers import set_mosflm_beam_centre
-        from dxtbx.model.detector_helpers import set_slow_fast_beam_centre_mm
-
         # Check the input. If no reference detector is provided then
         # Create the detector model from scratch from the parameters
         if reference is None:

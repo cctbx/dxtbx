@@ -5,11 +5,18 @@ An implementation of the CBF image reader for Pilatus images, from the Pilatus
 
 from __future__ import absolute_import, division, print_function
 
+import binascii
+import sys
+
+import libtbx
+from cbflib_adaptbx import uncompress
+from scitbx import matrix
+from scitbx.array_family import flex
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from dxtbx.masking import GoniometerMaskerFactory
-
+from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 # Module positional offsets in x, y, in pixels - for the moment ignoring the
 # rotational offsets as these are not well defined. To be honest these
@@ -165,8 +172,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
 
     @staticmethod
     def has_dynamic_shadowing(**kwargs):
-        import libtbx
-
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
         if dynamic_shadowing in (libtbx.Auto, "Auto"):
             return True
@@ -199,8 +204,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
             omega_value = float(self._cif_header_dictionary["Omega"].split()[0])
         else:
             omega_value = 0.0
-
-        from scitbx.array_family import flex
 
         phi = (1.0, 0.0, 0.0)
         kappa = (0.914, 0.279, -0.297)
@@ -291,7 +294,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         # got to here means 60-panel version
 
         from dxtbx.model.detector import Detector
-        from scitbx import matrix
 
         d = Detector()
 
@@ -346,9 +348,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         return GoniometerMaskerFactory.mini_kappa(goniometer)
 
     def _read_cbf_image(self):
-        from cbflib_adaptbx import uncompress
-        import binascii
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -382,8 +381,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatusDLS6MSN100.understand(arg))

@@ -2,10 +2,15 @@
 
 from __future__ import absolute_import, division, print_function
 
+import binascii
 import re
+import sys
+
+from cbflib_adaptbx import uncompress
 
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
+from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv
 
 
 class FormatCBFFullPilatus(FormatCBFFull):
@@ -97,9 +102,6 @@ class FormatCBFFullPilatus(FormatCBFFull):
         return detector
 
     def _read_cbf_image(self):
-        from cbflib_adaptbx import uncompress
-        import binascii
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -125,14 +127,10 @@ class FormatCBFFullPilatus(FormatCBFFull):
         return self._raw_data
 
     def get_vendortype(self):
-        from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv
-
         return gv(self.get_detector())
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatCBFFullPilatus.understand(arg))

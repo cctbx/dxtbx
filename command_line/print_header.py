@@ -1,11 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from scitbx.array_family import flex
+
+from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.format.Registry import Registry
+
 
 def print_header():
-    import sys
-    from dxtbx.format.Registry import Registry
-    from scitbx.array_family import flex
-
     # this will do the lookup for every frame - this is strictly not needed
     # if all frames are from the same instrument
 
@@ -34,7 +37,6 @@ def print_header():
             print("No scan model found")
         else:
             print(scan)
-        from dxtbx.format.FormatMultiImage import FormatMultiImage
 
         if not issubclass(format_class, FormatMultiImage):
             try:

@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import struct
+import sys
 
 from dxtbx.format.FormatTIFFRayonix import FormatTIFFRayonix
 
@@ -132,8 +133,6 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatTIFFRayonixSPring8.understand(arg))

@@ -1,9 +1,13 @@
 from __future__ import absolute_import, division, print_function
-from dxtbx.model.experiment_list import ExperimentListFactory
-from scitbx.matrix import sqr
-from dxtbx.model import Crystal
+
 from cctbx import crystal_orientation
+from cctbx.crystal import symmetry
+from cctbx.uctbx import unit_cell
 from libtbx.test_utils import approx_equal
+from scitbx.matrix import sqr
+
+from dxtbx.model import Crystal
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 """
 This test exercises and demos several pieces of cctbx/dxtbx/nanoBragg
@@ -20,8 +24,6 @@ orientations
 
 """
 
-from cctbx.uctbx import unit_cell
-from cctbx.crystal import symmetry
 
 GFC = symmetry(
     unit_cell=unit_cell((5.876, 7.299, 29.124, 90.00, 95.79, 90.00)),

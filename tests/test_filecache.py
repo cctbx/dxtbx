@@ -1,16 +1,16 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import io
 import os
 import random
+from builtins import range
+
+import libtbx.load_env
 
 import dxtbx.filecache
 
 
 def test_filecache():
-    import libtbx.load_env
-
     dxtbx_dir = libtbx.env.dist_path("dxtbx")
     image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
 

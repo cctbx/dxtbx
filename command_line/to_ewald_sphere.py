@@ -1,12 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
+
+from dxtbx import ImageToEwaldSphere
+from dxtbx.sweep import SweepFactory
 
 
 def to_ewald_sphere(list_of_images):
-
-    from dxtbx.sweep import SweepFactory
-    from dxtbx import ImageToEwaldSphere
 
     sweep = SweepFactory.sweep(list_of_images)
     beam = sweep.get_beam()
@@ -25,6 +26,4 @@ def to_ewald_sphere(list_of_images):
 
 
 if __name__ == "__main__":
-    import sys
-
     to_ewald_sphere(sys.argv[1:])

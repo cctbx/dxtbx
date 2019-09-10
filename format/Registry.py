@@ -6,9 +6,10 @@ of image formats.
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import object
-import pkg_resources
 import warnings
+from builtins import object
+
+import pkg_resources
 
 
 def get_format_class_for(format_class_name):

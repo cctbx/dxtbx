@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from iotbx.detectors.dtrek import DTREKImage
+
 from dxtbx.format.FormatSMVRigakuA200 import FormatSMVRigakuA200
 
 
@@ -32,8 +34,6 @@ class FormatSMVRigakuA200SPring8BL26B1(FormatSMVRigakuA200):
         return True
 
     def detectorbase_start(self):
-        from iotbx.detectors.dtrek import DTREKImage
-
         self.detectorbase = DTREKImage(self._image_file)
         self.detectorbase.readHeader()
 

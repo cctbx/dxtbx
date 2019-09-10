@@ -1,16 +1,19 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import math
+from builtins import range
 
-from scitbx.array_family import flex
-from scitbx.matrix import col
 from libtbx.phil import parse
-from libtbx.utils import Sorry
-from dxtbx.model.experiment_list import ExperimentListFactory
-from scitbx.math.superpose import least_squares_fit
-from xfel.command_line.cspad_detector_congruence import iterate_detector_at_level
 from libtbx.test_utils import approx_equal
+from libtbx.utils import Sorry
+from scitbx.array_family import flex
+from scitbx.math.superpose import least_squares_fit
+from scitbx.matrix import col
+from xfel.command_line.cspad_detector_congruence import iterate_detector_at_level
+
+from dials.util.options import OptionParser
+from dxtbx.model.experiment_list import ExperimentListFactory
+from dxtbx.serialize import dump
 
 help_message = """
 This program is used to superpose a moving detector onto a reference detector
@@ -55,8 +58,6 @@ class Script(object):
 
     def __init__(self):
         """ Set the expected options. """
-        from dials.util.options import OptionParser
-
         # Create the option parser
         usage = "usage: dxtbx.detector_superpose reference.json moving.json "
         self.parser = OptionParser(
@@ -201,8 +202,6 @@ class Script(object):
             else:
                 print("Movement not close to zero, repeating fit")
                 print()
-
-        from dxtbx.serialize import dump
 
         dump.experiment_list(moving_experiments, params.output_experiments)
 

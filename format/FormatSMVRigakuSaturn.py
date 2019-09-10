@@ -4,11 +4,14 @@ Inherits from FormatSMVRigaku.
 """
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
+import sys
 import time
+from builtins import range
+
+from iotbx.detectors.saturn import SaturnImage
+from scitbx import matrix
 
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
-from scitbx import matrix
 
 
 class FormatSMVRigakuSaturn(FormatSMVRigaku):
@@ -74,8 +77,6 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
         return False
 
     def detectorbase_start(self):
-        from iotbx.detectors.saturn import SaturnImage
-
         self.detectorbase = SaturnImage(self._image_file)
         self.detectorbase.open_file = self.open_file
         self.detectorbase.readHeader()
@@ -186,8 +187,6 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatSMVRigakuSaturn.understand(arg))

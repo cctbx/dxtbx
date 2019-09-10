@@ -8,9 +8,15 @@ from __future__ import absolute_import, division, print_function
 
 import binascii
 import os
+import sys
 
+from cbflib_adaptbx import uncompress
+from iotbx.detectors.pilatus_minicbf import PilatusImage
+
+import pycbf
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
+from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
 from dxtbx.model import ParallaxCorrectedPxMmStrategy, SimplePxMmStrategy
 
 dxtbx_overload_scale = float(os.getenv("DXTBX_OVERLOAD_SCALE", "1"))
@@ -221,8 +227,6 @@ class FormatCBFMini(FormatCBF):
         )
 
     def _read_cbf_image(self):
-        from cbflib_adaptbx import uncompress
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -264,8 +268,6 @@ class FormatCBFMini(FormatCBF):
         return self._raw_data
 
     def detectorbase_start(self):
-        from iotbx.detectors.pilatus_minicbf import PilatusImage
-
         self.detectorbase = PilatusImage(self._image_file)
         self.detectorbase.readHeader()  # necessary for LABELIT
 
@@ -294,9 +296,6 @@ class FormatCBFMini(FormatCBF):
           Auxiliary files (bad pixel mask, flat field, trim, image path)
           Detector not normal to beam
         """
-        import pycbf
-        from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
-
         cbf = cbf_wrapper()
         cbf_root = os.path.splitext(os.path.basename(path))[0] + ".cbf"
         cbf.new_datablock(os.path.splitext(os.path.basename(path))[0].encode())
@@ -426,7 +425,5 @@ class FormatCBFMini(FormatCBF):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMini.understand(arg))

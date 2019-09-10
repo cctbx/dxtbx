@@ -1,11 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from libtbx.phil import parse
+from xfel.cxi.cspad_ana import cspad_tbx
+
+from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
-from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
-from dxtbx import IncorrectFormatError
-from libtbx.phil import parse
+from dxtbx.format.FormatStill import FormatStill
 
 try:
     import psana
@@ -195,8 +199,6 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
     def get_psana_timestamp(self, index):
         """ Get the cctbx.xfel style event timestamp given an index """
-        from xfel.cxi.cspad_ana import cspad_tbx
-
         evt = self._get_event(index)
         time = evt.get(psana.EventId).time()
         # fid = evt.get(psana.EventId).fiducials()
@@ -208,7 +210,5 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatXTC.understand(arg))

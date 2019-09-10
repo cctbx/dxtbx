@@ -1,15 +1,17 @@
 from __future__ import absolute_import, division, print_function
+
 import binascii
 import sys
 
+import h5py
 import numpy
 
-from dxtbx.format import setup_hdf5_plugin_path
-from scitbx.array_family import flex
 from cbflib_adaptbx import compress
+from scitbx.array_family import flex
+
+from dxtbx.format import setup_hdf5_plugin_path
 
 setup_hdf5_plugin_path()  # must be called before import h5py
-import h5py
 
 
 def get_mask(nfast, nslow):

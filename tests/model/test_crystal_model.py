@@ -1,21 +1,25 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import math
 import random
+from builtins import range
 
 import pytest
+
 from cctbx import crystal, sgtbx, uctbx
-from dxtbx.model import (
-    Crystal,
-    MosaicCrystalKabsch2010,
-    MosaicCrystalSauter2014,
-    CrystalFactory,
-)
+from cctbx.sgtbx import change_of_basis_op
 from libtbx.test_utils import approx_equal
 from scitbx import matrix
-from scitbx.math import euler_angles
-from scitbx.math import euler_angles_as_matrix
+from scitbx.array_family import flex
+from scitbx.math import euler_angles, euler_angles_as_matrix
+
+from dxtbx.model import (
+    Crystal,
+    CrystalFactory,
+    MosaicCrystalKabsch2010,
+    MosaicCrystalSauter2014,
+)
+from dxtbx.tests.model.crystal_model_old import crystal_model_old
 
 
 def random_rotation():
@@ -437,8 +441,6 @@ def test_similarity():
 
 @pytest.mark.xfail(reason="https://github.com/cctbx/dxtbx/issues/5")
 def test_change_basis_mosaic_crystal():
-    from cctbx.sgtbx import change_of_basis_op
-
     mosaic_model = MosaicCrystalSauter2014(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
@@ -459,8 +461,6 @@ def test_change_basis_mosaic_crystal():
 
 
 def test_check_old_vs_new():
-    from dxtbx.tests.model.crystal_model_old import crystal_model_old
-
     model_1 = Crystal(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
@@ -556,8 +556,6 @@ def test_set_scan_varying_B_covariance(crystal_class):
         real_space_c=(0, 0, 12),
         space_group_symbol="P 1",
     )
-
-    from scitbx.array_family import flex
 
     cov_B = flex.double(
         (

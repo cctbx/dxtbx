@@ -1,6 +1,14 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function
 
+import ast
+import imp
+import pkgutil
+
+import libtbx.pkg_utils
+
+import dxtbx.format
+
 try:
     import dials.precommitbx.nagger
 
@@ -8,12 +16,6 @@ try:
 except ImportError:
     pass
 
-import ast
-import imp
-import pkgutil
-
-import dxtbx.format
-import libtbx.pkg_utils
 
 # --- format class registration ---
 

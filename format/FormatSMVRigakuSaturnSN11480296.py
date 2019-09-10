@@ -6,9 +6,12 @@ of fast and slow directions.)
 """
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
-from dxtbx.format.FormatSMVRigakuSaturn import FormatSMVRigakuSaturn
+
 from scitbx import matrix
+
+from dxtbx.format.FormatSMVRigakuSaturn import FormatSMVRigakuSaturn
 
 
 class FormatSMVRigakuSaturnSN11480296(FormatSMVRigakuSaturn):
@@ -105,8 +108,6 @@ class FormatSMVRigakuSaturnSN11480296(FormatSMVRigakuSaturn):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatSMVRigakuSaturnSN11480296.understand(arg))

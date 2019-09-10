@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
+from optparse import OptionParser
+
 from dxtbx.datablock import DataBlockDumper, DataBlockFactory
 
 if __name__ == "__main__":
-
-    from optparse import OptionParser
 
     usage = "usage: %prog [options] /path/to/image/files"
     parser = OptionParser(usage)

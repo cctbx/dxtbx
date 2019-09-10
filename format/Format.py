@@ -9,15 +9,29 @@ goniometers etc. from the headers and hence a format specific factory.
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 from future import standard_library
-
-standard_library.install_aliases()
 
 import functools
 import sys
 import urllib.parse
 import urllib.request
+from builtins import range
+from os.path import abspath
+
+import libtbx
+
+import dxtbx.filecache_controller
+from dxtbx.format.image import ImageBool
+from dxtbx.imageset import ImageSet, ImageSetData, ImageSweep
+from dxtbx.model import MultiAxisGoniometer
+from dxtbx.model.beam import BeamFactory
+from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.goniometer import GoniometerFactory
+from dxtbx.model.scan import ScanFactory
+from dxtbx.sweep_filenames import template_regex
+
+standard_library.install_aliases()
+
 
 if sys.hexversion < 0x3040000:
     # try Python3.3 backport bz2 pypi module first.
@@ -43,15 +57,9 @@ try:
 except ImportError:
     gzip = None
 
-import dxtbx.filecache_controller
 
 # import access to all of the factories that we will be needing
 
-from dxtbx.model.goniometer import GoniometerFactory
-from dxtbx.model.detector import DetectorFactory
-from dxtbx.model.beam import BeamFactory
-from dxtbx.model.scan import ScanFactory
-from dxtbx.model import MultiAxisGoniometer
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -123,8 +131,6 @@ class Format(object):
 
     @staticmethod
     def has_dynamic_shadowing(**kwargs):
-        import libtbx
-
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
         if dynamic_shadowing in (libtbx.Auto, "Auto"):
             return False
@@ -301,13 +307,6 @@ class Format(object):
         Factory method to create an imageset
 
         """
-        from dxtbx.format.image import ImageBool
-        from dxtbx.imageset import ImageSetData
-        from dxtbx.imageset import ImageSet
-        from dxtbx.imageset import ImageSweep
-        from dxtbx.sweep_filenames import template_regex
-        from os.path import abspath
-
         # Get filename absolute paths
         filenames = tuple(map(abspath, filenames))
 

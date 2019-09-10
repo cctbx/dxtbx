@@ -1,16 +1,24 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+import h5py
+
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
-from dxtbx.format.nexus import is_nexus_file
-from dxtbx.format.nexus import NXmxReader
-from dxtbx.format.nexus import BeamFactory
-from dxtbx.format.nexus import DetectorFactory, DetectorFactoryFromGroup
-from dxtbx.format.nexus import GoniometerFactory
-from dxtbx.format.nexus import ScanFactory
-from dxtbx.format.nexus import DataFactory, DetectorGroupDataFactory
-from dxtbx.format.nexus import MaskFactory
+from dxtbx.format.nexus import (
+    BeamFactory,
+    DataFactory,
+    DetectorFactory,
+    DetectorFactoryFromGroup,
+    DetectorGroupDataFactory,
+    GoniometerFactory,
+    MaskFactory,
+    NXmxReader,
+    ScanFactory,
+    is_nexus_file,
+)
 
 
 class FormatNexus(FormatHDF5):
@@ -138,8 +146,6 @@ class FormatNexus(FormatHDF5):
 class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
     @staticmethod
     def understand(image_file):
-        import h5py
-
         is_nexus_still = False
         try:
             from dxtbx.format.nexus import find_entries, find_class
@@ -164,8 +170,6 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         if FormatNexus.understand(arg):
 

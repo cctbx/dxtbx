@@ -2,9 +2,17 @@ from __future__ import absolute_import, division, print_function
 
 import warnings
 
-import dxtbx
-from scitbx import matrix
+from six.moves import StringIO
+
+from cctbx import uctbx
+from cctbx.sgtbx import space_group, space_group_symbols
+from iotbx.xds import xds_inp, xparm
+from rstbx.cftbx.coordinate_frame_converter import coordinate_frame_converter
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
+from scitbx import matrix
+
+import dxtbx
+from dxtbx.imageset import ImageSetFactory
 from dxtbx.model.detector_helpers_types import detector_helpers_types
 
 
@@ -19,9 +27,6 @@ def to_imageset(input_filename, extra_filename=None):
         The imageset
 
     """
-    from iotbx.xds import xds_inp
-    from dxtbx.imageset import ImageSetFactory
-
     # Read the input filename
     handle = xds_inp.reader()
     handle.read_file(input_filename)
@@ -96,9 +101,6 @@ def to_crystal(filename):
         The crystal model
 
     """
-    from rstbx.cftbx.coordinate_frame_converter import coordinate_frame_converter
-    from cctbx.sgtbx import space_group, space_group_symbols
-
     # Get the real space coordinate frame
     cfc = coordinate_frame_converter(filename)
     real_space_a = cfc.get("real_space_a")
@@ -420,8 +422,6 @@ class to_xds(object):
     def xparm_xds(
         self, real_space_a, real_space_b, real_space_c, space_group, out=None
     ):
-        from cctbx import uctbx
-
         R = self.imagecif_to_xds_transformation_matrix
         unit_cell_a_axis = R * matrix.col(real_space_a)
         unit_cell_b_axis = R * matrix.col(real_space_b)
@@ -431,9 +431,6 @@ class to_xds(object):
         )
         metrical_matrix = (A_inv * A_inv.transpose()).as_sym_mat3()
         unit_cell = uctbx.unit_cell(metrical_matrix=metrical_matrix)
-        from iotbx.xds import xparm
-
-        from six.moves import StringIO
 
         b = StringIO()
         writer = xparm.writer(

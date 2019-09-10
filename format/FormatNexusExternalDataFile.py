@@ -1,5 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+import h5py
+
 from dxtbx.format.FormatHDF5 import FormatHDF5
 
 
@@ -22,8 +26,6 @@ def is_nexus_external_data_file(filename):
     A hacky function to check if this is a nexus file
 
     """
-    import h5py
-
     # Get the file handle
     handle = h5py.File(filename, "r")
 
@@ -49,6 +51,4 @@ class FormatNexusExternalDataFile(FormatHDF5):
 
 
 if __name__ == "__main__":
-    import sys
-
     f = FormatNexusExternalDataFile(sys.argv[1])

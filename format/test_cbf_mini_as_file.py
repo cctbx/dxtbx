@@ -1,12 +1,18 @@
 from __future__ import absolute_import, division, print_function
 
-import pytest
 import os
-from dxtbx.datablock import DataBlockFactory
-from dxtbx.format.FormatCBFMini import FormatCBFMini
-from dxtbx.datablock import BeamComparison, DetectorComparison, GoniometerComparison
-from dxtbx.datablock import SweepDiff
+
+import pytest
+
 from dials.util.options import tolerance_phil_scope
+from dxtbx.datablock import (
+    BeamComparison,
+    DataBlockFactory,
+    DetectorComparison,
+    GoniometerComparison,
+    SweepDiff,
+)
+from dxtbx.format.FormatCBFMini import FormatCBFMini
 
 
 @pytest.mark.parametrize(

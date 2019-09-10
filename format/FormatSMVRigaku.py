@@ -5,6 +5,7 @@ Inherits from FormatSMV.
 from __future__ import absolute_import, division, print_function
 
 import calendar
+import sys
 import time
 
 from dxtbx.format.FormatSMV import FormatSMV
@@ -112,8 +113,6 @@ class FormatSMVRigaku(FormatSMV):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatSMVRigaku.understand(arg))

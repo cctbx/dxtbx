@@ -5,16 +5,18 @@ automatically, and builds a hierarchy if present
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import collections
 import struct
+import sys
+from builtins import range
+
+from libtbx.utils import Sorry
+from scitbx.array_family import flex
+from scitbx.matrix import col, sqr
 
 import pycbf
 from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile, FormatCBFMultiTileStill
 from dxtbx.model import Detector
-from libtbx.utils import Sorry
-from scitbx.array_family import flex
-from scitbx.matrix import col, sqr
 
 
 class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
@@ -409,8 +411,6 @@ class FormatCBFMultiTileHierarchyStill(
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatCBFMultiTileHierarchy.understand(arg))

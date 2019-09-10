@@ -2,9 +2,11 @@
 
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
-import pycbf
 
+import pycbf
+from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
@@ -72,8 +74,6 @@ class FormatCBFMultiTile(FormatCBFFull):
     def _start(self):
         """Open the image file as a cbf file handle, and keep this somewhere
         safe."""
-        from dxtbx.format.FormatCBF import FormatCBF
-
         FormatCBF._start(self)  # Note, skip up an inheritance level
 
     def detectorbase_start(self):
@@ -214,7 +214,5 @@ class FormatCBFMultiTileStill(FormatStill, FormatCBFMultiTile):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMultiTile.understand(arg))

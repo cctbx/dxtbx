@@ -1,13 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import object
-
-from builtins import range
 import math
+from builtins import object, range
+
+import libtbx.phil
 
 import pycbf
 from dxtbx_model_ext import Beam
-import libtbx.phil
 
 beam_phil_scope = libtbx.phil.parse(
     """

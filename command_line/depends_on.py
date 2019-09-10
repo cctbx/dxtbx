@@ -1,4 +1,7 @@
 from __future__ import absolute_import, division, print_function
+
+import sys
+
 import h5py
 
 sample = None
@@ -69,6 +72,4 @@ def depends_on(in_name):
 
 
 if __name__ == "__main__":
-    import sys
-
     depends_on(sys.argv[1])

@@ -1,16 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
-from builtins import object
-
 import os
+from builtins import object, range
 
 import libtbx.phil
-import pycbf
-from dxtbx_model_ext import Scan
-from dxtbx.model.scan_helpers import scan_helper_image_files
-from dxtbx.model.scan_helpers import scan_helper_image_formats
 from scitbx.array_family import flex
+
+import pycbf
+from dxtbx.model.scan_helpers import scan_helper_image_files, scan_helper_image_formats
+from dxtbx_model_ext import Scan
 
 scan_phil_scope = libtbx.phil.parse(
     """

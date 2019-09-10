@@ -7,16 +7,17 @@ cxi.index.  Note, oscillation values are not preserved.
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import math
 import os
 import sys
+from builtins import range
 
-import dxtbx
 import libtbx.option_parser
-from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
 from libtbx import easy_pickle
 from libtbx.utils import Usage
+from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
+
+import dxtbx
 
 
 def crop_image_pickle(

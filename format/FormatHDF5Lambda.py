@@ -5,8 +5,17 @@ http://www.x-spectrum.de/
 
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+import h5py
+
+from cctbx.eltbx import attenuation_coefficient
+from scitbx import matrix
+from scitbx.array_family import flex
+
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatHDF5 import FormatHDF5
+from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 
 class FormatHDF5Lambda(FormatHDF5):
@@ -23,8 +32,6 @@ class FormatHDF5Lambda(FormatHDF5):
         if tag != "\211HDF\r\n\032\n":
             return False
 
-        import h5py
-
         h5_handle = h5py.File(image_file, "r")
 
         try:
@@ -40,8 +47,6 @@ class FormatHDF5Lambda(FormatHDF5):
         return False
 
     def _start(self):
-        import h5py
-
         self._h5_handle = h5py.File(self.get_image_file(), "r")
 
     def _goniometer(self):
@@ -51,8 +56,6 @@ class FormatHDF5Lambda(FormatHDF5):
 
     def _detector(self):
         """Partly dummy detector"""
-        from scitbx import matrix
-
         # Get the detector geometry
         entry = self._h5_handle["entry"]
         instrument = entry["instrument"]
@@ -93,9 +96,6 @@ class FormatHDF5Lambda(FormatHDF5):
         # incorrect. Set it anyway, to override later.
         beam = self._beam()
         wavelength = beam.get_wavelength()
-
-        from cctbx.eltbx import attenuation_coefficient
-        from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
         # this will fail for undefined composite materials
         table = attenuation_coefficient.get_table(material)
@@ -151,8 +151,6 @@ class FormatHDF5Lambda(FormatHDF5):
             return scan[index]
 
     def get_raw_data(self, index):
-        from scitbx.array_family import flex
-
         detector = self._h5_handle["entry/instrument/detector"]
         data = detector["data"]
         im = data[index, :, :].astype("int32")  # convert from int16
@@ -163,7 +161,5 @@ class FormatHDF5Lambda(FormatHDF5):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatHDF5Lambda.understand(arg))

@@ -4,6 +4,8 @@ import glob
 import os
 
 from libtbx.test_utils import approx_equal
+from rstbx.cftbx import coordinate_frame_helpers
+
 from dxtbx.imageset import ImageSetFactory
 from dxtbx.serialize import xds
 
@@ -63,7 +65,6 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
     # run coordinate frame converter on xparm.xds as a sanity check
     with open("xparm.xds", mode="wb") as fh:
         fh.write(s2.encode("ASCII"))
-    from rstbx.cftbx import coordinate_frame_helpers
 
     converter = coordinate_frame_helpers.import_xds_xparm("xparm.xds")
     detector = sweep.get_detector()

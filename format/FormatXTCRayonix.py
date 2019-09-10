@@ -1,7 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.format.FormatXTC import FormatXTC, locator_str
+import sys
+
 from libtbx.phil import parse
+from scitbx.array_family import flex
+
+import psana
+from dxtbx.format.FormatXTC import FormatXTC, locator_str
 
 try:
     from xfel.cxi.cspad_ana import cspad_tbx, rayonix_tbx
@@ -22,8 +27,6 @@ rayonix_locator_scope = parse(rayonix_locator_str + locator_str, process_include
 
 class FormatXTCRayonix(FormatXTC):
     def __init__(self, image_file, **kwargs):
-        import psana
-
         super(FormatXTCRayonix, self).__init__(
             image_file, locator_scope=rayonix_locator_scope, **kwargs
         )
@@ -51,8 +54,6 @@ class FormatXTCRayonix(FormatXTC):
         return any(["rayonix" in src.lower() for src in params.detector_address])
 
     def get_raw_data(self, index):
-        from scitbx.array_family import flex
-
         assert len(self.params.detector_address) == 1
         # det = psana.Detector(self.params.detector_address[0], self._env)
         data = rayonix_tbx.get_data_from_psana_event(
@@ -103,7 +104,5 @@ class FormatXTCRayonix(FormatXTC):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatXTCRayonix.understand(arg))

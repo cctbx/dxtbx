@@ -1,7 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
-from scitbx import matrix
 from cctbx.sgtbx import space_group as SG
+from scitbx import matrix
+
+from dxtbx.model import Crystal
 
 
 class CrystalFactory(object):
@@ -93,8 +95,6 @@ class CrystalFactory(object):
         :returns: A crystal model derived from the given Mosflm A matrix
         :rtype: :py:class:`crystal_model`
         """
-        from dxtbx.model import Crystal
-
         if not space_group:
             space_group = SG("P1")
 

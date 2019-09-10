@@ -6,14 +6,14 @@ dimensions.
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import object
 import io
 import os
 import sys
+from builtins import object
 
 import dxtbx
-from dxtbx.model.detector_helpers import detector_helper_sensors
 from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.detector_helpers import detector_helper_sensors
 
 
 class detector_helpers_types(object):

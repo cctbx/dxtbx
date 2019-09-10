@@ -5,13 +5,17 @@ http://www.er-c.org/cbb/info/dmformat/
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import os
 import struct
+import sys
+from builtins import range
 
+from boost.python import streambuf
+from scitbx.array_family import flex
+
+from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx import IncorrectFormatError
 
 
 class FormatGatanDM4(FormatMultiImage, Format):
@@ -355,9 +359,6 @@ class FormatGatanDM4(FormatMultiImage, Format):
 
     def get_raw_data(self, index):
 
-        from boost.python import streambuf
-        from scitbx.array_family import flex
-
         # is this image a type we can read?
         assert self._data_type in ["h", "f", "B", "l", "b", "H", "I", "d"]
 
@@ -408,7 +409,5 @@ class FormatGatanDM4(FormatMultiImage, Format):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatGatanDM4.understand(arg))

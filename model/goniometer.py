@@ -1,15 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
-from builtins import object
-
 import math
+from builtins import object, range
 
 import libtbx.phil
+from scitbx.array_family import flex
+
 import pycbf
 from dxtbx_model_ext import KappaGoniometer  # noqa: F401, exported symbol
 from dxtbx_model_ext import Goniometer, MultiAxisGoniometer
-from scitbx.array_family import flex
 
 goniometer_phil_scope = libtbx.phil.parse(
     """

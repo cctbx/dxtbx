@@ -1,19 +1,18 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import random
+from builtins import range
 
 import pytest
 import six.moves.cPickle as pickle
+
 from cctbx.eltbx import attenuation_coefficient
-from dxtbx.model import Beam
-from dxtbx.model import Detector
-from dxtbx.model import Panel
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
-from dxtbx.model.detector_helpers import set_mosflm_beam_centre
 from libtbx.test_utils import approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
+
+from dxtbx.model import Beam, Detector, Panel, ParallaxCorrectedPxMmStrategy
+from dxtbx.model.detector_helpers import set_mosflm_beam_centre
 
 
 def create_detector(offset):

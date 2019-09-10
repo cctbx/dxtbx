@@ -1,11 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+
 import pytest
 
 from dxtbx.format.FormatCBFFullPilatusDLS6MSN126 import FormatCBFFullPilatusDLS6MSN126
-from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.masking import SmarGonShadowMasker
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def test_DLS_I03_smargon(dials_data, tmpdir):

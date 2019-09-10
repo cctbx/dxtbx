@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+from iotbx.detectors.hamamatsu import HamamatsuImage
+
 from dxtbx.format.FormatSMVADSC import FormatSMVADSC
 
 
@@ -16,8 +18,6 @@ class FormatSMVHamamatsu(FormatSMVADSC):
         return "hamamatsu" in header["DETECTOR_NAME"].lower()
 
     def detectorbase_start(self):
-        from iotbx.detectors.hamamatsu import HamamatsuImage
-
         self.detectorbase = HamamatsuImage(self._image_file)
         self.detectorbase.open_file = self.open_file
         self.detectorbase.readHeader()

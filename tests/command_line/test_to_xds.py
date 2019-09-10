@@ -2,8 +2,9 @@ from __future__ import absolute_import, division, print_function
 
 import procrunner
 import pytest
-from dxtbx.serialize import dump
+
 from dxtbx.imageset import ImageSetFactory
+from dxtbx.serialize import dump
 
 
 @pytest.fixture(scope="session")

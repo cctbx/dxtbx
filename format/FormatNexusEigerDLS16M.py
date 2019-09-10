@@ -1,10 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 import h5py
+
 import libtbx
+
 from dxtbx.format.FormatNexus import FormatNexus
-from dxtbx.model import MultiAxisGoniometer
 from dxtbx.masking import GoniometerMaskerFactory
+from dxtbx.model import MultiAxisGoniometer
 
 
 class FormatNexusEigerDLS16M(FormatNexus):
@@ -72,8 +76,6 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
 
 if __name__ == "__main__":
-
-    import sys
 
     for arg in sys.argv[1:]:
         print(FormatNexusEigerDLS16M.understand(arg))

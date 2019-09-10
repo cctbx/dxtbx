@@ -8,11 +8,13 @@ and generate the experimental model representations.
 
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.format.Format import Format
-from dxtbx.format.FormatTIFFHelpers import read_basic_tiff_header
-from dxtbx.format.FormatTIFFHelpers import LITTLE_ENDIAN
-from dxtbx.format.FormatTIFFHelpers import BIG_ENDIAN
 from dxtbx import IncorrectFormatError
+from dxtbx.format.Format import Format
+from dxtbx.format.FormatTIFFHelpers import (
+    BIG_ENDIAN,
+    LITTLE_ENDIAN,
+    read_basic_tiff_header,
+)
 
 
 class FormatTIFF(Format):

@@ -5,6 +5,9 @@ import re
 import textwrap
 import warnings
 
+from dxtbx.datablock import DataBlockDumper
+from dxtbx.serialize.imageset import imageset_to_dict
+
 
 def compact_simple_list(match):
     """Callback function. Given a simple list match, compact it and ensure
@@ -70,8 +73,6 @@ def imageset_to_string(obj, compact=False):
         The JSON string
 
     """
-    from dxtbx.serialize.imageset import imageset_to_dict
-
     if compact:
         return json.dumps(
             imageset_to_dict(obj), separators=(",", ":"), ensure_ascii=True
@@ -101,8 +102,6 @@ def imageset(obj, outfile, compact=False):
 
 def datablock(obj, outfile, **kwargs):
     """ Dump the given object to file. """
-    from dxtbx.datablock import DataBlockDumper
-
     dump = DataBlockDumper(obj)
     dump.as_file(outfile, **kwargs)
 

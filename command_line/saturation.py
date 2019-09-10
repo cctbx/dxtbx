@@ -1,9 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from dxtbx import load
+
 
 def saturation(image_file):
-    from dxtbx import load
-
     i = load(image_file)
     d = i.get_detector()
     raw_data = i.get_raw_data()
@@ -28,8 +30,6 @@ def saturation(image_file):
 
 
 if __name__ == "__main__":
-    import sys
-
     for image_file in sys.argv[1:]:
         i, s = saturation(image_file)
         print("%6d %.6f" % (i, s))

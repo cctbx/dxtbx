@@ -2,10 +2,20 @@ from __future__ import absolute_import, division, print_function
 
 import pytest
 
+from scitbx import matrix
+from scitbx.array_family import flex
+
+from dxtbx.model import (
+    Beam,
+    BeamFactory,
+    Goniometer,
+    GoniometerFactory,
+    Scan,
+    ScanFactory,
+)
+
 
 def test_beam():
-    from dxtbx.model import Beam, BeamFactory
-
     b1 = Beam((1, 0, 0), 2, 0.1, 0.1)
     d = b1.to_dict()
     b2 = BeamFactory.from_dict(d)
@@ -27,10 +37,7 @@ def test_beam():
 
 
 def test_beam_with_scan_points():
-    from dxtbx.model import Beam, BeamFactory
-
     b1 = Beam((1, 0, 0), 2, 0.1, 0.1)
-    from scitbx import matrix
 
     s0_static = matrix.col(b1.get_s0())
     b1.set_s0_at_scan_points([s0_static] * 5)
@@ -47,8 +54,6 @@ def test_beam_with_scan_points():
 
 
 def test_goniometer():
-    from dxtbx.model import Goniometer, GoniometerFactory
-
     g1 = Goniometer((1, 0, 0), (1, 0, 0, 0, 1, 0, 0, 0, 1))
     d = g1.to_dict()
     g2 = GoniometerFactory.from_dict(d)
@@ -66,9 +71,6 @@ def test_goniometer():
 
 
 def test_multi_axis_goniometer():
-    from dxtbx.model import GoniometerFactory
-    from scitbx.array_family import flex
-
     g1 = GoniometerFactory.multi_axis(
         flex.vec3_double(((1, 0, 0),)), flex.double((0,)), flex.std_string(("PHI",)), 0
     )
@@ -90,15 +92,10 @@ def test_multi_axis_goniometer():
 
 
 def test_goniometer_with_scan_points():
-    from dxtbx.model import Goniometer, GoniometerFactory
-    from scitbx.array_family import flex
-
     simple_g = Goniometer((1, 0, 0), (1, 0, 0, 0, 1, 0, 0, 0, 1))
     multi_ax_g = GoniometerFactory.multi_axis(
         flex.vec3_double(((1, 0, 0),)), flex.double((0,)), flex.std_string(("PHI",)), 0
     )
-
-    from scitbx import matrix
 
     for g1 in [simple_g, multi_ax_g]:
 
@@ -117,9 +114,6 @@ def test_goniometer_with_scan_points():
 
 
 def test_scan():
-    from dxtbx.model import Scan, ScanFactory
-    from scitbx.array_family import flex
-
     s1 = Scan(
         (1, 3),
         (1.0, 0.2),

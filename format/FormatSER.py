@@ -5,13 +5,17 @@ http://www.er-c.org/cbb/info/TIAformat/
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import struct
+import sys
+from builtins import range
+
+from boost.python import streambuf
+from scitbx.array_family import flex
 
 import dxtbx.ext
+from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx import IncorrectFormatError
 
 
 class FormatSER(FormatMultiImage, Format):
@@ -137,9 +141,6 @@ class FormatSER(FormatMultiImage, Format):
         return Format.get_image_file(self)
 
     def get_raw_data(self, index):
-        from boost.python import streambuf
-        from scitbx.array_family import flex
-
         data_offset = self._header_dictionary["DataOffsetArray"][index]
         with FormatSER.open_file(self._image_file, "rb") as f:
             f.seek(data_offset)
@@ -189,7 +190,5 @@ class FormatSER(FormatMultiImage, Format):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSER.understand(arg))

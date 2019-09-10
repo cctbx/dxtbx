@@ -1,9 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
 
 if __name__ == "__main__":
-    import sys
     from dxtbx.datablock import DataBlockFactory
     from dxtbx.model import ParallaxCorrectedPxMmStrategy
 

@@ -4,11 +4,10 @@ templates and so on.
 """
 from __future__ import absolute_import, division, print_function
 
-from builtins import object
-
 import math
 import os
 import re
+from builtins import object
 
 # These are reversed patterns...
 patterns = [

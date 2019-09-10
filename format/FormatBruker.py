@@ -1,8 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
-from dxtbx.format.Format import Format
+
+from iotbx.detectors.bruker import BrukerImage
+
 from dxtbx import IncorrectFormatError
+from dxtbx.format.Format import Format
 
 
 class FormatBruker(Format):
@@ -104,8 +108,6 @@ class FormatBruker(Format):
         """Open the image file, read the image header, copy the key / value
         pairs into an internal dictionary self._header_dictionary along with
         the length of the header in bytes self._header_size."""
-        from iotbx.detectors.bruker import BrukerImage
-
         self.detectorbase = BrukerImage(self._image_file)
         # self.detectorbase.readHeader() #unnecessary for the Bruker specialization
 
@@ -156,7 +158,5 @@ class FormatBruker(Format):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatBruker.understand(arg))
