@@ -1,20 +1,10 @@
-#!/usr/bin/env python
-# FormatCBFMiniEigerPhotonFactory.py
-#   Copyright (C) 2015 Diamond Light Source, Richard Gildea
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# An implementation of the CBF image reader for Eiger images. Inherits from
-# FormatCBFMini.
+"""An implementation of the CBF image reader for Eiger images"""
 
 from __future__ import absolute_import, division, print_function
 
 import os
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
-
-# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):

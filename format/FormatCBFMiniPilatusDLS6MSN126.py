@@ -1,11 +1,7 @@
-#!/usr/bin/env python
-#   Copyright (C) 2014 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# An implementation of the CBF image reader for Pilatus images, from the Pilatus
-# 6M SN 100 currently on Diamond I03.
+"""
+An implementation of the CBF image reader for Pilatus images, from the Pilatus
+6M SN 100 currently on Diamond I03.
+"""
 
 from __future__ import absolute_import, division, print_function
 

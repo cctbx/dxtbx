@@ -1,4 +1,4 @@
-# Implementation of an ImageFormat class to read MarIP-format image
+"""An ImageFormat class to read MarIP-format image"""
 
 from __future__ import absolute_import, division, print_function
 

@@ -1,6 +1,8 @@
-# A registry class to handle Format classes and provide lists of them when
-# this is useful for i.e. identifying the best tool to read a given range
-# of image formats.
+"""
+A registry class to handle Format classes and provide lists of them when
+this is useful for i.e. identifying the best tool to read a given range
+of image formats.
+"""
 
 from __future__ import absolute_import, division, print_function
 

@@ -1,5 +1,7 @@
-# Experimental format for Gatan Digital Micrograph DM4 files. See
-# http://www.er-c.org/cbb/info/dmformat/
+"""
+Experimental format for Gatan Digital Micrograph DM4 files. See
+http://www.er-c.org/cbb/info/dmformat/
+"""
 
 from __future__ import absolute_import, division, print_function
 

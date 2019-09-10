@@ -1,4 +1,4 @@
-# A simple cache controller. Caching only one file at a time.
+"""A simple cache controller. Caching only one file at a time."""
 
 from __future__ import absolute_import, division, print_function
 

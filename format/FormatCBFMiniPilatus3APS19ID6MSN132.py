@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# FormatCBFMiniPilatus3AOS19ID6MSN132.py
-#   Copyright (C) 2016 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus

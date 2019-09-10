@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-# FormatBrukerPhotonII.py
-#  Copyright (C) (2017) STFC Rutherford Appleton Laboratory, UK.
-#
-#  Author: David Waterman.
-#
-#  This code is distributed under the BSD license, a copy of which is
-#  included in the root directory of this package.
-
 from __future__ import absolute_import, division, print_function
 
 import sys

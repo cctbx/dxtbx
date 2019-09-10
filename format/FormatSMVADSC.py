@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# An implementation of the SMV image reader for ADSC images. Inherits from
-# FormatSMV.
+"""An implementation of the SMV image reader for ADSC images"""
 
 from __future__ import absolute_import, division, print_function
 

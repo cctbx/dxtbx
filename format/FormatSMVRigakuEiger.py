@@ -1,13 +1,7 @@
-#!/usr/bin/env python
-# FormatSMVRigakuEiger.py
-#   Copyright (C) 2013 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# An implementation of the SMV image reader for Rigaku Eiger.
-# Be aware: this is completely unrelated to the HDF5 Eiger format.
-
+"""
+An implementation of the SMV image reader for Rigaku Eiger.
+Be aware: this is completely unrelated to the HDF5 Eiger format.
+"""
 from __future__ import absolute_import, division, print_function
 
 from builtins import range

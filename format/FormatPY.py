@@ -1,4 +1,4 @@
-# Implementation of a base class to read a pickled Python dictionary.
+"""Implementation of a base class to read a pickled Python dictionary."""
 
 from __future__ import absolute_import, division, print_function
 

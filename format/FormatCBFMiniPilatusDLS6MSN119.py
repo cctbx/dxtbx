@@ -1,12 +1,7 @@
-#!/usr/bin/env python
-# FormatCBFMiniPilatusDLS6MSN119.py
-#   Copyright (C) 2014 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# An implementation of the CBF image reader for Pilatus images, from the Pilatus
-# 6M SN 119 currently on Diamond I24.
+"""
+An implementation of the CBF image reader for Pilatus images, from the Pilatus
+6M SN 119 currently on Diamond I24.
+"""
 
 from __future__ import absolute_import, division, print_function
 

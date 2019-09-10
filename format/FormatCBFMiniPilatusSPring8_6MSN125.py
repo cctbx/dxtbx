@@ -1,20 +1,6 @@
-#!/usr/bin/env python
-# FormatCBFMiniPilatusSPring8_6MSN125.py
-#
-#  Copyright (C) (2015) STFC Rutherford Appleton Laboratory, UK.
-#
-#  Author: David Waterman.
-#
-#  This code is distributed under the BSD license, a copy of which is
-#  included in the root directory of this package.
-#
-
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
-
-# from dxtbx.model import ParallaxCorrectedPxMmStrategy
-# from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 
 
 class FormatCBFMiniPilatusSPring8_6MSN125(FormatCBFMiniPilatus):

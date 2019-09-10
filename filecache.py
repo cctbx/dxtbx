@@ -1,37 +1,40 @@
-# A shared caching layer for file-like objects.
-# pseudo_file objects can be used as drop-in replacements for actual file
-# handles to provide a transparent caching layer to avoid reading multiple
-# times from disk or network.
-#
-# To create a pseudo_file instance, encapsulate a 'real' file handler
-# inside a lazy cache object:
-#   from dxtbx.filecache import lazy_file_cache
-#   cache = lazy_file_cache(open(filename, 'rb'))
-#
-# Finally use a reference to the cache object to create one or many pseudo_file
-# instances:
-#   fh1 = cache.open()
-#   from dxtbx.filecache import pseudo_file
-#   fh2 = pseudo_file(cache) # equivalent
-#   fh3 = pseudo_file(cache)
-#   ...
-#
-# Each pseudo_file instance can then be treated as a proper read-only
-# file handle, but will benefit from a shared cache:
-#   with cache.open() as fh:
-#     fh.read(100)
-#     fh.readline()
-#     fh.seek(500)
-#     fh.read()
-#     fh.readlines()
-#     fh.close()
-#
-# To flush the cache and free the memory you can use
-#     cache.close()
-# This will drop the cache when all associated file handles are closed.
-# To instantly drop the cache you can use
-#     cache.force_close()
-# Any further access attempts will then result in an exception.
+"""
+A shared caching layer for file-like objects.
+
+pseudo_file objects can be used as drop-in replacements for actual file
+handles to provide a transparent caching layer to avoid reading multiple
+times from disk or network.
+
+To create a pseudo_file instance, encapsulate a 'real' file handler
+inside a lazy cache object:
+  from dxtbx.filecache import lazy_file_cache
+  cache = lazy_file_cache(open(filename, 'rb'))
+
+Finally use a reference to the cache object to create one or many pseudo_file
+instances:
+  fh1 = cache.open()
+  from dxtbx.filecache import pseudo_file
+  fh2 = pseudo_file(cache) # equivalent
+  fh3 = pseudo_file(cache)
+  ...
+
+Each pseudo_file instance can then be treated as a proper read-only
+file handle, but will benefit from a shared cache:
+  with cache.open() as fh:
+    fh.read(100)
+    fh.readline()
+    fh.seek(500)
+    fh.read()
+    fh.readlines()
+    fh.close()
+
+To flush the cache and free the memory you can use
+    cache.close()
+This will drop the cache when all associated file handles are closed.
+To instantly drop the cache you can use
+    cache.force_close()
+Any further access attempts will then result in an exception.
+"""
 
 from __future__ import absolute_import, division, print_function
 from builtins import object

@@ -1,13 +1,8 @@
-#!/usr/bin/env python
-# FormatCBFMini.py
-#   Copyright (C) 2011 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# Base implementation of miniCBF format - as used with Dectris detectors -
-# this will read the header and populate a dictionary of the keyword / value
-# pairs.
+"""
+Base implementation of miniCBF format - as used with Dectris detectors -
+this will read the header and populate a dictionary of the keyword / value
+pairs.
+"""
 
 from __future__ import absolute_import, division, print_function
 

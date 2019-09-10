@@ -7,9 +7,6 @@ from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 injected_data = {}
-# import dlstbx.eiger_stream.data
-# injected_data = dlstbx.eiger_stream.data.valid_things
-# injected_data = dlstbx.eiger_stream.data.invalid_things
 
 
 class FormatEigerStream(FormatMultiImage, Format):

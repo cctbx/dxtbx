@@ -1,6 +1,6 @@
-#!/usr/bin/env python
 # LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.read_sweep
-# tool to benchmark overall time cost for simply reading data
+
+"""Tool to benchmark overall time cost for simply reading data"""
 
 from __future__ import absolute_import, division, print_function
 

@@ -1,14 +1,8 @@
-#!/usr/bin/env python
-# FormatSMVADSCSNID19.py
-#   Copyright (C) 2015 Diamond Light Source, Richard Gildea
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# An implementation of the SMV image reader for ADSC images. Inherits from
-# FormatSMVADSC, customised for example on APS ID19 SN 458 and 914
-# which have reversed phi.
-
+"""
+An implementation of the SMV image reader for ADSC images. Inherits from
+FormatSMVADSC, customised for example on APS ID19 SN 458 and 914
+which have reversed phi.
+"""
 from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN

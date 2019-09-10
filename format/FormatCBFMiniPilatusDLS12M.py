@@ -1,12 +1,4 @@
-#!/usr/bin/env python
-# FormatCBFMiniPilatusDLS12M.py
-#
-#   Copyright (C) 2014 Diamond Light Source, Graeme Winter
-#
-#   This code is distributed under the BSD license, a copy of which is
-#   included in the root directory of this package.
-#
-# An implementation of the CBF image reader for Pilatus images, for the P12M-DLS
+"""An implementation of the CBF image reader for Pilatus images, for the P12M-DLS"""
 
 from __future__ import absolute_import, division, print_function
 

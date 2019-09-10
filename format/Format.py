@@ -1,9 +1,11 @@
-# A top-level class to represent image formats which does little else but
-# (i) establish an abstract class for what needs to be implemented and
-# (ii) include the format registration code for any image formats which
-# inherit from this. This will also contain links to the static methods
-# from the X(component)Factories which will allow construction of e.g.
-# goniometers etc. from the headers and hence a format specific factory.
+"""
+A top-level class to represent image formats which does little else but
+(i) establish an abstract class for what needs to be implemented and
+(ii) include the format registration code for any image formats which
+inherit from this. This will also contain links to the static methods
+from the X(component)Factories which will allow construction of e.g.
+goniometers etc. from the headers and hence a format specific factory.
+"""
 
 from __future__ import absolute_import, division, print_function
 

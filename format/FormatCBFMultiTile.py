@@ -1,5 +1,4 @@
-# Reads a multi-tile CBF image, discovering its detector geometry
-# automatically
+"""Reads a multi-tile CBF image, discovering its detector geometry automatically"""
 
 from __future__ import absolute_import, division, print_function
 
