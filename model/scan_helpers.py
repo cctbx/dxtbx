@@ -1,7 +1,8 @@
+"""
+Helpers for the scan class, which are things for handling e.g. filenames,
+templates and so on.
+"""
 from __future__ import absolute_import, division, print_function
-
-# Helpers for the scan class, which are things for handling e.g. filenames,
-# templates and so on.
 
 from builtins import object
 
@@ -9,8 +10,7 @@ import math
 import os
 import re
 
-# N.B. these are reversed patterns...
-
+# These are reversed patterns...
 patterns = [
     r"([0-9]{2,12})\.(.*)",
     r"(.*)\.([0-9]{2,12})_(.*)",
