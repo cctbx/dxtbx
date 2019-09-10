@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 from cctbx.sgtbx import space_group as SG
 from scitbx import matrix
 
-from dxtbx_model_ext import Crystal
+from dxtbx_model_ext import Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014
 
 
 class CrystalFactory(object):
@@ -40,16 +40,10 @@ class CrystalFactory(object):
                     print(
                         "Warning, two kinds of mosaicity found. Using Sauter2014 model"
                     )
-                from dxtbx.model import MosaicCrystalSauter2014
-
                 return MosaicCrystalSauter2014.from_dict(joint)
         if "mosaicity" in joint:
-            from dxtbx.model import MosaicCrystalKabsch2010
-
             return MosaicCrystalKabsch2010.from_dict(joint)
         else:
-            from dxtbx.model import Crystal
-
             return Crystal.from_dict(joint)
 
     @staticmethod
