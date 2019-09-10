@@ -7,6 +7,7 @@ import sys
 import time
 from builtins import range
 
+from boost.python import streambuf
 from scitbx import matrix
 from scitbx.array_family import flex
 
@@ -180,9 +181,6 @@ class FormatSMVCMOS1(FormatSMV):
         flex array of integers.)"""
 
         # currently have no non-little-endian machines...
-
-        from boost.python import streambuf
-
         assert len(self.get_detector()) == 1
         image_size = self.get_detector()[0].get_image_size()
         with self.open_file(self._image_file) as fh:

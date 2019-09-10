@@ -2,10 +2,10 @@ from __future__ import absolute_import, division, print_function
 
 from optparse import OptionParser
 
-if __name__ == "__main__":
-    from dxtbx.serialize import dump
-    from dxtbx.imageset import ImageSetFactory
+from dxtbx.imageset import ImageSetFactory
+from dxtbx.serialize import dump
 
+if __name__ == "__main__":
     # Specify the command line options
     usage = "usage: %prog [options] /path/to/image/files.ext"
     parser = OptionParser(usage)

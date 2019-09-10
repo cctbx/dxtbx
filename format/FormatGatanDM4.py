@@ -13,7 +13,15 @@ from builtins import range
 from boost.python import streambuf
 from scitbx.array_family import flex
 
-from dxtbx import IncorrectFormatError
+from dxtbx import (
+    IncorrectFormatError,
+    read_float32,
+    read_int16,
+    read_int32,
+    read_uint8,
+    read_uint16,
+    read_uint32,
+)
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
@@ -369,28 +377,16 @@ class FormatGatanDM4(FormatMultiImage, Format):
             f.seek(skip_bytes, whence=1)
 
             if self._data_type == "f":
-                from dxtbx import read_float32
-
                 raw_data = read_float32(streambuf(f), self._image_num_elements)
             elif self._data_type == "B":
-                from dxtbx import read_uint8
-
                 raw_data = read_uint8(streambuf(f), self._image_num_elements)
             elif self._data_type == "h":
-                from dxtbx import read_int16
-
                 raw_data = read_int16(streambuf(f), self._image_num_elements)
             elif self._data_type == "H":
-                from dxtbx import read_uint16
-
                 raw_data = read_uint16(streambuf(f), self._image_num_elements)
             elif self._data_type == "l":
-                from dxtbx import read_int32
-
                 raw_data = read_int32(streambuf(f), self._image_num_elements)
             elif self._data_type == "I":
-                from dxtbx import read_uint32
-
                 raw_data = read_uint32(streambuf(f), self._image_num_elements)
 
             # no C++ reader for remaining types (should be unusual anyway)

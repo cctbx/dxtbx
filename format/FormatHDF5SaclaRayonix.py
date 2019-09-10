@@ -4,6 +4,9 @@ import os
 import sys
 
 import h5py
+import numpy
+
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
@@ -104,10 +107,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
             self.set_index(index)
 
         if self._raw_data is None:
-            from scitbx.array_family import flex
-            import numpy
-            import h5py
-
             h5_handle = h5py.File(self.image_filename, "r")
             data = h5_handle[self.tag]["data"][()].astype(numpy.int32)
             h5_handle.close()

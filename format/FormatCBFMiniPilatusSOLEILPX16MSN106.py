@@ -4,6 +4,8 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 
+from scitbx.array_family import flex
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 
 
@@ -56,8 +58,6 @@ class FormatCBFMiniPilatusSOLEILPX16MSN106(FormatCBFMiniPilatus):
 
         else:
             # Smargon
-            from scitbx.array_family import flex
-
             phi = float(self._cif_header_dictionary["Phi"].split()[0])
             chi = float(self._cif_header_dictionary["Chi"].split()[0])
             omega = float(self._cif_header_dictionary["Omega"].split()[0])

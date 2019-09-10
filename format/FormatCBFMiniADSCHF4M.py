@@ -13,6 +13,7 @@ import sys
 import time
 
 from cbflib_adaptbx import uncompress
+from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.adsc_minicbf import ADSCHF4MImage
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
@@ -89,8 +90,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         # take into consideration here the thickness of the sensor also the
         # wavelength of the radiation (which we have in the same file...)
-        from cctbx.eltbx import attenuation_coefficient
-
         table = attenuation_coefficient.get_table("Si")
         mu = table.mu_at_angstrom(wavelength) / 10.0
         t0 = thickness

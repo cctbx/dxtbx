@@ -10,10 +10,14 @@ import binascii
 import os
 import sys
 
+from boost.python import streambuf
 from cbflib_adaptbx import uncompress
+from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.pilatus_minicbf import PilatusImage
+from scitbx.array_family import flex
 
 import pycbf
+from dxtbx import read_int32
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
@@ -150,8 +154,6 @@ class FormatCBFMini(FormatCBF):
         if material is not None:
             # take into consideration here the thickness of the sensor also the
             # wavelength of the radiation (which we have in the same file...)
-            from cctbx.eltbx import attenuation_coefficient
-
             table = attenuation_coefficient.get_table(material)
             mu = table.mu_at_angstrom(wavelength) / 10.0
             t0 = thickness
@@ -243,10 +245,6 @@ class FormatCBFMini(FormatCBF):
                 slow=cbf_header["slow"],
             )
         elif cbf_header["no_compression"]:
-            from boost.python import streambuf
-            from dxtbx import read_int32
-            from scitbx.array_family import flex
-
             assert len(self.get_detector()) == 1
             with self.open_file(self._image_file) as f:
                 f.read(data_offset)

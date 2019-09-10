@@ -5,6 +5,7 @@ import warnings
 from six.moves import StringIO
 
 from cctbx import uctbx
+from cctbx.eltbx import attenuation_coefficient
 from cctbx.sgtbx import space_group, space_group_symbols
 from iotbx.xds import xds_inp, xparm
 from rstbx.cftbx.coordinate_frame_converter import coordinate_frame_converter
@@ -13,6 +14,7 @@ from scitbx import matrix
 
 import dxtbx
 from dxtbx.imageset import ImageSetFactory
+from dxtbx.model import Crystal, MosaicCrystalKabsch2010, ParallaxCorrectedPxMmStrategy
 from dxtbx.model.detector_helpers_types import detector_helpers_types
 
 
@@ -50,9 +52,6 @@ def to_imageset(input_filename, extra_filename=None):
         models = dxtbx.load(extra_filename)
         detector = models.get_detector()
         if detector_name.strip() in ("PILATUS", "EIGER") or handle.silicon is not None:
-            from dxtbx.model import ParallaxCorrectedPxMmStrategy
-            from cctbx.eltbx import attenuation_coefficient
-
             if handle.silicon is None:
                 table = attenuation_coefficient.get_table("Si")
                 wavelength = models.get_beam().get_wavelength()
@@ -112,8 +111,6 @@ def to_crystal(filename):
 
     # Return the crystal model
     if mosaicity is None:
-        from dxtbx.model import Crystal
-
         crystal = Crystal(
             real_space_a=real_space_a,
             real_space_b=real_space_b,
@@ -121,8 +118,6 @@ def to_crystal(filename):
             space_group=crystal_space_group,
         )
     else:
-        from dxtbx.model import MosaicCrystalKabsch2010
-
         crystal = MosaicCrystalKabsch2010(
             real_space_a=real_space_a,
             real_space_b=real_space_b,
@@ -326,8 +321,6 @@ class to_xds(object):
                 "SENSOR_THICKNESS= %.3f" % self.get_detector()[0].get_thickness()
             )
             if self.get_detector()[0].get_material():
-                from cctbx.eltbx import attenuation_coefficient
-
                 material = self.get_detector()[0].get_material()
                 table = attenuation_coefficient.get_table(material)
                 mu = table.mu_at_angstrom(self.wavelength) / 10.0

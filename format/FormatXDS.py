@@ -10,6 +10,7 @@ from scitbx import matrix
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
+from dxtbx.model import Detector
 
 
 class FormatXDS(Format):
@@ -73,8 +74,6 @@ class FormatXDS(Format):
     def _detector(self):
         """Return a working detector instance."""
         if self._panel_origin is not None:
-            from dxtbx.model import Detector
-
             detector = Detector()
             root = detector.hierarchy()
             root.set_frame(self._fast_axis, self._slow_axis, self._detector_origin)

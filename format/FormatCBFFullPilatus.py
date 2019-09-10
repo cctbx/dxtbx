@@ -7,10 +7,12 @@ import re
 import sys
 
 from cbflib_adaptbx import uncompress
+from cctbx.eltbx import attenuation_coefficient
 
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv
+from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 
 class FormatCBFFullPilatus(FormatCBFFull):
@@ -72,9 +74,6 @@ class FormatCBFFullPilatus(FormatCBFFull):
             if beam:
                 # attenuation coefficient depends on the beam wavelength
                 wavelength = beam.get_wavelength()
-
-                from cctbx.eltbx import attenuation_coefficient
-                from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
                 # this will fail for undefined composite materials
                 table = attenuation_coefficient.get_table(material)

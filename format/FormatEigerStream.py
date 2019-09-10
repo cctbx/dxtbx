@@ -6,6 +6,7 @@ import bitshuffle
 import numpy as np
 
 from scitbx import matrix
+from scitbx.array_family import flex
 
 import lz4
 from dxtbx import IncorrectFormatError
@@ -128,10 +129,6 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Get the raw data from the image
         """
-        #   if hasattr(self, 'raw_data_cache'):
-        #     return self.raw_data_cache
-        from scitbx.array_family import flex
-
         info = self.header["info"]
         data = injected_data["streamfile_3"]
         if info["encoding"] == "lz4<":
@@ -146,20 +143,13 @@ class FormatEigerStream(FormatMultiImage, Format):
         data = np.array(data, ndmin=3)  # handle data, must be 3 dim
         data = data.reshape(data.shape[1:3]).astype("int32")
 
-        #   from pprint import pprint
         print("Get raw data")
-        #   import traceback
-        #   traceback.print_stack()
-        #   pprint(info)
 
         if info["type"] == "uint16":
             bad_sel = data == 2 ** 16 - 1
             data[bad_sel] = -1
 
         return flex.int(data)
-
-    #   self.raw_data_cache = flex.int(data)
-    #   return self.raw_data_cache
 
     def readBSLZ4(self, data, shape, dtype, size):
         """

@@ -15,7 +15,7 @@ from scitbx import matrix
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.masking import GoniometerMaskerFactory
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 
 class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
@@ -59,9 +59,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         # module positions from detector blueprints - modelling at the moment as
         # 24 modules, each consisting of 5 sensors (the latter is ignored)
-
-        from dxtbx.model import Detector
-
         x = matrix.col((-1, 0, 0))
         y = matrix.col((0, 1, 0))
         z = matrix.col((0, 0, 1))

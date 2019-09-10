@@ -8,6 +8,8 @@ import os
 import sys
 from builtins import range
 
+import numpy as np
+
 import libtbx.phil
 from libtbx import easy_pickle
 from libtbx.utils import Sorry, Usage
@@ -106,7 +108,6 @@ def run(args, imageset=None):
 
     if params.show_plots:
         from matplotlib import pyplot as plt
-        import numpy as np
 
         colormap = plt.cm.gist_ncar
         plt.gca().set_color_cycle(

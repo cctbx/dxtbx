@@ -9,11 +9,12 @@ import binascii
 import sys
 
 from cbflib_adaptbx import uncompress
+from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 # Module positional offsets in x, y, in pixels - for the moment ignoring the
 # rotational offsets as these are not well defined. To be honest these
@@ -236,9 +237,6 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
 
         # take into consideration here the thickness of the sensor also the
         # wavelength of the radiation (which we have in the same file...)
-
-        from cctbx.eltbx import attenuation_coefficient
-
         table = attenuation_coefficient.get_table("Si")
         mu = table.mu_at_angstrom(wavelength) / 10.0
         t0 = thickness
@@ -276,9 +274,6 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
             return detector
 
         # got to here means 60-panel version
-
-        from dxtbx.model import Detector
-
         d = Detector()
 
         beam_centre = matrix.col((beam_x * pixel_x, beam_y * pixel_y, 0))

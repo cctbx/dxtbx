@@ -26,6 +26,11 @@ if sys.version_info[:2] >= (3, 6):
 else:
     from pathlib2 import Path
 
+try:
+    import h5py
+except ImportError:
+    h5py = None
+
 
 def _generate_all_test_images():
     """Internal convenience function to generates a list of test images.
@@ -44,13 +49,10 @@ def _generate_all_test_images():
 
     # Handle the special berkeley-only h5 file
     special_h5 = "/net/viper/raid1/dectris/eiger16MNov2015/2015_11_10/insu6_1_master.h5"
-    try:
-        import h5py
-    except ImportError:
+    if h5py is None:
         yield pytest.param(
             special_h5, marks=pytest.mark.skip(reason="could not import 'h5py'")
         ), special_h5
-        h5py = None
     else:
         if os.path.isfile(special_h5):
             yield special_h5, special_h5

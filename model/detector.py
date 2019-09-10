@@ -5,6 +5,7 @@ from builtins import object, range
 
 import libtbx.phil
 from cctbx.eltbx import attenuation_coefficient
+from libtbx.utils import Sorry
 from scitbx import matrix
 
 import pycbf
@@ -445,8 +446,6 @@ class DetectorFactory(object):
             if len(params.detector.slow_fast_beam_centre) > 2:
                 panel_id = params.detector.slow_fast_beam_centre[2]
             if panel_id >= len(detector):
-                from libtbx.utils import Sorry
-
                 raise Sorry("Detector does not have panel index {}".format(panel_id))
             px_size_f, px_size_s = detector[0].get_pixel_size()
             slow_fast_beam_centre_mm = (

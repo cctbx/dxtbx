@@ -1,3 +1,11 @@
+"""
+Note, scans and gonios not supported here. This writer essentially writes still images
+
+Example to write the first 10 images from an h5 file:
+writer = FullCBFWriter("data.h5")
+for i in range(10):
+  writer.write_cbf("example_%d.cbf"%i, index=i)
+"""
 from __future__ import absolute_import, division, print_function
 
 import os
@@ -11,18 +19,7 @@ from xfel.cftbx.detector.cspad_cbf_tbx import (
 )
 
 import pycbf
-
-
-"""
-Note, scans and gonios not supported here. This writer essentially writes still images
-"""
-
-"""
-Example to write the first 10 images from an h5 file:
-writer = FullCBFWriter("data.h5")
-for i in range(10):
-  writer.write_cbf("example_%d.cbf"%i, index=i)
-"""
+from dxtbx.format.Registry import Registry
 
 
 class FullCBFWriter(object):
@@ -35,8 +32,6 @@ class FullCBFWriter(object):
         ) == 1, "Supply either filename or imageset"
 
         if filename is not None:
-            from dxtbx.format.Registry import Registry
-
             format_class = Registry.find(filename)
             imageset = format_class.get_imageset([filename])
 

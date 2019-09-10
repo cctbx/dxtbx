@@ -7,6 +7,7 @@ import calendar
 import sys
 import time
 
+from iotbx.detectors import SMVImage
 from scitbx import matrix
 
 from dxtbx.format.FormatSMV import FormatSMV
@@ -53,8 +54,6 @@ class FormatSMVTimePix_SU(FormatSMV):
 
     def detectorbase_start(self):
         if not hasattr(self, "detectorbase") or self.detectorbase is None:
-            from iotbx.detectors import SMVImage
-
             self.detectorbase = SMVImage(self._image_file)
             self.detectorbase.open_file = self.open_file
             self.detectorbase.readHeader()

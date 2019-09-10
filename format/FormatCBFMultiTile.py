@@ -5,6 +5,10 @@ from __future__ import absolute_import, division, print_function
 import sys
 from builtins import range
 
+import numpy
+
+from scitbx.array_family import flex
+
 import pycbf
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull
@@ -162,9 +166,6 @@ class FormatCBFMultiTile(FormatCBFFull):
             cbf.select_row(0)
 
             d = self.get_detector()
-
-            import numpy
-            from scitbx.array_family import flex
 
             for panel in d:
                 name = panel.get_name()

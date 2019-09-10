@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import gzip
 import os
 
 import pytest
@@ -16,7 +17,6 @@ def test_DLS_I03_smargon(dials_data, tmpdir):
 
     # The need to manually extract the file will be removed by
     # https://github.com/cctbx/dxtbx/pull/80
-    import gzip
 
     filename = tmpdir.join(os.path.split(filename_gz[:-3])[-1]).strpath
     with open(filename, "wb") as f:

@@ -14,6 +14,7 @@ import cctbx.crystal
 from libtbx.containers import OrderedSet
 from libtbx.utils import format_float_with_standard_uncertainty
 from scitbx import matrix
+from scitbx.array_family import flex
 
 from dxtbx.imageset import ImageGrid, ImageSet, ImageSweep
 from dxtbx.model.beam import BeamFactory
@@ -332,8 +333,6 @@ class _(object):
         # Extract covariance of B at scan points, if present
         cov_B_at_scan_points = d.get("B_covariance_at_scan_points")
         if cov_B_at_scan_points is not None:
-            from scitbx.array_family import flex
-
             cov_B_at_scan_points = flex.double(cov_B_at_scan_points).as_1d()
             cov_B_at_scan_points.reshape(flex.grid(xl.num_scan_points, 9, 9))
             xl.set_B_covariance_at_scan_points(cov_B_at_scan_points)

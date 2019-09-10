@@ -11,6 +11,7 @@ from scitbx.math.superpose import least_squares_fit
 from scitbx.matrix import col
 from xfel.command_line.cspad_detector_congruence import iterate_detector_at_level
 
+import dials.util
 from dials.util.options import OptionParser
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.serialize import dump
@@ -272,8 +273,6 @@ class Script(object):
 
 
 if __name__ == "__main__":
-    import dials.util
-
     with dials.util.show_mail_on_error():
         script = Script()
         script.run()

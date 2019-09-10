@@ -44,9 +44,6 @@ class FormatBrukerFixedChi(FormatBruker):
         # AXIS indexes into this list to define the scan axis (in FORTRAN counting)
         # START and RANGE define the start and step size for each image
         # assume omega is 1,0,0 axis; chi about 0,0,1 at datum
-
-        from scitbx import matrix
-
         angles = [float(a) for a in self.header_dict["ANGLES"]]
 
         beam = matrix.col((0, 0, 1))

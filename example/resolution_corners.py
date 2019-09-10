@@ -7,6 +7,8 @@ import sys
 
 from scitbx import matrix
 
+import dxtbx
+
 
 def resolution_corners(frame):
     """Compute the resolution limit corresponding to the corners of the detector
@@ -31,7 +33,5 @@ def resolution_corners(frame):
 
 
 if __name__ == "__main__":
-
-    import dxtbx
 
     resolution_corners(dxtbx.load(sys.argv[1]))

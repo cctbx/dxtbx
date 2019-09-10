@@ -63,9 +63,6 @@ def get_tiff_header(image_file):
 
 def read_tiff_image(image_file):
     # currently have no non-little-endian machines...
-
-    from boost.python import streambuf
-
     width, height, depth, order, header_bytes = get_tiff_header(image_file)
     image_size = (width, height)
     header_size = 4096

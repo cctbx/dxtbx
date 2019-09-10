@@ -12,9 +12,12 @@ import os
 import sys
 from builtins import range
 
+import numpy as np
+
 import libtbx.option_parser
 from libtbx import easy_pickle
 from libtbx.utils import Usage
+from scitbx.array_family import flex
 from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
 
 import dxtbx
@@ -30,7 +33,6 @@ def crop_image_pickle(
     @param data The image dictionary of interest
     """
     # only one active area is allowed, and it should be the size of the image.
-    from scitbx.array_family import flex
 
     if preserve_active_areas_even_though_cropping_would_invalidate_them is False:
         test = flex.int([0, 0, data["SIZE1"], data["SIZE2"]]) == data["ACTIVE_AREAS"]
@@ -171,13 +173,8 @@ def run(argv=None):
             img = None
 
         if img is None:
-            import numpy as np
-
             try:
                 raw_data = np.loadtxt(imgpath)
-
-                from scitbx.array_family import flex
-
                 raw_data = flex.double(raw_data.astype(np.double))
             except ValueError:
                 raise Usage("Couldn't load %s, no supported readers" % imgpath)

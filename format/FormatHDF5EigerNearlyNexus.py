@@ -11,6 +11,7 @@ from iotbx.detectors.eiger import EIGERImage
 from scitbx import matrix
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
+from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
 from dxtbx.format.nexus import (
     BeamFactory,
@@ -349,8 +350,6 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self._raw_data = DataFactory(data).model
 
         # update model for masking Eiger detectors
-        from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
-
         for f0, f1, s0, s1 in determine_eiger_mask(self._detector_model):
             self._detector_model[0].add_mask(f0 - 1, s0 - 1, f1, s1)
 
