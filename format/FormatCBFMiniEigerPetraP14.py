@@ -33,6 +33,5 @@ class FormatCBFMiniEigerPetraP14(FormatCBFMiniEiger):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniEigerPetraP14.understand(arg))

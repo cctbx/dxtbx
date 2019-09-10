@@ -98,6 +98,5 @@ class FormatHDF5Dectris(FormatHDF5):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatHDF5Dectris.understand(arg))

@@ -50,6 +50,5 @@ class FormatCBFMiniPilatusDLS6MSN114DMM(FormatCBFMiniPilatus, FormatStill):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatusDLS6MSN114DMM.understand(arg))

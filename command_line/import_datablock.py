@@ -5,7 +5,6 @@ from optparse import OptionParser
 from dxtbx.datablock import DataBlockDumper, DataBlockFactory
 
 if __name__ == "__main__":
-
     usage = "usage: %prog [options] /path/to/image/files"
     parser = OptionParser(usage)
 

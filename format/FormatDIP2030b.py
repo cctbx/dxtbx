@@ -77,6 +77,5 @@ class FormatDIP2030b(Format):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatDIP2030b.understand(arg))

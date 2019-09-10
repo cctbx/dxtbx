@@ -226,6 +226,5 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatusDLS12M.understand(arg))

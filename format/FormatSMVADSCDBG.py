@@ -69,6 +69,5 @@ class FormatSMVADSCDBG(FormatSMVADSC):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatSMVADSCDBG.understand(arg))

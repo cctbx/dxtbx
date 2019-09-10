@@ -150,7 +150,6 @@ def factory(list_of_images):
 
 
 if __name__ == "__main__":
-
     # run some tests
 
     xsx = to_xds(factory(sys.argv[1:]))

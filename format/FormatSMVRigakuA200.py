@@ -193,6 +193,5 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatSMVRigakuA200.understand(arg))

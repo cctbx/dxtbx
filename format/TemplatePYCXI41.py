@@ -21,6 +21,5 @@ class FormatPYCXI41(FormatPYunspecified):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatPYCXI41.understand(arg))

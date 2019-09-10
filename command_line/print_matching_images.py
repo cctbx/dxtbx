@@ -12,5 +12,4 @@ def print_matching_images(image):
 
 
 if __name__ == "__main__":
-
     print_matching_images(sys.argv[1])

@@ -61,6 +61,5 @@ class FormatRAXISII(RAXISHelper, Format):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatRAXISII.understand(arg))

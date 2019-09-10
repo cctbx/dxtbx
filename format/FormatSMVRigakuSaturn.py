@@ -187,6 +187,5 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatSMVRigakuSaturn.understand(arg))

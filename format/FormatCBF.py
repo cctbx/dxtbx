@@ -115,6 +115,5 @@ class FormatCBF(Format):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatCBF.understand(arg))

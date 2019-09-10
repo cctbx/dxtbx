@@ -105,6 +105,5 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniEigerDLS16MSN160.understand(arg))

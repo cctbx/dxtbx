@@ -393,7 +393,6 @@ class FormatSMVTimePix_SU_516x516(FormatSMVTimePix_SU):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print("FormatSMVTimePix_SU:", FormatSMVTimePix_SU.understand(arg))
         print(

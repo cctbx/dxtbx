@@ -197,5 +197,4 @@ X-Binary-Size-Padding: 4095
 
 
 if __name__ == "__main__":
-
     make_cbf(sys.argv[1], sys.argv[2])

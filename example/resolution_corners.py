@@ -33,5 +33,4 @@ def resolution_corners(frame):
 
 
 if __name__ == "__main__":
-
     resolution_corners(dxtbx.load(sys.argv[1]))

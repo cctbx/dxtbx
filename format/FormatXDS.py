@@ -142,6 +142,5 @@ class FormatXDS(Format):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatXDS.understand(arg))

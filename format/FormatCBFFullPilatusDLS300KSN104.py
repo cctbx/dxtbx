@@ -55,6 +55,5 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatCBFFullPilatusDLS300KSN104.understand(arg))

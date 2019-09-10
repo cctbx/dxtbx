@@ -91,6 +91,5 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatus.understand(arg))

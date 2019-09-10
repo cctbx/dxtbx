@@ -133,7 +133,6 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
 
 
 if __name__ == "__main__":
-
     for arg in sys.argv[1:]:
         print(FormatTIFFRayonixSPring8.understand(arg))
         # print FormatTIFFRayonixSPring8BL26B2.understand(arg)
