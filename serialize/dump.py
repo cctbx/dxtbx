@@ -107,27 +107,6 @@ def datablock(obj, outfile, **kwargs):
     dump.as_file(outfile, **kwargs)
 
 
-def crystal(obj, outfile, compact=False):
-    """Dump the given object to file.
-
-    Params:
-        obj The crystal to dump
-        outfile The output file name or file object
-        compact Write in compact representation
-
-    """
-    from dxtbx.serialize.crystal import to_string
-
-    # If the input is a string then open and write to that file
-    if isinstance(outfile, str):
-        with open(outfile, "w") as outfile:
-            outfile.write(to_string(obj, compact))
-
-    # Otherwise assume the input is a file and write to it
-    else:
-        outfile.write(to_string(obj, compact))
-
-
 def experiment_list(obj, outfile):
     """ Dump an experiment list. """
     warnings.warn(
