@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import json
 
-import bitshuffle
 import numpy as np
 
 from scitbx import matrix
@@ -21,6 +20,11 @@ try:
     import lz4
 except ImportError:
     lz4 = None
+
+try:
+    import bitshuffle
+except ImportError:
+    bitshuffle = None
 
 injected_data = {}
 
@@ -159,6 +163,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Unpack bitshuffle-lz4 compressed frame and return np array image data
         """
+        assert bitshuffle is not None, "No bitshuffle module"
         blob = np.fromstring(data[12:], dtype=np.uint8)
         # blocksize is big endian uint32 starting at byte 8, divided by element size
         blocksize = np.ndarray(shape=(), dtype=">u4", buffer=data[8:12]) / 4
@@ -171,6 +176,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Unpack bitshuffle-lz4 compressed 16 bit frame and return np array image data
         """
+        assert bitshuffle is not None, "No bitshuffle module"
         blob = np.fromstring(data[12:], dtype=np.uint8)
         return bitshuffle.decompress_lz4(blob, shape[::-1], np.dtype(dtype))
 
