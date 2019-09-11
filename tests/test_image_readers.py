@@ -24,7 +24,6 @@ from dxtbx.format.image import (
     TIFFReader,
     cbf_read_buffer,
 )
-from dxtbx.format.nexus import dataset_as_flex_int
 from dxtbx.model.detector import DetectorFactory
 
 
@@ -265,6 +264,8 @@ def test_multitile_cbf(dials_regression, cbf_image):
 )
 def test_hdf5(dials_regression, hdf5_image):
     h5py = pytest.importorskip("h5py")
+    # Import after we know h5py is present
+    from dxtbx.format.nexus import dataset_as_flex_int
 
     filename = os.path.join(dials_regression, hdf5_image)
     handle = h5py.File(filename, "r")
