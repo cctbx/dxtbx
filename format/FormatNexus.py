@@ -134,6 +134,19 @@ class FormatNexus(FormatHDF5):
     def get_detectorbase(self, index=None):
         raise NotImplementedError
 
+    @staticmethod
+    def get_instrument_name(handle):
+        if "short_name" in handle["/entry/instrument"].attrs:
+            name = handle["/entry/instrument"].attrs["short_name"].lower()
+        elif (
+            "/entry/instrument/name" in handle
+            and "short_name" in handle["/entry/instrument/name"].attrs
+        ):
+            name = handle["/entry/instrument/name"].attrs["short_name"].lower()
+        else:
+            name = None
+        return name
+
 
 class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
     @staticmethod
