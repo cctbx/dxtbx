@@ -1,11 +1,18 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
-from scitbx import matrix
-from cctbx.uctbx import unit_cell
+from math import pi, sqrt
+
+from six.moves import StringIO
+
+from cctbx.crystal_orientation import crystal_orientation
 from cctbx.sgtbx import space_group as SG
 from cctbx.sgtbx import space_group_symbols
-from cctbx.crystal_orientation import crystal_orientation
+from cctbx.uctbx import unit_cell
+from scitbx import matrix
+from scitbx.math import angle_derivative_wrt_vectors
+from scitbx.math.lefebvre import matrix_inverse_error_propagation
 
 
 class crystal_model_old(object):
@@ -83,8 +90,6 @@ class crystal_model_old(object):
 
     def show(self, show_scan_varying=False, out=None):
         if out is None:
-            import sys
-
             out = sys.stdout
         uc = self.get_unit_cell().parameters()
         sg = str(self.get_space_group().info())
@@ -152,8 +157,6 @@ class crystal_model_old(object):
         print("\n".join(msg), file=out)
 
     def __str__(self):
-        from six.moves import StringIO
-
         s = StringIO()
         self.show(out=s)
         return s.getvalue()
@@ -227,10 +230,6 @@ class crystal_model_old(object):
         return
 
     def _calc_cell_parameter_sd(self):
-
-        from scitbx.math.lefebvre import matrix_inverse_error_propagation
-        from scitbx.math import angle_derivative_wrt_vectors
-        from math import pi, sqrt
 
         # self._cov_B is the covariance matrix of elements of the B matrix. We
         # need to construct the covariance matrix of elements of the
@@ -610,8 +609,6 @@ class crystal_model_old(object):
         :returns: The mosaicity
         :rtype: float or None
         """
-        from math import pi
-
         if deg is True:
             return self._mosaicity * 180.0 / pi
 
@@ -629,8 +626,6 @@ class crystal_model_old(object):
         :returns: The mosaicity
         :rtype: float or None
         """
-        from math import pi
-
         if deg is True:
             self._mosaicity = mosaicity * pi / 180.0
         else:
@@ -770,8 +765,6 @@ class crystal_model_old(object):
         :param deg: Degrees or radians
 
         """
-        from scitbx import matrix
-
         # Compute the matrix
         R = matrix.col(axis).axis_and_angle_as_r3_rotation_matrix(angle, deg=deg)
 

@@ -1,12 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
 
-if __name__ == "__main__":
-    import sys
-    from dxtbx.datablock import DataBlockFactory
-    from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from scitbx.array_family import flex
 
+from dxtbx.datablock import DataBlockFactory
+from dxtbx.model import ParallaxCorrectedPxMmStrategy
+
+if __name__ == "__main__":
     datablocks = DataBlockFactory.from_args(sys.argv[1:])
     assert len(datablocks) == 1
     detectors = datablocks[0].unique_detectors()
@@ -18,7 +20,6 @@ if __name__ == "__main__":
     print("Mu: %f mm^-1 " % px_mm.mu())
     print("t0: %f mm" % px_mm.t0())
     from matplotlib import pylab
-    from scitbx.array_family import flex
 
     image_size = detector[0].get_image_size()[::-1]
     xcorr = flex.double(flex.grid(image_size))

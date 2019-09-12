@@ -8,9 +8,12 @@ least viewed.
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import re
 import struct
+import sys
+from builtins import range
+
+from iotbx.detectors.mar import MARImage
 
 from dxtbx.format.FormatTIFFRayonix import FormatTIFFRayonix
 
@@ -65,8 +68,6 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        from iotbx.detectors.mar import MARImage
-
         MARImage._read_header_asserts = lambda self: None
         super(FormatTIFFRayonixXPP, self).__init__(image_file, **kwargs)
 
@@ -110,8 +111,5 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatTIFFRayonixXPP.understand(arg))

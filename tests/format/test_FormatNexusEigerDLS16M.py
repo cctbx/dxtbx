@@ -1,11 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+
 import pytest
 
 from dxtbx.format.FormatNexusEigerDLS16M import FormatNexusEigerDLS16M
 from dxtbx.model.experiment_list import ExperimentListFactory
-
 
 dials = pytest.importorskip("dials")
 pytest.importorskip("h5py")

@@ -4,11 +4,16 @@ Inherits from FormatSMVRigaku.
 """
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
+import sys
 import time
+from builtins import range
 
-from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
+from boost.python import streambuf
 from scitbx import matrix
+from scitbx.array_family import flex
+
+from dxtbx import read_int32
+from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
 
 class FormatSMVRigakuPilatus(FormatSMVRigaku):
@@ -138,10 +143,6 @@ class FormatSMVRigakuPilatus(FormatSMVRigaku):
         """Read the data - assuming it is streaming 4-byte unsigned ints following the
         header..."""
 
-        from boost.python import streambuf
-        from dxtbx import read_int32
-        from scitbx.array_family import flex
-
         assert len(self.get_detector()) == 1
         size = self.get_detector()[0].get_image_size()
         f = self.open_file(self._image_file)
@@ -153,8 +154,5 @@ class FormatSMVRigakuPilatus(FormatSMVRigaku):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSMVRigakuPilatus.understand(arg))

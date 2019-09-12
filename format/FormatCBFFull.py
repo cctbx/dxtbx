@@ -6,7 +6,13 @@ but will allow for extension for specific implementations of CBF.
 
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
+
+import numpy
+
+from iotbx.detectors.cbf import CBFImage
+from scitbx.array_family import flex
 
 import pycbf
 from dxtbx.format.Format import bz2, gzip
@@ -86,8 +92,6 @@ class FormatCBFFull(FormatCBF):
         return self._scan_factory.imgCIF_H(self._image_file, self._get_cbf_handle())
 
     def detectorbase_start(self):
-        from iotbx.detectors.cbf import CBFImage
-
         self.detectorbase = CBFImage(self._image_file)
         self.detectorbase.readHeader()
 
@@ -178,9 +182,6 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         cbf.select_column(0)
         cbf.select_row(0)
 
-        import numpy
-        from scitbx.array_family import flex
-
         cbf.find_column(b"data")
         assert cbf.get_typeofvalue().find(b"bnry") > -1
 
@@ -207,8 +208,5 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFFull.understand(arg))

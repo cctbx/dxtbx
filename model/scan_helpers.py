@@ -4,11 +4,12 @@ templates and so on.
 """
 from __future__ import absolute_import, division, print_function
 
-from builtins import object
-
 import math
 import os
 import re
+from builtins import object
+
+from libtbx.utils import Sorry
 
 # These are reversed patterns...
 patterns = [
@@ -47,8 +48,6 @@ def template_regex(filename):
         return template, int(digits)
 
     # What is supposed to happen otherwise?
-    from libtbx.utils import Sorry
-
     raise Sorry("Could not determine filename template")
 
 

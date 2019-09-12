@@ -3,14 +3,19 @@ Format class for the PAL XFEL raw data format
 """
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+import h5py
+import numpy as np
+
+from scitbx.array_family import flex
+
 from dxtbx.format.FormatHDF5 import FormatHDF5
 
 
 class FormatHDF5PAL(FormatHDF5):
     @staticmethod
     def understand(image_file):
-        import h5py
-
         h5_handle = h5py.File(image_file, "r")
         if len(h5_handle) != 1:
             return False
@@ -31,8 +36,6 @@ class FormatHDF5PAL(FormatHDF5):
         return True
 
     def _start(self):
-        import h5py
-
         self._h5_handle = h5py.File(self.get_image_file(), "r")
         self._run = self._h5_handle.keys()[0]
 
@@ -44,9 +47,6 @@ class FormatHDF5PAL(FormatHDF5):
         self._binning = self._max_pixels // frame_1.focus()[0]
 
     def get_raw_data(self, index=None):
-        from scitbx.array_family import flex
-        import numpy as np
-
         if index is None:
             index = 0
 
@@ -90,7 +90,5 @@ class FormatHDF5PAL(FormatHDF5):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatHDF5PAL.understand(arg))

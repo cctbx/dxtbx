@@ -4,8 +4,14 @@ from __future__ import absolute_import, division, print_function
 
 import datetime
 import struct
+import sys
 import time
 
+from boost.python import streambuf
+from iotbx.detectors.mar import MARImage
+from scitbx.array_family import flex
+
+from dxtbx import read_uint16
 from dxtbx.format.FormatTIFF import FormatTIFF
 
 
@@ -74,8 +80,6 @@ class FormatTIFFBruker(FormatTIFF):
         super(FormatTIFFBruker, self).__init__(image_file, **kwargs)
 
     def detectorbase_start(self):
-        from iotbx.detectors.mar import MARImage
-
         self.detectorbase = MARImage(self._image_file)
         self.detectorbase.readHeader()
 
@@ -292,10 +296,6 @@ class FormatTIFFBruker(FormatTIFF):
 
         bias = int(round(self._get_bruker_bias()))
 
-        from boost.python import streambuf
-        from dxtbx import read_uint16
-        from scitbx.array_family import flex
-
         assert len(self.get_detector()) == 1
         size = self.get_detector()[0].get_image_size()
         f = FormatTIFF.open_file(self._image_file)
@@ -308,8 +308,5 @@ class FormatTIFFBruker(FormatTIFF):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatTIFFBruker.understand(arg))

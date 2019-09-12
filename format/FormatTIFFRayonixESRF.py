@@ -5,7 +5,11 @@ specified in pixels
 from __future__ import absolute_import, division, print_function
 
 import struct
+import sys
 
+from scitbx.matrix import col
+
+from dxtbx.format.FormatTIFFHelpers import BIG_ENDIAN, LITTLE_ENDIAN
 from dxtbx.format.FormatTIFFRayonix import FormatTIFFRayonix
 
 
@@ -22,9 +26,6 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
         width, height, depth, order, bytes = FormatTIFFRayonix.get_tiff_header(
             image_file
         )
-
-        from scitbx.matrix import col
-        from dxtbx.format.FormatTIFFHelpers import LITTLE_ENDIAN, BIG_ENDIAN
 
         format = {LITTLE_ENDIAN: "<", BIG_ENDIAN: ">"}[order]
         offset = 1024
@@ -84,8 +85,5 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatTIFFRayonixESRF.understand(arg))

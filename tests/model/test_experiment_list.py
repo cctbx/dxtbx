@@ -2,12 +2,13 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import os
+from builtins import range
 from glob import glob
 
 import pytest
 import six.moves.cPickle as pickle
+
 from scitbx.array_family import flex
 
 import dxtbx

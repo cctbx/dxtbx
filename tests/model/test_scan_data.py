@@ -1,10 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
-from dxtbx.model import Scan
-
 import copy
+from builtins import range
+
 import pytest
+
+from libtbx.phil import parse
+
+from dxtbx.model import Scan
+from dxtbx.model.scan import ScanFactory, scan_phil_scope
 
 
 @pytest.fixture
@@ -126,9 +130,6 @@ def test_valid_image_ranges():
 
 
 def test_from_phil():
-    from dxtbx.model.scan import ScanFactory, scan_phil_scope
-    from libtbx.phil import parse
-
     params = scan_phil_scope.fetch(
         parse(
             """

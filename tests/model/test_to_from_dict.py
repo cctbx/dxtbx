@@ -2,10 +2,12 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import range
 
+from scitbx.array_family import flex
+
+from dxtbx.model import Beam, Detector, Goniometer, Scan
+
 
 def test_beam():
-    from dxtbx.model import Beam
-
     # Construct the object
     b1 = Beam(
         direction=(1, 2, 3),
@@ -25,8 +27,6 @@ def test_beam():
 
 
 def test_goniometer():
-    from dxtbx.model import Goniometer
-
     # Construct the object
     g1 = Goniometer(
         rotation_axis=(1, 2, 3), fixed_rotation_matrix=(1, 2, 3, 4, 5, 6, 7, 8, 9)
@@ -39,9 +39,6 @@ def test_goniometer():
 
 
 def test_scan():
-    from dxtbx.model import Scan
-    from scitbx.array_family import flex
-
     s1 = Scan(
         image_range=(1, 20),
         oscillation=(5.0, 0.1),
@@ -56,8 +53,6 @@ def test_scan():
 
 
 def test_detector():
-    from dxtbx.model import Detector
-
     d1 = Detector()
     p = d1.add_panel()
     p.set_name("p1")

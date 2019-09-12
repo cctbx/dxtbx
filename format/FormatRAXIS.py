@@ -61,18 +61,20 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
+import calendar
 import datetime
 import math
 import struct
+from builtins import range
 
+from iotbx.detectors.raxis import RAXISImage
+
+from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 
 
 class RAXISHelper(object):
     def __init__(self, image_file, **kwargs):
-        from dxtbx import IncorrectFormatError
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
@@ -90,8 +92,6 @@ class RAXISHelper(object):
             self._i = "<i"
 
     def detectorbase_start(self):
-        from iotbx.detectors.raxis import RAXISImage
-
         self.detectorbase = RAXISImage(self._image_file)
         self.detectorbase.readHeader()
 
@@ -228,8 +228,6 @@ class FormatRAXIS(RAXISHelper, Format):
 
     def _scan(self):
         """Return the scan information for this image."""
-        import calendar
-
         i = self._i
         f = self._f
         header = self._header_bytes

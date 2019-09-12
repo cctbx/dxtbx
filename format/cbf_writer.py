@@ -1,18 +1,25 @@
-from __future__ import absolute_import, division, print_function
-
-from xfel.cftbx.detector.cspad_cbf_tbx import add_frame_specific_cbf_tables, cbf_wrapper
-from scitbx.array_family import flex
-
 """
 Note, scans and gonios not supported here. This writer essentially writes still images
-"""
 
-"""
 Example to write the first 10 images from an h5 file:
 writer = FullCBFWriter("data.h5")
 for i in range(10):
   writer.write_cbf("example_%d.cbf"%i, index=i)
 """
+from __future__ import absolute_import, division, print_function
+
+import os
+import sys
+
+from scitbx.array_family import flex
+from xfel.cftbx.detector.cspad_cbf_tbx import (
+    add_frame_specific_cbf_tables,
+    basis,
+    cbf_wrapper,
+)
+
+import pycbf
+from dxtbx.format.Registry import Registry
 
 
 class FullCBFWriter(object):
@@ -25,8 +32,6 @@ class FullCBFWriter(object):
         ) == 1, "Supply either filename or imageset"
 
         if filename is not None:
-            from dxtbx.format.Registry import Registry
-
             format_class = Registry.find(filename)
             imageset = format_class.get_imageset([filename])
 
@@ -37,8 +42,6 @@ class FullCBFWriter(object):
         objects. A hierarchy key looks like this (0,1,2), where the entries are
         levels in a hierarchy and the numbers refer to a panel or group within that
         level"""
-        from xfel.cftbx.detector.cspad_cbf_tbx import basis
-
         metro = {}
 
         def recursive_setup_dict(panelgroup, key):
@@ -60,8 +63,6 @@ class FullCBFWriter(object):
     def get_cbf_handle(self, index=None, header_only=False, detector_only=False):
         """ Build a cbf handle in memory """
         # set up the metrology dictionary to include axis names, pixel sizes, and so forth
-        import os
-
         if index is None:
             detector = self.imageset.get_detector()
             beam = self.imageset.get_beam()
@@ -442,8 +443,6 @@ class FullCBFWriter(object):
         """
         Given a cbf handle, add the raw data and the necessary tables to support it
         """
-        import pycbf
-
         if data is None:
             if index is None:
                 data = self.imageset[0]
@@ -545,8 +544,6 @@ class FullCBFWriter(object):
 
     def write_cbf(self, filename, index=None, cbf=None):
         """ Write a CBF file. If the handle is not provided, create one """
-        import pycbf
-
         assert [index, cbf].count(None) in (1, 2), "Supply either index or cbf"
 
         if cbf is None:
@@ -559,8 +556,6 @@ class FullCBFWriter(object):
 
 
 if __name__ == "__main__":
-    import sys
-
     filename = sys.argv[1]
     if len(sys.argv) > 2:
         index = int(sys.argv[2])

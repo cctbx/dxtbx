@@ -3,10 +3,12 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import sys
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
+from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv
 
 
 class FormatCBFMiniPilatus(FormatCBFMini):
@@ -70,8 +72,6 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         )
 
     def get_vendortype(self):
-        from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv
-
         return gv(self.get_detector())
 
     @staticmethod
@@ -91,8 +91,5 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatus.understand(arg))

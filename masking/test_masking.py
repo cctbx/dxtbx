@@ -2,18 +2,22 @@ from __future__ import absolute_import, division, print_function
 
 import math
 import os
-import pytest
 import pickle
 
-from scitbx.array_family import flex
+import pytest
+
 from scitbx import matrix
+from scitbx.array_family import flex
 from scitbx.math import principal_axes_of_inertia_2d
 
-from dxtbx.model.goniometer import GoniometerFactory
+from dxtbx.masking import (
+    GoniometerMaskerFactory,
+    is_inside_polygon,
+    mask_untrusted_polygon,
+)
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
-from dxtbx.masking import GoniometerMaskerFactory
-from dxtbx.masking import mask_untrusted_polygon, is_inside_polygon
+from dxtbx.model.goniometer import GoniometerFactory
 
 
 def test_polygon():

@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 import os
 
+import libtbx.load_env
+
 from dxtbx.model.detector import DetectorFactory
 
 
@@ -32,8 +34,6 @@ def test_detector():
         (0, 1024),
         [],
     )
-
-    import libtbx.load_env
 
     dxtbx_dir = libtbx.env.dist_path("dxtbx")
 

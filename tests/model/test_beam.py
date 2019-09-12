@@ -1,13 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
 from builtins import range
+
 import pytest
 
-from scitbx import matrix
 from libtbx.phil import parse
+from scitbx import matrix
 
 from dxtbx.model import Beam
-from dxtbx.model.beam import beam_phil_scope, BeamFactory
+from dxtbx.model.beam import BeamFactory, beam_phil_scope
 
 
 def test_setting_direction_and_wavelength():

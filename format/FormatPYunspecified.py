@@ -1,19 +1,23 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import copy
 import os
+import sys
+from builtins import range
 
-from dxtbx.format.FormatPY import FormatPY
 import six
 import six.moves.cPickle as pickle
 from past.builtins import basestring
-from iotbx.detectors.cspad_detector_formats import reverse_timestamp
-from iotbx.detectors.cspad_detector_formats import detector_format_version
-from spotfinder.applications.xfel import cxi_phil
-from scitbx.array_family import flex
+
+from iotbx.detectors.cspad_detector_formats import (
+    detector_format_version,
+    reverse_timestamp,
+)
 from iotbx.detectors.npy import NpyImage
-import sys
+from scitbx.array_family import flex
+from spotfinder.applications.xfel import cxi_phil
+
+from dxtbx.format.FormatPY import FormatPY
 
 
 class FormatPYunspecified(FormatPY):

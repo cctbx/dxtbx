@@ -1,22 +1,33 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
+import binascii
 import os
+from builtins import range
 
-import dxtbx.ext
-import dxtbx.tests.imagelist
-import pycbf
+import numpy
 import pytest
-from dxtbx.format.FormatSMV import FormatSMV
-from dxtbx.format.image import CBFReader, cbf_read_buffer
+
+from boost.python import streambuf
+from cbflib_adaptbx import uncompress
 from scitbx.array_family import flex
 
+import dxtbx.ext
+import dxtbx.format.FormatCBF
+import dxtbx.tests.imagelist
+import pycbf
+from dxtbx.format.FormatSMV import FormatSMV
+from dxtbx.format.FormatTIFFHelpers import read_basic_tiff_header
+from dxtbx.format.image import (
+    CBFReader,
+    HDF5Reader,
+    SMVReader,
+    TIFFReader,
+    cbf_read_buffer,
+)
 from dxtbx.model.detector import DetectorFactory
 
 
 def read_smv_image(image_file):
-    from boost.python import streambuf
-
     header_size, header_dictionary = FormatSMV.get_smv_header(image_file)
 
     with open(image_file, "rb") as f:
@@ -41,8 +52,6 @@ def read_smv_image(image_file):
 
 
 def get_tiff_header(image_file):
-    from dxtbx.format.FormatTIFFHelpers import read_basic_tiff_header
-
     width, height, depth, header, order = read_basic_tiff_header(image_file)
 
     with open(image_file, "rb") as fh:
@@ -53,9 +62,6 @@ def get_tiff_header(image_file):
 
 def read_tiff_image(image_file):
     # currently have no non-little-endian machines...
-
-    from boost.python import streambuf
-
     width, height, depth, order, header_bytes = get_tiff_header(image_file)
     image_size = (width, height)
     header_size = 4096
@@ -71,10 +77,6 @@ def read_tiff_image(image_file):
 
 
 def read_cbf_image(cbf_image):
-    import dxtbx.format.FormatCBF
-    from cbflib_adaptbx import uncompress
-    import binascii
-
     start_tag = binascii.unhexlify("0c1a04d5")
 
     with open(cbf_image, "rb") as fh:
@@ -94,9 +96,6 @@ def read_cbf_image(cbf_image):
 
 
 def read_multitile_cbf_image(cbf_image):
-    import numpy
-    import pycbf
-
     raw_data = []
     cbf = pycbf.cbf_handle_struct()
     cbf.read_widefile(cbf_image.encode(), pycbf.MSG_DIGEST)
@@ -185,8 +184,6 @@ def read_multitile_cbf_image(cbf_image):
     ids=dxtbx.tests.imagelist.smv_image_ids,
 )
 def test_smv(dials_regression, smv_image):
-    from dxtbx.format.image import SMVReader
-
     filename = os.path.join(dials_regression, smv_image)
 
     image = SMVReader(filename).image()
@@ -209,8 +206,6 @@ def test_smv(dials_regression, smv_image):
     ids=dxtbx.tests.imagelist.tiff_image_ids,
 )
 def test_tiff(dials_regression, tiff_image):
-    from dxtbx.format.image import TIFFReader
-
     filename = os.path.join(dials_regression, tiff_image)
 
     image = TIFFReader(filename).image()
@@ -268,10 +263,9 @@ def test_multitile_cbf(dials_regression, cbf_image):
     ids=dxtbx.tests.imagelist.hdf5_image_ids,
 )
 def test_hdf5(dials_regression, hdf5_image):
-    from dxtbx.format.image import HDF5Reader
-    from dxtbx.format.nexus import dataset_as_flex_int
-
     h5py = pytest.importorskip("h5py")
+    # Import after we know h5py is present
+    from dxtbx.format.nexus import dataset_as_flex_int
 
     filename = os.path.join(dials_regression, hdf5_image)
     handle = h5py.File(filename, "r")

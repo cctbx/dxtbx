@@ -1,9 +1,17 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
-from dxtbx.format.FormatXTC import FormatXTC, locator_str
-from libtbx.phil import parse
+
 import numpy as np
+
+from libtbx.phil import parse
+from scitbx.array_family import flex
+from scitbx.matrix import col
+
+import psana
+from dxtbx.format.FormatXTC import FormatXTC, locator_str
+from dxtbx.model import Detector
 
 try:
     from xfel.cxi.cspad_ana import cspad_tbx
@@ -48,9 +56,6 @@ class FormatXTCJungfrau(FormatXTC):
         return any(["jungfrau" in src.lower() for src in params.detector_address])
 
     def get_raw_data(self, index):
-        import psana
-        from scitbx.array_family import flex
-
         d = FormatXTCJungfrau.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
@@ -105,9 +110,6 @@ class FormatXTCJungfrau(FormatXTC):
         run = self.get_run_from_index(index)
         if run.run() in self._cached_detector:
             return self._cached_detector[run.run()]
-        import psana
-        from dxtbx.model import Detector
-        from scitbx.matrix import col
 
         if index is None:
             index = 0
@@ -208,9 +210,6 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
             return False
 
     def get_raw_data(self, index):
-        import psana
-        from scitbx.array_family import flex
-
         self.get_detector(index)  # is this line required?
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
@@ -243,8 +242,6 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         # Bug, should call this part differently for understand method to work
         print(FormatXTCJungfrau.understand(arg))

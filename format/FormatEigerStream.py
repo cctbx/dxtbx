@@ -3,8 +3,28 @@ from __future__ import absolute_import, division, print_function
 import json
 
 import numpy as np
+
+from scitbx import matrix
+from scitbx.array_family import flex
+
+from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger
+from dxtbx.model.beam import BeamFactory
+from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.goniometer import GoniometerFactory
+from dxtbx.model.scan import ScanFactory
+
+try:
+    import lz4
+except ImportError:
+    lz4 = None
+
+try:
+    import bitshuffle
+except ImportError:
+    bitshuffle = None
 
 injected_data = {}
 
@@ -22,8 +42,6 @@ class FormatEigerStream(FormatMultiImage, Format):
         return 1
 
     def __init__(self, image_file, **kwargs):
-        from dxtbx import IncorrectFormatError
-
         if not injected_data:
             raise IncorrectFormatError(self, image_file)
 
@@ -46,9 +64,6 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Create the detector model
         """
-        from scitbx import matrix
-        from dxtbx.model.detector import DetectorFactory
-
         configuration = self.header["configuration"]
         info = self.header["info"]
 
@@ -95,8 +110,6 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Create the beam model
         """
-        from dxtbx.model.beam import BeamFactory
-
         configuration = self.header["configuration"]
         return BeamFactory.simple(configuration["wavelength"])
 
@@ -104,16 +117,12 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Create the goniometer model
         """
-        from dxtbx.model.goniometer import GoniometerFactory
-
         return GoniometerFactory.single_axis()
 
     def _scan(self):
         """
         Create the scan object
         """
-        from dxtbx.model.scan import ScanFactory
-
         phi_start = 0
         phi_increment = 0
         nimages = 1
@@ -128,10 +137,6 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Get the raw data from the image
         """
-        #   if hasattr(self, 'raw_data_cache'):
-        #     return self.raw_data_cache
-        from scitbx.array_family import flex
-
         info = self.header["info"]
         data = injected_data["streamfile_3"]
         if info["encoding"] == "lz4<":
@@ -146,11 +151,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         data = np.array(data, ndmin=3)  # handle data, must be 3 dim
         data = data.reshape(data.shape[1:3]).astype("int32")
 
-        #   from pprint import pprint
         print("Get raw data")
-        #   import traceback
-        #   traceback.print_stack()
-        #   pprint(info)
 
         if info["type"] == "uint16":
             bad_sel = data == 2 ** 16 - 1
@@ -158,15 +159,11 @@ class FormatEigerStream(FormatMultiImage, Format):
 
         return flex.int(data)
 
-    #   self.raw_data_cache = flex.int(data)
-    #   return self.raw_data_cache
-
     def readBSLZ4(self, data, shape, dtype, size):
         """
         Unpack bitshuffle-lz4 compressed frame and return np array image data
         """
-        import bitshuffle
-
+        assert bitshuffle is not None, "No bitshuffle module"
         blob = np.fromstring(data[12:], dtype=np.uint8)
         # blocksize is big endian uint32 starting at byte 8, divided by element size
         blocksize = np.ndarray(shape=(), dtype=">u4", buffer=data[8:12]) / 4
@@ -179,8 +176,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Unpack bitshuffle-lz4 compressed 16 bit frame and return np array image data
         """
-        import bitshuffle
-
+        assert bitshuffle is not None, "No bitshuffle module"
         blob = np.fromstring(data[12:], dtype=np.uint8)
         return bitshuffle.decompress_lz4(blob, shape[::-1], np.dtype(dtype))
 
@@ -188,14 +184,11 @@ class FormatEigerStream(FormatMultiImage, Format):
         """
         Unpack lz4 compressed frame and return np array image data
         """
-        import lz4
-
+        assert lz4 is not None, "No LZ4 module"
         dtype = np.dtype(dtype)
         data = lz4.loads(data)
 
         return np.reshape(np.fromstring(data, dtype=dtype), shape[::-1])
 
     def get_vendortype(self):
-        from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger
-
         return get_vendortype_eiger(self.get_detector())

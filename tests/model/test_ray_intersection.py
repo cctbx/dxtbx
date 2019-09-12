@@ -1,10 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import random
+from builtins import range
 
 import pytest
+
 from scitbx import matrix
+
+from dxtbx.model import Panel
 
 
 def tst_intersection_at_origin(intersection, wavelength, origin):
@@ -61,8 +64,6 @@ def tst_intersection_away_from_panel(intersection, panel, wavelength):
 
 
 def test_beam_plane_intersection():
-    from dxtbx.model import Panel
-
     # The input parameters (from a GXPARM.XDS file)
     fast_axis = (0.000000, -0.939693, -0.342020)
     slow_axis = (1.000000, 0.000000, 0.000000)
@@ -135,8 +136,6 @@ def tst_transform_at_corners(transform, panel):
 
 
 def test_plane_to_lab_transform():
-    from dxtbx.model import Panel
-
     # The input parameters (from a GXPARM.XDS file)
     fast_axis = (0.000000, -0.939693, -0.342020)
     slow_axis = (1.000000, 0.000000, 0.000000)
@@ -193,8 +192,6 @@ def tst_fwd_rev_random(intersection, transform, panel):
 
 
 def test_forward_and_reverse_transform():
-    from dxtbx.model import Panel
-
     # The input parameters (from a GXPARM.XDS file)
     fast_axis = (0.000000, -0.939693, -0.342020)
     slow_axis = (1.000000, 0.000000, 0.000000)

@@ -8,9 +8,19 @@ from __future__ import absolute_import, division, print_function
 
 import binascii
 import os
+import sys
 
+from boost.python import streambuf
+from cbflib_adaptbx import uncompress
+from cctbx.eltbx import attenuation_coefficient
+from iotbx.detectors.pilatus_minicbf import PilatusImage
+from scitbx.array_family import flex
+
+import pycbf
+from dxtbx import read_int32
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
+from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
 from dxtbx.model import ParallaxCorrectedPxMmStrategy, SimplePxMmStrategy
 
 dxtbx_overload_scale = float(os.getenv("DXTBX_OVERLOAD_SCALE", "1"))
@@ -144,8 +154,6 @@ class FormatCBFMini(FormatCBF):
         if material is not None:
             # take into consideration here the thickness of the sensor also the
             # wavelength of the radiation (which we have in the same file...)
-            from cctbx.eltbx import attenuation_coefficient
-
             table = attenuation_coefficient.get_table(material)
             mu = table.mu_at_angstrom(wavelength) / 10.0
             t0 = thickness
@@ -221,8 +229,6 @@ class FormatCBFMini(FormatCBF):
         )
 
     def _read_cbf_image(self):
-        from cbflib_adaptbx import uncompress
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -239,10 +245,6 @@ class FormatCBFMini(FormatCBF):
                 slow=cbf_header["slow"],
             )
         elif cbf_header["no_compression"]:
-            from boost.python import streambuf
-            from dxtbx import read_int32
-            from scitbx.array_family import flex
-
             assert len(self.get_detector()) == 1
             with self.open_file(self._image_file) as f:
                 f.read(data_offset)
@@ -264,8 +266,6 @@ class FormatCBFMini(FormatCBF):
         return self._raw_data
 
     def detectorbase_start(self):
-        from iotbx.detectors.pilatus_minicbf import PilatusImage
-
         self.detectorbase = PilatusImage(self._image_file)
         self.detectorbase.readHeader()  # necessary for LABELIT
 
@@ -294,9 +294,6 @@ class FormatCBFMini(FormatCBF):
           Auxiliary files (bad pixel mask, flat field, trim, image path)
           Detector not normal to beam
         """
-        import pycbf
-        from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
-
         cbf = cbf_wrapper()
         cbf_root = os.path.splitext(os.path.basename(path))[0] + ".cbf"
         cbf.new_datablock(os.path.splitext(os.path.basename(path))[0].encode())
@@ -426,7 +423,5 @@ class FormatCBFMini(FormatCBF):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMini.understand(arg))

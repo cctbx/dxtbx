@@ -1,12 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
 import ast
-import os
 import optparse
-import procrunner
-import py
+import os
 import sys
 
+import procrunner
+import py
 from six.moves.urllib import request
 
 

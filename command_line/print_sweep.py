@@ -1,11 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 from scitbx import matrix
+
+from dxtbx.imageset import ImageSetFactory
 
 
 def print_sweep(list_of_images):
-
-    from dxtbx.imageset import ImageSetFactory
 
     sweeps = ImageSetFactory.new(list_of_images)
 
@@ -35,8 +37,6 @@ def print_sweep(list_of_images):
 
 
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) == 2:
         print_sweep(sys.argv[1])
     else:

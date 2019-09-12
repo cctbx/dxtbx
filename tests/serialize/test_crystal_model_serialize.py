@@ -1,13 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
 from builtins import range
+
 import pytest
 
-from dxtbx.model import Crystal
-from dxtbx.model import CrystalFactory
-from dxtbx.model import MosaicCrystalKabsch2010
 from scitbx import matrix
 from scitbx.array_family import flex
+
+from dxtbx.model import Crystal, CrystalFactory, MosaicCrystalKabsch2010
 
 
 @pytest.fixture()

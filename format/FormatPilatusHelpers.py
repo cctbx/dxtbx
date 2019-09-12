@@ -5,9 +5,8 @@ identifying the regions to be masked.
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
-
 import collections
+from builtins import range
 
 _Detector = collections.namedtuple(
     "Detector",

@@ -3,6 +3,10 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 from boost.python import streambuf
+from libtbx.utils import Sorry
+from scitbx import matrix
+from scitbx.array_family import flex
+
 from dxtbx import IncorrectFormatError
 from dxtbx.ext import (
     is_big_endian,
@@ -13,9 +17,6 @@ from dxtbx.ext import (
     read_uint32_bs,
 )
 from dxtbx.format.FormatBruker import FormatBruker
-from libtbx.utils import Sorry
-from scitbx import matrix
-from scitbx.array_family import flex
 
 
 class FormatBrukerPhotonII(FormatBruker):

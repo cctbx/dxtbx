@@ -1,8 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
+import json
 import os
 
 import six
+
+from dxtbx.model.crystal import CrystalFactory
+from dxtbx.serialize.imageset import imageset_from_dict
 
 
 def _decode_list(data):
@@ -49,9 +53,6 @@ def imageset_from_string(string, directory=None):
         The models
 
     """
-    import json
-    from dxtbx.serialize.imageset import imageset_from_dict
-
     return imageset_from_dict(
         json.loads(string, object_hook=_decode_dict), directory=directory
     )
@@ -84,6 +85,7 @@ def datablock(filename, check_format=True):
       The datablock
 
     """
+    # Resolve recursive import
     from dxtbx.datablock import DataBlockFactory
 
     return DataBlockFactory.from_serialized_format(filename, check_format=check_format)
@@ -99,9 +101,6 @@ def crystal(infile):
         The models
 
     """
-    import json
-    from dxtbx.model.crystal import CrystalFactory
-
     # If the input is a string then open and read from that file
     if isinstance(infile, str):
         with open(infile, "r") as infile:
@@ -114,6 +113,7 @@ def crystal(infile):
 
 def experiment_list(infile, check_format=True):
     """ Load an experiment list from a serialzied format. """
+    # Resolve recursive import
     from dxtbx.model.experiment_list import ExperimentListFactory
 
     return ExperimentListFactory.from_serialized_format(

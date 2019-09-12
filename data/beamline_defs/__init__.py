@@ -1,10 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
+import datetime
 import importlib
 import string
 import unicodedata
-
 from builtins import bytes
+
+import iotbx.cif.model
 
 
 def get_beamline_definition(detector_id, **kwargs):
@@ -82,23 +84,17 @@ class template(object):
         self._detector_name = detector_name
 
     def write_block_to_file(self, block, filename):
-        import iotbx.cif.model
-
         c = iotbx.cif.model.cif()
         c[self.get_block_name()] = block
         with open(filename, "w") as fh:
             c.show(out=fh)
 
     def _date_to_epoch(self, year, month, day):
-        import datetime
-
         return (
             datetime.datetime(year, month, day, 0, 0) - datetime.datetime(1970, 1, 1)
         ).total_seconds()
 
     def _generate_block(self):
-        import iotbx.cif.model
-
         return iotbx.cif.model.block()
 
     def __str__(self):

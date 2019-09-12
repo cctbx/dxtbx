@@ -4,9 +4,12 @@ the instrument at CSHL, SN 09040159.
 """
 from __future__ import absolute_import, division, print_function
 
+import sys
 from builtins import range
-from dxtbx.format.FormatSMVRigakuSaturnNoTS import FormatSMVRigakuSaturnNoTS
+
 from scitbx import matrix
+
+from dxtbx.format.FormatSMVRigakuSaturnNoTS import FormatSMVRigakuSaturnNoTS
 
 SERIALS = ["09040159", "07510101"]
 
@@ -100,8 +103,5 @@ class FormatSMVRigakuSaturn09040159(FormatSMVRigakuSaturnNoTS):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSMVRigakuSaturn09040159.understand(arg))

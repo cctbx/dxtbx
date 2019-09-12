@@ -1,9 +1,20 @@
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.model import Detector
+from copy import deepcopy
+from math import sqrt
 
 import pytest
 import six.moves.cPickle as pickle
+
+from libtbx.phil import parse
+from scitbx import matrix
+
+from dxtbx.model import Beam, Detector
+from dxtbx.model.detector import (
+    DetectorFactory,
+    ParallaxCorrectedPxMmStrategy,
+    detector_phil_scope,
+)
 
 
 @pytest.fixture
@@ -127,8 +138,6 @@ def test_panels_depth_first_iteration(detector):
 
 def test_get_valid_D_matrix(detector):
     """ Setup the hierarchy of frames and check it's all consistent. """
-    from scitbx import matrix
-
     # Set a valid frame for the top level detector
     detector.hierarchy().set_local_frame(
         (1, 0, 0), (0, 1, 0), (0, 0, 100)  # Fast axis  # Slow axis
@@ -185,7 +194,6 @@ def test_get_valid_D_matrix(detector):
     )  # Origin relative to q2 frame
 
     # Test the panel coordinate systems
-    from math import sqrt
 
     eps = 1e-7
     p1_d0 = matrix.col((10.0 + sqrt(5.0 ** 2 / 2), 10.0 + sqrt(5.0 ** 2 / 2), 110))
@@ -215,8 +223,6 @@ def test_get_valid_D_matrix(detector):
 
 
 def test_copy_and_reference(detector):
-    from copy import deepcopy
-
     # Get the detector hierarchy
     root = detector.hierarchy()
 
@@ -295,11 +301,6 @@ def test_pickle(detector):
 
 
 def test_from_phil():
-    from dxtbx.model.detector import detector_phil_scope
-    from dxtbx.model.detector import DetectorFactory, ParallaxCorrectedPxMmStrategy
-    from libtbx.phil import parse
-    from dxtbx.model import Beam
-
     beam = Beam((0, 0, 1))
 
     params = detector_phil_scope.fetch(

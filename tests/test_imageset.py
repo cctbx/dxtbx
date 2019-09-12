@@ -1,14 +1,19 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import os
+from builtins import range
+
+import pytest
 import six.moves.cPickle as pickle
+
+from scitbx.array_family import flex
 
 import dxtbx.format.image
 import dxtbx.format.Registry
 import dxtbx.tests.imagelist
-import pytest
-from scitbx.array_family import flex
+from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
+from dxtbx.imageset import ExternalLookup, ImageSetData, ImageSetFactory, ImageSweep
+from dxtbx.model import Beam, Detector, Panel
 
 
 @pytest.mark.parametrize(
@@ -79,8 +84,6 @@ def test_image_buffer():
 
 
 def test_external_lookup():
-    from dxtbx.imageset import ExternalLookup
-
     mask = flex.bool(flex.grid(10, 10), True)
     gain = flex.double(flex.grid(10, 10), 1)
     pedestal = flex.double(flex.grid(10, 10), 2)
@@ -106,9 +109,6 @@ def test_external_lookup():
 
 
 def test_imagesetdata(centroid_files):
-    from dxtbx.imageset import ImageSetData
-    from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
-
     ReaderClass = FormatClass.get_reader()
 
     reader = ReaderClass(centroid_files)
@@ -262,8 +262,6 @@ class TestImageSet(object):
 
     @staticmethod
     def tst_set_models(imageset):
-        from dxtbx.model import Beam, Detector, Panel
-
         # Create some other models
         beam = Beam((1, 0, 0), 0.5)
         detector = Detector(
@@ -465,9 +463,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
         assert iset.get_scan(i) is None
 
 
-def test_imagesetfactory(centroid_files, dials_data):
-    from dxtbx.imageset import ImageSetFactory, ImageSweep
-
+def test_imagesetfactory(centroid_files, dials_regression):
     sweep = ImageSetFactory.new(centroid_files)
 
     assert isinstance(sweep[0], ImageSweep)
@@ -496,8 +492,6 @@ def test_imagesetfactory(centroid_files, dials_data):
 
 
 def test_pickle_imageset(centroid_files):
-    from dxtbx.imageset import ImageSetFactory
-
     sweep = ImageSetFactory.new(centroid_files)[0]
 
     # Read the 5th image

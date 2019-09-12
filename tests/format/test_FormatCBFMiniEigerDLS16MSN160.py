@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function
 import pytest
 
 from dxtbx.format.FormatCBFMiniEigerDLS16MSN160 import FormatCBFMiniEigerDLS16MSN160
-from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.masking import SmarGonShadowMasker
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def test_dlsnxs2cbf_therm(dials_data):

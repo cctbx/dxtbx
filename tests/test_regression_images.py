@@ -3,28 +3,33 @@ Image reading tests against the dials_regression suite
 """
 from __future__ import absolute_import, division, print_function
 
-import os
-import sys
-import re
-import gzip
 import bz2
+import gzip
+import os
+import re
 import shutil
+import sys
 
-import pytest
 import py.path
+import pytest
+import six
+
+import libtbx.load_env
+import scitbx.matrix
+from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 
 import dxtbx.conftest
 import dxtbx.format.Registry
-import libtbx.load_env
-import six
-
-from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
-import scitbx.matrix
 
 if sys.version_info[:2] >= (3, 6):
     from pathlib import Path
 else:
     from pathlib2 import Path
+
+try:
+    import h5py
+except ImportError:
+    h5py = None
 
 
 def _generate_all_test_images():
@@ -44,13 +49,10 @@ def _generate_all_test_images():
 
     # Handle the special berkeley-only h5 file
     special_h5 = "/net/viper/raid1/dectris/eiger16MNov2015/2015_11_10/insu6_1_master.h5"
-    try:
-        import h5py
-    except ImportError:
+    if h5py is None:
         yield pytest.param(
             special_h5, marks=pytest.mark.skip(reason="could not import 'h5py'")
         ), special_h5
-        h5py = None
     else:
         if os.path.isfile(special_h5):
             yield special_h5, special_h5

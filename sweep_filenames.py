@@ -1,9 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import os
 import re
-
+from builtins import range
 from collections import defaultdict
 from glob import glob
 

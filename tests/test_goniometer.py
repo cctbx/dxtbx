@@ -1,15 +1,25 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import math
 import os
+from builtins import range
 
 import pytest
-from dxtbx.model.goniometer import Goniometer, MultiAxisGoniometer
-from dxtbx.model.goniometer import GoniometerFactory
+
+import libtbx.load_env
 from libtbx import easy_pickle
-from libtbx.test_utils import Exception_expected
+from libtbx.phil import parse
+from libtbx.test_utils import Exception_expected, approx_equal
 from scitbx import matrix
+from scitbx.array_family import flex
+
+from dxtbx.model.goniometer import (
+    Goniometer,
+    GoniometerFactory,
+    KappaGoniometer,
+    MultiAxisGoniometer,
+    goniometer_phil_scope,
+)
 
 
 def _compare_tuples(a, b, tolerance=1.0e-6):
@@ -73,8 +83,6 @@ def test_goniometer():
     with pytest.raises(AssertionError):
         _compare_tuples(kappa.get_fixed_rotation(), fixed)
 
-    import libtbx.load_env
-
     dxtbx_dir = libtbx.env.dist_path("dxtbx")
 
     image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
@@ -97,16 +105,11 @@ def test_goniometer():
 
 
 def test_multi_axis_goniometer():
-    from libtbx.test_utils import approx_equal
-    from scitbx.array_family import flex
-
     alpha = 50
     omega = -10
     kappa = 30
     phi = 20
     direction = "-y"
-
-    from dxtbx.model.goniometer import KappaGoniometer
 
     kappa_omega_scan = KappaGoniometer(alpha, omega, kappa, phi, direction, "omega")
     axes = (
@@ -199,10 +202,6 @@ def test_multi_axis_goniometer():
 
 
 def test_goniometer_from_phil():
-    from dxtbx.model.goniometer import GoniometerFactory
-    from dxtbx.model.goniometer import goniometer_phil_scope
-    from libtbx.phil import parse
-
     params = goniometer_phil_scope.fetch(
         parse(
             """

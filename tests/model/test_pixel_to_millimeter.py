@@ -1,18 +1,26 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import math
 import os
 import random
+from builtins import range
 
-import dxtbx
 import pytest
 import six.moves.cPickle as pickle
+
 from cctbx.eltbx import attenuation_coefficient
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from libtbx.test_utils import approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
+
+import dxtbx
+from dxtbx.model import (
+    OffsetParallaxCorrectedPxMmStrategy,
+    Panel,
+    ParallaxCorrectedPxMmStrategy,
+)
+from dxtbx.model.beam import BeamFactory
+from dxtbx.model.detector import DetectorFactory
 
 
 @pytest.fixture
@@ -75,16 +83,12 @@ def test_array(model):
 
 def test_inverted_axis():
     def get_values(invert_y):
-        from dxtbx.model.beam import BeamFactory
-
         beam = BeamFactory.simple(wavelength=1)
 
         if invert_y:
             y_direction = "-y"
         else:
             y_direction = "+y"
-
-        from dxtbx.model.detector import DetectorFactory
 
         detector = DetectorFactory.simple(
             sensor=DetectorFactory.sensor("PAD"),
@@ -119,9 +123,6 @@ def test_inverted_axis():
 
 
 def test_offset_px_mm_strategy():
-    from dxtbx.model import Panel
-    from dxtbx.model import OffsetParallaxCorrectedPxMmStrategy
-
     # for future reference this is the array the same shape
     # as the image in pixels with offsets in pixels
 

@@ -5,9 +5,12 @@ which will tell you whether something is a CBF file (or no.)
 
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 import six
-from dxtbx.format.Format import Format
+
 from dxtbx import IncorrectFormatError
+from dxtbx.format.Format import Format
 
 
 class FormatCBF(Format):
@@ -112,8 +115,5 @@ class FormatCBF(Format):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBF.understand(arg))

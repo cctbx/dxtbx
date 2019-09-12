@@ -1,13 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import os
 import random
+from builtins import range
+
+from scitbx import matrix
 
 import dxtbx
-from dxtbx.model import parallax_correction
-from dxtbx.model import parallax_correction_inv
-from scitbx import matrix
+from dxtbx.model import parallax_correction, parallax_correction_inv
 
 
 def correct_gold(detector, attlen, xy):

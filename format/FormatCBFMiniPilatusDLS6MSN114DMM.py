@@ -5,6 +5,9 @@ An implementation of the CBF image reader for Pilatus images, from the Pilatus
 
 from __future__ import absolute_import, division, print_function
 
+import os
+import sys
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatStill import FormatStill
 
@@ -14,8 +17,6 @@ class FormatCBFMiniPilatusDLS6MSN114DMM(FormatCBFMiniPilatus, FormatStill):
     def understand(image_file):
         """Check to see if this looks like an Pilatus mini CBF format image,
         i.e. we can make sense of it."""
-
-        import os
 
         if os.environ.get("I02_DMM", "0") != "1":
             return False
@@ -49,8 +50,5 @@ class FormatCBFMiniPilatusDLS6MSN114DMM(FormatCBFMiniPilatus, FormatStill):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatusDLS6MSN114DMM.understand(arg))

@@ -1,7 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.format.Format import Format
+import sys
+
+from iotbx.detectors.macscience import DIPImage
+
 from dxtbx import IncorrectFormatError
+from dxtbx.format.Format import Format
 
 
 class FormatDIP2030b(Format):
@@ -30,8 +34,6 @@ class FormatDIP2030b(Format):
         pass
 
     def _start(self):
-        from iotbx.detectors.macscience import DIPImage
-
         self.detectorbase = DIPImage(self._image_file)
         self.detectorbase.readHeader()
 
@@ -75,8 +77,5 @@ class FormatDIP2030b(Format):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatDIP2030b.understand(arg))

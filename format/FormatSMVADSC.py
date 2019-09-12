@@ -2,7 +2,11 @@
 
 from __future__ import absolute_import, division, print_function
 
+import calendar
+import sys
 import time
+
+from iotbx.detectors import SMVImage
 
 from dxtbx.format.FormatSMV import FormatSMV
 
@@ -54,8 +58,6 @@ class FormatSMVADSC(FormatSMV):
 
     def detectorbase_start(self):
         if not hasattr(self, "detectorbase") or self.detectorbase is None:
-            from iotbx.detectors import SMVImage
-
             self.detectorbase = SMVImage(self._image_file)
             self.detectorbase.open_file = self.open_file
             self.detectorbase.readHeader()
@@ -189,8 +191,6 @@ class FormatSMVADSC(FormatSMV):
 
     def _scan(self):
         """Return the scan information for this image."""
-        import calendar
-
         format = self._scan_factory.format("SMV")
         exposure_time = float(self._header_dictionary["TIME"])
         epoch = None
@@ -235,8 +235,5 @@ class FormatSMVADSC(FormatSMV):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSMVADSC.understand(arg))

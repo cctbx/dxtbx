@@ -3,11 +3,16 @@
 from __future__ import absolute_import, division, print_function
 
 from builtins import range
-from dxtbx.format.FormatCBFMultiTileHierarchy import FormatCBFMultiTileHierarchyStill
-from dxtbx.format.FormatCBFFull import FormatCBFFullStill
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
+
+from cctbx.eltbx import attenuation_coefficient
 from scitbx.matrix import col, sqr
+
 import pycbf
+from dxtbx.format.FormatCBFFull import FormatCBFFullStill
+from dxtbx.format.FormatCBFMultiTileHierarchy import FormatCBFMultiTileHierarchyStill
+from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from dxtbx.model.beam import Beam, BeamFactory
+from dxtbx.model.detector import Detector, DetectorFactory
 
 
 class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
@@ -44,7 +49,6 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
         # wavelength of the radiation (which we have in the same file...)
         wavelength = beam.get_wavelength()
         thickness = 0.5  # mm, see Hart et al. 2012
-        from cctbx.eltbx import attenuation_coefficient
 
         table = attenuation_coefficient.get_table("Si")
         # mu_at_angstrom returns cm^-1
@@ -218,9 +222,6 @@ class FormatCBFFullStillInMemory(FormatCBFFullStill):
 
     def __init__(self, cbf_handle, **kwargs):
         """ @param cbf_handle In memory cbf_handle, alredy initialized """
-        from dxtbx.model.detector import Detector, DetectorFactory
-        from dxtbx.model.beam import Beam, BeamFactory
-
         self._goniometer_instance = None
         self._scan_instance = None
         self._detector_instance = None

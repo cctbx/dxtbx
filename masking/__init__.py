@@ -2,21 +2,19 @@ from __future__ import absolute_import, division, print_function
 
 import math
 
-from scitbx.array_family import flex
-from scitbx import matrix
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
-
-from dxtbx_masking_ext import (
-    mask_untrusted_rectangle,
-    mask_untrusted_circle,
-    mask_untrusted_polygon,
-    is_inside_polygon,
-)
+from scitbx import matrix
+from scitbx.array_family import flex
 
 from dxtbx.model import MultiAxisGoniometer
-
-from dxtbx_masking_ext import GoniometerShadowMasker
-from dxtbx_masking_ext import SmarGonShadowMasker
+from dxtbx_masking_ext import (
+    GoniometerShadowMasker,
+    SmarGonShadowMasker,
+    is_inside_polygon,
+    mask_untrusted_circle,
+    mask_untrusted_polygon,
+    mask_untrusted_rectangle,
+)
 
 __all__ = [
     "GoniometerShadowMasker",

@@ -1,6 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
 import math
+import sys
+
+import libtbx
 
 from dxtbx.format.FormatCBFFullPilatus import FormatCBFFullPilatus
 from dxtbx.masking import GoniometerMaskerFactory
@@ -32,8 +35,6 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
 
     @staticmethod
     def has_dynamic_shadowing(**kwargs):
-        import libtbx
-
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
         if dynamic_shadowing in (libtbx.Auto, "Auto"):
             return False
@@ -54,8 +55,5 @@ class FormatCBFFullPilatusDLS300KSN104(FormatCBFFullPilatus):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFFullPilatusDLS300KSN104.understand(arg))

@@ -3,16 +3,22 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import math
 import os
 import sys
+from builtins import range
 
-import dxtbx.datablock
+import numpy as np
+
 import libtbx.phil
 from libtbx import easy_pickle
 from libtbx.utils import Sorry, Usage
+from scitbx.array_family import flex
 from scitbx.matrix import col
+from xfel import radial_average
+
+import dxtbx.datablock
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 master_phil = libtbx.phil.parse(
     """
@@ -58,10 +64,6 @@ master_phil = libtbx.phil.parse(
 
 
 def run(args, imageset=None):
-    from xfel import radial_average
-    from scitbx.array_family import flex
-    from dxtbx.model.experiment_list import ExperimentListFactory
-
     # Parse input
     try:
         len(args)
@@ -106,7 +108,6 @@ def run(args, imageset=None):
 
     if params.show_plots:
         from matplotlib import pyplot as plt
-        import numpy as np
 
         colormap = plt.cm.gist_ncar
         plt.gca().set_color_cycle(

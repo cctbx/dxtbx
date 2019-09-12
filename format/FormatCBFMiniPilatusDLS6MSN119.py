@@ -5,6 +5,8 @@ An implementation of the CBF image reader for Pilatus images, from the Pilatus
 
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 
 
@@ -58,8 +60,5 @@ class FormatCBFMiniPilatusDLS6MSN119(FormatCBFMiniPilatus):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatusDLS6MSN119.understand(arg))

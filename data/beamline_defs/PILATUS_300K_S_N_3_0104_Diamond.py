@@ -1,4 +1,7 @@
 from __future__ import absolute_import, division, print_function
+
+import iotbx.cif.model
+
 import dxtbx.data.beamline_defs
 
 
@@ -25,8 +28,6 @@ class get_definition(dxtbx.data.beamline_defs.template):
         2. a lookup function for CIF/mmCIF strings."""
         # prepare string lookup table
         lookup = self._lookup(mmcif)
-
-        import iotbx.cif.model
 
         b = iotbx.cif.model.block()
         b[lookup("df.detector")] = "Photon counting pixel array"

@@ -7,13 +7,13 @@ classes.
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import object
-
 import math
 import sys
+from builtins import object
 
 from scitbx import matrix
 
+from dxtbx.imageset import ImageSetFactory
 from dxtbx.model.detector_helpers_types import detector_helpers_types
 
 
@@ -144,15 +144,12 @@ class to_xds(object):
 
 
 def factory(list_of_images):
-    from dxtbx.imageset import ImageSetFactory
-
     sweeps = ImageSetFactory.new(list_of_images)
     assert len(sweeps) == 1
     return sweeps[0]
 
 
 if __name__ == "__main__":
-
     # run some tests
 
     xsx = to_xds(factory(sys.argv[1:]))

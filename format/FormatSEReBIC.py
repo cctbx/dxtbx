@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 from dxtbx import IncorrectFormatError
 from dxtbx.format.FormatSER import FormatSER
 
@@ -93,7 +95,5 @@ class FormatSEReBIC(FormatSER):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSEReBIC.understand(arg))

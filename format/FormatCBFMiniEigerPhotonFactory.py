@@ -3,8 +3,12 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import sys
+
+from iotbx.detectors.pilatus_minicbf import PilatusImage
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
+from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
 
 
 class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
@@ -115,8 +119,6 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
 
     def detectorbase_start(self):
 
-        from iotbx.detectors.pilatus_minicbf import PilatusImage
-
         self.detectorbase = PilatusImage(self._image_file)
         self.detectorbase.readHeader()
 
@@ -124,14 +126,9 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
         self.detectorbase.parameters["SIZE2"] = 2070
 
     def get_vendortype(self):
-        from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
-
         return gv(self.get_detector())
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniEigerPhotonFactory.understand(arg))

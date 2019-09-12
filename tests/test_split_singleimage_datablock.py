@@ -1,7 +1,11 @@
 from __future__ import absolute_import, division, print_function
+
 import os
+
 import pytest
-from dxtbx.datablock import DataBlockFactory, DataBlockDumper
+
+from dxtbx.datablock import DataBlockDumper, DataBlockFactory
+
 
 """
 Test deserializing a datablock that has single file indices while using check_format = True or False

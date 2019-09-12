@@ -4,6 +4,10 @@ from Pilatus images using iotbx debug_write.
 """
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from iotbx.detectors import SMVImage
+
 from dxtbx.format.FormatSMVADSC import FormatSMVADSC
 
 
@@ -28,8 +32,6 @@ class FormatSMVADSCDBG(FormatSMVADSC):
         self._header_dictionary["SIZE2"] = "2463"
 
     def detectorbase_start(self):
-        from iotbx.detectors import SMVImage
-
         self.detectorbase = SMVImage(self._image_file)
         self.detectorbase.open_file = self.open_file
         self.detectorbase.readHeader()
@@ -67,8 +69,5 @@ class FormatSMVADSCDBG(FormatSMVADSC):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSMVADSCDBG.understand(arg))

@@ -1,10 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from libtbx.phil import parse
+
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
-from dxtbx.format.FormatXTCRayonix import FormatXTCRayonix, rayonix_locator_str
 from dxtbx.format.FormatXTCCspad import FormatXTCCspad, cspad_locator_str
 from dxtbx.format.FormatXTCJungfrau import FormatXTCJungfrau, jungfrau_locator_str
-from libtbx.phil import parse
+from dxtbx.format.FormatXTCRayonix import FormatXTCRayonix, rayonix_locator_str
+from dxtbx.model import Detector
 
 multiple_locator_scope = parse(
     rayonix_locator_str + cspad_locator_str + jungfrau_locator_str + locator_str,
@@ -74,8 +78,6 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
         return self._detector(index)
 
     def _detector(self, index=None):
-        from dxtbx.model import Detector
-
         if index is None:
             index = 0
         d = Detector()
@@ -112,7 +114,5 @@ class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJung
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatXTCMultipleDetectors.understand(arg))

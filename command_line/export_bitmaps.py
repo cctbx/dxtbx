@@ -1,6 +1,19 @@
 from __future__ import absolute_import, division, print_function
 
+import os
+import sys
+
+from six.moves import StringIO
+
 import iotbx.phil
+from libtbx.phil import command_line
+from libtbx.utils import Sorry, Usage
+from rstbx.slip_viewer.tile_generation import (
+    _get_flex_image,
+    _get_flex_image_multipanel,
+)
+
+from dxtbx.datablock import DataBlockFactory
 
 master_phil_scope = iotbx.phil.parse(
     """
@@ -24,13 +37,7 @@ colour_schemes = {"greyscale": 0, "rainbow": 1, "heatmap": 2, "inverse_greyscale
 
 
 def run(args):
-    import os
-    from libtbx.phil import command_line
-    from libtbx.utils import Sorry, Usage
-
     if len(args) == 0:
-        from six.moves import StringIO
-
         s = StringIO()
         master_phil_scope.show(out=s)
         raise Usage(
@@ -41,8 +48,6 @@ dxtbx.export_bitmaps image_files [options]
 """
             % s.getvalue()
         )
-
-    from dxtbx.datablock import DataBlockFactory
 
     unhandled = []
     datablocks = DataBlockFactory.from_args(args, verbose=False, unhandled=unhandled)
@@ -67,11 +72,6 @@ dxtbx.export_bitmaps image_files [options]
         output_dir = "."
     elif not os.path.exists(output_dir):
         os.makedirs(output_dir)
-
-    from rstbx.slip_viewer.tile_generation import (
-        _get_flex_image,
-        _get_flex_image_multipanel,
-    )
 
     for imageset in imagesets:
         detector = imageset.get_detector()
@@ -132,6 +132,4 @@ dxtbx.export_bitmaps image_files [options]
 
 
 if __name__ == "__main__":
-    import sys
-
     run(sys.argv[1:])

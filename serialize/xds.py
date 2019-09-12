@@ -2,9 +2,19 @@ from __future__ import absolute_import, division, print_function
 
 import warnings
 
-import dxtbx
-from scitbx import matrix
+from six.moves import StringIO
+
+from cctbx import uctbx
+from cctbx.eltbx import attenuation_coefficient
+from cctbx.sgtbx import space_group, space_group_symbols
+from iotbx.xds import xds_inp, xparm
+from rstbx.cftbx.coordinate_frame_converter import coordinate_frame_converter
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
+from scitbx import matrix
+
+import dxtbx
+from dxtbx.imageset import ImageSetFactory
+from dxtbx.model import Crystal, MosaicCrystalKabsch2010, ParallaxCorrectedPxMmStrategy
 from dxtbx.model.detector_helpers_types import detector_helpers_types
 
 
@@ -19,9 +29,6 @@ def to_imageset(input_filename, extra_filename=None):
         The imageset
 
     """
-    from iotbx.xds import xds_inp
-    from dxtbx.imageset import ImageSetFactory
-
     # Read the input filename
     handle = xds_inp.reader()
     handle.read_file(input_filename)
@@ -45,9 +52,6 @@ def to_imageset(input_filename, extra_filename=None):
         models = dxtbx.load(extra_filename)
         detector = models.get_detector()
         if detector_name.strip() in ("PILATUS", "EIGER") or handle.silicon is not None:
-            from dxtbx.model import ParallaxCorrectedPxMmStrategy
-            from cctbx.eltbx import attenuation_coefficient
-
             if handle.silicon is None:
                 table = attenuation_coefficient.get_table("Si")
                 wavelength = models.get_beam().get_wavelength()
@@ -96,36 +100,29 @@ def to_crystal(filename):
         The crystal model
 
     """
-    from rstbx.cftbx.coordinate_frame_converter import coordinate_frame_converter
-    from cctbx.sgtbx import space_group, space_group_symbols
-
     # Get the real space coordinate frame
     cfc = coordinate_frame_converter(filename)
     real_space_a = cfc.get("real_space_a")
     real_space_b = cfc.get("real_space_b")
     real_space_c = cfc.get("real_space_c")
     sg = cfc.get("space_group_number")
-    space_group = space_group(space_group_symbols(sg).hall())
+    crystal_space_group = space_group(space_group_symbols(sg).hall())
     mosaicity = cfc.get("mosaicity")
 
     # Return the crystal model
     if mosaicity is None:
-        from dxtbx.model import Crystal
-
         crystal = Crystal(
             real_space_a=real_space_a,
             real_space_b=real_space_b,
             real_space_c=real_space_c,
-            space_group=space_group,
+            space_group=crystal_space_group,
         )
     else:
-        from dxtbx.model import MosaicCrystalKabsch2010
-
         crystal = MosaicCrystalKabsch2010(
             real_space_a=real_space_a,
             real_space_b=real_space_b,
             real_space_c=real_space_c,
-            space_group=space_group,
+            space_group=crystal_space_group,
         )
         crystal.set_mosaicity(mosaicity)
     return crystal
@@ -324,8 +321,6 @@ class to_xds(object):
                 "SENSOR_THICKNESS= %.3f" % self.get_detector()[0].get_thickness()
             )
             if self.get_detector()[0].get_material():
-                from cctbx.eltbx import attenuation_coefficient
-
                 material = self.get_detector()[0].get_material()
                 table = attenuation_coefficient.get_table(material)
                 mu = table.mu_at_angstrom(self.wavelength) / 10.0
@@ -420,8 +415,6 @@ class to_xds(object):
     def xparm_xds(
         self, real_space_a, real_space_b, real_space_c, space_group, out=None
     ):
-        from cctbx import uctbx
-
         R = self.imagecif_to_xds_transformation_matrix
         unit_cell_a_axis = R * matrix.col(real_space_a)
         unit_cell_b_axis = R * matrix.col(real_space_b)
@@ -431,9 +424,6 @@ class to_xds(object):
         )
         metrical_matrix = (A_inv * A_inv.transpose()).as_sym_mat3()
         unit_cell = uctbx.unit_cell(metrical_matrix=metrical_matrix)
-        from iotbx.xds import xparm
-
-        from six.moves import StringIO
 
         b = StringIO()
         writer = xparm.writer(

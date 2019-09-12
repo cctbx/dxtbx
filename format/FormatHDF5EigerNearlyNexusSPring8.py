@@ -1,5 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+import h5py
+
 from dxtbx.format.FormatHDF5EigerNearlyNexus import FormatHDF5EigerNearlyNexus
 
 
@@ -9,8 +13,6 @@ class FormatHDF5EigerNearlyNexusSPring8(FormatHDF5EigerNearlyNexus):
         is_nexus = FormatHDF5EigerNearlyNexus.understand(image_file)
         if not is_nexus:
             return False
-
-        import h5py
 
         # Get the file handle
         handle = h5py.File(image_file, "r")
@@ -28,7 +30,5 @@ class FormatHDF5EigerNearlyNexusSPring8(FormatHDF5EigerNearlyNexus):
 
 
 if __name__ == "__main__":
-    import sys
-
     print(FormatHDF5EigerNearlyNexusSPring8.understand(sys.argv[1]))
     print(FormatHDF5EigerNearlyNexusSPring8(sys.argv[1]).get_goniometer())

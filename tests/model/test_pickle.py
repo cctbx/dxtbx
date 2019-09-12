@@ -1,12 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
+import six.moves.cPickle as pickle
+
 from dxtbx.model import Beam, Detector, Goniometer, Panel, Scan
 
 
 def pickle_then_unpickle(obj):
     """Pickle to a temp file then un-pickle."""
-    import six.moves.cPickle as pickle
-
     return pickle.loads(pickle.dumps(obj))
 
 

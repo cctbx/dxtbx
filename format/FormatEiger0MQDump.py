@@ -1,16 +1,19 @@
 from __future__ import absolute_import, division, print_function
 
+import json
+import os
+
+import numpy
+
+from scitbx.array_family import flex
+
+import msgpack
+from dxtbx.format.Format import Format
+
 try:
     import bitshuffle
 except ImportError:
     pass  # not available in conda
-import os
-import json
-import msgpack
-import numpy
-
-from scitbx.array_family import flex
-from dxtbx.format.Format import Format
 
 
 class FormatEiger0MQDump(Format):

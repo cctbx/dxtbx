@@ -1,12 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import os
+from builtins import range
+
+import pytest
 
 from dxtbx.model.scan import ScanFactory
-from dxtbx.model.scan_helpers import scan_helper_image_files
-from dxtbx.model.scan_helpers import scan_helper_image_formats
-import pytest
+from dxtbx.model.scan_helpers import scan_helper_image_files, scan_helper_image_formats
 
 
 @pytest.fixture

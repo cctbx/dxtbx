@@ -1,16 +1,16 @@
 from __future__ import absolute_import, division, print_function
 
-from future import standard_library
-import sys
-
-standard_library.install_aliases()
-
 import copy
 import pickle
+import sys
+
 import six
+
+from dxtbx.format.FormatPYunspecified import (
+    FormatPYunspecified,
+    FormatPYunspecifiedInMemory,
+)
 from dxtbx.format.FormatStill import FormatStill
-from dxtbx.format.FormatPYunspecified import FormatPYunspecified
-from dxtbx.format.FormatPYunspecified import FormatPYunspecifiedInMemory
 
 
 class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):

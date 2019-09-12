@@ -1,6 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import sys
+
+import h5py
+import numpy
+
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
@@ -14,8 +20,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
 
     @staticmethod
     def understand(image_file):
-        import h5py
-
         h5_handle = h5py.File(image_file, "r")
         if "metadata/detector" not in h5_handle:
             return False
@@ -50,8 +54,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
             self.distance = float(os.environ["RAYONIX_DISTANCE"])
 
     def _start(self):
-        import h5py
-
         h5_handle = h5py.File(self.image_filename, "r")
 
         self._images = sorted([tag for tag in h5_handle if tag.startswith("tag-")])
@@ -59,8 +61,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         h5_handle.close()
 
     def read_metadata(self):
-        import h5py
-
         h5_handle = h5py.File(self.image_filename, "r")
         self.pixelsize_in_um = h5_handle["metadata"]["pixelsize_in_um"][()]
         h5_handle.close()
@@ -93,8 +93,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         )
 
     def _beam(self):
-        import h5py
-
         h5_handle = h5py.File(self.image_filename, "r")
         eV = h5_handle[self.tag]["photon_energy_ev"][()]
         h5_handle.close()
@@ -109,10 +107,6 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
             self.set_index(index)
 
         if self._raw_data is None:
-            from scitbx.array_family import flex
-            import numpy
-            import h5py
-
             h5_handle = h5py.File(self.image_filename, "r")
             data = h5_handle[self.tag]["data"][()].astype(numpy.int32)
             h5_handle.close()
@@ -144,7 +138,5 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
 
 
 if __name__ == "__main__":
-    import sys
-
     print(FormatHDF5SaclaRayonix.understand(sys.argv[1]))
     FormatHDF5SaclaRayonix(sys.argv[1])

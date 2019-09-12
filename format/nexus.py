@@ -1,12 +1,29 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import functools
 import math
 import os
+from builtins import range
 
+import h5py
 import numpy
 import six
+
+import cctbx.uctbx
+from cctbx.eltbx import attenuation_coefficient
+from scitbx import matrix
+from scitbx.array_family import flex
+from scitbx.matrix import col, sqr
+
+import dxtbx.model
+from dxtbx.model import (
+    Beam,
+    Crystal,
+    Detector,
+    Panel,
+    ParallaxCorrectedPxMmStrategy,
+    Scan,
+)
 
 try:
     from dxtbx_format_nexus_ext import dataset_as_flex_int
@@ -277,7 +294,6 @@ def construct_vector(nx_file, item, vector=None):
     """
     Walk the dependency chain and create the absolute vector
     """
-    from scitbx import matrix
 
     class TransformVisitor(object):
         def __init__(self, vector):
@@ -341,7 +357,6 @@ def construct_axes(nx_file, item, vector=None):
     """
     Walk the dependency chain and create the absolute vector
     """
-    from scitbx.array_family import flex
 
     class Visitor(object):
         def __init__(self):
@@ -872,8 +887,6 @@ class NXmxReader(object):
     """
 
     def __init__(self, filename=None, handle=None):
-        import h5py
-
         # Get the file handle
         if filename is not None:
             handle = h5py.File(filename, "r")
@@ -951,8 +964,6 @@ def is_nexus_file(filename):
     """
     A hacky function to check if this is a nexus file
     """
-    import h5py
-
     with h5py.File(filename, "r") as handle:
         # Find the NXmx entries
         return bool(find_entries(handle, "/"))
@@ -964,8 +975,6 @@ class BeamFactory(object):
     """
 
     def __init__(self, obj, index=None):
-        from dxtbx.model import Beam
-
         # Get the items from the NXbeam class
         wavelength = obj.handle["incident_wavelength"]
         wavelength_value = wavelength[()]
@@ -991,8 +1000,6 @@ def get_change_of_basis(transformation):
     """
     Get the 4x4 homogenous coordinate matrix for a given NXtransformation.
     """
-    from scitbx.matrix import col, sqr
-
     # Change of basis to convert from NeXus to IUCr/ImageCIF convention
     n2i_cob = sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
 
@@ -1136,11 +1143,6 @@ class DetectorFactoryFromGroup(object):
     """
 
     def __init__(self, instrument, beam, idx=None):
-        from dxtbx.model import Detector
-        from cctbx.eltbx import attenuation_coefficient
-        from dxtbx.model import ParallaxCorrectedPxMmStrategy
-        from scitbx import matrix
-
         assert len(instrument.detector_groups) == 1, "Multiple detectors not supported"
 
         nx_group = instrument.detector_groups[0].handle
@@ -1355,11 +1357,6 @@ class DetectorFactory(object):
     """
 
     def __init__(self, obj, beam):
-        from dxtbx.model import Detector, Panel
-        from cctbx.eltbx import attenuation_coefficient
-        from dxtbx.model import ParallaxCorrectedPxMmStrategy
-        from scitbx import matrix
-
         # Get the handles
         nx_file = obj.handle.file
         nx_detector = obj.handle
@@ -1487,18 +1484,17 @@ class GoniometerFactory(object):
     """
 
     def __init__(self, obj):
-        from dxtbx.model import GoniometerFactory
 
         axes, angles, axis_names, scan_axis = construct_axes(
             obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
         )
 
         if len(axes) == 1:
-            self.model = GoniometerFactory.make_goniometer(
+            self.model = dxtbx.model.GoniometerFactory.make_goniometer(
                 axes[0], (1, 0, 0, 0, 1, 0, 0, 0, 1)
             )
         else:
-            self.model = GoniometerFactory.make_multi_axis_goniometer(
+            self.model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
                 axes, angles, axis_names, scan_axis
             )
         return
@@ -1523,9 +1519,6 @@ class ScanFactory(object):
     """
 
     def __init__(self, obj, detector_obj):
-        from dxtbx.model import Scan
-        from scitbx.array_family import flex
-
         # Get the image and oscillation range - need to search for rotations
         # in dependency tree
         try:
@@ -1583,10 +1576,6 @@ class CrystalFactory(object):
     """
 
     def __init__(self, obj):
-        from dxtbx.model import Crystal
-        import cctbx.uctbx
-        from scitbx import matrix
-
         # Get the crystal parameters
         unit_cell_parameters = list(obj.handle["unit_cell"][0])
         unit_cell = cctbx.uctbx.unit_cell(unit_cell_parameters)
@@ -1639,8 +1628,6 @@ class DataList(object):
         return self.num_images
 
     def __getitem__(self, index):
-        from scitbx.array_family import flex
-
         d = self.lookup[index]
         i = index - self.offset[d]
         N, height, width = self.datasets[d].shape
@@ -1736,8 +1723,6 @@ class MultiPanelDataList(object):
         return self.num_images
 
     def __getitem__(self, index):
-        from scitbx.array_family import flex
-
         d = self.lookup[index]
         i = index - self.offset[d]
 
@@ -1756,8 +1741,6 @@ class MultiPanelDataList(object):
 
 class DataFactory(object):
     def __init__(self, obj, max_size=0):
-        import h5py
-
         datasets = []
         for key in sorted(obj.handle):
             if key.startswith("_filename_"):
@@ -1831,8 +1814,6 @@ class MaskFactory(object):
 
     def __init__(self, objects, index=None):
         def make_mask(dset, index):
-            from scitbx.array_family import flex
-
             i = index if index is not None else 0
             mask = []
             for module_slices in all_slices:

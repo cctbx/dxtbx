@@ -1,8 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx import IncorrectFormatError
 
 
 class FormatHDF5(FormatMultiImage, Format):
@@ -22,7 +24,5 @@ class FormatHDF5(FormatMultiImage, Format):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatHDF5.understand(arg))

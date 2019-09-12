@@ -2,6 +2,10 @@
 
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from iotbx.detectors.marIP import MARIPImage
+
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 
@@ -34,8 +38,6 @@ class FormatMarIP(Format):
         """Open the image file, read the image header, copy the key / value
         pairs into an internal dictionary self._header_dictionary along with
         the length of the header in bytes self._header_size."""
-        from iotbx.detectors.marIP import MARIPImage
-
         self.detectorbase = MARIPImage(self._image_file)
         self.detectorbase.readHeader()
 
@@ -88,8 +90,5 @@ class FormatMarIP(Format):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatMarIP.understand(arg))

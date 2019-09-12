@@ -1,9 +1,9 @@
 # LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.debug_memory
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import resource
 import sys
+from builtins import range
 
 import dxtbx
 

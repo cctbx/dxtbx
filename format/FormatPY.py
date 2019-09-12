@@ -2,8 +2,10 @@
 
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.format.Format import Format
+import sys
+
 from dxtbx import IncorrectFormatError
+from dxtbx.format.Format import Format
 
 
 class FormatPY(Format):
@@ -31,7 +33,5 @@ class FormatPY(Format):
 
 
 if __name__ == "__main__":
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatPY.understand(arg))

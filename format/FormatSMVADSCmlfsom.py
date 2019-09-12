@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 from dxtbx.format.FormatSMVADSC import FormatSMVADSC
 
 
@@ -37,8 +39,5 @@ class FormatSMVADSCmlfsom(FormatSMVADSC):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSMVADSCmlfsom.understand(arg))

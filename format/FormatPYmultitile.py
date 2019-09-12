@@ -1,15 +1,17 @@
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.format.FormatPY import FormatPY
+import sys
+from calendar import timegm
+from time import strptime
 
 import six
 import six.moves.cPickle as pickle
-from xfel.cftbx.detector.cspad_detector import CSPadDetector
-from dxtbx.model import Detector
-from calendar import timegm
+
 from scitbx.matrix import col
-from time import strptime
-import sys
+from xfel.cftbx.detector.cspad_detector import CSPadDetector
+
+from dxtbx.format.FormatPY import FormatPY
+from dxtbx.model import Detector
 
 
 class FormatPYmultitile(FormatPY):

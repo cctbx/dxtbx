@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-import pytest
 import os
+
+import pytest
 
 from dxtbx.serialize.filename import load_path, resolve_path
 

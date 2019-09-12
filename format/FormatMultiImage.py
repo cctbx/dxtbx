@@ -1,12 +1,14 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import os
+from builtins import range
 
 from scitbx.array_family import flex
 
 from dxtbx.format.Format import Format
+from dxtbx.format.image import ImageBool
+from dxtbx.imageset import ImageSet, ImageSetData, ImageSetLazy, ImageSweep
 from dxtbx.model import MultiAxisGoniometer
 
 
@@ -128,10 +130,6 @@ class FormatMultiImage(Format):
         Factory method to create an imageset
 
         """
-        from dxtbx.format.image import ImageBool
-        from dxtbx.imageset import ImageSetData
-        from dxtbx.imageset import ImageSweep
-
         if isinstance(filenames, str):
             filenames = [filenames]
         elif len(filenames) > 1:
@@ -213,8 +211,6 @@ class FormatMultiImage(Format):
             # Use imagesetlazy
             # Setup ImageSetLazy and just return it. No models are set.
             if lazy:
-                from dxtbx.imageset import ImageSetLazy
-
                 iset = ImageSetLazy(
                     ImageSetData(
                         reader=reader,
@@ -227,8 +223,6 @@ class FormatMultiImage(Format):
                 )
                 return iset
             # Create the imageset
-            from dxtbx.imageset import ImageSet
-
             iset = ImageSet(
                 ImageSetData(
                     reader=reader, masker=None, vendor=vendor, params=params, format=cls

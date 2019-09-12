@@ -2,12 +2,20 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
+import binascii
 import math
+import sys
+from builtins import range
+
+import libtbx
+from cbflib_adaptbx import uncompress
+from cctbx.eltbx import attenuation_coefficient
+from scitbx import matrix
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.masking import GoniometerMaskerFactory
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 
 class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
@@ -30,8 +38,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
     @staticmethod
     def has_dynamic_shadowing(**kwargs):
-        import libtbx
-
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
         if dynamic_shadowing in (libtbx.Auto, "Auto"):
             return True
@@ -53,10 +59,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         # module positions from detector blueprints - modelling at the moment as
         # 24 modules, each consisting of 5 sensors (the latter is ignored)
-
-        from dxtbx.model import Detector
-        from scitbx import matrix
-
         x = matrix.col((-1, 0, 0))
         y = matrix.col((0, 1, 0))
         z = matrix.col((0, 0, 1))
@@ -88,8 +90,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
             y.elems,
             (-distance * z + (beam_shift_x * x) + (beam_shift_y * y)).elems,
         )
-
-        from cctbx.eltbx import attenuation_coefficient
 
         table = attenuation_coefficient.get_table("Si")
         mu = table.mu_at_angstrom(wavelength) / 10.0
@@ -158,9 +158,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         return detector
 
     def _read_cbf_image(self):
-        from cbflib_adaptbx import uncompress
-        import binascii
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -200,8 +197,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         """Return a model for a simple single-axis goniometer. This should
         probably be checked against the image header."""
 
-        from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
-
         timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
         # Goniometer changed from reverse phi to conventional rotation direction
         # on this date:
@@ -231,8 +226,5 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniPilatusDLS12M.understand(arg))

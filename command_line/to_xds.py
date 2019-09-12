@@ -8,13 +8,12 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 
-from dxtbx.serialize import xds
+from dxtbx.imageset import ImageSetFactory
+from dxtbx.serialize import load, xds
 
 
 def run(file_names):
     if len(file_names) == 1 and file_names[0].endswith("json"):
-        from dxtbx.serialize import load
-
         try:
             datablock = load.datablock(file_names[0])
             assert len(datablock) == 1
@@ -27,8 +26,6 @@ def run(file_names):
             else:
                 raise
     else:
-        from dxtbx.imageset import ImageSetFactory
-
         sweep = ImageSetFactory.new(file_names)[0]
     xsx = xds.to_xds(sweep)
     print(xsx.XDS_INP())

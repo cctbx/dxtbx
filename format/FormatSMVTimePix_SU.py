@@ -3,7 +3,12 @@ with a 2x2 array of Timepix modules, converted to SMV in various ways."""
 
 from __future__ import absolute_import, division, print_function
 
+import calendar
+import sys
 import time
+
+from iotbx.detectors import SMVImage
+from scitbx import matrix
 
 from dxtbx.format.FormatSMV import FormatSMV
 from dxtbx.model.detector import Detector
@@ -49,8 +54,6 @@ class FormatSMVTimePix_SU(FormatSMV):
 
     def detectorbase_start(self):
         if not hasattr(self, "detectorbase") or self.detectorbase is None:
-            from iotbx.detectors import SMVImage
-
             self.detectorbase = SMVImage(self._image_file)
             self.detectorbase.open_file = self.open_file
             self.detectorbase.readHeader()
@@ -76,8 +79,6 @@ class FormatSMVTimePix_SU(FormatSMV):
 
     def _scan(self):
         """Return the scan information for this image."""
-        import calendar
-
         format = self._scan_factory.format("SMV")
         exposure_time = float(self._header_dictionary["TIME"])
         epoch = None
@@ -133,8 +134,6 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
     def _detector(self):
         """4 panel detector, 55 micron pixels except for pixels at the outer
         edge of each chip, which are 165 microns wide."""
-        from scitbx import matrix
-
         # expect 55 mu pixels here, but make it general anyway
         pixel_size = tuple([float(self._header_dictionary["PIXEL_SIZE"])] * 2)
         image_size = (
@@ -394,9 +393,6 @@ class FormatSMVTimePix_SU_516x516(FormatSMVTimePix_SU):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print("FormatSMVTimePix_SU:", FormatSMVTimePix_SU.understand(arg))
         print(

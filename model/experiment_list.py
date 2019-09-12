@@ -1,11 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
 import copy
 import json
 import os
-import pkg_resources
 import warnings
+from builtins import range
+
+import pkg_resources
+import six
+import six.moves.cPickle as pickle
 
 from dxtbx.datablock import (
     BeamComparison,
@@ -32,8 +35,6 @@ from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
 from dxtbx.sweep_filenames import template_image_range
-import six
-import six.moves.cPickle as pickle
 
 try:
     from typing import Any, Dict, Optional, Tuple

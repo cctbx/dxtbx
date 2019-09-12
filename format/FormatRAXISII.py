@@ -1,5 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
+from iotbx.detectors.raxis_nonsquare import NonSquareRAXISImage
+
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatRAXIS import RAXISHelper
 
@@ -17,8 +21,6 @@ class FormatRAXISII(RAXISHelper, Format):
         pass  # override with an empty function
 
     def _start(self):
-        from iotbx.detectors.raxis_nonsquare import NonSquareRAXISImage
-
         self.detectorbase = NonSquareRAXISImage(self._image_file)
         self.detectorbase.readHeader()
 
@@ -59,8 +61,5 @@ class FormatRAXISII(RAXISHelper, Format):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatRAXISII.understand(arg))

@@ -4,13 +4,18 @@ Be aware: this is completely unrelated to the HDF5 Eiger format.
 """
 from __future__ import absolute_import, division, print_function
 
-from builtins import range
+import sys
 import time
+from builtins import range
 
-from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from boost.python import streambuf
+from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 from scitbx.array_family import flex
+
+from dxtbx import read_int32
+from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
+from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 
 class FormatSMVRigakuEiger(FormatSMVRigaku):
@@ -147,7 +152,6 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
         # to sensible defaults.
         t0 = 0.450
         material = "Si"
-        from cctbx.eltbx import attenuation_coefficient
 
         table = attenuation_coefficient.get_table(material)
         wavelength = float(self._header_dictionary["SCAN_WAVELENGTH"])
@@ -194,9 +198,6 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
         """Read the data - assuming it is streaming 4-byte unsigned ints following the
         header..."""
 
-        from boost.python import streambuf
-        from dxtbx import read_int32
-
         assert len(self.get_detector()) == 1
         size = self.get_detector()[0].get_image_size()
         f = self.open_file(self._image_file)
@@ -208,8 +209,5 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSMVRigakuEiger.understand(arg))

@@ -2,11 +2,18 @@
 
 from __future__ import absolute_import, division, print_function
 
+import binascii
 import os
+import sys
+
+from cbflib_adaptbx import uncompress
+from cctbx.eltbx import attenuation_coefficient
+from iotbx.detectors.eiger_minicbf import EigerCBFImage
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
+from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 if "DXTBX_OVERLOAD_SCALE" in os.environ:
@@ -83,8 +90,6 @@ class FormatCBFMiniEiger(FormatCBFMini):
         except KeyError:
             identifier = "Unknown Eiger"
 
-        from cctbx.eltbx import attenuation_coefficient
-
         table = attenuation_coefficient.get_table(material)
         mu = table.mu_at_angstrom(wavelength) / 10.0
         t0 = thickness
@@ -150,9 +155,6 @@ class FormatCBFMiniEiger(FormatCBFMini):
         )
 
     def _read_cbf_image(self):
-        from cbflib_adaptbx import uncompress
-        import binascii
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -178,20 +180,13 @@ class FormatCBFMiniEiger(FormatCBFMini):
         return self._raw_data
 
     def detectorbase_start(self):
-        from iotbx.detectors.eiger_minicbf import EigerCBFImage
-
         self.detectorbase = EigerCBFImage(self._image_file)
         self.detectorbase.readHeader()
 
     def get_vendortype(self):
-        from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
-
         return gv(self.get_detector())
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniEiger.understand(arg))

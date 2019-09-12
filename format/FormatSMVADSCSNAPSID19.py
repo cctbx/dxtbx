@@ -5,6 +5,8 @@ which have reversed phi.
 """
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN
 
 
@@ -81,8 +83,5 @@ class FormatSMVADSCSNAPSID19(FormatSMVADSCSN):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatSMVADSCSN.understand(arg))

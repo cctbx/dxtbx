@@ -6,15 +6,21 @@ Located in dxtbx/format
 
 from __future__ import absolute_import, division, print_function
 
+import binascii
+import calendar
+import re
+import sys
+import time
+
+from cbflib_adaptbx import uncompress
+from cctbx.eltbx import attenuation_coefficient
+from iotbx.detectors.adsc_minicbf import ADSCHF4MImage
+
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 
 def get_adsc_timestamp(timestamp):
-    import calendar
-    import time
-    import re
-
     # reduce duplicate to single underscore
     timestamp = re.sub("_+", "_", timestamp)
 
@@ -84,8 +90,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         # take into consideration here the thickness of the sensor also the
         # wavelength of the radiation (which we have in the same file...)
-        from cctbx.eltbx import attenuation_coefficient
-
         table = attenuation_coefficient.get_table("Si")
         mu = table.mu_at_angstrom(wavelength) / 10.0
         t0 = thickness
@@ -150,15 +154,10 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
     def detectorbase_start(self):
 
-        from iotbx.detectors.adsc_minicbf import ADSCHF4MImage
-
         self.detectorbase = ADSCHF4MImage(self._image_file)
         self.detectorbase.readHeader()
 
     def _read_cbf_image(self):
-        from cbflib_adaptbx import uncompress
-        import binascii
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -185,8 +184,5 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
 
 if __name__ == "__main__":
-
-    import sys
-
     for arg in sys.argv[1:]:
         print(FormatCBFMiniADSCHF4M.understand(arg))
