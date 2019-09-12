@@ -463,7 +463,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
         assert iset.get_scan(i) is None
 
 
-def test_imagesetfactory(centroid_files, dials_regression):
+def test_imagesetfactory(centroid_files, dials_data):
     sweep = ImageSetFactory.new(centroid_files)
 
     assert isinstance(sweep[0], ImageSweep)
