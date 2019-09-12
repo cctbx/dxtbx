@@ -465,14 +465,14 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
         assert iset.get_scan(i) is None
 
 
-def test_imagesetfactory(centroid_files, dials_regression):
+def test_imagesetfactory(centroid_files, dials_data):
     from dxtbx.imageset import ImageSetFactory, ImageSweep
 
     sweep = ImageSetFactory.new(centroid_files)
 
     assert isinstance(sweep[0], ImageSweep)
 
-    template = os.path.join(dials_regression, "centroid_test_data", "centroid_####.cbf")
+    template = dials_data("centroid_test_data").join("centroid_####.cbf").strpath
     image_range = (3, 6)
 
     sweep = ImageSetFactory.from_template(template, image_range)
