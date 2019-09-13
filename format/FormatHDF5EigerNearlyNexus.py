@@ -336,11 +336,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self._beam_model = nexus.beam_factory(beam)
         self._detector_model = nexus.detector_factory(detector, self._beam_model)
         self._goniometer_model = nexus.goniometer_factory(sample)
-        scan_models = nexus.scan_factory(sample, detector)
-        assert (
-            len(scan_models) == 1
-        ), "Multiple scans in a single NeXus file not currently supported"
-        self._scan_model = scan_models[0]
+        self._scan_models = nexus.scan_factory(sample, detector)
         self._raw_data = nexus.DataFactory(data).model
 
         # update model for masking Eiger detectors
@@ -360,7 +356,10 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         return self._beam_model
 
     def _scan(self):
-        return self._scan_model
+        return self._scan_models[0]
+
+    def _scans(self):
+        return self._scan_models
 
     def get_goniometer(self, index=None):
         return self._goniometer()

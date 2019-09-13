@@ -954,10 +954,10 @@ class DataBlockFilenameImporter(object):
                 )
                 self.unhandled.append(filename)
             elif issubclass(format_class, FormatMultiImage):
-                imageset = self._create_single_file_imageset(
+                imagesets = self._create_single_file_imagesets(
                     format_class, filename, format_kwargs=format_kwargs
                 )
-                format_groups.setdefault(format_class, []).append(imageset)
+                format_groups.setdefault(format_class, []).extend(imagesets)
                 logger.debug("Loaded file: %s", filename)
             else:
                 format_object = format_class(filename, format_kwargs=format_kwargs)
@@ -1171,11 +1171,13 @@ class DataBlockFilenameImporter(object):
         # Return the imageset
         return imageset
 
-    def _create_single_file_imageset(self, format_class, filename, format_kwargs=None):
-        """ Create an imageset from a multi image file. """
+    def _create_single_file_imagesets(self, format_class, filename, format_kwargs=None):
+        """ Create imagesets from a multi image file. """
         if format_kwargs is None:
             format_kwargs = {}
-        return format_class.get_imageset(abspath(filename), format_kwargs=format_kwargs)
+        return format_class.get_imagesets(
+            abspath(filename), format_kwargs=format_kwargs
+        )
 
 
 class InvalidDataBlockError(RuntimeError):

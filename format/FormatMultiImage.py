@@ -16,11 +16,14 @@ class Reader(object):
 
     _format_class_ = None
 
-    def __init__(self, filenames, num_images=None, **kwargs):
+    def __init__(self, filenames, offset=None, num_images=None, **kwargs):
         self.kwargs = kwargs
         self.format_class = Reader._format_class_
         assert len(filenames) == 1
         self._filename = filenames[0]
+        self._offset = offset
+        if self._offset is None:
+            self._offset = 0
         if num_images is None:
             self._num_images = self.read_num_images()
         else:
@@ -32,7 +35,7 @@ class Reader(object):
 
     def read(self, index):
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
-        return format_instance.get_raw_data(index)
+        return format_instance.get_raw_data(self._offset + index)
 
     def paths(self):
         return [self._filename]
@@ -64,6 +67,19 @@ class FormatMultiImage(Format):
     def __init__(self, **kwargs):
         pass
 
+    def setup(self):
+
+        self._start()
+
+        try:
+            self._goniometer_instance = self._goniometer()
+            self._detector_instance = self._detector()
+            self._beam_instance = self._beam()
+            self._scan_instance = self._scan()
+            self._scan_instances = self._scans()
+        finally:
+            self._end()
+
     def get_num_images(self):
         raise NotImplementedError
 
@@ -78,6 +94,9 @@ class FormatMultiImage(Format):
 
     def get_scan(self, index=None):
         return self._scan_instance
+
+    def get_scans(self, index=None):
+        return self._scan_instances
 
     def get_raw_data(self, index=None):
         raise NotImplementedError
@@ -111,7 +130,7 @@ class FormatMultiImage(Format):
         return masker
 
     @classmethod
-    def get_imageset(
+    def get_imagesets(
         cls,
         filenames,
         beam=None,
@@ -221,7 +240,7 @@ class FormatMultiImage(Format):
                     ),
                     indices=single_file_indices,
                 )
-                return iset
+                return [iset]
             # Create the imageset
             iset = ImageSet(
                 ImageSetData(
@@ -254,6 +273,8 @@ class FormatMultiImage(Format):
                 iset.set_goniometer(goniometer[single_file_indices[i]], i)
                 iset.set_scan(scan[single_file_indices[i]], i)
 
+            isets = [iset]
+
         else:
 
             # Get the template
@@ -281,11 +302,7 @@ class FormatMultiImage(Format):
             if goniometer is None:
                 goniometer = format_instance.get_goniometer()
             if scan is None:
-                scan = format_instance.get_scan()
-                if scan is not None:
-                    for f in filenames[1:]:
-                        format_instance = cls(f, **format_kwargs)
-                        scan += format_instance.get_scan()
+                scans = format_instance.get_scans()
 
             # Create the masker
             if format_instance is not None:
@@ -293,34 +310,46 @@ class FormatMultiImage(Format):
             else:
                 masker = None
 
-            isetdata = ImageSetData(
-                reader=reader,
-                masker=masker,
-                vendor=vendor,
-                params=params,
-                format=cls,
-                template=template,
-            )
+            isets = []
+            offset = 0
+            for scan in scans:
 
-            # Create the sequence
-            iset = ImageSequence(
-                isetdata,
-                beam=beam,
-                detector=detector,
-                goniometer=goniometer,
-                scan=scan,
-                indices=single_file_indices,
-            )
+                # Get some information from the format class
+                reader = cls.get_reader()(
+                    filenames, offset=offset, num_images=num_images, **format_kwargs
+                )
+
+                isetdata = ImageSetData(
+                    reader=reader,
+                    masker=masker,
+                    vendor=vendor,
+                    params=params,
+                    format=cls,
+                    template=template,
+                )
+
+                isets.append(
+                    ImageSequence(
+                        isetdata,
+                        beam=beam,
+                        detector=detector,
+                        goniometer=goniometer,
+                        scan=scan,
+                        indices=single_file_indices,
+                    )
+                )
+                offset += scan.get_num_images()
 
         if format_instance is not None:
             static_mask = format_instance.get_static_mask()
             if static_mask is not None:
-                if not iset.external_lookup.mask.data.empty():
-                    for m1, m2 in zip(static_mask, iset.external_lookup.mask.data):
-                        m1 &= m2.data()
-                    iset.external_lookup.mask.data = ImageBool(static_mask)
-                else:
-                    iset.external_lookup.mask.data = ImageBool(static_mask)
+                for iset in isets:
+                    if not iset.external_lookup.mask.data.empty():
+                        for m1, m2 in zip(static_mask, iset.external_lookup.mask.data):
+                            m1 &= m2.data()
+                        iset.external_lookup.mask.data = ImageBool(static_mask)
+                    else:
+                        iset.external_lookup.mask.data = ImageBool(static_mask)
 
-        # Return the imageset
-        return iset
+        # Return the imagesets
+        return isets
