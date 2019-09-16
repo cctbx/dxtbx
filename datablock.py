@@ -819,7 +819,6 @@ def _convert_to_imagesets(records, format_class, format_kwargs=None):
 
     # Iterate over images/sets such that template=None are clustered
     for setgroup in _groupby_template_is_none(records):
-#       print("SG", format_class, "x" + str(len(setgroup)))
         if setgroup[0].template is not None:
             # If we have a template, then it's a sweep
             assert len(setgroup) == 1, "Got group of metadata records in template?"
@@ -961,8 +960,7 @@ class DataBlockFilenameImporter(object):
             # Validate this datablock and store it
             assert imagesets, "Datablock got no imagesets?"
             for i in imagesets:
-#               print(i, len(i))
-                self.datablocks.append(DataBlock([i]))
+                append_to_datablocks(i)
 
         # Now we are done. since in an __init__, the caller can now pick the
         # results out of the .datablocks and .unhandled instance attributes.

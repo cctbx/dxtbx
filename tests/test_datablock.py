@@ -113,17 +113,17 @@ def test_create_multiple_blocks(multiple_block_filenames):
     assert blocks
 
     # Block 1
-    assert blocks[0].num_images() == 9
+    assert blocks[0].num_images() == 12
     imageset = blocks[0].extract_imagesets()
-    assert len(imageset) == 1
+    assert len(imageset) == 4
     assert len(imageset[0]) == 9
     sweeps = blocks[0].extract_sweeps()
-    assert len(sweeps) == 1
+    assert len(sweeps) == 4
     assert len(sweeps[0]) == 9
 
     pprint([b.num_images() for b in blocks])
 
-    assert len(blocks) == 24
+    assert len(blocks) == 8
 
 
 def test_pickling(multiple_block_filenames):
