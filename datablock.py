@@ -784,7 +784,7 @@ def _create_imagesweep(record, format_class, format_kwargs=None):
         goniometer=record.goniometer,
         scan=record.scan,
         format_kwargs=format_kwargs,
-        check_format=False,
+        # check_format=False,
     )
     return sweep
 

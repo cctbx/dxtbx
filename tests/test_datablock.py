@@ -123,7 +123,7 @@ def test_create_multiple_blocks(multiple_block_filenames):
 
     pprint([b.num_images() for b in blocks])
 
-    assert len(blocks) == 22
+    assert len(blocks) == 24
 
 
 def test_pickling(multiple_block_filenames):
