@@ -457,9 +457,11 @@ class DataBlockTemplateImporter(object):
 
 class ImageMetadataRecord(object):
     """Object to store metadata information.
-    This is used whilst building the datablocks - the metadata for each
+
+    This is used whilst building the datablocks.  The metadata for each
     image can be read once, and then any grouping/deduplication can happen
     later, without re-opening the original file.
+
     :ivar beam:           Stores a beam model
     :ivar detector:       Stores a detector model
     :ivar goniometer:     Stores a goniometer model
@@ -499,12 +501,14 @@ class ImageMetadataRecord(object):
         compare_goniometer=operator.__eq__,
     ):
         """Compare two record objects and merge equivalent data.
+
         This method will compare (with optional functions) instance data
         for beam, detector and goniometer. If any of the metadata for
-        this record is equivalent (but a different instance) than the other
+        this record is equivalent to (but a different instance from) the other
         record, then this instance will be altered to match the other.
         The function used to compare beams, detectors and goniometers can be
-        customized - but by default the normal equality operator is used.
+        customised - but by default the normal equality operator is used.
+
         :param ImageMetadataRecord other_record: Another metadata instance
         :param Callable compare_beam:            A function to compare beams
         :param Callable compare_detector:        A function to compare detectors
@@ -512,7 +516,7 @@ class ImageMetadataRecord(object):
         :returns: True if any action was taken
         :rtype:   bool
         """
-        # Allow 'defaults' of None to work - behavior from legacy implementaiton
+        # Allow 'defaults' of None to work - behavior from legacy implementation
         compare_beam = compare_beam or operator.__eq__
         compare_detector = compare_detector or operator.__eq__
         compare_goniometer = compare_goniometer or operator.__eq__
@@ -540,6 +544,7 @@ class ImageMetadataRecord(object):
     def from_format(cls, fmt):
         """
         Read metadata information from a Format instance.
+
         This will only pull information out of a single format instance while
         it is open - combining metadata records must be done separately.
         """
@@ -599,18 +604,20 @@ class ImageMetadataRecord(object):
 
 class OpeningPathIterator(object):
     """Utility class to efficiently open all paths.
+
     A path is a potential file or directory.
     Each path will be opened with :meth:`dxtbx.format.Format.open_file`,
     but in order to do so each file will only be opened once, and extraneous
     use of :func:`os.stat` will be avoided.
     Any path entries that are a directory will be recursed into, once -
     any further directories found will be ignored. Any path that is not
-    a file or directory, or IO fails for any reason, will be added to the
-    :attr:`unhandled` list.
+    a file or directory, or on which IO fails for any reason, will be added
+    to the :attr:`unhandled` list.
     The current expected length of the iterator can be found with
     `len(iterator)` - this can change while iterating, because until a
     directory is encountered it cannot be detected without extra IO
-    operations. The number of items processed can be accesed through the
+    operations. The number of items processed can be accessed through the
+
     :attr:`index` attribute.
     :ivar unhandled:  List of paths that could not be handled
     :ivar index:      Index of the next path item (alternatively, number
@@ -619,6 +626,7 @@ class OpeningPathIterator(object):
 
     def __init__(self, pathnames):
         """Initialise the path iterator.
+
         :param Iterable[str] pathnames: Paths to attempt to open
         """
         # Store a tuple of (recurse, pathname) to track what was root level
@@ -1052,7 +1060,7 @@ class DataBlockFilenameImporter(object):
 
                 # If the last was not a sweep then if the current is a sweep or none of
                 # the models are the same, increment. Otherwise if the current is not a
-                # sweep or if both sweeps don't share all models increment. If both
+                # sweep or if both sweeps don't share all models, increment. If both
                 # share, models try scan and increment if exception.
                 if last.template is None:
                     if template is not None or not any(same):
