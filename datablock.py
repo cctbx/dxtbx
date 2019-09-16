@@ -920,7 +920,7 @@ class DataBlockFilenameImporter(object):
                 format_groups.setdefault(format_class, []).append(imageset)
                 logger.debug("Loaded file: %s", filename)
             else:
-                format_object = format_class(filename, **format_kwargs)
+                format_object = format_class(filename, format_kwargs=format_kwargs)
                 meta = ImageMetadataRecord.from_format(format_object)
                 assert meta.filename == filename
 
