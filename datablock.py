@@ -61,7 +61,6 @@ class DataBlock(object):
 
     def append(self, imageset):
         """ Add an imageset to the block. """
-        print(imageset)
         if self._format_class is None:
             self._format_class = imageset.get_format_class()
         elif not self._format_class == imageset.get_format_class():
@@ -372,7 +371,7 @@ class DataBlockTemplateImporter(object):
         def append_to_datablocks(iset):
             try:
                 self.datablocks[-1].append(iset)
-            except TypeError:
+            except (IndexError, TypeError):
                 # This happens when we already have a datablock with a different format
                 self.datablocks.append(DataBlock([iset]))
             logger.debug("Added imageset to datablock %d", len(self.datablocks) - 1)
