@@ -1,13 +1,16 @@
 from __future__ import absolute_import, division, print_function
 
+import errno
+import mock
 import json
 import os
-from builtins import range
+from collections import namedtuple
 from pprint import pprint
 
 import pytest
 import six.moves.cPickle as pickle
 
+import dxtbx.datablock as datablock
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSweep
@@ -240,3 +243,131 @@ def test_with_external_lookup(centroid_test_data):
     assert imageset.external_lookup.mask.data.tile(0).data().all_eq(True)
     assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
     assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
+
+
+def test_path_iterator(monkeypatch):
+    """Test the pathname iterator that avoids excessive file calls"""
+
+    @classmethod
+    def _fake_open_file(cls, name):
+        """Mock replacement for Format's open_file"""
+        if name in ["a", "b", "dir/c", "dir/d", "e"]:
+            return mock.Mock()
+        elif name.startswith("dir"):
+            err = IOError()
+            err.errno = errno.EISDIR
+            # raise IOError(errno=errno.EISDIR)
+            raise err
+        assert False
+
+    # Path the lookup of files
+    listdir = mock.Mock(return_value=["c", "dir2", "d"])
+    monkeypatch.setattr(os, "listdir", listdir)
+    # Replace Format.open_file with a tame version
+    monkeypatch.setattr(Format, "open_file", _fake_open_file)
+
+    it = datablock.OpeningPathIterator(["a", "b", "dir", "e"])
+    assert list(x for x in it) == ["a", "b", "dir/c", "dir/d", "e"]
+    listdir.assert_called_once_with("dir")
+
+    # Test that the list is sorted
+    it = datablock.OpeningPathIterator(["e", "a", "b", "dir"])
+    assert list(x for x in it) == ["a", "b", "dir/c", "dir/d", "e"]
+
+
+def test_extract_metadata_record():
+    """Make sure we can read a metadataobject from a format instance"""
+    fmt = mock.MagicMock()
+    fmt.get_image_file.return_value = "filename_000.cbf"
+    fmt.get_scan.return_value = None
+    record = datablock.ImageMetadataRecord.from_format(fmt)
+    assert record.beam is fmt.get_beam()
+    assert record.detector is fmt.get_detector()
+    assert record.goniometer is fmt.get_goniometer()
+    assert record.scan is None
+    assert record.index is None
+
+
+class AEO(object):
+    """Always Equal Object: Simple test case class that always compares equal"""
+
+    def __eq__(self, other):
+        return True
+
+
+def test_merge_metadata_record():
+    "Test that merging metadata records works correctly"
+    assert AEO() == AEO()
+    a = datablock.ImageMetadataRecord(beam=AEO(), detector=AEO(), goniometer=AEO())
+    b = datablock.ImageMetadataRecord(beam=AEO(), detector=AEO(), goniometer=AEO())
+    pre_hash = hash(a)
+    assert a.beam is not b.beam
+    assert a.detector is not b.detector
+    assert a.goniometer is not b.goniometer
+    # This should do something
+    assert b.merge_metadata_from(a)
+    assert hash(a) == pre_hash, "a changed after merge"
+    # Make sure metadata was merged
+    assert a.beam is b.beam
+    assert a.detector is b.detector
+    assert a.goniometer is b.goniometer
+    # This should NOT do something
+    assert not a.merge_metadata_from(a)
+    assert hash(a) == pre_hash
+
+
+def test_merge_all_metadata():
+    "Test that merging metadata over a whole list of records works"
+    a = datablock.ImageMetadataRecord(beam=AEO(), detector=object(), goniometer=AEO())
+    b = datablock.ImageMetadataRecord(beam=AEO(), detector=object(), goniometer=AEO())
+    records = [a, b]
+    datablock._merge_model_metadata(records)
+    assert a.beam is b.beam
+    assert a.goniometer is b.goniometer
+    assert a.detector is not b.detector
+
+
+def test_merge_scan():
+    """Test merging logic of scans"""
+    scanA = mock.Mock(spec=Scan)
+    scanB = mock.Mock(spec=Scan)
+    recordA = mock.Mock(scan=scanA)
+    recordB = mock.Mock(
+        scan=scanB,
+        beam=recordA.beam,
+        detector=recordA.detector,
+        goniometer=recordA.goniometer,
+    )
+    result = datablock._merge_scans([recordA, recordB])
+    assert result == [recordA]
+    scanA.append.assert_called_once_with(scanB)
+
+    # Change some metadata in recordB so it doesn't match
+    scanA.reset_mock()
+    recordB.beam = mock.Mock()
+    assert datablock._merge_scans([recordA, recordB]) == [recordA, recordB]
+
+
+def test_groupby_template_none():
+    # _groupby_format_is_none
+    Fo = namedtuple("Fo", ["template"])
+    objs = [Fo(1), Fo(2), Fo(2), Fo(None), Fo(None), Fo("something")]
+    result = list(datablock._groupby_template_is_none(objs))
+    assert result == [
+        [Fo(1)],
+        [Fo(2)],
+        [Fo(2)],
+        [Fo(None), Fo(None)],
+        [Fo("something")],
+    ]
+
+
+def test_iterate_with_previous():
+    sample = list(range(5))
+    assert list(datablock._iterate_with_previous(sample)) == [
+        (None, 0),
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 4),
+    ]
