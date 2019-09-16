@@ -318,7 +318,6 @@ class FormatChecker(object):
             warnings.warn(
                 "The verbose parameter is deprecated.", DeprecationWarning, stacklevel=2
             )
-        self._verbose = verbose
 
     def find_format(self, filename):
         """Search the registry for the image format class.
@@ -898,7 +897,7 @@ class DataBlockFilenameImporter(object):
 
         # Process each file given by this path list
         to_process = OpeningPathIterator(filenames)
-        find_format = FormatChecker(verbose=True)  # verbose)
+        find_format = FormatChecker()
 
         format_groups = {}
         #        with progress(total=len(filenames)) as pbar:
