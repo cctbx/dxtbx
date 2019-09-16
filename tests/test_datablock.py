@@ -288,18 +288,26 @@ def test_extract_metadata_record():
     assert record.index is None
 
 
-class AEO(object):
-    """Always Equal Object: Simple test case class that always compares equal"""
-
-    def __eq__(self, other):
-        return True
+def _equal_but_not_same(thing):
+    object_1 = tuple([thing])
+    object_2 = tuple([thing])
+    assert object_1 == object_2
+    assert object_1 is not object_2
+    return object_1, object_2
 
 
 def test_merge_metadata_record():
     "Test that merging metadata records works correctly"
-    assert AEO() == AEO()
-    a = datablock.ImageMetadataRecord(beam=AEO(), detector=AEO(), goniometer=AEO())
-    b = datablock.ImageMetadataRecord(beam=AEO(), detector=AEO(), goniometer=AEO())
+    beam_a, beam_b = _equal_but_not_same("beam")
+    detector_a, detector_b = _equal_but_not_same("detector")
+    gonio_a, gonio_b = _equal_but_not_same("goniometer")
+
+    a = datablock.ImageMetadataRecord(
+        beam=beam_a, detector=detector_a, goniometer=gonio_a
+    )
+    b = datablock.ImageMetadataRecord(
+        beam=beam_b, detector=detector_b, goniometer=gonio_b
+    )
     pre_hash = hash(a)
     assert a.beam is not b.beam
     assert a.detector is not b.detector
@@ -318,8 +326,15 @@ def test_merge_metadata_record():
 
 def test_merge_all_metadata():
     "Test that merging metadata over a whole list of records works"
-    a = datablock.ImageMetadataRecord(beam=AEO(), detector=object(), goniometer=AEO())
-    b = datablock.ImageMetadataRecord(beam=AEO(), detector=object(), goniometer=AEO())
+    beam_a, beam_b = _equal_but_not_same("beam")
+    gonio_a, gonio_b = _equal_but_not_same("goniometer")
+
+    a = datablock.ImageMetadataRecord(
+        beam=beam_a, detector=object(), goniometer=gonio_a
+    )
+    b = datablock.ImageMetadataRecord(
+        beam=beam_b, detector=object(), goniometer=gonio_b
+    )
     records = [a, b]
     datablock._merge_model_metadata(records)
     assert a.beam is b.beam
