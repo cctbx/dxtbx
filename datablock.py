@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+import errno
 import itertools
 import json
 import logging
@@ -19,6 +20,7 @@ from libtbx.utils import Sorry
 from scitbx import matrix
 
 import dxtbx.imageset
+from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import get_format_class_for_file
@@ -441,6 +443,83 @@ class DataBlockTemplateImporter(object):
 
         # Return the imageset
         return imageset
+
+
+class OpeningPathIterator(object):
+    """Utility class to efficiently open all paths.
+    A path is a potential file or directory.
+    Each path will be opened with :meth:`dxtbx.format.Format.open_file`,
+    but in order to do so each file will only be opened once, and extraneous
+    use of :func:`os.stat` will be avoided.
+    Any path entries that are a directory will be recursed into, once -
+    any further directories found will be ignored. Any path that is not
+    a file or directory, or IO fails for any reason, will be added to the
+    :attr:`unhandled` list.
+    The current expected length of the iterator can be found with
+    `len(iterator)` - this can change while iterating, because until a
+    directory is encountered it cannot be detected without extra IO
+    operations. The number of items processed can be accesed through the
+    :attr:`index` attribute.
+    :ivar unhandled:  List of paths that could not be handled
+    :ivar index:      Index of the next path item (alternatively, number
+                      of processed path items)
+    """
+
+    def __init__(self, pathnames):
+        """Initialise the path iterator.
+        :param Iterable[str] pathnames: Paths to attempt to open
+        """
+        # Store a tuple of (recurse, pathname) to track what was root level
+        self._paths = collections.deque((True, x) for x in sorted(pathnames))
+        # Let's keep track of how many we've processed
+        self._processed_count = 0
+        # List of paths that could not be opened
+        self.unhandled = []
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        """Get the next path to process"""
+        try:
+            # Get the next path from the queue
+            (do_recurse, pathname) = self._paths.popleft()
+        except IndexError:
+            raise StopIteration()
+        self._processed_count += 1
+
+        try:
+            # Attempt to open this path
+            Format.open_file(pathname)
+        except IOError as e:
+            if e.errno == errno.EISDIR:
+                if do_recurse:
+                    # We've tried to open a directory. Get all the entries...
+                    subdir_paths = sorted(
+                        os.path.join(pathname, x) for x in os.listdir(pathname)
+                    )
+                    # ... and add them to our queue. Make sure not to mark for recursion
+                    self._paths.extendleft((False, x) for x in reversed(subdir_paths))
+                    logger.debug("Adding %d files from %s", len(subdir_paths), pathname)
+                else:
+                    logger.debug("Not adding sub-level directory entry %s", pathname)
+                # Don't return directory instances
+                return next(self)
+            else:
+                # A non-directory-related IO error
+                self.unhandled.append(pathname)
+                logger.debug("Could not import %s: %s", pathname, os.strerror(e.errno))
+
+        return pathname
+
+    def __len__(self):
+        """Get the (current) total of path items"""
+        return len(self._paths) + self._processed_count
+
+    @property
+    def index(self):
+        """Get the number of processed items"""
+        return self._processed_count
 
 
 class DataBlockFilenameImporter(object):
