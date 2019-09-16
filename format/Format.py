@@ -533,26 +533,6 @@ class Format(object):
         scheme = urllib.parse.urlparse(path).scheme
         return scheme and len(scheme) != 1
 
-    @staticmethod
-    def is_bz2(filename):
-        """Check if a file pointed at by filename is bzip2 format."""
-
-        if not filename.endswith(".bz2"):
-            return False
-
-        with open(filename, "rb") as fh:
-            return fh.read(3) == b"BZh"
-
-    @staticmethod
-    def is_gzip(filename):
-        """Check if a file pointed at by filename is gzip compressed."""
-
-        if not filename.endswith(".gz"):
-            return False
-
-        with open(filename, "rb") as fh:
-            return fh.read(2) == b"\x1f\x8b"
-
     @classmethod
     def open_file(cls, filename, mode="rb", url=False):
         """Open file for reading, decompressing silently if necessary,
@@ -561,12 +541,12 @@ class Format(object):
         if url and Format.is_url(filename):
             fh_func = functools.partial(urllib.request.urlopen, filename)
 
-        elif Format.is_bz2(filename):
+        elif filename.endswith(".bz2"):
             if not bz2:
                 raise RuntimeError("bz2 file provided without bz2 module")
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
 
-        elif Format.is_gzip(filename):
+        elif filename.endswith(".gz"):
             if not gzip:
                 raise RuntimeError("gz file provided without gzip module")
             fh_func = functools.partial(gzip.GzipFile, filename, mode=mode)
