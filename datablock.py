@@ -445,6 +445,148 @@ class DataBlockTemplateImporter(object):
         return imageset
 
 
+class ImageMetadataRecord(object):
+    """Object to store metadata information.
+    This is used whilst building the datablocks - the metadata for each
+    image can be read once, and then any grouping/deduplication can happen
+    later, without re-opening the original file.
+    :ivar beam:           Stores a beam model
+    :ivar detector:       Stores a detector model
+    :ivar goniometer:     Stores a goniometer model
+    :ivar scan:           Stores a scan model
+    :ivar str filename:   The filename this record was parsed from
+    :ivar str template:   The template string parsed from the filename.
+                          Usually, the template is only present if a scan
+                          was found and oscillation width was nonzero.
+    :ivar int index:      The index of this file in the template. Applying
+                          the index to the template field should recover
+                          the filename.
+    """
+
+    def __init__(
+        self,
+        beam=None,
+        detector=None,
+        goniometer=None,
+        scan=None,
+        template=None,
+        filename=None,
+        index=None,
+    ):
+        self.beam = beam
+        self.detector = detector
+        self.goniometer = goniometer
+        self.scan = scan
+        self.template = template
+        self.filename = filename
+        self.index = index
+
+    def merge_metadata_from(
+        self,
+        other_record,
+        compare_beam=operator.__eq__,
+        compare_detector=operator.__eq__,
+        compare_goniometer=operator.__eq__,
+    ):
+        """Compare two record objects and merge equivalent data.
+        This method will compare (with optional functions) instance data
+        for beam, detector and goniometer. If any of the metadata for
+        this record is equivalent (but a different instance) than the other
+        record, then this instance will be altered to match the other.
+        The function used to compare beams, detectors and goniometers can be
+        customized - but by default the normal equality operator is used.
+        :param ImageMetadataRecord other_record: Another metadata instance
+        :param Callable compare_beam:            A function to compare beams
+        :param Callable compare_detector:        A function to compare detectors
+        :param Callable compare_goniometer:      A function to compare goniometers
+        :returns: True if any action was taken
+        :rtype:   bool
+        """
+        # Allow 'defaults' of None to work - behavior from legacy implementaiton
+        compare_beam = compare_beam or operator.__eq__
+        compare_detector = compare_detector or operator.__eq__
+        compare_goniometer = compare_goniometer or operator.__eq__
+
+        record_altered = False
+        if self.beam is not other_record.beam and compare_beam(
+            self.beam, other_record.beam
+        ):
+            self.beam = other_record.beam
+            record_altered = True
+        if self.detector is not other_record.detector and compare_detector(
+            self.detector, other_record.detector
+        ):
+            self.detector = other_record.detector
+            record_altered = True
+        if self.goniometer is not other_record.goniometer and compare_goniometer(
+            self.goniometer, other_record.goniometer
+        ):
+            self.goniometer = other_record.goniometer
+            record_altered = True
+
+        return record_altered
+
+    @classmethod
+    def from_format(cls, fmt):
+        """
+        Read metadata information from a Format instance.
+        This will only pull information out of a single format instance while
+        it is open - combining metadata records must be done separately.
+        """
+        record = cls()
+        record.filename = fmt.get_image_file()
+        # Get the metadata from the format
+        try:
+            record.beam = fmt.get_beam()
+        except Exception:
+            pass
+        try:
+            record.detector = fmt.get_detector()
+        except Exception:
+            pass
+        try:
+            record.goniometer = fmt.get_goniometer()
+        except Exception:
+            pass
+        try:
+            record.scan = fmt.get_scan()
+        except Exception:
+            pass
+
+        # Get the template and index if possible - and only if we've got a
+        # recorded oscillation value
+        if record.scan is not None and abs(record.scan.get_oscillation()[1]) > 0.0:
+            record.template, record.index = template_regex(record.filename)
+
+        return record
+
+    def __repr__(self):
+        items = [
+            ("filename", self.filename),
+            ("beam", self.beam),
+            ("detector", self.detector),
+            ("goiometer", self.goniometer),
+            ("scan", self.scan),
+            ("template", self.template),
+            ("index", self.index),
+        ]
+        itemstr = ", ".join(x + "=" + repr(y) for x, y in items)
+        return "<{}{}{}>".format(type(self).__name__, " " if itemstr else "", itemstr)
+
+    def __hash__(self):
+        return hash(
+            (
+                self.beam,
+                self.detector,
+                self.goniometer,
+                self.scan,
+                self.template,
+                self.filename,
+                self.index,
+            )
+        )
+
+
 class OpeningPathIterator(object):
     """Utility class to efficiently open all paths.
     A path is a potential file or directory.
