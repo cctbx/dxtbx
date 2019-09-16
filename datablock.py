@@ -819,7 +819,7 @@ def _convert_to_imagesets(records, format_class, format_kwargs=None):
 
     # Iterate over images/sets such that template=None are clustered
     for setgroup in _groupby_template_is_none(records):
-        print("SG", format_class, "x" + str(len(setgroup)))
+#       print("SG", format_class, "x" + str(len(setgroup)))
         if setgroup[0].template is not None:
             # If we have a template, then it's a sweep
             assert len(setgroup) == 1, "Got group of metadata records in template?"
@@ -886,13 +886,10 @@ class DataBlockFilenameImporter(object):
 
         # A function to append or create a new datablock
         def append_to_datablocks(iset):
-            if self.datablocks:
-                try:
-                    self.datablocks[-1].append(iset)
-                except TypeError:
-                    # This happens when we already have a datablock with a different format
-                    self.datablocks.append(DataBlock([iset]))
-            else:
+            try:
+                self.datablocks[-1].append(iset)
+            except (IndexError, TypeError):
+                # This happens when we already have a datablock with a different format
                 self.datablocks.append(DataBlock([iset]))
             logger.debug("Added imageset to datablock %d", len(self.datablocks) - 1)
 
@@ -937,9 +934,9 @@ class DataBlockFilenameImporter(object):
 
         # Now, build datablocks from these files. Duplicating the logic of
         # the previous implementation:
-        # - Each change in format goes into it's own Datablock
+        # - Each change in format goes into its own Datablock
         # - FormatMultiImage files each have their own ImageSet
-        # - Every set of images forming a scan goes into it's own ImageSweep
+        # - Every set of images forming a scan goes into its own ImageSweep
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
 
@@ -964,7 +961,7 @@ class DataBlockFilenameImporter(object):
             # Validate this datablock and store it
             assert imagesets, "Datablock got no imagesets?"
             for i in imagesets:
-                print(i, len(i))
+#               print(i, len(i))
                 self.datablocks.append(DataBlock([i]))
 
         # Now we are done. since in an __init__, the caller can now pick the
