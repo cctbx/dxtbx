@@ -10,7 +10,7 @@ import operator
 import os.path
 import warnings
 from builtins import range
-from os.path import abspath, dirname, isdir, isfile, join, normpath, splitext
+from os.path import abspath, dirname, normpath, splitext
 
 import six
 import six.moves.cPickle as pickle
@@ -1474,25 +1474,8 @@ class DataBlockFactory(object):
         format_kwargs=None,
     ):
         """ Create a list of data blocks from a list of directory or file names. """
-        filelist = []
-        for f in sorted(filenames):
-            if isfile(f):
-                filelist.append(f)
-            elif isdir(f):
-                subdir = sorted(
-                    join(f, sf) for sf in os.listdir(f) if isfile(join(f, sf))
-                )
-                filelist.extend(subdir)
-                logger.debug("Added %d files from %s", len(subdir), f)
-            else:
-                logger.debug(
-                    "Could not import %s: not a valid file or directory name", f
-                )
-                if unhandled is not None:
-                    unhandled.append(f)
-
         importer = DataBlockFilenameImporter(
-            filelist,
+            filenames,
             compare_beam=compare_beam,
             compare_detector=compare_detector,
             compare_goniometer=compare_goniometer,
