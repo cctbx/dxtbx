@@ -20,11 +20,11 @@ from libtbx.utils import Sorry
 from scitbx import matrix
 
 import dxtbx.imageset
+import dxtbx.model
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import get_format_class_for_file
-from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize import load
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
@@ -33,6 +33,11 @@ from dxtbx.sweep_filenames import (
     template_regex,
     template_string_number_index,
 )
+
+try:
+    from typing import Any, Callable, Dict, Generator, Iterable, List, Type
+except ImportError:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -459,18 +464,6 @@ class ImageMetadataRecord(object):
     This is used whilst building the datablocks.  The metadata for each
     image can be read once, and then any grouping/deduplication can happen
     later, without re-opening the original file.
-
-    :ivar beam:           Stores a beam model
-    :ivar detector:       Stores a detector model
-    :ivar goniometer:     Stores a goniometer model
-    :ivar scan:           Stores a scan model
-    :ivar str filename:   The filename this record was parsed from
-    :ivar str template:   The template string parsed from the filename.
-                          Usually, the template is only present if a scan
-                          was found and oscillation width was nonzero.
-    :ivar int index:      The index of this file in the template. Applying
-                          the index to the template field should recover
-                          the filename.
     """
 
     def __init__(
@@ -483,6 +476,22 @@ class ImageMetadataRecord(object):
         filename=None,
         index=None,
     ):
+        # type: (dxtbx.model.Beam, dxtbx.model.Detector, dxtbx.model.Goniometer, dxtbx.model.Scan, str, str, int)
+        """
+        Args:
+            beam:       Stores a beam model
+            detector:   Stores a detector model
+            goniometer: Stores a goniometer model
+            scan:       Stores a scan model
+            filename:   The filename this record was parsed from
+            template:
+                The template string parsed from the filename. Usually,
+                the template is only present if a scan was found and
+                oscillation width was nonzero.
+            index:
+                The index of this file in the template. Applying the
+                index to the template field should recover the filename
+        """
         self.beam = beam
         self.detector = detector
         self.goniometer = goniometer
@@ -498,21 +507,25 @@ class ImageMetadataRecord(object):
         compare_detector=operator.__eq__,
         compare_goniometer=operator.__eq__,
     ):
-        """Compare two record objects and merge equivalent data.
+        # type: (ImageMetadataRecord, Callable, Callable, Callable) -> bool
+        """
+        Compare two record objects and merge equivalent data.
 
         This method will compare (with optional functions) instance data
         for beam, detector and goniometer. If any of the metadata for
-        this record is equivalent to (but a different instance from) the other
-        record, then this instance will be altered to match the other.
-        The function used to compare beams, detectors and goniometers can be
-        customised - but by default the normal equality operator is used.
+        this record is equivalent to (but a different instance from) the
+        other record, then this instance will be altered to match the
+        other. The function used to compare beams, detectors and
+        goniometers can be customised - but by default the normal
+        equality operator is used.
 
-        :param ImageMetadataRecord other_record: Another metadata instance
-        :param Callable compare_beam:            A function to compare beams
-        :param Callable compare_detector:        A function to compare detectors
-        :param Callable compare_goniometer:      A function to compare goniometers
-        :returns: True if any action was taken
-        :rtype:   bool
+        Args:
+            other_record:       Another metadata instance
+            compare_beam:       A function to compare beams
+            compare_detector:   A function to compare detectors
+            compare_goniometer: A function to compare goniometers
+
+        Returns: True if any action was taken
         """
         # Allow 'defaults' of None to work - behavior from legacy implementation
         compare_beam = compare_beam or operator.__eq__
@@ -540,11 +553,19 @@ class ImageMetadataRecord(object):
 
     @classmethod
     def from_format(cls, fmt):
+        # type: (Format) -> Any
         """
         Read metadata information from a Format instance.
 
-        This will only pull information out of a single format instance while
-        it is open - combining metadata records must be done separately.
+        This will only pull information out of a single format instance
+        while it is open - combining metadata records must be done
+        separately.
+
+        Args:
+            format: The instance of the format class to read data from
+
+        Returns:
+            A new ImageMetadataRecord with the pre-read information
         """
         record = cls()
         record.filename = fmt.get_image_file()
@@ -615,17 +636,20 @@ class OpeningPathIterator(object):
     `len(iterator)` - this can change while iterating, because until a
     directory is encountered it cannot be detected without extra IO
     operations. The number of items processed can be accessed through the
-
     :attr:`index` attribute.
-    :ivar unhandled:  List of paths that could not be handled
-    :ivar index:      Index of the next path item (alternatively, number
-                      of processed path items)
+
+    Attributes:
+        unhandled:  List of paths that could not be handled
+        index:      Index of the next path item (alternatively, number
+                    of processed path items)
     """
 
     def __init__(self, pathnames):
+        # type: (Iterable[str])
         """Initialise the path iterator.
 
-        :param Iterable[str] pathnames: Paths to attempt to open
+        Args:
+            pathnames: Paths to attempt to open
         """
         # Store a tuple of (recurse, pathname) to track what was root level
         self._paths = collections.deque((True, x) for x in sorted(pathnames))
@@ -685,17 +709,18 @@ class OpeningPathIterator(object):
 def _merge_model_metadata(
     records, compare_beam=None, compare_detector=None, compare_goniometer=None
 ):
+    # type: (Iterable[ImageMetadataRecord], Callable, Callable, Callable)
     """
     Merge metadata between consecutive record objects.
 
     This will compare each record with the previous one, and make sure
     the metadata instances are shared where appropriate.
 
-    :param  records:  Records for the images to merge into imagesets
-    :type records:    Iterable[ImageMetadataRecord]
-    :param Callable compare_beam:        The function to to compare beams
-    :param Callable compare_detector:    The function to compare detectors
-    :param Callable compare_goniometer:  The function to compare goniometers
+    Args:
+        records:    Records for the images to merge into imagesets
+        compare_beam:       The function to to compare beams
+        compare_detector:   The function to compare detectors
+        compare_goniometer: The function to compare goniometers
     """
     for prev, record in _iterate_with_previous(records):
         if prev is None:
@@ -709,17 +734,20 @@ def _merge_model_metadata(
 
 
 def _merge_scans(records, scan_tolerance=None):
+    # type: (Iterable[ImageMetadataRecord], float) -> List[ImageMetadataRecord]
     """
     Merge consecutive scan records with identical metadata.
 
     The records should have previously had their model metadata merged,
     as identity will be used to compare metadata identity at this stage.
 
-    :param  records:              Records to merge
-    :param float scan_tolerance:  Percentage of oscillation range to tolerate
-                                  when merging scan records
-    :returns: A (potentially shorter) list of records with scans merged
-    :rtype: list[ImageMetaDataRecord]
+    Args:
+        records:        Records to merge
+        scan_tolerance: Percentage of oscillation range to tolerate
+                        when merging scan records
+
+    Returns:
+        A (potentially shorter) list of records with scans merged
     """
     merged_records = []
     logger.debug("Merging scans")
@@ -766,17 +794,18 @@ def _merge_scans(records, scan_tolerance=None):
 
 
 def _create_imagesweep(record, format_class, format_kwargs=None):
+    # type: (ImageMetadataRecord, Type[Format], Dict) -> dxtbx.imageset.ImageSweep
     """
     Create an ImageSweep object from a single rotation data image.
 
-    :param record: Single-image metadata records to merge into a single imageset
-    :type records: ImageMetadataRecord
-    :param format_class:  The format class object for these image records
-    :type format_class:   Type[dxtbx.format.Format]
-    :param dict format_kwargs:  Extra arguments to pass to the format class when
-                                creating an ImageSet
-    :returns:       An imageset representing the sweep of data
-    :rtype:         dxtbx.imageset.ImageSweep
+    Args:
+        record: Single-image metadata records to merge into a single imageset
+        format_class: The format class object for these image records
+        format_kwargs: Extra arguments to pass to the format class when
+            creating an ImageSet
+
+    Returns:
+        An imageset representing the sweep of data
     """
     index_start, index_end = record.scan.get_image_range()
     # Create the sweep
@@ -795,11 +824,8 @@ def _create_imagesweep(record, format_class, format_kwargs=None):
 
 
 def _groupby_template_is_none(records):
-    """
-    Specialization of groupby that groups records by format=None.
-
-    :rtype: Generator
-    """
+    # type: (Iterable[ImageMetadataRecord]) -> Generator[List[ImageMetadataRecord]]
+    """Specialization of groupby that groups records by format=None"""
     for _, group in itertools.groupby(
         enumerate(records), key=lambda x: -1 if x[1].template is None else x[0]
     ):
@@ -807,6 +833,7 @@ def _groupby_template_is_none(records):
 
 
 def _convert_to_imagesets(records, format_class, format_kwargs=None):
+    # type: (Iterable[ImageMetadataRecord], Type[dxtbx.format.Format], Dict) -> Generator[dxtbx.imageset.ImageSet]
     """
     Convert records into imagesets.
 
@@ -816,13 +843,14 @@ def _convert_to_imagesets(records, format_class, format_kwargs=None):
       are shared, go into a single imageset
     - Anything with a template goes into a single sweep
 
-    :param Iterable[ImageMetadataRecord] records: The records to convert
-    :param format_class:  The format class for the data in this record
-    :type param:          Type[dxtbx.format.Format]
-    :param dict format_kwargs:  Any format configuration arguments to pass
-                                to the format imageset creator.
-    :returns:             Imagesets representing the records
-    :rtype:               Generator[ImageSet]
+    Args:
+        records: The records to convert
+        format_class: The format class for the data in this record
+        format_kwargs: Any format configuration arguments to pass
+            to the format imageset creator.
+
+    Returns:
+        Imagesets representing the records
     """
 
     # Iterate over images/sets such that template=None are clustered
@@ -839,17 +867,18 @@ def _convert_to_imagesets(records, format_class, format_kwargs=None):
 
 
 def _create_imageset(records, format_class, format_kwargs=None):
+    # type: (Iterable[ImageMetadataRecord], Type[dxtbx.format.Format], Dict) -> dxtbx.imageset.ImageSet
     """
     Create an ImageSet object from a set of single-image records.
 
-    :param records: Single-image metadata records to merge into a single imageset
-    :type records:  Iterable[ImageMetadataRecord]
-    :param format_class:  The format class object for these image records
-    :type format_class:   Type[dxtbx.format.Format]
-    :param dict format_kwargs:  Extra arguments to pass to the format class when
-                                creating an ImageSet
-    :returns:       An imageset for all the image records
-    :rtype:         dxtbx.imageset.ImageSet
+    Args:
+        records: Single-image metadata records to merge into a single imageset
+        format_class: The format class object for these image records
+        format_kwargs: Extra arguments to pass to the format class when
+            creating an ImageSet
+
+    Returns:
+        An imageset for all the image records
     """
     records = list(records)
     # Nothing here should have been assigned a template parameter
@@ -1193,20 +1222,22 @@ class DataBlockDictImporter(object):
 
         def load_models(obj):
             try:
-                beam = BeamFactory.from_dict(blist[obj["beam"]])
+                beam = dxtbx.model.BeamFactory.from_dict(blist[obj["beam"]])
             except Exception:
                 beam = None
             try:
                 dobj = dlist[obj["detector"]]
-                detector = DetectorFactory.from_dict(dobj)
+                detector = dxtbx.model.DetectorFactory.from_dict(dobj)
             except Exception:
                 detector = None
             try:
-                gonio = GoniometerFactory.from_dict(glist[obj["goniometer"]])
+                gonio = dxtbx.model.GoniometerFactory.from_dict(
+                    glist[obj["goniometer"]]
+                )
             except Exception:
                 gonio = None
             try:
-                scan = ScanFactory.from_dict(slist[obj["scan"]])
+                scan = dxtbx.model.ScanFactory.from_dict(slist[obj["scan"]])
             except Exception:
                 scan = None
             return beam, detector, gonio, scan
@@ -1643,10 +1674,7 @@ class DataBlockDumper(object):
 
 
 class BeamComparison(object):
-    """
-    A class to provide simple beam comparison
-
-    """
+    """A class to provide simple beam comparison"""
 
     def __init__(
         self,
@@ -1673,10 +1701,7 @@ class BeamComparison(object):
 
 
 class DetectorComparison(object):
-    """
-    A class to provide simple detector comparison
-
-    """
+    """A class to provide simple detector comparison"""
 
     def __init__(
         self, fast_axis_tolerance=1e-6, slow_axis_tolerance=1e-6, origin_tolerance=1e-6
@@ -1697,10 +1722,7 @@ class DetectorComparison(object):
 
 
 class GoniometerComparison(object):
-    """
-    A class to provide simple goniometer comparison
-
-    """
+    """A class to provide simple goniometer comparison"""
 
     def __init__(
         self,
@@ -1734,10 +1756,7 @@ def _all_approx_equal(a, b, tolerance):
 
 
 class BeamDiff(object):
-    """
-    A class to provide simple beam comparison
-
-    """
+    """A class to provide simple beam comparison"""
 
     def __init__(
         self,
@@ -1775,10 +1794,7 @@ class BeamDiff(object):
 
 
 class DetectorDiff(object):
-    """
-    A class to provide simple detector comparison
-
-    """
+    """A class to provide simple detector comparison"""
 
     def __init__(
         self, fast_axis_tolerance=1e-6, slow_axis_tolerance=1e-6, origin_tolerance=1e-6
@@ -1829,10 +1845,7 @@ class DetectorDiff(object):
 
 
 class GoniometerDiff(object):
-    """
-    A class to provide simple goniometer comparison
-
-    """
+    """A class to provide simple goniometer comparison"""
 
     def __init__(
         self,
@@ -1864,10 +1877,7 @@ class GoniometerDiff(object):
 
 
 class ScanDiff(object):
-    """
-    A class to provide scan comparison
-
-    """
+    """A class to provide scan comparison"""
 
     def __init__(self, scan_tolerance=1e-6):
         self.scan_tolerance = scan_tolerance
