@@ -687,8 +687,10 @@ def _merge_model_metadata(
 ):
     """
     Merge metadata between consecutive record objects.
+
     This will compare each record with the previous one, and make sure
     the metadata instances are shared where appropriate.
+
     :param  records:  Records for the images to merge into imagesets
     :type records:    Iterable[ImageMetadataRecord]
     :param Callable compare_beam:        The function to to compare beams
@@ -709,8 +711,10 @@ def _merge_model_metadata(
 def _merge_scans(records, scan_tolerance=None):
     """
     Merge consecutive scan records with identical metadata.
+
     The records should have previously had their model metadata merged,
     as identity will be used to compare metadata identity at this stage.
+
     :param  records:              Records to merge
     :param float scan_tolerance:  Percentage of oscillation range to tolerate
                                   when merging scan records
@@ -763,7 +767,8 @@ def _merge_scans(records, scan_tolerance=None):
 
 def _create_imagesweep(record, format_class, format_kwargs=None):
     """
-    Create an ImageSweep object from a single rotation data image
+    Create an ImageSweep object from a single rotation data image.
+
     :param record: Single-image metadata records to merge into a single imageset
     :type records: ImageMetadataRecord
     :param format_class:  The format class object for these image records
@@ -791,7 +796,8 @@ def _create_imagesweep(record, format_class, format_kwargs=None):
 
 def _groupby_template_is_none(records):
     """
-    Specialization of groupby that groups records by format=None
+    Specialization of groupby that groups records by format=None.
+
     :rtype: Generator
     """
     for _, group in itertools.groupby(
@@ -803,11 +809,13 @@ def _groupby_template_is_none(records):
 def _convert_to_imagesets(records, format_class, format_kwargs=None):
     """
     Convert records into imagesets.
+
     The records should have been metadata- and scan-merged by this point.
     Rules:
     - Any groups of template=None where any of the metadata objects
       are shared, go into a single imageset
     - Anything with a template goes into a single sweep
+
     :param Iterable[ImageMetadataRecord] records: The records to convert
     :param format_class:  The format class for the data in this record
     :type param:          Type[dxtbx.format.Format]
@@ -833,6 +841,7 @@ def _convert_to_imagesets(records, format_class, format_kwargs=None):
 def _create_imageset(records, format_class, format_kwargs=None):
     """
     Create an ImageSet object from a set of single-image records.
+
     :param records: Single-image metadata records to merge into a single imageset
     :type records:  Iterable[ImageMetadataRecord]
     :param format_class:  The format class object for these image records

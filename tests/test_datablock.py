@@ -297,7 +297,7 @@ def _equal_but_not_same(thing):
 
 
 def test_merge_metadata_record():
-    "Test that merging metadata records works correctly"
+    """Test that merging metadata records works correctly"""
     beam_a, beam_b = _equal_but_not_same("beam")
     detector_a, detector_b = _equal_but_not_same("detector")
     gonio_a, gonio_b = _equal_but_not_same("goniometer")
@@ -325,7 +325,7 @@ def test_merge_metadata_record():
 
 
 def test_merge_all_metadata():
-    "Test that merging metadata over a whole list of records works"
+    """Test that merging metadata over a whole list of records works"""
     beam_a, beam_b = _equal_but_not_same("beam")
     gonio_a, gonio_b = _equal_but_not_same("goniometer")
 
@@ -364,7 +364,6 @@ def test_merge_scan():
 
 
 def test_groupby_template_none():
-    # _groupby_format_is_none
     Fo = namedtuple("Fo", ["template"])
     objs = [Fo(1), Fo(2), Fo(2), Fo(None), Fo(None), Fo("something")]
     result = list(datablock._groupby_template_is_none(objs))
