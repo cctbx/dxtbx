@@ -1,0 +1,9 @@
+Improve integration performance
+
+If no external gain map is set then the gain map is populated from the detector
+panel gain value. This is not very efficient, especially if the gain is 1.0 and
+the pedestal is 0.0.
+
+This pull request implements a change to get_gain and get_pedestal which means
+that if the detector panel gain is 1.0 then an empty array is returned from
+get_gain and is pedestal is 0.0 an empty array is returned from get_pedestal.
