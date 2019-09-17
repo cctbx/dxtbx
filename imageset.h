@@ -710,17 +710,21 @@ public:
 
       // Compute the gain for each panel
       bool use_detector_gain = true;
+      bool need_gain_map = false;
       std::vector<double> gain(detector.size(), 0);
       for (std::size_t i = 0; i < detector.size(); ++i) {
         gain[i] = detector[i].get_gain();
         if (gain[i] <= 0) {
           use_detector_gain = false;
           break;
+        } else if (std::abs(gain[i] - 1.0) > 1e-7) {
+          need_gain_map = true;
+          break;
         }
       }
 
       // If using the gain from the panel, construct a gain map
-      if (use_detector_gain) {
+      if (use_detector_gain && need_gain_map) {
         Image<double> result;
         for (std::size_t i = 0; i < detector.size(); ++i) {
           std::size_t xsize = detector[i].get_image_size()[0];
@@ -750,17 +754,21 @@ public:
 
       // Compute the pedestal for each panel
       bool use_detector_pedestal = true;
+      bool need_pedestal_map = false;
       std::vector<double> pedestal(detector.size(), 0);
       for (std::size_t i = 0; i < detector.size(); ++i) {
         pedestal[i] = detector[i].get_pedestal();
         if (pedestal[i] <= 0) {
           use_detector_pedestal = false;
           break;
+        } else if (std::abs(pedestal[i]) > 1e-7) {
+          need_pedestal_map = false;
+          break;
         }
       }
 
       // If using the pedestal from the panel, construct a pedestal map
-      if (use_detector_pedestal) {
+      if (use_detector_pedestal && need_pedestal_map) {
         Image<double> result;
         for (std::size_t i = 0; i < detector.size(); ++i) {
           std::size_t xsize = detector[i].get_image_size()[0];
