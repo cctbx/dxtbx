@@ -665,30 +665,35 @@ public:
       DXTBX_ASSERT(g.size() == 0 || r.accessor().all_eq(g.accessor()));
       DXTBX_ASSERT(p.size() == 0 || r.accessor().all_eq(p.accessor()));
 
-      // Create the result array
-      array_type c(r.accessor(),
-                   scitbx::af::init_functor_null<array_type::value_type>());
+      if (p.size() == 0 && g.size() == 0) {
+        // Nothing to apply, save the copy
+        result.push_back(ImageTile<double>(data.tile(i).data()));
+      } else {
+        // Create the result array
+        array_type c(r.accessor(),
+                    scitbx::af::init_functor_null<array_type::value_type>());
 
-      // Copy the data values
-      std::uninitialized_copy(r.begin(), r.end(), c.begin());
+        // Copy the data values
+        std::uninitialized_copy(r.begin(), r.end(), c.begin());
 
-      // Apply dark
-      if (p.size() > 0) {
-        for (std::size_t j = 0; j < r.size(); ++j) {
-          c[j] = c[j] - p[j];
+        // Apply dark
+        if (p.size() > 0) {
+          for (std::size_t j = 0; j < r.size(); ++j) {
+            c[j] = c[j] - p[j];
+          }
         }
-      }
 
-      // Apply gain
-      if (g.size() > 0) {
-        for (std::size_t j = 0; j < r.size(); ++j) {
-          DXTBX_ASSERT(g[j] > 0);
-          c[j] = c[j] / g[j];
+        // Apply gain
+        if (g.size() > 0) {
+          for (std::size_t j = 0; j < r.size(); ++j) {
+            DXTBX_ASSERT(g[j] > 0);
+            c[j] = c[j] / g[j];
+          }
         }
-      }
 
-      // Add the image tile
-      result.push_back(ImageTile<double>(c));
+        // Add the image tile
+        result.push_back(ImageTile<double>(c));
+      }
     }
 
     // Return the result
