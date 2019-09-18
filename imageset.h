@@ -522,9 +522,10 @@ public:
   /**
    * Cache an image
    */
+  template<class T>
   class DataCache {
   public:
-    ImageBuffer image;
+    T image;
     int index;
 
     DataCache() : index(-1) {}
@@ -641,7 +642,7 @@ public:
 
     // Get the multi-tile data, gain and pedestal
     DXTBX_ASSERT(index < indices_.size());
-    Image<double> data = get_raw_data(index).as_double();
+    Image<double> data = get_raw_data_as_double(index);
     Image<double> gain = get_gain(index);
     Image<double> dark = get_pedestal(index);
     DXTBX_ASSERT(gain.n_tiles() == 0 || data.n_tiles() == gain.n_tiles());
@@ -874,7 +875,7 @@ public:
    */
   Image<bool> get_trusted_range_mask(Image<bool> mask, std::size_t index) {
     Detector detector = detail::safe_dereference(get_detector_for_image(index));
-    Image<double> data = get_raw_data(index).as_double();
+    Image<double> data = get_raw_data_as_double(index);
     DXTBX_ASSERT(mask.n_tiles() == data.n_tiles());
     DXTBX_ASSERT(data.n_tiles() == detector.size());
     for (std::size_t i = 0; i < detector.size(); ++i) {
@@ -1078,7 +1079,20 @@ public:
 protected:
   ImageSetData data_;
   scitbx::af::shared<std::size_t> indices_;
-  DataCache data_cache_;
+  DataCache<ImageBuffer> data_cache_;
+  DataCache<Image<double> > double_raw_data_cache_;
+
+  Image<double> get_raw_data_as_double(std::size_t index) {
+    DXTBX_ASSERT(index < indices_.size());
+    if (double_raw_data_cache_.index == index) {
+      return double_raw_data_cache_.image;
+    }
+    Image<double> image = get_raw_data(index).as_double();
+    double_raw_data_cache_.index = index;
+    double_raw_data_cache_.image = image;
+    return image;
+  }
+
 };
 
 /**
