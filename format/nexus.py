@@ -176,15 +176,13 @@ def local_visit(nxfile, visitor):
 
     Args:
       nxfile: hdf5 file node
-      visitor: visitor function to act on node and children
+      visitor: visitor function to act on children
     """
-    visitor(nxfile.name, nxfile)
-    for k in nxfile:
-        try:
-            if "NX_class" in nxfile[k].attrs:
-                local_visit(nxfile[k], visitor)
-        except KeyError:
-            pass
+    for k in nxfile.values():
+        if "NX_class" not in k.attrs:
+            continue
+        visitor(k.name, k)
+        local_visit(k, visitor)
 
 
 def find_entries(nx_file, entry):
