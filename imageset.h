@@ -522,9 +522,10 @@ public:
   /**
    * Cache an image
    */
+  template <class T>
   class DataCache {
   public:
-    ImageBuffer image;
+    T image;
     int index;
 
     DataCache() : index(-1) {}
@@ -641,7 +642,7 @@ public:
 
     // Get the multi-tile data, gain and pedestal
     DXTBX_ASSERT(index < indices_.size());
-    Image<double> data = get_raw_data(index).as_double();
+    Image<double> data = get_raw_data_as_double(index);
     Image<double> gain = get_gain(index);
     Image<double> dark = get_pedestal(index);
     DXTBX_ASSERT(gain.n_tiles() == 0 || data.n_tiles() == gain.n_tiles());
@@ -665,30 +666,35 @@ public:
       DXTBX_ASSERT(g.size() == 0 || r.accessor().all_eq(g.accessor()));
       DXTBX_ASSERT(p.size() == 0 || r.accessor().all_eq(p.accessor()));
 
-      // Create the result array
-      array_type c(r.accessor(),
-                   scitbx::af::init_functor_null<array_type::value_type>());
+      if (p.size() == 0 && g.size() == 0) {
+        // Nothing to apply, save the copy
+        result.push_back(ImageTile<double>(data.tile(i).data()));
+      } else {
+        // Create the result array
+        array_type c(r.accessor(),
+                     scitbx::af::init_functor_null<array_type::value_type>());
 
-      // Copy the data values
-      std::uninitialized_copy(r.begin(), r.end(), c.begin());
+        // Copy the data values
+        std::uninitialized_copy(r.begin(), r.end(), c.begin());
 
-      // Apply dark
-      if (p.size() > 0) {
-        for (std::size_t j = 0; j < r.size(); ++j) {
-          c[j] = c[j] - p[j];
+        // Apply dark
+        if (p.size() > 0) {
+          for (std::size_t j = 0; j < r.size(); ++j) {
+            c[j] = c[j] - p[j];
+          }
         }
-      }
 
-      // Apply gain
-      if (g.size() > 0) {
-        for (std::size_t j = 0; j < r.size(); ++j) {
-          DXTBX_ASSERT(g[j] > 0);
-          c[j] = c[j] / g[j];
+        // Apply gain
+        if (g.size() > 0) {
+          for (std::size_t j = 0; j < r.size(); ++j) {
+            DXTBX_ASSERT(g[j] > 0);
+            c[j] = c[j] / g[j];
+          }
         }
-      }
 
-      // Add the image tile
-      result.push_back(ImageTile<double>(c));
+        // Add the image tile
+        result.push_back(ImageTile<double>(c));
+      }
     }
 
     // Return the result
@@ -869,7 +875,7 @@ public:
    */
   Image<bool> get_trusted_range_mask(Image<bool> mask, std::size_t index) {
     Detector detector = detail::safe_dereference(get_detector_for_image(index));
-    Image<double> data = get_raw_data(index).as_double();
+    Image<double> data = get_raw_data_as_double(index);
     DXTBX_ASSERT(mask.n_tiles() == data.n_tiles());
     DXTBX_ASSERT(data.n_tiles() == detector.size());
     for (std::size_t i = 0; i < detector.size(); ++i) {
@@ -1073,7 +1079,19 @@ public:
 protected:
   ImageSetData data_;
   scitbx::af::shared<std::size_t> indices_;
-  DataCache data_cache_;
+  DataCache<ImageBuffer> data_cache_;
+  DataCache<Image<double> > double_raw_data_cache_;
+
+  Image<double> get_raw_data_as_double(std::size_t index) {
+    DXTBX_ASSERT(index < indices_.size());
+    if (double_raw_data_cache_.index == index) {
+      return double_raw_data_cache_.image;
+    }
+    Image<double> image = get_raw_data(index).as_double();
+    double_raw_data_cache_.index = index;
+    double_raw_data_cache_.image = image;
+    return image;
+  }
 };
 
 /**
