@@ -184,7 +184,8 @@ namespace dxtbx { namespace model {
       return get_lab_coord(xy_mm);
     }
 
-    vec3<double> get_pixel_lab_coord(tiny<double, 2> xy, double attenuation_length) const {
+    vec3<double> get_pixel_lab_coord(tiny<double, 2> xy,
+                                     double attenuation_length) const {
       tiny<double, 2> xy_mm = pixel_to_millimeter(xy, attenuation_length);
       return get_lab_coord(xy_mm);
     }
