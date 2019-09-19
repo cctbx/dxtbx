@@ -522,7 +522,7 @@ public:
   /**
    * Cache an image
    */
-  template<class T>
+  template <class T>
   class DataCache {
   public:
     T image;
@@ -672,7 +672,7 @@ public:
       } else {
         // Create the result array
         array_type c(r.accessor(),
-                    scitbx::af::init_functor_null<array_type::value_type>());
+                     scitbx::af::init_functor_null<array_type::value_type>());
 
         // Copy the data values
         std::uninitialized_copy(r.begin(), r.end(), c.begin());
@@ -1092,7 +1092,6 @@ protected:
     double_raw_data_cache_.image = image;
     return image;
   }
-
 };
 
 /**
