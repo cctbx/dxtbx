@@ -15,6 +15,7 @@
 #include <dxtbx/model/parallax_correction.h>
 #include <dxtbx/model/panel_data.h>
 #include <dxtbx/error.h>
+#include <limits>
 #include <string>
 
 namespace dxtbx { namespace model {
@@ -42,7 +43,7 @@ namespace dxtbx { namespace model {
                                        vec2<double> xy) const = 0;
 
     virtual double attenuation_length(const PanelData &panel, vec2<double> xy) const {
-      return 0.0;
+      return std::numeric_limits<double>::quiet_NaN();
     }
 
     virtual vec2<double> to_millimeter(const PanelData &panel,
