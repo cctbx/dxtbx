@@ -302,8 +302,11 @@ namespace dxtbx { namespace model {
       // unit cell
       set_unit_cell(real_space_a, real_space_b, real_space_c);
 
-      // reciprocal space orthogonalisation matrix (is the transpose of the
-      // real space fractionalisation matrix, see http://goo.gl/H3p1s)
+      // reciprocal space orthogonalisation matrix, i.e. the transpose of the
+      // real space fractionalisation matrix.
+      // see lecture notes from Kevin Cowtan, 'Coordinate systems, operators,
+      // and transformations'
+      // https://www.iucr.org/resources/commissions/computing/schools/siena-2005-crystallographic-computing-school/speakers-notes
       update_B();
 
       // initial orientation matrix
