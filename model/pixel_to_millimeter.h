@@ -140,7 +140,7 @@ namespace dxtbx { namespace model {
       return t0_;
     }
 
-    double attenuation_length(const PanelData &panel, vec2<double> xy) {
+    double attenuation_length(const PanelData &panel, vec2<double> xy) const {
       // Convert to s1 for attenuation
       vec2<double> xy_for_pc = SimplePxMmStrategy::to_millimeter(panel, xy);
       vec3<double> s1 = panel.get_origin() + xy_for_pc[0] * panel.get_fast_axis()
