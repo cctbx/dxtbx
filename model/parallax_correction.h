@@ -148,6 +148,21 @@ namespace dxtbx { namespace model {
     return c_xy;
   }
 
+  inline vec2<double> parallax_correction_inv2_attenuation(double mu,
+                                                           double t0,
+                                                           vec2<double> xy,
+                                                           vec3<double> fast,
+                                                           vec3<double> slow,
+                                                           vec3<double> origin,
+                                                           double attenuation_length) {
+    vec2<double> c_xy;
+    vec3<double> s1 = origin + xy[0] * fast + xy[1] * slow;
+    s1 = s1.normalize();
+    c_xy[0] = xy[0] - (s1 * fast) * attenuation_length;
+    c_xy[1] = xy[1] - (s1 * slow) * attenuation_length;
+    return c_xy;
+  }
+
 }}  // namespace dxtbx::model
 
 #endif /* DXTBX_MODEL_PARALLAX_CORRECTION_H */

@@ -327,6 +327,16 @@ namespace dxtbx { namespace model { namespace boost_python {
     return panel_from_dict_with_offset(obj, dx2, dy2);
   }
 
+  vec3<double> get_pixel_lab_coord(Panel &panel, tiny<double, 2> px) {
+    return panel.get_pixel_lab_coord(px);
+  }
+
+  vec2<double> pixel_to_millimeter(Panel &panel, vec2<double> px) {
+    return panel.pixel_to_millimeter(px);
+  }
+
+  // vec2<double> pixel_to_millimeter(vec2<double> xy, double attenuation_length) const
+  // {
   void export_panel() {
     using namespace boost::python;
 
@@ -496,13 +506,13 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("is_coord_valid_mm", &Panel::is_coord_valid_mm)
       .def("get_normal_origin_px", &Panel::get_normal_origin_px)
       .def("get_beam_centre_px", &Panel::get_beam_centre_px)
-      .def("get_pixel_lab_coord", &Panel::get_pixel_lab_coord)
+      .def("get_pixel_lab_coord", get_pixel_lab_coord)
       .def("get_ray_intersection_px", &Panel::get_ray_intersection_px)
       .def("get_bidirectional_ray_intersection_px",
            &Panel::get_bidirectional_ray_intersection_px)
       .def("millimeter_to_pixel", &Panel::millimeter_to_pixel)
       .def("millimeter_to_pixel", millimeter_to_pixel_multiple)
-      .def("pixel_to_millimeter", &Panel::pixel_to_millimeter)
+      .def("pixel_to_millimeter", pixel_to_millimeter)
       .def("pixel_to_millimeter", pixel_to_millimeter_multiple)
       .def("get_two_theta_at_pixel", &Panel::get_two_theta_at_pixel)
       .def("get_two_theta_array", &Panel::get_two_theta_array)

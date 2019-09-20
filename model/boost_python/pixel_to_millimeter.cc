@@ -78,9 +78,13 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
   };
 
+  vec2<double> to_millimeter(PxMmStrategy& strategy, Panel& panel, tiny<double, 2> xy) {
+    return strategy.to_millimeter(panel, xy);
+  }
+
   void export_pixel_to_millimeter() {
     class_<PxMmStrategy, boost::noncopyable>("PxMmStrategy", no_init)
-      .def("to_millimeter", &PxMmStrategy::to_millimeter, (arg("panel"), arg("xy")))
+      .def("to_millimeter", to_millimeter, (arg("panel"), arg("xy")))
       .def("to_pixel", &PxMmStrategy::to_pixel, (arg("panel"), arg("xy")))
       .def("name", &PxMmStrategy::name)
       .def("__str__", &PxMmStrategy::strategy_name);

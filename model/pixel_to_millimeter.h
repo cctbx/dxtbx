@@ -15,6 +15,7 @@
 #include <dxtbx/model/parallax_correction.h>
 #include <dxtbx/model/panel_data.h>
 #include <dxtbx/error.h>
+#include <limits>
 #include <string>
 
 namespace dxtbx { namespace model {
@@ -40,6 +41,14 @@ namespace dxtbx { namespace model {
      */
     virtual vec2<double> to_millimeter(const PanelData &panel,
                                        vec2<double> xy) const = 0;
+
+    virtual double attenuation_length(const PanelData &panel, vec2<double> xy) const {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    virtual vec2<double> to_millimeter(const PanelData &panel,
+                                       vec2<double> xy,
+                                       double attenuation_length) const = 0;
 
     /**
      * Convert a millimeter coordinate to a pixel coordinate
@@ -79,6 +88,13 @@ namespace dxtbx { namespace model {
       vec2<double> pixel_size = panel.get_pixel_size();
       return vec2<double>(xy[0] * pixel_size[0], xy[1] * pixel_size[1]);
     }
+
+    virtual vec2<double> to_millimeter(const PanelData &panel,
+                                       vec2<double> xy,
+                                       double attenuation_length) const {
+      // Ignore attenuation length if not handling explicitly
+      return SimplePxMmStrategy::to_millimeter(panel, xy);
+    };
 
     /**
      * Convert a millimeter coordinate to a pixel coordinate
@@ -125,6 +141,17 @@ namespace dxtbx { namespace model {
       return t0_;
     }
 
+    virtual double attenuation_length(const PanelData &panel, vec2<double> xy) const {
+      // Convert to s1 for attenuation
+      vec2<double> xy_for_pc = SimplePxMmStrategy::to_millimeter(panel, xy);
+      vec3<double> s1 = panel.get_origin() + xy_for_pc[0] * panel.get_fast_axis()
+                        + xy_for_pc[1] * panel.get_slow_axis();
+      s1 = s1.normalize();
+
+      return dxtbx::model::attenuation_length(
+        mu_, t0_, s1, panel.get_fast_axis(), panel.get_slow_axis(), panel.get_origin());
+    }
+
     /**
      * Convert a pixel coordinate to a millimeter coordinate
      * @param panel The panel structure
@@ -140,6 +167,18 @@ namespace dxtbx { namespace model {
                                       panel.get_origin());
     }
 
+    vec2<double> to_millimeter(const PanelData &panel,
+                               vec2<double> xy,
+                               double attenuation_length) const {
+      return parallax_correction_inv2_attenuation(
+        mu_,
+        t0_,
+        SimplePxMmStrategy::to_millimeter(panel, xy, attenuation_length),
+        panel.get_fast_axis(),
+        panel.get_slow_axis(),
+        panel.get_origin(),
+        attenuation_length);
+    }
     /**
      * Convert a millimeter coordinate to a pixel coordinate
      * @param panel The panel structure

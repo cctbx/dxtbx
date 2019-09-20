@@ -184,6 +184,16 @@ namespace dxtbx { namespace model {
       return get_lab_coord(xy_mm);
     }
 
+    vec3<double> get_pixel_lab_coord(tiny<double, 2> xy,
+                                     double attenuation_length) const {
+      tiny<double, 2> xy_mm = pixel_to_millimeter(xy, attenuation_length);
+      return get_lab_coord(xy_mm);
+    }
+
+    double attenuation_length(tiny<double, 2> xy) const {
+      return convert_coord_->attenuation_length(*this, xy);
+    }
+
     /** Get the ray intersection in pixel coordinates */
     vec2<double> get_ray_intersection_px(vec3<double> s1) const {
       return millimeter_to_pixel(get_ray_intersection(s1));
@@ -206,6 +216,10 @@ namespace dxtbx { namespace model {
       return convert_coord_->to_millimeter(*this, xy);
     }
 
+    vec2<double> pixel_to_millimeter(vec2<double> xy, double attenuation_length) const {
+      DXTBX_ASSERT(convert_coord_ != NULL);
+      return convert_coord_->to_millimeter(*this, xy, attenuation_length);
+    }
     /**
      * Get the 2theta angle at a given pixel.
      * @param s0 The incident beam vector
