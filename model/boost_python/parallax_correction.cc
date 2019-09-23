@@ -18,50 +18,30 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   using namespace boost::python;
 
-  vec2<double> parallax_correction1(double d,
-                                    double la,
-                                    vec2<double> xy0,
-                                    vec2<double> xy) {
-    return parallax_correction(d, la, xy0, xy);
-  }
-
-  vec2<double> parallax_correction2(double mu,
-                                    double t0,
-                                    vec2<double> xy,
-                                    vec3<double> fast,
-                                    vec3<double> slow,
-                                    vec3<double> origin) {
-    return parallax_correction(mu, t0, xy, fast, slow, origin);
-  }
-
-  vec2<double> parallax_correction_inv1(double d,
-                                        double la,
-                                        vec2<double> xy0,
-                                        vec2<double> xy){
-    return parallax_correction_inv(d, la, xy0, xy);
-  }
-
-  vec2<double> parallax_correction_inv2(double mu,
-                                        double t0,
-                                        vec2<double> xy,
-                                        vec3<double> fast,
-                                        vec3<double> slow,
-                                        vec3<double> origin){
-    return parallax_correction_inv(mu, t0, xy, fast, slow, origin);
-  }
+  // Parallax functions are overloaded so declare the forms for boost
+  typedef vec2<double> (*parallax_orig_type)(double d,
+                                             double la,
+                                             vec2<double> xy0,
+                                             vec2<double> xy);
+  typedef vec2<double> (*parallax_axis_type)(double mu,
+                                             double t0,
+                                             vec2<double> xy,
+                                             vec3<double> fast_axis,
+                                             vec3<double> slow_axis,
+                                             vec3<double> origin);
 
   void export_parallax_correction() {
     def("parallax_correction",
-        &parallax_correction1,
+        (parallax_orig_type)&parallax_correction,
         (arg("d"), arg("la"), arg("xy0"), arg("xy")));
     def("parallax_correction",
-        &parallax_correction2,
+        (parallax_axis_type)&parallax_correction,
         (arg("mu"), arg("t0"), arg("xy"), arg("fast"), arg("slow"), arg("origin")));
     def("parallax_correction_inv",
-        &parallax_correction_inv1,
+        (parallax_orig_type)&parallax_correction_inv,
         (arg("d"), arg("la"), arg("xy0"), arg("xy")));
     def("parallax_correction_inv",
-        &parallax_correction_inv2,
+        (parallax_axis_type)&parallax_correction_inv,
         (arg("mu"), arg("t0"), arg("xy"), arg("fast"), arg("slow"), arg("origin")));
   }
 
