@@ -160,20 +160,18 @@ namespace dxtbx { namespace model {
      * @return The (x, y) millimeter coordinate
      */
     vec2<double> to_millimeter(const PanelData &panel, vec2<double> xy) const {
-      return parallax_correction_inv2(mu_,
-                                      t0_,
-                                      SimplePxMmStrategy::to_millimeter(panel, xy),
-                                      panel.get_fast_axis(),
-                                      panel.get_slow_axis(),
-                                      panel.get_origin());
+      return parallax_correction_inv(mu_,
+                                     t0_,
+                                     SimplePxMmStrategy::to_millimeter(panel, xy),
+                                     panel.get_fast_axis(),
+                                     panel.get_slow_axis(),
+                                     panel.get_origin());
     }
 
     vec2<double> to_millimeter(const PanelData &panel,
                                vec2<double> xy,
                                double attenuation_length) const {
-      return parallax_correction_inv2_attenuation(
-        mu_,
-        t0_,
+      return parallax_correction_inv(
         SimplePxMmStrategy::to_millimeter(panel, xy, attenuation_length),
         panel.get_fast_axis(),
         panel.get_slow_axis(),

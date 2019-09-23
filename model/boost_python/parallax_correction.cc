@@ -18,33 +18,49 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   using namespace boost::python;
 
-  vec2<double> parallax_correction_original(double d,
-                                            double la,
-                                            vec2<double> xy0,
-                                            vec2<double> xy) {
+  vec2<double> parallax_correction1(double d,
+                                    double la,
+                                    vec2<double> xy0,
+                                    vec2<double> xy) {
     return parallax_correction(d, la, xy0, xy);
   }
 
-  vec2<double> parallax_correction_with_panel_data(double mu,
-                                                   double t0,
-                                                   vec2<double> xy,
-                                                   vec3<double> fast,
-                                                   vec3<double> slow,
-                                                   vec3<double> origin) {
+  vec2<double> parallax_correction2(double mu,
+                                    double t0,
+                                    vec2<double> xy,
+                                    vec3<double> fast,
+                                    vec3<double> slow,
+                                    vec3<double> origin) {
     return parallax_correction(mu, t0, xy, fast, slow, origin);
+  }
+
+  vec2<double> parallax_correction_inv1(double d,
+                                        double la,
+                                        vec2<double> xy0,
+                                        vec2<double> xy){
+    return parallax_correction_inv(d, la, xy0, xy);
+  }
+
+  vec2<double> parallax_correction_inv2(double mu,
+                                        double t0,
+                                        vec2<double> xy,
+                                        vec3<double> fast,
+                                        vec3<double> slow,
+                                        vec3<double> origin){
+    return parallax_correction_inv(mu, t0, xy, fast, slow, origin);
   }
 
   void export_parallax_correction() {
     def("parallax_correction",
-        &parallax_correction_original,
+        &parallax_correction1,
         (arg("d"), arg("la"), arg("xy0"), arg("xy")));
     def("parallax_correction",
-        &parallax_correction_with_panel_data,
+        &parallax_correction2,
         (arg("mu"), arg("t0"), arg("xy"), arg("fast"), arg("slow"), arg("origin")));
     def("parallax_correction_inv",
-        &parallax_correction_inv,
+        &parallax_correction_inv1,
         (arg("d"), arg("la"), arg("xy0"), arg("xy")));
-    def("parallax_correction_inv2",
+    def("parallax_correction_inv",
         &parallax_correction_inv2,
         (arg("mu"), arg("t0"), arg("xy"), arg("fast"), arg("slow"), arg("origin")));
   }
