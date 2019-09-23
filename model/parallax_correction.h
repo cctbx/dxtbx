@@ -104,7 +104,7 @@ namespace dxtbx { namespace model {
    * @param slow Detector slow direction
    * @param origin Direction of detector origin
    */
-  inline vec2<double> parallax_correction2(double mu,
+  inline vec2<double> parallax_correction(double mu,
                                            double t0,
                                            vec2<double> xy,
                                            vec3<double> fast,
