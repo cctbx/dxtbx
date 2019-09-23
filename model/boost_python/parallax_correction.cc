@@ -18,6 +18,13 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   using namespace boost::python;
 
+  vec2<double> parallax_correction_original(double d,
+                                            double la,
+                                            vec2<double> xy0,
+                                            vec2<double> xy) {
+    return parallax_correction(d, la, xy0, xy);
+  }
+
   vec2<double> parallax_correction_with_panel_data(double mu,
                                                    double t0,
                                                    vec2<double> xy,
@@ -29,7 +36,7 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_parallax_correction() {
     def("parallax_correction",
-        &parallax_correction,
+        &parallax_correction_original,
         (arg("d"), arg("la"), arg("xy0"), arg("xy")));
     def("parallax_correction",
         &parallax_correction_with_panel_data,
