@@ -12,6 +12,7 @@
 #define DXTBX_MODEL_PIXEL_TO_MILLIMETER_H
 
 #include <scitbx/vec2.h>
+#include <scitbx/vec3.h>
 #include <dxtbx/model/parallax_correction.h>
 #include <dxtbx/model/panel_data.h>
 #include <dxtbx/error.h>
@@ -187,7 +188,7 @@ namespace dxtbx { namespace model {
      */
     vec2<double> to_pixel(const PanelData &panel, vec2<double> xy) const {
       return SimplePxMmStrategy::to_pixel(panel,
-                                          parallax_correction2(mu_,
+                                          parallax_correction(mu_,
                                                                t0_,
                                                                xy,
                                                                panel.get_fast_axis(),
