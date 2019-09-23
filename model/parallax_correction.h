@@ -150,7 +150,7 @@ namespace dxtbx { namespace model {
 
   /**
    * Function to perform an inverse parallax correction on a given coordinate
-   * correctly, with a precaculated attenuation length. X corresponds to the fast
+   * correctly, with a precalculated attenuation length. X corresponds to the fast
    * direction, Y to the slow direction in input & output. Returns corrected mm
    * position.
    * @param xy The xy mm coordinate
