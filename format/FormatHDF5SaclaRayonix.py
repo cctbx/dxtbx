@@ -20,13 +20,13 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
 
     @staticmethod
     def understand(image_file):
-        h5_handle = h5py.File(image_file, "r")
-        if "metadata/detector" not in h5_handle:
-            return False
-        if h5_handle["metadata/detector"][()] != "Rayonix MX300HS":
-            return False
-        if any(elem.startswith("tag-") for elem in h5_handle):
-            return True
+        with h5py.File(image_file, "r") as h5_handle:
+            if "metadata/detector" not in h5_handle:
+                return False
+            if h5_handle["metadata/detector"][()] != "Rayonix MX300HS":
+                return False
+            if any(elem.startswith("tag-") for elem in h5_handle):
+                return True
 
         return False
 

@@ -32,17 +32,14 @@ class FormatHDF5Lambda(FormatHDF5):
         if tag != "\211HDF\r\n\032\n":
             return False
 
-        h5_handle = h5py.File(image_file, "r")
+        with h5py.File(image_file, "r") as h5_handle:
+            try:
+                desc = h5_handle["entry/instrument/detector/description"]
+            except KeyError:
+                return False
 
-        try:
-            desc = h5_handle["entry/instrument/detector/description"]
-        except KeyError:
-            h5_handle.close()
-            return False
-
-        if "Lambda" in desc[()][0]:
-            h5_handle.close()
-            return True
+            if "Lambda" in desc[()][0]:
+                return True
 
         return False
 

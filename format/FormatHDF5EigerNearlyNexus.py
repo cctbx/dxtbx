@@ -43,19 +43,18 @@ def is_eiger_nearly_nexus_file(filename):
     A hacky function to check if this is an EIGER-flavoured nexus file
     """
     # Get the file handle
-    handle = h5py.File(filename, "r")
-
-    # Find the NXmx entries
-    entry = find_entries(handle)
-    if entry is not None:
-        try:
-            return (
-                numpy.string_("dectris eiger")
-                in entry["instrument"]["detector"]["description"][()].lower()
-            )
-        except KeyError:
-            pass
-    return False
+    with h5py.File(filename, "r") as handle:
+        # Find the NXmx entries
+        entry = find_entries(handle)
+        if entry is not None:
+            try:
+                return (
+                    numpy.string_("dectris eiger")
+                    in entry["instrument"]["detector"]["description"][()].lower()
+                )
+            except KeyError:
+                pass
+        return False
 
 
 class EigerNXmxFixer(object):

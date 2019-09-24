@@ -26,13 +26,13 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
 
     @staticmethod
     def understand(image_file):
-        h5_handle = h5py.File(image_file, "r")
-        understood = False
-        if "file_info" in h5_handle and "run_number_list" in h5_handle["file_info"]:
-            run_grp = FormatHDF5Sacla._get_run_h5group(h5_handle)
-            if "detector_2d_assembled_1" in list(run_grp.keys()):
-                understood = True
-        return understood
+        with h5py.File(image_file, "r") as h5_handle:
+            understood = False
+            if "file_info" in h5_handle and "run_number_list" in h5_handle["file_info"]:
+                run_grp = FormatHDF5Sacla._get_run_h5group(h5_handle)
+                if "detector_2d_assembled_1" in list(run_grp.keys()):
+                    understood = True
+            return understood
 
     def _start(self):
         self._h5_handle = h5py.File(self.get_image_file(), "r")

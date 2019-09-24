@@ -164,11 +164,11 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
             from dxtbx.format.nexus import find_entries, find_class
 
             # Get the file handle
-            handle = h5py.File(image_file, "r")
-            for entry in find_entries(handle, "/"):
-                for sample in find_class(entry, "NXsample"):
-                    if "depends_on" not in sample:
-                        is_nexus_still = True
+            with h5py.File(image_file, "r") as handle:
+                for entry in find_entries(handle, "/"):
+                    for sample in find_class(entry, "NXsample"):
+                        if "depends_on" not in sample:
+                            is_nexus_still = True
         except IOError:
             return False
         return is_nexus_still

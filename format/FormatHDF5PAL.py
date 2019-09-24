@@ -16,23 +16,23 @@ from dxtbx.format.FormatHDF5 import FormatHDF5
 class FormatHDF5PAL(FormatHDF5):
     @staticmethod
     def understand(image_file):
-        h5_handle = h5py.File(image_file, "r")
-        if len(h5_handle) != 1:
-            return False
+        with h5py.File(image_file, "r") as h5_handle:
+            if len(h5_handle) != 1:
+                return False
 
-        for key in h5_handle:
-            if not key.startswith("R"):
-                return False
-            try:
-                int(key.lstrip("R"))
-            except ValueError:
-                return False
-            for subkey in h5_handle[key]:
-                if subkey not in ("header", "scan_dat"):
+            for key in h5_handle:
+                if not key.startswith("R"):
                     return False
-                if subkey == "scan_dat":
-                    if "raymx_header" not in h5_handle[key][subkey]:
+                try:
+                    int(key.lstrip("R"))
+                except ValueError:
+                    return False
+                for subkey in h5_handle[key]:
+                    if subkey not in ("header", "scan_dat"):
                         return False
+                    if subkey == "scan_dat":
+                        if "raymx_header" not in h5_handle[key][subkey]:
+                            return False
         return True
 
     def _start(self):

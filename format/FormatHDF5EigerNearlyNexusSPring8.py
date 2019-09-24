@@ -15,11 +15,11 @@ class FormatHDF5EigerNearlyNexusSPring8(FormatHDF5EigerNearlyNexus):
             return False
 
         # Get the file handle
-        handle = h5py.File(image_file, "r")
-        if "/entry/instrument/detector/detector_number" in handle and handle[
-            "/entry/instrument/detector/detector_number"
-        ][()] in ["E-32-0114", "E-32-0112", "E-18-0103"]:
-            return True
+        with h5py.File(image_file, "r") as handle:
+            if "/entry/instrument/detector/detector_number" in handle and handle[
+                "/entry/instrument/detector/detector_number"
+            ][()] in ["E-32-0114", "E-32-0112", "E-18-0103"]:
+                return True
         return False
 
     def _start(self):

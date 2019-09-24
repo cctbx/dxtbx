@@ -42,15 +42,15 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
 
     @staticmethod
     def understand(image_file):
-        h5_handle = h5py.File(image_file, "r")
-        if "metadata/detector" in h5_handle:
-            if "Rayonix" in h5_handle["metadata/detector"][()]:
-                return False
+        with h5py.File(image_file, "r") as h5_handle:
+            if "metadata/detector" in h5_handle:
+                if "Rayonix" in h5_handle["metadata/detector"][()]:
+                    return False
 
-        for elem in h5_handle:
-            if elem.startswith("tag-"):
-                return True
-        return False
+            for elem in h5_handle:
+                if elem.startswith("tag-"):
+                    return True
+            return False
 
     def __init__(self, image_file, index=0, reconst_mode=False, **kwargs):
         self._raw_data = None

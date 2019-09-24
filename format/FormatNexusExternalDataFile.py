@@ -27,13 +27,12 @@ def is_nexus_external_data_file(filename):
 
     """
     # Get the file handle
-    handle = h5py.File(filename, "r")
-
-    # Find the NXmx entries
-    entry = find_entries(handle)
-    if entry is not None:
-        if "instrument" not in entry:
-            return True
+    with h5py.File(filename, "r") as handle:
+        # Find the NXmx entries
+        entry = find_entries(handle)
+        if entry is not None:
+            if "instrument" not in entry:
+                return True
     return False
 
 
