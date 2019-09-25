@@ -767,6 +767,9 @@ class DetectorFactory(object):
         if detector_helper_sensors.check_sensor(name):
             return name
 
+        if name is None:
+            return detector_helper_sensors.SENSOR_UNKNOWN
+
         if name.upper() == "PAD":
             return detector_helper_sensors.SENSOR_PAD
         elif name.upper() == "CCD":

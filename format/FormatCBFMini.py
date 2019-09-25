@@ -318,6 +318,8 @@ class FormatCBFMini(FormatCBF):
             sensor = "CdTe"
         elif panel.get_type() == "SENSOR_CCD":
             sensor = "CCD"
+        else:
+            sensor = "unknown"
 
         # maybe someday more people will do this
         flux = beam.get_flux()
