@@ -11,6 +11,7 @@ from dxtbx.model.goniometer import Goniometer
 pytest.importorskip("h5py")
 
 
+@pytest.mark.skip(reason="mx-scratch filesystem causes test to hang")
 def test_soleil_Proxima2A_zenodo_1443110_data03():
     # https://zenodo.org/record/1221344#.XEHr_5ynx2Q
     master_h5 = "/dls/mx-scratch/rjgildea/zenodo/1221344/200Hz/3_5_200Hz_1_master.h5"
