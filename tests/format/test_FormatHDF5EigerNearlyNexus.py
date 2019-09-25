@@ -10,15 +10,14 @@ from dxtbx.model.goniometer import Goniometer
 
 pytest.importorskip("h5py")
 
-pytestmark = pytest.mark.skipif(
-    not os.access("/dls/mx-scratch/rjgildea/zenodo", os.R_OK),
-    reason="Test images not available",
-)
-
 
 def test_soleil_Proxima2A_zenodo_1443110_data03():
     # https://zenodo.org/record/1221344#.XEHr_5ynx2Q
     master_h5 = "/dls/mx-scratch/rjgildea/zenodo/1221344/200Hz/3_5_200Hz_1_master.h5"
+
+    if not os.access(master_h5, os.R_OK):
+        pytest.skip("Test images not available")
+
     assert FormatHDF5EigerNearlyNexus.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])
