@@ -77,6 +77,9 @@ class FormatMultiImage(Format):
             self._beam_instance = self._beam()
             self._scan_instance = self._scan()
             self._scan_instances = self._scans()
+        except Exception:
+            # FIXME ideally should not squash the errors here...
+            pass
         finally:
             self._end()
 
