@@ -12,7 +12,6 @@
 #define DXTBX_MODEL_PIXEL_TO_MILLIMETER_H
 
 #include <scitbx/vec2.h>
-#include <scitbx/vec3.h>
 #include <dxtbx/model/parallax_correction.h>
 #include <dxtbx/model/panel_data.h>
 #include <dxtbx/error.h>
