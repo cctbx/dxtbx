@@ -104,7 +104,7 @@ namespace dxtbx { namespace model {
    * @param slow Detector slow direction
    * @param origin Direction of detector origin
    */
-  inline vec2<double> parallax_correction2(double mu,
+  inline vec2<double> parallax_correction(double mu,
                                            double t0,
                                            vec2<double> xy,
                                            vec3<double> fast,
@@ -132,12 +132,12 @@ namespace dxtbx { namespace model {
    * @param slow Detector slow direction
    * @param origin Direction of detector origin
    */
-  inline vec2<double> parallax_correction_inv2(double mu,
-                                               double t0,
-                                               vec2<double> xy,
-                                               vec3<double> fast,
-                                               vec3<double> slow,
-                                               vec3<double> origin) {
+  inline vec2<double> parallax_correction_inv(double mu,
+                                              double t0,
+                                              vec2<double> xy,
+                                              vec3<double> fast,
+                                              vec3<double> slow,
+                                              vec3<double> origin) {
     double o;
     vec2<double> c_xy;
     vec3<double> s1 = origin + xy[0] * fast + xy[1] * slow;
@@ -148,13 +148,22 @@ namespace dxtbx { namespace model {
     return c_xy;
   }
 
-  inline vec2<double> parallax_correction_inv2_attenuation(double mu,
-                                                           double t0,
-                                                           vec2<double> xy,
-                                                           vec3<double> fast,
-                                                           vec3<double> slow,
-                                                           vec3<double> origin,
-                                                           double attenuation_length) {
+  /**
+   * Function to perform an inverse parallax correction on a given coordinate
+   * correctly, with a precalculated attenuation length. X corresponds to the fast
+   * direction, Y to the slow direction in input & output. Returns corrected mm
+   * position.
+   * @param xy The xy mm coordinate
+   * @param fast Detector fast direction
+   * @param slow Detector slow direction
+   * @param origin Direction of detector origin
+   * @param attenuation_length Precalculated attenuation length
+   */
+  inline vec2<double> parallax_correction_inv(vec2<double> xy,
+                                              vec3<double> fast,
+                                              vec3<double> slow,
+                                              vec3<double> origin,
+                                              double attenuation_length) {
     vec2<double> c_xy;
     vec3<double> s1 = origin + xy[0] * fast + xy[1] * slow;
     s1 = s1.normalize();

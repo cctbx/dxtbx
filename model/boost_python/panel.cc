@@ -335,8 +335,6 @@ namespace dxtbx { namespace model { namespace boost_python {
     return panel.pixel_to_millimeter(px);
   }
 
-  // vec2<double> pixel_to_millimeter(vec2<double> xy, double attenuation_length) const
-  // {
   void export_panel() {
     using namespace boost::python;
 

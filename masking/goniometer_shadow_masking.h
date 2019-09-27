@@ -217,6 +217,8 @@ namespace dxtbx { namespace masking {
       goniometer_.set_angles(angles);
     }
 
+    virtual ~GoniometerShadowMasker() {};
+
   protected:
     MultiAxisGoniometer goniometer_;
     scitbx::af::shared<vec3<double> > extrema_at_datum_;
