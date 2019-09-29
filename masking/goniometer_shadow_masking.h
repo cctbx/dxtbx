@@ -217,7 +217,7 @@ namespace dxtbx { namespace masking {
       goniometer_.set_angles(angles);
     }
 
-    virtual ~GoniometerShadowMasker() {};
+    virtual ~GoniometerShadowMasker(){};
 
   protected:
     MultiAxisGoniometer goniometer_;

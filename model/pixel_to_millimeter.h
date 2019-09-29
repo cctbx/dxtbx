@@ -186,11 +186,11 @@ namespace dxtbx { namespace model {
     vec2<double> to_pixel(const PanelData &panel, vec2<double> xy) const {
       return SimplePxMmStrategy::to_pixel(panel,
                                           parallax_correction(mu_,
-                                                               t0_,
-                                                               xy,
-                                                               panel.get_fast_axis(),
-                                                               panel.get_slow_axis(),
-                                                               panel.get_origin()));
+                                                              t0_,
+                                                              xy,
+                                                              panel.get_fast_axis(),
+                                                              panel.get_slow_axis(),
+                                                              panel.get_origin()));
     }
 
     std::string mu_t0() const {

@@ -105,11 +105,11 @@ namespace dxtbx { namespace model {
    * @param origin Direction of detector origin
    */
   inline vec2<double> parallax_correction(double mu,
-                                           double t0,
-                                           vec2<double> xy,
-                                           vec3<double> fast,
-                                           vec3<double> slow,
-                                           vec3<double> origin) {
+                                          double t0,
+                                          vec2<double> xy,
+                                          vec3<double> fast,
+                                          vec3<double> slow,
+                                          vec3<double> origin) {
     double o;
     vec2<double> c_xy;
     vec3<double> s1 = origin + xy[0] * fast + xy[1] * slow;
