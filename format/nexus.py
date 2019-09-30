@@ -25,11 +25,19 @@ from dxtbx.model import (
 )
 
 try:
-    from dxtbx_format_nexus_ext import dataset_as_flex_int
+    from dxtbx_format_nexus_ext import dataset_as_flex_int, dataset_as_flex_double
 except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
     if "SIT_ROOT" not in os.environ:
         raise
+
+
+def dataset_as_flex(dataset, selection):
+    if numpy.issubdtype(dataset.dtype, numpy.integer):
+        return dataset_as_flex_int(dataset.id.id, selection)
+    else:
+        assert numpy.issubdtype(dataset.dtype, numpy.floating)
+        return dataset_as_flex_double(dataset.id.id, selection)
 
 
 def _check_dtype(expected_type, dataset):
@@ -1653,8 +1661,8 @@ class DataList(object):
         d = self.lookup[index]
         i = index - self.offset[d]
         N, height, width = self.datasets[d].shape
-        data_as_flex = dataset_as_flex_int(
-            self.datasets[d].id.id,
+        data_as_flex = dataset_as_flex(
+            self.datasets[d],
             (slice(i, i + 1, 1), slice(0, height, 1), slice(0, width, 1)),
         )
         data_as_flex.reshape(flex.grid(data_as_flex.all()[1:]))
@@ -1753,7 +1761,7 @@ class MultiPanelDataList(object):
         for module_slices in self.all_slices:
             slices = [slice(i, i + 1, 1)]
             slices.extend(module_slices)
-            data_as_flex = dataset_as_flex_int(self.datasets[d].id.id, tuple(slices))
+            data_as_flex = dataset_as_flex(self.datasets[d], tuple(slices))
             data_as_flex.reshape(
                 flex.grid(data_as_flex.all()[-2:])
             )  # handle 3 or 4 dimension arrays
