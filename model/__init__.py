@@ -784,7 +784,7 @@ class _(object):
 
         # Write the file
         if filename:
-            with open(filename, "wb") as outfile:
+            with open(str(filename), "wb") as outfile:
                 outfile.write(text)
         else:
             return text
@@ -801,6 +801,21 @@ class _(object):
         else:
             ext_str = "|".join(j_ext + p_ext)
             raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
+
+    @staticmethod
+    def from_file(filename, check_format=True):
+        # type: (str, bool) -> ExperimentList
+        """
+        Load an ExperimentList from a serialized file.
+
+        Args:
+            filename: The filename to load an ExperimentList from
+            check_format: If True, will attempt to verify image data type
+        """
+        # Inline to avoid recursive imports
+        from .experiment_list import ExperimentListFactory
+
+        return ExperimentListFactory.from_serialized_format(str(filename), check_format)
 
 
 @boost.python.inject_into(Beam)

@@ -787,3 +787,19 @@ def compare_experiment(exp1, exp2):
         and exp1.scaling_model == exp2.scaling_model
         and exp1.identifier == exp2.identifier
     )
+
+
+def test_experimentlist_from_file(dials_regression, tmpdir):
+    # This allows expansion of environment variables in regression files
+    os.environ["DIALS_REGRESSION"] = dials_regression
+
+    exp_list = ExperimentList.from_file(
+        os.path.join(dials_regression, "experiment_test_data", "experiment_1.json")
+    )
+    assert len(exp_list) == 1
+    assert exp_list[0].beam
+    # Try loading from a pickle
+    exp_list.as_pickle(tmpdir / "el.pickle")
+    exp_list_pk = ExperimentList.from_file(tmpdir / "el.pickle")
+    assert len(exp_list_pk) == 1
+    assert exp_list[0].beam
