@@ -373,6 +373,16 @@ def test_experimentlist_factory_from_json(dials_regression):
             assert e1.crystal == ee.crystal
 
 
+@pytest.mark.xfail(
+    reason="This currently fails constructing the experiments with cctbx/dxtbx#97"
+)
+def test_experiment_list_from_json_FormatMultiImage(dials_data):
+    expt_json = dials_data("vmxi_proteinase_k_sweeps").join("experiments_0.json")
+    expts = ExperimentListFactory.from_json_file(expt_json.strpath, check_format=False)
+    assert len(expts) == 1
+    assert len(expts[0].imageset) == 600
+
+
 def test_experimentlist_factory_from_pickle(dials_regression):
     os.environ["DIALS_REGRESSION"] = dials_regression
 
