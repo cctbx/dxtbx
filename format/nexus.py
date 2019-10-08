@@ -3,11 +3,8 @@ from __future__ import absolute_import, division, print_function
 import functools
 import math
 import os
+import string
 from builtins import range
-
-import h5py
-import numpy
-import six
 
 import cctbx.uctbx
 from cctbx.eltbx import attenuation_coefficient
@@ -16,6 +13,9 @@ from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
 
 import dxtbx.model
+import h5py
+import numpy
+import six
 from dxtbx.model import (
     Beam,
     Crystal,
@@ -165,6 +165,10 @@ class check_attr(object):
                     "attribute '%s' of %s has type %s, expected %s"
                     % (self.name, dset.name, dtype, self.dtype)
                 )
+
+
+def clean_string(input):
+    return "".join([i for i in input if i in string.letters])
 
 
 def local_visit(nxfile, visitor):
@@ -1307,7 +1311,10 @@ class DetectorFactoryFromGroup(object):
 
                 # Get the detector material
                 if "sensor_material" in nx_detector.handle:
-                    material = str(nx_detector.handle["sensor_material"][()])
+                    material = clean_string(
+                        str(nx_detector.handle["sensor_material"][()])
+                    )
+
                     p.set_material(material)
 
                     # Compute the attenuation coefficient.
@@ -1383,13 +1390,14 @@ class DetectorFactory(object):
         thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
 
         # Get the detector material
+        detector_material = clean_string(nx_detector["sensor_material"][()])
         material = {
             numpy.string_("Si"): "Si",
             numpy.string_("Silicon"): "Si",
             numpy.string_("Sillicon"): "Si",
             numpy.string_("CdTe"): "CdTe",
             numpy.string_("GaAs"): "GaAs",
-        }.get(nx_detector["sensor_material"][()])
+        }.get(detector_material)
         if not material:
             raise RuntimeError(
                 "Unknown material: %s" % nx_detector["sensor_material"][()]
