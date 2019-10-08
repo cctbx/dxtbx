@@ -1,30 +1,24 @@
 from __future__ import absolute_import, division, print_function
 
-import sys
-
 import h5py
-from dxtbx.format.FormatHDF5 import FormatHDF5
-from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
-from dxtbx.format.FormatStill import FormatStill
+from dials.array_family import flex
+from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.format.nexus import (
     BeamFactory,
     DataFactory,
     DetectorFactory,
-    DetectorFactoryFromGroup,
-    DetectorGroupDataFactory,
-    GoniometerFactory,
     MaskFactory,
     NXmxReader,
-    ScanFactory,
-    is_nexus_file,
 )
+from dxtbx.model import Scan
 
 
-class FormatNexus(FormatHDF5):
+class FormatNexusJungfrauHack(FormatNexus):
     @staticmethod
     def understand(image_file):
         try:
-            return is_nexus_file(image_file)
+            with h5py.File(image_file, "r") as handle:
+                return "/entry/instrument/JF1M" in handle
         except IOError:
             return False
 
@@ -63,26 +57,26 @@ class FormatNexus(FormatHDF5):
         else:
             num_images = 0
 
-        if len(instrument.detector_groups) == 0:
-            assert (
-                len(reader.entries[0].instruments[0].detectors) == 1
-            ), "Currently only supports 1 NXdetector unless in a detector group"
-            assert (
-                len(reader.entries[0].instruments[0].detectors[0].modules) == 1
-            ), "Currently only supports 1 NXdetector_module unless in a detector group"
-
-            self._detector_model = DetectorFactory(detector, self._beam_model).model
-            self._raw_data = DataFactory(data, max_size=num_images).model
-        else:
-            self._detector_model = DetectorFactoryFromGroup(
-                instrument, self._beam_model
-            ).model
-            self._raw_data = DetectorGroupDataFactory(data, instrument).model
+        self._detector_model = DetectorFactory(detector, self._beam_model).model
+        self._raw_data = DataFactory(data, max_size=num_images).model
 
     def _setup_gonio_and_scan(self, sample, detector):
-        """ Set up rotation-specific models """
-        self._goniometer_model = GoniometerFactory(sample).model
-        self._scan_model = ScanFactory(sample, detector).model
+        # scan
+
+        with h5py.File(self._image_file, "r") as handle:
+            phi = handle["/entry/sample/goniometer/omega"][()]
+        image_range = (1, len(phi))
+        oscillation = (float(phi[0]), float(phi[1] - phi[0]))
+
+        # Get the exposure time
+        num_images = len(phi)
+        exposure_time = flex.double(num_images, 0)
+        epochs = flex.double(num_images, 0.0)
+        for i in range(1, len(epochs)):
+            epochs[i] = epochs[i - 1] + exposure_time[i - 1]
+
+        self._scan_model = Scan(image_range, oscillation, exposure_time, epochs)
+        self._goniometer_model = self._goniometer_factory.single_axis()
 
     def _end(self):
         return
@@ -153,52 +147,3 @@ class FormatNexus(FormatHDF5):
         else:
             name = None
         return name
-
-
-class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
-    @staticmethod
-    def understand(image_file):
-        is_nexus_still = False
-        try:
-            from dxtbx.format.nexus import find_entries, find_class
-
-            # Get the file handle
-            with h5py.File(image_file, "r") as handle:
-                if "/entry/sample/goniometer/omega_increment" in handle:
-                    return False
-
-                for entry in find_entries(handle, "/"):
-                    for sample in find_class(entry, "NXsample"):
-                        if "depends_on" not in sample:
-                            is_nexus_still = True
-        except IOError:
-            return False
-        return is_nexus_still
-
-    def _setup_gonio_and_scan(self, sample, detector):
-        """ No rotation-specific models for stills """
-        self._goniometer_model = None
-        self._scan_model = None
-
-    def get_num_images(self):
-        return len(self._raw_data)
-
-
-if __name__ == "__main__":
-    for arg in sys.argv[1:]:
-        if FormatNexus.understand(arg):
-
-            format_instance = FormatNexus(arg)
-
-            beam = format_instance.get_beam()
-            detector = format_instance.get_detector()
-            goniometer = format_instance.get_goniometer()
-            scan = format_instance.get_scan()
-
-            iset = FormatNexus.get_imageset(arg)
-            print(beam)
-            print(detector)
-            print(goniometer)
-            print(scan)
-
-            print(len(iset))

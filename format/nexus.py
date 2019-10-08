@@ -1390,7 +1390,7 @@ class DetectorFactory(object):
         thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
 
         # Get the detector material
-        detector_material = clean_string(nx_detector["sensor_material"][()])
+        detector_material = clean_string(str(nx_detector["sensor_material"][()]))
         material = {
             numpy.string_("Si"): "Si",
             numpy.string_("Silicon"): "Si",
@@ -1399,9 +1399,7 @@ class DetectorFactory(object):
             numpy.string_("GaAs"): "GaAs",
         }.get(detector_material)
         if not material:
-            raise RuntimeError(
-                "Unknown material: %s" % nx_detector["sensor_material"][()]
-            )
+            raise RuntimeError("Unknown material: %s" % detector_material)
 
         try:
             x_pixel = nx_detector["x_pixel_size"][()] * 1000.0
@@ -1409,6 +1407,7 @@ class DetectorFactory(object):
 
             legacy_beam_x = float(x_pixel * nx_detector["beam_center_x"][()])
             legacy_beam_y = float(y_pixel * nx_detector["beam_center_y"][()])
+            legacy_distance = float(1000 * nx_detector["detector_distance"][()])
         except KeyError:
             legacy_beam_x = 0
             legacy_beam_y = 0
@@ -1434,8 +1433,11 @@ class DetectorFactory(object):
         slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
 
         # Get the origin vector - working around if absent
-        module_offset = nx_module["module_offset"]
-        origin = construct_vector(nx_file, module_offset.name)
+        try:
+            module_offset = nx_module["module_offset"]
+            origin = construct_vector(nx_file, module_offset.name)
+        except KeyError:
+            origin = matrix.col((0.0, 0.0, legacy_distance))
         if origin.elems[0] == 0.0 and origin.elems[1] == 0:
             origin = -(origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis)
 
