@@ -1,16 +1,21 @@
 from __future__ import absolute_import, division, print_function
 
+from cctbx.eltbx import attenuation_coefficient
+from scitbx import matrix
+
 import h5py
+import numpy
 from dials.array_family import flex
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.format.nexus import (
     BeamFactory,
     DataFactory,
-    DetectorFactory,
     MaskFactory,
     NXmxReader,
+    clean_string,
+    convert_units,
 )
-from dxtbx.model import Scan
+from dxtbx.model import Detector, Panel, ParallaxCorrectedPxMmStrategy, Scan
 
 
 class FormatNexusJungfrauHack(FormatNexus):
@@ -49,6 +54,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         # Construct the models
         self._beam_model = BeamFactory(beam).model
 
+        self._setup_detector(detector, self._beam_model)
         self._setup_gonio_and_scan(sample, detector)
 
         if self._scan_model:
@@ -57,8 +63,124 @@ class FormatNexusJungfrauHack(FormatNexus):
         else:
             num_images = 0
 
-        self._detector_model = DetectorFactory(detector, self._beam_model).model
         self._raw_data = DataFactory(data, max_size=num_images).model
+
+    def _setup_detector(self, detector, beam):
+        nx_detector = detector.handle
+        nx_module = detector.modules[0].handle
+
+        # Get the detector name and type
+        if "type" in nx_detector:
+            detector_type = str(nx_detector["type"][()])
+        else:
+            detector_type = "unknown"
+        detector_name = str(nx_detector.name)
+
+        # Get the trusted range of pixel values
+        if "saturation_value" in nx_detector:
+            trusted_range = (-1, float(nx_detector["saturation_value"][()]))
+        else:
+            trusted_range = (-1, 99999999)
+
+        # Get the detector thickness
+        thickness = nx_detector["sensor_thickness"]
+        thickness_value = float(thickness[()])
+        thickness_units = thickness.attrs["units"]
+        thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
+
+        # Get the detector material
+        detector_material = clean_string(str(nx_detector["sensor_material"][()]))
+        material = {
+            numpy.string_("Si"): "Si",
+            numpy.string_("Silicon"): "Si",
+            numpy.string_("Sillicon"): "Si",
+            numpy.string_("CdTe"): "CdTe",
+            numpy.string_("GaAs"): "GaAs",
+        }.get(detector_material)
+        if not material:
+            raise RuntimeError("Unknown material: %s" % detector_material)
+
+        try:
+            x_pixel = nx_detector["x_pixel_size"][()] * 1000.0
+            y_pixel = nx_detector["y_pixel_size"][()] * 1000.0
+
+            legacy_beam_x = float(x_pixel * nx_detector["beam_center_x"][()])
+            legacy_beam_y = float(y_pixel * nx_detector["beam_center_y"][()])
+            legacy_distance = float(1000 * nx_detector["detector_distance"][()])
+        except KeyError:
+            legacy_beam_x = 0
+            legacy_beam_y = 0
+
+        # Get the fast pixel size and vector
+        fast_pixel_direction = nx_module["fast_pixel_direction"]
+        fast_pixel_direction_value = float(fast_pixel_direction[()])
+        fast_pixel_direction_units = fast_pixel_direction.attrs["units"]
+        fast_pixel_direction_vector = fast_pixel_direction.attrs["vector"]
+        fast_pixel_direction_value = convert_units(
+            fast_pixel_direction_value, fast_pixel_direction_units, "mm"
+        )
+        fast_axis = matrix.col(fast_pixel_direction_vector).normalize()
+
+        # Get the slow pixel size and vector
+        slow_pixel_direction = nx_module["slow_pixel_direction"]
+        slow_pixel_direction_value = float(slow_pixel_direction[()])
+        slow_pixel_direction_units = slow_pixel_direction.attrs["units"]
+        slow_pixel_direction_vector = slow_pixel_direction.attrs["vector"]
+        slow_pixel_direction_value = convert_units(
+            slow_pixel_direction_value, slow_pixel_direction_units, "mm"
+        )
+        slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
+
+        origin = matrix.col((0.0, 0.0, legacy_distance))
+        if origin.elems[0] == 0.0 and origin.elems[1] == 0:
+            origin = -(origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis)
+
+        # Change of basis to convert from NeXus to IUCr/ImageCIF convention
+        cob = matrix.sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
+        origin = cob * matrix.col(origin)
+        fast_axis = cob * fast_axis
+        slow_axis = cob * slow_axis
+
+        # Ensure that fast and slow axis are orthogonal
+        normal = fast_axis.cross(slow_axis)
+        slow_axis = -fast_axis.cross(normal)
+
+        # Compute the attenuation coefficient.
+        # This will fail for undefined composite materials
+        # mu_at_angstrom returns cm^-1, but need mu in mm^-1
+        table = attenuation_coefficient.get_table(material)
+        wavelength = beam.get_wavelength()
+        mu = table.mu_at_angstrom(wavelength) / 10.0
+
+        # Construct the detector model
+        pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
+        # image size stored slow to fast but dxtbx needs fast to slow
+        image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
+        image_size = (1030, 1064)
+
+        self.model = Detector()
+        self.model.add_panel(
+            Panel(
+                detector_type,
+                detector_name,
+                tuple(fast_axis),
+                tuple(slow_axis),
+                tuple(origin),
+                pixel_size,
+                image_size,
+                trusted_range,
+                thickness_value,
+                material,
+                mu,
+            )
+        )
+
+        # Set the parallax correction
+        for panel in self.model:
+            panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, thickness_value))
+            panel.set_type("SENSOR_PAD")
+
+        self._detector_model = self.model
 
     def _setup_gonio_and_scan(self, sample, detector):
         # scan
