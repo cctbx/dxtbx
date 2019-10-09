@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import functools
 import math
 import os
-import string
 from builtins import range
 
 import cctbx.uctbx
@@ -165,10 +164,6 @@ class check_attr(object):
                     "attribute '%s' of %s has type %s, expected %s"
                     % (self.name, dset.name, dtype, self.dtype)
                 )
-
-
-def clean_string(input):
-    return "".join([i for i in input if i in string.letters])
 
 
 def local_visit(nxfile, visitor):
@@ -1311,10 +1306,7 @@ class DetectorFactoryFromGroup(object):
 
                 # Get the detector material
                 if "sensor_material" in nx_detector.handle:
-                    material = clean_string(
-                        str(nx_detector.handle["sensor_material"][()])
-                    )
-
+                    material = str(nx_detector.handle["sensor_material"][()])
                     p.set_material(material)
 
                     # Compute the attenuation coefficient.
@@ -1390,7 +1382,7 @@ class DetectorFactory(object):
         thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
 
         # Get the detector material
-        detector_material = clean_string(str(nx_detector["sensor_material"][()]))
+        detector_material = str(nx_detector["sensor_material"][()])
         material = {
             numpy.string_("Si"): "Si",
             numpy.string_("Silicon"): "Si",

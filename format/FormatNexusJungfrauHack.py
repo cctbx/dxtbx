@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import string
+
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 
@@ -12,10 +14,13 @@ from dxtbx.format.nexus import (
     DataFactory,
     MaskFactory,
     NXmxReader,
-    clean_string,
     convert_units,
 )
 from dxtbx.model import Detector, Panel, ParallaxCorrectedPxMmStrategy, Scan
+
+
+def clean_string(input):
+    return "".join([i for i in input if i in string.letters])
 
 
 class FormatNexusJungfrauHack(FormatNexus):
