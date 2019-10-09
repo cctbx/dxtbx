@@ -136,7 +136,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         )
         slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
 
-        origin = matrix.col((0.0, 0.0, legacy_distance))
+        origin = matrix.col((0.0, 0.0, -legacy_distance))
         if origin.elems[0] == 0.0 and origin.elems[1] == 0:
             origin = -(origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis)
 
