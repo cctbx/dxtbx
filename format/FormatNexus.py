@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 import h5py
-
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
@@ -165,6 +164,9 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
 
             # Get the file handle
             with h5py.File(image_file, "r") as handle:
+                if "/entry/sample/goniometer/omega_increment" in handle:
+                    return False
+
                 for entry in find_entries(handle, "/"):
                     for sample in find_class(entry, "NXsample"):
                         if "depends_on" not in sample:

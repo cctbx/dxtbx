@@ -5,10 +5,6 @@ import math
 import os
 from builtins import range
 
-import h5py
-import numpy
-import six
-
 import cctbx.uctbx
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
@@ -16,6 +12,9 @@ from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
 
 import dxtbx.model
+import h5py
+import numpy
+import six
 from dxtbx.model import (
     Beam,
     Crystal,
