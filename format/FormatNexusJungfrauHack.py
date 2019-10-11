@@ -188,8 +188,6 @@ class FormatNexusJungfrauHack(FormatNexus):
         self._detector_model = self.model
 
     def _setup_gonio_and_scan(self, sample, detector):
-        # scan
-
         with h5py.File(self._image_file, "r") as handle:
             phi = handle["/entry/sample/goniometer/omega"][()]
         image_range = (1, len(phi))
