@@ -20,7 +20,7 @@ from dxtbx.model import Detector, Panel, ParallaxCorrectedPxMmStrategy, Scan
 
 
 def clean_string(input):
-    return "".join([i for i in input if i in string.letters])
+    return "".join(i for i in input if i in string.letters)
 
 
 class FormatNexusJungfrauHack(FormatNexus):
