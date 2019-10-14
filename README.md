@@ -15,7 +15,7 @@ This toolbox will include code for:
  * reading image headers
  * transforming contents of image header to standard (i.e. imgCIF) frame
  * python models of experiment
- * reading a sweep into memory using existing cctbx image reading tools in [iotbx](https://cctbx.github.io/iotbx/index.html)
+ * reading a sequence into memory using existing cctbx image reading tools in [iotbx](https://cctbx.github.io/iotbx/index.html)
 
 Initially implemented to support [xia2](https://github.com/xia2/xia2) development, dxtbx is designed to be extensible, to support other applications and to make it easy to work with other detectors, with a generic approach to reading the data files.
 

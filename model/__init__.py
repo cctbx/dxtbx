@@ -7,8 +7,6 @@ import sys
 import warnings
 from builtins import range
 
-import six.moves.cPickle as pickle
-
 import boost.python
 import cctbx.crystal
 from libtbx.containers import OrderedSet
@@ -16,7 +14,8 @@ from libtbx.utils import format_float_with_standard_uncertainty
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.imageset import ImageGrid, ImageSet, ImageSweep
+import six.moves.cPickle as pickle
+from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.model.detector import DetectorFactory
@@ -74,7 +73,7 @@ __all__ = (
     "GoniometerFactory",
     "ImageGrid",
     "ImageSet",
-    "ImageSweep",
+    "ImageSequence",
     "KappaDirection",
     "KappaGoniometer",
     "KappaScanAxis",
@@ -524,9 +523,9 @@ class _(object):
         """Check if all the experiments are stills"""
         return all(exp.is_still() for exp in self)
 
-    def all_sweeps(self):
-        """Check if all the experiments are from sweeps"""
-        return all(exp.is_sweep() for exp in self)
+    def all_sequences(self):
+        """Check if all the experiments are from sequences"""
+        return all(exp.is_sequence() for exp in self)
 
     def to_dict(self):
         """ Serialize the experiment list to dictionary. """
@@ -585,11 +584,11 @@ class _(object):
         # Serialize all the imagesets
         result["imageset"] = []
         for imset in index_lookup["imageset"]:
-            if isinstance(imset, ImageSweep):
+            if isinstance(imset, ImageSequence):
                 # FIXME_HACK
                 template = get_template(imset)
                 r = collections.OrderedDict(
-                    [("__id__", "ImageSweep"), ("template", template)]
+                    [("__id__", "ImageSequence"), ("template", template)]
                 )
                 # elif isinstance(imset, MemImageSet):
                 #   r = collections.OrderedDict([
@@ -613,7 +612,9 @@ class _(object):
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
             else:
-                raise TypeError("expected ImageSet or ImageSweep, got %s" % type(imset))
+                raise TypeError(
+                    "expected ImageSet or ImageSequence, got %s" % type(imset)
+                )
             r["mask"] = imset.external_lookup.mask.filename
             r["gain"] = imset.external_lookup.gain.filename
             r["pedestal"] = imset.external_lookup.pedestal.filename

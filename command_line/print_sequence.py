@@ -7,22 +7,22 @@ from scitbx import matrix
 from dxtbx.imageset import ImageSetFactory
 
 
-def print_sweep(list_of_images):
+def print_sequence(list_of_images):
 
-    sweeps = ImageSetFactory.new(list_of_images)
+    sequences = ImageSetFactory.new(list_of_images)
 
-    for sweep in sweeps:
-        print(sweep.get_detector())
-        print(sweep.get_beam())
-        print(sweep.get_goniometer())
-        print(sweep.get_scan())
+    for sequence in sequences:
+        print(sequence.get_detector())
+        print(sequence.get_beam())
+        print(sequence.get_goniometer())
+        print(sequence.get_scan())
 
         # compute the beam centre... in mm... w.r.t. fast, slow axis
 
         print("Derived quantities:")
 
-        d = sweep.get_detector()[0]
-        b = sweep.get_beam()
+        d = sequence.get_detector()[0]
+        b = sequence.get_beam()
 
         o = matrix.col(d.get_origin())
         f = matrix.col(d.get_fast_axis())
@@ -38,6 +38,6 @@ def print_sweep(list_of_images):
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
-        print_sweep(sys.argv[1])
+        print_sequence(sys.argv[1])
     else:
-        print_sweep(sys.argv[1:])
+        print_sequence(sys.argv[1:])

@@ -16,11 +16,11 @@ def run(file_names):
     if len(file_names) == 1 and file_names[0].endswith("json"):
         datablock = load.datablock(file_names[0])
         assert len(datablock) == 1
-        sweep = datablock[0].extract_sweeps()[0]
+        sequence = datablock[0].extract_sequences()[0]
     else:
-        sweep = ImageSetFactory.new(file_names)[0]
-    detector = sweep.get_detector()
-    beam = sweep.get_beam()
+        sequence = ImageSetFactory.new(file_names)[0]
+    detector = sequence.get_detector()
+    beam = sequence.get_beam()
     print(detector.get_ray_intersection(beam.get_s0())[1])
 
 

@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.sweep_filenames import template_regex
+from dxtbx.sequence_filenames import template_regex
 
 
 def test_template_regex():

@@ -5,9 +5,8 @@ import os
 from builtins import range
 
 import six.moves.cPickle as pickle
-
 from dxtbx.format.image import ImageBool, ImageDouble
-from dxtbx.imageset import ImageSet, ImageSetFactory, ImageSweep
+from dxtbx.imageset import ImageSequence, ImageSet, ImageSetFactory
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize.filename import resolve_path
 
@@ -52,11 +51,11 @@ def basic_imageset_to_dict(imageset):
     )
 
 
-def imagesweep_to_dict(sweep):
-    """Convert a sweep to a dictionary
+def imagesequence_to_dict(sequence):
+    """Convert a sequence to a dictionary
 
     Params:
-        sweep The sweep
+        sequence The sequence
 
     Returns:
         A dictionary of the parameters
@@ -67,14 +66,14 @@ def imagesweep_to_dict(sweep):
     return collections.OrderedDict(
         [
             ("__id__", "imageset"),
-            ("template", filename_to_absolute(sweep.get_template())),
-            ("mask", filename_or_none(sweep.external_lookup.mask.filename)),
-            ("gain", filename_or_none(sweep.external_lookup.gain.filename)),
-            ("pedestal", filename_or_none(sweep.external_lookup.pedestal.filename)),
-            ("beam", sweep.get_beam().to_dict()),
-            ("detector", sweep.get_detector().to_dict()),
-            ("goniometer", sweep.get_goniometer().to_dict()),
-            ("scan", sweep.get_scan().to_dict()),
+            ("template", filename_to_absolute(sequence.get_template())),
+            ("mask", filename_or_none(sequence.external_lookup.mask.filename)),
+            ("gain", filename_or_none(sequence.external_lookup.gain.filename)),
+            ("pedestal", filename_or_none(sequence.external_lookup.pedestal.filename)),
+            ("beam", sequence.get_beam().to_dict()),
+            ("detector", sequence.get_detector().to_dict()),
+            ("goniometer", sequence.get_goniometer().to_dict()),
+            ("scan", sequence.get_scan().to_dict()),
         ]
     )
 
@@ -90,8 +89,8 @@ def imageset_to_dict(imageset):
 
     """
     # If this is an imageset then return a list of filenames
-    if isinstance(imageset, ImageSweep):
-        return imagesweep_to_dict(imageset)
+    if isinstance(imageset, ImageSequence):
+        return imagesequence_to_dict(imageset)
     elif isinstance(imageset, ImageSet):
         return basic_imageset_to_dict(imageset)
     else:
@@ -133,8 +132,8 @@ def basic_imageset_from_dict(d, directory=None):
     return imageset
 
 
-def imagesweep_from_dict(d, check_format=True, directory=None):
-    """Construct and image sweep from the dictionary."""
+def imagesequence_from_dict(d, check_format=True, directory=None):
+    """Construct and image sequence from the dictionary."""
     # Get the template (required)
     template = resolve_path(str(d["template"]), directory=directory)
 
@@ -151,9 +150,9 @@ def imagesweep_from_dict(d, check_format=True, directory=None):
     detector = DetectorFactory.from_dict(d.get("detector"))
     scan = ScanFactory.from_dict(d.get("scan"))
 
-    # Construct the sweep
+    # Construct the sequence
     try:
-        sweep = ImageSetFactory.from_template(
+        sequence = ImageSetFactory.from_template(
             template,
             image_range,
             beam=beam,
@@ -164,7 +163,7 @@ def imagesweep_from_dict(d, check_format=True, directory=None):
         )[0]
     except Exception:
         indices = list(range(image_range[0], image_range[1] + 1))
-        sweep = ImageSetFactory.make_sweep(
+        sequence = ImageSetFactory.make_sequence(
             template,
             indices,
             beam=beam,
@@ -178,31 +177,31 @@ def imagesweep_from_dict(d, check_format=True, directory=None):
     if "mask" in d and d["mask"] is not None and d["mask"] != "":
         path = resolve_path(d["mask"], directory=directory)
         with open(path) as infile:
-            sweep.external_lookup.mask.filename = path
-            sweep.external_lookup.mask.data = ImageBool(pickle.load(infile))
+            sequence.external_lookup.mask.filename = path
+            sequence.external_lookup.mask.data = ImageBool(pickle.load(infile))
     if "gain" in d and d["gain"] is not None and d["gain"] != "":
         path = resolve_path(d["gain"], directory=directory)
         with open(path) as infile:
-            sweep.external_lookup.gain.filename = path
-            sweep.external_lookup.gain.data = ImageDouble(pickle.load(infile))
+            sequence.external_lookup.gain.filename = path
+            sequence.external_lookup.gain.data = ImageDouble(pickle.load(infile))
     if "pedestal" in d and d["pedestal"] is not None and d["pedestal"] != "":
         path = resolve_path(d["pedestal"], directory=directory)
         with open(path) as infile:
-            sweep.external_lookup.pedestal.filename = path
-            sweep.external_lookup.pedestal.data = ImageDouble(pickle.load(infile))
+            sequence.external_lookup.pedestal.filename = path
+            sequence.external_lookup.pedestal.data = ImageDouble(pickle.load(infile))
 
-    # Return the sweep
-    return sweep
+    # Return the sequence
+    return sequence
 
 
 def imageset_from_dict(d, check_format=True, directory=None):
-    """Convert the dictionary to a sweep
+    """Convert the dictionary to a sequence
 
     Params:
         d The dictionary of parameters
 
     Returns:
-        The sweep
+        The sequence
 
     """
     # Check the input
@@ -216,6 +215,8 @@ def imageset_from_dict(d, check_format=True, directory=None):
     if "filenames" in d:
         return basic_imageset_from_dict(d, directory=directory)
     elif "template" in d:
-        return imagesweep_from_dict(d, check_format=check_format, directory=directory)
+        return imagesequence_from_dict(
+            d, check_format=check_format, directory=directory
+        )
     else:
         raise TypeError("Unable to deserialize given imageset")

@@ -6,15 +6,15 @@ import boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
-from dxtbx.sweep_filenames import group_files_by_imageset, template_image_range
+from dxtbx.sequence_filenames import group_files_by_imageset, template_image_range
 from dxtbx_imageset_ext import (
     ExternalLookup,
     ExternalLookupItemBool,
     ExternalLookupItemDouble,
     ImageGrid,
+    ImageSequence,
     ImageSet,
     ImageSetData,
-    ImageSweep,
 )
 
 ext = boost.python.import_ext("dxtbx_ext")
@@ -28,7 +28,7 @@ __all__ = (
     "ImageSetData",
     "ImageSetFactory",
     "ImageSetLazy",
-    "ImageSweep",
+    "ImageSequence",
     "MemReader",
 )
 
@@ -209,27 +209,27 @@ class ImageSetLazy(ImageSet):
         return super(ImageSetLazy, self).get_gain(index)
 
 
-@boost.python.inject_into(ImageSweep)
+@boost.python.inject_into(ImageSequence)
 class _(object):
     def __getitem__(self, item):
-        """Get an item from the sweep stream.
+        """Get an item from the sequence stream.
 
         If the item is an index, read and return the image at the given index.
-        Otherwise, if the item is a slice, then create a new Sweep object
+        Otherwise, if the item is a slice, then create a new Sequence object
         with the given number of array indices from the slice.
 
         Params:
             item The index or slice
 
         Returns:
-            An image or new Sweep object
+            An image or new Sequence object
 
         """
         if isinstance(item, slice):
             start = item.start or 0
             stop = item.stop or len(self)
             if item.step is not None:
-                raise IndexError("Sweeps must be sequential")
+                raise IndexError("Sequences must be sequential")
             return self.partial_set(start, stop)
         else:
             return self.get_corrected_data(item)
@@ -246,7 +246,7 @@ def _analyse_files(filenames):
         filenames The list of filenames
 
     Returns:
-        A list of (template, [indices], is_sweep)
+        A list of (template, [indices], is_sequence)
 
     """
     # Analyse filenames to figure out how many imagesets we have
@@ -264,11 +264,11 @@ def _analyse_files(filenames):
 
         return True
 
-    def _is_imageset_a_sweep(template, indices):
-        """Return True/False if the imageset is a sweep or not.
+    def _is_imageset_a_sequence(template, indices):
+        """Return True/False if the imageset is a sequence or not.
 
         Where more than 1 image that follow sequential numbers are given
-        the images are catagorised as belonging to a sweep, otherwise they
+        the images are catagorised as belonging to a sequence, otherwise they
         belong to an image set.
 
         """
@@ -277,15 +277,15 @@ def _analyse_files(filenames):
         indices = sorted(indices)
         return _indices_sequential_ge_zero(indices)
 
-    # Label each group as either an imageset or a sweep.
+    # Label each group as either an imageset or a sequence.
     file_groups = []
     for template, indices in filelist_per_imageset.items():
 
-        # Check if this imageset is a sweep
-        is_sweep = _is_imageset_a_sweep(template, indices)
+        # Check if this imageset is a sequence
+        is_sequence = _is_imageset_a_sequence(template, indices)
 
         # Append the items to the group list
-        file_groups.append((template, indices, is_sweep))
+        file_groups.append((template, indices, is_sequence))
 
     # Return the groups of files
     return file_groups
@@ -293,11 +293,11 @@ def _analyse_files(filenames):
 
 # FIXME Lots of duplication in this class, need to tidy up
 class ImageSetFactory(object):
-    """ Factory to create imagesets and sweeps. """
+    """ Factory to create imagesets and sequences. """
 
     @staticmethod
     def new(filenames, check_headers=False, ignore_unknown=False):
-        """Create an imageset or sweep
+        """Create an imageset or sequence
 
         Params:
             filenames A list of filenames
@@ -320,13 +320,13 @@ class ImageSetFactory(object):
         filelist_per_imageset = _analyse_files(filenames)
 
         # For each file list denoting an image set, create the imageset
-        # and return as a list of imagesets. N.B sweeps and image sets are
+        # and return as a list of imagesets. N.B sequences and image sets are
         # returned in the same list.
         imagesetlist = []
         for filelist in filelist_per_imageset:
             try:
                 if filelist[2] is True:
-                    iset = ImageSetFactory._create_sweep(filelist, check_headers)
+                    iset = ImageSetFactory._create_sequence(filelist, check_headers)
                 else:
                     iset = ImageSetFactory._create_imageset(filelist, check_headers)
                 imagesetlist.append(iset)
@@ -348,7 +348,7 @@ class ImageSetFactory(object):
         goniometer=None,
         scan=None,
     ):
-        """Create a new sweep from a template.
+        """Create a new sequence from a template.
 
         Params:
             template The template argument
@@ -356,7 +356,7 @@ class ImageSetFactory(object):
             check_headers Check the headers to ensure all images are valid
 
         Returns:
-            A list of sweeps
+            A list of sequences
 
         """
         if not check_format:
@@ -381,7 +381,7 @@ class ImageSetFactory(object):
             # Set the image range
             array_range = range(image_range[0] - 1, image_range[1])
 
-            # Create the sweep file list
+            # Create the sequence file list
             filenames = [template_format % (i + 1) for i in array_range]
 
         # Import here as Format and Imageset have cyclic dependencies
@@ -393,11 +393,11 @@ class ImageSetFactory(object):
         else:
             format_class = Format
 
-        # Create the sweep object
-        sweep = format_class.get_imageset(
+        # Create the sequence object
+        sequence = format_class.get_imageset(
             filenames,
             template=template,
-            as_sweep=True,
+            as_sequence=True,
             beam=beam,
             detector=detector,
             goniometer=goniometer,
@@ -405,14 +405,14 @@ class ImageSetFactory(object):
             check_format=check_format,
         )
 
-        # Return the sweep
-        return [sweep]
+        # Return the sequence
+        return [sequence]
 
     @staticmethod
     def _create_imageset(filelist, check_headers):
         """Create an image set"""
         # Extract info from filelist
-        template, indices, is_sweep = filelist
+        template, indices, is_sequence = filelist
 
         # Get the template format
         count = template.count("#")
@@ -434,10 +434,10 @@ class ImageSetFactory(object):
         return format_class.get_imageset(filenames, as_imageset=True)
 
     @staticmethod
-    def _create_sweep(filelist, check_headers):
-        """Create a sweep"""
+    def _create_sequence(filelist, check_headers):
+        """Create a sequence"""
         # Extract info from filelist
-        template, indices, is_sweep = filelist
+        template, indices, is_sequence = filelist
 
         # Get the template format
         count = template.count("#")
@@ -463,13 +463,15 @@ class ImageSetFactory(object):
         # Set the image range
         array_range = range(min(indices) - 1, max(indices))
 
-        # Create the sweep file list
+        # Create the sequence file list
         filenames = [template_format % (i + 1) for i in array_range]
 
-        sweep = format_class.get_imageset(filenames, template=template, as_sweep=True)
+        sequence = format_class.get_imageset(
+            filenames, template=template, as_sequence=True
+        )
 
-        # Return the sweep
-        return sweep
+        # Return the sequence
+        return sequence
 
     @staticmethod
     def make_imageset(
@@ -507,7 +509,7 @@ class ImageSetFactory(object):
         )
 
     @staticmethod
-    def make_sweep(
+    def make_sequence(
         template,
         indices,
         format_class=None,
@@ -518,7 +520,7 @@ class ImageSetFactory(object):
         check_format=True,
         format_kwargs=None,
     ):
-        """Create a sweep"""
+        """Create a sequence"""
         indices = sorted(indices)
 
         # Get the template format
@@ -552,7 +554,7 @@ class ImageSetFactory(object):
             else:
                 format_class = Format
 
-        sweep = format_class.get_imageset(
+        sequence = format_class.get_imageset(
             filenames,
             beam=beam,
             detector=detector,
@@ -560,20 +562,20 @@ class ImageSetFactory(object):
             scan=scan,
             format_kwargs=format_kwargs,
             template=template,
-            as_sweep=True,
+            as_sequence=True,
             check_format=check_format,
             single_file_indices=list(range(*array_range)),
         )
 
-        # Return the sweep
-        return sweep
+        # Return the sequence
+        return sequence
 
     @staticmethod
     def imageset_from_anyset(imageset):
-        """ Create a new ImageSet object from an imageset object. Converts ImageSweep to ImageSet. """
+        """ Create a new ImageSet object from an imageset object. Converts ImageSequence to ImageSet. """
         if isinstance(imageset, ImageSetLazy):
             return ImageSetLazy(imageset.data(), imageset.indices())
-        elif isinstance(imageset, ImageSweep) or isinstance(imageset, ImageSet):
+        elif isinstance(imageset, ImageSequence) or isinstance(imageset, ImageSet):
             return ImageSet(imageset.data(), imageset.indices())
         else:
             raise ValueError("Unrecognized imageset type: %s" % str(type(imageset)))

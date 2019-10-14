@@ -1,19 +1,18 @@
 from __future__ import absolute_import, division, print_function
 
 import errno
-import mock
 import json
 import os
 from collections import namedtuple
 from pprint import pprint
 
+import dxtbx.datablock as datablock
+import mock
 import pytest
 import six.moves.cPickle as pickle
-
-import dxtbx.datablock as datablock
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
-from dxtbx.imageset import ImageSweep
+from dxtbx.imageset import ImageSequence
 from dxtbx.model import Beam, Detector, Goniometer, Scan
 
 
@@ -23,7 +22,7 @@ def centroid_test_data(dials_regression):
 
 
 @pytest.fixture
-def single_sweep_filenames(centroid_test_data):
+def single_sequence_filenames(centroid_test_data):
     filenames = [
         os.path.join(centroid_test_data, "centroid_000{}.cbf".format(i))
         for i in range(1, 10)
@@ -32,7 +31,7 @@ def single_sweep_filenames(centroid_test_data):
 
 
 @pytest.fixture
-def multiple_sweep_filenames(centroid_test_data):
+def multiple_sequence_filenames(centroid_test_data):
     filenames = [
         os.path.join(centroid_test_data, "centroid_000{}.cbf".format(i))
         for i in [1, 2, 3, 7, 8, 9]
@@ -71,8 +70,8 @@ def all_image_examples(dials_regression):
 
 
 @pytest.fixture
-def multiple_block_filenames(single_sweep_filenames, all_image_examples):
-    return single_sweep_filenames + all_image_examples
+def multiple_block_filenames(single_sequence_filenames, all_image_examples):
+    return single_sequence_filenames + all_image_examples
 
 
 def encode_json_then_decode(obj, check_format=True):
@@ -84,30 +83,30 @@ def pickle_then_unpickle(obj):
     return pickle.loads(pickle.dumps(obj))
 
 
-def test_create_single_sweep(single_sweep_filenames):
-    blocks = DataBlockFactory.from_filenames(single_sweep_filenames, verbose=True)
+def test_create_single_sequence(single_sequence_filenames):
+    blocks = DataBlockFactory.from_filenames(single_sequence_filenames, verbose=True)
     assert len(blocks) == 1
     assert blocks[0].num_images() == 9
     assert blocks[0].format_class()
     imageset = blocks[0].extract_imagesets()
     assert len(imageset) == 1
     assert len(imageset[0]) == 9
-    sweeps = blocks[0].extract_sweeps()
-    assert len(sweeps) == 1
-    assert len(sweeps[0]) == 9
+    sequences = blocks[0].extract_sequences()
+    assert len(sequences) == 1
+    assert len(sequences[0]) == 9
 
 
-def test_create_multiple_sweeps(multiple_sweep_filenames):
-    blocks = DataBlockFactory.from_filenames(multiple_sweep_filenames)
+def test_create_multiple_sequences(multiple_sequence_filenames):
+    blocks = DataBlockFactory.from_filenames(multiple_sequence_filenames)
     assert len(blocks) == 1
     assert blocks[0].num_images() == 6
     assert blocks[0].format_class()
     imageset = blocks[0].extract_imagesets()
     assert len(imageset) == 2
-    sweeps = blocks[0].extract_sweeps()
-    assert len(sweeps) == 2
-    assert len(sweeps[0]) == 3
-    assert len(sweeps[1]) == 3
+    sequences = blocks[0].extract_sequences()
+    assert len(sequences) == 2
+    assert len(sequences[0]) == 3
+    assert len(sequences[1]) == 3
 
 
 def test_create_multiple_blocks(multiple_block_filenames):
@@ -120,9 +119,9 @@ def test_create_multiple_blocks(multiple_block_filenames):
     imageset = blocks[0].extract_imagesets()
     assert len(imageset) == 4
     assert len(imageset[0]) == 9
-    sweeps = blocks[0].extract_sweeps()
-    assert len(sweeps) == 4
-    assert len(sweeps[0]) == 9
+    sequences = blocks[0].extract_sequences()
+    assert len(sequences) == 4
+    assert len(sequences[0]) == 9
 
     pprint([b.num_images() for b in blocks])
 
@@ -156,22 +155,22 @@ def test_json2(multiple_block_filenames):
     for b1, b2 in zip(blocks1, blocks2):
         for im1, im2 in zip(b1.extract_imagesets(), b2.extract_imagesets()):
             assert len(im1) == len(im2)
-            if isinstance(im1, ImageSweep):
-                assert isinstance(im2, ImageSweep)
+            if isinstance(im1, ImageSequence):
+                assert isinstance(im2, ImageSequence)
                 assert im1.get_beam() == im2.get_beam()
                 assert im1.get_detector() == im2.get_detector()
                 assert im1.get_goniometer() == im2.get_goniometer()
                 assert im1.get_scan() == im2.get_scan()
             else:
-                assert not isinstance(im2, ImageSweep)
+                assert not isinstance(im2, ImageSequence)
                 for i in range(len(im1)):
                     assert im1.get_beam(i) == im2.get_beam(i)
                     assert im1.get_detector(i) == im2.get_detector(i)
 
 
-def test_from_null_sweep():
+def test_from_null_sequence():
     filenames = ["template_%2d.cbf" % (i + 1) for i in range(0, 10)]
-    sweep = Format.get_imageset(
+    sequence = Format.get_imageset(
         filenames,
         beam=Beam((0, 0, 1)),
         detector=Detector(),
@@ -180,17 +179,17 @@ def test_from_null_sweep():
     )
 
     # Create the datablock
-    datablock = DataBlockFactory.from_imageset(sweep)
+    datablock = DataBlockFactory.from_imageset(sequence)
     assert len(datablock) == 1
     datablock = datablock[0]
     assert datablock.format_class()
 
-    sweeps = datablock.extract_sweeps()
-    assert len(sweeps) == 1
-    assert sweeps[0].get_beam() == sweep.get_beam()
-    assert sweeps[0].get_detector() == sweep.get_detector()
-    assert sweeps[0].get_goniometer() == sweep.get_goniometer()
-    assert sweeps[0].get_scan() == sweep.get_scan()
+    sequences = datablock.extract_sequences()
+    assert len(sequences) == 1
+    assert sequences[0].get_beam() == sequence.get_beam()
+    assert sequences[0].get_detector() == sequence.get_detector()
+    assert sequences[0].get_goniometer() == sequence.get_goniometer()
+    assert sequences[0].get_scan() == sequence.get_scan()
 
 
 def test_with_bad_external_lookup(centroid_test_data):

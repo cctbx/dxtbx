@@ -3,16 +3,15 @@ from __future__ import absolute_import, division, print_function
 import os
 from builtins import range
 
-import pytest
-import six.moves.cPickle as pickle
-
 from scitbx.array_family import flex
 
 import dxtbx.format.image
 import dxtbx.format.Registry
 import dxtbx.tests.imagelist
+import pytest
+import six.moves.cPickle as pickle
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
-from dxtbx.imageset import ExternalLookup, ImageSetData, ImageSetFactory, ImageSweep
+from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import Beam, Detector, Panel
 
 
@@ -277,7 +276,7 @@ class TestImageSet(object):
             )
         )
 
-        # Override sweep models
+        # Override sequence models
         imageset.set_beam(beam)
         imageset.set_detector(detector)
 
@@ -298,84 +297,84 @@ class TestImageSet(object):
         assert detector2 != detector
 
 
-class TestImageSweep(object):
+class TestImageSequence(object):
     def test(self, centroid_files):
         # Create the format class
         format_class = dxtbx.format.Registry.get_format_class_for_file(
             centroid_files[0]
         )
 
-        # Create the sweep
-        sweep = format_class.get_imageset(centroid_files)
+        # Create the sequence
+        sequence = format_class.get_imageset(centroid_files)
 
         # Run a load of tests
-        assert len(sweep) == len(centroid_files)
-        assert sweep.get_array_range() == (0, 9)
-        self.tst_get_item(sweep)
-        assert_is_iterable(sweep)
-        self.tst_paths(sweep, centroid_files)
-        assert_can_get_detectorbase(sweep, range(len(centroid_files)), 9)
-        self.tst_get_models(sweep, range(len(centroid_files)), 9)
-        self.tst_set_models(sweep)
+        assert len(sequence) == len(centroid_files)
+        assert sequence.get_array_range() == (0, 9)
+        self.tst_get_item(sequence)
+        assert_is_iterable(sequence)
+        self.tst_paths(sequence, centroid_files)
+        assert_can_get_detectorbase(sequence, range(len(centroid_files)), 9)
+        self.tst_get_models(sequence, range(len(centroid_files)), 9)
+        self.tst_set_models(sequence)
 
-    def tst_get_item(self, sweep):
-        _ = sweep[0]
+    def tst_get_item(self, sequence):
+        _ = sequence[0]
         with pytest.raises(RuntimeError):
-            _ = sweep[9]
+            _ = sequence[9]
 
-        sweep2 = sweep[3:7]
-        assert sweep2.get_array_range() == (3, 7)
-        _ = sweep2[0]
+        sequence2 = sequence[3:7]
+        assert sequence2.get_array_range() == (3, 7)
+        _ = sequence2[0]
         with pytest.raises(RuntimeError):
-            _ = sweep2[5]
+            _ = sequence2[5]
 
-        assert len(sweep2) == 4
-        assert_can_get_detectorbase(sweep2, range(0, 4), 5)
-        self.tst_get_models(sweep2, range(0, 4), 5)
-        self.tst_paths(sweep2, sweep.paths()[3:7])
-        assert_is_iterable(sweep2)
+        assert len(sequence2) == 4
+        assert_can_get_detectorbase(sequence2, range(0, 4), 5)
+        self.tst_get_models(sequence2, range(0, 4), 5)
+        self.tst_paths(sequence2, sequence.paths()[3:7])
+        assert_is_iterable(sequence2)
 
         with pytest.raises(IndexError):
-            _ = sweep[3:7:2]
+            _ = sequence[3:7:2]
 
     @staticmethod
-    def tst_paths(sweep, filenames1):
-        filenames2 = sweep.paths()
+    def tst_paths(sequence, filenames1):
+        filenames2 = sequence.paths()
         for f1, f2 in zip(filenames1, filenames2):
             assert f1 == f2
 
-    def tst_get_models(self, sweep, indices, outside_index):
-        self.tst_get_models_index(sweep)
+    def tst_get_models(self, sequence, indices, outside_index):
+        self.tst_get_models_index(sequence)
         for i in indices:
-            self.tst_get_models_index(sweep, i)
+            self.tst_get_models_index(sequence, i)
 
     @staticmethod
-    def tst_get_models_index(sweep, index=None):
+    def tst_get_models_index(sequence, index=None):
         if index is None:
-            sweep.get_detector()
-            sweep.get_beam()
-            sweep.get_goniometer()
-            sweep.get_scan()
+            sequence.get_detector()
+            sequence.get_beam()
+            sequence.get_goniometer()
+            sequence.get_scan()
         else:
-            sweep.get_detector(index)
-            sweep.get_beam(index)
-            sweep.get_goniometer(index)
-            sweep.get_scan(index)
+            sequence.get_detector(index)
+            sequence.get_beam(index)
+            sequence.get_goniometer(index)
+            sequence.get_scan(index)
 
         # Ensure state at zero
-        sweep[0]
-        scan1 = sweep.get_scan()
-        # Put sweep to end
-        sweep[len(sweep) - 1]
-        scan2 = sweep.get_scan()
+        sequence[0]
+        scan1 = sequence.get_scan()
+        # Put sequence to end
+        sequence[len(sequence) - 1]
+        scan2 = sequence.get_scan()
         assert scan1 == scan2
 
     @staticmethod
-    def tst_set_models(sweep):
+    def tst_set_models(sequence):
         # Get some models
-        beam = sweep.get_beam()
-        gonio = sweep.get_goniometer()
-        detector = sweep.get_detector()
+        beam = sequence.get_beam()
+        gonio = sequence.get_goniometer()
+        detector = sequence.get_detector()
 
         # Modify the geometry
         assert len(detector) == 1
@@ -383,46 +382,46 @@ class TestImageSweep(object):
         gonio.set_rotation_axis((0, 1, 0))
         detector[0].set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
 
-        # Override sweep models
-        sweep.set_beam(beam)
-        sweep.set_goniometer(gonio)
-        sweep.set_detector(detector)
+        # Override sequence models
+        sequence.set_beam(beam)
+        sequence.set_goniometer(gonio)
+        sequence.set_detector(detector)
 
         # Ensure this doens't interfere with reading
-        for i in sweep:
+        for i in sequence:
             pass
 
         # Get the models back and check they're ok
-        beam2 = sweep.get_beam()
-        gonio2 = sweep.get_goniometer()
-        detector2 = sweep.get_detector()
+        beam2 = sequence.get_beam()
+        gonio2 = sequence.get_goniometer()
+        detector2 = sequence.get_detector()
         assert beam2 == beam
         assert gonio2 == gonio
         assert detector2 == detector
 
         # Get the models from an index back and check they're the same
-        beam2 = sweep.get_beam(0)
-        gonio2 = sweep.get_goniometer(0)
-        detector2 = sweep.get_detector(0)
+        beam2 = sequence.get_beam(0)
+        gonio2 = sequence.get_goniometer(0)
+        detector2 = sequence.get_detector(0)
         assert beam2 == beam
         assert gonio2 == gonio
         assert detector2 == detector
 
-        # Get a sub sweep
-        sub_sweep = sweep[3:7]
+        # Get a sub sequence
+        sub_sequence = sequence[3:7]
 
         # Get the models back and check they're ok
-        beam2 = sub_sweep.get_beam()
-        gonio2 = sub_sweep.get_goniometer()
-        detector2 = sub_sweep.get_detector()
+        beam2 = sub_sequence.get_beam()
+        gonio2 = sub_sequence.get_goniometer()
+        detector2 = sub_sequence.get_detector()
         assert beam2 == beam
         assert gonio2 == gonio
         assert detector2 == detector
 
         # Get the models from an index back and check they're not the same
-        beam2 = sub_sweep.get_beam(0)
-        gonio2 = sub_sweep.get_goniometer(0)
-        detector2 = sub_sweep.get_detector(0)
+        beam2 = sub_sequence.get_beam(0)
+        gonio2 = sub_sequence.get_goniometer(0)
+        detector2 = sub_sequence.get_detector(0)
         assert beam2 == beam
         assert gonio2 == gonio
         assert detector2 == detector
@@ -464,19 +463,19 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
 
 
 def test_imagesetfactory(centroid_files, dials_data):
-    sweep = ImageSetFactory.new(centroid_files)
+    sequence = ImageSetFactory.new(centroid_files)
 
-    assert isinstance(sweep[0], ImageSweep)
+    assert isinstance(sequence[0], ImageSequence)
 
     template = dials_data("centroid_test_data").join("centroid_####.cbf").strpath
     image_range = (3, 6)
 
-    sweep = ImageSetFactory.from_template(template, image_range)
+    sequence = ImageSetFactory.from_template(template, image_range)
 
-    assert isinstance(sweep[0], ImageSweep)
-    assert len(sweep[0]) == 4
-    assert sweep[0].paths()[0].endswith("3.cbf")
-    assert sweep[0].paths()[-1].endswith("6.cbf")
+    assert isinstance(sequence[0], ImageSequence)
+    assert len(sequence[0]) == 4
+    assert sequence[0].paths()[0].endswith("3.cbf")
+    assert sequence[0].paths()[-1].endswith("6.cbf")
 
     imageset = ImageSetFactory.make_imageset(centroid_files)
     assert len(imageset) == 9
@@ -484,33 +483,33 @@ def test_imagesetfactory(centroid_files, dials_data):
     imageset = ImageSetFactory.make_imageset(centroid_files, check_format=False)
     assert len(imageset) == 9
 
-    sweep = ImageSetFactory.make_sweep(template, list(range(1, 9 + 1)))
-    assert len(sweep) == 9
+    sequence = ImageSetFactory.make_sequence(template, list(range(1, 9 + 1)))
+    assert len(sequence) == 9
 
-    sweep = ImageSetFactory.make_sweep(template, list(range(3, 6 + 1)))
-    assert len(sweep) == 4
+    sequence = ImageSetFactory.make_sequence(template, list(range(3, 6 + 1)))
+    assert len(sequence) == 4
 
 
 def test_pickle_imageset(centroid_files):
-    sweep = ImageSetFactory.new(centroid_files)[0]
+    sequence = ImageSetFactory.new(centroid_files)[0]
 
     # Read the 5th image
-    assert sweep[4]
+    assert sequence[4]
 
     # Pickle, then unpickle
-    pickled_sweep = pickle.dumps(sweep)
-    sweep2 = pickle.loads(pickled_sweep)
+    pickled_sequence = pickle.dumps(sequence)
+    sequence2 = pickle.loads(pickled_sequence)
 
-    assert sweep.get_template() == sweep2.get_template()
-    assert sweep.get_array_range() == sweep2.get_array_range()
-    assert sweep.get_beam() == sweep2.get_beam()
-    assert sweep.get_goniometer() == sweep2.get_goniometer()
-    assert sweep.get_scan() == sweep2.get_scan()
-    assert sweep.paths() == sweep2.paths()
-    assert sweep == sweep2
+    assert sequence.get_template() == sequence2.get_template()
+    assert sequence.get_array_range() == sequence2.get_array_range()
+    assert sequence.get_beam() == sequence2.get_beam()
+    assert sequence.get_goniometer() == sequence2.get_goniometer()
+    assert sequence.get_scan() == sequence2.get_scan()
+    assert sequence.paths() == sequence2.paths()
+    assert sequence == sequence2
 
     # Check auxiliary methods after pickling
-    sweep3 = sweep2[0:4]
-    sweep4 = sweep3[0:2]
-    sweep4.get_detectorbase(0)
-    sweep4[0]
+    sequence3 = sequence2[0:4]
+    sequence4 = sequence3[0:2]
+    sequence4.get_detectorbase(0)
+    sequence4[0]

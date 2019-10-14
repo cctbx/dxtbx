@@ -47,7 +47,7 @@ def test_is_angle_in_random_range():
                 assert is_angle_in_range(angular_range, angle, True) is True
 
 
-def test_is_angle_sweep_in_range():
+def test_is_angle_sequence_in_range():
     # Create a range over 360 and make sure all angles are valid
     angular_range = (-10, 370)
     for angle in range(0, 360):

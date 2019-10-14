@@ -8,7 +8,7 @@ from scitbx.array_family import flex
 
 from dxtbx.format.Format import Format
 from dxtbx.format.image import ImageBool
-from dxtbx.imageset import ImageSet, ImageSetData, ImageSetLazy, ImageSweep
+from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetLazy
 from dxtbx.model import MultiAxisGoniometer
 
 
@@ -118,7 +118,7 @@ class FormatMultiImage(Format):
         detector=None,
         goniometer=None,
         scan=None,
-        as_sweep=False,
+        as_sequence=False,
         as_imageset=False,
         single_file_indices=None,
         format_kwargs=None,
@@ -160,7 +160,7 @@ class FormatMultiImage(Format):
             format_instance = cls(filenames[0], **format_kwargs)
         else:
             format_instance = None
-            if not as_sweep:
+            if not as_sequence:
                 lazy = True
 
         # Read the vendor type
@@ -172,21 +172,21 @@ class FormatMultiImage(Format):
         # Get the format kwargs
         params = format_kwargs
 
-        # Check if we have a sweep
+        # Check if we have a sequence
 
         # Make sure only 1 or none is set
-        assert [as_imageset, as_sweep].count(True) < 2
+        assert [as_imageset, as_sequence].count(True) < 2
         if as_imageset:
-            is_sweep = False
-        elif as_sweep:
-            is_sweep = True
+            is_sequence = False
+        elif as_sequence:
+            is_sequence = True
         else:
             if scan is None and format_instance is None:
                 raise RuntimeError(
                     """
           One of the following needs to be set
             - as_imageset=True
-            - as_sweep=True
+            - as_sequence=True
             - scan
             - check_format=True
       """
@@ -196,17 +196,17 @@ class FormatMultiImage(Format):
             else:
                 test_scan = scan
             if test_scan is not None and test_scan.get_oscillation()[1] != 0:
-                is_sweep = True
+                is_sequence = True
             else:
-                is_sweep = False
+                is_sequence = False
 
-        assert not (as_sweep and lazy), "No lazy support for sweeps"
+        assert not (as_sequence and lazy), "No lazy support for sequences"
 
         if single_file_indices is not None:
             single_file_indices = flex.size_t(single_file_indices)
 
-        # Create an imageset or sweep
-        if not is_sweep:
+        # Create an imageset or sequence
+        if not is_sequence:
 
             # Use imagesetlazy
             # Setup ImageSetLazy and just return it. No models are set.
@@ -302,8 +302,8 @@ class FormatMultiImage(Format):
                 template=template,
             )
 
-            # Create the sweep
-            iset = ImageSweep(
+            # Create the sequence
+            iset = ImageSequence(
                 isetdata,
                 beam=beam,
                 detector=detector,
