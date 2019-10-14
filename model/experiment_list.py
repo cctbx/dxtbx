@@ -233,7 +233,10 @@ class ExperimentListDict(object):
                         imageset = self._make_grid(
                             imageset_data, format_kwargs=format_kwargs
                         )
-                    elif imageset_data["__id__"] == "ImageSequence":
+                    elif (
+                        imageset_data["__id__"] == "ImageSequence"
+                        or imageset_data["__id__"] == "ImageSweep"
+                    ):
                         imageset = self._make_sequence(
                             imageset_data,
                             beam=beam,
