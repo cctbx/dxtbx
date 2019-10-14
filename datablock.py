@@ -1254,7 +1254,7 @@ class DataBlockDictImporter(object):
                 format_kwargs = imageset["params"]
             else:
                 format_kwargs = {}
-            if ident == "ImageSequence":
+            if ident == "ImageSequence" or ident == "ImageSweep":
                 beam, detector, gonio, scan = load_models(imageset)
                 if "template" in imageset:
                     template = resolve_path(imageset["template"], directory=directory)
