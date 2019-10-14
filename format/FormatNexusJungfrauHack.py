@@ -4,10 +4,10 @@ import string
 
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
+from scitbx.array_family import flex
 
 import h5py
 import numpy
-from dials.array_family import flex
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.format.nexus import (
     BeamFactory,
