@@ -4,21 +4,21 @@ import sys
 from builtins import range
 
 from dxtbx import ImageToEwaldSphere
-from dxtbx.sweep import SweepFactory
+from dxtbx.sequence import SequenceFactory
 
 
 def to_ewald_sphere(list_of_images):
 
-    sweep = SweepFactory.sweep(list_of_images)
-    beam = sweep.get_beam()
-    detector = sweep.get_detector()
-    gonio = sweep.get_goniometer()
-    scan = sweep.get_scan()
-    start, end = sweep.get_array_range()
+    sequence = SequenceFactory.sequence(list_of_images)
+    beam = sequence.get_beam()
+    detector = sequence.get_detector()
+    gonio = sequence.get_goniometer()
+    scan = sequence.get_scan()
+    start, end = sequence.get_array_range()
     image_to_ewald_sphere = ImageToEwaldSphere(beam, detector, gonio, scan)
 
     for frame in range(start, end):
-        intensity = sweep[frame]
+        intensity = sequence[frame]
         x_list = image_to_ewald_sphere(frame)
         for k, x in enumerate(x_list):
             i = intensity[k]

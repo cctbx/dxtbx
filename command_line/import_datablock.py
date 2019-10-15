@@ -74,8 +74,8 @@ if __name__ == "__main__":
     # Loop through the data blocks
     for i, datablock in enumerate(datablocks):
 
-        # Extract any sweeps
-        sweeps = datablock.extract_sweeps()
+        # Extract any sequences
+        sequences = datablock.extract_sequences()
 
         # Extract any stills
         stills = datablock.extract_stills()
@@ -89,19 +89,19 @@ if __name__ == "__main__":
         print("DataBlock %d" % i)
         print("  format: %s" % str(datablock.format_class()))
         print("  num images: %d" % datablock.num_images())
-        print("  num sweeps: %d" % len(sweeps))
+        print("  num sequences: %d" % len(sequences))
         print("  num stills: %d" % num_stills)
 
-        # Loop through all the sweeps
+        # Loop through all the sequences
         if options.verbose > 1:
-            for j, sweep in enumerate(sweeps):
+            for j, sequence in enumerate(sequences):
                 print("")
-                print("Sweep %d" % j)
-                print("  length %d" % len(sweep))
-                print(sweep.get_beam())
-                print(sweep.get_goniometer())
-                print(sweep.get_detector())
-                print(sweep.get_scan())
+                print("Sequence %d" % j)
+                print("  length %d" % len(sequence))
+                print(sequence.get_beam())
+                print(sequence.get_goniometer())
+                print(sequence.get_detector())
+                print(sequence.get_scan())
 
     # Write the datablock to a JSON or pickle file
     if options.output:

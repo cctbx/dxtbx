@@ -14,8 +14,8 @@ def test_to_xds(dials_data, tmpdir):
     tmpdir.chdir()
     template = dials_data("centroid_test_data").join("centroid_00*.cbf").strpath
     file_names = glob.glob(template)
-    sweep = ImageSetFactory.new(file_names)[0]
-    to_xds = xds.to_xds(sweep)
+    sequence = ImageSetFactory.new(file_names)[0]
+    to_xds = xds.to_xds(sequence)
     s1 = to_xds.XDS_INP()
     expected = (
         """\
@@ -67,9 +67,9 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
         fh.write(s2.encode("ASCII"))
 
     converter = coordinate_frame_helpers.import_xds_xparm("xparm.xds")
-    detector = sweep.get_detector()
-    goniometer = sweep.get_goniometer()
-    beam = sweep.get_beam()
+    detector = sequence.get_detector()
+    goniometer = sequence.get_goniometer()
+    beam = sequence.get_beam()
     assert approx_equal(real_space_a, converter.get_real_space_a())
     assert approx_equal(real_space_b, converter.get_real_space_b())
     assert approx_equal(real_space_c, converter.get_real_space_c())
@@ -87,8 +87,8 @@ def test_to_xds_multi_panel_i23(dials_regression, tmpdir):
     file_name = os.path.join(
         dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
     )
-    sweep = ImageSetFactory.new([file_name])[0]
-    to_xds = xds.to_xds(sweep)
+    sequence = ImageSetFactory.new([file_name])[0]
+    to_xds = xds.to_xds(sequence)
     s1 = to_xds.XDS_INP()
     for expected_substr in (
         """\

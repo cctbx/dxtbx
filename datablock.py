@@ -12,27 +12,26 @@ import warnings
 from builtins import range
 from os.path import abspath, dirname, normpath, splitext
 
-import six
-import six.moves.cPickle as pickle
-
 import libtbx
 from libtbx.utils import Sorry
 from scitbx import matrix
 
 import dxtbx.imageset
 import dxtbx.model
+import six
+import six.moves.cPickle as pickle
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import get_format_class_for_file
-from dxtbx.serialize import load
-from dxtbx.serialize.filename import resolve_path
-from dxtbx.serialize.load import _decode_dict
-from dxtbx.sweep_filenames import (
+from dxtbx.sequence_filenames import (
     locate_files_matching_template_string,
     template_regex,
     template_string_number_index,
 )
+from dxtbx.serialize import load
+from dxtbx.serialize.filename import resolve_path
+from dxtbx.serialize.load import _decode_dict
 
 try:
     from typing import Any, Callable, Dict, Generator, Iterable, List, Type
@@ -51,7 +50,7 @@ def _iterate_with_previous(iterable):
 
 
 class DataBlock(object):
-    """ High level container for blocks of sweeps and imagesets. """
+    """ High level container for blocks of sequences and imagesets. """
 
     def __init__(self, imagesets=None):
         """ Instantiate from a list of imagesets. """
@@ -85,9 +84,9 @@ class DataBlock(object):
         """ Extract all the still imagesets """
         return list(self.iter_stills())
 
-    def extract_sweeps(self):
-        """ Extract all the sweeps from the block. """
-        return list(self.iter_sweeps())
+    def extract_sequences(self):
+        """ Extract all the sequences from the block. """
+        return list(self.iter_sequences())
 
     def extract_imagesets(self):
         """ Extract all imagesets. """
@@ -119,22 +118,22 @@ class DataBlock(object):
         for iset in self._imagesets:
             yield iset
 
-    def iter_sweeps(self):
-        """ Iterate over sweep groups. """
+    def iter_sequences(self):
+        """ Iterate over sequence groups. """
         for iset in self._imagesets:
-            if isinstance(iset, dxtbx.imageset.ImageSweep):
+            if isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
 
     def iter_stills(self):
         """ Iterate over still groups. """
         for iset in self._imagesets:
-            if not isinstance(iset, dxtbx.imageset.ImageSweep):
+            if not isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
 
     def _find_unique_items(self, item_name, filter_none=False):
         """Return a list of unique beams, detectors, ... in order.
         Optionally filter out None values (unless they came in via
-        an ImageSweep)."""
+        an ImageSequence)."""
 
         # Use the keys of an ordered dictionary to guaranteeing uniqueness
         # while keeping the order. Could rewrite to use OrderedSet or wait
@@ -143,7 +142,7 @@ class DataBlock(object):
         items = collections.OrderedDict()
         for imageset in self._imagesets:
             getter_function = getattr(imageset, "get_" + item_name)
-            if isinstance(imageset, dxtbx.imageset.ImageSweep):
+            if isinstance(imageset, dxtbx.imageset.ImageSequence):
                 items[getter_function()] = None
             else:
                 for i in range(len(imageset)):
@@ -185,12 +184,12 @@ class DataBlock(object):
 
         # Loop through all the imagesets
         for iset in self._imagesets:
-            if isinstance(iset, dxtbx.imageset.ImageSweep):
+            if isinstance(iset, dxtbx.imageset.ImageSequence):
                 if iset.reader().is_single_file_reader():
                     result["imageset"].append(
                         collections.OrderedDict(
                             [
-                                ("__id__", "ImageSweep"),
+                                ("__id__", "ImageSequence"),
                                 ("master", abspath(iset.reader().master_path())),
                                 (
                                     "mask",
@@ -227,7 +226,7 @@ class DataBlock(object):
                     result["imageset"].append(
                         collections.OrderedDict(
                             [
-                                ("__id__", "ImageSweep"),
+                                ("__id__", "ImageSequence"),
                                 ("template", abspath(iset.get_template())),
                                 (
                                     "mask",
@@ -406,14 +405,14 @@ class DataBlockTemplateImporter(object):
                 append_to_datablocks(imageset)
 
     def _create_imageset(self, format_class, template, filenames, **kwargs):
-        """ Create a multi file sweep or imageset. """
+        """ Create a multi file sequence or imageset. """
         # Get the image range
         index = slice(*template_string_number_index(template))
         first = int(filenames[0][index])
         last = int(filenames[-1][index])
 
         # Check all images in range are present - if allowed
-        if not kwargs.get("allow_incomplete_sweeps", False):
+        if not kwargs.get("allow_incomplete_sequences", False):
             all_numbers = {int(f[index]) for f in filenames}
             missing = set(range(first, last + 1)) - all_numbers
             if missing:
@@ -442,8 +441,8 @@ class DataBlockTemplateImporter(object):
         image_range = s.get_image_range()
         image_range = (image_range[0], image_range[1] + 1)
 
-        # Create the sweep
-        imageset = dxtbx.imageset.ImageSetFactory.make_sweep(
+        # Create the sequence
+        imageset = dxtbx.imageset.ImageSetFactory.make_sequence(
             template,
             list(range(*image_range)),
             format_class,
@@ -793,10 +792,10 @@ def _merge_scans(records, scan_tolerance=None):
     return merged_records
 
 
-def _create_imagesweep(record, format_class, format_kwargs=None):
-    # type: (ImageMetadataRecord, Type[Format], Dict) -> dxtbx.imageset.ImageSweep
+def _create_imagesequence(record, format_class, format_kwargs=None):
+    # type: (ImageMetadataRecord, Type[Format], Dict) -> dxtbx.imageset.ImageSequence
     """
-    Create an ImageSweep object from a single rotation data image.
+    Create an ImageSequence object from a single rotation data image.
 
     Args:
         record: Single-image metadata records to merge into a single imageset
@@ -805,11 +804,11 @@ def _create_imagesweep(record, format_class, format_kwargs=None):
             creating an ImageSet
 
     Returns:
-        An imageset representing the sweep of data
+        An imageset representing the sequence of data
     """
     index_start, index_end = record.scan.get_image_range()
-    # Create the sweep
-    sweep = dxtbx.imageset.ImageSetFactory.make_sweep(
+    # Create the sequence
+    sequence = dxtbx.imageset.ImageSetFactory.make_sequence(
         template=os.path.abspath(record.template),
         indices=range(index_start, index_end + 1),
         format_class=format_class,
@@ -820,7 +819,7 @@ def _create_imagesweep(record, format_class, format_kwargs=None):
         format_kwargs=format_kwargs,
         # check_format=False,
     )
-    return sweep
+    return sequence
 
 
 def _groupby_template_is_none(records):
@@ -841,7 +840,7 @@ def _convert_to_imagesets(records, format_class, format_kwargs=None):
     Rules:
     - Any groups of template=None where any of the metadata objects
       are shared, go into a single imageset
-    - Anything with a template goes into a single sweep
+    - Anything with a template goes into a single sequence
 
     Args:
         records: The records to convert
@@ -856,12 +855,12 @@ def _convert_to_imagesets(records, format_class, format_kwargs=None):
     # Iterate over images/sets such that template=None are clustered
     for setgroup in _groupby_template_is_none(records):
         if setgroup[0].template is not None:
-            # If we have a template, then it's a sweep
+            # If we have a template, then it's a sequence
             assert len(setgroup) == 1, "Got group of metadata records in template?"
-            logger.debug("Creating Imagesweep from %s", setgroup[0].template)
-            yield _create_imagesweep(setgroup[0], format_class, format_kwargs)
+            logger.debug("Creating Imagesequence from %s", setgroup[0].template)
+            yield _create_imagesequence(setgroup[0], format_class, format_kwargs)
         else:
-            # Without a template, it was never identified as a sweep, so an imageset
+            # Without a template, it was never identified as a sequence, so an imageset
             logger.debug("Creating ImageSet from %d files", len(setgroup))
             yield _create_imageset(setgroup, format_class, format_kwargs)
 
@@ -973,7 +972,7 @@ class DataBlockFilenameImporter(object):
         # the previous implementation:
         # - Each change in format goes into its own Datablock
         # - FormatMultiImage files each have their own ImageSet
-        # - Every set of images forming a scan goes into its own ImageSweep
+        # - Every set of images forming a scan goes into its own ImageSequence
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
 
@@ -1091,9 +1090,9 @@ class DataBlockFilenameImporter(object):
                     g = last.goniometer
                     same[2] = True
 
-                # If the last was not a sweep then if the current is a sweep or none of
+                # If the last was not a sequence then if the current is a sequence or none of
                 # the models are the same, increment. Otherwise if the current is not a
-                # sweep or if both sweeps don't share all models, increment. If both
+                # sequence or if both sequences don't share all models, increment. If both
                 # share, models try scan and increment if exception.
                 if last.template is None:
                     if template is not None or not any(same):
@@ -1130,17 +1129,17 @@ class DataBlockFilenameImporter(object):
         return records
 
     def _create_multi_file_imageset(self, format_class, records, format_kwargs=None):
-        """ Create a multi file sweep or imageset. """
+        """ Create a multi file sequence or imageset. """
 
-        # Make either an imageset or sweep
+        # Make either an imageset or sequence
         if len(records) == 1 and records[0].template is not None:
 
             # Get the image range
             image_range = records[0].scan.get_image_range()
             image_range = (image_range[0], image_range[1] + 1)
 
-            # Create the sweep
-            imageset = dxtbx.imageset.ImageSetFactory.make_sweep(
+            # Create the sequence
+            imageset = dxtbx.imageset.ImageSetFactory.make_sequence(
                 abspath(records[0].template),
                 list(range(*image_range)),
                 format_class,
@@ -1255,12 +1254,12 @@ class DataBlockDictImporter(object):
                 format_kwargs = imageset["params"]
             else:
                 format_kwargs = {}
-            if ident == "ImageSweep":
+            if ident == "ImageSequence" or ident == "ImageSweep":
                 beam, detector, gonio, scan = load_models(imageset)
                 if "template" in imageset:
                     template = resolve_path(imageset["template"], directory=directory)
                     i0, i1 = scan.get_image_range()
-                    iset = dxtbx.imageset.ImageSetFactory.make_sweep(
+                    iset = dxtbx.imageset.ImageSetFactory.make_sequence(
                         template,
                         list(range(i0, i1 + 1)),
                         None,
@@ -1327,7 +1326,7 @@ class DataBlockDictImporter(object):
                         format_class = FormatMultiImage
                     else:
                         format_class = None
-                    iset = dxtbx.imageset.ImageSetFactory.make_sweep(
+                    iset = dxtbx.imageset.ImageSetFactory.make_sequence(
                         template,
                         list(range(i0, i1 + 1)),
                         format_class=format_class,
@@ -1439,7 +1438,7 @@ class DataBlockDictImporter(object):
                     iset.update_detector_px_mm_data()
                 imagesets.append(iset)
             else:
-                raise RuntimeError("expected ImageSet/ImageSweep, got %s" % ident)
+                raise RuntimeError("expected ImageSet/ImageSequence, got %s" % ident)
 
         # Return the datablock
         return DataBlock(imagesets)
@@ -1570,7 +1569,7 @@ class DataBlockFactory(object):
 
     @staticmethod
     def from_imageset_json_file(filename):
-        """ Load a datablock from a sweep file. """
+        """ Load a datablock from a sequence file. """
         # Load the imageset and create a datablock from the filenames
         imageset = load.imageset(filename)
         return DataBlockFactory.from_imageset(imageset)
@@ -1914,7 +1913,7 @@ class ScanDiff(object):
         return text
 
 
-class SweepDiff(object):
+class SequenceDiff(object):
     def __init__(self, tolerance):
 
         if tolerance is None:
@@ -1944,10 +1943,10 @@ class SweepDiff(object):
 
             self.s_diff = ScanDiff(scan_tolerance=tolerance.scan.oscillation)
 
-    def __call__(self, sweep1, sweep2):
+    def __call__(self, sequence1, sequence2):
         text = []
-        text.extend(self.b_diff(sweep1.get_beam(), sweep2.get_beam()))
-        text.extend(self.d_diff(sweep1.get_detector(), sweep2.get_detector()))
-        text.extend(self.g_diff(sweep1.get_goniometer(), sweep2.get_goniometer()))
-        text.extend(self.s_diff(sweep1.get_scan(), sweep2.get_scan()))
+        text.extend(self.b_diff(sequence1.get_beam(), sequence2.get_beam()))
+        text.extend(self.d_diff(sequence1.get_detector(), sequence2.get_detector()))
+        text.extend(self.g_diff(sequence1.get_goniometer(), sequence2.get_goniometer()))
+        text.extend(self.s_diff(sequence1.get_scan(), sequence2.get_scan()))
         return text

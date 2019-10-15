@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import procrunner
 import pytest
-
 from dxtbx.imageset import ImageSetFactory
 from dxtbx.serialize import dump
 
@@ -62,10 +61,10 @@ def test_to_xds_from_json(dials_data, expected_output, tmpdir):
     file_names = dials_data("centroid_test_data").listdir("centroid_*.cbf")
 
     # now test reading from a json file
-    sweep = ImageSetFactory.new([f.strpath for f in file_names])[0]
-    with tmpdir.join("sweep.json").open("wb") as fh:
-        dump.imageset(sweep, fh)
-    result = procrunner.run(["dxtbx.to_xds", "sweep.json"], working_directory=tmpdir)
+    sequence = ImageSetFactory.new([f.strpath for f in file_names])[0]
+    with tmpdir.join("sequence.json").open("wb") as fh:
+        dump.imageset(sequence, fh)
+    result = procrunner.run(["dxtbx.to_xds", "sequence.json"], working_directory=tmpdir)
     assert not result.returncode and not result.stderr
 
     # allow extra lines to have been added (these may be comments)

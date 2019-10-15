@@ -2,8 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import warnings
 
-from six.moves import StringIO
-
 from cctbx import uctbx
 from cctbx.eltbx import attenuation_coefficient
 from cctbx.sgtbx import space_group, space_group_symbols
@@ -16,6 +14,7 @@ import dxtbx
 from dxtbx.imageset import ImageSetFactory
 from dxtbx.model import Crystal, MosaicCrystalKabsch2010, ParallaxCorrectedPxMmStrategy
 from dxtbx.model.detector_helpers_types import detector_helpers_types
+from six.moves import StringIO
 
 
 def to_imageset(input_filename, extra_filename=None):
@@ -158,10 +157,10 @@ def xds_detector_name(dxtbx_name):
 
 
 class to_xds(object):
-    """A class to export contents of a Sweep as XDS.INP or XPARM.XDS."""
+    """A class to export contents of a Sequence as XDS.INP or XPARM.XDS."""
 
-    def __init__(self, sweep):
-        self._sweep = sweep
+    def __init__(self, sequence):
+        self._sequence = sequence
 
         # detector dimensions in pixels
         self.detector_size = [
@@ -267,20 +266,20 @@ class to_xds(object):
         ).elems
 
     def get_detector(self):
-        return self._sweep.get_detector()
+        return self._sequence.get_detector()
 
     def get_goniometer(self):
-        return self._sweep.get_goniometer()
+        return self._sequence.get_goniometer()
 
     def get_beam(self):
-        return self._sweep.get_beam()
+        return self._sequence.get_beam()
 
     def get_scan(self):
-        return self._sweep.get_scan()
+        return self._sequence.get_scan()
 
     def get_template(self):
         try:
-            return self._sweep.get_template()
+            return self._sequence.get_template()
         except AttributeError:
             return "FIXME####.h5"
 

@@ -3,14 +3,13 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import pytest
-
 from dials.util.options import tolerance_phil_scope
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
     DetectorComparison,
     GoniometerComparison,
-    SweepDiff,
+    SequenceDiff,
 )
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 
@@ -43,7 +42,7 @@ def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
 
     tolerance = tolerance_phil_scope.extract().tolerance
 
-    diff = SweepDiff(tolerance)
+    diff = SequenceDiff(tolerance)
     print("\n".join(diff(imageset, imageset2)))
 
     assert BeamComparison()(imageset.get_beam(), imageset2.get_beam())

@@ -17,17 +17,17 @@ def run(file_names):
         try:
             datablock = load.datablock(file_names[0])
             assert len(datablock) == 1
-            sweep = datablock[0].extract_sweeps()[0]
+            sequence = datablock[0].extract_sequences()[0]
         except ValueError as e:
             if str(e) == '"__id__" does not equal "imageset"':
                 experiments = load.experiment_list(file_names[0])
                 assert len(experiments) == 1
-                sweep = experiments[0].imageset
+                sequence = experiments[0].imageset
             else:
                 raise
     else:
-        sweep = ImageSetFactory.new(file_names)[0]
-    xsx = xds.to_xds(sweep)
+        sequence = ImageSetFactory.new(file_names)[0]
+    xsx = xds.to_xds(sequence)
     print(xsx.XDS_INP())
 
 

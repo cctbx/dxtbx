@@ -7,20 +7,20 @@ import warnings
 from builtins import range
 
 import pkg_resources
+
 import six
 import six.moves.cPickle as pickle
-
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
     DataBlockTemplateImporter,
     DetectorComparison,
     GoniometerComparison,
-    SweepDiff,
+    SequenceDiff,
 )
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
-from dxtbx.imageset import ImageGrid, ImageSet, ImageSetFactory, ImageSweep
+from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet, ImageSetFactory
 from dxtbx.model import (
     BeamFactory,
     CrystalFactory,
@@ -31,10 +31,10 @@ from dxtbx.model import (
     ProfileModelFactory,
     ScanFactory,
 )
+from dxtbx.sequence_filenames import template_image_range
 from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
-from dxtbx.sweep_filenames import template_image_range
 
 try:
     from typing import Any, Dict, Optional, Tuple
@@ -46,7 +46,7 @@ __all__ = [
     "DetectorComparison",
     "ExperimentListFactory",
     "GoniometerComparison",
-    "SweepDiff",
+    "SequenceDiff",
 ]
 
 
@@ -233,8 +233,11 @@ class ExperimentListDict(object):
                         imageset = self._make_grid(
                             imageset_data, format_kwargs=format_kwargs
                         )
-                    elif imageset_data["__id__"] == "ImageSweep":
-                        imageset = self._make_sweep(
+                    elif (
+                        imageset_data["__id__"] == "ImageSequence"
+                        or imageset_data["__id__"] == "ImageSweep"
+                    ):
+                        imageset = self._make_sequence(
                             imageset_data,
                             beam=beam,
                             detector=detector,
@@ -291,7 +294,7 @@ class ExperimentListDict(object):
                         imageset.external_lookup.dy.filename = dy_filename
 
                         # Update the imageset models
-                        if isinstance(imageset, ImageSweep):
+                        if isinstance(imageset, ImageSequence):
                             imageset.set_beam(beam)
                             imageset.set_detector(detector)
                             imageset.set_goniometer(goniometer)
@@ -355,7 +358,7 @@ class ExperimentListDict(object):
             self._make_stills(imageset, format_kwargs=format_kwargs), grid_size
         )
 
-    def _make_sweep(
+    def _make_sequence(
         self,
         imageset,
         beam=None,
@@ -364,7 +367,7 @@ class ExperimentListDict(object):
         scan=None,
         format_kwargs=None,
     ):
-        """ Make an image sweep. """
+        """ Make an image sequence. """
         # Get the template format
         template = resolve_path(imageset["template"], directory=self._directory)
 
@@ -380,8 +383,8 @@ class ExperimentListDict(object):
             if "single_file_indices" in imageset:
                 format_class = FormatMultiImage
 
-        # Make a sweep from the input data
-        return ImageSetFactory.make_sweep(
+        # Make a sequence from the input data
+        return ImageSetFactory.make_sequence(
             template,
             list(range(i0, i1 + 1)),
             format_class=format_class,
@@ -514,8 +517,8 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_imageset_and_crystal(imageset, crystal, load_models=True):
         """ Load an experiment list from an imageset and crystal. """
-        if isinstance(imageset, ImageSweep):
-            return ExperimentListFactory.from_sweep_and_crystal(
+        if isinstance(imageset, ImageSequence):
+            return ExperimentListFactory.from_sequence_and_crystal(
                 imageset, crystal, load_models
             )
         else:
@@ -524,8 +527,8 @@ class ExperimentListFactory(object):
             )
 
     @staticmethod
-    def from_sweep_and_crystal(imageset, crystal, load_models=True):
-        """ Create an experiment list from sweep and crystal. """
+    def from_sequence_and_crystal(imageset, crystal, load_models=True):
+        """ Create an experiment list from sequence and crystal. """
         if load_models:
             return ExperimentList(
                 [
@@ -665,14 +668,14 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_xds(xds_inp, xds_other):
         """ Generate an experiment list from XDS files. """
-        # Get the sweep from the XDS files
-        sweep = xds.to_imageset(xds_inp, xds_other)
+        # Get the sequence from the XDS files
+        sequence = xds.to_imageset(xds_inp, xds_other)
 
         # Get the crystal from the XDS files
         crystal = xds.to_crystal(xds_other)
 
         # Create the experiment list
-        experiments = ExperimentListFactory.from_imageset_and_crystal(sweep, crystal)
+        experiments = ExperimentListFactory.from_imageset_and_crystal(sequence, crystal)
 
         # Set the crystal in the experiment list
         assert len(experiments) == 1

@@ -31,7 +31,7 @@ from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
-from dxtbx.sweep_filenames import template_regex
+from dxtbx.sequence_filenames import template_regex
 
 
 if sys.hexversion < 0x3040000:
@@ -298,7 +298,7 @@ class Format(object):
         goniometer=None,
         scan=None,
         as_imageset=False,
-        as_sweep=False,
+        as_sequence=False,
         single_file_indices=None,
         format_kwargs=None,
         template=None,
@@ -309,7 +309,7 @@ class Format(object):
 
         """
         # Import here to avoid cyclic imports
-        from dxtbx.imageset import ImageSet, ImageSetData, ImageSweep
+        from dxtbx.imageset import ImageSet, ImageSetData, ImageSequence
 
         # Get filename absolute paths
         filenames = tuple(map(abspath, filenames))
@@ -337,18 +337,18 @@ class Format(object):
         params = format_kwargs
 
         # Make sure only 1 or none is set
-        assert [as_imageset, as_sweep].count(True) < 2
+        assert [as_imageset, as_sequence].count(True) < 2
         if as_imageset:
-            is_sweep = False
-        elif as_sweep:
-            is_sweep = True
+            is_sequence = False
+        elif as_sequence:
+            is_sequence = True
         else:
             if scan is None and format_instance is None:
                 raise RuntimeError(
                     """
           One of the following needs to be set
             - as_imageset=True
-            - as_sweep=True
+            - as_sequence=True
             - scan
             - check_format=True
       """
@@ -358,12 +358,12 @@ class Format(object):
             else:
                 test_scan = scan
             if test_scan is not None and test_scan.get_oscillation()[1] != 0:
-                is_sweep = True
+                is_sequence = True
             else:
-                is_sweep = False
+                is_sequence = False
 
-        # Create an imageset or sweep
-        if not is_sweep:
+        # Create an imageset or sequence
+        if not is_sequence:
 
             # Create the imageset
             iset = ImageSet(
@@ -425,10 +425,10 @@ class Format(object):
                         format_instance = Class(f, **format_kwargs)
                         scan += format_instance.get_scan()
 
-            assert beam is not None, "Can't create Sweep without beam"
-            assert detector is not None, "Can't create Sweep without detector"
-            assert goniometer is not None, "Can't create Sweep without goniometer"
-            assert scan is not None, "Can't create Sweep without scan"
+            assert beam is not None, "Can't create Sequence without beam"
+            assert detector is not None, "Can't create Sequence without detector"
+            assert goniometer is not None, "Can't create Sequence without goniometer"
+            assert scan is not None, "Can't create Sequence without scan"
 
             # Create the masker
             if format_instance is not None:
@@ -436,8 +436,8 @@ class Format(object):
             else:
                 masker = None
 
-            # Create the sweep
-            iset = ImageSweep(
+            # Create the sequence
+            iset = ImageSequence(
                 ImageSetData(
                     reader=reader,
                     masker=masker,

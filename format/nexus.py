@@ -1528,10 +1528,10 @@ class ScanFactory(object):
         image_range = (1, len(phi))
         if len(phi) > 1:
             oscillation = (float(phi[0]), float(phi[1] - phi[0]))
-            is_sweep = True
+            is_sequence = True
         else:
             oscillation = (float(phi[0]), 0.0)
-            is_sweep = False
+            is_sequence = False
 
         # Get the exposure time
         num_images = len(phi)
@@ -1545,14 +1545,14 @@ class ScanFactory(object):
             exposure_time = flex.double(num_images, 0)
             epochs = flex.double(num_images, 0)
 
-        if is_sweep is True:
+        if is_sequence is True:
 
             # Construct the model
             self.model = Scan(image_range, oscillation, exposure_time, epochs)
 
         else:
 
-            # if this is not a sweep, then this is stills, in which case... should
+            # if this is not a sequence, then this is stills, in which case... should
             # we have scans? and, even if we do, we have a small problem in that
             # this returns a list of scans which even less works...
 

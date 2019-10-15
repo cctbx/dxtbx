@@ -45,11 +45,11 @@ def template_regex(filename):
             #  img.0815.cbf
             r"(.*?\.)([0-9]+)(_.*)",
             # last number in the filename standing between _ and .
-            #  NO2_0100.sweep.18keV
+            #  NO2_0100.sequence.18keV
             r"(.*?\.)([0-9]+)(.*)",
         ]
         # last number in the filename before a .
-        #  NO2.00100.sweep.18keV or image-00001.cbf
+        #  NO2.00100.sequence.18keV or image-00001.cbf
 
         # patterns are evaluated in order, the first to match will be used
         # each pattern needs to describe the entire filename with three braces:

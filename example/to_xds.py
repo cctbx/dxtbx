@@ -36,13 +36,13 @@ def xds_detector_name(xia2_name):
 
 
 class to_xds(object):
-    def __init__(self, sweep):
-        self._template = sweep.get_template()
-        self._start_end = min(sweep.indices()), max(sweep.indices())
-        self._goniometer = sweep.get_goniometer()
-        self._detector = sweep.get_detector()
-        self._beam = sweep.get_beam()
-        self._scan = sweep.get_scan()
+    def __init__(self, sequence):
+        self._template = sequence.get_template()
+        self._start_end = min(sequence.indices()), max(sequence.indices())
+        self._goniometer = sequence.get_goniometer()
+        self._detector = sequence.get_detector()
+        self._beam = sequence.get_beam()
+        self._scan = sequence.get_scan()
 
     def get_detector(self):
         return self._detector
@@ -144,9 +144,9 @@ class to_xds(object):
 
 
 def factory(list_of_images):
-    sweeps = ImageSetFactory.new(list_of_images)
-    assert len(sweeps) == 1
-    return sweeps[0]
+    sequences = ImageSetFactory.new(list_of_images)
+    assert len(sequences) == 1
+    return sequences[0]
 
 
 if __name__ == "__main__":

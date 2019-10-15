@@ -1158,7 +1158,7 @@ public:
 
   /**
    * Get the complete seta
-   * @returns The complete sweep
+   * @returns The complete sequence
    */
   ImageSet complete_set() const {
     throw DXTBX_ERROR("Cannot get complete set from image grid");
@@ -1169,7 +1169,7 @@ public:
    * Get a partial set
    * @param first The first index
    * @param last The last index
-   * @returns The partial sweep
+   * @returns The partial sequence
    */
   ImageSet partial_set(std::size_t first, std::size_t last) const {
     throw DXTBX_ERROR("Cannot get partial set from image grid");
@@ -1181,19 +1181,19 @@ protected:
 };
 
 /**
- * A class to represent a sweep of data
+ * A class to represent a sequence of data
  */
-class ImageSweep : public ImageSet {
+class ImageSequence : public ImageSet {
 public:
   /**
-   * Construct the sweep
+   * Construct the sequence
    * @param data The imageset data
    * @param beam The beam model
    * @param detector The detector model
    * @param goniometer The gonioeter model
    * @param scan The scan model
    */
-  ImageSweep(const ImageSetData &data,
+  ImageSequence(const ImageSetData &data,
              const beam_ptr &beam,
              const detector_ptr &detector,
              const goniometer_ptr &goniometer,
@@ -1221,7 +1221,7 @@ public:
   }
 
   /**
-   * Construct the sweep
+   * Construct the sequence
    * @param data The imageset data
    * @param indices The image indices
    * @param beam The beam model
@@ -1229,7 +1229,7 @@ public:
    * @param goniometer The gonioeter model
    * @param scan The scan model
    */
-  ImageSweep(const ImageSetData &data,
+  ImageSequence(const ImageSetData &data,
              const scitbx::af::const_ref<std::size_t> &indices,
              const beam_ptr &beam,
              const detector_ptr &detector,
@@ -1265,7 +1265,7 @@ public:
   /**
    * Destructor
    */
-  virtual ~ImageSweep() {}
+  virtual ~ImageSequence() {}
 
   /**
    * Get the dynamic mask for the requested image
@@ -1394,32 +1394,32 @@ public:
    * Override per-image model
    */
   void set_beam_for_image(const beam_ptr &beam, std::size_t index) {
-    throw DXTBX_ERROR("Cannot set per-image model in sweep");
+    throw DXTBX_ERROR("Cannot set per-image model in sequence");
   }
 
   /**
    * Override per-image model
    */
   void set_detector_for_image(const detector_ptr &detector, std::size_t index) {
-    throw DXTBX_ERROR("Cannot set per-image model in sweep");
+    throw DXTBX_ERROR("Cannot set per-image model in sequence");
   }
 
   /**
    * Override per-image model
    */
   void set_goniometer_for_image(const goniometer_ptr &goniometer, std::size_t index) {
-    throw DXTBX_ERROR("Cannot set per-image model in sweep");
+    throw DXTBX_ERROR("Cannot set per-image model in sequence");
   }
 
   /**
    * Override per-image model
    */
   void set_scan_for_image(const scan_ptr &scan, std::size_t index) {
-    throw DXTBX_ERROR("Cannot set per-image model in sweep");
+    throw DXTBX_ERROR("Cannot set per-image model in sequence");
   }
 
   /**
-   * Convert the sweep to an imageset
+   * Convert the sequence to an imageset
    * @returns An imageset
    */
   ImageSet as_imageset() const {
@@ -1429,10 +1429,10 @@ public:
 
   /**
    * Get the complete seta
-   * @returns The complete sweep
+   * @returns The complete sequence
    */
   ImageSet complete_set() const {
-    throw DXTBX_ERROR("Cannot get complete set from image sweep");
+    throw DXTBX_ERROR("Cannot get complete set from image sequence");
     return ImageSet();
   }
 
@@ -1440,29 +1440,29 @@ public:
    * Get a partial set
    * @param first The first index
    * @param last The last index
-   * @returns The partial sweep
+   * @returns The partial sequence
    */
   ImageSet partial_set(std::size_t first, std::size_t last) const {
-    throw DXTBX_ERROR("Cannot get partial set from image sweep");
+    throw DXTBX_ERROR("Cannot get partial set from image sequence");
     return ImageSet();
   }
 
   /**
    * Get the complete seta
-   * @returns The complete sweep
+   * @returns The complete sequence
    */
-  ImageSweep complete_sweep() const {
+  ImageSequence complete_sequence() const {
     // Compute scan
     Scan scan = detail::safe_dereference(data_.get_scan(0));
     for (std::size_t i = 1; i < data_.size(); ++i) {
       scan += detail::safe_dereference(data_.get_scan(i));
     }
 
-    // Construct a sweep
-    ImageSweep result(
+    // Construct a sequence
+    ImageSequence result(
       data_, get_beam(), get_detector(), get_goniometer(), scan_ptr(new Scan(scan)));
 
-    // Return the sweep
+    // Return the sequence
     return result;
   }
 
@@ -1470,9 +1470,9 @@ public:
    * Get a partial set
    * @param first The first index
    * @param last The last index
-   * @returns The partial sweep
+   * @returns The partial sequence
    */
-  ImageSweep partial_sweep(std::size_t first, std::size_t last) const {
+  ImageSequence partial_sequence(std::size_t first, std::size_t last) const {
     // Check slice indices
     DXTBX_ASSERT(last > first);
 
@@ -1485,15 +1485,15 @@ public:
     // Construct the partial indices
     scitbx::af::const_ref<std::size_t> indices(&indices_[first], last - first);
 
-    // Construct the partial sweep
-    ImageSweep result(data_,
+    // Construct the partial sequence
+    ImageSequence result(data_,
                       indices,
                       get_beam(),
                       get_detector(),
                       get_goniometer(),
                       scan_ptr(new Scan(scan)));
 
-    // Return the sweep
+    // Return the sequence
     return result;
   }
 

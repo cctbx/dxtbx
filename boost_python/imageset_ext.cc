@@ -342,10 +342,10 @@ namespace dxtbx { namespace boost_python {
   };
 
   /**
-   * Implement pickling for ImageSweep class
+   * Implement pickling for ImageSequence class
    */
-  struct ImageSweepPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(ImageSweep obj) {
+  struct ImageSequencePickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(ImageSequence obj) {
       return boost::python::make_tuple(obj.data(),
                                        obj.indices(),
                                        obj.get_beam(),
@@ -513,8 +513,8 @@ namespace dxtbx { namespace boost_python {
    * If we have offset arrays set in the imageset then update the pixel to
    * millimeter strategy to use them
    */
-  void ImageSweep_update_detector_px_mm_data(ImageSweep &self) {
-    ImageSweep::detector_ptr detector = self.get_detector();
+  void ImageSequence_update_detector_px_mm_data(ImageSequence &self) {
+    ImageSequence::detector_ptr detector = self.get_detector();
     Image<double> dx = self.external_lookup().dx().get_data();
     Image<double> dy = self.external_lookup().dy().get_data();
     DXTBX_ASSERT(dx.empty() == dy.empty());
@@ -656,45 +656,45 @@ namespace dxtbx { namespace boost_python {
       .staticmethod("from_imageset")
       .def_pickle(ImageGridPickleSuite());
 
-    class_<ImageSweep, bases<ImageSet> >("ImageSweep", no_init)
+    class_<ImageSequence, bases<ImageSet> >("ImageSequence", no_init)
       .def(init<const ImageSetData &,
-                const ImageSweep::beam_ptr &,
-                const ImageSweep::detector_ptr &,
-                const ImageSweep::goniometer_ptr &,
-                const ImageSweep::scan_ptr &>(
+                const ImageSequence::beam_ptr &,
+                const ImageSequence::detector_ptr &,
+                const ImageSequence::goniometer_ptr &,
+                const ImageSequence::scan_ptr &>(
         (arg("data"), arg("beam"), arg("detector"), arg("goniometer"), arg("scan"))))
       .def(init<const ImageSetData &,
                 const scitbx::af::const_ref<std::size_t> &,
-                const ImageSweep::beam_ptr &,
-                const ImageSweep::detector_ptr &,
-                const ImageSweep::goniometer_ptr &,
-                const ImageSweep::scan_ptr &>((arg("data"),
+                const ImageSequence::beam_ptr &,
+                const ImageSequence::detector_ptr &,
+                const ImageSequence::goniometer_ptr &,
+                const ImageSequence::scan_ptr &>((arg("data"),
                                                arg("indices"),
                                                arg("beam"),
                                                arg("detector"),
                                                arg("goniometer"),
                                                arg("scan"))))
-      .def("get_beam", &ImageSweep::get_beam_for_image)
-      .def("get_detector", &ImageSweep::get_detector_for_image)
-      .def("get_goniometer", &ImageSweep::get_goniometer_for_image)
-      .def("get_scan", &ImageSweep::get_scan_for_image)
-      .def("set_beam", &ImageSweep::set_beam_for_image)
-      .def("set_detector", &ImageSweep::set_detector_for_image)
-      .def("set_goniometer", &ImageSweep::set_goniometer_for_image)
-      .def("set_scan", &ImageSweep::set_scan_for_image)
-      .def("get_beam", &ImageSweep::get_beam)
-      .def("get_detector", &ImageSweep::get_detector)
-      .def("get_goniometer", &ImageSweep::get_goniometer)
-      .def("get_scan", &ImageSweep::get_scan)
-      .def("set_beam", &ImageSweep::set_beam)
-      .def("set_detector", &ImageSweep::set_detector)
-      .def("set_goniometer", &ImageSweep::set_goniometer)
-      .def("set_scan", &ImageSweep::set_scan)
-      .def("get_array_range", &ImageSweep::get_array_range)
-      .def("complete_set", &ImageSweep::complete_sweep)
-      .def("partial_set", &ImageSweep::partial_sweep)
-      .def("update_detector_px_mm_data", &ImageSweep_update_detector_px_mm_data)
-      .def_pickle(ImageSweepPickleSuite());
+      .def("get_beam", &ImageSequence::get_beam_for_image)
+      .def("get_detector", &ImageSequence::get_detector_for_image)
+      .def("get_goniometer", &ImageSequence::get_goniometer_for_image)
+      .def("get_scan", &ImageSequence::get_scan_for_image)
+      .def("set_beam", &ImageSequence::set_beam_for_image)
+      .def("set_detector", &ImageSequence::set_detector_for_image)
+      .def("set_goniometer", &ImageSequence::set_goniometer_for_image)
+      .def("set_scan", &ImageSequence::set_scan_for_image)
+      .def("get_beam", &ImageSequence::get_beam)
+      .def("get_detector", &ImageSequence::get_detector)
+      .def("get_goniometer", &ImageSequence::get_goniometer)
+      .def("get_scan", &ImageSequence::get_scan)
+      .def("set_beam", &ImageSequence::set_beam)
+      .def("set_detector", &ImageSequence::set_detector)
+      .def("set_goniometer", &ImageSequence::set_goniometer)
+      .def("set_scan", &ImageSequence::set_scan)
+      .def("get_array_range", &ImageSequence::get_array_range)
+      .def("complete_set", &ImageSequence::complete_sequence)
+      .def("partial_set", &ImageSequence::partial_sequence)
+      .def("update_detector_px_mm_data", &ImageSequence_update_detector_px_mm_data)
+      .def_pickle(ImageSequencePickleSuite());
   }
 
   BOOST_PYTHON_MODULE(dxtbx_imageset_ext) {

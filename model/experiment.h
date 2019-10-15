@@ -156,7 +156,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if this experiment represents swept rotation image(s)
      */
-    bool is_sweep() const {
+    bool is_sequence() const {
       return !is_still();
     }
 

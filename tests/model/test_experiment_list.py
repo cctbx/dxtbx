@@ -6,12 +6,11 @@ import os
 from builtins import range
 from glob import glob
 
-import pytest
-import six.moves.cPickle as pickle
-
 from scitbx.array_family import flex
 
 import dxtbx
+import pytest
+import six.moves.cPickle as pickle
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSetFactory
@@ -99,20 +98,20 @@ def test_experiment_equality():
 
 
 def test_experiment_consistent(dials_regression):
-    # Create a sweep
-    sweep_filenames = os.path.join(
+    # Create a sequence
+    sequence_filenames = os.path.join(
         dials_regression, "centroid_test_data", "centroid*.cbf"
     )
-    sweep = ImageSetFactory.new(sorted(glob(sweep_filenames)))[0]
+    sequence = ImageSetFactory.new(sorted(glob(sequence_filenames)))[0]
 
-    # Create experiment with sweep and good scan
-    e = Experiment(imageset=sweep, scan=sweep.get_scan())
+    # Create experiment with sequence and good scan
+    e = Experiment(imageset=sequence, scan=sequence.get_scan())
     assert e.is_consistent()
 
-    # Create experiment with sweep and defective scan
-    scan = sweep.get_scan()
+    # Create experiment with sequence and defective scan
+    scan = sequence.get_scan()
     scan.set_image_range((1, 1))
-    e = Experiment(imageset=sweep, scan=scan)
+    e = Experiment(imageset=sequence, scan=scan)
     # assert not e.is_consistent()) # FIXME
 
     ## Create experiment with imageset and good scan
@@ -442,7 +441,7 @@ def test_experimentlist_factory_from_imageset():
     assert experiments[0].crystal
 
 
-def test_experimentlist_factory_from_sweep():
+def test_experimentlist_factory_from_sequence():
     filenames = ["filename_%01d.cbf" % (i + 1) for i in range(0, 2)]
 
     imageset = Format.get_imageset(
@@ -451,7 +450,7 @@ def test_experimentlist_factory_from_sweep():
         detector=Detector(),
         goniometer=Goniometer(),
         scan=Scan((1, 2), (0, 1)),
-        as_sweep=True,
+        as_sequence=True,
     )
 
     crystal = Crystal((1, 0, 0), (0, 1, 0), (0, 0, 1), space_group_symbol="P1")
@@ -476,7 +475,7 @@ def test_experimentlist_factory_from_datablock():
         detector=Detector(),
         goniometer=Goniometer(),
         scan=Scan((1, 2), (0, 1)),
-        as_sweep=True,
+        as_sequence=True,
     )
 
     crystal = Crystal((1, 0, 0), (0, 1, 0), (0, 0, 1), space_group_symbol="P1")
@@ -564,7 +563,7 @@ def test_experimentlist_dumper_dump_scan_varying(dials_regression, tmpdir):
     check(elist1, elist2)
 
 
-def test_experimentlist_dumper_dump_empty_sweep(tmpdir):
+def test_experimentlist_dumper_dump_empty_sequence(tmpdir):
     tmpdir.chdir()
 
     filenames = ["filename_%01d.cbf" % (i + 1) for i in range(0, 2)]
@@ -575,7 +574,7 @@ def test_experimentlist_dumper_dump_empty_sweep(tmpdir):
         detector=Detector(),
         goniometer=Goniometer(),
         scan=Scan((1, 2), (0.0, 1.0)),
-        as_sweep=True,
+        as_sequence=True,
     )
 
     crystal = Crystal((1, 0, 0), (0, 1, 0), (0, 0, 1), space_group_symbol="P1")
