@@ -588,7 +588,8 @@ class ImageMetadataRecord(object):
 
         # Get the template and index if possible - and only if we've got a
         # recorded oscillation value
-        if record.scan is not None and abs(record.scan.get_oscillation()[1]) > 0.0:
+        if record.scan is not None:
+            # and abs(record.scan.get_oscillation()[1]) > 0.0:
             record.template, record.index = template_regex(record.filename)
 
         return record
@@ -777,7 +778,8 @@ def _merge_scans(records, scan_tolerance=None):
                     prev.scan.append(record.scan)
                 else:
                     prev.scan.append(record.scan, scan_tolerance=scan_tolerance)
-            except RuntimeError:
+            except RuntimeError as e:
+                print(e)
                 logger.debug(
                     "  Failed to merge record %s with previous - writing new scan"
                 )
