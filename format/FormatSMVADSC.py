@@ -75,10 +75,8 @@ class FormatSMVADSC(FormatSMV):
         """Return a 16 bit trusted range shifted to account for any image
         pedestal that is present"""
 
-        if "IMAGE_PEDESTAL" in self._header_dictionary:
-            pedestal = int(self._header_dictionary["IMAGE_PEDESTAL"])
-        elif pedestal is None:
-            pedestal = 0
+        if pedestal is None:
+            pedestal = int(self._header_dictionary.get("IMAGE_PEDESTAL", 0))
 
         overload = 65535 - pedestal
         underload = -1 - pedestal
