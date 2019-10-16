@@ -201,7 +201,7 @@ class FormatNexusJungfrauHack(FormatNexus):
             epochs[i] = epochs[i - 1] + exposure_time[i - 1]
 
         self._scan_model = Scan(image_range, oscillation, exposure_time, epochs)
-        self._goniometer_model = self._goniometer_factory.single_axis()
+        self._goniometer_model = self._goniometer_factory.known_axis((-1, 0, 0))
 
     def _end(self):
         return
