@@ -171,7 +171,7 @@ namespace dxtbx { namespace model {
     }
 
     /** Get the still flag */
-    bool get_is_still() const {
+    bool is_still() const {
       return is_still_;
     }
 
