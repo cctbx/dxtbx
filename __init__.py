@@ -5,7 +5,15 @@ import os
 import sys
 import warnings
 
+import libtbx.load_env
+
 import dxtbx.format.Registry
+
+# Set up the plugin path for HDF5 to pick up compression plugins.
+plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
+os.environ["HDF5_PLUGIN_PATH"] = (
+    plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
+)
 
 # Invert FPE trap defaults, https://github.com/cctbx/cctbx_project/pull/324
 if "boost.python" in sys.modules:
