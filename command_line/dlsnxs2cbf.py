@@ -3,15 +3,11 @@ from __future__ import absolute_import, division, print_function
 import binascii
 import sys
 
-import numpy
-
 from cbflib_adaptbx import compress
 from scitbx.array_family import flex
 
-from dxtbx.format import setup_hdf5_plugin_path
-
-setup_hdf5_plugin_path()  # must be called before import h5py
-import h5py  # isort:skip # noqa: E402
+import h5py
+import numpy
 
 
 def get_mask(nfast, nslow):
