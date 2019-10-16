@@ -439,7 +439,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
 
-    iset = format_class.get_imageset([filename], lazy=lazy)
+    iset = format_class.get_imagesets([filename], lazy=lazy)[0]
 
     assert len(iset) == 4
     for i in range(len(iset)):
@@ -450,7 +450,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
         assert iset.get_goniometer(i) is None
         assert iset.get_scan(i) is None
 
-    iset = format_class.get_imageset([filename], single_file_indices=[1], lazy=lazy)
+    iset = format_class.get_imagesets([filename], single_file_indices=[1], lazy=lazy)[0]
     assert len(iset) == 1
 
     for i in range(len(iset)):
