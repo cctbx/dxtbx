@@ -759,22 +759,17 @@ public:
       Detector detector = detail::safe_dereference(get_detector_for_image(index));
 
       // Compute the pedestal for each panel
-      bool use_detector_pedestal = true;
-      bool need_pedestal_map = false;
+      bool use_detector_pedestal = false;
       std::vector<double> pedestal(detector.size(), 0);
       for (std::size_t i = 0; i < detector.size(); ++i) {
         pedestal[i] = detector[i].get_pedestal();
-        if (pedestal[i] <= 0) {
-          use_detector_pedestal = false;
-          break;
-        } else if (std::abs(pedestal[i]) > 1e-7) {
-          need_pedestal_map = true;
-          break;
+        if (std::abs(pedestal[i]) > 1e-7) {
+          use_detector_pedestal = true;
         }
       }
 
       // If using the pedestal from the panel, construct a pedestal map
-      if (use_detector_pedestal && need_pedestal_map) {
+      if (use_detector_pedestal) {
         Image<double> result;
         for (std::size_t i = 0; i < detector.size(); ++i) {
           std::size_t xsize = detector[i].get_image_size()[0];
