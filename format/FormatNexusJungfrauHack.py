@@ -8,14 +8,8 @@ from scitbx.array_family import flex
 
 import h5py
 import numpy
+from dxtbx.format import nexus
 from dxtbx.format.FormatNexus import FormatNexus
-from dxtbx.format.nexus import (
-    BeamFactory,
-    DataFactory,
-    MaskFactory,
-    NXmxReader,
-    convert_units,
-)
 from dxtbx.model import Detector, Panel, ParallaxCorrectedPxMmStrategy, Scan
 
 
@@ -35,7 +29,7 @@ class FormatNexusJungfrauHack(FormatNexus):
     def _start(self):
 
         # Read the file structure
-        self._reader = reader = NXmxReader(self._image_file)
+        self._reader = reader = nexus.NXmxReader(self._image_file)
 
         # Only support 1 set of models at the moment
         assert len(reader.entries) == 1, "Currently only supports 1 NXmx entry"
@@ -57,7 +51,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         data = entry.data[0]
 
         # Construct the models
-        self._beam_model = BeamFactory(beam).model
+        self._beam_model = nexus.beam_factory(beam).model
 
         self._setup_detector(detector, self._beam_model)
         self._setup_gonio_and_scan(sample, detector)
@@ -68,7 +62,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         else:
             num_images = 0
 
-        self._raw_data = DataFactory(data, max_size=num_images).model
+        self._raw_data = nexus.DataFactory(data, max_size=num_images).model
 
     def _setup_detector(self, detector, beam):
         nx_detector = detector.handle
@@ -91,7 +85,9 @@ class FormatNexusJungfrauHack(FormatNexus):
         thickness = nx_detector["sensor_thickness"]
         thickness_value = float(thickness[()])
         thickness_units = thickness.attrs["units"]
-        thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
+        thickness_value = float(
+            nexus.convert_units(thickness_value, thickness_units, "mm")
+        )
 
         # Get the detector material
         detector_material = clean_string(str(nx_detector["sensor_material"][()]))
@@ -121,7 +117,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         fast_pixel_direction_value = float(fast_pixel_direction[()])
         fast_pixel_direction_units = fast_pixel_direction.attrs["units"]
         fast_pixel_direction_vector = fast_pixel_direction.attrs["vector"]
-        fast_pixel_direction_value = convert_units(
+        fast_pixel_direction_value = nexus.convert_units(
             fast_pixel_direction_value, fast_pixel_direction_units, "mm"
         )
         fast_axis = matrix.col(fast_pixel_direction_vector).normalize()
@@ -131,7 +127,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         slow_pixel_direction_value = float(slow_pixel_direction[()])
         slow_pixel_direction_units = slow_pixel_direction.attrs["units"]
         slow_pixel_direction_vector = slow_pixel_direction.attrs["vector"]
-        slow_pixel_direction_value = convert_units(
+        slow_pixel_direction_value = nexus.convert_units(
             slow_pixel_direction_value, slow_pixel_direction_units, "mm"
         )
         slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
@@ -220,7 +216,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         sample = entry.samples[0]
         beam = sample.beams[0]
 
-        self._beam_model = BeamFactory(beam, index).model
+        self._beam_model = nexus.beam_factory(beam, index).model
         return self._beam_model
 
     def _scan(self):
@@ -247,7 +243,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         return self._raw_data[index]
 
     def get_mask(self, index=None, goniometer=None):
-        return MaskFactory(self.instrument.detectors, index).mask
+        return nexus.mask_factory(self.instrument.detectors, index).mask
 
     def get_num_images(self):
         if self._scan() is not None:
