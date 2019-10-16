@@ -589,7 +589,6 @@ class ImageMetadataRecord(object):
         # Get the template and index if possible - and only if we've got a
         # recorded oscillation value
         if record.scan is not None:
-            # and abs(record.scan.get_oscillation()[1]) > 0.0:
             record.template, record.index = template_regex(record.filename)
 
         return record
