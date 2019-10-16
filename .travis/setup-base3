@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXPECTED_CACHE_REVISION=20191015-python3
+EXPECTED_CACHE_REVISION=20191016-python3
 
 if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
   echo -e "\e[31;1mCron job build detected. Invalidating cache.\e[0m"
@@ -28,11 +28,11 @@ else
   # Enter environment
   . build_dials/build/setpaths.sh
 
-  # Disable dials, xia2 and downstream modules - these are not needed for testing
   # Clean out the build directory, cctbx insists on rebuilding everything anyway
+  # Then disable dials, xia2 and downstream modules - these are not needed for testing
   cd build_dials/build
-  libtbx.configure . --exclude=dials,iota,prime,xia2,xfel
   make clean
+  libtbx.configure . --exclude=dials,iota,prime,xia2,xfel
   cd ../..
 
   # Remove unused modules
