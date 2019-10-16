@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import pytest
-from dials.util.options import tolerance_phil_scope
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
@@ -40,7 +39,8 @@ def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
     datablock2 = DataBlockFactory.from_filenames(["image_0001.cbf"])[0]
     imageset2 = datablock2.extract_imagesets()[0]
 
-    tolerance = tolerance_phil_scope.extract().tolerance
+    d_u_o = pytest.importorskip("dials.util.options")
+    tolerance = d_u_o.tolerance_phil_scope.extract().tolerance
 
     diff = SequenceDiff(tolerance)
     print("\n".join(diff(imageset, imageset2)))
