@@ -768,7 +768,7 @@ public:
           use_detector_pedestal = false;
           break;
         } else if (std::abs(pedestal[i]) > 1e-7) {
-          need_pedestal_map = false;
+          need_pedestal_map = true;
           break;
         }
       }
