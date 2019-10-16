@@ -157,6 +157,7 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
             pixel_size,
             image_size,
             (underload, overload),
+            pedestal=int(self._header_dictionary.get("IMAGE_PEDESTAL"), 0),
         )
 
     def _beam(self):
@@ -194,13 +195,7 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
         assert len(self.get_detector()) == 1
         panel = self.get_detector()[0]
         image_size = panel.get_image_size()
-        raw_data = self._get_endianic_raw_data(size=image_size)
-
-        # apply image pedestal, will result in *negative pixel values*
-        image_pedestal = int(self._header_dictionary["DARK_PEDESTAL"])
-        raw_data -= image_pedestal
-
-        return raw_data
+        return self._get_endianic_raw_data(size=image_size)
 
 
 if __name__ == "__main__":

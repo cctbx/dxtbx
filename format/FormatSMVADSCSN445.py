@@ -49,6 +49,7 @@ class FormatSMVADSCSN445(FormatSMVADSCSN):
             trusted_range,
             [],
             gain=self._adsc_module_gain(),
+            pedestal=40,
         )
 
     def get_raw_data(self):
@@ -58,10 +59,4 @@ class FormatSMVADSCSN445(FormatSMVADSCSN):
         assert len(self.get_detector()) == 1
         panel = self.get_detector()[0]
         image_size = panel.get_image_size()
-        raw_data = self._get_endianic_raw_data(size=image_size)
-
-        # apply image pedestal, will result in *negative pixel values*
-        image_pedestal = 40
-        raw_data -= image_pedestal
-
-        return raw_data
+        return self._get_endianic_raw_data(size=image_size)

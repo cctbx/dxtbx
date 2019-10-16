@@ -178,6 +178,7 @@ class FormatSMVADSC(FormatSMV):
             self._adsc_trusted_range(),
             [],
             gain=self._adsc_module_gain(),
+            pedestal=int(self._header_dictionary.get("IMAGE_PEDESTAL", 0)),
         )
 
     def _beam(self):
@@ -223,13 +224,7 @@ class FormatSMVADSC(FormatSMV):
         assert len(self.get_detector()) == 1
         panel = self.get_detector()[0]
         image_size = panel.get_image_size()
-        raw_data = self._get_endianic_raw_data(size=image_size)
-
-        # if we subtract PEDESTAL is this still raw?
-        if "IMAGE_PEDESTAL" in self._header_dictionary:
-            raw_data -= int(self._header_dictionary["IMAGE_PEDESTAL"])
-
-        return raw_data
+        return self._get_endianic_raw_data(size=image_size)
 
 
 if __name__ == "__main__":
