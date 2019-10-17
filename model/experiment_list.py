@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import collections
 import copy
 import json
 import logging
@@ -9,6 +10,7 @@ from builtins import range
 
 import pkg_resources
 
+import dxtbx.datablock
 import six
 import six.moves.cPickle as pickle
 from dxtbx.datablock import (
@@ -494,18 +496,91 @@ class ExperimentListFactory(object):
     ):
         """ Create a list of data blocks from a list of directory or file names. """
         experiments = ExperimentList()
-        for db in DataBlockFactory.from_filenames(
-            filenames,
-            unhandled=unhandled,
-            compare_beam=compare_beam,
-            compare_detector=compare_detector,
-            compare_goniometer=compare_goniometer,
-            scan_tolerance=scan_tolerance,
-            format_kwargs=format_kwargs,
-        ):
-            experiments.extend(
-                ExperimentListFactory.from_datablock_and_crystal(db, None, load_models)
+
+        if format_kwargs is None:
+            format_kwargs = {}
+
+        # Process each file given by this path list
+        to_process = dxtbx.datablock.OpeningPathIterator(filenames)
+        find_format = dxtbx.datablock.FormatChecker()
+
+        format_groups = collections.OrderedDict()
+        for filename in to_process:
+            # We now have a file, pre-opened by Format.open_file (therefore
+            # cached). Determine its type, and prepare to put into a group
+            format_class = find_format.find_format(filename)
+
+            # Verify this makes sense
+            if not format_class:
+                # No format class found?
+                logger.debug("Could not determine format for %s", filename)
+                if unhandled is not None:
+                    unhandled.append(filename)
+            elif format_class.ignore():
+                # Invalid format class found?
+                logger.debug(
+                    "Found format class %s for %s but is ignored",
+                    str(format_class),
+                    filename,
+                )
+                if unhandled is not None:
+                    unhandled.append(filename)
+            elif issubclass(format_class, FormatMultiImage):
+                imageset = format_class.get_imageset(
+                    os.path.abspath(filename), format_kwargs=format_kwargs
+                )
+                format_groups.setdefault(format_class, []).append(imageset)
+                logger.debug("Loaded file: %s", filename)
+            else:
+                format_object = format_class(filename, format_kwargs=format_kwargs)
+                meta = dxtbx.datablock.ImageMetadataRecord.from_format(format_object)
+                assert meta.filename == filename
+
+                # Add this entry to our table of formats
+                format_groups.setdefault(format_class, []).append(meta)
+                logger.debug("Loaded metadata of file: %s", filename)
+
+        # Now, build experiments from these files:
+        # - FormatMultiImage files each have their own ImageSet
+        # - Every set of images forming a scan goes into its own ImageSequence
+        # - Any consecutive still frames that share any metadata with the
+        #   previous still frame get collected into one ImageSet
+
+        # Treat each format as a separate datablock
+        for format_class, records in format_groups.items():
+            if issubclass(format_class, FormatMultiImage):
+                for imageset in records:
+                    experiments.extend(
+                        ExperimentListFactory.from_imageset_and_crystal(
+                            imageset, crystal=None, load_models=load_models
+                        )
+                    )
+                continue
+
+            # Merge any consecutive and identical metadata together
+            dxtbx.datablock._merge_model_metadata(
+                records,
+                compare_beam=compare_beam,
+                compare_detector=compare_detector,
+                compare_goniometer=compare_goniometer,
             )
+            records = dxtbx.datablock._merge_scans(
+                records, scan_tolerance=scan_tolerance
+            )
+            imagesets = dxtbx.datablock._convert_to_imagesets(
+                records, format_class, format_kwargs
+            )
+            imagesets = list(imagesets)
+
+            # Validate this datablock and store it
+            assert imagesets, "No imagesets found"
+            for imageset in imagesets:
+                experiments.extend(
+                    ExperimentListFactory.from_imageset_and_crystal(
+                        imageset, crystal=None, load_models=load_models
+                    )
+                )
+
         return experiments
 
     @staticmethod
