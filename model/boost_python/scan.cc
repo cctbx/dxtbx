@@ -407,6 +407,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_array_range", &Scan::get_array_range)
       .def("get_oscillation", &get_oscillation, (arg("deg") = true))
       .def("set_oscillation", &set_oscillation, (arg("deg") = true))
+      .def("is_still", &Scan::is_still)
       .def("get_exposure_times", &Scan::get_exposure_times)
       .def("set_exposure_times", &Scan::set_exposure_times)
       .def("get_epochs", &Scan::get_epochs)
