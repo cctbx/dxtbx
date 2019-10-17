@@ -414,7 +414,7 @@ def test_experimentlist_factory_from_args(dials_regression):
     ]
 
     # Get the experiments from a list of filenames
-    experiments = ExperimentListFactory.from_args(filenames, verbose=True)
+    experiments = ExperimentListFactory.from_args(filenames)
 
     assert len(experiments) == 3
     for experiment in experiments:

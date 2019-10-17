@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import copy
 import json
+import logging
 import os
 import warnings
 from builtins import range
@@ -48,6 +49,9 @@ __all__ = [
     "GoniometerComparison",
     "SequenceDiff",
 ]
+
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidExperimentListError(RuntimeError):
@@ -457,17 +461,10 @@ class ExperimentListFactory(object):
     """ A class to help instantiate experiment lists. """
 
     @staticmethod
-    def from_args(args, verbose=False, unhandled=None):
+    def from_args(args, unhandled=None):
         """ Try to load experiment from any recognised format. """
 
-        # Create a list for unhandled arguments
-        if unhandled is None:
-            unhandled = []
-
         experiments = ExperimentList()
-        ## First try as image files
-        # experiments = ExperimentListFactory.from_datablock(
-        # DataBlockFactory.from_args(args, verbose, unhandled1))
 
         # Try to load from serialized formats
         for filename in args:
@@ -475,12 +472,11 @@ class ExperimentListFactory(object):
                 experiments.extend(
                     ExperimentListFactory.from_serialized_format(filename)
                 )
-                if verbose:
-                    print("Loaded experiments from %s" % filename)
+                logger.debug("Loaded experiments from %s", filename)
             except Exception as e:
-                if verbose:
-                    print("Could not load experiments from %s: %s" % (filename, str(e)))
-                unhandled.append(filename)
+                logger.debug("Could not load experiments from %s: %s", filename, str(e))
+                if unhandled is not None:
+                    unhandled.append(filename)
 
         # Return the experiments
         return experiments
@@ -488,7 +484,6 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_filenames(
         filenames,
-        verbose=False,
         unhandled=None,
         compare_beam=None,
         compare_detector=None,
@@ -501,7 +496,6 @@ class ExperimentListFactory(object):
         experiments = ExperimentList()
         for db in DataBlockFactory.from_filenames(
             filenames,
-            verbose=verbose,
             unhandled=unhandled,
             compare_beam=compare_beam,
             compare_detector=compare_detector,
