@@ -1,16 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
-import errno
-import itertools
 import json
 import logging
 import math
-import operator
 import os.path
 import warnings
 from builtins import range
-from os.path import abspath, dirname, normpath, splitext
 
 import libtbx
 from libtbx.utils import Sorry
@@ -20,34 +16,18 @@ import dxtbx.imageset
 import dxtbx.model
 import six
 import six.moves.cPickle as pickle
-from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import get_format_class_for_file
-from dxtbx.model.experiment_list import ExperimentList, ExperimentListFactory
 from dxtbx.sequence_filenames import (
     locate_files_matching_template_string,
-    template_regex,
     template_string_number_index,
 )
 from dxtbx.serialize import load
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
 
-try:
-    from typing import Any, Callable, Dict, Generator, Iterable, List, Type
-except ImportError:
-    pass
-
 logger = logging.getLogger(__name__)
-
-
-def _iterate_with_previous(iterable):
-    """Convenience iterator to give pairs of (previous, next) items"""
-    previous = None
-    for val in iterable:
-        yield (previous, val)
-        previous = val
 
 
 class DataBlock(object):
@@ -170,7 +150,7 @@ class DataBlock(object):
         def abspath_or_none(filename):
             if filename is None or filename == "":
                 return None
-            return abspath(filename)
+            return os.path.abspath(filename)
 
         # Get a list of all the unique models
         b = list(self.unique_beams())
@@ -191,7 +171,10 @@ class DataBlock(object):
                         collections.OrderedDict(
                             [
                                 ("__id__", "ImageSequence"),
-                                ("master", abspath(iset.reader().master_path())),
+                                (
+                                    "master",
+                                    os.path.abspath(iset.reader().master_path()),
+                                ),
                                 (
                                     "mask",
                                     abspath_or_none(iset.external_lookup.mask.filename),
@@ -228,7 +211,7 @@ class DataBlock(object):
                         collections.OrderedDict(
                             [
                                 ("__id__", "ImageSequence"),
-                                ("template", abspath(iset.get_template())),
+                                ("template", os.path.abspath(iset.get_template())),
                                 (
                                     "mask",
                                     abspath_or_none(iset.external_lookup.mask.filename),
@@ -269,7 +252,7 @@ class DataBlock(object):
                 image_list = []
                 for i in range(len(iset)):
                     image_dict = collections.OrderedDict()
-                    image_dict["filename"] = abspath(iset.get_path(i))
+                    image_dict["filename"] = os.path.abspath(iset.get_path(i))
                     image_dict["gain"] = abspath_or_none(
                         iset.external_lookup.gain.filename
                     )
@@ -382,7 +365,7 @@ class DataBlockTemplateImporter(object):
 
         # For each template do an import
         for template in templates:
-            template = normpath(template)
+            template = os.path.normpath(template)
             paths = sorted(locate_files_matching_template_string(template))
             logger.debug("The following files matched the template string:")
             if len(paths) > 0:
@@ -456,447 +439,6 @@ class DataBlockTemplateImporter(object):
 
         # Return the imageset
         return imageset
-
-
-class ImageMetadataRecord(object):
-    """Object to store metadata information.
-
-    This is used whilst building the datablocks.  The metadata for each
-    image can be read once, and then any grouping/deduplication can happen
-    later, without re-opening the original file.
-    """
-
-    def __init__(
-        self,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        template=None,
-        filename=None,
-        index=None,
-    ):
-        # type: (dxtbx.model.Beam, dxtbx.model.Detector, dxtbx.model.Goniometer, dxtbx.model.Scan, str, str, int)
-        """
-        Args:
-            beam:       Stores a beam model
-            detector:   Stores a detector model
-            goniometer: Stores a goniometer model
-            scan:       Stores a scan model
-            filename:   The filename this record was parsed from
-            template:
-                The template string parsed from the filename. Usually,
-                the template is only present if a scan was found and
-                oscillation width was nonzero.
-            index:
-                The index of this file in the template. Applying the
-                index to the template field should recover the filename
-        """
-        self.beam = beam
-        self.detector = detector
-        self.goniometer = goniometer
-        self.scan = scan
-        self.template = template
-        self.filename = filename
-        self.index = index
-
-    def merge_metadata_from(
-        self,
-        other_record,
-        compare_beam=operator.__eq__,
-        compare_detector=operator.__eq__,
-        compare_goniometer=operator.__eq__,
-    ):
-        # type: (ImageMetadataRecord, Callable, Callable, Callable) -> bool
-        """
-        Compare two record objects and merge equivalent data.
-
-        This method will compare (with optional functions) instance data
-        for beam, detector and goniometer. If any of the metadata for
-        this record is equivalent to (but a different instance from) the
-        other record, then this instance will be altered to match the
-        other. The function used to compare beams, detectors and
-        goniometers can be customised - but by default the normal
-        equality operator is used.
-
-        Args:
-            other_record:       Another metadata instance
-            compare_beam:       A function to compare beams
-            compare_detector:   A function to compare detectors
-            compare_goniometer: A function to compare goniometers
-
-        Returns: True if any action was taken
-        """
-        # Allow 'defaults' of None to work - behavior from legacy implementation
-        compare_beam = compare_beam or operator.__eq__
-        compare_detector = compare_detector or operator.__eq__
-        compare_goniometer = compare_goniometer or operator.__eq__
-
-        record_altered = False
-        if self.beam is not other_record.beam and compare_beam(
-            self.beam, other_record.beam
-        ):
-            self.beam = other_record.beam
-            record_altered = True
-        if self.detector is not other_record.detector and compare_detector(
-            self.detector, other_record.detector
-        ):
-            self.detector = other_record.detector
-            record_altered = True
-        if self.goniometer is not other_record.goniometer and compare_goniometer(
-            self.goniometer, other_record.goniometer
-        ):
-            self.goniometer = other_record.goniometer
-            record_altered = True
-
-        return record_altered
-
-    @classmethod
-    def from_format(cls, fmt):
-        # type: (Format) -> Any
-        """
-        Read metadata information from a Format instance.
-
-        This will only pull information out of a single format instance
-        while it is open - combining metadata records must be done
-        separately.
-
-        Args:
-            format: The instance of the format class to read data from
-
-        Returns:
-            A new ImageMetadataRecord with the pre-read information
-        """
-        record = cls()
-        record.filename = fmt.get_image_file()
-        # Get the metadata from the format
-        try:
-            record.beam = fmt.get_beam()
-        except Exception:
-            pass
-        try:
-            record.detector = fmt.get_detector()
-        except Exception:
-            pass
-        try:
-            record.goniometer = fmt.get_goniometer()
-        except Exception:
-            pass
-        try:
-            record.scan = fmt.get_scan()
-        except Exception:
-            pass
-
-        # Get the template and index if possible - and only if we've got a
-        # recorded oscillation value
-        if record.scan is not None:
-            record.template, record.index = template_regex(record.filename)
-
-        return record
-
-    def __repr__(self):
-        items = [
-            ("filename", self.filename),
-            ("beam", self.beam),
-            ("detector", self.detector),
-            ("goiometer", self.goniometer),
-            ("scan", self.scan),
-            ("template", self.template),
-            ("index", self.index),
-        ]
-        itemstr = ", ".join(x + "=" + repr(y) for x, y in items)
-        return "<{}{}{}>".format(type(self).__name__, " " if itemstr else "", itemstr)
-
-    def __hash__(self):
-        return hash(
-            (
-                self.beam,
-                self.detector,
-                self.goniometer,
-                self.scan,
-                self.template,
-                self.filename,
-                self.index,
-            )
-        )
-
-
-class OpeningPathIterator(object):
-    """Utility class to efficiently open all paths.
-
-    A path is a potential file or directory.
-    Each path will be opened with :meth:`dxtbx.format.Format.open_file`,
-    but in order to do so each file will only be opened once, and extraneous
-    use of :func:`os.stat` will be avoided.
-    Any path entries that are a directory will be recursed into, once -
-    any further directories found will be ignored. Any path that is not
-    a file or directory, or on which IO fails for any reason, will be added
-    to the :attr:`unhandled` list.
-    The current expected length of the iterator can be found with
-    `len(iterator)` - this can change while iterating, because until a
-    directory is encountered it cannot be detected without extra IO
-    operations. The number of items processed can be accessed through the
-    :attr:`index` attribute.
-
-    Attributes:
-        unhandled:  List of paths that could not be handled
-        index:      Index of the next path item (alternatively, number
-                    of processed path items)
-    """
-
-    def __init__(self, pathnames):
-        # type: (Iterable[str])
-        """Initialise the path iterator.
-
-        Args:
-            pathnames: Paths to attempt to open
-        """
-        # Store a tuple of (recurse, pathname) to track what was root level
-        self._paths = collections.deque((True, x) for x in sorted(pathnames))
-        # Let's keep track of how many we've processed
-        self._processed_count = 0
-        # List of paths that could not be opened
-        self.unhandled = []
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        """Get the next path to process"""
-        try:
-            # Get the next path from the queue
-            (do_recurse, pathname) = self._paths.popleft()
-        except IndexError:
-            raise StopIteration()
-        self._processed_count += 1
-
-        try:
-            # Attempt to open this path
-            Format.open_file(pathname)
-        except IOError as e:
-            if e.errno == errno.EISDIR:
-                if do_recurse:
-                    # We've tried to open a directory. Get all the entries...
-                    subdir_paths = sorted(
-                        os.path.join(pathname, x) for x in os.listdir(pathname)
-                    )
-                    # ... and add them to our queue. Make sure not to mark for recursion
-                    self._paths.extendleft((False, x) for x in reversed(subdir_paths))
-                    logger.debug("Adding %d files from %s", len(subdir_paths), pathname)
-                else:
-                    logger.debug("Not adding sub-level directory entry %s", pathname)
-                # Don't return directory instances
-                return next(self)
-            else:
-                # A non-directory-related IO error
-                self.unhandled.append(pathname)
-                logger.debug("Could not import %s: %s", pathname, os.strerror(e.errno))
-
-        return pathname
-
-    next = __next__
-
-    def __len__(self):
-        """Get the (current) total of path items"""
-        return len(self._paths) + self._processed_count
-
-    @property
-    def index(self):
-        """Get the number of processed items"""
-        return self._processed_count
-
-
-def _merge_model_metadata(
-    records, compare_beam=None, compare_detector=None, compare_goniometer=None
-):
-    # type: (Iterable[ImageMetadataRecord], Callable, Callable, Callable)
-    """
-    Merge metadata between consecutive record objects.
-
-    This will compare each record with the previous one, and make sure
-    the metadata instances are shared where appropriate.
-
-    Args:
-        records:    Records for the images to merge into imagesets
-        compare_beam:       The function to to compare beams
-        compare_detector:   The function to compare detectors
-        compare_goniometer: The function to compare goniometers
-    """
-    for prev, record in _iterate_with_previous(records):
-        if prev is None:
-            continue
-        record.merge_metadata_from(
-            prev,
-            compare_beam=compare_beam,
-            compare_detector=compare_detector,
-            compare_goniometer=compare_goniometer,
-        )
-
-
-def _merge_scans(records, scan_tolerance=None):
-    # type: (Iterable[ImageMetadataRecord], float) -> List[ImageMetadataRecord]
-    """
-    Merge consecutive scan records with identical metadata.
-
-    The records should have previously had their model metadata merged,
-    as identity will be used to compare metadata identity at this stage.
-
-    Args:
-        records:        Records to merge
-        scan_tolerance: Percentage of oscillation range to tolerate
-                        when merging scan records
-
-    Returns:
-        A (potentially shorter) list of records with scans merged
-    """
-    merged_records = []
-    logger.debug("Merging scans")
-    for prev, record in _iterate_with_previous(records):
-        # The first record always gets recorded
-        if prev is None:
-            merged_records.append(record)
-            logger.debug("  Saving initial record %s", record)
-            continue
-        # Compare metadata instances
-        same_metadata = [
-            prev.beam is record.beam,
-            prev.detector is record.detector,
-            prev.goniometer is record.goniometer,
-        ]
-        # Condition for combining:
-        # - All metadata must match
-        # - Previous record must be templated
-        # - This record must be templated
-        if (
-            all(same_metadata)
-            and prev.template is not None
-            and record.template is not None
-        ):
-            # Attempt to append to scan
-            try:
-                if scan_tolerance is None:
-                    prev.scan.append(record.scan)
-                else:
-                    prev.scan.append(record.scan, scan_tolerance=scan_tolerance)
-            except RuntimeError as e:
-                print(e)
-                logger.debug(
-                    "  Failed to merge record %s with previous - writing new scan"
-                )
-            else:
-                # If we appended, then we don't need to keep this record's scan
-                record.scan = prev.scan
-                logger.debug("  Appended record %s to previous", record)
-                continue
-        merged_records.append(record)
-
-    logger.debug("Result of merging record scans: %d records", len(merged_records))
-    return merged_records
-
-
-def _create_imagesequence(record, format_class, format_kwargs=None):
-    # type: (ImageMetadataRecord, Type[Format], Dict) -> dxtbx.imageset.ImageSequence
-    """
-    Create an ImageSequence object from a single rotation data image.
-
-    Args:
-        record: Single-image metadata records to merge into a single imageset
-        format_class: The format class object for these image records
-        format_kwargs: Extra arguments to pass to the format class when
-            creating an ImageSet
-
-    Returns:
-        An imageset representing the sequence of data
-    """
-    index_start, index_end = record.scan.get_image_range()
-    # Create the sequence
-    sequence = dxtbx.imageset.ImageSetFactory.make_sequence(
-        template=os.path.abspath(record.template),
-        indices=range(index_start, index_end + 1),
-        format_class=format_class,
-        beam=record.beam,
-        detector=record.detector,
-        goniometer=record.goniometer,
-        scan=record.scan,
-        format_kwargs=format_kwargs,
-        # check_format=False,
-    )
-    return sequence
-
-
-def _groupby_template_is_none(records):
-    # type: (Iterable[ImageMetadataRecord]) -> Generator[List[ImageMetadataRecord]]
-    """Specialization of groupby that groups records by format=None"""
-    for _, group in itertools.groupby(
-        enumerate(records), key=lambda x: -1 if x[1].template is None else x[0]
-    ):
-        yield list(x[1] for x in group)
-
-
-def _convert_to_imagesets(records, format_class, format_kwargs=None):
-    # type: (Iterable[ImageMetadataRecord], Type[dxtbx.format.Format], Dict) -> Generator[dxtbx.imageset.ImageSet]
-    """
-    Convert records into imagesets.
-
-    The records should have been metadata- and scan-merged by this point.
-    Rules:
-    - Any groups of template=None where any of the metadata objects
-      are shared, go into a single imageset
-    - Anything with a template goes into a single sequence
-
-    Args:
-        records: The records to convert
-        format_class: The format class for the data in this record
-        format_kwargs: Any format configuration arguments to pass
-            to the format imageset creator.
-
-    Returns:
-        Imagesets representing the records
-    """
-
-    # Iterate over images/sets such that template=None are clustered
-    for setgroup in _groupby_template_is_none(records):
-        if setgroup[0].template is not None:
-            # If we have a template, then it's a sequence
-            assert len(setgroup) == 1, "Got group of metadata records in template?"
-            logger.debug("Creating Imagesequence from %s", setgroup[0].template)
-            yield _create_imagesequence(setgroup[0], format_class, format_kwargs)
-        else:
-            # Without a template, it was never identified as a sequence, so an imageset
-            logger.debug("Creating ImageSet from %d files", len(setgroup))
-            yield _create_imageset(setgroup, format_class, format_kwargs)
-
-
-def _create_imageset(records, format_class, format_kwargs=None):
-    # type: (Iterable[ImageMetadataRecord], Type[dxtbx.format.Format], Dict) -> dxtbx.imageset.ImageSet
-    """
-    Create an ImageSet object from a set of single-image records.
-
-    Args:
-        records: Single-image metadata records to merge into a single imageset
-        format_class: The format class object for these image records
-        format_kwargs: Extra arguments to pass to the format class when
-            creating an ImageSet
-
-    Returns:
-        An imageset for all the image records
-    """
-    records = list(records)
-    # Nothing here should have been assigned a template parameter
-    assert all(x.template is None for x in records)
-    # Extract the filenames from the records
-    filenames = [os.path.abspath(x.filename) for x in records]
-    # Create the imageset
-    imageset = dxtbx.imageset.ImageSetFactory.make_imageset(
-        filenames, format_class, format_kwargs=format_kwargs, check_format=False
-    )
-    # Update all of the metadata for each record
-    for i, r in enumerate(records):
-        imageset.set_beam(r.beam, i)
-        imageset.set_detector(r.detector, i)
-        imageset.set_goniometer(r.goniometer, i)
-        imageset.set_scan(r.scan, i)
-    return imageset
 
 
 class InvalidDataBlockError(RuntimeError):
@@ -1215,6 +757,9 @@ class DataBlockFactory(object):
     ):
         """ Create a list of data blocks from a list of directory or file names. """
 
+        # Import here to avoid circular import dependency
+        from dxtbx.model.experiment_list import ExperimentList, ExperimentListFactory
+
         expts = ExperimentListFactory.from_filenames(
             filenames,
             unhandled=unhandled,
@@ -1257,8 +802,8 @@ class DataBlockFactory(object):
     @staticmethod
     def from_json_file(filename, check_format=True):
         """ Decode a datablock from a JSON file. """
-        filename = abspath(filename)
-        directory = dirname(filename)
+        filename = os.path.abspath(filename)
+        directory = os.path.dirname(filename)
         with open(filename, "r") as infile:
             return DataBlockFactory.from_json(
                 infile.read(), check_format=check_format, directory=directory
@@ -1373,7 +918,7 @@ class DataBlockDumper(object):
 
     def as_file(self, filename, **kwargs):
         """ Dump datablocks as file. """
-        ext = splitext(filename)[1]
+        ext = os.path.splitext(filename)[1]
         j_ext = [".json"]
         p_ext = [".p", ".pkl", ".pickle"]
         if ext.lower() in j_ext:
