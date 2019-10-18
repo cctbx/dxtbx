@@ -16,9 +16,10 @@ patterns = [
     r"([0-9]{2,12})\.(.*)",
     r"(.*)\.([0-9]{2,12})_(.*)",
     r"(.*)\.([0-9]{2,12})(.*)",
+    r"(.*)\.([0-9]{1})(.*)",
 ]
 
-joiners = [".", "_", ""]
+joiners = [".", "_", "", ""]
 
 compiled_patterns = [re.compile(pattern) for pattern in patterns]
 
