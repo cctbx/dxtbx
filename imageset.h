@@ -1194,10 +1194,10 @@ public:
    * @param scan The scan model
    */
   ImageSequence(const ImageSetData &data,
-             const beam_ptr &beam,
-             const detector_ptr &detector,
-             const goniometer_ptr &goniometer,
-             const scan_ptr &scan)
+                const beam_ptr &beam,
+                const detector_ptr &detector,
+                const goniometer_ptr &goniometer,
+                const scan_ptr &scan)
       : ImageSet(data),
         beam_(beam),
         detector_(detector),
@@ -1230,11 +1230,11 @@ public:
    * @param scan The scan model
    */
   ImageSequence(const ImageSetData &data,
-             const scitbx::af::const_ref<std::size_t> &indices,
-             const beam_ptr &beam,
-             const detector_ptr &detector,
-             const goniometer_ptr &goniometer,
-             const scan_ptr &scan)
+                const scitbx::af::const_ref<std::size_t> &indices,
+                const beam_ptr &beam,
+                const detector_ptr &detector,
+                const goniometer_ptr &goniometer,
+                const scan_ptr &scan)
       : ImageSet(data, indices),
         beam_(beam),
         detector_(detector),
@@ -1487,11 +1487,11 @@ public:
 
     // Construct the partial sequence
     ImageSequence result(data_,
-                      indices,
-                      get_beam(),
-                      get_detector(),
-                      get_goniometer(),
-                      scan_ptr(new Scan(scan)));
+                         indices,
+                         get_beam(),
+                         get_detector(),
+                         get_goniometer(),
+                         scan_ptr(new Scan(scan)));
 
     // Return the sequence
     return result;

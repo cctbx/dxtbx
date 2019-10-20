@@ -669,11 +669,11 @@ namespace dxtbx { namespace boost_python {
                 const ImageSequence::detector_ptr &,
                 const ImageSequence::goniometer_ptr &,
                 const ImageSequence::scan_ptr &>((arg("data"),
-                                               arg("indices"),
-                                               arg("beam"),
-                                               arg("detector"),
-                                               arg("goniometer"),
-                                               arg("scan"))))
+                                                  arg("indices"),
+                                                  arg("beam"),
+                                                  arg("detector"),
+                                                  arg("goniometer"),
+                                                  arg("scan"))))
       .def("get_beam", &ImageSequence::get_beam_for_image)
       .def("get_detector", &ImageSequence::get_detector_for_image)
       .def("get_goniometer", &ImageSequence::get_goniometer_for_image)
