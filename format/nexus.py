@@ -1532,31 +1532,31 @@ class ScanFactory(object):
         # in dependency tree - if not, find translations or just the thing
         # the sample depends on
         try:
-            phi = find_goniometer_rotation(obj)
+            scan_axis = find_goniometer_rotation(obj)
         except ValueError:
-            phi = find_scanning_axis(obj)
+            scan_axis = find_scanning_axis(obj)
 
-        if phi is None:
-            phi = obj.handle.file[obj.handle["depends_on"][()]]
+        if scan_axis is None:
+            scan_axis = obj.handle.file[obj.handle["depends_on"][()]]
 
-        image_range = (1, len(phi))
+        image_range = (1, len(scan_axis))
 
-        rotn = phi.attrs["transformation_type"] == numpy.string_("rotation")
+        rotn = scan_axis.attrs["transformation_type"] == numpy.string_("rotation")
 
-        if len(phi) > 1:
+        if len(scan_axis) > 1:
             if rotn:
-                oscillation = (float(phi[0]), float(phi[1] - phi[0]))
+                oscillation = (float(scan_axis[0]), float(scan_axis[1] - scan_axis[0]))
             else:
                 # nothing to see here - should really work out how to dig out
                 # the setting for this - but not today
                 oscillation = (0, 0)
             is_sequence = True
         else:
-            oscillation = (float(phi[0]), 0.0)
+            oscillation = (float(scan_axis[0]), 0.0)
             is_sequence = False
 
         # Get the exposure time
-        num_images = len(phi)
+        num_images = len(scan_axis)
         if "frame_time" in detector_obj.handle:
             frame_time = float(detector_obj.handle["frame_time"][()])
             exposure_time = flex.double(num_images, frame_time)
