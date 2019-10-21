@@ -28,13 +28,7 @@ class FormatSMVADSCSN915(FormatSMVADSCSN):
         assert len(self.get_detector()) == 1
         panel = self.get_detector()[0]
         image_size = panel.get_image_size()
-        raw_data = self._get_endianic_raw_data(size=image_size)
-
-        # apply image pedestal, will result in *negative pixel values*
-        image_pedestal = int(self._header_dictionary["IMAGE_PEDESTAL"])
-        raw_data -= image_pedestal
-
-        return raw_data
+        return self._get_endianic_raw_data(size=image_size)
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer with reversed

@@ -513,3 +513,23 @@ def test_pickle_imageset(centroid_files):
     sequence4 = sequence3[0:2]
     sequence4.get_detectorbase(0)
     sequence4[0]
+
+
+def test_get_corrected_data(centroid_files):
+    sequence = ImageSetFactory.new(centroid_files)[0]
+
+    assert not sequence.get_gain(0)
+    assert not sequence.get_pedestal(0)
+    data1 = sequence.get_corrected_data(0)[0]
+
+    # Set a gain
+    detector = sequence.get_detector()
+    panel = detector[0]
+    panel.set_gain(2)
+    data2 = sequence.get_corrected_data(0)[0]
+    assert flex.mean(data2) == pytest.approx(flex.mean(data1) / 2.0)
+
+    # Set a pedestal
+    panel.set_pedestal(1)
+    data3 = sequence.get_corrected_data(0)[0]
+    assert flex.mean(data3) == pytest.approx(flex.mean(data2) - 1.0 / 2.0)
