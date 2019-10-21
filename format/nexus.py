@@ -1513,6 +1513,15 @@ def find_goniometer_rotation(obj):
     raise ValueError("no rotation found")
 
 
+def find_scanning_axis(obj):
+    thing = obj.handle.file[obj.handle["depends_on"][()]]
+    tree = get_depends_on_chain_using_equipment_components(thing)
+    for t in tree:
+        o = obj.handle.file[t.name]
+        if o[()].size > 1:
+            return o
+
+
 class ScanFactory(object):
     """
     A class to create a scan model from NXmx stuff
@@ -1520,14 +1529,27 @@ class ScanFactory(object):
 
     def __init__(self, obj, detector_obj):
         # Get the image and oscillation range - need to search for rotations
-        # in dependency tree
+        # in dependency tree - if not, find translations or just the thing
+        # the sample depends on
         try:
             phi = find_goniometer_rotation(obj)
         except ValueError:
+            phi = find_scanning_axis(obj)
+
+        if phi is None:
             phi = obj.handle.file[obj.handle["depends_on"][()]]
+
         image_range = (1, len(phi))
+
+        rotn = phi.attrs["transformation_type"] == numpy.string_("rotation")
+
         if len(phi) > 1:
-            oscillation = (float(phi[0]), float(phi[1] - phi[0]))
+            if rotn:
+                oscillation = (float(phi[0]), float(phi[1] - phi[0]))
+            else:
+                # nothing to see here - should really work out how to dig out
+                # the setting for this - but not today
+                oscillation = (0, 0)
             is_sequence = True
         else:
             oscillation = (float(phi[0]), 0.0)
