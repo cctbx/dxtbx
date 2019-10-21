@@ -3,10 +3,9 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import pytest
-
 from dxtbx.format.FormatNexusEigerDLS16M import FormatNexusEigerDLS16M
-from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.masking import SmarGonShadowMasker
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 dials = pytest.importorskip("dials")
 pytest.importorskip("h5py")
@@ -129,7 +128,9 @@ def test_grid_scan_i04():
         assert a1 == pytest.approx(a2, abs=5e-2)
     # assert gonio.get_scan_axis() == 2
 
-    assert scan is None
+    if scan:
+        osc = scan.get_oscillation()
+        assert osc[0] == osc[1]
 
     assert beam.get_wavelength() == pytest.approx(0.979499)
     assert beam.get_s0() == pytest.approx((0, 0, -1 / beam.get_wavelength()))
