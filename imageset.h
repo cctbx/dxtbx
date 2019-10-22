@@ -725,7 +725,6 @@ public:
           break;
         } else if (std::abs(gain[i] - 1.0) > 1e-7) {
           need_gain_map = true;
-          break;
         }
       }
 
