@@ -10,16 +10,15 @@ import re
 import shutil
 import sys
 
-import py.path
-import pytest
-import six
-
 import libtbx.load_env
 import scitbx.matrix
 from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 
 import dxtbx.conftest
 import dxtbx.format.Registry
+import py.path
+import pytest
+import six
 
 if sys.version_info[:2] >= (3, 6):
     from pathlib import Path
@@ -137,7 +136,6 @@ def test_image_for_reading(test_image):
     skipped_tests = {
         "ADSC_CBF": "something wrong with ADSC CBF format reader         [2013:sauter@r12]",
         "APS_19BM": "APS beamline 19; appears to be an uncorrected image [2013:sauter@r16]",
-        "SACLA_MPCCD_Cheetah": "MPCCD not supported by iotbx             [2016:nakane@r1540]",
         "putative_imgCIF_HDF5_mapping": "test hdf5 image set not yet supported [2013:aaron@r66]",
     }
     # Check that the name is an actual folder in the file path
@@ -197,10 +195,21 @@ def test_read_image(test_image_for_reading):
 
         print("%-40s" % format_instance.__name__, R_raw_data[0].focus())
 
+        # also exercise get_corrected_data - iff it has the method
+        if hasattr(instance, "get_corrected_data"):
+
+            try:
+                R_corrected_data = instance.get_corrected_data()
+            except TypeError:
+                R_corrected_data = instance.get_corrected_data(0)
+
         # Set instance.detectorbase, if available. There used to be a blacklist
         # of files not to call this with, but relying on the attribute test
-        # seems to be just as effective
-        instance.get_detectorbase()
+        # seems to be just as effective - unless raises NotImplementedError
+        try:
+            instance.get_detectorbase()
+        except NotImplementedError:
+            pass
         print("  Have detectorbase? ", hasattr(instance, "detectorbase"))
 
         # test the older detectorbase interface if available
