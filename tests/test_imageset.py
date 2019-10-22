@@ -533,3 +533,22 @@ def test_get_corrected_data(centroid_files):
     panel.set_pedestal(1)
     data3 = sequence.get_corrected_data(0)[0]
     assert flex.mean(data3) == pytest.approx(flex.mean(data2) - 1.0 / 2.0)
+
+
+def test_multi_panel_gain_map(dials_regression):
+    pytest.importorskip("h5py")
+    filename = os.path.join(
+        dials_regression,
+        "image_examples",
+        "SACLA_MPCCD_Cheetah",
+        "run266702-0-subset.h5",
+    )
+
+    format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
+    iset = format_class.get_imageset([filename])
+
+    # Test gain map set correctly (https://github.com/dials/dials/issues/979)
+    gain_values = [p.get_gain() for p in iset.get_detector(0)]
+    gain_maps = iset.get_gain(0)
+    for v, m in zip(gain_values, gain_maps):
+        assert m.all_eq(v)
