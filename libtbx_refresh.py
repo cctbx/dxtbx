@@ -9,6 +9,9 @@ import libtbx.pkg_utils
 
 import dxtbx.format
 
+import past.builtins  # noqa: F401; Ensure package grammar files are generated
+
+
 try:
     import dials.precommitbx.nagger
 
