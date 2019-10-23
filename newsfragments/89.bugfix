@@ -1,7 +1,0 @@
-Reduce number of redundant file operations in dxtbx
-
-This includes a change in the DataBlock() construction semantics: sequences from
-identical detectors are merged into a single DataBlock() object regardless of
-their position in the call order. Since DataBlock() is deprecated and any
-reliance on order would have to be handled explicitly downstream anyway this
-should not have any impact on users or developers.

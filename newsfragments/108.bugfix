@@ -1,4 +1,0 @@
-Fix setting a per-panel pedestal
-
-Per-panel pedestals are now respected when the corrected data is used.
-
