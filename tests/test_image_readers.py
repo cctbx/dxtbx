@@ -189,6 +189,8 @@ def test_smv(dials_regression, smv_image):
     image = SMVReader(filename).image()
     if image.is_double():
         image = image.as_double()
+    elif image.is_float():
+        image = image.as_float()
     else:
         image = image.as_int()
     assert image.n_tiles() == 1
@@ -211,6 +213,8 @@ def test_tiff(dials_regression, tiff_image):
     image = TIFFReader(filename).image()
     if image.is_double():
         image = image.as_double()
+    elif image.is_float():
+        image = image.as_float()
     else:
         image = image.as_int()
     assert image.n_tiles() == 1

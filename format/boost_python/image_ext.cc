@@ -168,6 +168,7 @@ namespace dxtbx { namespace format { namespace boost_python {
       .def("is_int", &ImageBuffer::is_int)
       .def("is_double", &ImageBuffer::is_double)
       .def("as_int", &ImageBuffer::as_int)
+      .def("as_float", &ImageBuffer::as_float)
       .def("as_double", &ImageBuffer::as_double);
 
     class_<ImageReader>("ImageReader", no_init)

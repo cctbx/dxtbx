@@ -158,16 +158,17 @@ namespace dxtbx { namespace format {
   };
 
   /**
-   * A class to hold image data which can be either int or double
+   * A class to hold image data which can be either int, float, or double
    */
   class ImageBuffer {
   public:
     typedef int empty_type;
     typedef Image<int> int_image_type;
+    typedef Image<float> float_image_type;
     typedef Image<double> double_image_type;
 
     // The variant type
-    typedef boost::variant<empty_type, int_image_type, double_image_type> variant_type;
+    typedef boost::variant<empty_type, int_image_type, float_image_type, double_image_type> variant_type;
 
     /**
      * A visitor class to convert from/to different types.
@@ -233,6 +234,21 @@ namespace dxtbx { namespace format {
     };
 
     /**
+     * Is the data a float type
+     */
+    class IsFloatVisitor : public boost::static_visitor<bool> {
+    public:
+      bool operator()(const float_image_type &v) const {
+        return true;
+      }
+
+      template <typename OtherImageType>
+      bool operator()(const OtherImageType &v) const {
+        return false;
+      }
+    };
+
+    /**
      * Is the data a double type
      */
     class IsDoubleVisitor : public boost::static_visitor<bool> {
@@ -272,6 +288,13 @@ namespace dxtbx { namespace format {
     }
 
     /**
+     * @returns Is the buffer a float
+     */
+    bool is_float() const {
+      return boost::apply_visitor(IsFloatVisitor(), data_);
+    }
+
+    /**
      * @returns Is the buffer a double
      */
     bool is_double() const {
@@ -283,6 +306,13 @@ namespace dxtbx { namespace format {
      */
     Image<int> as_int() const {
       return boost::apply_visitor(ConverterVisitor<Image<int> >(), data_);
+    }
+
+    /**
+     * @returns The buffer as a float image
+     */
+    Image<float> as_float() const {
+      return boost::apply_visitor(ConverterVisitor<Image<float> >(), data_);
     }
 
     /**

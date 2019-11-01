@@ -5,6 +5,10 @@ import math
 import os
 from builtins import range
 
+import h5py
+import numpy
+import six
+
 import cctbx.uctbx
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
@@ -12,9 +16,6 @@ from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
 
 import dxtbx.model
-import h5py
-import numpy
-import six
 from dxtbx.model import (
     Beam,
     Crystal,
@@ -25,7 +26,11 @@ from dxtbx.model import (
 )
 
 try:
-    from dxtbx_format_nexus_ext import dataset_as_flex_int, dataset_as_flex_double
+    from dxtbx_format_nexus_ext import (
+        dataset_as_flex_int,
+        dataset_as_flex_double,
+        dataset_as_flex_float,
+    )
 except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
     if "SIT_ROOT" not in os.environ:
@@ -37,7 +42,24 @@ def dataset_as_flex(dataset, selection):
         return dataset_as_flex_int(dataset.id.id, selection)
     else:
         assert numpy.issubdtype(dataset.dtype, numpy.floating)
-        return dataset_as_flex_double(dataset.id.id, selection)
+        if dataset.dtype in [
+            numpy.half,
+            numpy.single,
+            numpy.float_,
+            numpy.float16,
+            numpy.float32,
+        ]:
+            return dataset_as_flex_float(dataset.id.id, selection)
+        elif dataset.dtype in [
+            numpy.double,
+            numpy.longfloat,
+            numpy.float64,
+            numpy.float96,
+            numpy.float128,
+        ]:
+            return dataset_as_flex_double(dataset.id.id, selection)
+        else:
+            assert False, "unknown floating data type (%s)" % str(dataset.dtype)
 
 
 def _check_dtype(expected_type, dataset):
