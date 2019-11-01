@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import pytest
-
 from dxtbx.datablock import DataBlockDumper, DataBlockFactory
 
 
@@ -27,6 +26,7 @@ def test_split_single_image_datablock(dials_regression, tmpdir):
         "run266702-0-subset.h5",
     )
     db = DataBlockFactory.from_filenames([sacla_file])[0]
+    db2 = DataBlockFactory.from_dict(db.to_dict())
     assert db.num_images() == 4
     imageset = db.extract_imagesets()[0]
     subset = imageset[2:3]

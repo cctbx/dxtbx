@@ -626,6 +626,8 @@ def datablock_from_dict(obj, check_format=True, directory=None):
                 iset.update_detector_px_mm_data()
             imagesets.append(iset)
         elif ident == "ImageSet" or ident == "ImageGrid":
+            # filenames = imageset["images"]
+            # indices = imageset["single_file_indices"]
             filenames = [image["filename"] for image in imageset["images"]]
             indices = [
                 image["image"] for image in imageset["images"] if "image" in image

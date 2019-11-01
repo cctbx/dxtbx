@@ -655,6 +655,46 @@ class _(object):
             if "scan" in e:
                 imageset["scan"] = e["scan"]
 
+            if imageset["__id__"] in ("ImageSet", "ImageGrid"):
+                image_list = []
+                for filename, file_index in zip(
+                    imageset["images"], imageset["single_file_indices"]
+                ):
+                    image_dict = collections.OrderedDict()
+                    image_dict["filename"] = filename
+                    image_dict["image"] = file_index
+                    # image_dict["gain"] = abspath_or_none(
+                    # iset.external_lookup.gain.filename
+                    # )
+                    # image_dict["pedestal"] = abspath_or_none(
+                    # iset.external_lookup.pedestal.filename
+                    # )
+                    # image_dict["dx"] = abspath_or_none(iset.external_lookup.dx.filename)
+                    # image_dict["dy"] = abspath_or_none(iset.external_lookup.dy.filename)
+                    # if iset.reader().is_single_file_reader():
+                    # image_dict["image"] = iset.indices()[i]
+                    # try:
+                    # image_dict["beam"] = b.index(iset.get_beam(i))
+                    # except Exception:
+                    # pass
+                    # try:
+                    # image_dict["detector"] = d.index(iset.get_detector())
+                    # except Exception:
+                    # pass
+                    # try:
+                    # image_dict["goniometer"] = g.index(iset.get_goniometer())
+                    # except Exception:
+                    # pass
+                    # try:
+                    # image_dict["scan"] = s.index(iset.get_scan(i))
+                    # except Exception:
+                    # pass
+                    image_list.append(image_dict)
+                # imageset["mask"] = abspath_or_none(iset.external_lookup.mask.filename)
+                imageset["images"] = image_list
+                # imageset["params"] = iset.params()
+                # result["imageset"].append(imageset)
+
         # Remove the experiments
         del obj["experiment"]
 

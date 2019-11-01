@@ -808,6 +808,35 @@ def test_experimentlist_from_file(dials_regression, tmpdir):
     assert exp_list[0].beam
 
 
+def test_to_datablocks_imagesequence(dials_data):
+    expts = ExperimentListFactory.from_filenames(
+        [dials_data("vmxi_thaumatin").join("image_15799_master.h5").strpath]
+    )
+    datablocks = expts.to_datablocks()
+    assert len(datablocks) == 1
+    imagesets = datablocks[0].extract_imagesets()
+    assert len(imagesets) == 1
+    imageset = imagesets[0]
+    assert imageset.get_detector() == expts[0].detector
+    assert imageset.get_beam() == expts[0].beam
+    assert imageset.get_goniometer() == expts[0].goniometer
+    assert imageset.get_scan() == expts[0].scan
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_to_datablocks_imageset(dials_regression, tmpdir):
+    tmpdir.chdir()
+    pytest.importorskip("h5py")
+    sacla_file = os.path.join(
+        dials_regression,
+        "image_examples",
+        "SACLA_MPCCD_Cheetah",
+        "run266702-0-subset.h5",
+    )
+    expts = ExperimentListFactory.from_filenames([sacla_file])
+    datablocks = expts.to_datablocks()
+
+
 def test_path_iterator(monkeypatch):
     """Test the pathname iterator that avoids excessive file calls"""
 
