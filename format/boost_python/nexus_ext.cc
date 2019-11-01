@@ -34,6 +34,16 @@ namespace dxtbx { namespace format { namespace boost_python {
   }
 
   /**
+   * Custom read function for floats
+   */
+  template<>
+  inline herr_t custom_read<float>(hid_t dataset_id, hid_t mem_space_id, hid_t file_space_id,
+                          scitbx::af::versa<float, scitbx::af::flex_grid<> > data) {
+    return H5Dread(
+      dataset_id, H5T_NATIVE_FLOAT, mem_space_id, file_space_id, H5P_DEFAULT, &data[0]);
+  }
+
+  /**
    * Custom read function for doubles
    */
   template<>
@@ -106,6 +116,7 @@ namespace dxtbx { namespace format { namespace boost_python {
   BOOST_PYTHON_MODULE(dxtbx_format_nexus_ext) {
     def("dataset_as_flex_int", &dataset_as_flex<int>);
     def("dataset_as_flex_double", &dataset_as_flex<double>);
+    def("dataset_as_flex_float", &dataset_as_flex<float>);
   }
 
 }}}  // namespace dxtbx::format::boost_python

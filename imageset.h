@@ -448,6 +448,8 @@ protected:
     ImageBuffer buffer;
     if (name == "double") {
       buffer = ImageBuffer(get_image_from_tuple<double>(obj));
+    } else if (name == "float") {
+      buffer = ImageBuffer(get_image_from_tuple<float>(obj));
     } else if (name == "int") {
       buffer = ImageBuffer(get_image_from_tuple<int>(obj));
     } else {
@@ -465,6 +467,8 @@ protected:
     ImageBuffer buffer;
     if (name == "double") {
       buffer = ImageBuffer(Image<double>(get_image_tile_from_object<double>(obj)));
+    } else if (name == "float") {
+      buffer = ImageBuffer(Image<float>(get_image_tile_from_object<float>(obj)));
     } else if (name == "int") {
       buffer = ImageBuffer(Image<int>(get_image_tile_from_object<int>(obj)));
     } else {
