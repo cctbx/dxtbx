@@ -102,8 +102,8 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             reconst_mode = bool(os.environ["MPCCD_RECONST_MODE"])
         self.RECONST_MODE = reconst_mode
         self.RECONST_64 = (
-            True
-        )  # Set False if you want to keep panels completely horizontal
+            True  # Set False if you want to keep panels completely horizontal
+        )
         # But this makes errors bigger.
 
         if "MPCCD_GEOMETRY" in os.environ:

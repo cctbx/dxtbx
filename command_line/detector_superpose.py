@@ -165,7 +165,10 @@ class Script(object):
             if params.fit_target == "corners":
                 rmsd = rmsd_from_centers(reference_sites, lsq.other_sites_best_fit())
                 print("RMSD of fit of centers: %.1f microns" % rmsd)
-            angle, axis = lsq.r.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
+            (
+                angle,
+                axis,
+            ) = lsq.r.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
                 deg=True
             )
             print(

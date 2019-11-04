@@ -248,9 +248,7 @@ def get_vendortype(xdetector):
     if array == (2463, 2527):
         return "Pilatus-6M"
     elif array == (2463, 195):
-        return (
-            "Pilatus-6M"
-        )  # special treatment of Pilatus-12M, treat as -6M for the viewer
+        return "Pilatus-6M"  # special treatment of Pilatus-12M, treat as -6M for the viewer
     elif array == (1475, 1679):
         return "Pilatus-2M"
     elif array == (487, 619):

@@ -137,7 +137,10 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
                 )
             )
 
-            angle, axis = r3.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
+            (
+                angle,
+                axis,
+            ) = r3.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
                 deg=True
             )
             if angle == 0:
