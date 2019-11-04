@@ -59,6 +59,8 @@ master_phil = libtbx.phil.parse(
     .type = int
   max_images = None
     .type = int
+  reference_geometry = None
+    .type = path
 """
 )
 
@@ -98,6 +100,15 @@ def run(args, imageset=None):
     assert params.n_bins is not None
     assert params.verbose is not None
     assert params.output_bins is not None
+
+    if params.reference_geometry is not None:
+        ref_expts = ExperimentListFactory.from_json_file(
+            params.reference_geometry, check_format=None
+        )
+        assert (
+            len(ref_expts.detectors()) == 1
+        ), "Provide only one detector in the reference geometry file"
+        detector = ref_expts.detectors()[0]
 
     # Allow writing to a file instead of stdout
     if params.output_file is None:
@@ -153,7 +164,8 @@ def run(args, imageset=None):
             subiterable = [params.image_number]
         for image_number in subiterable:
             beam = iset.get_beam(image_number)
-            detector = iset.get_detector(image_number)
+            if params.reference_geometry is None:
+                detector = iset.get_detector(image_number)
             s0 = col(beam.get_s0())
 
             # Search the detector for the panel farthest from the beam. The
@@ -312,6 +324,8 @@ def run(args, imageset=None):
                 if params.plot_x_max is not None:
                     results = results.select(xvals <= params.plot_x_max)
                     xvals = xvals.select(xvals <= params.plot_x_max)
+                if params.x_axis == "resolution":
+                    xvals = 1 / (xvals ** 2)
                 if params.normalize:
                     plt.plot(
                         xvals.as_numpy_array(),
@@ -325,10 +339,17 @@ def run(args, imageset=None):
                 elif params.x_axis == "q":
                     plt.xlabel("q")
                 elif params.x_axis == "resolution":
+                    from matplotlib.ticker import FuncFormatter
+
                     plt.xlabel("Resolution ($\\AA$)")
-                    plt.gca().set_xscale("log")
-                    plt.gca().invert_xaxis()
-                    plt.xlim(0, 50)
+
+                    def resolution(x, pos):
+                        if x <= 0:
+                            return "-"
+                        return "%.1f" % (1 / math.sqrt(x))
+
+                    formatter = FuncFormatter(resolution)
+                    plt.gca().xaxis.set_major_formatter(formatter)
                 plt.ylabel("Avg ADUs")
                 if params.plot_y_max is not None:
                     plt.ylim(0, params.plot_y_max)
