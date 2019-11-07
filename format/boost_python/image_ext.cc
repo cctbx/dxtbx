@@ -166,6 +166,7 @@ namespace dxtbx { namespace format { namespace boost_python {
       .def(init<Image<double> >())
       .def("is_empty", &ImageBuffer::is_empty)
       .def("is_int", &ImageBuffer::is_int)
+      .def("is_float", &ImageBuffer::is_float)
       .def("is_double", &ImageBuffer::is_double)
       .def("as_int", &ImageBuffer::as_int)
       .def("as_float", &ImageBuffer::as_float)
