@@ -3,13 +3,14 @@ from __future__ import absolute_import, division, print_function
 import os
 from builtins import range
 
+import pytest
+import six.moves.cPickle as pickle
+
 from scitbx.array_family import flex
 
 import dxtbx.format.image
 import dxtbx.format.Registry
 import dxtbx.tests.imagelist
-import pytest
-import six.moves.cPickle as pickle
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import Beam, Detector, Panel
@@ -78,6 +79,7 @@ def test_image_buffer():
 
     b = dxtbx.format.image.ImageBuffer(image)
     assert b.is_int() is True
+    assert b.is_float() is False
     assert b.is_double() is False
     assert b.is_empty() is False
 

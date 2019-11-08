@@ -434,6 +434,8 @@ namespace dxtbx { namespace boost_python {
       result = image_as_tuple<int>(buffer.as_int());
     } else if (buffer.is_double()) {
       result = image_as_tuple<double>(buffer.as_double());
+    } else if (buffer.is_float()) {
+      result = image_as_tuple<float>(buffer.as_float());
     } else {
       throw DXTBX_ERROR("Problem reading raw data");
     }
