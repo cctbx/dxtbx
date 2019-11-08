@@ -700,8 +700,8 @@ class ExperimentListFactory(object):
 class ExperimentListTemplateImporter(object):
     """ A class to import an experiment list from a template. """
 
-    def __init__(self, templates, verbose=False, **kwargs):
-        importer = DataBlockTemplateImporter(templates, verbose=verbose, **kwargs)
+    def __init__(self, templates, **kwargs):
+        importer = DataBlockTemplateImporter(templates, **kwargs)
         self.experiments = ExperimentList()
         for db in importer.datablocks:
             self.experiments.extend(
