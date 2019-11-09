@@ -45,7 +45,10 @@ class FormatSEReBIC(FormatSER):
             pixel_size = 0.028, 0.028
 
         distance = 2000
-        trusted_range = (-4, 65535)
+        # For Ceta, complete saturation occurs ~8000 counts. Negative values
+        # are common and may require setting a negative pedestal to make most
+        # pixels positive.
+        trusted_range = (-1000, 8000)
         beam_centre = [(p * i) / 2 for p, i in zip(pixel_size, image_size)]
         d = self._detector_factory.simple(
             "PAD",
@@ -57,8 +60,9 @@ class FormatSEReBIC(FormatSER):
             image_size,
             trusted_range,
         )
-        # Not sure what the gain is
-        # for p in d: p.set_gain(8)
+        # The gain of the Ceta is thought to be > 26.0
+        for p in d:
+            p.set_gain(26)
         return d
 
     def _beam(self):
