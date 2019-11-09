@@ -41,14 +41,16 @@ class FormatSEReBIC(FormatSER):
         )
         if image_size == (4096, 4096):
             pixel_size = 0.014, 0.014
+            binning = 1
         if image_size == (2048, 2048):
             pixel_size = 0.028, 0.028
+            binning = 2
 
         distance = 2000
-        # For Ceta, complete saturation occurs ~8000 counts. Negative values
+        # For Ceta binning=1, complete saturation occurs ~8000 counts. Negative values
         # are common and may require setting a negative pedestal to make most
         # pixels positive.
-        trusted_range = (-1000, 8000)
+        trusted_range = (-1000, 8000 * binning ** 2)
         beam_centre = [(p * i) / 2 for p, i in zip(pixel_size, image_size)]
         d = self._detector_factory.simple(
             "PAD",
