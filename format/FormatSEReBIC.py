@@ -60,7 +60,8 @@ class FormatSEReBIC(FormatSER):
             image_size,
             trusted_range,
         )
-        # The gain of the Ceta is thought to be > 26.0
+        # The gain of the CetaD is thought to be > 26.0 at 200 keV. That of
+        # the standard Ceta is about 7.
         for p in d:
             p.set_gain(26)
         return d
