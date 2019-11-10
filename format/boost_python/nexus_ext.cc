@@ -21,14 +21,20 @@ namespace dxtbx { namespace format { namespace boost_python {
 
   using namespace boost::python;
   template <typename T>
-  inline herr_t custom_read(hid_t, hid_t, hid_t, scitbx::af::versa<T, scitbx::af::flex_grid<> >);
+  inline herr_t custom_read(hid_t,
+                            hid_t,
+                            hid_t,
+                            scitbx::af::versa<T, scitbx::af::flex_grid<> >);
 
   /**
    * Custom read function for integers
    */
-  template<>
-  inline herr_t custom_read<int>(hid_t dataset_id, hid_t mem_space_id, hid_t file_space_id,
-                          scitbx::af::versa<int, scitbx::af::flex_grid<> > data) {
+  template <>
+  inline herr_t custom_read<int>(
+    hid_t dataset_id,
+    hid_t mem_space_id,
+    hid_t file_space_id,
+    scitbx::af::versa<int, scitbx::af::flex_grid<> > data) {
     return H5Dread(
       dataset_id, H5T_NATIVE_INT, mem_space_id, file_space_id, H5P_DEFAULT, &data[0]);
   }
@@ -36,9 +42,12 @@ namespace dxtbx { namespace format { namespace boost_python {
   /**
    * Custom read function for floats
    */
-  template<>
-  inline herr_t custom_read<float>(hid_t dataset_id, hid_t mem_space_id, hid_t file_space_id,
-                          scitbx::af::versa<float, scitbx::af::flex_grid<> > data) {
+  template <>
+  inline herr_t custom_read<float>(
+    hid_t dataset_id,
+    hid_t mem_space_id,
+    hid_t file_space_id,
+    scitbx::af::versa<float, scitbx::af::flex_grid<> > data) {
     return H5Dread(
       dataset_id, H5T_NATIVE_FLOAT, mem_space_id, file_space_id, H5P_DEFAULT, &data[0]);
   }
@@ -46,11 +55,18 @@ namespace dxtbx { namespace format { namespace boost_python {
   /**
    * Custom read function for doubles
    */
-  template<>
-  inline herr_t custom_read<double>(hid_t dataset_id, hid_t mem_space_id, hid_t file_space_id,
-                          scitbx::af::versa<double, scitbx::af::flex_grid<> > data) {
-    return H5Dread(
-      dataset_id, H5T_NATIVE_DOUBLE, mem_space_id, file_space_id, H5P_DEFAULT, &data[0]);
+  template <>
+  inline herr_t custom_read<double>(
+    hid_t dataset_id,
+    hid_t mem_space_id,
+    hid_t file_space_id,
+    scitbx::af::versa<double, scitbx::af::flex_grid<> > data) {
+    return H5Dread(dataset_id,
+                   H5T_NATIVE_DOUBLE,
+                   mem_space_id,
+                   file_space_id,
+                   H5P_DEFAULT,
+                   &data[0]);
   }
 
   /**
@@ -102,7 +118,7 @@ namespace dxtbx { namespace format { namespace boost_python {
     hid_t mem_space_id = H5Screate_simple(ndims, &count[0], NULL);
 
     // Copy the data
-    herr_t status2 = custom_read<T> (dataset_id, mem_space_id, file_space_id, data);
+    herr_t status2 = custom_read<T>(dataset_id, mem_space_id, file_space_id, data);
     DXTBX_ASSERT(status2 >= 0);
 
     // Close some stuff

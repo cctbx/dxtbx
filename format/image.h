@@ -168,7 +168,9 @@ namespace dxtbx { namespace format {
     typedef Image<double> double_image_type;
 
     // The variant type
-    typedef boost::variant<empty_type, int_image_type, float_image_type, double_image_type> variant_type;
+    typedef boost::
+      variant<empty_type, int_image_type, float_image_type, double_image_type>
+        variant_type;
 
     /**
      * A visitor class to convert from/to different types.
