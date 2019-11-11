@@ -53,6 +53,10 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         # 24 rows * 5 columns
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         self._multi_panel = kwargs.get("multi_panel", False)
+
+        # mask for broken modules 2019/11/11
+        self._broken_module_mask = self._make_broken_module_mask()
+
         super(FormatCBFMiniPilatusDLS12M, self).__init__(image_file, **kwargs)
 
     def _detector(self):
@@ -173,7 +177,27 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
             slow=cbf_header["slow"],
         )
 
+        # Overwrite broken pixels with -2 - 2019/11/11
+        pixel_values.as_1d().set_selected(self._broken_module_mask, -2)
+
         return pixel_values
+
+    def _make_broken_module_mask(self):
+        from scitbx.array_family import flex
+
+        mask = flex.bool(flex.grid((5071, 2463)), False)
+        module = flex.bool(flex.grid((195, 487)), True)
+
+        dx = 487 + 7
+        dy = 195 + 17
+
+        # module @ row 15 column 2
+        mask.matrix_paste_block_in_place(module, 15 * dy, 2 * dx)
+
+        # module @ row 17 column 0
+        mask.matrix_paste_block_in_place(module, 17 * dy, 0)
+
+        return mask.as_1d()
 
     def get_raw_data(self):
         if self._raw_data is None:
