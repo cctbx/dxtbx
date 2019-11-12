@@ -7,8 +7,15 @@ import libtbx.phil
 from scitbx.array_family import flex
 
 import pycbf
-from dxtbx_model_ext import KappaGoniometer  # noqa: F401, exported symbol
-from dxtbx_model_ext import Goniometer, MultiAxisGoniometer
+from dxtbx_model_ext import Goniometer, KappaGoniometer, MultiAxisGoniometer
+
+__all__ = [
+    "Goniometer",
+    "GoniometerFactory",
+    "KappaGoniometer",
+    "MultiAxisGoniometer",
+    "goniometer_phil_scope",
+]
 
 goniometer_phil_scope = libtbx.phil.parse(
     """
