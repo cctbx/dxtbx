@@ -165,7 +165,7 @@ def _check_attr(name, dset, dtype=None):
     Check some properties of an attribute
     :param name:  The name of the attribute
     :param dset:  The dataset to check
-    :param tests: A list of tests to run
+    :param dtype: The expected type of the named attribute
     """
 
     if name not in dset.attrs:
@@ -311,7 +311,7 @@ def construct_vector(nx_file, item, vector=None):
         def __init__(self, vector):
             self.vector = matrix.col(vector)
 
-        def __call__(self, nx_file, depends_on):
+        def visit(self, nx_file, depends_on):
             item = nx_file[depends_on]
             value = item[()]
             units = item.attrs["units"]
@@ -335,9 +335,6 @@ def construct_vector(nx_file, item, vector=None):
             else:
                 raise RuntimeError("Unknown transformation_type: %s" % ttype)
 
-        def result(self):
-            return self.vector
-
     if vector is None:
         value = nx_file[item][()]
         units = nx_file[item].attrs["units"]
@@ -357,10 +354,8 @@ def construct_vector(nx_file, item, vector=None):
             vector += offset
 
     visitor = TransformVisitor(vector)
-
-    visit_dependencies(nx_file, item, visitor)
-
-    return visitor.result()
+    visit_dependencies(nx_file, item, visitor.visit)
+    return visitor.vector
 
 
 def construct_axes(nx_file, item, vector=None):
@@ -375,7 +370,7 @@ def construct_axes(nx_file, item, vector=None):
             self._axis_names = flex.std_string()
             self._is_scan_axis = flex.bool()
 
-        def __call__(self, nx_file, depends_on):
+        def visit(self, nx_file, depends_on):
             item = nx_file[depends_on]
             value = item[()]
             units = item.attrs["units"]
@@ -445,9 +440,9 @@ def construct_axes(nx_file, item, vector=None):
             vector += offset
 
     visitor = Visitor()
-    visitor(nx_file, item)
+    visitor.visit(nx_file, item)
 
-    visit_dependencies(nx_file, item, visitor)
+    visit_dependencies(nx_file, item, visitor.visit)
 
     return visitor.result()
 
@@ -478,7 +473,6 @@ class NXdetector_module(object):
     """
 
     def __init__(self, handle, errors=None):
-
         self.handle = handle
 
         items = {
@@ -1493,7 +1487,6 @@ class GoniometerFactory(object):
     """
 
     def __init__(self, obj):
-
         axes, angles, axis_names, scan_axis = construct_axes(
             obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
         )
@@ -1506,7 +1499,6 @@ class GoniometerFactory(object):
             self.model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
                 axes, angles, axis_names, scan_axis
             )
-        return
 
 
 def find_goniometer_rotation(obj):
