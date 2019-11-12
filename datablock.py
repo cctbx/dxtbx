@@ -619,6 +619,25 @@ class ImageMetadataRecord(object):
             )
         )
 
+    def __eq__(self, other):
+        if not isinstance(other, ImageMetadataRecord):
+            return False
+        return all(
+            getattr(self, attribute) == getattr(other, attribute)
+            for attribute in (
+                "beam",
+                "detector",
+                "goniometer",
+                "scan",
+                "template",
+                "filename",
+                "index",
+            )
+        )
+
+    def __ne__(self, other):
+        return not self == other
+
 
 class OpeningPathIterator(object):
     """Utility class to efficiently open all paths.
