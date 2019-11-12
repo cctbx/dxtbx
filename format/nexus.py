@@ -5,10 +5,6 @@ import math
 import os
 from builtins import range
 
-import h5py
-import numpy
-import six
-
 import cctbx.uctbx
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
@@ -16,6 +12,9 @@ from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
 
 import dxtbx.model
+import h5py
+import numpy
+import six
 from dxtbx.model import (
     Beam,
     Crystal,
@@ -161,39 +160,22 @@ class check_dset(object):
                 raise RuntimeError(errors)
 
 
-class check_attr(object):
+def _check_attr(name, dset, dtype=None):
     """
     Check some properties of an attribute
+    :param name:  The name of the attribute
+    :param dset:  The dataset to check
+    :param tests: A list of tests to run
     """
 
-    def __init__(self, name, value=None, dtype=None):
-        """
-        Set stuff to check
-        :param name:  The name of the attribute
-        :param value: The value of the attribute
-        :param tests: A list of tests to run
-        """
-        self.name = name
-        self.value = value
-        self.dtype = dtype
-
-    def __call__(self, dset):
-        if self.name not in dset.attrs:
+    if name not in dset.attrs:
+        raise RuntimeError("'%s' does not have an attribute '%s'" % (dset.name, name))
+    if dtype is not None:
+        if not isinstance(dset.attrs[name], dtype):
             raise RuntimeError(
-                "'%s' does not have an attribute '%s'" % (dset.name, self.name)
+                "attribute '%s' of %s has type %s, expected %s"
+                % (name, dset.name, type(dset.attrs[name]), dtype)
             )
-        elif self.value is not None and dset.attrs[self.name] != self.value:
-            raise RuntimeError(
-                "attribute '%s' of %s has value %s, expected %s"
-                % (self.name, dset.name, dset.attrs[self.name], self.value)
-            )
-        elif self.dtype is not None:
-            dtype = type(dset.attrs[self.name])
-            if not isinstance(dset.attrs[self.name], self.dtype):
-                raise RuntimeError(
-                    "attribute '%s' of %s has type %s, expected %s"
-                    % (self.name, dset.name, dtype, self.dtype)
-                )
 
 
 def local_visit(nxfile, visitor):
@@ -305,7 +287,7 @@ def visit_dependencies(nx_file, item, visitor=None):
     else:
         depends_on = nx_file[item].attrs["depends_on"]
     while not depends_on == numpy.string_("."):
-        if visitor is not None:
+        if visitor:
             visitor(nx_file, depends_on)
         if depends_on in dependency_chain:
             raise RuntimeError("'%s' is a circular dependency" % depends_on)
@@ -374,8 +356,6 @@ def construct_vector(nx_file, item, vector=None):
                 vector = vector * value[0]
             vector += offset
 
-    else:
-        pass
     visitor = TransformVisitor(vector)
 
     visit_dependencies(nx_file, item, visitor)
@@ -478,7 +458,6 @@ def run_checks(handle, items):
     """
     for item, detail in items.items():
         min_occurs = detail["minOccurs"]
-        checks = detail["checks"]
         assert min_occurs in [0, 1]
         try:
             dset = handle[item]
@@ -489,7 +468,7 @@ def run_checks(handle, items):
             else:
                 continue
         if dset is not None:
-            for check in checks:
+            for check in detail["checks"]:
                 check(dset)
 
 
@@ -525,33 +504,33 @@ class NXdetector_module(object):
                     check_dset(
                         dtype=["float64", "float32", "int64", "int32"], is_scalar=True
                     ),
-                    check_attr("transformation_type"),
-                    check_attr("vector"),
-                    check_attr("offset"),
-                    check_attr("units", dtype=(numpy.string_, str)),
-                    check_attr("depends_on"),
+                    functools.partial(_check_attr, "transformation_type"),
+                    functools.partial(_check_attr, "vector"),
+                    functools.partial(_check_attr, "offset"),
+                    functools.partial(_check_attr, "units", dtype=(numpy.string_, str)),
+                    functools.partial(_check_attr, "depends_on"),
                 ],
             },
             "fast_pixel_direction": {
                 "minOccurs": 0,
                 "checks": [
                     check_dset(dtype=["float32", "float64"], is_scalar=True),
-                    check_attr("transformation_type"),
-                    check_attr("vector"),
-                    check_attr("offset"),
-                    check_attr("units", dtype=(numpy.string_, str)),
-                    check_attr("depends_on"),
+                    functools.partial(_check_attr, "transformation_type"),
+                    functools.partial(_check_attr, "vector"),
+                    functools.partial(_check_attr, "offset"),
+                    functools.partial(_check_attr, "units", dtype=(numpy.string_, str)),
+                    functools.partial(_check_attr, "depends_on"),
                 ],
             },
             "slow_pixel_direction": {
                 "minOccurs": 0,
                 "checks": [
                     check_dset(dtype=["float32", "float64"], is_scalar=True),
-                    check_attr("transformation_type"),
-                    check_attr("vector"),
-                    check_attr("offset"),
-                    check_attr("units", dtype=(numpy.string_, str)),
-                    check_attr("depends_on"),
+                    functools.partial(_check_attr, "transformation_type"),
+                    functools.partial(_check_attr, "vector"),
+                    functools.partial(_check_attr, "offset"),
+                    functools.partial(_check_attr, "units", dtype=(numpy.string_, str)),
+                    functools.partial(_check_attr, "depends_on"),
                 ],
             },
         }
@@ -716,7 +695,7 @@ class NXdetector(object):
                 "minOccurs": 0,
                 "checks": [
                     check_dset(dtype=["float32", "float64"], is_scalar=True),
-                    check_attr("units", dtype=numpy.string_),
+                    functools.partial(_check_attr, "units", dtype=numpy.string_),
                 ],
             },
             "threshold_energy": {
