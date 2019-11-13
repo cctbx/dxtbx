@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import copy
 import json
 import os
-import warnings
 from builtins import range
 
 import pkg_resources
@@ -434,23 +433,6 @@ def _experimentlist_from_file(filename, directory=None):
             return json.load(infile, object_hook=_decode_dict)
     except IOError:
         raise IOError("unable to read file, %s" % filename)
-
-
-class ExperimentListDumper(object):
-    """ A class to help writing JSON files. """
-
-    def __init__(self, experiment_list):
-        """ Initialise """
-        warnings.warn(
-            "class ExperimentListDumper() is deprecated. "
-            "Use experiment_list.as_json(), experiment_list.as_pickle(), experiment_list.as_file() directly",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        assert experiment_list
-        self.as_json = experiment_list.as_json
-        self.as_pickle = experiment_list.as_pickle
-        self.as_file = experiment_list.as_file
 
 
 class ExperimentListFactory(object):

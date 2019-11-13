@@ -8,7 +8,6 @@ import logging
 import math
 import operator
 import os.path
-import warnings
 from builtins import range
 from os.path import abspath, dirname, normpath, splitext
 
@@ -315,13 +314,9 @@ class FormatChecker(object):
     """A helper class to speed up identifying the correct image format by first
     trying the last format that was used."""
 
-    def __init__(self, verbose=None):
+    def __init__(self):
         """ Set the format class to none. """
         self._format_class = None
-        if verbose is not None:
-            warnings.warn(
-                "The verbose parameter is deprecated.", DeprecationWarning, stacklevel=2
-            )
 
     def find_format(self, filename):
         """Search the registry for the image format class.
@@ -360,12 +355,9 @@ class FormatChecker(object):
 class DataBlockTemplateImporter(object):
     """ A class to import a datablock from a template. """
 
-    def __init__(self, templates, verbose=None, **kwargs):
+    def __init__(self, templates, **kwargs):
         """ Import the datablocks from the given templates. """
-        if verbose is not None:
-            warnings.warn(
-                "The verbose parameter is deprecated.", DeprecationWarning, stacklevel=2
-            )
+        assert "verbose" not in kwargs, "The verbose parameter has been removed"
         assert len(templates) > 0
 
         self.datablocks = []
@@ -923,7 +915,6 @@ class DataBlockFilenameImporter(object):
     def __init__(
         self,
         filenames,
-        verbose=None,
         compare_beam=None,
         compare_detector=None,
         compare_goniometer=None,
@@ -931,10 +922,6 @@ class DataBlockFilenameImporter(object):
         format_kwargs=None,
     ):
         """ Import the datablocks from the given filenames. """
-        if verbose is not None:
-            warnings.warn(
-                "The verbose parameter is deprecated.", DeprecationWarning, stacklevel=2
-            )
 
         # Init the datablock list
         self.unhandled = []
