@@ -11,7 +11,7 @@ from boost.python import streambuf
 from iotbx.detectors.mar import MARImage
 from scitbx.array_family import flex
 
-from dxtbx import read_uint16
+from dxtbx.ext import read_uint16
 from dxtbx.format.FormatTIFF import FormatTIFF
 
 

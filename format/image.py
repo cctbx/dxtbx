@@ -1,6 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
-from dxtbx_format_image_ext import *  # noqa: F403
+import boost.python  # noqa # lgtm # Ensure boost python libraries are in memory
+
+from dxtbx_format_image_ext import *  # isort:skip # noqa: F403
+
 
 __all__ = (  # noqa: F405
     "CBFFastImageListReader",

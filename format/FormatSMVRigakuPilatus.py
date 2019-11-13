@@ -12,7 +12,7 @@ from boost.python import streambuf
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx import read_int32
+from dxtbx.ext import read_int32
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
 

@@ -17,7 +17,7 @@ from iotbx.detectors.pilatus_minicbf import PilatusImage
 from scitbx.array_family import flex
 
 import pycbf
-from dxtbx import read_int32
+from dxtbx.ext import read_int32
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.format.FormatCBFMultiTile import cbf_wrapper

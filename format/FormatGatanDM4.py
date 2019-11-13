@@ -13,8 +13,8 @@ from builtins import range
 from boost.python import streambuf
 from scitbx.array_family import flex
 
-from dxtbx import (
-    IncorrectFormatError,
+from dxtbx import IncorrectFormatError
+from dxtbx.ext import (
     read_float32,
     read_int16,
     read_int32,

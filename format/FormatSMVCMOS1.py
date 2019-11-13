@@ -11,7 +11,7 @@ from boost.python import streambuf
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx import read_uint16
+from dxtbx.ext import read_uint16
 from dxtbx.format.FormatSMV import FormatSMV
 
 

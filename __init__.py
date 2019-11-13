@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 import sys
-import warnings
 
 import libtbx.load_env
 
@@ -28,30 +27,6 @@ elif not os.getenv("BOOST_ADAPTBX_TRAP_FPE") and not os.getenv(
     "BOOST_ADAPTBX_TRAP_OVERFLOW"
 ):
     os.environ["BOOST_ADAPTBX_FPE_DEFAULT"] = "1"
-
-
-def _deprecate_function(name, func):
-    def _wrapper(*args, **kwargs):
-        warnings.warn(
-            "Addressing dxtbx extensions as dxtbx.{0} is deprecated. Instead use dxtbx.ext.{0}".format(
-                name
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return func(*args, **kwargs)
-
-    return _wrapper
-
-
-try:
-    import dxtbx.ext as _ext
-
-    for funcname in dir(_ext):
-        if funcname != "ext" and not funcname.startswith("_"):
-            globals()[funcname] = _deprecate_function(funcname, getattr(_ext, funcname))
-except ImportError:
-    pass
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
 
