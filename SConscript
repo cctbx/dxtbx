@@ -1,6 +1,7 @@
 import sys
 import os
 import libtbx.load_env
+from libtbx.env_config import get_boost_library_with_python_version
 
 Import("env_etc")
 
@@ -47,10 +48,11 @@ if sys.platform == "win32" and env_etc.compiler == "win32_cl":
         env_etc.dxtbx_includes.extend(env_etc.conda_cpppath)
         env_etc.dxtbx_lib_paths.extend(env_etc.conda_libpath)
         # library changes
-        # tiff.lib instead of libtiff.lib for newer libtiff conda packages
-        env_etc.dxtbx_libs = [
-            "tiff" if x == "libtiff" else x for x in env_etc.dxtbx_libs
-        ]
+        boost_python = get_boost_library_with_python_version(
+            "boost_python", env_etc.conda_libpath
+        )
+        # tiff.lib instead of libtiff.lib for newer libtiff conda psackages
+        env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
         # add zlib.lib for hdf5
         env_etc.dxtbx_hdf5_libs.append("zlib")
 
