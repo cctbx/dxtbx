@@ -18,8 +18,8 @@ from xfel.cftbx.detector.cspad_cbf_tbx import (
     cbf_wrapper,
 )
 
+import dxtbx.format.Registry
 import pycbf
-from dxtbx.format.Registry import Registry
 
 
 class FullCBFWriter(object):
@@ -32,7 +32,7 @@ class FullCBFWriter(object):
         ) == 1, "Supply either filename or imageset"
 
         if filename is not None:
-            format_class = Registry.find(filename)
+            format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
             imageset = format_class.get_imageset([filename])
 
         self.imageset = imageset
