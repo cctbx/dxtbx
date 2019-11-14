@@ -197,7 +197,8 @@ namespace dxtbx { namespace model {
      * Extend the experiment list with experiments from another
      */
     void extend(const ExperimentList &experiment_list) {
-      for (std::size_t i = 0; i < experiment_list.size(); ++i) {
+      size_t size = experiment_list.size();
+      for (std::size_t i = 0; i < size; ++i) {
         append(experiment_list[i]);
       }
     }
