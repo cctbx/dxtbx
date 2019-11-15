@@ -234,6 +234,25 @@ class _(object):
         else:
             return self.get_corrected_data(item)
 
+    def as_experiments(self):
+        """Iterate over images in the sequence creating an experiment for
+        each with the information in the ImageSequence."""
+
+        start, end = self.get_scan().get_array_range()
+
+        from dxtbx.model.experiment_list import Experiment
+
+        for j in range(start, end):
+            subset = self[j : j + 1]
+            expt = Experiment(
+                beam=subset.get_beam(),
+                detector=subset.get_detector(),
+                goniometer=subset.get_goniometer(),
+                scan=subset.get_scan(),
+                imageset=subset,
+            )
+            yield expt
+
     def get_template(self):
         """ Return the template """
         return self.data().get_template()
