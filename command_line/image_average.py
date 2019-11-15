@@ -140,7 +140,7 @@ class single_image_worker(image_worker):
         if self.command_line.options.verbose:
             print("Processing %s" % path)
 
-        format_class = dxtbx.format.Registry.get_format_class_for(path)
+        format_class = dxtbx.format.Registry.get_format_class_for_file(path)
         assert not issubclass(
             format_class, FormatMultiImage
         ), "Average container files seperately"
