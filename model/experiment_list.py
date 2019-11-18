@@ -319,7 +319,6 @@ class ExperimentListDict(object):
             elif ikey in raw_imagesets:
                 # update with correct scan since ths is the only special key
                 imageset = raw_imagesets[ikey]
-                imageset.set_scan(scan)
             else:
                 # This imageset hasn't been loaded yet - create it
                 imageset_data = self._lookup_model("imageset", eobj)
