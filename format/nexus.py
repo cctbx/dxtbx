@@ -1350,8 +1350,8 @@ def known_backwards(image_size):
     return image_size in [
         (4362, 4148),  # Eiger 2X 16M @ DLS
         (4371, 4150),  # Eiger 16M @ Spring8
-        (2162, 2068),  # VMXi EIGER2 @ DLS
-        (2167, 2070),  # VMXi EIGER1 @ DLS
+        (2162, 2068),  # Eiger 2x 4M @ VMXi, DLS
+        (2167, 2070),  # Eiger 1 4M @ VMXi, DLS
         (3269, 3110),  # Eiger 9M Proxima2A beamline @ SOLEIL
     ]
 
