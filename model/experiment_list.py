@@ -7,9 +7,9 @@ import warnings
 from builtins import range
 
 import pkg_resources
-
 import six
 import six.moves.cPickle as pickle
+
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
@@ -65,7 +65,7 @@ class ExperimentListDict(object):
     to save the experiment list to JSON format."""
 
     def __init__(self, obj, check_format=True, directory=None):
-        """ Initialise. Copy the dictionary. """
+        """Initialise. Copy the dictionary."""
         # Basic check: This is a dict-like object. This can happen if e.g. we
         # were passed a DataBlock list instead of an ExperimentList dictionary
         if isinstance(obj, list) or not hasattr(obj, "get"):
@@ -103,8 +103,10 @@ class ExperimentListDict(object):
         }
 
     def _extract_models(self, name, from_dict):
-        """ Helper function. Extract the models. """
-        """if name == imageset: Extract imageset objects from the source.
+        """
+        Helper function. Extract the models.
+
+        if name == imageset: Extract imageset objects from the source.
 
         This function does resolving of an (old) method of imageset lookup
         e.g. it was valid to have a string as the imageset value in an
@@ -153,7 +155,8 @@ class ExperimentListDict(object):
 
     def _load_pickle_path(self, imageset_data, param):
         # type: (Dict, str) -> Tuple[Optional[str], Any]
-        """Read a filename from an imageset dict and load if required.
+        """
+        Read a filename from an imageset dict and load if required.
 
         Args:
             imageset_data: The dictionary holding imageset information
@@ -179,7 +182,7 @@ class ExperimentListDict(object):
         return filename or "", None
 
     def decode(self):
-        """ Decode the dictionary into a list of experiments. """
+        """Decode the dictionary into a list of experiments."""
         # Extract all the experiments
 
         # Map of imageset/scan pairs
@@ -331,11 +334,11 @@ class ExperimentListDict(object):
         return el
 
     def _make_mem_imageset(self, imageset):
-        """ Can't make a mem imageset from dict. """
+        """Can't make a mem imageset from dict."""
         return None
 
     def _make_stills(self, imageset, format_kwargs=None):
-        """ Make a still imageset. """
+        """Make a still imageset."""
         filenames = [
             resolve_path(p, directory=self._directory) for p in imageset["images"]
         ]
@@ -352,7 +355,7 @@ class ExperimentListDict(object):
         )
 
     def _make_grid(self, imageset, format_kwargs=None):
-        """ Make a still imageset. """
+        """Make a still imageset."""
         grid_size = imageset["grid_size"]
         return ImageGrid.from_imageset(
             self._make_stills(imageset, format_kwargs=format_kwargs), grid_size
@@ -367,7 +370,7 @@ class ExperimentListDict(object):
         scan=None,
         format_kwargs=None,
     ):
-        """ Make an image sequence. """
+        """Make an image sequence."""
         # Get the template format
         template = resolve_path(imageset["template"], directory=self._directory)
 
@@ -420,14 +423,14 @@ class ExperimentListDict(object):
 
     @staticmethod
     def _scaling_model_from_dict(obj):
-        """ Get the scaling model from a dictionary. """
+        """Get the scaling model from a dictionary."""
         for entry_point in pkg_resources.iter_entry_points("dxtbx.scaling_model_ext"):
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
 
 
 def _experimentlist_from_file(filename, directory=None):
-    """ Load a model dictionary from a file. """
+    """Load a model dictionary from a file."""
     filename = resolve_path(filename, directory=directory)
     try:
         with open(filename, "r") as infile:
@@ -437,10 +440,9 @@ def _experimentlist_from_file(filename, directory=None):
 
 
 class ExperimentListDumper(object):
-    """ A class to help writing JSON files. """
+    """A class to help writing JSON files."""
 
     def __init__(self, experiment_list):
-        """ Initialise """
         warnings.warn(
             "class ExperimentListDumper() is deprecated. "
             "Use experiment_list.as_json(), experiment_list.as_pickle(), experiment_list.as_file() directly",
@@ -454,11 +456,11 @@ class ExperimentListDumper(object):
 
 
 class ExperimentListFactory(object):
-    """ A class to help instantiate experiment lists. """
+    """A class to help instantiate experiment lists."""
 
     @staticmethod
     def from_args(args, verbose=False, unhandled=None):
-        """ Try to load experiment from any recognised format. """
+        """Try to load experiment from any recognised format."""
 
         # Create a list for unhandled arguments
         if unhandled is None:
@@ -497,7 +499,7 @@ class ExperimentListFactory(object):
         format_kwargs=None,
         load_models=True,
     ):
-        """ Create a list of data blocks from a list of directory or file names. """
+        """Create a list of data blocks from a list of directory or file names."""
         experiments = ExperimentList()
         for db in DataBlockFactory.from_filenames(
             filenames,
@@ -516,7 +518,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_imageset_and_crystal(imageset, crystal, load_models=True):
-        """ Load an experiment list from an imageset and crystal. """
+        """Load an experiment list from an imageset and crystal."""
         if isinstance(imageset, ImageSequence):
             return ExperimentListFactory.from_sequence_and_crystal(
                 imageset, crystal, load_models
@@ -528,7 +530,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_sequence_and_crystal(imageset, crystal, load_models=True):
-        """ Create an experiment list from sequence and crystal. """
+        """Create an experiment list from sequence and crystal."""
         if load_models:
             return ExperimentList(
                 [
@@ -547,7 +549,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_stills_and_crystal(imageset, crystal, load_models=True):
-        """ Create an experiment list from stills and crystal. """
+        """Create an experiment list from stills and crystal."""
         experiments = ExperimentList()
         if load_models:
             for i in range(len(imageset)):
@@ -570,7 +572,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_datablock_and_crystal(datablock, crystal, load_models=True):
-        """ Load an experiment list from a datablock. """
+        """Load an experiment list from a datablock."""
 
         # Initialise the experiment list
         experiments = ExperimentList()
@@ -601,7 +603,8 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_dict(obj, check_format=True, directory=None):
-        """Load an experiment list from a dictionary.
+        """
+        Load an experiment list from a dictionary.
 
         Args:
             obj (dict):
@@ -640,7 +643,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_json(text, check_format=True, directory=None):
-        """ Load an experiment list from JSON. """
+        """Load an experiment list from JSON."""
         return ExperimentListFactory.from_dict(
             json.loads(text, object_hook=_decode_dict),
             check_format=check_format,
@@ -649,7 +652,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_json_file(filename, check_format=True):
-        """ Load an experiment list from a json file. """
+        """Load an experiment list from a json file."""
         filename = os.path.abspath(filename)
         directory = os.path.dirname(filename)
         with open(filename, "r") as infile:
@@ -659,7 +662,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_pickle_file(filename):
-        """ Decode an experiment list from a pickle file. """
+        """Decode an experiment list from a pickle file."""
         with open(filename, "rb") as infile:
             obj = pickle.load(infile)
         assert isinstance(obj, ExperimentList)
@@ -667,7 +670,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_xds(xds_inp, xds_other):
-        """ Generate an experiment list from XDS files. """
+        """Generate an experiment list from XDS files."""
         # Get the sequence from the XDS files
         sequence = xds.to_imageset(xds_inp, xds_other)
 
@@ -685,7 +688,7 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_serialized_format(filename, check_format=True):
-        """ Try to load the experiment list from a serialized format. """
+        """Try to load the experiment list from a serialized format."""
 
         # First try as a JSON file
         try:
@@ -698,7 +701,7 @@ class ExperimentListFactory(object):
 
 
 class ExperimentListTemplateImporter(object):
-    """ A class to import an experiment list from a template. """
+    """A class to import an experiment list from a template."""
 
     def __init__(self, templates, **kwargs):
         importer = DataBlockTemplateImporter(templates, **kwargs)
