@@ -7,9 +7,9 @@ import warnings
 from builtins import range
 
 import pkg_resources
-
 import six
 import six.moves.cPickle as pickle
+
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
@@ -284,9 +284,6 @@ class ExperimentListDict(object):
         # Map of imageset/scan pairs
         imagesets = {}
 
-        # Map of imagesets
-        raw_imagesets = {}
-
         # For every experiment, use the given input to create
         # a sensible experiment.
         el = ExperimentList()
@@ -312,33 +309,25 @@ class ExperimentListDict(object):
                 "scaling_model": scaling_model,
             }
 
-            key = (eobj.get("imageset"), eobj.get("scan"))
-            ikey = eobj.get("imageset")
-            if key in imagesets:
-                imageset = imagesets[key]
-            elif ikey in raw_imagesets:
-                # update with correct scan since ths is the only special key
-                imageset = raw_imagesets[ikey]
-            else:
-                # This imageset hasn't been loaded yet - create it
-                imageset_data = self._lookup_model("imageset", eobj)
+            imageset_ref = eobj.get("imageset")
 
-                # Add the imageset to the dict - even if empty - as this will
-                # prevent a duplicated attempt at reconstruction
+            # If not already cached, load this imageset
+            if imageset_ref not in imagesets:
+                imageset_data = self._lookup_model("imageset", eobj)
 
                 if imageset_data is not None:
                     # Create the imageset from the input data
-                    imageset = self._imageset_from_imageset_data(imageset_data, models)
+                    imagesets[imageset_ref] = self._imageset_from_imageset_data(
+                        imageset_data, models
+                    )
                 else:
-                    imageset = None
-
-                imagesets[key] = imageset
-                raw_imagesets[ikey] = imageset
+                    # Even if we have an empty entry, this counts as a load
+                    imagesets[imageset_ref] = None
 
             # Append the experiment
             el.append(
                 Experiment(
-                    imageset=imageset,
+                    imageset=imagesets[imageset_ref],
                     beam=beam,
                     detector=detector,
                     goniometer=goniometer,
