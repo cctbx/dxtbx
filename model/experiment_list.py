@@ -284,6 +284,9 @@ class ExperimentListDict(object):
         # Map of imageset/scan pairs
         imagesets = {}
 
+        # Map of imagesets
+        raw_imagesets = {}
+
         # For every experiment, use the given input to create
         # a sensible experiment.
         el = ExperimentList()
@@ -310,11 +313,14 @@ class ExperimentListDict(object):
             }
 
             key = (eobj.get("imageset"), eobj.get("scan"))
-
-            imageset = None
-            try:
-                imageset = imagesets[key]  # type: ImageSet
-            except KeyError:
+            ikey = eobj.get("imageset")
+            if key in imagesets:
+                imageset = imagesets[key]
+            elif ikey in raw_imagesets:
+                # update with correct scan since ths is the only special key
+                imageset = raw_imagesets[ikey]
+                imageset.set_scan(scan)
+            else:
                 # This imageset hasn't been loaded yet - create it
                 imageset_data = self._lookup_model("imageset", eobj)
 
@@ -328,6 +334,7 @@ class ExperimentListDict(object):
                     imageset = None
 
                 imagesets[key] = imageset
+                raw_imagesets[ikey] = imageset
 
             # Append the experiment
             el.append(
