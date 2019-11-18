@@ -1347,11 +1347,13 @@ def known_backwards(image_size):
 
     image_size is in dxtbx image size order (fast, slow)
     """
-    # 4148,4362: Eiger 2X 16M @ DLS
-    # 4150,4371: Eiger 16M @ Spring8
-    # 2068,2162: VMXi
-    # 3110,3269: Eiger 9M Proxima2A beamline, SOLEIL
-    return image_size in [(4362, 4148), (4371, 4150), (2162, 2068), (3269, 3110)]
+    return image_size in [
+        (4362, 4148),  # Eiger 2X 16M @ DLS
+        (4371, 4150),  # Eiger 16M @ Spring8
+        (2162, 2068),  # VMXi EIGER2 @ DLS
+        (2167, 2070),  # VMXi EIGER1 @ DLS
+        (3269, 3110),  # Eiger 9M Proxima2A beamline @ SOLEIL
+    ]
 
 
 class DetectorFactory(object):
