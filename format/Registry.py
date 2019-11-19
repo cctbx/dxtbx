@@ -6,9 +6,6 @@ of image formats.
 
 from __future__ import absolute_import, division, print_function
 
-import warnings
-from builtins import object
-
 import pkg_resources
 
 
@@ -18,15 +15,6 @@ def get_format_class_for(format_class_name):
     :return: The (uninstantiated) class object
     """
     return get_format_class_index()[format_class_name][0]()
-
-
-def lookup(format_class):
-    warnings.warn(
-        "lookup() has been renamed to get_format_class_for()",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return get_format_class_for(format_class)
 
 
 def get_format_class_index():
@@ -121,26 +109,3 @@ def get_format_class_for_file(image_file, format_hint=None):
 
     # There is no class accepting this file, so return None instead
     return None
-
-
-class _Registry(object):
-    # deprecated class
-
-    @staticmethod
-    def get():
-        warnings.warn("Registry.get() is deprecated", DeprecationWarning, stacklevel=2)
-        return tuple(
-            get_format_class_for(format_class) for format_class in _format_dag["Format"]
-        )
-
-    @staticmethod
-    def find(image_file, format_hint=None):
-        warnings.warn(
-            "Registry.find() is deprecated, use get_format_class_for_file()",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return get_format_class_for_file(image_file, format_hint)
-
-
-Registry = _Registry()
