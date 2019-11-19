@@ -291,7 +291,7 @@ class ExperimentListDict(object):
             if imageset_ref in eobj_scan:
                 eobj_scan[imageset_ref] += scan
             else:
-                eobj_scan[imageset_ref] = scan
+                eobj_scan[imageset_ref] = copy.deepcopy(scan)
 
         # Map of imageset/scan pairs
         imagesets = {}
