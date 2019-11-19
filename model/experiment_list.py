@@ -7,9 +7,9 @@ import warnings
 from builtins import range
 
 import pkg_resources
+
 import six
 import six.moves.cPickle as pickle
-
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
@@ -279,7 +279,19 @@ class ExperimentListDict(object):
 
     def decode(self):
         """ Decode the dictionary into a list of experiments. """
-        # Extract all the experiments
+        # Extract all the experiments - first find all scans belonging to
+        # same imageset
+
+        eobj_scan = {}
+
+        for eobj in self._obj["experiment"]:
+
+            imageset_ref = eobj.get("imageset")
+            scan = self._lookup_model("scan", eobj)
+            if imageset_ref in eobj_scan:
+                eobj_scan[imageset_ref] += scan
+            else:
+                eobj_scan[imageset_ref] = scan
 
         # Map of imageset/scan pairs
         imagesets = {}
@@ -314,12 +326,11 @@ class ExperimentListDict(object):
             # If not already cached, load this imageset
             if imageset_ref not in imagesets:
                 imageset_data = self._lookup_model("imageset", eobj)
-
+                models["scan"] = eobj_scan[imageset_ref]
                 if imageset_data is not None:
                     # Create the imageset from the input data
-                    imagesets[imageset_ref] = self._imageset_from_imageset_data(
-                        imageset_data, models
-                    )
+                    imageset = self._imageset_from_imageset_data(imageset_data, models)
+                    imagesets[imageset_ref] = imageset
                 else:
                     # Even if we have an empty entry, this counts as a load
                     imagesets[imageset_ref] = None
