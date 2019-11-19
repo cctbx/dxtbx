@@ -1,10 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
-import pytest
-import six.moves.cPickle as pickle
-
 from scitbx.array_family import flex
 
+import pytest
+import six.moves.cPickle as pickle
 from dxtbx.format.FormatHDF5SaclaMPCCD import FormatHDF5SaclaMPCCD
 from dxtbx.format.image import ImageBool
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -65,7 +64,7 @@ def test_MPCCD_Phase3_21528(dials_data):
     assert imageset.get_scan() is None
 
     assert beam.get_wavelength() == pytest.approx(1.2452843833238922)
-    assert beam.get_direction() == (0, 0, 1)
+    assert beam.get_sample_to_source_direction() == (0, 0, 1)
 
 
 def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):

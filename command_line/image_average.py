@@ -16,10 +16,10 @@ from libtbx import easy_mp, option_parser
 from libtbx.utils import Sorry, Usage
 from scitbx.array_family import flex
 
+import dxtbx.format.Registry
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.cbf_writer import FullCBFWriter
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx.format.Registry import Registry
 
 
 def splitit(l, n):
@@ -140,7 +140,7 @@ class single_image_worker(image_worker):
         if self.command_line.options.verbose:
             print("Processing %s" % path)
 
-        format_class = Registry.find(path)
+        format_class = dxtbx.format.Registry.get_format_class_for_file(path)
         assert not issubclass(
             format_class, FormatMultiImage
         ), "Average container files seperately"

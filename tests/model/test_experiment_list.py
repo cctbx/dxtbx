@@ -26,6 +26,14 @@ from dxtbx.model import (
 from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactory
 
 
+def test_experiment_list_extend():
+    """Check that the extend method of ExperimentList works."""
+    # Create a minimal ExperimentList instance.
+    expts = ExperimentList([Experiment()])
+    # Try to extend it.
+    expts.extend(expts)
+
+
 def test_experiment_contains():
     # Create a load of models
     b1 = Beam()

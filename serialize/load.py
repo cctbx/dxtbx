@@ -4,7 +4,6 @@ import json
 import os
 
 import six
-
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.serialize.imageset import imageset_from_dict
 
@@ -115,6 +114,11 @@ def experiment_list(infile, check_format=True):
     """ Load an experiment list from a serialzied format. """
     # Resolve recursive import
     from dxtbx.model.experiment_list import ExperimentListFactory
+
+    if infile and hasattr(infile, "__fspath__"):
+        infile = (
+            infile.__fspath__()
+        )  # Resolve file system path (PEP-519) object to string.
 
     return ExperimentListFactory.from_serialized_format(
         infile, check_format=check_format
