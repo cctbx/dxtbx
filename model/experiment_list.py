@@ -290,7 +290,9 @@ class ExperimentListDict(object):
             scan = self._lookup_model("scan", eobj)
 
             if imageset_ref in eobj_scan:
-                if scan:
+                # old imageset: no scan
+                # > 1 expt sharing image sequence with same scan: do not change
+                if scan and scan != eobj_scan[imageset_ref]:
                     eobj_scan[imageset_ref] += scan
             else:
                 eobj_scan[imageset_ref] = copy.deepcopy(scan)
