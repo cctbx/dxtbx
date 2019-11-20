@@ -288,8 +288,10 @@ class ExperimentListDict(object):
 
             imageset_ref = eobj.get("imageset")
             scan = self._lookup_model("scan", eobj)
+
             if imageset_ref in eobj_scan:
-                eobj_scan[imageset_ref] += scan
+                if scan:
+                    eobj_scan[imageset_ref] += scan
             else:
                 eobj_scan[imageset_ref] = copy.deepcopy(scan)
 
