@@ -285,7 +285,8 @@ class ExperimentListDict(object):
         eobj_scan = {}
 
         for eobj in self._obj["experiment"]:
-
+            if self._lookup_model("imageset", eobj) is None:
+                continue
             imageset_ref = eobj.get("imageset")
             scan = self._lookup_model("scan", eobj)
 
@@ -330,9 +331,9 @@ class ExperimentListDict(object):
             # If not already cached, load this imageset
             if imageset_ref not in imagesets:
                 imageset_data = self._lookup_model("imageset", eobj)
-                models["scan"] = eobj_scan[imageset_ref]
                 if imageset_data is not None:
                     # Create the imageset from the input data
+                    models["scan"] = eobj_scan[imageset_ref]
                     imageset = self._imageset_from_imageset_data(imageset_data, models)
                     imagesets[imageset_ref] = imageset
                 else:
