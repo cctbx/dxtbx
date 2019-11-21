@@ -557,9 +557,30 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_sequence_and_crystal(imageset, crystal, load_models=True):
         """ Create an experiment list from sequence and crystal. """
+
+        assert isinstance(imageset, ImageSequence)
+
+        experiments = ExperimentList()
+
         if load_models:
-            return ExperimentList(
-                [
+            # if imagesequence is still images, make one experiment for each
+            # all referencing into the same image set
+            if imageset.get_scan().is_still():
+                start, end = imageset.get_scan().get_array_range()
+                for j in range(start, end):
+                    subset = imageset[j : j + 1]
+                    experiments.append(
+                        Experiment(
+                            imageset=imageset,
+                            beam=imageset.get_beam(),
+                            detector=imageset.get_detector(),
+                            goniometer=imageset.get_goniometer(),
+                            scan=subset.get_scan(),
+                            crystal=crystal,
+                        )
+                    )
+            else:
+                experiments.append(
                     Experiment(
                         imageset=imageset,
                         beam=imageset.get_beam(),
@@ -568,8 +589,10 @@ class ExperimentListFactory(object):
                         scan=imageset.get_scan(),
                         crystal=crystal,
                     )
-                ]
-            )
+                )
+
+            return experiments
+
         else:
             return ExperimentList([Experiment(imageset=imageset, crystal=crystal)])
 
