@@ -22,6 +22,7 @@ from dxtbx.model import (
     ExperimentList,
     Goniometer,
     Scan,
+    ScanFactory,
 )
 from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactory
 
@@ -810,3 +811,57 @@ def test_experimentlist_from_file(dials_regression, tmpdir):
     exp_list_pk = ExperimentList.from_file(tmpdir / "el.pickle")
     assert len(exp_list_pk) == 1
     assert exp_list[0].beam
+
+
+def test_experimentlist_imagesequence_decode(mocker):
+    # These models are shared between experiments
+    beam = Beam(s0=(0, 0, -1))
+    detector = Detector()
+    gonio = Goniometer()
+
+    # Construct the experiment list
+    experiments = ExperimentList()
+    for i in range(3):
+        experiments.append(
+            Experiment(
+                beam=beam,
+                detector=detector,
+                scan=ScanFactory.make_scan(
+                    image_range=(i + 1, i + 1),
+                    exposure_times=[1],
+                    oscillation=(0, 0),
+                    epochs=[0],
+                ),
+                goniometer=gonio,
+            )
+        )
+
+    # Convert experiment list to dict and manually insert a shared imageset
+    d = experiments.to_dict()
+    d["imageset"].append(
+        {"__id__": "ImageSequence", "template": "Puck3_10_1_####.cbf.gz"}
+    )
+    for e in d["experiment"]:
+        e["imageset"] = 0
+
+    # Monkeypatch this function as we don't actually have an imageset
+    make_sequence = mocker.patch.object(ExperimentListDict, "_make_sequence")
+    # Ensure that if make_sequence is called more than once it returns a different
+    # value each time
+    make_sequence.side_effect = lambda *args, **kwargs: mocker.MagicMock()
+
+    # Decode the dict to get a new experiment list
+    experiments2 = ExperimentListDict(d).decode()
+
+    # This function should only be called once per imageset
+    make_sequence.assert_called_once()
+
+    # Verify that this experiment is as we expect
+    assert len(experiments2) == 3
+    assert len(experiments2.imagesets()) == 1
+    assert len(experiments2.goniometers()) == 1
+    assert len(experiments2.detectors()) == 1
+    assert len(experiments2.beams()) == 1
+    assert len(experiments2.scans()) == 3
+    for expt in experiments2:
+        assert expt.imageset is experiments2.imagesets()[0]
