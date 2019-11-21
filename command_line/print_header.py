@@ -4,8 +4,8 @@ import sys
 
 from scitbx.array_family import flex
 
+import dxtbx.format.Registry
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx.format.Registry import Registry
 
 
 def print_header():
@@ -14,7 +14,7 @@ def print_header():
 
     for arg in sys.argv[1:]:
         print("=== %s ===" % arg)
-        format_class = Registry.find(arg)
+        format_class = dxtbx.format.Registry.get_format_class_got_file(arg)
         print("Using header reader: %s" % format_class.__name__)
         i = format_class(arg)
         beam = i.get_beam()

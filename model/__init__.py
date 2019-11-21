@@ -4,7 +4,6 @@ import collections
 import json
 import os
 import sys
-import warnings
 from builtins import range
 
 import boost.python
@@ -817,16 +816,3 @@ class _(object):
         from .experiment_list import ExperimentListFactory
 
         return ExperimentListFactory.from_serialized_format(str(filename), check_format)
-
-
-@boost.python.inject_into(Beam)
-class _(object):
-    def get_direction(self):
-        warnings.warn(
-            "Calling get_direction is deprecated. Please use "
-            ".get_sample_to_source_direction() instead. "
-            "See https://github.com/cctbx/dxtbx/issues/6",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.get_sample_to_source_direction()
