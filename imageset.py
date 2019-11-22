@@ -228,9 +228,10 @@ class _(object):
         if isinstance(item, slice):
             start = item.start or 0
             stop = item.stop or len(self)
+            offset = self.get_scan().get_batch_offset()
             if item.step is not None:
                 raise IndexError("Sequences must be sequential")
-            return self.partial_set(start, stop)
+            return self.partial_set(start - offset, stop - offset)
         else:
             return self.get_corrected_data(item)
 
@@ -541,6 +542,7 @@ class ImageSetFactory(object):
         array_range = (min(indices) - 1, max(indices))
         if scan is not None:
             assert array_range == scan.get_array_range()
+        scan.set_batch_offset(array_range[0])
 
         # Get the format object and reader
         if format_class is None:
