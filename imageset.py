@@ -542,7 +542,7 @@ class ImageSetFactory(object):
         array_range = (min(indices) - 1, max(indices))
         if scan is not None:
             assert array_range == scan.get_array_range()
-        scan.set_batch_offset(array_range[0])
+            scan.set_batch_offset(array_range[0])
 
         # Get the format object and reader
         if format_class is None:
