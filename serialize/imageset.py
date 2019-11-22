@@ -12,7 +12,7 @@ from dxtbx.serialize.filename import resolve_path
 
 
 def filename_to_absolute(filename):
-    """ Convert filenames to absolute form. """
+    """Convert filenames to absolute form."""
 
     if isinstance(filename, list):
         return [os.path.abspath(f) for f in filename]
@@ -98,7 +98,7 @@ def imageset_to_dict(imageset):
 
 
 def basic_imageset_from_dict(d, directory=None):
-    """ Construct an ImageSet class from the dictionary."""
+    """Construct an ImageSet class from the dictionary."""
     # Get the filename list and create the imageset
     filenames = [resolve_path(str(p), directory=directory) for p in d["filenames"]]
     imageset = ImageSetFactory.new(filenames)[0]

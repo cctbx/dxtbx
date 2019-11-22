@@ -90,20 +90,20 @@ class _(object):
             return self.get_corrected_data(item)
 
     def __iter__(self):
-        """ Iterate over the array indices and read each image in turn. """
+        """Iterate over the array indices and read each image in turn."""
         for i in range(len(self)):
             yield self[i]
 
     def get_vendortype(self, index):
-        """ Get the vendor information. """
+        """Get the vendor information."""
         return self.data().get_vendor()
 
     def get_format_class(self):
-        """ Get format class name """
+        """Get format class name"""
         return self.data().get_format_class()
 
     def params(self):
-        """ Get the parameters """
+        """Get the parameters"""
         return self.data().get_params()
 
     def get_detectorbase(self, index):
@@ -235,7 +235,7 @@ class _(object):
             return self.get_corrected_data(item)
 
     def get_template(self):
-        """ Return the template """
+        """Return the template"""
         return self.data().get_template()
 
 
@@ -293,7 +293,7 @@ def _analyse_files(filenames):
 
 # FIXME Lots of duplication in this class, need to tidy up
 class ImageSetFactory(object):
-    """ Factory to create imagesets and sequences. """
+    """Factory to create imagesets and sequences."""
 
     @staticmethod
     def new(filenames, check_headers=False, ignore_unknown=False):
@@ -572,7 +572,7 @@ class ImageSetFactory(object):
 
     @staticmethod
     def imageset_from_anyset(imageset):
-        """ Create a new ImageSet object from an imageset object. Converts ImageSequence to ImageSet. """
+        """Create a new ImageSet object from an imageset object. Converts ImageSequence to ImageSet."""
         if isinstance(imageset, ImageSetLazy):
             return ImageSetLazy(imageset.data(), imageset.indices())
         elif isinstance(imageset, ImageSequence) or isinstance(imageset, ImageSet):

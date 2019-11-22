@@ -49,12 +49,12 @@ def splitit(l, n):
 
 
 class image_worker(object):
-    """ Class to compute running sums while reading image data """
+    """Class to compute running sums while reading image data"""
 
     # Deriving class should implement __init__, load and read
 
     def __call__(self, subset):
-        """ Worker function for multiprocessing """
+        """Worker function for multiprocessing"""
         nfail = 0
         nmemb = 0
 
@@ -95,7 +95,7 @@ class image_worker(object):
 
 
 class multi_image_worker(image_worker):
-    """ Class for reading container files """
+    """Class for reading container files"""
 
     def __init__(self, command_line, path, imageset):
         self.path = path
@@ -104,14 +104,14 @@ class multi_image_worker(image_worker):
         self.imageset = imageset
 
     def load(self):
-        """ Called by seperate process during multiprocessing """
+        """Called by seperate process during multiprocessing"""
 
         if self.command_line.options.nproc > 1:
             # Need to re-open the file if HDF5 as HDF5 file handles can't be pickled during multiprocessing
             self.imageset.reader().nullify_format_instance()
 
     def read(self, n):
-        """ Read image at postion n"""
+        """Read image at postion n"""
         if self.command_line.options.verbose:
             print("Processing %s: %d" % (self.path, n))
 
@@ -128,7 +128,7 @@ class multi_image_worker(image_worker):
 
 
 class single_image_worker(image_worker):
-    """ Class for averaging single images from individual files """
+    """Class for averaging single images from individual files"""
 
     def __init__(self, command_line):
         self.command_line = command_line

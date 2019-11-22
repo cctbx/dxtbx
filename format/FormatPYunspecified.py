@@ -204,7 +204,7 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
 
     @staticmethod
     def understand(image_file):
-        """ If it's an image dictionary, we understand this """
+        """If it's an image dictionary, we understand this"""
         wanted_header_items = ["SIZE1", "SIZE2", "TIMESTAMP"]
         try:
             if any(
@@ -218,7 +218,7 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
             return False
 
     def __init__(self, data, **kwargs):
-        """ @param data In memory image dictionary, alredy initialized """
+        """@param data In memory image dictionary, alredy initialized"""
         super(FormatPYunspecifiedInMemory, self).__init__(data, **kwargs)
         self._image_file = copy.deepcopy(data)
 

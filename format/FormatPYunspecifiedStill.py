@@ -48,7 +48,7 @@ class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory)
 
     @staticmethod
     def understand(image_file):
-        """ If it's an image dictionary, we understand this """
+        """If it's an image dictionary, we understand this"""
         data = image_file
         if not isinstance(data, dict):
             return False
@@ -57,7 +57,7 @@ class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory)
         return data["OSC_RANGE"] <= 0
 
     def __init__(self, data, **kwargs):
-        """ @param data In memory image dictionary, alredy initialized """
+        """@param data In memory image dictionary, alredy initialized"""
         super(FormatPYunspecifiedStillInMemory, self).__init__(data, **kwargs)
         self._image_file = copy.deepcopy(data)
 

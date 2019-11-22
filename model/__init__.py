@@ -102,13 +102,13 @@ __all__ = (
 @boost.python.inject_into(Detector)
 class _(object):
     def iter_panels(self):
-        """ Iterate through just the panels depth-first. """
+        """Iterate through just the panels depth-first."""
         for obj in self.iter_preorder():
             if obj.is_panel():
                 yield obj
 
     def iter_preorder(self):
-        """ Iterate through the groups and panels depth-first. """
+        """Iterate through the groups and panels depth-first."""
         stack = [self.hierarchy()]
         while stack:
             node = stack.pop()
@@ -117,7 +117,7 @@ class _(object):
                 stack.extend(reversed(node))
 
     def iter_levelorder(self):
-        """ Iterate through the groups and panels breadth-first. """
+        """Iterate through the groups and panels breadth-first."""
         queue = [self.hierarchy()]
         while queue:
             node = queue.pop(0)
@@ -469,7 +469,7 @@ class _(object):
 @boost.python.inject_into(Experiment)
 class _(object):
     def load_models(self, index=None):
-        """ Load the models from the imageset """
+        """Load the models from the imageset"""
         if index is None:
             index = 0
         self.beam = self.imageset.get_beam(index)
@@ -487,31 +487,31 @@ class _(object):
             return "ExperimentList()"
 
     def beams(self):
-        """ Get a list of the unique beams (includes None). """
+        """Get a list of the unique beams (includes None)."""
         return list(OrderedSet(e.beam for e in self))
 
     def detectors(self):
-        """ Get a list of the unique detectors (includes None). """
+        """Get a list of the unique detectors (includes None)."""
         return list(OrderedSet(e.detector for e in self))
 
     def goniometers(self):
-        """ Get a list of the unique goniometers (includes None). """
+        """Get a list of the unique goniometers (includes None)."""
         return list(OrderedSet(e.goniometer for e in self))
 
     def scans(self):
-        """ Get a list of the unique scans (includes None). """
+        """Get a list of the unique scans (includes None)."""
         return list(OrderedSet(e.scan for e in self))
 
     def crystals(self):
-        """ Get a list of the unique crystals (includes None). """
+        """Get a list of the unique crystals (includes None)."""
         return list(OrderedSet(e.crystal for e in self))
 
     def profiles(self):
-        """ Get a list of the unique profile models (includes None). """
+        """Get a list of the unique profile models (includes None)."""
         return list(OrderedSet(e.profile for e in self))
 
     def scaling_models(self):
-        """ Get a list of the unique scaling models (includes None). """
+        """Get a list of the unique scaling models (includes None)."""
         return list(OrderedSet(e.scaling_model for e in self))
 
     def imagesets(self):
@@ -527,7 +527,7 @@ class _(object):
         return all(exp.is_sequence() for exp in self)
 
     def to_dict(self):
-        """ Serialize the experiment list to dictionary. """
+        """Serialize the experiment list to dictionary."""
 
         # Check the experiment list is consistent
         assert self.is_consistent()
@@ -672,7 +672,7 @@ class _(object):
                 experiment.imageset.reader().nullify_format_instance()
 
     def as_json(self, filename=None, compact=False, split=False):
-        """ Dump experiment list as json """
+        """Dump experiment list as json"""
         # Get the dictionary and get the JSON string
         dictionary = self.to_dict()
 
@@ -778,7 +778,7 @@ class _(object):
                 return text
 
     def as_pickle(self, filename=None, **kwargs):
-        """ Dump experiment list as pickle. """
+        """Dump experiment list as pickle."""
         # Get the pickle string
         text = pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -790,7 +790,7 @@ class _(object):
             return text
 
     def as_file(self, filename, **kwargs):
-        """ Dump experiment list as file. """
+        """Dump experiment list as file."""
         ext = os.path.splitext(filename)[1]
         j_ext = [".json", ".expt"]
         p_ext = [".p", ".pkl", ".pickle"]

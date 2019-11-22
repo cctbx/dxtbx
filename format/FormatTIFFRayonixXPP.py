@@ -19,7 +19,7 @@ from dxtbx.format.FormatTIFFRayonix import FormatTIFFRayonix
 
 
 def check(l):
-    """ Sets l or values in l that are less than zero to zero """
+    """Sets l or values in l that are less than zero to zero"""
     if not isinstance(l, list) and not isinstance(l, tuple):
         if l < 0:
             return 0
@@ -48,7 +48,7 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
 
     @staticmethod
     def understand(image_file):
-        """Check to see if this looks like an XPP Rayonix TIFF """
+        """Check to see if this looks like an XPP Rayonix TIFF"""
 
         with open(image_file, "rb") as fh:
 

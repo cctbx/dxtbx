@@ -49,10 +49,10 @@ def _iterate_with_previous(iterable):
 
 
 class DataBlock(object):
-    """ High level container for blocks of sequences and imagesets. """
+    """High level container for blocks of sequences and imagesets."""
 
     def __init__(self, imagesets=None):
-        """ Instantiate from a list of imagesets. """
+        """Instantiate from a list of imagesets."""
         # Try to get a format class
         self._format_class = None
         self._imagesets = []
@@ -63,7 +63,7 @@ class DataBlock(object):
                 self.append(iset)
 
     def append(self, imageset):
-        """ Add an imageset to the block. """
+        """Add an imageset to the block."""
         if self._format_class is None:
             self._format_class = imageset.get_format_class()
         elif not self._format_class == imageset.get_format_class():
@@ -71,36 +71,36 @@ class DataBlock(object):
         self._imagesets.append(imageset)
 
     def extend(self, datablock):
-        """ Add two datablocks. """
+        """Add two datablocks."""
         for iset in datablock:
             self.append(iset)
 
     def format_class(self):
-        """ Return the format class. """
+        """Return the format class."""
         return self._format_class
 
     def extract_stills(self):
-        """ Extract all the still imagesets """
+        """Extract all the still imagesets"""
         return list(self.iter_stills())
 
     def extract_sequences(self):
-        """ Extract all the sequences from the block. """
+        """Extract all the sequences from the block."""
         return list(self.iter_sequences())
 
     def extract_imagesets(self):
-        """ Extract all imagesets. """
+        """Extract all imagesets."""
         return list(self._imagesets)
 
     def num_images(self):
-        """ Get the number of images. """
+        """Get the number of images."""
         return sum(len(iset) for iset in self._imagesets)
 
     def __len__(self):
-        """ The number of image sets. """
+        """The number of image sets."""
         return len(self._imagesets)
 
     def __eq__(self, rhs):
-        """ Check if two blocks are the same. """
+        """Check if two blocks are the same."""
         return (
             self._format_class == rhs._format_class
             and self._imagesets == rhs._imagesets
@@ -109,22 +109,22 @@ class DataBlock(object):
     __hash__ = None  # datablock objects are mutable and therefore unhashable
 
     def __ne__(self, rhs):
-        """ Check if two blocks are not equal. """
+        """Check if two blocks are not equal."""
         return not self.__eq__(rhs)
 
     def __iter__(self):
-        """ Iterate through the imagesets. """
+        """Iterate through the imagesets."""
         for iset in self._imagesets:
             yield iset
 
     def iter_sequences(self):
-        """ Iterate over sequence groups. """
+        """Iterate over sequence groups."""
         for iset in self._imagesets:
             if isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
 
     def iter_stills(self):
-        """ Iterate over still groups. """
+        """Iterate over still groups."""
         for iset in self._imagesets:
             if not isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
@@ -163,7 +163,7 @@ class DataBlock(object):
         return self._find_unique_items("scan", filter_none=True)
 
     def to_dict(self):
-        """ Convert the datablock to a dictionary """
+        """Convert the datablock to a dictionary"""
 
         def abspath_or_none(filename):
             if filename is None or filename == "":
@@ -315,7 +315,7 @@ class FormatChecker(object):
     trying the last format that was used."""
 
     def __init__(self):
-        """ Set the format class to none. """
+        """Set the format class to none."""
         self._format_class = None
 
     def find_format(self, filename):
@@ -353,10 +353,10 @@ class FormatChecker(object):
 
 
 class DataBlockTemplateImporter(object):
-    """ A class to import a datablock from a template. """
+    """A class to import a datablock from a template."""
 
     def __init__(self, templates, **kwargs):
-        """ Import the datablocks from the given templates. """
+        """Import the datablocks from the given templates."""
         assert "verbose" not in kwargs, "The verbose parameter has been removed"
         assert len(templates) > 0
 
@@ -397,7 +397,7 @@ class DataBlockTemplateImporter(object):
                 append_to_datablocks(imageset)
 
     def _create_imageset(self, format_class, template, filenames, **kwargs):
-        """ Create a multi file sequence or imageset. """
+        """Create a multi file sequence or imageset."""
         # Get the image range
         index = slice(*template_string_number_index(template))
         first = int(filenames[0][index])
@@ -910,7 +910,7 @@ def _create_imageset(records, format_class, format_kwargs=None):
 
 
 class DataBlockFilenameImporter(object):
-    """ A class to import a datablock from image files. """
+    """A class to import a datablock from image files."""
 
     def __init__(
         self,
@@ -921,7 +921,7 @@ class DataBlockFilenameImporter(object):
         scan_tolerance=None,
         format_kwargs=None,
     ):
-        """ Import the datablocks from the given filenames. """
+        """Import the datablocks from the given filenames."""
 
         # Init the datablock list
         self.unhandled = []
@@ -1019,7 +1019,7 @@ class DataBlockFilenameImporter(object):
         scan_tolerance=None,
         format_kwargs=None,
     ):
-        """ Extract the file meta data in order to sort them. """
+        """Extract the file meta data in order to sort them."""
         # If no comparison functions are set
         if compare_beam is None:
             compare_beam = operator.__eq__
@@ -1136,7 +1136,7 @@ class DataBlockFilenameImporter(object):
         return records
 
     def _create_multi_file_imageset(self, format_class, records, format_kwargs=None):
-        """ Create a multi file sequence or imageset. """
+        """Create a multi file sequence or imageset."""
 
         # Make either an imageset or sequence
         if len(records) == 1 and records[0].template is not None:
@@ -1179,7 +1179,7 @@ class DataBlockFilenameImporter(object):
         return imageset
 
     def _create_single_file_imageset(self, format_class, filename, format_kwargs=None):
-        """ Create an imageset from a multi image file. """
+        """Create an imageset from a multi image file."""
         if format_kwargs is None:
             format_kwargs = {}
         return format_class.get_imageset(abspath(filename), format_kwargs=format_kwargs)
@@ -1196,14 +1196,14 @@ class InvalidDataBlockError(RuntimeError):
 
 
 class DataBlockDictImporter(object):
-    """ A class to import a datablock from dictionary. """
+    """A class to import a datablock from dictionary."""
 
     def __init__(self, obj, check_format=True, directory=None):
-        """ Get the datablocks from the dictionary. """
+        """Get the datablocks from the dictionary."""
         self.datablocks = self._load_datablocks(obj, check_format, directory)
 
     def _load_datablocks(self, obj, check_format=True, directory=None):
-        """ Create the datablock from a dictionary. """
+        """Create the datablock from a dictionary."""
 
         # If we have a list, extract for each dictionary in the list
         if isinstance(obj, list):
@@ -1452,10 +1452,10 @@ class DataBlockDictImporter(object):
 
 
 class DataBlockImageSetImporter(object):
-    """ A class to import a datablock from imagesets. """
+    """A class to import a datablock from imagesets."""
 
     def __init__(self, imagesets):
-        """ Load a list of datablocks from imagesets. """
+        """Load a list of datablocks from imagesets."""
         self.datablocks = []
         if not isinstance(imagesets, list):
             imagesets = [imagesets]
@@ -1467,7 +1467,7 @@ class DataBlockImageSetImporter(object):
 
 
 class DataBlockFactory(object):
-    """ Class for creating DataBlock instances"""
+    """Class for creating DataBlock instances"""
 
     @staticmethod
     def from_args(
@@ -1480,7 +1480,7 @@ class DataBlockFactory(object):
         scan_tolerance=None,
         format_kwargs=None,
     ):
-        """ Try to load datablocks from any recognized format. """
+        """Try to load datablocks from any recognized format."""
 
         if unhandled is None:
             unhandled = []
@@ -1519,7 +1519,7 @@ class DataBlockFactory(object):
         scan_tolerance=None,
         format_kwargs=None,
     ):
-        """ Create a list of data blocks from a list of directory or file names. """
+        """Create a list of data blocks from a list of directory or file names."""
         importer = DataBlockFilenameImporter(
             filenames,
             compare_beam=compare_beam,
@@ -1534,13 +1534,13 @@ class DataBlockFactory(object):
 
     @staticmethod
     def from_dict(obj, check_format=True, directory=None):
-        """ Create a datablock from a dictionary. """
+        """Create a datablock from a dictionary."""
         importer = DataBlockDictImporter(obj, check_format, directory)
         return importer.datablocks
 
     @staticmethod
     def from_json(string, check_format=True, directory=None):
-        """ Decode a datablock from JSON string. """
+        """Decode a datablock from JSON string."""
         return DataBlockFactory.from_dict(
             json.loads(string, object_hook=_decode_dict),
             check_format=check_format,
@@ -1549,7 +1549,7 @@ class DataBlockFactory(object):
 
     @staticmethod
     def from_json_file(filename, check_format=True):
-        """ Decode a datablock from a JSON file. """
+        """Decode a datablock from a JSON file."""
         filename = abspath(filename)
         directory = dirname(filename)
         with open(filename, "r") as infile:
@@ -1559,7 +1559,7 @@ class DataBlockFactory(object):
 
     @staticmethod
     def from_pickle_file(filename):
-        """ Decode a datablock from a pickle file. """
+        """Decode a datablock from a pickle file."""
         with open(filename, "rb") as infile:
             obj = pickle.load(infile)
             if isinstance(obj, list):
@@ -1570,20 +1570,20 @@ class DataBlockFactory(object):
 
     @staticmethod
     def from_imageset(imagesets):
-        """ Load a datablock from a list of imagesets. """
+        """Load a datablock from a list of imagesets."""
         importer = DataBlockImageSetImporter(imagesets)
         return importer.datablocks
 
     @staticmethod
     def from_imageset_json_file(filename):
-        """ Load a datablock from a sequence file. """
+        """Load a datablock from a sequence file."""
         # Load the imageset and create a datablock from the filenames
         imageset = load.imageset(filename)
         return DataBlockFactory.from_imageset(imageset)
 
     @staticmethod
     def from_serialized_format(filename, check_format=True):
-        """ Load a datablock from serialized formats. """
+        """Load a datablock from serialized formats."""
 
         # First try as JSON format
         try:
@@ -1602,7 +1602,7 @@ class DataBlockFactory(object):
 
     @staticmethod
     def from_in_memory(images, indices=None):
-        """ Function to instantiate data block from in memory imageset. """
+        """Function to instantiate data block from in memory imageset."""
         return DataBlock(
             [
                 dxtbx.imageset.ImageSet(
@@ -1622,17 +1622,17 @@ class AutoEncoder(json.JSONEncoder):
 
 
 class DataBlockDumper(object):
-    """ Class to help in dumping datablock objects. """
+    """Class to help in dumping datablock objects."""
 
     def __init__(self, datablocks):
-        """ Initialise the list of data blocks. """
+        """Initialise the list of data blocks."""
         if isinstance(datablocks, DataBlock):
             self._datablocks = [datablocks]
         else:
             self._datablocks = datablocks
 
     def as_json(self, filename=None, compact=False):
-        """ Dump datablock as json. """
+        """Dump datablock as json."""
 
         dictionary = [db.to_dict() for db in self._datablocks]
         if compact:
@@ -1653,7 +1653,7 @@ class DataBlockDumper(object):
             )
 
     def as_pickle(self, filename=None, **kwargs):
-        """ Dump datablock as pickle. """
+        """Dump datablock as pickle."""
 
         # Get the pickle string
         text = pickle.dumps(self._datablocks, protocol=pickle.HIGHEST_PROTOCOL)
@@ -1666,7 +1666,7 @@ class DataBlockDumper(object):
             return text
 
     def as_file(self, filename, **kwargs):
-        """ Dump datablocks as file. """
+        """Dump datablocks as file."""
         ext = splitext(filename)[1]
         j_ext = [".json"]
         p_ext = [".p", ".pkl", ".pickle"]

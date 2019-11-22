@@ -71,7 +71,7 @@ class FormatXTCRayonix(FormatXTC):
         return self._beam(index)
 
     def _beam(self, index=None):
-        """Returns a simple model for the beam """
+        """Returns a simple model for the beam"""
         if index is None:
             index = 0
         evt = self._get_event(index)

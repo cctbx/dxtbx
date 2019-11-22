@@ -9,7 +9,7 @@ from dxtbx.serialize.imageset import imageset_from_dict
 
 
 def _decode_list(data):
-    """Decode a list to str from unicode. """
+    """Decode a list to str from unicode."""
     if six.PY3:
         return data
     rv = []
@@ -25,7 +25,7 @@ def _decode_list(data):
 
 
 def _decode_dict(data):
-    """ Decode a dict to str from unicode. """
+    """Decode a dict to str from unicode."""
     if six.PY3:
         return data
     rv = {}
@@ -111,7 +111,7 @@ def crystal(infile):
 
 
 def experiment_list(infile, check_format=True):
-    """ Load an experiment list from a serialzied format. """
+    """Load an experiment list from a serialzied format."""
     # Resolve recursive import
     from dxtbx.model.experiment_list import ExperimentListFactory
 

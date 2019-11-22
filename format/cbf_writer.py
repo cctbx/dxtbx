@@ -23,10 +23,10 @@ import pycbf
 
 
 class FullCBFWriter(object):
-    """ Class for writing full CBF files from any dxtbx-supported format class """
+    """Class for writing full CBF files from any dxtbx-supported format class"""
 
     def __init__(self, filename=None, imageset=None):
-        """ Provide a file name or imageset as input """
+        """Provide a file name or imageset as input"""
         assert [filename, imageset].count(
             None
         ) == 1, "Supply either filename or imageset"
@@ -61,7 +61,7 @@ class FullCBFWriter(object):
         return metro
 
     def get_cbf_handle(self, index=None, header_only=False, detector_only=False):
-        """ Build a cbf handle in memory """
+        """Build a cbf handle in memory"""
         # set up the metrology dictionary to include axis names, pixel sizes, and so forth
         if index is None:
             detector = self.imageset.get_detector()
@@ -543,7 +543,7 @@ class FullCBFWriter(object):
                 )
 
     def write_cbf(self, filename, index=None, cbf=None):
-        """ Write a CBF file. If the handle is not provided, create one """
+        """Write a CBF file. If the handle is not provided, create one"""
         assert [index, cbf].count(None) in (1, 2), "Supply either index or cbf"
 
         if cbf is None:

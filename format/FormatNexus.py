@@ -80,7 +80,7 @@ class FormatNexus(FormatHDF5):
             self._raw_data = DetectorGroupDataFactory(data, instrument).model
 
     def _setup_gonio_and_scan(self, sample, detector):
-        """ Set up rotation-specific models """
+        """Set up rotation-specific models"""
         self._goniometer_model = GoniometerFactory(sample).model
         self._scan_model = ScanFactory(sample, detector).model
 
@@ -176,7 +176,7 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
         return is_nexus_still
 
     def _setup_gonio_and_scan(self, sample, detector):
-        """ No rotation-specific models for stills """
+        """No rotation-specific models for stills"""
         self._goniometer_model = None
         self._scan_model = None
 

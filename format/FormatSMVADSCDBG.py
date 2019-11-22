@@ -12,7 +12,7 @@ from dxtbx.format.FormatSMVADSC import FormatSMVADSC
 
 
 class FormatSMVADSCDBG(FormatSMVADSC):
-    """ Format class for reading images converted from pilatus to smv adsc"""
+    """Format class for reading images converted from pilatus to smv adsc"""
 
     @staticmethod
     def understand(image_file):

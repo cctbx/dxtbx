@@ -1792,7 +1792,7 @@ class DataFactory(object):
 
 
 class DetectorGroupDataFactory(DataFactory):
-    """ Class to handle reading data from a detector with a NXdetector_group """
+    """Class to handle reading data from a detector with a NXdetector_group"""
 
     def __init__(self, obj, instrument):
         DataFactory.__init__(self, obj)

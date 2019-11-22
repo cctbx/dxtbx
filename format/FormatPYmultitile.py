@@ -133,7 +133,7 @@ class FormatPYmultitile(FormatPY):
         return detector
 
     def get_raw_data(self):
-        """ Return a tuple of flex arrays, one for each asic """
+        """Return a tuple of flex arrays, one for each asic"""
 
         return tuple(self._raw_data)
 

@@ -91,7 +91,7 @@ class FormatXTCJungfrau(FormatXTC):
         return self._beam(index)
 
     def _beam(self, index=None):
-        """Returns a simple model for the beam """
+        """Returns a simple model for the beam"""
         if index is None:
             index = 0
         evt = self._get_event(index)
@@ -197,7 +197,7 @@ class FormatXTCJungfrau(FormatXTC):
 
 
 class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
-    """ Monolithic version of the Jungfrau, I.E. use the psana detector image function to assemble a monolithic image """
+    """Monolithic version of the Jungfrau, I.E. use the psana detector image function to assemble a monolithic image"""
 
     @staticmethod
     def understand(image_file):

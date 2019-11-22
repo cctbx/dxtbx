@@ -64,7 +64,7 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
         in a gui, call this function to synchronize these changes to the underlying CBF handle"""
 
         def recursive_sync(cbf, group, cbf_detectors=None, root=False):
-            """ Walks the hierarchy and synchronizes the dxtbx matrices to the CBF axes."""
+            """Walks the hierarchy and synchronizes the dxtbx matrices to the CBF axes."""
 
             d_mat = group.get_local_d_matrix()
             fast = col((d_mat[0], d_mat[3], d_mat[6])).normalize()
@@ -224,7 +224,7 @@ class FormatCBFFullStillInMemory(FormatCBFFullStill):
         return False
 
     def __init__(self, cbf_handle, **kwargs):
-        """ @param cbf_handle In memory cbf_handle, alredy initialized """
+        """@param cbf_handle In memory cbf_handle, alredy initialized"""
         self._goniometer_instance = None
         self._scan_instance = None
         self._detector_instance = None
@@ -275,4 +275,4 @@ class FormatCBFMultiTileHierarchyStillInMemory(
 
 
 class FormatCBFCspadInMemory(FormatCBFMultiTileHierarchyStillInMemory, FormatCBFCspad):
-    """ mixin class for in memory cspad images"""
+    """mixin class for in memory cspad images"""

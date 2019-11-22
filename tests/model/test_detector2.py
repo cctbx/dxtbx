@@ -48,7 +48,7 @@ def detector():
 
 
 def test_flat(detector):
-    """ Test the flat hierarchy. """
+    """Test the flat hierarchy."""
 
     expected_types = ["P", "P", "P", "P"]
     expected_names = ["P1", "P2", "P3", "P4"]
@@ -137,7 +137,7 @@ def test_panels_depth_first_iteration(detector):
 
 
 def test_get_valid_D_matrix(detector):
-    """ Setup the hierarchy of frames and check it's all consistent. """
+    """Setup the hierarchy of frames and check it's all consistent."""
     # Set a valid frame for the top level detector
     detector.hierarchy().set_local_frame(
         (1, 0, 0), (0, 1, 0), (0, 0, 100)  # Fast axis  # Slow axis

@@ -44,7 +44,7 @@ locator_scope = parse(locator_str)
 
 class XtcReader(Reader):
     def nullify_format_instance(self):
-        """ No-op for XTC streams. No issue with multiprocessing. """
+        """No-op for XTC streams. No issue with multiprocessing."""
         pass
 
 
@@ -93,7 +93,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
     @staticmethod
     def params_from_phil(master_phil, user_phil, strict=False):
-        """ Read the locator file """
+        """Read the locator file"""
         try:
             user_input = parse(file_name=user_phil)
             working_phil, unused = master_phil.fetch(
@@ -145,7 +145,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             self.times.extend(times)
 
     def get_run_from_index(self, index=None):
-        """ Look up the run number given an index """
+        """Look up the run number given an index"""
         if index is None:
             index = 0
         for run_number in self.run_mapping:
@@ -166,7 +166,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
     @staticmethod
     def _get_datasource(image_file, params):
-        """ Construct a psana data source object given the locator parameters """
+        """Construct a psana data source object given the locator parameters"""
         if params.calib_dir is not None:
             psana.setOption("psana.calib-dir", params.calib_dir)
         if params.data_source is None:
@@ -198,7 +198,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         return psana_runs
 
     def get_psana_timestamp(self, index):
-        """ Get the cctbx.xfel style event timestamp given an index """
+        """Get the cctbx.xfel style event timestamp given an index"""
         evt = self._get_event(index)
         time = evt.get(psana.EventId).time()
         # fid = evt.get(psana.EventId).fiducials()

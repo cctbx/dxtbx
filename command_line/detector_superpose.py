@@ -55,10 +55,10 @@ repeat_until_converged = True
 
 
 class Script(object):
-    """ Class to parse the command line options. """
+    """Class to parse the command line options."""
 
     def __init__(self):
-        """ Set the expected options. """
+        """Set the expected options."""
         # Create the option parser
         usage = "usage: dxtbx.detector_superpose reference.json moving.json "
         self.parser = OptionParser(
@@ -70,7 +70,7 @@ class Script(object):
         )
 
     def run(self):
-        """ Parse the options. """
+        """Parse the options."""
         # Parse the command line arguments
         params, options = self.parser.parse_args(show_diff_phil=True)
 
