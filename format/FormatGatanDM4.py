@@ -81,7 +81,10 @@ class FormatGatanDM4(FormatMultiImage, Format):
     @staticmethod
     def understand(image_file):
 
-        header = FormatGatanDM4._read_header(image_file)
+        try:
+            header = FormatGatanDM4._read_header(image_file)
+        except struct.error:
+            return False
 
         if header["version"] != 4:
             return False
