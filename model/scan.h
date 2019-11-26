@@ -234,6 +234,11 @@ namespace dxtbx { namespace model {
     void set_oscillation(vec2<double> oscillation) {
       DXTBX_ASSERT(oscillation[1] >= 0.0);
       oscillation_ = oscillation;
+      if (oscillation[1] != 0.0) {
+        is_still_ = false;
+      } else {
+        is_still_ = true;
+      }
     }
 
     /** Set the exposure time */
