@@ -10,12 +10,11 @@ from builtins import range
 import libtbx
 from cbflib_adaptbx import uncompress
 from cctbx.eltbx import attenuation_coefficient
-from libtbx import phil
 from scitbx import matrix
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
-from dxtbx.masking import GoniometerMaskerFactory, untrusted_phil_scope
+from dxtbx.masking import GoniometerMaskerFactory
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 
@@ -54,39 +53,8 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         # 24 rows * 5 columns
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         self._multi_panel = kwargs.get("multi_panel", False)
-        self._define_untrusted_region()
 
         super(FormatCBFMiniPilatusDLS12M, self).__init__(image_file, **kwargs)
-
-    def _define_untrusted_region(self):
-        if self._multi_panel:
-            phil_str = """
-            untrusted {
-                panel = 85
-                rectangle = 0,487,0,195
-            }
-            untrusted {
-                panel = 89
-                rectangle = 0,487,0,195
-            }
-            """
-        else:
-            phil_str = """
-            untrusted {
-                panel = 17
-                rectangle = 0,487,0,195
-            }
-            untrusted {
-                panel = 17
-                rectangle = 1976,2463,0,195
-            }
-            """
-        self._untrusted_region = (
-            untrusted_phil_scope.fetch(phil.parse(phil_str)).extract().untrusted
-        )
-
-    def get_untrusted_regions(self):
-        return self._untrusted_region
 
     def _detector(self):
 
@@ -188,6 +156,12 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                     p.set_raw_image_offset((xmin, ymin))
                     self.coords[p.get_name()] = (xmin, ymin, xmax, ymax)
 
+        if self._multi_panel:
+            detector[85].add_mask(0, 0, 487, 195)
+            detector[85].add_mask(0, 0, 487, 195)
+        else:
+            detector[17].add_mask(0, 0, 487, 195)
+            detector[17].add_mask(1976, 0, 2463, 195)
         return detector
 
     def _read_cbf_image(self):

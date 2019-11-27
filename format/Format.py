@@ -23,15 +23,9 @@ from builtins import range
 from os.path import abspath
 
 import libtbx
-from scitbx.array_family import flex
 
 import dxtbx.filecache_controller
 from dxtbx.format.image import ImageBool
-from dxtbx.masking import (
-    mask_untrusted_circle,
-    mask_untrusted_polygon,
-    mask_untrusted_rectangle,
-)
 from dxtbx.model import MultiAxisGoniometer
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
@@ -152,7 +146,6 @@ class Format(object):
         self._detector_instance = None
         self._beam_instance = None
         self._scan_instance = None
-        self._static_mask = None
 
         self._goniometer_factory = GoniometerFactory
         self._detector_factory = DetectorFactory
@@ -514,61 +507,14 @@ class Format(object):
         long as the result is an scan."""
         return None
 
-    def get_untrusted_regions(self):
-        """Overload this method to define untrusted regions of the detector.
-
-        Returns: an extracted dxtbx.masking.untrusted_phil_scope.
-        """
-        return None
-
     def get_static_mask(self):
-        if self._static_mask is not None:
-            # Use cached mask
-            return self._static_mask
-
-        untrusted_regions = self.get_untrusted_regions()
-        if not untrusted_regions:
-            return None
-
-        # Create the mask for each image
-        masks = []
-        for index, panel in enumerate(self.get_detector()):
-            mask = flex.bool(flex.grid(reversed(panel.get_image_size())), True)
-            # Apply the untrusted regions
-            for region in untrusted_regions:
-                if region.panel == index:
-                    if region.circle is not None:
-                        xc, yc, radius = region.circle
-                        mask_untrusted_circle(mask, xc, yc, radius)
-                    if region.rectangle is not None:
-                        x0, x1, y0, y1 = region.rectangle
-                        mask_untrusted_rectangle(mask, x0, x1, y0, y1)
-                    if region.polygon is not None:
-                        assert (
-                            len(region.polygon) % 2 == 0
-                        ), "Polygon must contain 2D coords"
-                        vertices = []
-                        for i in range(int(len(region.polygon) / 2)):
-                            x = region.polygon[2 * i]
-                            y = region.polygon[2 * i + 1]
-                            vertices.append((x, y))
-                        polygon = flex.vec2_double(vertices)
-                        mask_untrusted_polygon(mask, polygon)
-                    if region.pixel is not None:
-                        mask[region.pixel] = False
-
-            # Add to the list
-            masks.append(mask)
-
-        # Save the mask so we don't have to recalculate it again
-        self._static_mask = tuple(masks)
-
-        # Return the mask
-        return self._static_mask
+        """Overload this method to override the static mask."""
+        return None
 
     def get_goniometer_shadow_masker(self, goniometer=None):
         """Overload this method to allow generation of dynamic goniometer shadow
         masks to be used during spotfinding or integration."""
+
         return None
 
     ####################################################################
