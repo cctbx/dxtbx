@@ -527,7 +527,7 @@ class Format(object):
             return self._static_mask
 
         untrusted_regions = self.get_untrusted_regions()
-        if not untrusted_regions or not untrusted_regions.untrusted:
+        if not untrusted_regions:
             return None
 
         # Create the mask for each image
@@ -535,7 +535,7 @@ class Format(object):
         for index, panel in enumerate(self.get_detector()):
             mask = flex.bool(flex.grid(reversed(panel.get_image_size())), True)
             # Apply the untrusted regions
-            for region in untrusted_regions.untrusted:
+            for region in untrusted_regions:
                 if region.panel == index:
                     if region.circle is not None:
                         xc, yc, radius = region.circle

@@ -80,7 +80,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                 rectangle = 1976,2463,0,195
             }
             """
-        return untrusted_phil_scope.fetch(phil.parse(phil_str)).extract()
+        return untrusted_phil_scope.fetch(phil.parse(phil_str)).extract().untrusted
 
     def _detector(self):
 
