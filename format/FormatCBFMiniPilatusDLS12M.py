@@ -54,10 +54,11 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         # 24 rows * 5 columns
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         self._multi_panel = kwargs.get("multi_panel", False)
+        self._define_untrusted_region()
 
         super(FormatCBFMiniPilatusDLS12M, self).__init__(image_file, **kwargs)
 
-    def get_untrusted_regions(self):
+    def _define_untrusted_region(self):
         if self._multi_panel:
             phil_str = """
             untrusted {
@@ -80,7 +81,12 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                 rectangle = 1976,2463,0,195
             }
             """
-        return untrusted_phil_scope.fetch(phil.parse(phil_str)).extract().untrusted
+        self._untrusted_region = (
+            untrusted_phil_scope.fetch(phil.parse(phil_str)).extract().untrusted
+        )
+
+    def get_untrusted_regions(self):
+        return self._untrusted_region
 
     def _detector(self):
 
