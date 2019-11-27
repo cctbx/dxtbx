@@ -264,6 +264,22 @@ class to_xds(object):
             Rd * matrix.col(self.get_goniometer().get_rotation_axis())
         ).elems
 
+        # Untrusted rectangles
+        self.untrusted_rectangles = []
+        format_instance = sequence.get_format_class().get_instance(sequence.paths()[0])
+        if format_instance.get_untrusted_regions():
+            for region in format_instance.get_untrusted_regions():
+                if region.rectangle is not None:
+                    x0, _, y0, _ = self.panel_limits[region.panel]
+                    self.untrusted_rectangles.append(
+                        (
+                            region.rectangle[0] + x0 - 1,
+                            region.rectangle[1] + x0 - 1,
+                            region.rectangle[2] + y0 - 1,
+                            region.rectangle[3] + y0 - 1,
+                        )
+                    )
+
     def get_detector(self):
         return self._sequence.get_detector()
 
@@ -371,6 +387,11 @@ class to_xds(object):
         result.append("TRUSTED_REGION= 0.0 1.41")
         for f0, s0, f1, s1 in self.get_detector()[0].get_mask():
             result.append("UNTRUSTED_RECTANGLE= %d %d %d %d" % (f0, f1 + 1, s0, s1 + 1))
+
+        for untrusted_rectangle in self.untrusted_rectangles:
+            result.append(
+                "UNTRUSTED_RECTANGLE= %d %d %d %d" % tuple(untrusted_rectangle)
+            )
 
         start_end = self.get_scan().get_image_range()
 
