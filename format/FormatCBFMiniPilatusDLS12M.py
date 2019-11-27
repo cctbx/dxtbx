@@ -10,11 +10,19 @@ from builtins import range
 import libtbx
 from cbflib_adaptbx import uncompress
 from cctbx.eltbx import attenuation_coefficient
+from libtbx import phil
 from scitbx import matrix
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
-from dxtbx.masking import GoniometerMaskerFactory
+from dxtbx.masking import (
+    GoniometerMaskerFactory,
+    mask_untrusted_circle,
+    mask_untrusted_polygon,
+    mask_untrusted_rectangle,
+    untrusted_phil_scope,
+)
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 
@@ -54,10 +62,66 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         self._multi_panel = kwargs.get("multi_panel", False)
 
-        # mask for broken modules 2019/11/11
-        self._broken_module_mask = self._make_broken_module_mask()
-
         super(FormatCBFMiniPilatusDLS12M, self).__init__(image_file, **kwargs)
+
+    def untrusted_regions(self):
+        if self._multi_panel:
+            phil_str = """
+            untrusted {
+                panel = 85
+                rectangle = 0,487,0,195
+            }
+            untrusted {
+                panel = 89
+                rectangle = 0,487,0,195
+            }
+            """
+        else:
+            phil_str = """
+            untrusted {
+                panel = 17
+                rectangle = 0,487,0,195
+            }
+            untrusted {
+                panel = 17
+                rectangle = 1976,2463,0,195
+            }
+            """
+        return untrusted_phil_scope.fetch(phil.parse(phil_str)).extract()
+
+    def get_static_mask(self):
+        # Create the mask for each image
+        masks = []
+        for index, panel in enumerate(self.get_detector()):
+            mask = flex.bool(flex.grid(reversed(panel.get_image_size())), True)
+            # Apply the untrusted regions
+            for region in self.untrusted_regions().untrusted:
+                if region.panel == index:
+                    if region.circle is not None:
+                        xc, yc, radius = region.circle
+                        mask_untrusted_circle(mask, xc, yc, radius)
+                    if region.rectangle is not None:
+                        x0, x1, y0, y1 = region.rectangle
+                        mask_untrusted_rectangle(mask, x0, x1, y0, y1)
+                    if region.polygon is not None:
+                        assert (
+                            len(region.polygon) % 2 == 0
+                        ), "Polygon must contain 2D coords"
+                        vertices = []
+                        for i in range(int(len(region.polygon) / 2)):
+                            x = region.polygon[2 * i]
+                            y = region.polygon[2 * i + 1]
+                            vertices.append((x, y))
+                        polygon = flex.vec2_double(vertices)
+                        mask_untrusted_polygon(mask, polygon)
+                    if region.pixel is not None:
+                        mask[region.pixel] = False
+
+            # Add to the list
+            masks.append(mask)
+
+        # Return the mask
+        return tuple(masks)
 
     def _detector(self):
 
@@ -177,27 +241,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
             slow=cbf_header["slow"],
         )
 
-        # Overwrite broken pixels with -2 - 2019/11/11
-        pixel_values.as_1d().set_selected(self._broken_module_mask, -2)
-
         return pixel_values
-
-    def _make_broken_module_mask(self):
-        from scitbx.array_family import flex
-
-        mask = flex.bool(flex.grid((5071, 2463)), False)
-        module = flex.bool(flex.grid((195, 487)), True)
-
-        dx = 487 + 7
-        dy = 195 + 17
-
-        # module @ row 17 column 0
-        mask.matrix_paste_block_in_place(module, 17 * dy, 0)
-
-        # module @ row 17 column 4
-        mask.matrix_paste_block_in_place(module, 17 * dy, 4 * dx)
-
-        return mask.as_1d()
 
     def get_raw_data(self):
         if self._raw_data is None:
