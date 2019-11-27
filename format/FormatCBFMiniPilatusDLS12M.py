@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 
 import binascii
+import calendar
 import math
 import sys
 from builtins import range
@@ -156,12 +157,16 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                     p.set_raw_image_offset((xmin, ymin))
                     self.coords[p.get_name()] = (xmin, ymin, xmax, ymax)
 
-        if self._multi_panel:
-            detector[85].add_mask(0, 0, 487, 195)
-            detector[85].add_mask(0, 0, 487, 195)
-        else:
-            detector[17].add_mask(0, 0, 487, 195)
-            detector[17].add_mask(1976, 0, 2463, 195)
+        # Mask out known bad modules
+        timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
+        if timestamp > calendar.timegm((2019, 11, 26, 0, 0, 0)):
+            if self._multi_panel:
+                detector[85].add_mask(0, 0, 487, 195)
+                detector[85].add_mask(0, 0, 487, 195)
+            else:
+                detector[17].add_mask(0, 0, 487, 195)
+                detector[17].add_mask(1976, 0, 2463, 195)
+
         return detector
 
     def _read_cbf_image(self):
