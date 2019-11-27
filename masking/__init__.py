@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import math
 
+from libtbx import phil
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
 from scitbx import matrix
 from scitbx.array_family import flex
@@ -24,6 +25,39 @@ __all__ = [
     "mask_untrusted_polygon",
     "mask_untrusted_rectangle",
 ]
+
+
+untrusted_phil_scope = phil.parse(
+    """\
+untrusted
+  .multiple = True
+{
+
+  panel = 0
+    .type = int
+    .help = "The panel number"
+
+  circle = None
+    .type = ints(3)
+    .help = "An untrusted circle (xc, yc, r)"
+
+  rectangle = None
+    .type = ints(4)
+    .help = "An untrusted rectangle (x0, x1, y0, y1)"
+
+  polygon = None
+    .type = ints(value_min=0)
+    .help = "The pixel coordinates (fast, slow) that define the corners "
+            "of the untrusted polygon. Spots whose centroids fall within "
+            "the bounds of the untrusted polygon will be rejected."
+
+  pixel = None
+    .type = ints(2, value_min=0)
+    .help = "An untrusted pixel (y, x)"
+
+}
+"""
+)
 
 
 class GoniometerMaskerFactory(object):
