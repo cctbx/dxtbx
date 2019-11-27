@@ -152,6 +152,7 @@ class Format(object):
         self._detector_instance = None
         self._beam_instance = None
         self._scan_instance = None
+        self._static_mask = None
 
         self._goniometer_factory = GoniometerFactory
         self._detector_factory = DetectorFactory
@@ -521,6 +522,10 @@ class Format(object):
         return None
 
     def get_static_mask(self):
+        if self._static_mask is not None:
+            # Use cached mask
+            return self._static_mask
+
         untrusted_regions = self.get_untrusted_regions()
         if not untrusted_regions or not untrusted_regions.untrusted:
             return None
@@ -555,8 +560,11 @@ class Format(object):
             # Add to the list
             masks.append(mask)
 
+        # Save the mask so we don't have to recalculate it again
+        self._static_mask = tuple(masks)
+
         # Return the mask
-        return tuple(masks)
+        return self._static_mask
 
     def get_goniometer_shadow_masker(self, goniometer=None):
         """Overload this method to allow generation of dynamic goniometer shadow
