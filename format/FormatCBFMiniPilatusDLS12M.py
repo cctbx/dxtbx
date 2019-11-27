@@ -191,11 +191,11 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         dx = 487 + 7
         dy = 195 + 17
 
-        # module @ row 15 column 2
-        mask.matrix_paste_block_in_place(module, 15 * dy, 2 * dx)
-
         # module @ row 17 column 0
         mask.matrix_paste_block_in_place(module, 17 * dy, 0)
+
+        # module @ row 17 column 4
+        mask.matrix_paste_block_in_place(module, 17 * dy, 4 * dx)
 
         return mask.as_1d()
 
