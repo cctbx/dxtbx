@@ -369,8 +369,13 @@ class to_xds(object):
             template = template.replace("master", "??????")
         result.append("NAME_TEMPLATE_OF_DATA_FRAMES= %s" % template.replace("#", "?"))
         result.append("TRUSTED_REGION= 0.0 1.41")
-        for f0, s0, f1, s1 in self.get_detector()[0].get_mask():
-            result.append("UNTRUSTED_RECTANGLE= %d %d %d %d" % (f0, f1 + 1, s0, s1 + 1))
+
+        for panel, (x0, _, y0, _) in zip(self.get_detector(), self.panel_limits):
+            for f0, s0, f1, s1 in panel.get_mask():
+                result.append(
+                    "UNTRUSTED_RECTANGLE= %d %d %d %d"
+                    % (f0 + x0 - 1, f1 + x0, s0 + y0 - 1, s1 + y0)
+                )
 
         start_end = self.get_scan().get_image_range()
 

@@ -82,7 +82,7 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
     assert approx_equal(detector[0].get_origin(), converter.get_detector_origin())
 
 
-def test_to_xds_multi_panel_i23(dials_regression, tmpdir):
+def test_to_xds_multi_panel_i23(dials_regression, tmpdir, mocker):
     tmpdir.chdir()
     file_name = os.path.join(
         dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
@@ -111,3 +111,15 @@ SEGMENT_DISTANCE= 250.000
 SEGMENT_ORGX= 1075.00 SEGMENT_ORGY= 4973.67""",
     ):
         assert expected_substr in s1
+    assert "UNTRUSTED_RECTANGLE" not in s1
+
+    # Fool the format class into masking out a couple of bad modules
+    mocked_timestamp = mocker.patch(
+        "dxtbx.format.FormatCBFMiniPilatusDLS12M.get_pilatus_timestamp"
+    )
+    mocked_timestamp.return_value = 1574857526.34
+    sequence = ImageSetFactory.new([file_name])[0]
+    to_xds = xds.to_xds(sequence)
+    s = to_xds.XDS_INP()
+    assert "UNTRUSTED_RECTANGLE= 0 488 3604 3800" in s
+    assert "UNTRUSTED_RECTANGLE= 1976 2464 3604 3800" in s
