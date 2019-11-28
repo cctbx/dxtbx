@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 
 import binascii
+import calendar
 import math
 import sys
 from builtins import range
@@ -53,9 +54,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         # 24 rows * 5 columns
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         self._multi_panel = kwargs.get("multi_panel", False)
-
-        # mask for broken modules 2019/11/11
-        self._broken_module_mask = self._make_broken_module_mask()
 
         super(FormatCBFMiniPilatusDLS12M, self).__init__(image_file, **kwargs)
 
@@ -159,6 +157,35 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                     p.set_raw_image_offset((xmin, ymin))
                     self.coords[p.get_name()] = (xmin, ymin, xmax, ymax)
 
+        detector = self._mask_bad_modules(detector)
+        return detector
+
+    def _mask_bad_modules(self, detector):
+        # Mask out known bad modules
+        timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
+        nx = 487  # module pixels x
+        ny = 195  # module pixels y
+        dx = 7  # module gap size
+        if timestamp > calendar.timegm((2019, 11, 26, 0, 0, 0)):
+            # 2019 run 5
+            # module @ row 17 column 0
+            # module @ row 17 column 4
+            if self._multi_panel:
+                detector[5 * 17].add_mask(0, 0, nx, ny)
+                detector[5 * 17 + 4].add_mask(0, 0, nx, ny)
+            else:
+                detector[17].add_mask(0, 0, nx, ny)
+                detector[17].add_mask((nx + dx) * 4, 0, (nx + dx) * 4 + nx, ny)
+        elif timestamp > calendar.timegm((2019, 9, 3, 0, 0, 0)):
+            # 2019 run 4
+            # module @ row 15 column 2
+            # module @ row 17 column 0
+            if self._multi_panel:
+                detector[5 * 15 + 2].add_mask(0, 0, nx, ny)
+                detector[5 * 17].add_mask(0, 0, nx, ny)
+            else:
+                detector[15].add_mask((nx + dx) * 2, 0, (nx + dx) * 2 + nx, ny)
+                detector[17].add_mask(0, 0, nx, ny)
         return detector
 
     def _read_cbf_image(self):
@@ -177,27 +204,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
             slow=cbf_header["slow"],
         )
 
-        # Overwrite broken pixels with -2 - 2019/11/11
-        pixel_values.as_1d().set_selected(self._broken_module_mask, -2)
-
         return pixel_values
-
-    def _make_broken_module_mask(self):
-        from scitbx.array_family import flex
-
-        mask = flex.bool(flex.grid((5071, 2463)), False)
-        module = flex.bool(flex.grid((195, 487)), True)
-
-        dx = 487 + 7
-        dy = 195 + 17
-
-        # module @ row 17 column 0
-        mask.matrix_paste_block_in_place(module, 17 * dy, 0)
-
-        # module @ row 17 column 4
-        mask.matrix_paste_block_in_place(module, 17 * dy, 4 * dx)
-
-        return mask.as_1d()
 
     def get_raw_data(self):
         if self._raw_data is None:
