@@ -189,7 +189,13 @@ def local_visit(nxfile, visitor):
       nxfile: hdf5 file node
       visitor: visitor function to act on children
     """
-    for k in nxfile.values():
+    for key in nxfile.keys():
+        # Do not iterate over .values().
+        # As .values() is not a true generator all value objects have be represented
+        # in memory at the same time. If the value objects refer to external files
+        # then those are opened and kept open until the loop terminates, at which
+        # point all of the file handles are garbage collected and closed at once.
+        k = nxfile[key]
         try:
             if "NX_class" not in k.attrs:
                 continue
