@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function
 
+import functools
 import os
 from builtins import range
 
@@ -13,12 +14,9 @@ from dxtbx.model import MultiAxisGoniometer
 
 
 class Reader(object):
-
-    _format_class_ = None
-
-    def __init__(self, filenames, num_images=None, **kwargs):
+    def __init__(self, format_class, filenames, num_images=None, **kwargs):
         self.kwargs = kwargs
-        self.format_class = Reader._format_class_
+        self.format_class = format_class
         assert len(filenames) == 1
         self._filename = filenames[0]
         if num_images is None:
@@ -48,7 +46,7 @@ class Reader(object):
         return self.num_images()
 
     def copy(self, filenames, indices=None):
-        return Reader(filenames, indices)
+        return Reader(self.format_class, filenames, indices)
 
     def identifiers(self):
         return ["%s-%d" % (self._filename, index) for index in range(len(self))]
@@ -89,17 +87,10 @@ class FormatMultiImage(Format):
     def get_reader(cls):
         """
         Return a reader class
-
         """
-        obj = Reader
-        obj._format_class_ = cls
-        return obj
+        return functools.partial(Reader, cls)
 
     def get_masker(self, goniometer=None):
-        """
-        Return a reader class
-
-        """
         if (
             isinstance(goniometer, MultiAxisGoniometer)
             and hasattr(self, "_dynamic_shadowing")

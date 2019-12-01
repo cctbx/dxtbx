@@ -66,12 +66,9 @@ _cache_controller = dxtbx.filecache_controller.simple_controller()
 
 
 class Reader(object):
-
-    _format_class_ = None
-
-    def __init__(self, filenames, **kwargs):
+    def __init__(self, format_class, filenames, **kwargs):
         self._kwargs = kwargs
-        self.format_class = Reader._format_class_
+        self.format_class = format_class
         self._filenames = filenames
 
     def read(self, index):
@@ -90,7 +87,7 @@ class Reader(object):
         return len(self._filenames)
 
     def copy(self, filenames):
-        return Reader(filenames)
+        return Reader(self.format_class, filenames)
 
     def is_single_file_reader(self):
         return False
@@ -267,13 +264,11 @@ class Format(object):
         return Class._current_instance_
 
     @classmethod
-    def get_reader(Class):
+    def get_reader(cls):
         """
         Return a reader class
         """
-        obj = Reader
-        obj._format_class_ = Class
-        return obj
+        return functools.partial(Reader, cls)
 
     def get_masker(self, goniometer=None):
         """
