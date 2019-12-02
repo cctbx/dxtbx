@@ -195,13 +195,13 @@ def local_visit(nxfile, visitor):
         # in memory at the same time. If the value objects refer to external files
         # then those are opened and kept open until the loop terminates, at which
         # point all of the file handles are garbage collected and closed at once.
-        k = nxfile[key]
         try:
+            k = nxfile[key]
             if "NX_class" not in k.attrs:
                 continue
             visitor(k.name, k)
             local_visit(k, visitor)
-        except AttributeError:
+        except (AttributeError, KeyError):
             pass
 
 
