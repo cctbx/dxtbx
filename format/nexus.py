@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import itertools
 import math
 import os
 from builtins import range
@@ -163,10 +164,7 @@ def convert_units(value, input_units, output_units):
     try:
         return converters[input_units][output_units](value)
     except Exception:
-        pass
-    raise RuntimeError(
-        'Can\'t convert units "%s" to "%s"' % (input_units, output_units)
-    )
+        raise RuntimeError("Can't convert units %r to %r" % (input_units, output_units))
 
 
 def visit_dependencies(nx_file, item, visitor=None):
@@ -724,7 +722,7 @@ class DetectorFactoryFromGroup(object):
 
         assert root_name is not None, "Detector root not found"
         assert sorted(
-            [os.path.basename(d.handle.name) for d in instrument.detectors]
+            os.path.basename(d.handle.name) for d in instrument.detectors
         ) == sorted(
             expected_detectors
         ), "Mismatch between detector group names and detectors available"
@@ -1184,35 +1182,31 @@ class DataList(object):
     """
 
     def __init__(self, obj, max_size=0):
-        self.datasets = obj
-        self.num_images = 0
-        self.lookup = []
-        self.offset = [0]
+        self._datasets = obj
+        self._num_images = 0
+        self._lookup = []
+        self._offset = [0]
 
-        if len(self.datasets) == 1 and max_size:
-            self.num_images = max_size
-            self.lookup.extend([0] * max_size)
-            self.offset.append(max_size)
+        if len(self._datasets) == 1 and max_size:
+            self._num_images = max_size
+            self._lookup.extend([0] * max_size)
+            self._offset.append(max_size)
 
         else:
-            for i, dataset in enumerate(self.datasets):
-                self.num_images += dataset.shape[0]
-                self.lookup.extend([i] * dataset.shape[0])
-                self.offset.append(self.num_images)
-
-        shape = self.datasets[0].shape
-        self.height = shape[1]
-        self.width = shape[2]
+            for i, dataset in enumerate(self._datasets):
+                self._num_images += dataset.shape[0]
+                self._lookup.extend([i] * dataset.shape[0])
+                self._offset.append(self._num_images)
 
     def __len__(self):
-        return self.num_images
+        return self._num_images
 
     def __getitem__(self, index):
-        d = self.lookup[index]
-        i = index - self.offset[d]
-        N, height, width = self.datasets[d].shape
+        d = self._lookup[index]
+        i = index - self._offset[d]
+        N, height, width = self._datasets[d].shape
         data_as_flex = dataset_as_flex(
-            self.datasets[d],
+            self._datasets[d],
             (slice(i, i + 1, 1), slice(0, height, 1), slice(0, width, 1)),
         )
         data_as_flex.reshape(flex.grid(data_as_flex.all()[1:]))
@@ -1226,21 +1220,18 @@ class DetectorGroupDataList(object):
     """
 
     def __init__(self, datalists):
-        self.datalists = datalists
+        self._datalists = datalists
         lengths = [len(datalist) for datalist in datalists]
-        self.num_images = lengths[0]
+        self._num_images = lengths[0]
         assert all(
-            length == self.num_images for length in lengths
+            length == self._num_images for length in lengths
         ), "Not all datasets are the same length"
 
     def __len__(self):
-        return self.num_images
+        return self._num_images
 
     def __getitem__(self, index):
-        data = []
-        for datalist in self.datalists:
-            data.extend(datalist[index])
-        return tuple(data)
+        return tuple(itertools.chain.from_iterable(dl[index] for dl in self._datalists))
 
 
 def get_detector_module_slices(detector):
@@ -1288,30 +1279,30 @@ class MultiPanelDataList(object):
     """
 
     def __init__(self, datasets, detector):
-        self.datasets = datasets
-        self.num_images = 0
-        self.lookup = []
-        self.offset = [0]
-        for i, dataset in enumerate(self.datasets):
-            self.num_images += dataset.shape[0]
-            self.lookup.extend([i] * dataset.shape[0])
-            self.offset.append(self.num_images)
+        self._datasets = datasets
+        self._num_images = 0
+        self._lookup = []
+        self._offset = [0]
+        for i, dataset in enumerate(self._datasets):
+            self._num_images += dataset.shape[0]
+            self._lookup.extend([i] * dataset.shape[0])
+            self._offset.append(self._num_images)
 
-        self.all_slices = get_detector_module_slices(detector)
+        self._all_slices = get_detector_module_slices(detector)
 
     def __len__(self):
-        return self.num_images
+        return self._num_images
 
     def __getitem__(self, index):
-        d = self.lookup[index]
-        i = index - self.offset[d]
+        d = self._lookup[index]
+        i = index - self._offset[d]
 
         all_data = []
 
-        for module_slices in self.all_slices:
+        for module_slices in self._all_slices:
             slices = [slice(i, i + 1, 1)]
             slices.extend(module_slices)
-            data_as_flex = dataset_as_flex(self.datasets[d], tuple(slices))
+            data_as_flex = dataset_as_flex(self._datasets[d], tuple(slices))
             data_as_flex.reshape(
                 flex.grid(data_as_flex.all()[-2:])
             )  # handle 3 or 4 dimension arrays
@@ -1394,7 +1385,7 @@ class MaskFactory(object):
 
     def __init__(self, objects, index=None):
         def make_mask(dset, index):
-            i = index if index is not None else 0
+            i = 0 if index is None else index
             mask = []
             for module_slices in all_slices:
                 assert len(dset.shape) in [len(module_slices), len(module_slices) + 1]

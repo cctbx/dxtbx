@@ -20,7 +20,10 @@ class Reader(object):
         assert len(filenames) == 1
         self._filename = filenames[0]
         if num_images is None:
-            self._num_images = self.read_num_images()
+            format_instance = self.format_class.get_instance(
+                self._filename, **self.kwargs
+            )
+            self._num_images = format_instance.get_num_images()
         else:
             self._num_images = num_images
 
@@ -35,15 +38,8 @@ class Reader(object):
     def paths(self):
         return [self._filename]
 
-    def read_num_images(self):
-        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
-        return format_instance.get_num_images()
-
-    def num_images(self):
-        return self._num_images
-
     def __len__(self):
-        return self.num_images()
+        return self._num_images
 
     def copy(self, filenames, indices=None):
         return Reader(self.format_class, filenames, indices)
