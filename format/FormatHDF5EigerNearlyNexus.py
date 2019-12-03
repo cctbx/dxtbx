@@ -15,6 +15,7 @@ from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
 from dxtbx.format.nexus import (
     BeamFactory,
     DataFactory,
+    DataFactoryCache,
     DetectorFactory,
     GoniometerFactory,
     MaskFactory,
@@ -124,6 +125,7 @@ class EigerNXmxFixer(object):
         # entries than there are in real life...
         delete = []
         handle_orig_entry_properties = {}
+        self.data_factory_cache = {}
         for k in sorted(handle_orig["/entry/data"]):
             try:
                 handle_orig_entry = handle_orig["/entry/data/%s" % k]
@@ -136,6 +138,11 @@ class EigerNXmxFixer(object):
                 "length": len(handle_orig_entry),
                 "filename": handle_orig_entry.file.filename,
             }
+            self.data_factory_cache[k] = DataFactoryCache(
+                shape=shape,
+                ndim=handle_orig_entry.ndim,
+                filename=handle_orig_entry.file.filename,
+            )
         for d in delete:
             del handle[d]
 
@@ -352,7 +359,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self._detector_model = DetectorFactory(detector, self._beam_model).model
         self._goniometer_model = GoniometerFactory(sample).model
         self._scan_model = ScanFactory(sample, detector).model
-        self._raw_data = DataFactory(data)
+        self._raw_data = DataFactory(data, cached_information=fixer.data_factory_cache)
 
         # update model for masking Eiger detectors
         for f0, f1, s0, s1 in determine_eiger_mask(self._detector_model):
