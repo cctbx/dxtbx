@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import functools
 import sys
 
 from libtbx.phil import parse
@@ -113,15 +114,11 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             return None
 
     @classmethod
-    def get_reader(Class):
+    def get_reader(cls):
         """
         Return a reader class
-
         """
-        obj = XtcReader
-        # Note, need to set this on the parent class since it's a scoped global variable
-        Reader._format_class_ = Class
-        return obj
+        return functools.partial(XtcReader, cls)
 
     def populate_events(self):
         """Read the timestamps from the XTC stream.  Assumes the psana idx mode of reading data.

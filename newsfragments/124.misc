@@ -1,0 +1,6 @@
+format.Format.Reader() constructor changed.
+
+Format class now given as first constructor argument instead of
+injection via private property
+
+
