@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import functools
 import math
 import os
 from builtins import range
@@ -61,121 +60,8 @@ def dataset_as_flex(dataset, selection):
             assert False, "unknown floating data type (%s)" % str(dataset.dtype)
 
 
-def _check_dtype(expected_type, dataset):
-    """
-    A function to check whether the dataset data type matches the expected
-    """
-
-    dataset_type = dataset.dtype
-    if dataset_type not in expected_type:
-        return (
-            False,
-            "%s is type %s, expected %s"
-            % (dataset.name, dataset_type, ", ".join(expected_type)),
-        )
-    return True, ""
-
-
-def _check_dims(expected_dimensions, dataset):
-    """
-    A function to check whether the dataset dimensions matches the expected
-    """
-
-    dataset_dimensions = len(dataset.shape)
-    if dataset_dimensions not in expected_dimensions:
-        return (
-            False,
-            "%s has dims %d, expected %s"
-            % (
-                dataset.name,
-                dataset_dimensions,
-                " or ".join(str(d) for d in expected_dimensions),
-            ),
-        )
-    return True, ""
-
-
-def _check_shape(expected_shape, dataset):
-    """
-    A function to check whether the dataset shape matches the expected
-    """
-
-    if dataset.shape not in expected_shape:
-        return (
-            False,
-            "%s has shape %s, expected one of %s"
-            % (dataset.name, str(dataset.shape), str(expected_shape)),
-        )
-    return True, ""
-
-
-def _check_is_scalar(expected_scalar, dataset):
-    """
-    A function to check whether the dataset is scalar or not
-    """
-
-    try:
-        _ = dataset[()]
-        is_scalar = True
-    except Exception:
-        is_scalar = False
-    if is_scalar != expected_scalar:
-        return (
-            False,
-            "%s == scalar is %s, expected %s"
-            % (dataset.name, is_scalar, expected_scalar),
-        )
-    return True, ""
-
-
-class check_dset(object):
-    """
-    Check properties of a dataset
-    """
-
-    def __init__(self, dtype=None, dims=None, shape=None, is_scalar=None):
-        """
-        Set stuff to check
-        :param dtype:         The datatype
-        :param dims:          The number of dimensions
-        :param shape:         The shape of the dataset
-
-        """
-        self.checks = []
-        if dtype is not None:
-            if not isinstance(dtype, list) and not isinstance(dtype, tuple):
-                dtype = [dtype]
-            self.checks.append(functools.partial(_check_dtype, dtype))
-        if dims is not None:
-            self.checks.append(functools.partial(_check_dims, dims))
-        if shape is not None:
-            self.checks.append(functools.partial(_check_shape, shape))
-        if is_scalar is not None:
-            self.checks.append(functools.partial(_check_is_scalar, is_scalar))
-
-    def __call__(self, dset):
-        for check in self.checks:
-            passed, errors = check(dset)
-            if passed is False:
-                raise RuntimeError(errors)
-
-
-def _check_attr(name, dset, dtype=None):
-    """
-    Check some properties of an attribute
-    :param name:  The name of the attribute
-    :param dset:  The dataset to check
-    :param dtype: The expected type of the named attribute
-    """
-
-    if name not in dset.attrs:
-        raise RuntimeError("'%s' does not have an attribute '%s'" % (dset.name, name))
-    if dtype is not None:
-        if not isinstance(dset.attrs[name], dtype):
-            raise RuntimeError(
-                "attribute '%s' of %s has type %s, expected %s"
-                % (name, dset.name, type(dset.attrs[name]), dtype)
-            )
+class NXValidationError(RuntimeError):
+    """A specific exception to record validation errors"""
 
 
 def local_visit(nxfile, visitor):
@@ -453,89 +339,13 @@ def construct_axes(nx_file, item, vector=None):
     return visitor.result()
 
 
-def run_checks(handle, items):
-    """
-    Run checks for datasets
-    """
-    for item, detail in items.items():
-        min_occurs = detail["minOccurs"]
-        assert min_occurs in [0, 1]
-        try:
-            dset = handle[item]
-        except Exception:
-            dset = None
-            if min_occurs != 0:
-                raise RuntimeError("Could not find %s in %s" % (item, handle.name))
-            else:
-                continue
-        if dset is not None:
-            for check in detail["checks"]:
-                check(dset)
-
-
 class NXdetector_module(object):
     """
     A class to hold a handle to NXdetector_module
     """
 
-    def __init__(self, handle, errors=None):
+    def __init__(self, handle):
         self.handle = handle
-
-        items = {
-            "data_origin": {
-                "minOccurs": 1,
-                "checks": [
-                    check_dset(
-                        dtype=["uint32", "uint64", "int32", "int64"], shape=[(2,), (3,)]
-                    )
-                ],
-            },
-            "data_size": {
-                "minOccurs": 1,
-                "checks": [
-                    check_dset(
-                        dtype=["int32", "int64", "uint32", "uint64"], shape=[(2,), (3,)]
-                    )
-                ],
-            },
-            "module_offset": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(
-                        dtype=["float64", "float32", "int64", "int32"], is_scalar=True
-                    ),
-                    functools.partial(_check_attr, "transformation_type"),
-                    functools.partial(_check_attr, "vector"),
-                    functools.partial(_check_attr, "offset"),
-                    functools.partial(_check_attr, "units", dtype=(numpy.string_, str)),
-                    functools.partial(_check_attr, "depends_on"),
-                ],
-            },
-            "fast_pixel_direction": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(dtype=["float32", "float64"], is_scalar=True),
-                    functools.partial(_check_attr, "transformation_type"),
-                    functools.partial(_check_attr, "vector"),
-                    functools.partial(_check_attr, "offset"),
-                    functools.partial(_check_attr, "units", dtype=(numpy.string_, str)),
-                    functools.partial(_check_attr, "depends_on"),
-                ],
-            },
-            "slow_pixel_direction": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(dtype=["float32", "float64"], is_scalar=True),
-                    functools.partial(_check_attr, "transformation_type"),
-                    functools.partial(_check_attr, "vector"),
-                    functools.partial(_check_attr, "offset"),
-                    functools.partial(_check_attr, "units", dtype=(numpy.string_, str)),
-                    functools.partial(_check_attr, "depends_on"),
-                ],
-            },
-        }
-
-        run_checks(self.handle, items)
 
 
 class NXdetector_group(object):
@@ -543,39 +353,8 @@ class NXdetector_group(object):
     A class to hold a handle to NXdetector_group
     """
 
-    def __init__(self, handle, errors=None):
-
+    def __init__(self, handle):
         self.handle = handle
-
-        items = {
-            "group_names": {"minOccurs": 0, "checks": []},
-            "group_index": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(
-                        dtype=["int32", "int64", "uint32", "uint64"], is_scalar=True
-                    )
-                ],
-            },
-            "group_parent": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(
-                        dtype=["int32", "int64", "uint32", "uint64"], is_scalar=True
-                    )
-                ],
-            },
-            "group_type": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(
-                        dtype=["int32", "int64", "uint32", "uint64"], is_scalar=True
-                    )
-                ],
-            },
-        }
-
-        run_checks(self.handle, items)
 
 
 class NXdetector(object):
@@ -583,142 +362,17 @@ class NXdetector(object):
     A class to handle a handle to NXdetector
     """
 
-    def __init__(self, handle, errors=None):
-
+    def __init__(self, handle):
         self.handle = handle
-
-        # The items to validate
-        items = {
-            "data": {"minOccurs": 0, "checks": [check_dset(dims=[3, 4])]},
-            "description": {"minOccurs": 0, "checks": []},
-            "time_per_channel": {"minOccurs": 0, "checks": []},
-            "distance": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "dead_time": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "count_time": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "beam_centre_x": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "beam_centre_y": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "angular_calibration_applied": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(
-                        dtype=["int32", "int64", "uint32", "uint64"], is_scalar=True
-                    )
-                ],
-            },
-            "angular_calibration": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"])],
-            },
-            "flatfield_applied": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(
-                        dtype=["int32", "int64", "uint32", "uint64"], is_scalar=True
-                    )
-                ],
-            },
-            "flatfield": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"])],
-            },
-            "flatfield_error": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"])],
-            },
-            "pixel_mask_applied": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(
-                        dtype=[
-                            "int8",
-                            "int16",
-                            "int32",
-                            "int64",
-                            "uint8",
-                            "uint16",
-                            "uint32",
-                            "uint64",
-                        ],
-                        is_scalar=True,
-                    )
-                ],
-            },
-            "pixel_mask": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["uint8", "uint16", "uint32", "int32"])],
-            },
-            "countrate_correction_applied": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(
-                        dtype=["int8", "int16", "int32", "int64", "uint32", "uint64"],
-                        is_scalar=True,
-                    )
-                ],
-            },
-            "bit_depth_readout": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(dtype=["uint16", "int32", "int64"], is_scalar=True)
-                ],
-            },
-            "detector_readout_time": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "frame_time": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "gain_setting": {"minOccurs": 0, "checks": []},
-            "saturation_value": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["int32", "int64"], is_scalar=True)],
-            },
-            "sensor_material": {"minOccurs": 0, "checks": []},
-            "sensor_thickness": {
-                "minOccurs": 0,
-                "checks": [
-                    check_dset(dtype=["float32", "float64"], is_scalar=True),
-                    functools.partial(_check_attr, "units", dtype=numpy.string_),
-                ],
-            },
-            "threshold_energy": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "type": {"minOccurs": 0, "checks": []},
-        }
-
-        run_checks(self.handle, items)
 
         # Find the NXdetector_modules
         self.modules = []
         for entry in find_class(self.handle, "NXdetector_module"):
-            try:
-                self.modules.append(NXdetector_module(entry, errors=errors))
-            except Exception as e:
-                if errors is not None:
-                    errors.append(str(e))
+            self.modules.append(NXdetector_module(entry))
 
         # Check we've got some stuff
-        if len(self.modules) == 0:
-            raise RuntimeError("No NXdetector_module in %s" % self.handle.name)
+        if not self.modules:
+            raise NXValidationError("No NXdetector_module in %s" % self.handle.name)
 
 
 class NXinstrument(object):
@@ -726,31 +380,22 @@ class NXinstrument(object):
     A class to hold a handle to NXinstrument
     """
 
-    def __init__(self, handle, errors=None):
-
+    def __init__(self, handle):
         self.handle = handle
 
         # Find the NXdetector
         self.detectors = []
         for entry in find_class(self.handle, "NXdetector"):
-            try:
-                self.detectors.append(NXdetector(entry, errors=errors))
-            except Exception as e:
-                if errors is not None:
-                    errors.append(str(e))
+            self.detectors.append(NXdetector(entry))
 
         # Check we've got stuff
-        if len(self.detectors) == 0:
-            raise RuntimeError("No NXdetector in %s" % self.handle.name)
+        if not self.detectors:
+            raise NXValidationError("No NXdetector in %s" % self.handle.name)
 
         # Find any detector groups
         self.detector_groups = []
         for entry in find_class(self.handle, "NXdetector_group"):
-            try:
-                self.detector_groups.append(NXdetector_group(entry, errors=errors))
-            except Exception as e:
-                if errors is not None:
-                    errors.append(str(e))
+            self.detector_groups.append(NXdetector_group(entry))
 
 
 class NXbeam(object):
@@ -758,27 +403,8 @@ class NXbeam(object):
     A class to hold a handle to NXbeam
     """
 
-    def __init__(self, handle, errors=None):
-
+    def __init__(self, handle):
         self.handle = handle
-
-        items = {
-            "incident_wavelength": {
-                "minOccurs": 1,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-            "incident_wavelength_spectrum": {"minOccurs": 0, "checks": []},
-            "incident_polarization_stokes": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], shape=[(4,)])],
-            },
-            "flux": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype=["float32", "float64"], is_scalar=True)],
-            },
-        }
-
-        run_checks(self.handle, items)
 
 
 class NXsample(object):
@@ -786,45 +412,17 @@ class NXsample(object):
     A class to hold a handle to NXsample
     """
 
-    def __init__(self, handle, errors=None):
-
+    def __init__(self, handle):
         self.handle = handle
-
-        items = {
-            "name": {"minOccurs": 0, "checks": []},
-            "depends_on": {"minOccurs": 0, "checks": []},
-            "chemical_formula": {"minOccurs": 0, "checks": []},
-            "unit_cell": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype="float64", dims=[2])],
-            },
-            "unit_cell_class": {"minOccurs": 0, "checks": []},
-            "unit_cell_group": {"minOccurs": 0, "checks": []},
-            "sample_orientation": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype="float64", shape=[(3,)])],
-            },
-            "orientation_matrix": {
-                "minOccurs": 0,
-                "checks": [check_dset(dtype="float64", dims=[3])],
-            },
-            "temperature": {"minOccurs": 0, "checks": []},
-        }
-
-        run_checks(self.handle, items)
 
         # Find the NXsource
         self.beams = []
         for entry in find_class(self.handle, "NXbeam"):
-            try:
-                self.beams.append(NXbeam(entry, errors=errors))
-            except Exception as e:
-                if errors is not None:
-                    errors.append(str(e))
+            self.beams.append(NXbeam(entry))
 
         # Check we've got stuff
-        if len(self.beams) == 0:
-            raise RuntimeError("No NXbeam in %s" % self.handle.name)
+        if not self.beams:
+            raise NXValidationError("No NXbeam in %s" % self.handle.name)
 
 
 class NXdata(object):
@@ -832,8 +430,7 @@ class NXdata(object):
     A class to hold a handle to NXdata
     """
 
-    def __init__(self, handle, errors=None):
-
+    def __init__(self, handle):
         self.handle = handle
 
 
@@ -842,52 +439,31 @@ class NXmxEntry(object):
     A class to hold a handle to NXmx entries
     """
 
-    def __init__(self, handle, errors=None):
-
+    def __init__(self, handle):
         self.handle = handle
-
-        items = {
-            "title": {"minOccurs": 0, "checks": []},
-            "start_time": {"minOccurs": 0, "checks": []},
-            "end_time": {"minOccurs": 0, "checks": []},
-        }
-
-        run_checks(self.handle, items)
 
         # Find the NXinstrument
         self.instruments = []
         for entry in find_class(self.handle, "NXinstrument"):
-            try:
-                self.instruments.append(NXinstrument(entry, errors=errors))
-            except Exception as e:
-                if errors is not None:
-                    errors.append(str(e))
+            self.instruments.append(NXinstrument(entry))
 
         # Find the NXsample
         self.samples = []
         for entry in find_class(self.handle, "NXsample"):
-            try:
-                self.samples.append(NXsample(entry, errors=errors))
-            except Exception as e:
-                if errors is not None:
-                    errors.append(str(e))
+            self.samples.append(NXsample(entry))
 
-        # Find the NXidata
+        # Find the NXdata
         self.data = []
         for entry in find_class(self.handle, "NXdata"):
-            try:
-                self.data.append(NXdata(entry, errors=errors))
-            except Exception as e:
-                if errors is not None:
-                    errors.append(str(e))
+            self.data.append(NXdata(entry))
 
         # Check we've got some stuff
-        if len(self.instruments) == 0:
-            raise RuntimeError("No NXinstrument in %s" % self.handle.name)
-        if len(self.samples) == 0:
-            raise RuntimeError("No NXsample in %s" % self.handle.name)
-        if len(self.data) == 0:
-            raise RuntimeError("No NXdata in %s" % self.handle.name)
+        if not self.instruments:
+            raise NXValidationError("No NXinstrument in %s" % self.handle.name)
+        if not self.samples:
+            raise NXValidationError("No NXsample in %s" % self.handle.name)
+        if not self.data:
+            raise NXValidationError("No NXdata in %s" % self.handle.name)
 
 
 class NXmxReader(object):
@@ -900,43 +476,16 @@ class NXmxReader(object):
         if filename is not None:
             handle = h5py.File(filename, "r")
 
-        # A list of errors
-        self.errors = []
-
         # Find the NXmx entries
         self.entries = []
         for entry in find_entries(handle, "/"):
-            try:
-                self.entries.append(NXmxEntry(entry, errors=self.errors))
-            except Exception as e:
-                self.errors.append(str(e))
+            self.entries.append(NXmxEntry(entry))
 
         # Check we've got some stuff
-        if len(self.entries) == 0:
+        if not self.entries:
             raise RuntimeError(
-                """
-        Error reading NXmxfile: %s
-          No NXmx entries in file
-
-        The following errors occurred:
-
-        %s
-      """
-                % (filename, "\n".join(self.errors))
+                "Error reading NXmxfile %r. No NXmx entries in file" % filename
             )
-
-    def print_errors(self):
-        """
-        Print any errors that occurred
-
-        """
-        if len(self.errors) > 0:
-            print("")
-            print("*" * 80)
-            print("The following errors occurred:\n")
-            print("\n".join(self.errors))
-            print("*" * 80)
-            print("")
 
     def print_description(self):
         """
@@ -1207,7 +756,7 @@ class DetectorFactoryFromGroup(object):
             # get the set of leaf modules (handles nested modules)
             modules = []
             for nx_detector_module in nx_detector.modules:
-                if len(find_class(nx_detector_module.handle, "NXdetector_module")) == 0:
+                if not find_class(nx_detector_module.handle, "NXdetector_module"):
                     modules.append(nx_detector_module)
 
             # depends_on field for a detector will have NxM entries in it, where
@@ -1704,7 +1253,7 @@ def get_detector_module_slices(detector):
     # get the set of leaf modules (handles nested modules)
     modules = []
     for nx_detector_module in detector.modules:
-        if len(find_class(nx_detector_module.handle, "NXdetector_module")) == 0:
+        if not find_class(nx_detector_module.handle, "NXdetector_module"):
             modules.append(nx_detector_module)
 
     all_slices = []
