@@ -1340,45 +1340,52 @@ class DataFactory(object):
         self.model = DataList(datasets, max_size=max_size)
 
 
-class DetectorGroupDataFactory(DataFactory):
-    """Class to handle reading data from a detector with a NXdetector_group"""
+def detectorgroupdatafactory(obj, instrument):
+    """Function to handle reading data from a detector with a NXdetector_group"""
 
-    def __init__(self, obj, instrument):
-        DataFactory.__init__(self, obj)
+    mapping = {}
+    for key in sorted(obj.handle):
+        if key.startswith("_filename_"):
+            continue
+
+        # datasets in this context mean ones which contain diffraction images
+        # so must have ndim > 1 - for example omega can also be nexus data set
+        # but with 1 dimension...
+
+        dataset = obj.handle[key]  # this opens the file
+        if dataset.ndim == 1:
+            continue
 
         # Map NXdetector names to list of datasets
-        mapping = {}
-        for dataset in self._datasets:
-            dataset_name = os.path.basename(dataset.name)
-            found_it = False
-            for detector in instrument.detectors:
-                if dataset_name in detector.handle:
-                    found_it = True
-                    detector_name = os.path.basename(detector.handle.name)
-                    if detector_name in mapping:
-                        assert (
-                            dataset_name not in mapping[detector_name]["dataset_names"]
-                        ), ("Dataset %s found in > 1 NXdetectors" % dataset_name)
-                        mapping[detector_name]["dataset_names"].append(dataset_name)
-                        mapping[detector_name]["datasets"].append(dataset)
-                    else:
-                        mapping[detector_name] = {
-                            "dataset_names": [dataset_name],
-                            "datasets": [dataset],
-                            "detector": detector,
-                        }
-            assert found_it, "Couldn't match dataset %s to a NXdetector" % dataset_name
+        dataset_name = os.path.basename(dataset.name)
+        found_it = False
+        for detector in instrument.detectors:
+            if dataset_name in detector.handle:
+                found_it = True
+                detector_name = os.path.basename(detector.handle.name)
+                if detector_name in mapping:
+                    assert (
+                        dataset_name not in mapping[detector_name]["dataset_names"]
+                    ), ("Dataset %s found in > 1 NXdetectors" % dataset_name)
+                    mapping[detector_name]["dataset_names"].add(dataset_name)
+                    mapping[detector_name]["datasets"].append(dataset)
+                else:
+                    mapping[detector_name] = {
+                        "dataset_names": {dataset_name},
+                        "datasets": [dataset],
+                        "detector": detector,
+                    }
+        assert found_it, "Couldn't match dataset %s to a NXdetector" % dataset_name
 
-        # Create a list of multipanel datalist objects
-        datalists = []
-        for detector_name in mapping:
-            datalists.append(
-                MultiPanelDataList(
-                    mapping[detector_name]["datasets"],
-                    mapping[detector_name]["detector"],
-                )
+    # Create a list of multipanel datalist objects
+    return DetectorGroupDataList(
+        [
+            MultiPanelDataList(
+                detector_mapping["datasets"], detector_mapping["detector"]
             )
-        self.model = DetectorGroupDataList(datalists)
+            for detector_mapping in mapping.values()
+        ]
+    )
 
 
 class MaskFactory(object):

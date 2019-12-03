@@ -11,11 +11,11 @@ from dxtbx.format.nexus import (
     DataFactory,
     DetectorFactory,
     DetectorFactoryFromGroup,
-    DetectorGroupDataFactory,
     GoniometerFactory,
     MaskFactory,
     NXmxReader,
     ScanFactory,
+    detectorgroupdatafactory,
     is_nexus_file,
 )
 
@@ -77,7 +77,7 @@ class FormatNexus(FormatHDF5):
             self._detector_model = DetectorFactoryFromGroup(
                 instrument, self._beam_model
             ).model
-            self._raw_data = DetectorGroupDataFactory(data, instrument).model
+            self._raw_data = detectorgroupdatafactory(data, instrument)
 
     def _setup_gonio_and_scan(self, sample, detector):
         """Set up rotation-specific models"""
