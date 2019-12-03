@@ -138,17 +138,25 @@ class FormatMultiImage(Format):
         else:
             num_images = None
 
-        # Get some information from the format class
-        reader = cls.get_reader()(filenames, num_images=num_images, **format_kwargs)
-
         # Get the format instance
         assert len(filenames) == 1
         if check_format is True:
             format_instance = cls(filenames[0], **format_kwargs)
+            if num_images is None and not lazy:
+                # As we now have the actual format class we can get the number
+                # of images from here. This saves having to create another
+                # format class instance in the Reader() constructor
+                # NOTE: Having this information breaks internal assumptions in
+                #       *Lazy classes, so they have to figure this out in
+                #       their own time.
+                num_images = format_instance.get_num_images()
         else:
             format_instance = None
             if not as_sequence:
                 lazy = True
+
+        # Get some information from the format class
+        reader = cls.get_reader()(filenames, num_images=num_images, **format_kwargs)
 
         # Read the vendor type
         if check_format is True:
