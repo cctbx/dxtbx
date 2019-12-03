@@ -4,12 +4,11 @@ import sys
 import uuid
 from builtins import range
 
-import h5py
-import numpy
-
 from iotbx.detectors.eiger import EIGERImage
 from scitbx import matrix
 
+import h5py
+import numpy
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
@@ -121,22 +120,30 @@ class EigerNXmxFixer(object):
         dataset[0] = 0
         dataset[1] = 0
 
-        # Create detector data size
-        dataset = group.create_dataset("data_size", (2,), dtype="int32")
-        dataset[0] = handle_orig["/entry/data/data_000001"].shape[2]
-        dataset[1] = handle_orig["/entry/data/data_000001"].shape[1]
-
         # cope with badly structured chunk information i.e. many more data
         # entries than there are in real life...
         delete = []
+        handle_orig_entry_properties = {}
         for k in sorted(handle_orig["/entry/data"]):
             try:
-                handle_orig["/entry/data/%s" % k].shape
+                handle_orig_entry = handle_orig["/entry/data/%s" % k]
+                shape = handle_orig_entry.shape
             except KeyError:
                 delete.append("/entry/data/%s" % k)
-
+                continue
+            handle_orig_entry_properties[k] = {
+                "shape": shape,
+                "length": len(handle_orig_entry),
+                "filename": handle_orig_entry.file.filename,
+            }
         for d in delete:
             del handle[d]
+
+        # Create detector data size
+        dataset = group.create_dataset("data_size", (2,), dtype="int32")
+        dataset[0] = handle_orig_entry_properties["data_000001"]["shape"][2]
+        dataset[1] = handle_orig_entry_properties["data_000001"]["shape"][1]
+
         depends_on = "/entry/instrument/detector/transformations/translation"
 
         # Add fast_pixel_size dataset
@@ -262,7 +269,7 @@ class EigerNXmxFixer(object):
 
             num_images = 0
             for name in sorted(handle["/entry/data"]):
-                num_images += len(handle_orig["/entry/data/%s" % name])
+                num_images += handle_orig_entry_properties[name]["length"]
             dataset = group.create_dataset("omega", (num_images,), dtype="float32")
             dataset.attrs["units"] = numpy.string_("degree")
             dataset.attrs["transformation_type"] = numpy.string_("rotation")
@@ -291,7 +298,7 @@ class EigerNXmxFixer(object):
         # Change relative paths to absolute paths
         for name in handle["/entry/data"]:
             del handle["entry/data"][name]
-            filename = handle_orig["entry/data"][name].file.filename
+            filename = handle_orig_entry_properties[name]["filename"]
             handle["entry/data"][name] = h5py.ExternalLink(filename, "entry/data/data")
             handle["entry/data"]["_filename_" + name] = filename  # Store file names
 
@@ -308,7 +315,6 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
             return False
 
     def _start(self):
-
         # Read the file structure
         temp_file = "tmp_master_%s.nxs" % uuid.uuid1().hex
         fixer = EigerNXmxFixer(self._image_file, temp_file)
