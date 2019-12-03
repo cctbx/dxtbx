@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import collections
 import itertools
 import math
 import os
@@ -1178,44 +1179,6 @@ class CrystalFactory(object):
         )
 
 
-class DataList(object):
-    """
-    A class to make it easier to access the data from multiple datasets.
-    FIXME The file should be fixed and this should be removed
-    """
-
-    def __init__(self, obj, max_size=0):
-        self._datasets = obj
-        self._num_images = 0
-        self._lookup = []
-        self._offset = [0]
-
-        if len(self._datasets) == 1 and max_size:
-            self._num_images = max_size
-            self._lookup.extend([0] * max_size)
-            self._offset.append(max_size)
-
-        else:
-            for i, dataset in enumerate(self._datasets):
-                self._num_images += dataset.shape[0]
-                self._lookup.extend([i] * dataset.shape[0])
-                self._offset.append(self._num_images)
-
-    def __len__(self):
-        return self._num_images
-
-    def __getitem__(self, index):
-        d = self._lookup[index]
-        i = index - self._offset[d]
-        N, height, width = self._datasets[d].shape
-        data_as_flex = dataset_as_flex(
-            self._datasets[d],
-            (slice(i, i + 1, 1), slice(0, height, 1), slice(0, width, 1)),
-        )
-        data_as_flex.reshape(flex.grid(data_as_flex.all()[1:]))
-        return data_as_flex
-
-
 class DetectorGroupDataList(object):
     """
     A class to make it easier to access the data from multiple datasets.
@@ -1313,31 +1276,91 @@ class MultiPanelDataList(object):
         return tuple(all_data)
 
 
+DataFactoryCache = collections.namedtuple("DataFactoryCache", "ndim shape filename")
+
+
 class DataFactory(object):
-    def __init__(self, obj, max_size=0):
+    """
+    A class to make it easier to access data from multiple datasets.
+    """
+
+    def __init__(self, obj, max_size=0, cached_information=None):
+        """
+        cached_information is a dictionary of DataFactoryCache named tuples.
+        The dictionary key corresponds to the object handle key.
+        """
+
+        self.clear_cache()
+
+        DataSetInformation = collections.namedtuple(
+            "DataSetInformation", "accessor file shape"
+        )
         datasets = []
         for key in sorted(obj.handle):
             if key.startswith("_filename_"):
                 continue
 
+            if cached_information and key in cached_information:
+                ohk = cached_information[key]
+                filename = ohk.filename
+            else:
+                ohk = obj.handle[key]  # this opens the file
+                filename = ohk.file.filename
+
             # datasets in this context mean ones which contain diffraction images
             # so must have ndim > 1 - for example omega can also be nexus data set
             # but with 1 dimension...
-            if obj.handle[key].ndim == 1:
+            if ohk.ndim == 1:
                 continue
 
-            try:
-                datasets.append(obj.handle[key])
-            except KeyError:  # If we cannot follow links due to lack of a write permission
-                datasets.append(
-                    h5py.File(obj.handle["_filename_" + key].value, "r")[
-                        "/entry/data/data"
-                    ]
+            datasets.append(
+                DataSetInformation(
+                    accessor=(lambda obj=obj, key=key: obj.handle[key]),
+                    file=filename,
+                    shape=ohk.shape,
                 )
+            )
 
-        self._datasets = datasets
+        self._datasets = tuple(datasets)
+        self._num_images = 0
+        self._lookup = []
+        self._offset = [0]
 
-        self.model = DataList(datasets, max_size=max_size)
+        if len(self._datasets) == 1 and max_size:
+            self._num_images = max_size
+            self._lookup.extend([0] * max_size)
+            self._offset.append(max_size)
+        else:
+            for i, dataset in enumerate(self._datasets):
+                self._num_images += dataset.shape[0]
+                self._lookup.extend([i] * dataset.shape[0])
+                self._offset.append(self._num_images)
+
+    def clear_cache(self):
+        self._cache = (None, None)
+
+    def __len__(self):
+        return self._num_images
+
+    def __getitem__(self, index):
+        d = self._lookup[index]
+        i = index - self._offset[d]
+
+        # a lock-free most-recently-used file handle cache based on
+        # immutability of python tuples
+        cached_handle = self._cache
+        if self._datasets[d].file == cached_handle[0]:
+            data = cached_handle[1]
+        else:
+            data = self._datasets[d].accessor()
+            self._cache = (self._datasets[d].file, data)
+
+        N, height, width = self._datasets[d].shape
+        data_as_flex = dataset_as_flex(
+            data, (slice(i, i + 1, 1), slice(0, height, 1), slice(0, width, 1))
+        )
+        data_as_flex.reshape(flex.grid(data_as_flex.all()[1:]))
+        return data_as_flex
 
 
 def detectorgroupdatafactory(obj, instrument):

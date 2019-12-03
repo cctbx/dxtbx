@@ -352,7 +352,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self._detector_model = DetectorFactory(detector, self._beam_model).model
         self._goniometer_model = GoniometerFactory(sample).model
         self._scan_model = ScanFactory(sample, detector).model
-        self._raw_data = DataFactory(data).model
+        self._raw_data = DataFactory(data)
 
         # update model for masking Eiger detectors
         for f0, f1, s0, s1 in determine_eiger_mask(self._detector_model):

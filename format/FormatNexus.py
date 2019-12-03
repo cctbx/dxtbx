@@ -72,7 +72,7 @@ class FormatNexus(FormatHDF5):
             ), "Currently only supports 1 NXdetector_module unless in a detector group"
 
             self._detector_model = DetectorFactory(detector, self._beam_model).model
-            self._raw_data = DataFactory(data, max_size=num_images).model
+            self._raw_data = DataFactory(data, max_size=num_images)
         else:
             self._detector_model = DetectorFactoryFromGroup(
                 instrument, self._beam_model
