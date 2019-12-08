@@ -283,7 +283,7 @@ namespace dxtbx { namespace model {
              && std::abs(oscillation_[0] - rhs.oscillation_[0]) < eps
              && std::abs(oscillation_[1] - rhs.oscillation_[1]) < eps
              && exposure_times_.const_ref().all_approx_equal(
-                  rhs.exposure_times_.const_ref(), eps)
+               rhs.exposure_times_.const_ref(), eps)
              && epochs_.const_ref().all_approx_equal(rhs.epochs_.const_ref(), eps);
     }
 

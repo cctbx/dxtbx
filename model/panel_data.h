@@ -178,15 +178,15 @@ namespace dxtbx { namespace model {
       if (!static_only) {
         result = result
                  && get_fast_axis().const_ref().all_approx_equal(
-                      rhs.get_fast_axis().const_ref(), fast_axis_tolerance)
+                   rhs.get_fast_axis().const_ref(), fast_axis_tolerance)
                  && get_slow_axis().const_ref().all_approx_equal(
-                      rhs.get_slow_axis().const_ref(), slow_axis_tolerance)
+                   rhs.get_slow_axis().const_ref(), slow_axis_tolerance)
                  && get_origin().const_ref().all_approx_equal(
-                      rhs.get_origin().const_ref(), origin_tolerance);
+                   rhs.get_origin().const_ref(), origin_tolerance);
         if (!ignore_trusted_range) {
           result = result
                    && trusted_range_.const_ref().all_approx_equal(
-                        rhs.trusted_range_.const_ref(), 1e-7);
+                     rhs.trusted_range_.const_ref(), 1e-7);
         }
       }
       return result;

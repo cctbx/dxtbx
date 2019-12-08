@@ -203,9 +203,9 @@ namespace dxtbx { namespace model {
       // static model checks
       return std::abs(angle_safe(rotation_axis_, rhs.rotation_axis_)) <= eps
              && fixed_rotation_.const_ref().all_approx_equal(
-                  rhs.fixed_rotation_.const_ref(), eps)
+               rhs.fixed_rotation_.const_ref(), eps)
              && setting_rotation_.const_ref().all_approx_equal(
-                  rhs.setting_rotation_.const_ref(), eps);
+               rhs.setting_rotation_.const_ref(), eps);
     }
 
     /** Check rotation axes are not (almost) the same */
@@ -234,9 +234,9 @@ namespace dxtbx { namespace model {
       return std::abs(angle_safe(rotation_axis_, rhs.rotation_axis_))
                <= rotation_axis_tolerance
              && fixed_rotation_.const_ref().all_approx_equal(
-                  rhs.fixed_rotation_.const_ref(), fixed_rotation_tolerance)
+               rhs.fixed_rotation_.const_ref(), fixed_rotation_tolerance)
              && setting_rotation_.const_ref().all_approx_equal(
-                  rhs.setting_rotation_.const_ref(), setting_rotation_tolerance);
+               rhs.setting_rotation_.const_ref(), setting_rotation_tolerance);
     }
 
     /** Rotate the goniometer about an axis */
