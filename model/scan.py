@@ -88,6 +88,7 @@ class ScanFactory(object):
                         epochs[i] = epoch_correction
                     scan.set_epochs(epochs)
                     scan.set_exposure_times(exposure_times)
+
             if params.scan.oscillation is not None:
                 scan.set_oscillation(params.scan.oscillation)
 

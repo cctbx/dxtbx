@@ -233,6 +233,11 @@ namespace dxtbx { namespace model {
     /** Set the oscillation */
     void set_oscillation(vec2<double> oscillation) {
       DXTBX_ASSERT(oscillation[1] >= 0.0);
+      if (oscillation[1] != 0.0) {
+        is_still_ = false;
+      } else {
+        is_still_ = true;
+      }
       oscillation_ = oscillation;
     }
 
