@@ -180,9 +180,125 @@ class ExperimentListDict(object):
 
         return filename or "", None
 
+    def _imageset_from_imageset_data(self, imageset_data, models):
+        """ Make an imageset from imageset_data - help with refactor decode. """
+        assert imageset_data is not None
+        if "params" in imageset_data:
+            format_kwargs = imageset_data["params"]
+        else:
+            format_kwargs = {}
+
+        beam = models["beam"]
+        detector = models["detector"]
+        goniometer = models["goniometer"]
+        scan = models["scan"]
+
+        # Load the external lookup data
+        mask_filename, mask = self._load_pickle_path(imageset_data, "mask")
+        gain_filename, gain = self._load_pickle_path(imageset_data, "gain")
+        pedestal_filename, pedestal = self._load_pickle_path(imageset_data, "pedestal")
+        dx_filename, dx = self._load_pickle_path(imageset_data, "dx")
+        dy_filename, dy = self._load_pickle_path(imageset_data, "dy")
+
+        if imageset_data["__id__"] == "ImageSet":
+            imageset = self._make_stills(imageset_data, format_kwargs=format_kwargs)
+        elif imageset_data["__id__"] == "ImageGrid":
+            imageset = self._make_grid(imageset_data, format_kwargs=format_kwargs)
+        elif (
+            imageset_data["__id__"] == "ImageSequence"
+            or imageset_data["__id__"] == "ImageSweep"
+        ):
+            imageset = self._make_sequence(
+                imageset_data,
+                beam=beam,
+                detector=detector,
+                goniometer=goniometer,
+                scan=scan,
+                format_kwargs=format_kwargs,
+            )
+        elif imageset_data["__id__"] == "MemImageSet":
+            imageset = self._make_mem_imageset(imageset_data)
+        else:
+            raise RuntimeError("Unknown imageset type")
+
+        if imageset is not None:
+            # Set the external lookup
+            if mask is None:
+                mask = ImageBool()
+            else:
+                mask = ImageBool(mask)
+            if gain is None:
+                gain = ImageDouble()
+            else:
+                gain = ImageDouble(gain)
+            if pedestal is None:
+                pedestal = ImageDouble()
+            else:
+                pedestal = ImageDouble(pedestal)
+            if dx is None:
+                dx = ImageDouble()
+            else:
+                dx = ImageDouble(dx)
+            if dy is None:
+                dy = ImageDouble()
+            else:
+                dy = ImageDouble(dy)
+
+            if not imageset.external_lookup.mask.data.empty():
+                if not mask.empty():
+                    mask = tuple(m.data() for m in mask)
+                    for m1, m2 in zip(mask, imageset.external_lookup.mask.data):
+                        m1 &= m2.data()
+                    imageset.external_lookup.mask.data = ImageBool(mask)
+            else:
+                imageset.external_lookup.mask.data = mask
+            imageset.external_lookup.mask.filename = mask_filename
+            imageset.external_lookup.gain.data = gain
+            imageset.external_lookup.gain.filename = gain_filename
+            imageset.external_lookup.pedestal.data = pedestal
+            imageset.external_lookup.pedestal.filename = pedestal_filename
+            imageset.external_lookup.dx.data = dx
+            imageset.external_lookup.dx.filename = dx_filename
+            imageset.external_lookup.dy.data = dy
+            imageset.external_lookup.dy.filename = dy_filename
+
+            # Update the imageset models
+            if isinstance(imageset, ImageSequence):
+                imageset.set_beam(beam)
+                imageset.set_detector(detector)
+                imageset.set_goniometer(goniometer)
+                imageset.set_scan(scan)
+            elif isinstance(imageset, (ImageSet, ImageGrid)):
+                for i in range(len(imageset)):
+                    imageset.set_beam(beam, i)
+                    imageset.set_detector(detector, i)
+                    imageset.set_goniometer(goniometer, i)
+                    imageset.set_scan(scan, i)
+
+            imageset.update_detector_px_mm_data()
+
+        return imageset
+
     def decode(self):
         """Decode the dictionary into a list of experiments."""
-        # Extract all the experiments
+        # Extract all the experiments - first find all scans belonging to
+        # same imageset
+
+        eobj_scan = {}
+
+        for eobj in self._obj["experiment"]:
+            if self._lookup_model("imageset", eobj) is None:
+                continue
+            imageset_ref = eobj.get("imageset")
+            scan = self._lookup_model("scan", eobj)
+
+            if imageset_ref in eobj_scan:
+                # old imageset: no scan
+                # > 1 expt sharing image sequence with same scan: do not change
+                if scan and scan != eobj_scan[imageset_ref]:
+                    eobj_scan[imageset_ref] += scan
+            else:
+                eobj_scan[imageset_ref] = copy.deepcopy(scan)
 
         # Map of imageset/scan pairs
         imagesets = {}
@@ -202,122 +318,34 @@ class ExperimentListDict(object):
             profile = self._lookup_model("profile", eobj)
             scaling_model = self._lookup_model("scaling_model", eobj)
 
-            key = (eobj.get("imageset"), eobj.get("scan"))
+            models = {
+                "beam": beam,
+                "detector": detector,
+                "goniometer": goniometer,
+                "scan": scan,
+                "crystal": crystal,
+                "profile": profile,
+                "scaling_model": scaling_model,
+            }
 
-            imageset = None
-            try:
-                imageset = imagesets[key]  # type: ImageSet
-            except KeyError:
-                # This imageset hasn't been loaded yet - create it
+            imageset_ref = eobj.get("imageset")
+
+            # If not already cached, load this imageset
+            if imageset_ref not in imagesets:
                 imageset_data = self._lookup_model("imageset", eobj)
-
-                # Create the imageset from the input data
                 if imageset_data is not None:
-                    if "params" in imageset_data:
-                        format_kwargs = imageset_data["params"]
-                    else:
-                        format_kwargs = {}
-
-                    # Load the external lookup data
-                    mask_filename, mask = self._load_pickle_path(imageset_data, "mask")
-                    gain_filename, gain = self._load_pickle_path(imageset_data, "gain")
-                    pedestal_filename, pedestal = self._load_pickle_path(
-                        imageset_data, "pedestal"
-                    )
-                    dx_filename, dx = self._load_pickle_path(imageset_data, "dx")
-                    dy_filename, dy = self._load_pickle_path(imageset_data, "dy")
-
-                    if imageset_data["__id__"] == "ImageSet":
-                        imageset = self._make_stills(
-                            imageset_data, format_kwargs=format_kwargs
-                        )
-                    elif imageset_data["__id__"] == "ImageGrid":
-                        imageset = self._make_grid(
-                            imageset_data, format_kwargs=format_kwargs
-                        )
-                    elif (
-                        imageset_data["__id__"] == "ImageSequence"
-                        or imageset_data["__id__"] == "ImageSweep"
-                    ):
-                        imageset = self._make_sequence(
-                            imageset_data,
-                            beam=beam,
-                            detector=detector,
-                            goniometer=goniometer,
-                            scan=scan,
-                            format_kwargs=format_kwargs,
-                        )
-                    elif imageset_data["__id__"] == "MemImageSet":
-                        imageset = self._make_mem_imageset(imageset_data)
-                    else:
-                        raise RuntimeError("Unknown imageset type")
-
-                    if imageset is not None:
-                        # Set the external lookup
-                        if mask is None:
-                            mask = ImageBool()
-                        else:
-                            mask = ImageBool(mask)
-                        if gain is None:
-                            gain = ImageDouble()
-                        else:
-                            gain = ImageDouble(gain)
-                        if pedestal is None:
-                            pedestal = ImageDouble()
-                        else:
-                            pedestal = ImageDouble(pedestal)
-                        if dx is None:
-                            dx = ImageDouble()
-                        else:
-                            dx = ImageDouble(dx)
-                        if dy is None:
-                            dy = ImageDouble()
-                        else:
-                            dy = ImageDouble(dy)
-
-                        if not imageset.external_lookup.mask.data.empty():
-                            if not mask.empty():
-                                mask = tuple(m.data() for m in mask)
-                                for m1, m2 in zip(
-                                    mask, imageset.external_lookup.mask.data
-                                ):
-                                    m1 &= m2.data()
-                                imageset.external_lookup.mask.data = ImageBool(mask)
-                        else:
-                            imageset.external_lookup.mask.data = mask
-                        imageset.external_lookup.mask.filename = mask_filename
-                        imageset.external_lookup.gain.data = gain
-                        imageset.external_lookup.gain.filename = gain_filename
-                        imageset.external_lookup.pedestal.data = pedestal
-                        imageset.external_lookup.pedestal.filename = pedestal_filename
-                        imageset.external_lookup.dx.data = dx
-                        imageset.external_lookup.dx.filename = dx_filename
-                        imageset.external_lookup.dy.data = dy
-                        imageset.external_lookup.dy.filename = dy_filename
-
-                        # Update the imageset models
-                        if isinstance(imageset, ImageSequence):
-                            imageset.set_beam(beam)
-                            imageset.set_detector(detector)
-                            imageset.set_goniometer(goniometer)
-                            imageset.set_scan(scan)
-                        elif isinstance(imageset, (ImageSet, ImageGrid)):
-                            for i in range(len(imageset)):
-                                imageset.set_beam(beam, i)
-                                imageset.set_detector(detector, i)
-                                imageset.set_goniometer(goniometer, i)
-                                imageset.set_scan(scan, i)
-
-                        imageset.update_detector_px_mm_data()
-
-                # Add the imageset to the dict - even if empty - as this will
-                # prevent a duplicated attempt at reconstruction
-                imagesets[key] = imageset
+                    # Create the imageset from the input data
+                    models["scan"] = eobj_scan[imageset_ref]
+                    imageset = self._imageset_from_imageset_data(imageset_data, models)
+                    imagesets[imageset_ref] = imageset
+                else:
+                    # Even if we have an empty entry, this counts as a load
+                    imagesets[imageset_ref] = None
 
             # Append the experiment
             el.append(
                 Experiment(
-                    imageset=imageset,
+                    imageset=imagesets[imageset_ref],
                     beam=beam,
                     detector=detector,
                     goniometer=goniometer,
@@ -514,9 +542,30 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_sequence_and_crystal(imageset, crystal, load_models=True):
         """Create an experiment list from sequence and crystal."""
+
+        assert isinstance(imageset, ImageSequence)
+
+        experiments = ExperimentList()
+
         if load_models:
-            return ExperimentList(
-                [
+            # if imagesequence is still images, make one experiment for each
+            # all referencing into the same image set
+            if imageset.get_scan().is_still():
+                start, end = imageset.get_scan().get_array_range()
+                for j in range(start, end):
+                    subset = imageset[j : j + 1]
+                    experiments.append(
+                        Experiment(
+                            imageset=imageset,
+                            beam=imageset.get_beam(),
+                            detector=imageset.get_detector(),
+                            goniometer=imageset.get_goniometer(),
+                            scan=subset.get_scan(),
+                            crystal=crystal,
+                        )
+                    )
+            else:
+                experiments.append(
                     Experiment(
                         imageset=imageset,
                         beam=imageset.get_beam(),
@@ -525,8 +574,10 @@ class ExperimentListFactory(object):
                         scan=imageset.get_scan(),
                         crystal=crystal,
                     )
-                ]
-            )
+                )
+
+            return experiments
+
         else:
             return ExperimentList([Experiment(imageset=imageset, crystal=crystal)])
 
