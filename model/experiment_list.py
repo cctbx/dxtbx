@@ -6,9 +6,9 @@ import os
 from builtins import range
 
 import pkg_resources
+
 import six
 import six.moves.cPickle as pickle
-
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
@@ -293,10 +293,23 @@ class ExperimentListDict(object):
             scan = self._lookup_model("scan", eobj)
 
             if imageset_ref in eobj_scan:
-                # old imageset: no scan
-                # > 1 expt sharing image sequence with same scan: do not change
-                if scan and scan != eobj_scan[imageset_ref]:
+                # if there is no scan, or scan is identical, move on, else
+                # make a scan which encompasses both scans
+                if not scan or scan != eobj_scan[imageset_ref]:
+                    continue
+                i = eobj_scan[imageset_ref].get_image_range()
+                j = scan.get_image_range()
+                if i[1] + 1 == j[0]:
                     eobj_scan[imageset_ref] += scan
+                else:
+                    # make a new bigger scan
+                    o = eobj_scan[imageset_ref].get_oscillation()
+                    s = scan.get_oscillation()
+                    assert o[1] == s[1]
+                    scan = copy.deepcopy(scan)
+                    scan.set_image_range((min(i[0], j[0]), max(i[1], j[1])))
+                    scan.set_oscillation((min(o[0], s[0]), o[1]))
+                    eobj_scan[imageset_ref] = scan
             else:
                 eobj_scan[imageset_ref] = copy.deepcopy(scan)
 
