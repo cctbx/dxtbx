@@ -68,7 +68,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         else:
             num_images = 0
 
-        self._raw_data = DataFactory(data, max_size=num_images).model
+        self._raw_data = DataFactory(data, max_size=num_images)
 
     def _setup_detector(self, detector, beam):
         nx_detector = detector.handle

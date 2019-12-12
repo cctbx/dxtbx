@@ -11,11 +11,11 @@ from dxtbx.format.nexus import (
     DataFactory,
     DetectorFactory,
     DetectorFactoryFromGroup,
-    DetectorGroupDataFactory,
     GoniometerFactory,
     MaskFactory,
     NXmxReader,
     ScanFactory,
+    detectorgroupdatafactory,
     is_nexus_file,
 )
 
@@ -72,12 +72,12 @@ class FormatNexus(FormatHDF5):
             ), "Currently only supports 1 NXdetector_module unless in a detector group"
 
             self._detector_model = DetectorFactory(detector, self._beam_model).model
-            self._raw_data = DataFactory(data, max_size=num_images).model
+            self._raw_data = DataFactory(data, max_size=num_images)
         else:
             self._detector_model = DetectorFactoryFromGroup(
                 instrument, self._beam_model
             ).model
-            self._raw_data = DetectorGroupDataFactory(data, instrument).model
+            self._raw_data = detectorgroupdatafactory(data, instrument)
 
     def _setup_gonio_and_scan(self, sample, detector):
         """Set up rotation-specific models"""
