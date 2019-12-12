@@ -295,7 +295,7 @@ class ExperimentListDict(object):
             if imageset_ref in eobj_scan:
                 # if there is no scan, or scan is identical, move on, else
                 # make a scan which encompasses both scans
-                if not scan or scan != eobj_scan[imageset_ref]:
+                if not scan or scan == eobj_scan[imageset_ref]:
                     continue
                 i = eobj_scan[imageset_ref].get_image_range()
                 j = scan.get_image_range()
