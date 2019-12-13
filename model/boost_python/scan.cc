@@ -133,7 +133,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   Scan *from_dict<Scan>(boost::python::dict obj) {
     vec2<int> ir = boost::python::extract<vec2<int> >(obj["image_range"]);
-    std::size_t bo = boost::python::extract<std::size_t>(obj["batch_offset"]);
+    int bo = boost::python::extract<int>(obj["batch_offset"]);
     vec2<double> osc =
       deg_as_rad(boost::python::extract<vec2<double> >(obj["oscillation"]));
     DXTBX_ASSERT(ir[1] >= ir[0]);
