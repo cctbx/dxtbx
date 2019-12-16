@@ -1,2 +1,0 @@
-dxtbx extensions can no longer be imported from `dxtbx`
-and must now be imported from `dxtbx.ext`
