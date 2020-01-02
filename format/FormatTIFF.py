@@ -31,7 +31,10 @@ class FormatTIFF(Format):
         """Check to see if this looks like an TIFF format image, i.e. we can
         make sense of it."""
 
-        return bool(read_basic_tiff_header(image_file))
+        try:
+            return bool(read_basic_tiff_header(image_file))
+        except:
+            return False
 
     @staticmethod
     def get_tiff_header(image_file):
