@@ -33,7 +33,7 @@ class FormatTIFF(Format):
 
         try:
             return bool(read_basic_tiff_header(image_file))
-        except:
+        except Exception:
             return False
 
     @staticmethod
