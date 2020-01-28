@@ -51,7 +51,7 @@ if sys.platform == "win32" and env_etc.compiler == "win32_cl":
         boost_python = get_boost_library_with_python_version(
             "boost_python", env_etc.conda_libpath
         )
-        # tiff.lib instead of libtiff.lib for newer libtiff conda psackages
+        # tiff.lib instead of libtiff.lib for newer libtiff conda packages
         env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
         # add zlib.lib for hdf5
         env_etc.dxtbx_hdf5_libs.append("zlib")
