@@ -1,6 +1,7 @@
 import sys
 import os
 import libtbx.load_env
+from libtbx.env_config import get_boost_library_with_python_version
 
 Import("env_etc")
 
@@ -24,7 +25,6 @@ env_etc.dxtbx_lib_paths = [
 ]
 env_etc.dxtbx_hdf5_lib_paths = []
 if sys.platform == "win32" and env_etc.compiler == "win32_cl":
-    env_etc.dxtbx_libs = ["libtiff", "cbf", "boost_python"]
     env_etc.dxtbx_hdf5_libs = ["libhdf5"]
     env_etc.dxtbx_includes.append(
         libtbx.env.under_base(os.path.join("HDF5-1.8.16", "include"))
@@ -43,16 +43,18 @@ if sys.platform == "win32" and env_etc.compiler == "win32_cl":
     )
     env_etc.dxtbx_includes.append(libtbx.env.under_base("libtiff"))
 
+    env_etc.dxtbx_libs = ["libtiff", "cbf", "boost_python"]
     if libtbx.env.build_options.use_conda:
-        env_etc.dxtbx_includes.extend(env_etc.conda_cpppath)
-        env_etc.dxtbx_lib_paths.extend(env_etc.conda_libpath)
         # library changes
+        boost_python = get_boost_library_with_python_version(
+            "boost_python", env_etc.conda_libpath
+        )
         # tiff.lib instead of libtiff.lib for newer libtiff conda packages
-        env_etc.dxtbx_libs = [
-            "tiff" if x == "libtiff" else x for x in env_etc.dxtbx_libs
-        ]
+        env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
         # add zlib.lib for hdf5
         env_etc.dxtbx_hdf5_libs.append("zlib")
+        env_etc.dxtbx_includes.extend(env_etc.conda_cpppath)
+        env_etc.dxtbx_lib_paths.extend(env_etc.conda_libpath)
 
 # for the hdf5.h file - look at where Python is coming from unless is OS X
 # framework build... messy but appears to work on Linux and OS X
