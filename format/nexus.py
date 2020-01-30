@@ -722,7 +722,7 @@ class DetectorFactoryFromGroup(object):
                 assert root_name is None, "Multiple roots not supported"
                 root_name = group_names[i]
             else:
-                expected_detectors.append(group_names[i])
+                expected_detectors.append(group_names[i].astype(str))
 
         assert root_name is not None, "Detector root not found"
         assert sorted(
@@ -769,7 +769,7 @@ class DetectorFactoryFromGroup(object):
                 panel_name = str(os.path.basename(nx_detector_module.handle.name))
                 # image size stored slow to fast but dxtbx needs fast to slow
                 image_size = tuple(
-                    reversed(map(int, nx_detector_module.handle["data_size"][-2:]))
+                    reversed(list(map(int, nx_detector_module.handle["data_size"][-2:])))
                 )
 
                 # Get the trusted range of pixel values
