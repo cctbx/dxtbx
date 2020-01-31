@@ -2,12 +2,13 @@ from __future__ import absolute_import, division, print_function
 
 import string
 
+import h5py
+import numpy
+
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 from scitbx.array_family import flex
 
-import h5py
-import numpy
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.format.nexus import (
     BeamFactory,
@@ -20,7 +21,11 @@ from dxtbx.model import Detector, Panel, ParallaxCorrectedPxMmStrategy, Scan
 
 
 def clean_string(input):
-    return "".join(i for i in input if i in string.letters)
+    if hasattr(string, "letters"):
+        letters = string.letters
+    else:
+        letters = string.ascii_letters
+    return "".join(i for i in input if i in letters)
 
 
 class FormatNexusJungfrauHack(FormatNexus):
@@ -94,8 +99,12 @@ class FormatNexusJungfrauHack(FormatNexus):
         thickness_value = float(convert_units(thickness_value, thickness_units, "mm"))
 
         # Get the detector material
-        detector_material = clean_string(str(nx_detector["sensor_material"][()]))
+        material = nx_detector["sensor_material"][()]
+        if hasattr(material, "shape"):
+            material = "".join(m.decode() for m in material)
+        detector_material = clean_string(str(material))
         material = {
+            "Si": "Si",
             numpy.string_("Si"): "Si",
             numpy.string_("Silicon"): "Si",
             numpy.string_("Sillicon"): "Si",
