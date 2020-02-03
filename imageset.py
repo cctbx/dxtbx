@@ -227,8 +227,8 @@ class _(object):
         """
         if isinstance(item, slice):
             start = item.start or 0
-            stop = item.stop or len(self)
             offset = self.get_scan().get_batch_offset()
+            stop = item.stop or (len(self) + offset)
             if item.step is not None:
                 raise IndexError("Sequences must be sequential")
             return self.partial_set(start - offset, stop - offset)
