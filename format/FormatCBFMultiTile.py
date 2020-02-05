@@ -8,50 +8,11 @@ from builtins import range
 import numpy
 
 from scitbx.array_family import flex
-
-import pycbf
+from dxtbx.format.cbf_wrapper import cbf_wrapper 
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
-
-
-class cbf_wrapper(pycbf.cbf_handle_struct):
-    """Wrapper class that provids convience functions for working with cbflib"""
-
-    def add_category(self, name, columns):
-        """Create a new category and populate it with column names"""
-        self.new_category(name.encode())
-        for column in columns:
-            self.new_column(column.encode())
-
-    def add_row(self, data):
-        """Add a row to the current category.  If data contains more entries than
-        there are columns in this category, then the remainder is truncated
-        Use '.' for an empty value in a row."""
-        self.new_row()
-        self.rewind_column()
-        for item in data:
-            self.set_value(item.encode())
-            if item == ".":
-                self.set_typeofvalue(b"null")
-            try:
-                self.next_column()
-            except Exception:
-                break
-
-    def has_sections(self):
-        """True if the cbf has the array_structure_list_section table, which
-        changes how its data is stored in the binary sections
-        """
-        try:
-            self.find_category(b"array_structure_list_section")
-            return True
-        except Exception as e:
-            if "CBF_NOTFOUND" in str(e):
-                return False
-            raise e
-
 
 class FormatCBFMultiTile(FormatCBFFull):
     """An image reading class multi-tile CBF files"""
@@ -62,8 +23,8 @@ class FormatCBFMultiTile(FormatCBFFull):
         make sense of it."""
 
         try:
-            cbf_handle = pycbf.cbf_handle_struct()
-            cbf_handle.read_widefile(image_file.encode(), pycbf.MSG_DIGEST)
+            cbf_handle = cbf_wrapper()
+            cbf_handle.read_widefile(image_file)
         except Exception as e:
             if "CBFlib Error" in str(e):
                 return False
@@ -88,7 +49,7 @@ class FormatCBFMultiTile(FormatCBFFull):
             return self._cbf_handle
         except AttributeError:
             self._cbf_handle = cbf_wrapper()
-            self._cbf_handle.read_widefile(self._image_file.encode(), pycbf.MSG_DIGEST)
+            self._cbf_handle.read_widefile(self._image_file)
             return self._cbf_handle
 
     def _detector(self):
@@ -100,10 +61,10 @@ class FormatCBFMultiTile(FormatCBFFull):
 
         for i in range(cbf.count_elements()):
             ele_id = cbf.get_element_id(i)
-            cbf.find_category(b"diffrn_data_frame")
-            cbf.find_column(b"detector_element_id")
+            cbf.find_category("diffrn_data_frame")
+            cbf.find_column("detector_element_id")
             cbf.find_row(ele_id)
-            cbf.find_column(b"array_id")
+            cbf.find_column("array_id")
             array_id = cbf.get_value()
 
             cbf_detector = cbf.construct_detector(i)
@@ -124,8 +85,8 @@ class FormatCBFMultiTile(FormatCBFFull):
             size = tuple(reversed(cbf.get_image_size(0)))
 
             try:
-                cbf.find_category(b"array_intensities")
-                cbf.find_column(b"undefined_value")
+                cbf.find_category("array_intensities")
+                cbf.find_column("undefined_value")
                 underload = cbf.get_doublevalue()
                 overload = cbf.get_overload(0)
                 trusted_range = (underload, overload)
@@ -169,11 +130,11 @@ class FormatCBFMultiTile(FormatCBFFull):
 
             for panel in d:
                 name = panel.get_name()
-                cbf.find_column(b"array_id")
+                cbf.find_column("array_id")
                 assert name == cbf.get_value()
 
-                cbf.find_column(b"data")
-                assert cbf.get_typeofvalue().find(b"bnry") > -1
+                cbf.find_column("data")
+                assert cbf.get_typeofvalue().find("bnry") > -1
 
                 image_string = cbf.get_realarray_as_string()
                 image = flex.double(numpy.fromstring(image_string, numpy.float))

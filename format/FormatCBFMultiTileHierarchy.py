@@ -14,10 +14,9 @@ from libtbx.utils import Sorry
 from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
 
-import pycbf
+from dxtbx.format.cbf_wrapper import cbf_wrapper
 from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile, FormatCBFMultiTileStill
 from dxtbx.model import Detector
-
 
 class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
     """An image reading class multi-tile CBF files"""
@@ -27,8 +26,8 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         """Check to see if this looks like an CBF format image, i.e. we can
         make sense of it."""
 
-        cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_widefile(image_file.encode(), pycbf.MSG_DIGEST)
+        cbf_handle = cbf_wrapper()
+        cbf_handle.read_widefile(image_file)
 
         # check if multiple arrays
         if cbf_handle.count_elements() <= 1:
@@ -36,8 +35,8 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
         # we need the optional column equipment_component to build a hierarchy
         try:
-            cbf_handle.find_category(b"axis")
-            cbf_handle.find_column(b"equipment_component")
+            cbf_handle.find_category("axis")
+            cbf_handle.find_column("equipment_component")
         except Exception as e:
             if "CBF_NOTFOUND" in str(e):
                 return False
@@ -58,7 +57,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         # change of basis matrix in homologous coordinates
         cob = None
 
-        if axis_type == b"rotation":
+        if axis_type == "rotation":
             r3 = vector.axis_and_angle_as_r3_rotation_matrix(
                 setting + increment, deg=True
             )
@@ -82,7 +81,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                     1,
                 )
             )
-        elif axis_type == b"translation":
+        elif axis_type == "translation":
             translation = offset + vector * (setting + increment)
             cob = sqr(
                 (
@@ -123,7 +122,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
         parent_id = cbf.get_axis_depends_on(axis_id)
 
-        if parent_id == b".":
+        if parent_id == ".":
             return None, cob
 
         eq_comp = cbf.get_axis_equipment_component(axis_id)
@@ -146,12 +145,12 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
         # group_id will only be "." if the panel being worked on has the same equipment_component name as the
         # last axis in the hierarchy, which isn't really sensible
-        assert group_id != b"."
+        assert group_id != "."
 
         name = group_id
 
         for subobj in d.iter_preorder():
-            if subobj.get_name().encode() == name:
+            if subobj.get_name() == name:
                 return subobj
 
         parent, cob = self._get_cumulative_change_of_basis(group_id)
@@ -186,18 +185,18 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         d = Detector()
 
         # find the panel elment names. Either array ids or section ids
-        cbf.find_category(b"array_structure_list")
+        cbf.find_category("array_structure_list")
         try:
-            cbf.find_column(b"array_section_id")
+            cbf.find_column("array_section_id")
         except Exception as e:
             if "CBF_NOTFOUND" not in str(e):
                 raise e
-            cbf.find_column(b"array_id")
+            cbf.find_column("array_id")
 
         panel_names = []
         for i in range(cbf.count_rows()):
             cbf.select_row(i)
-            if cbf.get_typeofvalue() == b"null":
+            if cbf.get_typeofvalue() == "null":
                 continue
 
             val = cbf.get_value()
@@ -215,16 +214,16 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             detector_axes.append(axis0)
             cbf_detector.__swig_destroy__(cbf_detector)
         panel_names_detectororder = []
-        cbf.find_category(b"array_structure_list")
+        cbf.find_category("array_structure_list")
         for detector_axis in detector_axes:
-            cbf.find_column(b"axis_set_id")
+            cbf.find_column("axis_set_id")
             cbf.find_row(detector_axis)
             try:
-                cbf.find_column(b"array_section_id")
+                cbf.find_column("array_section_id")
             except Exception as e:
                 if "CBF_NOTFOUND" not in str(e):
                     raise e
-                cbf.find_column(b"array_id")
+                cbf.find_column("array_id")
             panel_names_detectororder.append(cbf.get_value())
 
         for panel_name in panel_names:
@@ -248,13 +247,13 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                 if "CBF_NOTFOUND" in str(e):
                     # no array data in the file, it's probably just a cbf header.  Get the image size elsewhere
                     size = [0, 0]
-                    cbf.find_category(b"array_structure_list")
+                    cbf.find_category("array_structure_list")
                     for axis in [axis0, axis1]:
-                        cbf.find_column(b"axis_set_id")
+                        cbf.find_column("axis_set_id")
                         cbf.find_row(axis)
-                        cbf.find_column(b"precedence")
+                        cbf.find_column("precedence")
                         idx = int(cbf.get_value()) - 1
-                        cbf.find_column(b"dimension")
+                        cbf.find_column("dimension")
                         size[idx] = int(cbf.get_value())
                     assert size[0] != 0 and size[1] != 0
                 else:
@@ -273,8 +272,8 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             p.set_local_frame(fast, slow, origin)
 
             try:
-                cbf.find_category(b"array_intensities")
-                cbf.find_column(b"undefined_value")
+                cbf.find_category("array_intensities")
+                cbf.find_column("undefined_value")
                 underload = cbf.get_doublevalue()
                 overload = cbf.get_overload(0)
                 trusted_range = (underload, overload)
@@ -301,8 +300,8 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         if self._raw_data is None:
             self._raw_data = []
             cbf = self._get_cbf_handle()
-            cbf.find_category(b"array_structure")
-            cbf.find_column(b"encoding_type")
+            cbf.find_category("array_structure")
+            cbf.find_column("encoding_type")
             cbf.select_row(0)
             types = []
             for i in range(cbf.count_rows()):
@@ -312,21 +311,21 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
             # read the data
             data = collections.OrderedDict()
-            cbf.find_category(b"array_data")
+            cbf.find_category("array_data")
             for i in range(cbf.count_rows()):
-                cbf.find_column(b"array_id")
+                cbf.find_column("array_id")
                 name = cbf.get_value()
 
-                cbf.find_column(b"data")
-                assert cbf.get_typeofvalue().find(b"bnry") > -1
+                cbf.find_column("data")
+                assert cbf.get_typeofvalue().find("bnry") > -1
 
-                if types[i] == b"signed 32-bit integer":
+                if types[i] == "signed 32-bit integer":
                     array_string = cbf.get_integerarray_as_string()
                     nelem = int(len(array_string) / 4)
                     array = flex.int(struct.unpack("%di" % nelem, array_string))
                     parameters = cbf.get_integerarrayparameters_wdims_fs()
                     array_size = (parameters[11], parameters[10], parameters[9])
-                elif types[i] == b"signed 64-bit real IEEE":
+                elif types[i] == "signed 64-bit real IEEE":
                     array_string = cbf.get_realarray_as_string()
                     nelem = int(len(array_string) / 8)
                     array = flex.double(struct.unpack("%dd" % nelem, array_string))
@@ -343,22 +342,22 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             if cbf.has_sections():
                 section_shapes = collections.OrderedDict()
                 for i in range(cbf.count_rows()):
-                    cbf.find_column(b"id")
+                    cbf.find_column("id")
                     section_name = cbf.get_value()
                     if section_name not in section_shapes:
                         section_shapes[section_name] = {}
-                    cbf.find_column(b"array_id")
+                    cbf.find_column("array_id")
                     if "array_id" not in section_shapes[section_name]:
                         section_shapes[section_name]["array_id"] = cbf.get_value()
                     else:
                         assert (
                             section_shapes[section_name]["array_id"] == cbf.get_value()
                         )
-                    cbf.find_column(b"index")
+                    cbf.find_column("index")
                     axis_index = int(cbf.get_value()) - 1
-                    cbf.find_column(b"start")
+                    cbf.find_column("start")
                     axis_start = int(cbf.get_value()) - 1
-                    cbf.find_column(b"end")
+                    cbf.find_column("end")
                     axis_end = int(cbf.get_value())
 
                     section_shapes[section_name][axis_index] = slice(
