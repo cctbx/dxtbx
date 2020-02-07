@@ -14,6 +14,7 @@ from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from dxtbx.model.beam import Beam, BeamFactory
 from dxtbx.model.detector import Detector, DetectorFactory
 
+
 class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
     """An image reading class CSPAD CBF files"""
 

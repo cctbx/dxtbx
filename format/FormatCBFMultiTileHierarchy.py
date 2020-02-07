@@ -18,6 +18,7 @@ from dxtbx.format.cbf_wrapper import cbf_wrapper
 from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile, FormatCBFMultiTileStill
 from dxtbx.model import Detector
 
+
 class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
     """An image reading class multi-tile CBF files"""
 

@@ -1,6 +1,7 @@
 from __future__ import print_function
 import pycbf
-from libtbx.utils import to_unicode, to_bytes, to_str
+from libtbx.utils import to_bytes, to_str
+
 
 class cbf_wrapper(pycbf.cbf_handle_struct):
     """Wrapper class that provides convenience functions for working with cbflib.
@@ -53,27 +54,31 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
     def find_column(self, arg):
         return to_str(super(cbf_wrapper, self).find_column(to_bytes(arg)))
 
-    def set_realarray_wdims_fs(self,
-                                pycbf_const,
-                                binary_id,
-                                data,
-                                elsize,
-                                elements,
-                                byteorder,
-                                dimfast,
-                                dimmid,
-                                dimslow,
-                                padding):
-        return super(cbf_wrapper, self).set_realarray_wdims_fs(pycbf_const,
-                                                              binary_id,
-                                                              data,
-                                                              elsize,
-                                                              elements,
-                                                              to_bytes(byteorder),
-                                                              dimfast,
-                                                              dimmid,
-                                                              dimslow,
-                                                              padding)
+    def set_realarray_wdims_fs(
+        self,
+        pycbf_const,
+        binary_id,
+        data,
+        elsize,
+        elements,
+        byteorder,
+        dimfast,
+        dimmid,
+        dimslow,
+        padding,
+    ):
+        return super(cbf_wrapper, self).set_realarray_wdims_fs(
+            pycbf_const,
+            binary_id,
+            data,
+            elsize,
+            elements,
+            to_bytes(byteorder),
+            dimfast,
+            dimmid,
+            dimslow,
+            padding,
+        )
 
     def find_row(self, arg):
         return to_str(super(cbf_wrapper, self).find_row(to_bytes(arg)))
@@ -100,7 +105,7 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
         return to_str(super(cbf_wrapper, self).get_axis_type(to_bytes(axis_id)))
 
     def get_axis_offset(self, axis_id):
-        return super(cbf_wrapper, self).get_axis_offset(to_bytes(axis_id))  
+        return super(cbf_wrapper, self).get_axis_offset(to_bytes(axis_id))
 
     def get_axis_vector(self, axis_id):
         return super(cbf_wrapper, self).get_axis_vector(to_bytes(axis_id))
@@ -112,13 +117,18 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
         return to_str(super(cbf_wrapper, self).get_axis_depends_on(to_bytes(axis_id)))
 
     def get_axis_equipment_component(self, axis_id):
-        return to_str(super(cbf_wrapper, self).get_axis_equipment_component(to_bytes(axis_id)))
+        return to_str(
+            super(cbf_wrapper, self).get_axis_equipment_component(to_bytes(axis_id))
+        )
 
     def set_axis_setting(self, axis_id, start, increment):
         super(cbf_wrapper, self).set_axis_setting(to_bytes(axis_id), start, increment)
 
     def construct_detector(self, element_number):
-        return cbf_detector_wrapper(super(cbf_wrapper, self).construct_detector(element_number))
+        return cbf_detector_wrapper(
+            super(cbf_wrapper, self).construct_detector(element_number)
+        )
+
 
 class cbf_detector_wrapper(object):
     def __init__(self, cbf_detector):
@@ -128,8 +138,8 @@ class cbf_detector_wrapper(object):
         return getattr(self._cbf_detector, name)
 
     def __setattr__(self, name, value):
-        if name == '_cbf_detector':
-            super(cbf_detector_wrapper, self).__setattr__(name, value)    
+        if name == "_cbf_detector":
+            super(cbf_detector_wrapper, self).__setattr__(name, value)
         else:
             setattr(self._cbf_detector, name, value)
 

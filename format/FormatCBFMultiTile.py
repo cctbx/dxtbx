@@ -8,11 +8,12 @@ from builtins import range
 import numpy
 
 from scitbx.array_family import flex
-from dxtbx.format.cbf_wrapper import cbf_wrapper 
+from dxtbx.format.cbf_wrapper import cbf_wrapper
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
+
 
 class FormatCBFMultiTile(FormatCBFFull):
     """An image reading class multi-tile CBF files"""
