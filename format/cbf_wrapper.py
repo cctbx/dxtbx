@@ -146,3 +146,8 @@ class cbf_detector_wrapper(object):
     def get_detector_surface_axes(self, index):
         return to_str(self._cbf_detector.get_detector_surface_axes(index))
 
+    def __swig_destroy__(self, cbf_detector):
+        try:
+            self._cbf_detector.__swig_destroy__(cbf_detector)
+        except TypeError:
+            self._cbf_detector.__swig_destroy__(cbf_detector._cbf_detector)
