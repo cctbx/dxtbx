@@ -62,7 +62,7 @@ class FormatNexusEigerDLS16M(FormatNexus):
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
 
     def get_detector(self, index=None):
-        if "_master.h5" not in self._image_file:
+        if not self._image_file.endswith("_master.h5"):
             return self._detector()
 
         # workaround for https://jira.diamond.ac.uk/browse/I03-365
