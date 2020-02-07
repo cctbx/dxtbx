@@ -75,6 +75,8 @@ class FormatNexusEigerDLS16M(FormatNexus):
             meta = self._image_file.replace("_master.h5", "_meta.h5")
             limit = get_count_limit_from_meta(meta)
 
+            assert limit > 0
+
             for panel in detector:
                 trusted = panel.get_trusted_range()
                 panel.set_trusted_range((trusted[0], limit))
