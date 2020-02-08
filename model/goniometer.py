@@ -6,7 +6,7 @@ from builtins import object, range
 import libtbx.phil
 from scitbx.array_family import flex
 
-import pycbf
+from dxtbx.format.cbf_wrapper import cbf_wrapper
 from dxtbx_model_ext import Goniometer, KappaGoniometer, MultiAxisGoniometer
 
 __all__ = [
@@ -366,8 +366,8 @@ class GoniometerFactory(object):
 
         # FIXME in here work out how to get the proper setting matrix if != 1
 
-        cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_file(cif_file.encode(), pycbf.MSG_DIGEST)
+        cbf_handle = cbf_wrapper()
+        cbf_handle.read_file(cif_file)
 
         return GoniometerFactory.imgCIF_H(cbf_handle)
 
@@ -382,33 +382,33 @@ class GoniometerFactory(object):
         axes = flex.vec3_double()
         angles = flex.double()
         scan_axis = None
-        cbf_handle.find_category(b"axis")
+        cbf_handle.find_category("axis")
         for i in range(cbf_handle.count_rows()):
-            cbf_handle.find_column(b"equipment")
-            if cbf_handle.get_value() == b"goniometer":
-                cbf_handle.find_column(b"id")
+            cbf_handle.find_column("equipment")
+            if cbf_handle.get_value() == "goniometer":
+                cbf_handle.find_column("id")
                 axis_names.append(cbf_handle.get_value())
                 axis = []
                 for i in range(3):
-                    cbf_handle.find_column(b"vector[%i]" % (i + 1))
+                    cbf_handle.find_column("vector[%i]" % (i + 1))
                     axis.append(float(cbf_handle.get_value()))
                 axes.append(axis)
-                cbf_handle.find_column(b"depends_on")
+                cbf_handle.find_column("depends_on")
                 depends_on.append(cbf_handle.get_value())
             cbf_handle.next_row()
 
         # find the starting angles of each goniometer axis and figure out which one
         # is the scan axis (i.e. non-zero angle_increment)
-        cbf_handle.find_category(b"diffrn_scan_axis")
+        cbf_handle.find_category("diffrn_scan_axis")
         for i in range(cbf_handle.count_rows()):
-            cbf_handle.find_column(b"axis_id")
+            cbf_handle.find_column("axis_id")
             axis_name = cbf_handle.get_value()
-            if axis_name.decode() not in axis_names:
+            if axis_name not in axis_names:
                 cbf_handle.next_row()
                 continue
-            cbf_handle.find_column(b"angle_start")
+            cbf_handle.find_column("angle_start")
             axis_angle = float(cbf_handle.get_value())
-            cbf_handle.find_column(b"angle_increment")
+            cbf_handle.find_column("angle_increment")
             increment = float(cbf_handle.get_value())
             angles.append(axis_angle)
             if abs(increment) > 0:

@@ -8,7 +8,7 @@ from cctbx.eltbx import attenuation_coefficient
 from libtbx.utils import Sorry
 from scitbx import matrix
 
-import pycbf
+from dxtbx.format.cbf_wrapper import cbf_wrapper
 from dxtbx.model.detector_helpers import (
     detector_helper_sensors,
     find_undefined_value,
@@ -711,8 +711,8 @@ class DetectorFactory(object):
     def imgCIF(cif_file, sensor):
         """Initialize a detector model from an imgCIF file."""
 
-        cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_file(cif_file.encode(), pycbf.MSG_DIGEST)
+        cbf_handle = cbf_wrapper()
+        cbf_handle.read_file(cif_file)
 
         return DetectorFactory.imgCIF_H(cbf_handle, sensor)
 

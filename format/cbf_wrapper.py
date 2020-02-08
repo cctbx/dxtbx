@@ -42,6 +42,9 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
                 return False
             raise e
 
+    def read_file(self, imagefile, flags=pycbf.MSG_DIGEST):
+        return super(cbf_wrapper, self).read_file(to_bytes(imagefile), flags)
+
     def read_widefile(self, imagefile, flags=pycbf.MSG_DIGEST):
         return super(cbf_wrapper, self).read_widefile(to_bytes(imagefile), flags)
 

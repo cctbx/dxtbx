@@ -6,7 +6,7 @@ from builtins import object, range
 import libtbx.phil
 from scitbx.array_family import flex
 
-import pycbf
+from dxtbx.format.cbf_wrapper import cbf_wrapper
 from dxtbx.model.scan_helpers import scan_helper_image_files, scan_helper_image_formats
 from dxtbx_model_ext import Scan
 
@@ -166,8 +166,8 @@ class ScanFactory(object):
     def imgCIF(cif_file):
         """Initialize a scan model from an imgCIF file."""
 
-        cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_file(cif_file, pycbf.MSG_DIGEST)
+        cbf_handle = cbf_wrapper()
+        cbf_handle.read_file(cif_file)
 
         return ScanFactory.imgCIF_H(cif_file, cbf_handle)
 

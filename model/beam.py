@@ -5,7 +5,7 @@ from builtins import object, range
 
 import libtbx.phil
 
-import pycbf
+from dxtbx.format.cbf_wrapper import cbf_wrapper
 from dxtbx_model_ext import Beam
 
 beam_phil_scope = libtbx.phil.parse(
@@ -226,8 +226,8 @@ class BeamFactory(object):
         in this - it is the angle between the polarization plane and the
         +Y laboratory frame vector."""
 
-        cbf_handle = pycbf.cbf_handle_struct()
-        cbf_handle.read_widefile(cif_file.encode(), pycbf.MSG_DIGEST)
+        cbf_handle = cbf_wrapper()
+        cbf_handle.read_widefile(cif_file)
 
         result = BeamFactory.imgCIF_H(cbf_handle)
 
@@ -243,19 +243,19 @@ class BeamFactory(object):
 
         d2r = math.pi / 180.0
 
-        cbf_handle.find_category(b"axis")
+        cbf_handle.find_category("axis")
 
         # find record with equipment = source
 
         try:
-            cbf_handle.find_column(b"equipment")
-            cbf_handle.find_row(b"source")
+            cbf_handle.find_column("equipment")
+            cbf_handle.find_row("source")
 
             # then get the vector and offset from this
             direction = []
 
             for j in range(3):
-                cbf_handle.find_column(b"vector[%d]" % (j + 1))
+                cbf_handle.find_column("vector[%d]" % (j + 1))
                 direction.append(cbf_handle.get_doublevalue())
         except Exception as e:
             if str(e).split()[-1] != "CBF_NOTFOUND":
