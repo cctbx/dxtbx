@@ -9,8 +9,6 @@ import os
 import re
 from builtins import object
 
-from libtbx.utils import Sorry
-
 # These are reversed patterns...
 patterns = [
     r"([0-9]{2,12})\.(.*)",
@@ -49,7 +47,7 @@ def template_regex(filename):
         return template, int(digits)
 
     # What is supposed to happen otherwise?
-    raise Sorry("Could not determine filename template")
+    raise ValueError("Could not determine filename template")
 
 
 def _image2template(filename):

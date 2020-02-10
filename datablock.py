@@ -11,14 +11,14 @@ import os.path
 from builtins import range
 from os.path import abspath, dirname, normpath, splitext
 
+import six
+import six.moves.cPickle as pickle
+
 import libtbx
-from libtbx.utils import Sorry
 from scitbx import matrix
 
 import dxtbx.imageset
 import dxtbx.model
-import six
-import six.moves.cPickle as pickle
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
@@ -384,14 +384,14 @@ class DataBlockTemplateImporter(object):
 
             # Check if we've matched any filenames
             if len(paths) == 0:
-                raise Sorry('Template "%s" does not match any files' % template)
+                raise ValueError('Template "%s" does not match any files' % template)
 
             # Get the format from the first image
             fmt = FormatChecker().find_format(paths[0])
             if fmt is None:
-                raise Sorry("Image file %s format is unknown" % paths[0])
+                raise ValueError("Image file %s format is unknown" % paths[0])
             elif fmt.ignore():
-                raise Sorry("Image file %s format will be ignored" % paths[0])
+                raise ValueError("Image file %s format will be ignored" % paths[0])
             else:
                 imageset = self._create_imageset(fmt, template, paths, **kwargs)
                 append_to_datablocks(imageset)
@@ -408,7 +408,7 @@ class DataBlockTemplateImporter(object):
             all_numbers = {int(f[index]) for f in filenames}
             missing = set(range(first, last + 1)) - all_numbers
             if missing:
-                raise Sorry(
+                raise ValueError(
                     "Missing image{} {} from imageset ({}-{})".format(
                         "s" if len(missing) > 1 else "",
                         ", ".join(str(x) for x in sorted(missing)),
