@@ -165,7 +165,7 @@ class FormatBrukerPhotonII(FormatBruker):
         # the understand method. Otherwise the user gets FormatBruker reading the
         # image improperly but without failing
         if self.header_dict["FORMAT"] != "100":
-            raise ValueError(
+            raise NotImplementedError(
                 "Only FORMAT 100 images from the Photon II are currently supported"
             )
 
