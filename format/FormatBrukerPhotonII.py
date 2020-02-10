@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 from boost.python import streambuf
-from libtbx.utils import Sorry
 from scitbx import matrix
 from scitbx.array_family import flex
 
@@ -166,8 +165,8 @@ class FormatBrukerPhotonII(FormatBruker):
         # the understand method. Otherwise the user gets FormatBruker reading the
         # image improperly but without failing
         if self.header_dict["FORMAT"] != "100":
-            raise Sorry(
-                "Only FORMAT 100 images from the Photon II are currently " "supported"
+            raise ValueError(
+                "Only FORMAT 100 images from the Photon II are currently supported"
             )
 
         f = self.open_file(self._image_file, "rb")
