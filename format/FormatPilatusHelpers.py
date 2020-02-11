@@ -256,7 +256,6 @@ def get_vendortype(xdetector):
     return "Undetermined Pilatus size"
 
 
-# FIXME this contains hard coded information and does not apply to 2X
 def get_vendortype_eiger(xdetector):
     array = xdetector[0].get_image_size()
     # print array,
@@ -268,4 +267,16 @@ def get_vendortype_eiger(xdetector):
         return "Eiger-4M"
     elif array == (1030, 1065):
         return "Eiger-1M"
+    elif array == (1030, 514):
+        return "Eiger-500K"
+    elif array == (4148, 4362):
+        return "Eiger2-16M"
+    elif array == (3108, 3262):
+        return "Eiger2-9M"
+    elif array == (2068, 2162):
+        return "Eiger2-4M"
+    elif array == (1028, 1062):
+        return "Eiger2-1M"
+    elif array == (1028, 512):
+        return "Eiger2-500K"
     return "Undetermined EigerX size"
