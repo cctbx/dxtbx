@@ -50,6 +50,7 @@ class get_definition(dxtbx.data.beamline_defs.template):
         b[lookup("df.m.spec_supp")] = "MiTeGen MicroMount"
         b[lookup("df.rad.source")] = "Diamond Light Source Beamline I19-1"
         b[lookup("df.rad.mono")] = "Silicon 111"
+        b[lookup("sw.collection")] = "GDA - generic data acquisition software"
 
         return b
 
