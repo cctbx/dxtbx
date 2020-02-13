@@ -59,6 +59,7 @@ class template(object):
             "df.m.dev_type": "_diffrn?measurement_device_type",
             "df.m.method": "_diffrn?measurement_method",
             "df.m.spec_supp": "_diffrn?measurement_specimen_support",
+            "sw.collection": "_computing?data_collection",
         }
         column = 1 if mmCIFsemantics else 0
 

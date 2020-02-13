@@ -38,11 +38,12 @@ class get_definition(dxtbx.data.beamline_defs.template):
     def _at_I19(self, mmcif=False):
         b, lookup = self._base(mmcif)
 
-        #   b[lookup('df.m.dev')]       = 'Fixed \\c 3-circle diffractometer'
-        #   b[lookup('df.m.dev_type')]  = 'Fluid Film Devices'
+        b[lookup("df.m.dev")] = "Newport IS4CCD (4 circle)"
+        b[lookup("df.m.dev_type")] = "Photon counting pixel array, PILATUS 300K"
         b[lookup("df.m.method")] = "shutterless scans"
         #   b[lookup('df.m.spec_supp')] = 'MiTeGen MicroMount'
         b[lookup("df.rad.source")] = "Diamond Light Source Beamline I19-2"
         b[lookup("df.rad.mono")] = "Silicon 111"
+        b[lookup("sw.collection")] = "GDA - generic data acquisition software"
 
         return b
