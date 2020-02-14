@@ -226,12 +226,29 @@ class _(object):
 
         """
         if isinstance(item, slice):
-            start = item.start or 0
             offset = self.get_scan().get_batch_offset()
-            stop = item.stop or (len(self) + offset)
             if item.step is not None:
                 raise IndexError("Sequences must be sequential")
-            return self.partial_set(start - offset, stop - offset)
+
+            # nasty workaround for https://github.com/dials/dials/issues/1153
+            # slices with -1 in them are meaningful :-/ so grab the original
+            # constructor arguments of the slice object.
+            # item.start and item.stop may have been compromised at this point.
+            if offset < 0:
+                start, stop, step = item.__reduce__()[1]
+                if start is None:
+                    start = 0
+                else:
+                    start -= offset
+                if stop is None:
+                    stop = len(self)
+                else:
+                    stop -= offset
+                return self.partial_set(start, stop)
+            else:
+                start = item.start or 0
+                stop = item.stop or (len(self) + offset)
+                return self.partial_set(start - offset, stop - offset)
         else:
             return self.get_corrected_data(item)
 
