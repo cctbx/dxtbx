@@ -174,7 +174,7 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
 
         # find the data
         cbf.select_category(0)
-        while cbf.category_name().lower() != "array_data":
+        while cbf.category_name().lower() != b"array_data":
             try:
                 cbf.next_category()
             except Exception:
