@@ -74,7 +74,7 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
             if group.is_panel():
                 if cbf.has_sections():
                     # use the pre-mapping
-                    cbf_detector = cbf_detectors[group.get_name()]
+                    cbf_detector = cbf_detectors[group.get_name().encode()]
                 else:
                     # figure out which panel number this panel is by finding it in diffrn_data_frame
                     cbf.find_category(b"diffrn_data_frame")
@@ -97,7 +97,7 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
                 # of the ASIC.
                 orig -= col(cbf.get_axis_offset(axis1))
             else:
-                name = group.get_name()
+                name = group.get_name().encode()
 
             v3 = fast.cross(slow).normalize()
 
@@ -117,11 +117,11 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
                 cbf.next_row()
 
             cbf.find_column(b"offset[1]")
-            cbf.set_value(str(orig[0]))
+            cbf.set_value(str(orig[0]).encode())
             cbf.find_column(b"offset[2]")
-            cbf.set_value(str(orig[1]))
+            cbf.set_value(str(orig[1]).encode())
             cbf.find_column(b"offset[3]")
-            cbf.set_value(str(orig[2]))
+            cbf.set_value(str(orig[2]).encode())
 
             r3 = sqr(
                 (
@@ -149,18 +149,18 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
             assert axis.length() > 0
 
             cbf.find_column(b"vector[1]")
-            cbf.set_value(str(axis[0]))
+            cbf.set_value(str(axis[0]).encode())
             cbf.find_column(b"vector[2]")
-            cbf.set_value(str(axis[1]))
+            cbf.set_value(str(axis[1]).encode())
             cbf.find_column(b"vector[3]")
-            cbf.set_value(str(axis[2]))
+            cbf.set_value(str(axis[2]).encode())
 
             cbf.set_axis_setting(axis_name, angle, 0)
 
             if root:
                 # synchronize the new root origin
                 for axis_id, setting_value in zip(
-                    ["_X", "_Y", "_Z"], [dx, dy, distance]
+                    [b"_X", b"_Y", b"_Z"], [dx, dy, distance]
                 ):
                     while axis_id not in axis_name:
                         axis_name = cbf.get_axis_depends_on(axis_name)
@@ -186,7 +186,7 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
             which can then be matchedup with the axes of the object returned by construct_detector
             """
             all_cbfdetectors = [cbf.construct_detector(i) for i in range(len(detector))]
-            all_panelnames = [panel.get_name() for panel in detector]
+            all_panelnames = [panel.get_name().encode() for panel in detector]
 
             # map the array_section_ids, which match the panel names, to their root axis names
             panel_name_mapping = {}
