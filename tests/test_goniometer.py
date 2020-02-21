@@ -200,7 +200,7 @@ def test_multi_axis_goniometer():
     assert single_axis.get_rotation_axis() == (1, 0, 0)
 
 
-def test_goniometer_from_phil():
+def test_single_axis_goniometer_from_phil():
     params = goniometer_phil_scope.fetch(
         parse(
             """
@@ -214,6 +214,53 @@ def test_goniometer_from_phil():
     g1 = GoniometerFactory.from_phil(params)
 
     assert g1.get_rotation_axis() == (1, 0, 0)
+
+
+def test_single_axis_goniometer_using_axes_from_phil():
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axes = (1, 0, 0)
+    }
+  """
+        )
+    ).extract()
+
+    g1 = GoniometerFactory.from_phil(params)
+
+    assert g1.get_rotation_axis() == (1, 0, 0)
+
+
+def test_single_axis_goniometer_using_axis_and_axes_from_phil():
+
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axis = (1, 0, 0)
+      axes = (1, 0, 0)
+    }
+    """
+        )
+    ).extract()
+
+    with pytest.raises(ValueError):
+        GoniometerFactory.from_phil(params)
+
+
+def test_single_axis_goniometer_with_fixed_rotation_and_reference_from_phil():
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axes = (1, 0, 0)
+    }
+  """
+        )
+    ).extract()
+
+    g1 = GoniometerFactory.from_phil(params)
 
     params = goniometer_phil_scope.fetch(
         parse(
@@ -231,6 +278,8 @@ def test_goniometer_from_phil():
     assert g2.get_rotation_axis() == (0, 1, 0)
     assert g2.get_fixed_rotation() == (0, 1, 0, 1, 0, 0, 0, 0, 1)
 
+
+def test_multi_axis_goniometer_from_phil():
     params = goniometer_phil_scope.fetch(
         parse(
             """
@@ -242,10 +291,11 @@ def test_goniometer_from_phil():
         )
     ).extract()
 
-    g3 = GoniometerFactory.from_phil(params)
-    assert tuple(g3.get_axes()) == ((1, 0, 0), (0, 1, 0), (0, 0, 1))
-    assert g3.get_scan_axis() == 2
+    g1 = GoniometerFactory.from_phil(params)
+    assert tuple(g1.get_axes()) == ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    assert g1.get_scan_axis() == 2
 
+    # Test using a reference
     params = goniometer_phil_scope.fetch(
         parse(
             """
@@ -256,26 +306,9 @@ def test_goniometer_from_phil():
         )
     ).extract()
 
-    g4 = GoniometerFactory.from_phil(params, reference=g3)
+    g2 = GoniometerFactory.from_phil(params, reference=g1)
 
-    assert tuple(g4.get_axes()) == ((0, 1, 0), (1, 0, 0), (0, 0, 1))
-
-
-def test_axis_and_axes_from_phil():
-
-    params = goniometer_phil_scope.fetch(
-        parse(
-            """
-    goniometer {
-      axis = (1, 0, 0)
-      axes = (1, 0, 0)
-    }
-    """
-        )
-    ).extract()
-
-    with pytest.raises(ValueError):
-        GoniometerFactory.from_phil(params)
+    assert tuple(g2.get_axes()) == ((0, 1, 0), (1, 0, 0), (0, 0, 1))
 
 
 def test_scan_varying():
