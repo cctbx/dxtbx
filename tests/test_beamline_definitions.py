@@ -20,7 +20,7 @@ def test_lookup_known_detector():
     assert str(n) != ""
     cif = n.CIF_block()
     assert cif.__module__ == "iotbx.cif.model"
-    assert "_diffrn_radiation_type" in str(cif)
-    cif = n.mmCIF_block()
-    assert cif.__module__ == "iotbx.cif.model"
-    assert "_diffrn_radiation.type" in str(cif)
+    assert "_diffrn_source" in str(cif)
+    mmcif = n.mmCIF_block()
+    assert mmcif.__module__ == "iotbx.cif.model"
+    assert "_diffrn_source.source" in str(mmcif)
