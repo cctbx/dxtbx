@@ -246,6 +246,8 @@ class GoniometerFactory(object):
         else:
             if params.goniometer.axis is None and params.goniometer.axes is None:
                 return None
+            if params.goniometer.axis and params.goniometer.axes:
+                raise ValueError("Only one of axis or axes should be set")
             if params.goniometer.axes and len(params.goniometer.axes) > 3:
                 goniometer = GoniometerFactory.multi_axis_goniometer_from_phil(params)
             else:

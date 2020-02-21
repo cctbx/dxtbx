@@ -261,6 +261,23 @@ def test_goniometer_from_phil():
     assert tuple(g4.get_axes()) == ((0, 1, 0), (1, 0, 0), (0, 0, 1))
 
 
+def test_axis_and_axes_from_phil():
+
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axis = (1, 0, 0)
+      axes = (1, 0, 0)
+    }
+    """
+        )
+    ).extract()
+
+    with pytest.raises(ValueError):
+        GoniometerFactory.from_phil(params)
+
+
 def test_scan_varying():
     axis = (1, 0, 0)
     g = Goniometer(axis)
