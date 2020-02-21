@@ -311,6 +311,63 @@ def test_multi_axis_goniometer_from_phil():
     assert tuple(g2.get_axes()) == ((0, 1, 0), (1, 0, 0), (0, 0, 1))
 
 
+def test_single_axis_goniometer_with_multi_axis_reference_from_phil():
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axes = (1, 0, 0, 0, 1, 0, 0, 0, 1)
+      scan_axis = 2
+    }
+  """
+        )
+    ).extract()
+
+    g1 = GoniometerFactory.from_phil(params)
+
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axis = (0, 1, 0)
+    }
+  """
+        )
+    ).extract()
+
+    with pytest.raises(ValueError):
+        GoniometerFactory.from_phil(params, reference=g1)
+
+
+def test_multi_axis_goniometer_with_single_axis_reference_from_phil():
+
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axis = (0, 1, 0)
+    }
+  """
+        )
+    ).extract()
+
+    g1 = GoniometerFactory.from_phil(params)
+
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axes = (1, 0, 0, 0, 1, 0, 0, 0, 1)
+      scan_axis = 2
+    }
+  """
+        )
+    ).extract()
+
+    with pytest.raises(ValueError):
+        GoniometerFactory.from_phil(params, reference=g1)
+
+
 def test_scan_varying():
     axis = (1, 0, 0)
     g = Goniometer(axis)

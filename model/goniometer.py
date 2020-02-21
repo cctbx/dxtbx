@@ -234,18 +234,26 @@ class GoniometerFactory(object):
         Convert the phil parameters into a goniometer model
 
         """
+        if params.goniometer.axis and params.goniometer.axes:
+            raise ValueError("Only one of axis or axes should be set")
         if reference is not None:
             if isinstance(reference, MultiAxisGoniometer):
+                if params.goniometer.axis:
+                    raise ValueError(
+                        "Cannot set 'axis' with a multi-axis reference goniometer"
+                    )
                 goniometer = GoniometerFactory.multi_axis_goniometer_from_phil(
                     params, reference
                 )
             else:
+                if params.goniometer.axes:
+                    raise ValueError(
+                        "Cannot set 'axes' with a single-axis reference goniometer"
+                    )
                 goniometer = GoniometerFactory.single_axis_goniometer_from_phil(
                     params, reference
                 )
         else:
-            if params.goniometer.axis and params.goniometer.axes:
-                raise ValueError("Only one of axis or axes should be set")
             if params.goniometer.axes and len(params.goniometer.axes) > 3:
                 goniometer = GoniometerFactory.multi_axis_goniometer_from_phil(params)
             elif params.goniometer.axis or params.goniometer.axes:
