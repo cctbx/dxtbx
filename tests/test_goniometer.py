@@ -311,7 +311,7 @@ def test_multi_axis_goniometer_from_phil():
     assert tuple(g2.get_axes()) == ((0, 1, 0), (1, 0, 0), (0, 0, 1))
 
 
-def test_single_axis_goniometer_with_multi_axis_reference_from_phil():
+def test_single_axis_goniometer_with_multi_axis_reference_from_phil_raises_error():
     params = goniometer_phil_scope.fetch(
         parse(
             """
