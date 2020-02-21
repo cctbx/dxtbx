@@ -233,6 +233,8 @@ def test_single_axis_goniometer_using_axes_from_phil():
 
 
 def test_single_axis_goniometer_using_axis_and_axes_from_phil_raises_error():
+    """Supplying both the 'axis' and 'axes' parameters is ambiguous, so it should
+    be mutually exclusive. This test ensures that is the case."""
 
     params = goniometer_phil_scope.fetch(
         parse(
@@ -312,6 +314,9 @@ def test_multi_axis_goniometer_from_phil():
 
 
 def test_single_axis_goniometer_with_multi_axis_reference_from_phil_raises_error():
+    """Attempting to set up a single-axis goniometer while using a multi-axis
+    goniometer as reference is explicitly unsupported. Ensure this raises an error"""
+
     params = goniometer_phil_scope.fetch(
         parse(
             """
@@ -340,6 +345,8 @@ def test_single_axis_goniometer_with_multi_axis_reference_from_phil_raises_error
 
 
 def test_multi_axis_goniometer_with_single_axis_reference_from_phil_raises_error():
+    """Attempting to set up a mulyi-axis goniometer while using a single-axis
+    goniometer as reference is explicitly unsupported. Ensure this raises an error"""
 
     params = goniometer_phil_scope.fetch(
         parse(
