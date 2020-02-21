@@ -4,8 +4,6 @@ import math
 import os
 from builtins import range
 
-import pytest
-
 import libtbx.load_env
 from libtbx import easy_pickle
 from libtbx.phil import parse
@@ -13,6 +11,7 @@ from libtbx.test_utils import Exception_expected, approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
 
+import pytest
 from dxtbx.model.goniometer import (
     Goniometer,
     GoniometerFactory,
@@ -206,7 +205,7 @@ def test_goniometer_from_phil():
         parse(
             """
     goniometer {
-      axes = (1, 0, 0)
+      axis = (1, 0, 0)
     }
   """
         )
@@ -220,7 +219,7 @@ def test_goniometer_from_phil():
         parse(
             """
     goniometer {
-      axes = (0, 1, 0)
+      axis = (0, 1, 0)
       fixed_rotation = (0, 1, 0, 1, 0, 0, 0, 0, 1)
     }
   """

@@ -24,6 +24,12 @@ goniometer_phil_scope = libtbx.phil.parse(
     .short_caption = "Goniometer overrides"
   {
 
+    axis = None
+      .type = floats(size=3)
+      .help = "Override the axis for a single axis goniometer. Equivalent to"
+              "providing a single 3D vector to 'axes'."
+      .short_caption="Goniometer axis"
+
     axes = None
       .type = floats
       .help = "Override the goniometer axes. Axes must be provided in the"
@@ -82,9 +88,11 @@ class GoniometerFactory(object):
 
         """
 
-        # Check the axes parameter
-        if params.goniometer.axes is not None and len(params.goniometer.axes) != 3:
-            raise RuntimeError("Single axis goniometer requires 3 axes parameters")
+        # Check the axis parameter and copy from axes if required
+        if params.goniometer.axis is None:
+            params.goniometer.axis = params.goniometer.axes
+        if params.goniometer.axis is not None and len(params.goniometer.axis) != 3:
+            raise RuntimeError("Single axis goniometer requires 3 axis values")
 
         # Check the angles parameter
         if params.goniometer.angles is not None:
@@ -101,8 +109,8 @@ class GoniometerFactory(object):
             goniometer = reference
 
         # Set the parameters
-        if params.goniometer.axes is not None:
-            goniometer.set_rotation_axis_datum(params.goniometer.axes)
+        if params.goniometer.axis is not None:
+            goniometer.set_rotation_axis_datum(params.goniometer.axis)
         if params.goniometer.fixed_rotation is not None:
             goniometer.set_fixed_rotation(params.goniometer.fixed_rotation)
         if params.goniometer.setting_rotation is not None:
@@ -223,7 +231,7 @@ class GoniometerFactory(object):
     @staticmethod
     def from_phil(params, reference=None):
         """
-        Convert the phil parameters into a beam model
+        Convert the phil parameters into a goniometer model
 
         """
         if reference is not None:
@@ -236,9 +244,9 @@ class GoniometerFactory(object):
                     params, reference
                 )
         else:
-            if params.goniometer.axes is None:
+            if params.goniometer.axis is None and params.goniometer.axes is None:
                 return None
-            if len(params.goniometer.axes) > 3:
+            if params.goniometer.axes and len(params.goniometer.axes) > 3:
                 goniometer = GoniometerFactory.multi_axis_goniometer_from_phil(params)
             else:
                 goniometer = GoniometerFactory.single_axis_goniometer_from_phil(params)
