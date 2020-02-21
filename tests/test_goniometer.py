@@ -4,8 +4,6 @@ import math
 import os
 from builtins import range
 
-import pytest
-
 import libtbx.load_env
 from libtbx import easy_pickle
 from libtbx.phil import parse
@@ -13,6 +11,7 @@ from libtbx.test_utils import Exception_expected, approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
 
+import pytest
 from dxtbx.model.goniometer import (
     Goniometer,
     GoniometerFactory,
@@ -201,7 +200,23 @@ def test_multi_axis_goniometer():
     assert single_axis.get_rotation_axis() == (1, 0, 0)
 
 
-def test_goniometer_from_phil():
+def test_single_axis_goniometer_from_phil():
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axis = (1, 0, 0)
+    }
+  """
+        )
+    ).extract()
+
+    g1 = GoniometerFactory.from_phil(params)
+
+    assert g1.get_rotation_axis() == (1, 0, 0)
+
+
+def test_single_axis_goniometer_using_axes_from_phil():
     params = goniometer_phil_scope.fetch(
         parse(
             """
@@ -216,11 +231,44 @@ def test_goniometer_from_phil():
 
     assert g1.get_rotation_axis() == (1, 0, 0)
 
+
+def test_single_axis_goniometer_using_axis_and_axes_from_phil_raises_error():
+    """Supplying both the 'axis' and 'axes' parameters is ambiguous, so it should
+    be mutually exclusive. This test ensures that is the case."""
+
     params = goniometer_phil_scope.fetch(
         parse(
             """
     goniometer {
-      axes = (0, 1, 0)
+      axis = (1, 0, 0)
+      axes = (1, 0, 0)
+    }
+    """
+        )
+    ).extract()
+
+    with pytest.raises(ValueError):
+        GoniometerFactory.from_phil(params)
+
+
+def test_single_axis_goniometer_with_fixed_rotation_and_reference_from_phil():
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axes = (1, 0, 0)
+    }
+  """
+        )
+    ).extract()
+
+    g1 = GoniometerFactory.from_phil(params)
+
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axis = (0, 1, 0)
       fixed_rotation = (0, 1, 0, 1, 0, 0, 0, 0, 1)
     }
   """
@@ -231,6 +279,43 @@ def test_goniometer_from_phil():
 
     assert g2.get_rotation_axis() == (0, 1, 0)
     assert g2.get_fixed_rotation() == (0, 1, 0, 1, 0, 0, 0, 0, 1)
+
+
+def test_multi_axis_goniometer_from_phil():
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axes = (1, 0, 0, 0, 1, 0, 0, 0, 1)
+      scan_axis = 2
+    }
+  """
+        )
+    ).extract()
+
+    g1 = GoniometerFactory.from_phil(params)
+    assert tuple(g1.get_axes()) == ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    assert g1.get_scan_axis() == 2
+
+    # Test using a reference
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axes = (0, 1, 0, 1, 0, 0, 0, 0, 1)
+    }
+  """
+        )
+    ).extract()
+
+    g2 = GoniometerFactory.from_phil(params, reference=g1)
+
+    assert tuple(g2.get_axes()) == ((0, 1, 0), (1, 0, 0), (0, 0, 1))
+
+
+def test_single_axis_goniometer_with_multi_axis_reference_from_phil_raises_error():
+    """Attempting to set up a single-axis goniometer while using a multi-axis
+    goniometer as reference is explicitly unsupported. Ensure this raises an error"""
 
     params = goniometer_phil_scope.fetch(
         parse(
@@ -243,23 +328,51 @@ def test_goniometer_from_phil():
         )
     ).extract()
 
-    g3 = GoniometerFactory.from_phil(params)
-    assert tuple(g3.get_axes()) == ((1, 0, 0), (0, 1, 0), (0, 0, 1))
-    assert g3.get_scan_axis() == 2
+    g1 = GoniometerFactory.from_phil(params)
 
     params = goniometer_phil_scope.fetch(
         parse(
             """
     goniometer {
-      axes = (0, 1, 0, 1, 0, 0, 0, 0, 1)
+      axis = (0, 1, 0)
     }
   """
         )
     ).extract()
 
-    g4 = GoniometerFactory.from_phil(params, reference=g3)
+    with pytest.raises(ValueError):
+        GoniometerFactory.from_phil(params, reference=g1)
 
-    assert tuple(g4.get_axes()) == ((0, 1, 0), (1, 0, 0), (0, 0, 1))
+
+def test_multi_axis_goniometer_with_single_axis_reference_from_phil_raises_error():
+    """Attempting to set up a mulyi-axis goniometer while using a single-axis
+    goniometer as reference is explicitly unsupported. Ensure this raises an error"""
+
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axis = (0, 1, 0)
+    }
+  """
+        )
+    ).extract()
+
+    g1 = GoniometerFactory.from_phil(params)
+
+    params = goniometer_phil_scope.fetch(
+        parse(
+            """
+    goniometer {
+      axes = (1, 0, 0, 0, 1, 0, 0, 0, 1)
+      scan_axis = 2
+    }
+  """
+        )
+    ).extract()
+
+    with pytest.raises(ValueError):
+        GoniometerFactory.from_phil(params, reference=g1)
 
 
 def test_scan_varying():
