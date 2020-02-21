@@ -339,7 +339,7 @@ def test_single_axis_goniometer_with_multi_axis_reference_from_phil():
         GoniometerFactory.from_phil(params, reference=g1)
 
 
-def test_multi_axis_goniometer_with_single_axis_reference_from_phil():
+def test_multi_axis_goniometer_with_single_axis_reference_from_phil_raises_error():
 
     params = goniometer_phil_scope.fetch(
         parse(
