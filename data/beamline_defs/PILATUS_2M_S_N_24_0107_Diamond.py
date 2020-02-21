@@ -37,7 +37,8 @@ class get_definition(dxtbx.data.beamline_defs.template):
 
         b = iotbx.cif.model.block()
         b[lookup("df.detector")] = "Photon counting pixel array"
-        b[lookup("df.rad.type")] = "Synchrotron"
+        b[lookup("df.detector.type")] = "Dectris PILATUS 2M"
+        b[lookup("df.src")] = "Synchrotron"
 
         return b, lookup
 
@@ -45,11 +46,13 @@ class get_definition(dxtbx.data.beamline_defs.template):
         b, lookup = self._base(mmcif)
 
         b[lookup("df.m.dev")] = "Fixed \\c 3-circle diffractometer"
-        b[lookup("df.m.dev_type")] = "Fluid Film Devices"
+        b[lookup("df.m.dev.type")] = "Fluid Film Devices"
         b[lookup("df.m.method")] = "shutterless scans"
-        b[lookup("df.m.spec_supp")] = "MiTeGen MicroMount"
-        b[lookup("df.rad.source")] = "Diamond Light Source Beamline I19-1"
+        b[lookup("df.m.spec.supp")] = "MiTeGen MicroMount"
         b[lookup("df.rad.mono")] = "Silicon 111"
+        b[lookup("df.src.details")] = "Allan et al. (2017)"
+        b[lookup("df.src.type")] = "Diamond Light Source Beamline I19-1"
+        b[lookup("references")] = "Allan, D. R. et al. (2017) Crystals, 7(11), 336."
         b[lookup("sw.collection")] = "GDA - generic data acquisition software"
 
         return b
@@ -57,6 +60,6 @@ class get_definition(dxtbx.data.beamline_defs.template):
     def _at_I04_1(self, mmcif=False):
         b, lookup = self._base(mmcif)
 
-        b[lookup("df.rad.source")] = "Diamond Light Source Beamline I04-1"
+        b[lookup("df.src.type")] = "Diamond Light Source Beamline I04-1"
 
         return b
