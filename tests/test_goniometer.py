@@ -232,7 +232,7 @@ def test_single_axis_goniometer_using_axes_from_phil():
     assert g1.get_rotation_axis() == (1, 0, 0)
 
 
-def test_single_axis_goniometer_using_axis_and_axes_from_phil():
+def test_single_axis_goniometer_using_axis_and_axes_from_phil_raises_error():
 
     params = goniometer_phil_scope.fetch(
         parse(
