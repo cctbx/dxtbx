@@ -345,7 +345,7 @@ def test_single_axis_goniometer_with_multi_axis_reference_from_phil_raises_error
 
 
 def test_multi_axis_goniometer_with_single_axis_reference_from_phil_raises_error():
-    """Attempting to set up a mulyi-axis goniometer while using a single-axis
+    """Attempting to set up a multi-axis goniometer while using a single-axis
     goniometer as reference is explicitly unsupported. Ensure this raises an error"""
 
     params = goniometer_phil_scope.fetch(
