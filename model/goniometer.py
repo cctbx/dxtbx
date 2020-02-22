@@ -238,18 +238,10 @@ class GoniometerFactory(object):
             raise ValueError("Only one of axis or axes should be set")
         if reference is not None:
             if isinstance(reference, MultiAxisGoniometer):
-                if params.goniometer.axis:
-                    raise ValueError(
-                        "Cannot set 'axis' with a multi-axis reference goniometer"
-                    )
                 goniometer = GoniometerFactory.multi_axis_goniometer_from_phil(
                     params, reference
                 )
             else:
-                if params.goniometer.axes:
-                    raise ValueError(
-                        "Cannot set 'axes' with a single-axis reference goniometer"
-                    )
                 goniometer = GoniometerFactory.single_axis_goniometer_from_phil(
                     params, reference
                 )
