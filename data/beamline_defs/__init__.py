@@ -41,7 +41,7 @@ class template(object):
 
     def _lookup(self, mmCIFsemantics):
         keys = {
-            # Entries can either be
+            # Values can either be
             #
             # a tuple
             #    ( CIF-string, mmCIF-string )
@@ -51,14 +51,20 @@ class template(object):
             # where
             #   _something_something_else is CIF, and
             #   _something.something_else is mmCIF
-            "df.detector": ("_diffrn_detector", "_diffrn.detector"),
-            "df.rad.mono": "_diffrn_radiation?monochromator",
-            "df.rad.source": "_diffrn_radiation?source",
-            "df.rad.type": "_diffrn_radiation?type",
+            #
+            # Do NOT use underscores in keys.
+            "df.detector": "_diffrn?detector",
+            "df.detector.type": "_diffrn_detector?type",
             "df.m.dev": "_diffrn?measurement_device",
-            "df.m.dev_type": "_diffrn?measurement_device_type",
+            "df.m.dev.type": "_diffrn?measurement_device_type",
             "df.m.method": "_diffrn?measurement_method",
-            "df.m.spec_supp": "_diffrn?measurement_specimen_support",
+            "df.m.spec.supp": "_diffrn?measurement_specimen_support",
+            "df.rad.mono": "_diffrn_radiation?monochromator",
+            "df.src": ("_diffrn_source", "_diffrn_source.source"),
+            "df.src.details": "_diffrn_source?details",
+            "df.src.type": "_diffrn_source?type",
+            "references": "_publ?section_references",
+            "sw.collection": "_computing?data_collection",
         }
         column = 1 if mmCIFsemantics else 0
 
