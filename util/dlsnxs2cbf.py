@@ -2,11 +2,11 @@ from __future__ import absolute_import, division, print_function
 
 import binascii
 
-from cbflib_adaptbx import compress
-from scitbx.array_family import flex
-
 import h5py
 import numpy
+
+from cbflib_adaptbx import compress
+from scitbx.array_family import flex
 
 
 def get_mask(nfast, nslow):
@@ -68,6 +68,7 @@ def compute_cbf_header(f, nn=0):
     L = instrument["beam/incident_wavelength"][()]
     A = instrument["attenuator/attenuator_transmission"][()]
 
+    timestamp = f["/entry/start_time"][()].decode()
     omega = f["/entry/sample/transformations/omega"][()]
     omega_increment = f["/entry/sample/transformations/omega_increment_set"][()]
     chi = f["/entry/sample/transformations/chi"][()]
@@ -90,7 +91,7 @@ _array_data.header_contents
 ;"""
     )
     result.append("# Detector: EIGER 2XE 16M S/N 160-0001 Diamond %s" % name)
-    result.append("# %s" % f["/entry/start_time"][()])
+    result.append("# %s" % timestamp)
     result.append("# Pixel_size 75e-6 m x 75e-6 m")
     result.append("# Silicon sensor, thickness 0.000450 m")
     result.append("# Exposure_time %.5f s" % T)
