@@ -253,6 +253,30 @@ namespace dxtbx { namespace model {
     }
 
     /**
+     * Get the cos2(2theta) angle at every pixel.
+     * @param s0 The incident beam vector
+     * @returns flex::double array containing 2theta at every pixel
+     */
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > get_cos2_two_theta_array(
+      vec3<double> s0) const {
+      DXTBX_ASSERT(s0.length() > 0);
+      s0 /= s0.length();
+      size_t fast = image_size_[0], slow = image_size_[1];
+
+      scitbx::af::versa<double, scitbx::af::c_grid<2> > result(
+        scitbx::af::c_grid<2>(slow, fast));
+      for (size_t j = 0; j < slow; j++) {
+        for (size_t i = 0; i < fast; i++) {
+	  vec3<double> p = get_pixel_lab_coord(vec2<double>(i, j));
+	  double d1 = s0 * p;
+	  double d2 = p * p;
+          result(j, i) = d1 * d1 / d2;
+        }
+      }
+      return result;
+    }
+
+    /**
      * Get the resolution at a given pixel.
      * @param s0 The incident beam vector
      * @param xy The pixel coordinate
