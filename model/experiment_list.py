@@ -6,9 +6,9 @@ import os
 from builtins import range
 
 import pkg_resources
-
 import six
 import six.moves.cPickle as pickle
+
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
@@ -736,6 +736,9 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_serialized_format(filename, check_format=True):
         """Try to load the experiment list from a serialized format."""
+
+        if hasattr(filename, "__fspath__"):
+            filename = filename.__fspath__()  # unwrap PEP-519-style objects
 
         # First try as a JSON file
         try:

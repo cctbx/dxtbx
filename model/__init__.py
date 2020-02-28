@@ -6,6 +6,8 @@ import os
 import sys
 from builtins import range
 
+import six.moves.cPickle as pickle
+
 import boost.python
 import cctbx.crystal
 from libtbx.containers import OrderedSet
@@ -13,7 +15,6 @@ from libtbx.utils import format_float_with_standard_uncertainty
 from scitbx import matrix
 from scitbx.array_family import flex
 
-import six.moves.cPickle as pickle
 from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.crystal import CrystalFactory
@@ -815,4 +816,4 @@ class _(object):
         # Inline to avoid recursive imports
         from .experiment_list import ExperimentListFactory
 
-        return ExperimentListFactory.from_serialized_format(str(filename), check_format)
+        return ExperimentListFactory.from_serialized_format(filename, check_format)
