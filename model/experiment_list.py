@@ -9,8 +9,6 @@ import pkg_resources
 import six
 import six.moves.cPickle as pickle
 
-import boost.python
-
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
@@ -748,16 +746,6 @@ class ExperimentListFactory(object):
         # Now try as a pickle file
         return ExperimentListFactory.from_pickle_file(filename)
 
-    @staticmethod
-    def from_file(filename, check_format=True):
-        """Load experiment from file."""
-        return ExperimentListFactory.from_serialized_format(
-            filename, check_format=check_format
-        )
-
-
-@boost.python.inject_into(ExperimentList)
-class _(object):
     @staticmethod
     def from_file(filename, check_format=True):
         """Load experiment from file."""
