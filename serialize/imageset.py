@@ -5,6 +5,7 @@ import os
 from builtins import range
 
 import six.moves.cPickle as pickle
+
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetFactory
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory

@@ -6,11 +6,12 @@ import os
 from builtins import range
 from glob import glob
 
+import pytest
+import six.moves.cPickle as pickle
+
 from scitbx.array_family import flex
 
 import dxtbx
-import pytest
-import six.moves.cPickle as pickle
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSetFactory

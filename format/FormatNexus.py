@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 import h5py
+
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill

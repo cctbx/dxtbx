@@ -4,6 +4,7 @@ import json
 import os
 
 import six
+
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.serialize.imageset import imageset_from_dict
 

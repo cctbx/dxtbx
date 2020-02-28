@@ -1,9 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
-from scitbx.array_family import flex
-
 import pytest
 import six.moves.cPickle as pickle
+
+from scitbx.array_family import flex
+
 from dxtbx.format.FormatHDF5SaclaMPCCD import FormatHDF5SaclaMPCCD
 from dxtbx.format.image import ImageBool
 from dxtbx.model.experiment_list import ExperimentListFactory

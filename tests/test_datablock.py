@@ -6,10 +6,11 @@ import os
 from collections import namedtuple
 from pprint import pprint
 
-import dxtbx.datablock as datablock
 import mock
 import pytest
 import six.moves.cPickle as pickle
+
+import dxtbx.datablock as datablock
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSequence

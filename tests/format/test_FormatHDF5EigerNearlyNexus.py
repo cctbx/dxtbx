@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import pytest
+
 from dxtbx.format.FormatHDF5EigerNearlyNexus import FormatHDF5EigerNearlyNexus
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.model.goniometer import Goniometer

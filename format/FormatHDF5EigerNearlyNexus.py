@@ -4,11 +4,12 @@ import sys
 import uuid
 from builtins import range
 
+import h5py
+import numpy
+
 from iotbx.detectors.eiger import EIGERImage
 from scitbx import matrix
 
-import h5py
-import numpy
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
