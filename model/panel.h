@@ -267,9 +267,9 @@ namespace dxtbx { namespace model {
         scitbx::af::c_grid<2>(slow, fast));
       for (size_t j = 0; j < slow; j++) {
         for (size_t i = 0; i < fast; i++) {
-	  vec3<double> p = get_pixel_lab_coord(vec2<double>(i, j));
-	  double d1 = s0 * p;
-	  double d2 = p * p;
+          vec3<double> p = get_pixel_lab_coord(vec2<double>(i, j));
+          double d1 = s0 * p;
+          double d2 = p * p;
           result(j, i) = d1 * d1 / d2;
         }
       }
