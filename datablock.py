@@ -11,14 +11,13 @@ import os.path
 from builtins import range
 from os.path import abspath, dirname, normpath, splitext
 
-import six
-import six.moves.cPickle as pickle
-
 import libtbx
 from scitbx import matrix
 
 import dxtbx.imageset
 import dxtbx.model
+import six
+import six.moves.cPickle as pickle
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
@@ -941,7 +940,8 @@ class DataBlockFilenameImporter(object):
         find_format = FormatChecker()
 
         format_groups = collections.OrderedDict()
-        #        with progress(total=len(filenames)) as pbar:
+        if format_kwargs is None:
+            format_kwargs = {}
         for filename in to_process:
             # We now have a file, pre-opened by Format.open_file (therefore
             # cached). Determine its type, and prepare to put into a group
@@ -967,7 +967,7 @@ class DataBlockFilenameImporter(object):
                 format_groups.setdefault(format_class, []).append(imageset)
                 logger.debug("Loaded file: %s", filename)
             else:
-                format_object = format_class(filename, format_kwargs=format_kwargs)
+                format_object = format_class(filename, **format_kwargs)
                 meta = ImageMetadataRecord.from_format(format_object)
                 assert meta.filename == filename
 
