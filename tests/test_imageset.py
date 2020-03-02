@@ -557,17 +557,7 @@ def test_multi_panel_gain_map(dials_regression):
 
 
 @pytest.mark.parametrize(
-    "multi_panel,expected_panel_count",
-    (
-        (False, 24),
-        pytest.param(
-            True,
-            120,
-            marks=pytest.mark.xfail(
-                reason="https://github.com/dials/dials/issues/1176"
-            ),
-        ),
-    ),
+    "multi_panel,expected_panel_count", ((False, 24), (True, 120,),),
 )
 def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
     image_path = os.path.join(
