@@ -37,11 +37,12 @@ n_pixels_vertical_gaps = 195 * 7 * 4 * 24
 def test_bad_pixel_mask(
     timestamp, multi_panel, masked_pixel_count, dials_regression, mocker
 ):
-    # Fool the format class into masking out bad modules
-    mocked_timestamp = mocker.patch(
-        "dxtbx.format.FormatCBFMiniPilatusDLS12M.get_pilatus_timestamp"
-    )
-    mocked_timestamp.return_value = timestamp
+    if timestamp is not None:
+        # Fool the format class into masking out bad modules
+        mocked_timestamp = mocker.patch(
+            "dxtbx.format.FormatCBFMiniPilatusDLS12M.get_pilatus_timestamp"
+        )
+        mocked_timestamp.return_value = timestamp
 
     image_path = os.path.join(
         dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
