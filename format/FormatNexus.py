@@ -15,8 +15,8 @@ from dxtbx.format.nexus import (
     GoniometerFactory,
     MaskFactory,
     NXmxReader,
-    ScanFactory,
     detectorgroupdatafactory,
+    generate_scan_model,
     is_nexus_file,
 )
 
@@ -83,7 +83,7 @@ class FormatNexus(FormatHDF5):
     def _setup_gonio_and_scan(self, sample, detector):
         """Set up rotation-specific models"""
         self._goniometer_model = GoniometerFactory(sample).model
-        self._scan_model = ScanFactory(sample, detector).model
+        self._scan_model = generate_scan_model(sample, detector)
 
     def _end(self):
         return
