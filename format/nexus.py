@@ -1102,24 +1102,18 @@ class ScanFactory(object):
         if scan_axis is None:
             scan_axis = obj.handle.file[obj.handle["depends_on"][()]]
 
-        image_range = (1, len(scan_axis))
+        num_images = len(scan_axis)
+        image_range = (1, num_images)
 
         rotn = scan_axis.attrs["transformation_type"] == numpy.string_("rotation")
 
-        if len(scan_axis) > 1:
-            if rotn:
-                oscillation = (float(scan_axis[0]), float(scan_axis[1] - scan_axis[0]))
-            else:
-                # nothing to see here - should really work out how to dig out
-                # the setting for this - but not today
-                oscillation = (0, 0)
-            is_sequence = True
+        if num_images > 1 and rotn:
+            oscillation = (float(scan_axis[0]), float(scan_axis[1] - scan_axis[0]))
         else:
-            oscillation = (float(scan_axis[0]), 0.0)
-            is_sequence = False
+            # If not a rotation, or only one image, => stills, oscillation range = 0
+            oscillation = (float(scan_axis[0]), 0)
 
         # Get the exposure time
-        num_images = len(scan_axis)
         if "frame_time" in detector_obj.handle:
             frame_time = float(detector_obj.handle["frame_time"][()])
             exposure_time = flex.double(num_images, frame_time)
@@ -1130,29 +1124,8 @@ class ScanFactory(object):
             exposure_time = flex.double(num_images, 0)
             epochs = flex.double(num_images, 0)
 
-        if is_sequence is True:
-
-            # Construct the model
-            self.model = Scan(image_range, oscillation, exposure_time, epochs)
-
-        else:
-
-            # if this is not a sequence, then this is stills, in which case... should
-            # we have scans? and, even if we do, we have a small problem in that
-            # this returns a list of scans which even less works...
-
-            self.model = []
-            for i, image in enumerate(range(image_range[0], image_range[1] + 1)):
-                self.model.append(
-                    Scan(
-                        (image, image),
-                        oscillation,
-                        exposure_time[i : i + 1],
-                        epochs[i : i + 1],
-                    )
-                )
-
-            self.model = None
+        # Construct the model
+        self.model = Scan(image_range, oscillation, exposure_time, epochs)
 
 
 class CrystalFactory(object):
