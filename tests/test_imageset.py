@@ -3,17 +3,17 @@ from __future__ import absolute_import, division, print_function
 import os
 from builtins import range
 
-import pytest
-import six.moves.cPickle as pickle
-
 from scitbx.array_family import flex
 
 import dxtbx.format.image
 import dxtbx.format.Registry
 import dxtbx.tests.imagelist
+import pytest
+import six.moves.cPickle as pickle
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import Beam, Detector, Panel
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 @pytest.mark.parametrize(
@@ -554,3 +554,21 @@ def test_multi_panel_gain_map(dials_regression):
     gain_maps = iset.get_gain(0)
     for v, m in zip(gain_values, gain_maps):
         assert m.all_eq(v)
+
+
+@pytest.mark.parametrize(
+    "multi_panel,expected_panel_count", ((False, 24), (True, 120,),),
+)
+def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
+    image_path = os.path.join(
+        dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
+    )
+    experiments = ExperimentListFactory.from_filenames(
+        [image_path], format_kwargs={"multi_panel": multi_panel}
+    )
+    imageset = experiments[0].imageset
+    assert (
+        len(imageset.get_detector())
+        == len(imageset.get_raw_data(0))
+        == expected_panel_count
+    )
