@@ -32,7 +32,10 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
         self.new_row()
         self.rewind_column()
         for item in data:
-            self.set_value(item.encode())
+            try:
+                self.set_value(item.encode())
+            except AttributeError:
+                self.set_value(item)
             if item == ".":
                 self.set_typeofvalue(b"null")
             try:
