@@ -136,7 +136,10 @@ class FullCBFWriter(object):
 
         # the data block is the root cbf node
         cbf = cbf_wrapper()
-        cbf.new_datablock(cbf_root)
+        try:
+            cbf.new_datablock(cbf_root)
+        except TypeError:  # Python 3
+            cbf.new_datablock(cbf_root.encode())
 
         # Each category listed here is preceded by the imageCIF description taken from here:
         # http://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/index.html
@@ -459,7 +462,12 @@ class FullCBFWriter(object):
                 array_names.append(cbf.get_value())
                 cbf.next_row()
             except Exception as e:
-                assert "CBF_NOTFOUND" in e.message
+                try:
+                    e_message = e.message
+                except AttributeError:
+                    e_message = str(e)
+
+                assert "CBF_NOTFOUND" in e_message
                 break
 
         dataisint = flex.bool()
@@ -528,7 +536,10 @@ class FullCBFWriter(object):
                 )
             else:
                 elsize = 8
-
+                try:
+                    byteorder = byteorder.encode()
+                except AttributeError:
+                    pass
                 cbf.set_realarray_wdims_fs(
                     pycbf.CBF_PACKED,
                     binary_id,
@@ -550,6 +561,10 @@ class FullCBFWriter(object):
             cbf = self.get_cbf_handle(index=index, header_only=True)
             self.add_data_to_cbf(cbf, index=index)
 
+        try:
+            filename = filename.encode()
+        except AttributeError:
+            pass
         cbf.write_widefile(
             filename, pycbf.CBF, pycbf.MIME_HEADERS | pycbf.MSG_DIGEST | pycbf.PAD_4K, 0
         )
