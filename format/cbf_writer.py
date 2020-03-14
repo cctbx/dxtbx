@@ -11,6 +11,8 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 
+import six
+
 from scitbx.array_family import flex
 from xfel.cftbx.detector.cspad_cbf_tbx import (
     add_frame_specific_cbf_tables,
@@ -136,9 +138,9 @@ class FullCBFWriter(object):
 
         # the data block is the root cbf node
         cbf = cbf_wrapper()
-        try:
+        if six.PY2:
             cbf.new_datablock(cbf_root)
-        except TypeError:  # Python 3
+        else:
             cbf.new_datablock(cbf_root.encode())
 
         # Each category listed here is preceded by the imageCIF description taken from here:
@@ -462,9 +464,9 @@ class FullCBFWriter(object):
                 array_names.append(cbf.get_value())
                 cbf.next_row()
             except Exception as e:
-                try:
+                if six.PY2:
                     e_message = e.message
-                except AttributeError:
+                else:
                     e_message = str(e)
 
                 assert "CBF_NOTFOUND" in e_message
@@ -536,10 +538,8 @@ class FullCBFWriter(object):
                 )
             else:
                 elsize = 8
-                try:
+                if six.PY3:
                     byteorder = byteorder.encode()
-                except AttributeError:
-                    pass
                 cbf.set_realarray_wdims_fs(
                     pycbf.CBF_PACKED,
                     binary_id,
@@ -561,10 +561,8 @@ class FullCBFWriter(object):
             cbf = self.get_cbf_handle(index=index, header_only=True)
             self.add_data_to_cbf(cbf, index=index)
 
-        try:
+        if six.PY3:
             filename = filename.encode()
-        except AttributeError:
-            pass
         cbf.write_widefile(
             filename, pycbf.CBF, pycbf.MIME_HEADERS | pycbf.MSG_DIGEST | pycbf.PAD_4K, 0
         )
