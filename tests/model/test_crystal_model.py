@@ -596,3 +596,25 @@ def test_set_scan_varying_B_covariance(crystal_class):
         assert cov_B_at_scan_point == cov_B_2d
         cell_sd_at_scan_point = xl.get_cell_parameter_sd_at_scan_point(i)
         assert cell_sd_at_scan_point == pytest.approx(cell_sd)
+
+
+def test_postrefined_cell():
+    xl = Crystal(
+        real_space_a=(10, 0, 0),
+        real_space_b=(0, 11, 0),
+        real_space_c=(0, 0, 12),
+        space_group_symbol="P 1",
+    )
+
+    # This should fail: cannot access postrefined cell before it is set
+    with pytest.raises(RuntimeError):
+        xl.get_unit_cell(postrefined=True)
+        pytest.fail("Postrefined cell not set yet")
+
+    uc1 = xl.get_unit_cell()
+    xl.set_unit_cell(uc1, postrefined=True)
+
+    # Now it is possible to get the cell
+    uc2 = xl.get_unit_cell(postrefined=True)
+
+    assert uc1.is_similar_to(uc2)
