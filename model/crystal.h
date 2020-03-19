@@ -153,7 +153,8 @@ namespace dxtbx { namespace model {
                                const vec3<double> &real_space_b,
                                const vec3<double> &real_space_c) = 0;
     // Set the unit cell parameters
-    virtual void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) = 0;
+    virtual void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell,
+                               bool postrefined = false) = 0;
     // Update the B matrix
     virtual void update_B() = 0;
     // Set the U matrix
@@ -169,7 +170,7 @@ namespace dxtbx { namespace model {
     // @returns the A matrix
     virtual mat3<double> get_A() const = 0;
     // @returns the unit_cell
-    virtual cctbx::uctbx::unit_cell get_unit_cell() const = 0;
+    virtual cctbx::uctbx::unit_cell get_unit_cell(bool postrefined = false) const = 0;
     // @returns the real space vectors
     virtual scitbx::af::shared<vec3<double> > get_real_space_vectors() const = 0;
     // Set the space group
@@ -383,9 +384,13 @@ namespace dxtbx { namespace model {
      *
      * @param unit_cell The updated unit cell
      */
-    void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
-      unit_cell_ = unit_cell;
-      update_B();
+    void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell, bool postrefined=false) {
+      if (postrefined){
+        postrefined_cell_ = unit_cell;
+      } else {
+        unit_cell_ = unit_cell;
+        update_B();
+      }
     }
 
     /**
@@ -461,8 +466,12 @@ namespace dxtbx { namespace model {
     /**
      * @returns the unit_cell
      */
-    cctbx::uctbx::unit_cell get_unit_cell() const {
-      return unit_cell_;
+    cctbx::uctbx::unit_cell get_unit_cell(bool postrefined=false) const {
+      if (postrefined){
+        return postrefined_cell_;
+      } else {
+        return unit_cell_;
+      }
     }
 
     /**
@@ -1028,6 +1037,7 @@ namespace dxtbx { namespace model {
   protected:
     cctbx::sgtbx::space_group space_group_;
     cctbx::uctbx::unit_cell unit_cell_;
+    cctbx::uctbx::unit_cell postrefined_cell_;
     mat3<double> U_;
     mat3<double> B_;
     scitbx::af::shared<mat3<double> > A_at_scan_points_;
