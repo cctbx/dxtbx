@@ -154,7 +154,7 @@ namespace dxtbx { namespace model {
                                const vec3<double> &real_space_c) = 0;
     // Set the unit cell parameters
     virtual void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell,
-                               bool postrefined = false) = 0;
+                               const bool postrefined = false) = 0;
     // Update the B matrix
     virtual void update_B() = 0;
     // Set the U matrix
@@ -384,8 +384,10 @@ namespace dxtbx { namespace model {
      *
      * @param unit_cell The updated unit cell
      */
-    void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell, bool postrefined=false) {
+    void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell,
+                       const bool postrefined=false) {
       if (postrefined){
+        postrefined_cell_is_set_ = true;
         postrefined_cell_ = unit_cell;
       } else {
         unit_cell_ = unit_cell;
@@ -468,6 +470,7 @@ namespace dxtbx { namespace model {
      */
     cctbx::uctbx::unit_cell get_unit_cell(bool postrefined=false) const {
       if (postrefined){
+        DXTBX_ASSERT(postrefined_cell_is_set_);
         return postrefined_cell_;
       } else {
         return unit_cell_;
@@ -1038,6 +1041,7 @@ namespace dxtbx { namespace model {
     cctbx::sgtbx::space_group space_group_;
     cctbx::uctbx::unit_cell unit_cell_;
     cctbx::uctbx::unit_cell postrefined_cell_;
+    bool postrefined_cell_is_set_ = false;
     mat3<double> U_;
     mat3<double> B_;
     scitbx::af::shared<mat3<double> > A_at_scan_points_;

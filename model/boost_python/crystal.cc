@@ -284,14 +284,15 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   inline void CrystalBase_set_unit_cell(CrystalBase &self,
-                                        cctbx::uctbx::unit_cell &unit_cell) {
-    self.set_unit_cell(unit_cell);
+                                        cctbx::uctbx::unit_cell &unit_cell,
+                                        bool postrefined=false) {
+    self.set_unit_cell(unit_cell, postrefined);
   }
 
   void export_crystal() {
     class_<CrystalBase, boost::noncopyable>("CrystalBase", no_init)
       .def("set_unit_cell", CrystalBase_set_unit_cell_real_space_vectors)
-      .def("set_unit_cell", CrystalBase_set_unit_cell)
+      .def("set_unit_cell", CrystalBase_set_unit_cell,(arg("unit_cell"), arg("postrefined") = false))
       .def("update_B", &CrystalBase::update_B)
       .def("set_U", &CrystalBase::set_U)
       .def("get_U", &CrystalBase::get_U)
@@ -299,7 +300,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_B", &CrystalBase::get_B)
       .def("set_A", &CrystalBase::set_A)
       .def("get_A", &CrystalBase::get_A)
-      .def("get_unit_cell", &CrystalBase::get_unit_cell)
+      .def("get_unit_cell", &CrystalBase::get_unit_cell,(arg("postrefined") = false))
       .def("get_real_space_vectors", &CrystalBase::get_real_space_vectors)
       .def("set_space_group", &CrystalBase::set_space_group)
       .def("get_space_group", &CrystalBase::get_space_group)
