@@ -279,6 +279,12 @@ class _(object):
             except RuntimeError:
                 pass
 
+        try:
+            postrefine_cell = self.get_unit_cell(postrefined=True)
+            xl_dict["postrefined_cell"] = postrefine_cell
+        except RuntimeError:
+            pass
+
         return xl_dict
 
     @staticmethod
@@ -336,6 +342,9 @@ class _(object):
             cov_B_at_scan_points.reshape(flex.grid(xl.num_scan_points, 9, 9))
             xl.set_B_covariance_at_scan_points(cov_B_at_scan_points)
 
+        postrefined_cell = d.get("postrefined_cell")
+        if postrefined_cell is not None:
+            xl.set_unit_cell(postrefined_cell, postrefined=True)
         return xl
 
 

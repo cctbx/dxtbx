@@ -712,6 +712,15 @@ namespace dxtbx { namespace model {
       if (!uc_a.is_similar_to(uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
         return false;
       }
+      if (postrefined_cell_is_set_) {
+        bool postrefined = true;
+        cctbx::uctbx::unit_cell uc_a = get_unit_cell(postrefined);
+        cctbx::uctbx::unit_cell uc_b = other.get_unit_cell(postrefined);
+        if (!uc_a.is_similar_to(uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
+          return false;
+        }
+      }
+
 
       // scan varying tests
       if (get_num_scan_points() != other.get_num_scan_points()) {
