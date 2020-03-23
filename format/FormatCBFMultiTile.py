@@ -126,10 +126,13 @@ class FormatCBFMultiTile(FormatCBFFull):
             try:
                 cbf.find_category(b"array_intensities")
                 cbf.find_column(b"undefined_value")
+                cbf.select_row(i)
                 underload = cbf.get_doublevalue()
-                overload = cbf.get_overload(0)
+                overload = cbf.get_overload(i)
                 trusted_range = (underload, overload)
-            except Exception:
+            except Exception as e:
+                if "CBF_NOTFOUND" not in str(e):
+                    raise
                 trusted_range = (0.0, 0.0)
 
             cbf_detector.__swig_destroy__(cbf_detector)

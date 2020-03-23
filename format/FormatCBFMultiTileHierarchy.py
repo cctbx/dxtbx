@@ -163,7 +163,9 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             except RuntimeError as e:
                 assert "DXTBX_ASSERT(D_)" in str(e)
             else:
-                assert False  # shouldn't be reached.  Detector should be initialized only once.
+                assert (
+                    False
+                )  # shouldn't be reached.  Detector should be initialized only once.
         else:
             parent_pg = self._add_panel_group(parent, d)
             pg = parent_pg.add_group()
@@ -208,26 +210,35 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         # as this array of panel names. re-iterate, associating root axes of
         # detector objects with panel names
         detector_axes = []
+        has_sections = cbf.has_sections()
 
         for i in range(len(panel_names)):
             cbf_detector = cbf.construct_detector(i)
             axis0 = cbf_detector.get_detector_surface_axes(0)
             detector_axes.append(axis0)
             cbf_detector.__swig_destroy__(cbf_detector)
-        panel_names_detectororder = []
         cbf.find_category(b"array_structure_list")
+        array_ids_detectororder = []
+        panel_names_detectororder = []
         for detector_axis in detector_axes:
             cbf.find_column(b"axis_set_id")
             cbf.find_row(detector_axis)
-            try:
+            if has_sections:
+                try:
+                    cbf.find_column(
+                        b"array_id"
+                    )  # mandatory, but not always actually there
+                except Exception as e:
+                    if "CBF_NOTFOUND" not in str(e):
+                        raise
+                    cbf.find_column(b"array_section")  # use as backup, non standard
+                array_ids_detectororder.append(cbf.get_value())
                 cbf.find_column(b"array_section_id")
-            except Exception as e:
-                if "CBF_NOTFOUND" not in str(e):
-                    raise e
+            else:
                 cbf.find_column(b"array_id")
             panel_names_detectororder.append(cbf.get_value())
 
-        for panel_name in panel_names:
+        for panel_number, panel_name in enumerate(panel_names):
             cbf_detector = cbf.construct_detector(
                 panel_names_detectororder.index(panel_name)
             )
@@ -273,12 +284,19 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             p.set_local_frame(fast, slow, origin)
 
             try:
+                overload = cbf.get_overload(panel_number)
                 cbf.find_category(b"array_intensities")
+                cbf.find_column(b"array_id")
+                if has_sections:
+                    cbf.find_row(array_ids_detectororder[panel_number])
+                else:
+                    cbf.find_row(panel_name)
                 cbf.find_column(b"undefined_value")
                 underload = cbf.get_doublevalue()
-                overload = cbf.get_overload(0)
                 trusted_range = (underload, overload)
-            except Exception:
+            except Exception as e:
+                if "CBF_NOTFOUND" not in str(e):
+                    raise
                 trusted_range = (0.0, 0.0)
 
             p.set_pixel_size(tuple(map(float, pixel)))

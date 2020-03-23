@@ -360,7 +360,7 @@ def run(argv=None):
 
     # Early exit if no statistics were accumulated.
     if command_line.options.verbose:
-        sys.stderr.write("Processed %d images (%d failed)\n" % (nmemb, nfail))
+        sys.stdout.write("Processed %d images (%d failed)\n" % (nmemb, nfail))
     if nmemb == 0:
         return 0
 
