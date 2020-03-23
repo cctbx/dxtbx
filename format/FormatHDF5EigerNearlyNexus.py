@@ -356,8 +356,9 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         data = NXdata(fixer.handle_orig[entry.data[0].handle.name])
 
         # Construct the models
-        self._beam_model = BeamFactory(beam).model
-        self._detector_model = DetectorFactory(detector, self._beam_model).model
+        self._beam_factory = BeamFactory(beam)
+        self._beam_factory.load_model(0)
+        self._detector_model = DetectorFactory(detector, self._beam_factory.model).model
         self._goniometer_model = GoniometerFactory(sample).model
         self._scan_model = generate_scan_model(sample, detector)
         self._raw_data = DataFactory(data, cached_information=fixer.data_factory_cache)
@@ -375,7 +376,9 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
     def _detector(self):
         return self._detector_model
 
-    def _beam(self):
+    def _beam(self, index=None):
+        self._beam_factory.load_model(index)
+        self._beam_model = self._beam_factory.model
         return self._beam_model
 
     def _scan(self):
@@ -388,7 +391,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         return self._detector()
 
     def get_beam(self, index=None):
-        return self._beam()
+        return self._beam(index)
 
     def get_scan(self, index=None):
         if index is None:

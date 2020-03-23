@@ -535,18 +535,31 @@ class BeamFactory(object):
     A class to create a beam model from NXmx stuff
     """
 
-    def __init__(self, obj, index=None):
-        # Get the items from the NXbeam class
-        wavelength = obj.handle["incident_wavelength"]
-        wavelength_value = wavelength[()]
-        wavelength_units = wavelength.attrs["units"]
+    def __init__(self, obj):
+        self.obj = obj
+        self.model = None
+        self.index = None
 
-        if (
-            index is not None
-            and hasattr(wavelength_value, "__iter__")
-            and len(wavelength_value) > 1
-        ):
-            wavelength_value = wavelength_value[index]
+    def load_model(self, index=None):
+        # Cached model
+        if self.model is not None and index == self.index:
+            return
+
+        # Get the items from the NXbeam class
+        wavelength = self.obj.handle["incident_wavelength"]
+        wavelength_weights = self.obj.handle.get("incident_wavelength_weights")
+        if wavelength.shape in (tuple(), (1,)):
+            wavelength_value = wavelength[()]
+        elif len(wavelength.shape) == 1:
+            if wavelength_weights is None:
+                if index is None:
+                    index = 0
+                wavelength_value = wavelength[index]
+            else:
+                raise NotImplementedError("Spectra not implemented")
+        else:
+            raise NotImplementedError("Spectra not implemented")
+        wavelength_units = wavelength.attrs["units"]
 
         # Convert wavelength to Angstroms
         wavelength_value = float(
@@ -554,6 +567,7 @@ class BeamFactory(object):
         )
 
         # Construct the beam model
+        self.index = index
         self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
 
 

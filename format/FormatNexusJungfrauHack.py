@@ -62,9 +62,10 @@ class FormatNexusJungfrauHack(FormatNexus):
         data = entry.data[0]
 
         # Construct the models
-        self._beam_model = BeamFactory(beam).model
+        self._beam_factory = BeamFactory(beam).model
+        self._beam_factory.load_model(0)
 
-        self._setup_detector(detector, self._beam_model)
+        self._setup_detector(detector, self._beam_factory.model)
         self._setup_gonio_and_scan(sample, detector)
 
         if self._scan_model:
@@ -222,14 +223,8 @@ class FormatNexusJungfrauHack(FormatNexus):
         return self._detector_model
 
     def _beam(self, index=None):
-        if index is None:
-            index = 0
-
-        entry = self._reader.entries[0]
-        sample = entry.samples[0]
-        beam = sample.beams[0]
-
-        self._beam_model = BeamFactory(beam, index).model
+        self._beam_factory.load_model(index)
+        self._beam_model = self._beam_factory.model
         return self._beam_model
 
     def _scan(self):
@@ -242,7 +237,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         return self._detector()
 
     def get_beam(self, index=None):
-        return self._beam()
+        return self._beam(index)
 
     def get_scan(self, index=None):
         if index is None:
