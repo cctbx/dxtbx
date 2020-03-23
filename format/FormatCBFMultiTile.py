@@ -135,6 +135,15 @@ class FormatCBFMultiTile(FormatCBFFull):
                     raise
                 trusted_range = (0.0, 0.0)
 
+            try:
+                cbf.find_column(b"gain")
+                cbf.select_row(i)
+                gain = cbf.get_doublevalue()
+            except Exception as e:
+                if "CBF_NOTFOUND" not in str(e):
+                    raise
+                gain = 1.0
+
             cbf_detector.__swig_destroy__(cbf_detector)
             del cbf_detector
 
@@ -143,6 +152,7 @@ class FormatCBFMultiTile(FormatCBFFull):
             p.set_pixel_size(tuple(map(float, pixel)))
             p.set_image_size(size)
             p.set_trusted_range(tuple(map(float, trusted_range)))
+            p.set_gain(gain)
             # p.set_px_mm_strategy(px_mm) FIXME
 
         return d
