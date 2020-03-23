@@ -54,7 +54,8 @@ class FormatNexus(FormatHDF5):
         data = entry.data[0]
 
         # Construct the models
-        self._beam_model = BeamFactory(beam).model
+        self._beam_factory = BeamFactory(beam)
+        self._beam_factory.load_model(0)
 
         self._setup_gonio_and_scan(sample, detector)
 
@@ -72,11 +73,13 @@ class FormatNexus(FormatHDF5):
                 len(reader.entries[0].instruments[0].detectors[0].modules) == 1
             ), "Currently only supports 1 NXdetector_module unless in a detector group"
 
-            self._detector_model = DetectorFactory(detector, self._beam_model).model
+            self._detector_model = DetectorFactory(
+                detector, self._beam_factory.model
+            ).model
             self._raw_data = DataFactory(data, max_size=num_images)
         else:
             self._detector_model = DetectorFactoryFromGroup(
-                instrument, self._beam_model
+                instrument, self._beam_factory.model
             ).model
             self._raw_data = detectorgroupdatafactory(data, instrument)
 
@@ -95,14 +98,8 @@ class FormatNexus(FormatHDF5):
         return self._detector_model
 
     def _beam(self, index=None):
-        if index is None:
-            index = 0
-
-        entry = self._reader.entries[0]
-        sample = entry.samples[0]
-        beam = sample.beams[0]
-
-        self._beam_model = BeamFactory(beam, index).model
+        self._beam_factory.load_model(index)
+        self._beam_model = self._beam_factory.model
         return self._beam_model
 
     def _scan(self):
@@ -115,7 +112,7 @@ class FormatNexus(FormatHDF5):
         return self._detector()
 
     def get_beam(self, index=None):
-        return self._beam()
+        return self._beam(index)
 
     def get_scan(self, index=None):
         if index is None:
