@@ -208,6 +208,7 @@ class FullCBFWriter(object):
                 [panel.get_trusted_range() for panel in detector],
                 diffrn_id,
                 False,
+                gain=[panel.get_gain() for panel in detector],
             )
 
         """Data items in the AXIS category record the information required

@@ -115,6 +115,18 @@ def find_undefined_value(cbf_handle):
     return cbf_handle.get_doublevalue()
 
 
+def find_gain_value(cbf_handle):
+    """Given a cbf handle, get the gain value."""
+    try:
+        cbf_handle.find_category(b"array_intensities")
+        cbf_handle.find_column(b"gain")
+    except Exception as e:
+        if "CBF_NOTFOUND" not in str(e):
+            raise
+        return 1.0
+    return cbf_handle.get_doublevalue()
+
+
 class detector_helper_sensors(object):
     """A helper class which allows enumeration of detector sensor technologies
     which should help in identifying specific detectors when needed. These are
