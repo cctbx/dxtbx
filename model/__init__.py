@@ -279,6 +279,10 @@ class _(object):
             except RuntimeError:
                 pass
 
+        if self.has_recalc_unit_cell():
+            recalc_unit_cell = self.get_recalc_unit_cell()
+            xl_dict["recalc_unit_cell"] = recalc_unit_cell
+
         return xl_dict
 
     @staticmethod
@@ -335,6 +339,10 @@ class _(object):
             cov_B_at_scan_points = flex.double(cov_B_at_scan_points).as_1d()
             cov_B_at_scan_points.reshape(flex.grid(xl.num_scan_points, 9, 9))
             xl.set_B_covariance_at_scan_points(cov_B_at_scan_points)
+
+        recalc_unit_cell = d.get("recalc_unit_cell")
+        if recalc_unit_cell is not None:
+            xl.set_recalc_unit_cell(recalc_unit_cell)
 
         return xl
 

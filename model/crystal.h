@@ -710,6 +710,15 @@ namespace dxtbx { namespace model {
         return false;
       }
 
+      // recalculated unit cell test, if both exist
+      if (has_recalc_cell_ && other.has_recalc_unit_cell()) {
+        cctbx::uctbx::unit_cell uc_a = get_recalc_unit_cell();
+        cctbx::uctbx::unit_cell uc_b = other.get_recalc_unit_cell();
+        if (!uc_a.is_similar_to(uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
+          return false;
+        }
+      }
+
       // scan varying tests
       if (get_num_scan_points() != other.get_num_scan_points()) {
         return false;
@@ -1035,6 +1044,7 @@ namespace dxtbx { namespace model {
     }
 
     void set_recalc_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
+      has_recalc_cell_ = true;
       recalc_unit_cell_ = unit_cell;
     }
 
