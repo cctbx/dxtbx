@@ -75,3 +75,15 @@ def test_crystal_with_scan_points(example_crystal):
             assert abs(e1 - e2) <= eps
 
     assert c1 == c2
+
+
+def test_crystal_with_recalculated_cell(example_crystal):
+    c1 = Crystal(**example_crystal)
+    uc = c1.get_unit_cell()
+    c1.set_recalc_unit_cell(uc)
+
+    d = c1.to_dict()
+    c2 = CrystalFactory.from_dict(d)
+
+    assert c1.get_recalc_unit_cell().is_similar_to(c2.get_recalc_unit_cell())
+    assert c1 == c2

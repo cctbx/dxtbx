@@ -596,3 +596,26 @@ def test_set_scan_varying_B_covariance(crystal_class):
         assert cov_B_at_scan_point == cov_B_2d
         cell_sd_at_scan_point = xl.get_cell_parameter_sd_at_scan_point(i)
         assert cell_sd_at_scan_point == pytest.approx(cell_sd)
+
+
+def test_recalculated_cell():
+    xl = Crystal(
+        real_space_a=(10, 0, 0),
+        real_space_b=(0, 11, 0),
+        real_space_c=(0, 0, 12),
+        space_group_symbol="P 1",
+    )
+
+    assert not xl.has_recalc_unit_cell()
+
+    uc1 = xl.get_unit_cell()
+    xl.set_recalc_unit_cell(uc1)
+    assert xl.has_recalc_unit_cell()
+
+    uc2 = xl.get_recalc_unit_cell()
+    assert uc1.is_similar_to(uc2)
+
+    xl.set_recalc_cell_parameter_sd((0.1,) * 6)
+
+    for val in xl.get_recalc_cell_parameter_sd():
+        assert val == 0.1
