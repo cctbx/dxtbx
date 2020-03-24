@@ -238,7 +238,16 @@ namespace dxtbx { namespace model {
     virtual void calc_cell_parameter_sd() = 0;
     // Reset unit cell errors
     virtual void reset_unit_cell_errors() = 0;
+    // Access recalculated unit cell, set e.g. by postrefinement
+    virtual void set_recalc_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) = 0;
+    virtual cctbx::uctbx::unit_cell get_recalc_unit_cell() const = 0;
+    virtual void set_recalc_cell_parameter_sd(
+      const scitbx::af::small<double, 6> &unit_cell_sd
+    ) = 0;
+    virtual scitbx::af::small<double, 6> get_recalc_cell_parameter_sd() = 0;
+    virtual bool has_recalc_unit_cell() const = 0;
   };
+
 
   /**
    * Simple model for the crystal lattice geometry and symmetry
@@ -1025,15 +1034,40 @@ namespace dxtbx { namespace model {
       cell_volume_sd_ = 0;
     }
 
+    void set_recalc_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
+      recalc_unit_cell_ = unit_cell;
+    }
+
+    cctbx::uctbx::unit_cell get_recalc_unit_cell() const {
+      return recalc_unit_cell_;
+    }
+
+    void set_recalc_cell_parameter_sd(const scitbx::af::small<double, 6> &unit_cell_sd)
+    {
+      recalc_cell_sd_ = unit_cell_sd;
+    }
+
+    scitbx::af::small<double, 6> get_recalc_cell_parameter_sd() {
+      return recalc_cell_sd_;
+    }
+
+    bool has_recalc_unit_cell() const {
+      return has_recalc_cell_;
+    }
+
+
   protected:
     cctbx::sgtbx::space_group space_group_;
     cctbx::uctbx::unit_cell unit_cell_;
+    cctbx::uctbx::unit_cell recalc_unit_cell_;
     mat3<double> U_;
     mat3<double> B_;
     scitbx::af::shared<mat3<double> > A_at_scan_points_;
     scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B_;
     scitbx::af::versa<double, scitbx::af::c_grid<3> > cov_B_at_scan_points_;
     scitbx::af::small<double, 6> cell_sd_;
+    scitbx::af::small<double, 6> recalc_cell_sd_;
+    bool has_recalc_cell_ = false;
     double cell_volume_sd_;
   };
 
