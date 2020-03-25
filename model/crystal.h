@@ -1076,7 +1076,7 @@ namespace dxtbx { namespace model {
     scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B_;
     scitbx::af::versa<double, scitbx::af::c_grid<3> > cov_B_at_scan_points_;
     scitbx::af::small<double, 6> cell_sd_;
-    scitbx::af::small<double, 6> recalc_cell_sd_;
+    scitbx::af::small<double, 6> recalc_cell_sd_ = scitbx::af::small<double, 6>();
     bool has_recalc_cell_ = false;
     double cell_volume_sd_;
   };
