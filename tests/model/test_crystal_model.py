@@ -617,5 +617,4 @@ def test_recalculated_cell():
 
     xl.set_recalc_cell_parameter_sd((0.1,) * 6)
 
-    for val in xl.get_recalc_cell_parameter_sd():
-        assert val == 0.1
+    assert xl.get_recalc_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
