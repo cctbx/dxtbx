@@ -743,6 +743,8 @@ class ExperimentListFactory(object):
         # First try as a JSON file
         try:
             return ExperimentListFactory.from_json_file(filename, check_format)
+        except FileNotFoundError:
+            raise
         except Exception:
             pass
 
