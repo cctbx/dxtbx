@@ -238,7 +238,8 @@ namespace dxtbx { namespace model {
     virtual void calc_cell_parameter_sd() = 0;
     // Reset unit cell errors
     virtual void reset_unit_cell_errors() = 0;
-    // Access recalculated unit cell, set e.g. by postrefinement
+    // Access recalculated unit cell, intended for use by post-integration
+    // refinement algorithms, such as that of dials.two_theta_refine
     virtual void set_recalc_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) = 0;
     virtual cctbx::uctbx::unit_cell get_recalc_unit_cell() const = 0;
     virtual void set_recalc_cell_parameter_sd(
