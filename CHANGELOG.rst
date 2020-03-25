@@ -1,3 +1,13 @@
+DIALS 2.2 (2020-03-15)
+======================
+
+Bugfixes
+--------
+
+- Fix spot-finding on images with file names ending in '0000.cbf' (#133)
+- Fixed imageset slicing for image sets starting from image 0 (#141)
+
+
 DIALS 2.1 (2019-12-16)
 ======================
 

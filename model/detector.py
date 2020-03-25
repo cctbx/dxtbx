@@ -11,6 +11,7 @@ import pycbf
 from dxtbx.model.detector_helpers import (
     detector_helper_sensors,
     find_undefined_value,
+    find_gain_value,
     set_detector_distance,
     set_mosflm_beam_centre,
     set_slow_fast_beam_centre_mm,
@@ -741,6 +742,8 @@ class DetectorFactory(object):
         except Exception:
             trusted_range = (0.0, 1.0e6)
 
+        gain = find_gain_value(cbf_handle)
+
         cbf_detector.__swig_destroy__(cbf_detector)
         del cbf_detector
 
@@ -752,6 +755,7 @@ class DetectorFactory(object):
             pixel,
             size,
             trusted_range,
+            gain=gain,
         )
 
     @staticmethod

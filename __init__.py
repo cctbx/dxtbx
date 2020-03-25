@@ -3,10 +3,18 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 import sys
+import warnings
 
 import libtbx.load_env
 
 import dxtbx.format.Registry
+
+if sys.version_info.major == 2:
+    warnings.warn(
+        "Python 2 is no longer fully supported. Please consider using the DIALS 2.2 release branch. "
+        "For more information on Python 2.7 support please go to https://github.com/dials/dials/issues/1175.",
+        DeprecationWarning,
+    )
 
 # Set up the plugin path for HDF5 to pick up compression plugins.
 plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
