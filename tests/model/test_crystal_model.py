@@ -606,12 +606,13 @@ def test_recalculated_cell():
         space_group_symbol="P 1",
     )
 
-    assert not xl.has_recalc_unit_cell()
+    assert not xl._has_recalc_unit_cell()
+    assert xl.get_recalc_unit_cell() is None
 
     uc1 = xl.get_unit_cell()
     uc2 = uctbx.unit_cell((10, 11, 10, 90, 90, 90))
     xl.set_recalc_unit_cell(uc2)
-    assert xl.has_recalc_unit_cell()
+    assert xl._has_recalc_unit_cell()
 
     uc3 = xl.get_recalc_unit_cell()
     assert not uc1.is_similar_to(uc2)

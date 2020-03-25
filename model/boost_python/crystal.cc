@@ -349,10 +349,10 @@ namespace dxtbx { namespace model { namespace boost_python {
            &CrystalBase::get_cell_parameter_sd_at_scan_point)
       .def("reset_unit_cell_errors", &CrystalBase::reset_unit_cell_errors)
       .def("set_recalc_unit_cell", &CrystalBase_set_recalc_unit_cell)
-      .def("get_recalc_unit_cell", &CrystalBase::get_recalc_unit_cell)
+      .def("_get_recalc_unit_cell", &CrystalBase::get_recalc_unit_cell)
       .def("set_recalc_cell_parameter_sd", &CrystalBase_set_recalc_cell_parameter_sd)
       .def("get_recalc_cell_parameter_sd", &CrystalBase::get_recalc_cell_parameter_sd)
-      .def("has_recalc_unit_cell", &CrystalBase::has_recalc_unit_cell)
+      .def("_has_recalc_unit_cell", &CrystalBase::has_recalc_unit_cell)
       .def("__eq__", &CrystalBase::operator==)
       .def("__ne__", &CrystalBase::operator!=);
 

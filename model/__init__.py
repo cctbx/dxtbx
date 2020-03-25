@@ -215,8 +215,10 @@ class _(object):
                     msg.append("    A = UB:    " + amat[0])
                     msg.append("               " + amat[1])
                     msg.append("               " + amat[2])
-        if self.has_recalc_unit_cell():
-            uc = self.get_recalc_unit_cell().parameters()
+
+        uc = self.get_recalc_unit_cell()
+        if uc is not None:
+            uc = uc.parameters()
             uc_sd = self.get_recalc_cell_parameter_sd()
             if len(uc_sd) != 0:
                 cell_str = [
@@ -294,8 +296,8 @@ class _(object):
             except RuntimeError:
                 pass
 
-        if self.has_recalc_unit_cell():
-            recalc_unit_cell = self.get_recalc_unit_cell()
+        recalc_unit_cell = self.get_recalc_unit_cell()
+        if recalc_unit_cell is not None:
             recalc_cell_parameter_sd = self.get_recalc_cell_parameter_sd()
             xl_dict["recalc_unit_cell"] = recalc_unit_cell.parameters()
             xl_dict["recalc_cell_parameter_sd"] = recalc_cell_parameter_sd
@@ -366,6 +368,12 @@ class _(object):
             xl.set_recalc_cell_parameter_sd(recalc_cell_parameter_sd)
 
         return xl
+
+    def get_recalc_unit_cell(self):
+        if self._has_recalc_unit_cell():
+            return self._get_recalc_unit_cell()
+        else:
+            return None
 
 
 @boost.python.inject_into(MosaicCrystalKabsch2010)
