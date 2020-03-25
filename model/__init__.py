@@ -281,7 +281,9 @@ class _(object):
 
         if self.has_recalc_unit_cell():
             recalc_unit_cell = self.get_recalc_unit_cell()
+            recalc_cell_parameter_sd = self.get_recalc_cell_parameter_sd()
             xl_dict["recalc_unit_cell"] = recalc_unit_cell
+            xl_dict["recalc_cell_parameter_sd"] = recalc_cell_parameter_sd
 
         return xl_dict
 
@@ -343,6 +345,10 @@ class _(object):
         recalc_unit_cell = d.get("recalc_unit_cell")
         if recalc_unit_cell is not None:
             xl.set_recalc_unit_cell(recalc_unit_cell)
+
+        recalc_cell_parameter_sd = d.get("recalc_cell_parameter_sd")
+        if recalc_cell_parameter_sd is not None:
+            xl.set_recalc_cell_parameter_sd(recalc_cell_parameter_sd)
 
         return xl
 
