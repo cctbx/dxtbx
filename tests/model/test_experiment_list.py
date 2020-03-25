@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import errno
 import os
 from builtins import range
 from glob import glob
@@ -801,10 +802,11 @@ def compare_experiment(exp1, exp2):
 def test_experimentlist_from_file(dials_regression, tmpdir):
     # With the default check_format=True this file should fail to load with an
     # appropriate error as we can't find the images on disk
-    with pytest.raises(FileNotFoundError) as e:
+    with pytest.raises(IOError) as e:
         exp_list = ExperimentList.from_file(
             os.path.join(dials_regression, "experiment_test_data", "experiment_1.json")
         )
+    assert e.value.errno == errno.ENOENT
     assert "No such file or directory" in str(e.value)
     assert "centroid_0001.cbf" in str(e.value)
 
