@@ -10,6 +10,7 @@ import six.moves.cPickle as pickle
 
 import boost.python
 import cctbx.crystal
+import cctbx.uctbx
 from libtbx.containers import OrderedSet
 from libtbx.utils import format_float_with_standard_uncertainty
 from scitbx import matrix
@@ -214,6 +215,20 @@ class _(object):
                     msg.append("    A = UB:    " + amat[0])
                     msg.append("               " + amat[1])
                     msg.append("               " + amat[2])
+        if self.has_recalc_unit_cell():
+            uc = self.get_recalc_unit_cell().parameters()
+            uc_sd = self.get_recalc_cell_parameter_sd()
+            if len(uc_sd) != 0:
+                cell_str = [
+                    format_float_with_standard_uncertainty(v, e, minimum=1.0e-5)
+                    for (v, e) in zip(uc, uc_sd)
+                ]
+                msg.append("    Recalculated unit cell: (" + ", ".join(cell_str) + ")")
+            else:
+                msg.append(
+                    "    Recalculated unit cell: "
+                    + "(%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f)" % uc
+                )
         return "\n".join(msg)
 
     def __str__(self):
@@ -282,7 +297,7 @@ class _(object):
         if self.has_recalc_unit_cell():
             recalc_unit_cell = self.get_recalc_unit_cell()
             recalc_cell_parameter_sd = self.get_recalc_cell_parameter_sd()
-            xl_dict["recalc_unit_cell"] = recalc_unit_cell
+            xl_dict["recalc_unit_cell"] = recalc_unit_cell.parameters()
             xl_dict["recalc_cell_parameter_sd"] = recalc_cell_parameter_sd
 
         return xl_dict
@@ -344,7 +359,7 @@ class _(object):
 
         recalc_unit_cell = d.get("recalc_unit_cell")
         if recalc_unit_cell is not None:
-            xl.set_recalc_unit_cell(recalc_unit_cell)
+            xl.set_recalc_unit_cell(cctbx.uctbx.unit_cell(recalc_unit_cell))
 
         recalc_cell_parameter_sd = d.get("recalc_cell_parameter_sd")
         if recalc_cell_parameter_sd is not None:
