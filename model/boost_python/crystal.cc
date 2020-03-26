@@ -291,18 +291,19 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   inline void CrystalBase_set_recalc_unit_cell(CrystalBase &self,
-                                        cctbx::uctbx::unit_cell &unit_cell) {
+                                               cctbx::uctbx::unit_cell &unit_cell) {
     self.set_recalc_unit_cell(unit_cell);
   }
 
-  inline void CrystalBase_set_recalc_cell_parameter_sd(CrystalBase &self,
-      const scitbx::af::small<double, 6> &unit_cell_sd) {
+  inline void CrystalBase_set_recalc_cell_parameter_sd(
+    CrystalBase &self,
+    const scitbx::af::small<double, 6> &unit_cell_sd) {
     self.set_recalc_cell_parameter_sd(unit_cell_sd);
   }
 
   void export_crystal() {
     // Expose the optional values
-    to_and_from_python<boost::optional<cctbx::uctbx::unit_cell > >();
+    to_and_from_python<boost::optional<cctbx::uctbx::unit_cell> >();
 
     class_<CrystalBase, boost::noncopyable>("CrystalBase", no_init)
       .def("set_unit_cell", CrystalBase_set_unit_cell_real_space_vectors)

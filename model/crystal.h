@@ -243,11 +243,9 @@ namespace dxtbx { namespace model {
     virtual void set_recalc_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) = 0;
     virtual boost::optional<cctbx::uctbx::unit_cell> get_recalc_unit_cell() const = 0;
     virtual void set_recalc_cell_parameter_sd(
-      const scitbx::af::small<double, 6> &unit_cell_sd
-    ) = 0;
+      const scitbx::af::small<double, 6> &unit_cell_sd) = 0;
     virtual scitbx::af::small<double, 6> get_recalc_cell_parameter_sd() = 0;
   };
-
 
   /**
    * Simple model for the crystal lattice geometry and symmetry
@@ -712,9 +710,11 @@ namespace dxtbx { namespace model {
 
       // recalculated unit cell test, if both exist
       boost::optional<cctbx::uctbx::unit_cell> recalc_uc_a = get_recalc_unit_cell();
-      boost::optional<cctbx::uctbx::unit_cell> recalc_uc_b = other.get_recalc_unit_cell();
+      boost::optional<cctbx::uctbx::unit_cell> recalc_uc_b =
+        other.get_recalc_unit_cell();
       if (recalc_uc_a && recalc_uc_b) {
-        if (!recalc_uc_a->is_similar_to(*recalc_uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
+        if (!recalc_uc_a->is_similar_to(
+              *recalc_uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
           return false;
         }
       }
@@ -1051,15 +1051,14 @@ namespace dxtbx { namespace model {
       return recalc_unit_cell_;
     }
 
-    void set_recalc_cell_parameter_sd(const scitbx::af::small<double, 6> &unit_cell_sd)
-    {
+    void set_recalc_cell_parameter_sd(
+      const scitbx::af::small<double, 6> &unit_cell_sd) {
       recalc_cell_sd_ = unit_cell_sd;
     }
 
     scitbx::af::small<double, 6> get_recalc_cell_parameter_sd() {
       return recalc_cell_sd_;
     }
-
 
   protected:
     cctbx::sgtbx::space_group space_group_;
