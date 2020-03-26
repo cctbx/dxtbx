@@ -169,10 +169,10 @@ class _(object):
                 format_float_with_standard_uncertainty(v, e, minimum=1.0e-5)
                 for (v, e) in zip(uc, uc_sd)
             ]
-            msg.append("    Unit cell: (" + ", ".join(cell_str) + ")")
+            msg.append("    Unit cell: " + ", ".join(cell_str))
         else:
             msg.append(
-                "    Unit cell: " + "(%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f)" % uc
+                "    Unit cell: " + "%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f" % uc
             )
         msg.append("    Space group: " + sg)
         msg.append("    U matrix:  " + umat[0])
@@ -204,7 +204,7 @@ class _(object):
                     msg.append("  Scan point #%i:" % (i + 1))
                     msg.append(
                         "    Unit cell: "
-                        + "(%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f)" % uc
+                        + "%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f" % uc
                     )
                     msg.append("    U matrix:  " + umat[0])
                     msg.append("               " + umat[1])
@@ -225,7 +225,7 @@ class _(object):
                     format_float_with_standard_uncertainty(v, e, minimum=1.0e-5)
                     for (v, e) in zip(uc, uc_sd)
                 ]
-                msg.append("    Recalculated unit cell: (" + ", ".join(cell_str) + ")")
+                msg.append("    Recalculated unit cell: " + ", ".join(cell_str))
             else:
                 msg.append(
                     "    Recalculated unit cell: "

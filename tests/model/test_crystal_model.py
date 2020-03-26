@@ -152,7 +152,7 @@ def test_crystal_model():
         str(model).replace("-0.0000", " 0.0000")
         == """\
 Crystal:
-    Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
+    Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
     U matrix:  {{ 0.4330, -0.7500,  0.5000},
                 { 0.7891,  0.0474, -0.6124},
@@ -332,7 +332,7 @@ def test_MosaicCrystalKabsch2010():
         str(mosaic_model).replace("-0.0000", " 0.0000")
         == """\
 Crystal:
-    Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
+    Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
     U matrix:  {{ 1.0000,  0.0000,  0.0000},
                 { 0.0000,  1.0000,  0.0000},
@@ -378,7 +378,7 @@ def test_MosaicCrystalSauter2014():
         str(mosaic_model).replace("-0.0000", " 0.0000")
         == """\
 Crystal:
-    Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
+    Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
     U matrix:  {{ 1.0000,  0.0000,  0.0000},
                 { 0.0000,  1.0000,  0.0000},
@@ -620,6 +620,6 @@ def test_recalculated_cell():
     assert xl.get_recalc_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
 
     assert str(xl).splitlines()[-1] == (
-        "    Recalculated unit cell: (10.00(10)"
-        ", 11.00(10), 10.00(10), 90.00(10), 90.00(10), 90.00(10))"
+        "    Recalculated unit cell: 10.00(10)"
+        ", 11.00(10), 10.00(10), 90.00(10), 90.00(10), 90.00(10)"
     )
