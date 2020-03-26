@@ -606,18 +606,18 @@ def test_recalculated_cell():
         space_group_symbol="P 1",
     )
 
-    assert xl.get_recalc_unit_cell() is None
+    assert xl.get_recalculated_unit_cell() is None
 
     uc1 = xl.get_unit_cell()
     uc2 = uctbx.unit_cell((10, 11, 10, 90, 90, 90))
-    xl.set_recalc_unit_cell(uc2)
-    uc3 = xl.get_recalc_unit_cell()
+    xl.set_recalculated_unit_cell(uc2)
+    uc3 = xl.get_recalculated_unit_cell()
     assert uc3 is not None
     assert not uc1.is_similar_to(uc2)
     assert uc2.is_similar_to(uc3)
 
-    xl.set_recalc_cell_parameter_sd((0.1,) * 6)
-    assert xl.get_recalc_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
+    xl.set_recalculated_cell_parameter_sd((0.1,) * 6)
+    assert xl.get_recalculated_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
 
     assert str(xl).splitlines()[-1] == (
         "    Recalculated unit cell: 10.00(10)"

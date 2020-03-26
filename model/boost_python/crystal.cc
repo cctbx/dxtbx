@@ -290,15 +290,15 @@ namespace dxtbx { namespace model { namespace boost_python {
     self.set_unit_cell(unit_cell);
   }
 
-  inline void CrystalBase_set_recalc_unit_cell(CrystalBase &self,
+  inline void CrystalBase_set_recalculated_unit_cell(CrystalBase &self,
                                                cctbx::uctbx::unit_cell &unit_cell) {
-    self.set_recalc_unit_cell(unit_cell);
+    self.set_recalculated_unit_cell(unit_cell);
   }
 
-  inline void CrystalBase_set_recalc_cell_parameter_sd(
+  inline void CrystalBase_set_recalculated_cell_parameter_sd(
     CrystalBase &self,
     const scitbx::af::small<double, 6> &unit_cell_sd) {
-    self.set_recalc_cell_parameter_sd(unit_cell_sd);
+    self.set_recalculated_cell_parameter_sd(unit_cell_sd);
   }
 
   void export_crystal() {
@@ -354,10 +354,10 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_cell_parameter_sd_at_scan_point",
            &CrystalBase::get_cell_parameter_sd_at_scan_point)
       .def("reset_unit_cell_errors", &CrystalBase::reset_unit_cell_errors)
-      .def("set_recalc_unit_cell", &CrystalBase_set_recalc_unit_cell)
-      .def("get_recalc_unit_cell", &CrystalBase::get_recalc_unit_cell)
-      .def("set_recalc_cell_parameter_sd", &CrystalBase_set_recalc_cell_parameter_sd)
-      .def("get_recalc_cell_parameter_sd", &CrystalBase::get_recalc_cell_parameter_sd)
+      .def("set_recalculated_unit_cell", &CrystalBase_set_recalculated_unit_cell)
+      .def("get_recalculated_unit_cell", &CrystalBase::get_recalculated_unit_cell)
+      .def("set_recalculated_cell_parameter_sd", &CrystalBase_set_recalculated_cell_parameter_sd)
+      .def("get_recalculated_cell_parameter_sd", &CrystalBase::get_recalculated_cell_parameter_sd)
       .def("__eq__", &CrystalBase::operator==)
       .def("__ne__", &CrystalBase::operator!=);
 

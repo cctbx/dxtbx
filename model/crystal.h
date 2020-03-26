@@ -240,11 +240,11 @@ namespace dxtbx { namespace model {
     virtual void reset_unit_cell_errors() = 0;
     // Access recalculated unit cell, intended for use by post-integration
     // refinement algorithms, such as that of dials.two_theta_refine
-    virtual void set_recalc_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) = 0;
-    virtual boost::optional<cctbx::uctbx::unit_cell> get_recalc_unit_cell() const = 0;
-    virtual void set_recalc_cell_parameter_sd(
+    virtual void set_recalculated_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) = 0;
+    virtual boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell() const = 0;
+    virtual void set_recalculated_cell_parameter_sd(
       const scitbx::af::small<double, 6> &unit_cell_sd) = 0;
-    virtual scitbx::af::small<double, 6> get_recalc_cell_parameter_sd() = 0;
+    virtual scitbx::af::small<double, 6> get_recalculated_cell_parameter_sd() = 0;
   };
 
   /**
@@ -709,12 +709,12 @@ namespace dxtbx { namespace model {
       }
 
       // recalculated unit cell test, if both exist
-      boost::optional<cctbx::uctbx::unit_cell> recalc_uc_a = get_recalc_unit_cell();
-      boost::optional<cctbx::uctbx::unit_cell> recalc_uc_b =
-        other.get_recalc_unit_cell();
-      if (recalc_uc_a && recalc_uc_b) {
-        if (!recalc_uc_a->is_similar_to(
-              *recalc_uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_uc_a = get_recalculated_unit_cell();
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_uc_b =
+        other.get_recalculated_unit_cell();
+      if (recalculated_uc_a && recalculated_uc_b) {
+        if (!recalculated_uc_a->is_similar_to(
+              *recalculated_uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
           return false;
         }
       }
@@ -1043,34 +1043,34 @@ namespace dxtbx { namespace model {
       cell_volume_sd_ = 0;
     }
 
-    void set_recalc_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
-      recalc_unit_cell_ = unit_cell;
+    void set_recalculated_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
+      recalculated_unit_cell_ = unit_cell;
     }
 
-    boost::optional<cctbx::uctbx::unit_cell> get_recalc_unit_cell() const {
-      return recalc_unit_cell_;
+    boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell() const {
+      return recalculated_unit_cell_;
     }
 
-    void set_recalc_cell_parameter_sd(
+    void set_recalculated_cell_parameter_sd(
       const scitbx::af::small<double, 6> &unit_cell_sd) {
-      recalc_cell_sd_ = unit_cell_sd;
+      recalculated_cell_sd_ = unit_cell_sd;
     }
 
-    scitbx::af::small<double, 6> get_recalc_cell_parameter_sd() {
-      return recalc_cell_sd_;
+    scitbx::af::small<double, 6> get_recalculated_cell_parameter_sd() {
+      return recalculated_cell_sd_;
     }
 
   protected:
     cctbx::sgtbx::space_group space_group_;
     cctbx::uctbx::unit_cell unit_cell_;
-    boost::optional<cctbx::uctbx::unit_cell> recalc_unit_cell_ = boost::none;
+    boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell_ = boost::none;
     mat3<double> U_;
     mat3<double> B_;
     scitbx::af::shared<mat3<double> > A_at_scan_points_;
     scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B_;
     scitbx::af::versa<double, scitbx::af::c_grid<3> > cov_B_at_scan_points_;
     scitbx::af::small<double, 6> cell_sd_;
-    scitbx::af::small<double, 6> recalc_cell_sd_ = scitbx::af::small<double, 6>();
+    scitbx::af::small<double, 6> recalculated_cell_sd_ = scitbx::af::small<double, 6>();
     double cell_volume_sd_;
   };
 

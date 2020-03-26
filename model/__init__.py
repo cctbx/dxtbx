@@ -216,10 +216,10 @@ class _(object):
                     msg.append("               " + amat[1])
                     msg.append("               " + amat[2])
 
-        uc = self.get_recalc_unit_cell()
+        uc = self.get_recalculated_unit_cell()
         if uc is not None:
             uc = uc.parameters()
-            uc_sd = self.get_recalc_cell_parameter_sd()
+            uc_sd = self.get_recalculated_cell_parameter_sd()
             if len(uc_sd) != 0:
                 cell_str = [
                     format_float_with_standard_uncertainty(v, e, minimum=1.0e-5)
@@ -296,11 +296,11 @@ class _(object):
             except RuntimeError:
                 pass
 
-        recalc_unit_cell = self.get_recalc_unit_cell()
-        if recalc_unit_cell is not None:
-            recalc_cell_parameter_sd = self.get_recalc_cell_parameter_sd()
-            xl_dict["recalc_unit_cell"] = recalc_unit_cell.parameters()
-            xl_dict["recalc_cell_parameter_sd"] = recalc_cell_parameter_sd
+        recalculated_unit_cell = self.get_recalculated_unit_cell()
+        if recalculated_unit_cell is not None:
+            recalculated_cell_parameter_sd = self.get_recalculated_cell_parameter_sd()
+            xl_dict["recalculated_unit_cell"] = recalculated_unit_cell.parameters()
+            xl_dict["recalculated_cell_parameter_sd"] = recalculated_cell_parameter_sd
 
         return xl_dict
 
@@ -359,13 +359,13 @@ class _(object):
             cov_B_at_scan_points.reshape(flex.grid(xl.num_scan_points, 9, 9))
             xl.set_B_covariance_at_scan_points(cov_B_at_scan_points)
 
-        recalc_unit_cell = d.get("recalc_unit_cell")
-        if recalc_unit_cell is not None:
-            xl.set_recalc_unit_cell(cctbx.uctbx.unit_cell(recalc_unit_cell))
+        recalculated_unit_cell = d.get("recalculated_unit_cell")
+        if recalculated_unit_cell is not None:
+            xl.set_recalculated_unit_cell(cctbx.uctbx.unit_cell(recalculated_unit_cell))
 
-        recalc_cell_parameter_sd = d.get("recalc_cell_parameter_sd")
-        if recalc_cell_parameter_sd is not None:
-            xl.set_recalc_cell_parameter_sd(recalc_cell_parameter_sd)
+        recalculated_cell_parameter_sd = d.get("recalculated_cell_parameter_sd")
+        if recalculated_cell_parameter_sd is not None:
+            xl.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd)
 
         return xl
 
