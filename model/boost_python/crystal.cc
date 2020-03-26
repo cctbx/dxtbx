@@ -10,6 +10,7 @@
  */
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
+#include <boost_adaptbx/optional_conversions.h>
 #include <string>
 #include <sstream>
 #include <dxtbx/model/crystal.h>
@@ -17,6 +18,7 @@
 namespace dxtbx { namespace model { namespace boost_python {
 
   using namespace boost::python;
+  using boost_adaptbx::optional_conversions::to_and_from_python;
 
   static Crystal *make_crystal_default(const vec3<double> &real_space_a,
                                        const vec3<double> &real_space_b,
@@ -299,6 +301,9 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   void export_crystal() {
+    // Expose the optional values
+    to_and_from_python<boost::optional<cctbx::uctbx::unit_cell > >();
+
     class_<CrystalBase, boost::noncopyable>("CrystalBase", no_init)
       .def("set_unit_cell", CrystalBase_set_unit_cell_real_space_vectors)
       .def("set_unit_cell", CrystalBase_set_unit_cell)
@@ -349,10 +354,9 @@ namespace dxtbx { namespace model { namespace boost_python {
            &CrystalBase::get_cell_parameter_sd_at_scan_point)
       .def("reset_unit_cell_errors", &CrystalBase::reset_unit_cell_errors)
       .def("set_recalc_unit_cell", &CrystalBase_set_recalc_unit_cell)
-      .def("_get_recalc_unit_cell", &CrystalBase::get_recalc_unit_cell)
+      .def("get_recalc_unit_cell", &CrystalBase::get_recalc_unit_cell)
       .def("set_recalc_cell_parameter_sd", &CrystalBase_set_recalc_cell_parameter_sd)
       .def("get_recalc_cell_parameter_sd", &CrystalBase::get_recalc_cell_parameter_sd)
-      .def("_has_recalc_unit_cell", &CrystalBase::has_recalc_unit_cell)
       .def("__eq__", &CrystalBase::operator==)
       .def("__ne__", &CrystalBase::operator!=);
 

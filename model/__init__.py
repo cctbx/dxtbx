@@ -369,12 +369,6 @@ class _(object):
 
         return xl
 
-    def get_recalc_unit_cell(self):
-        if self._has_recalc_unit_cell():
-            return self._get_recalc_unit_cell()
-        else:
-            return None
-
 
 @boost.python.inject_into(MosaicCrystalKabsch2010)
 class _(object):
