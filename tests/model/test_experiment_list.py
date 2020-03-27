@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import errno
 import os
 from builtins import range
 from glob import glob
@@ -799,7 +800,26 @@ def compare_experiment(exp1, exp2):
 
 
 def test_experimentlist_from_file(dials_regression, tmpdir):
-    # This allows expansion of environment variables in regression files
+    # With the default check_format=True this file should fail to load with an
+    # appropriate error as we can't find the images on disk
+    with pytest.raises(IOError) as e:
+        exp_list = ExperimentList.from_file(
+            os.path.join(dials_regression, "experiment_test_data", "experiment_1.json")
+        )
+    assert e.value.errno == errno.ENOENT
+    assert "No such file or directory" in str(e.value)
+    assert "centroid_0001.cbf" in str(e.value)
+
+    # Setting check_format=False should allow the file to load
+    exp_list = ExperimentList.from_file(
+        os.path.join(dials_regression, "experiment_test_data", "experiment_1.json"),
+        check_format=False,
+    )
+    assert len(exp_list) == 1
+    assert exp_list[0].beam
+
+    # This allows expansion of environment variables in regression files, enabling the
+    # file to load with check_format=True
     os.environ["DIALS_REGRESSION"] = dials_regression
 
     exp_list = ExperimentList.from_file(
