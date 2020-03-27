@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import range
 
 import pytest
+import six.moves.cPickle as pickle
 
 from scitbx import matrix
 from scitbx.array_family import flex
@@ -93,11 +94,12 @@ def test_crystal_with_recalculated_cell(crystal_class, example_crystal):
 
     d = c1.to_dict()
     c2 = CrystalFactory.from_dict(d)
+    c3 = pickle.loads(pickle.dumps(c1))
 
-    assert c2.get_recalculated_unit_cell() is not None
-    assert c1.get_recalculated_unit_cell().is_similar_to(
-        c2.get_recalculated_unit_cell()
-    )
-    assert c1 == c2
-
-    assert c2.get_recalculated_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
+    for c in (c2, c3):
+        assert c.get_recalculated_unit_cell() is not None
+        assert c1.get_recalculated_unit_cell().is_similar_to(
+            c.get_recalculated_unit_cell()
+        )
+        assert c1 == c
+        assert c.get_recalculated_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
