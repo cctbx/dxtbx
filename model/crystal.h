@@ -629,6 +629,10 @@ namespace dxtbx { namespace model {
         }
         other->set_A_at_scan_points(new_A_at_scan_points.const_ref());
       }
+      if (recalculated_unit_cell_) {
+        other->set_recalculated_unit_cell(
+          recalculated_unit_cell_->change_basis(change_of_basis_op));
+      }
       return other;
     }
 

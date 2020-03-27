@@ -629,3 +629,10 @@ def test_recalculated_cell(crystal_class):
         ", 11.00(10), 10.00(10), 90.00(10), 90.00(10), 90.00(10)"
         in str(xl).splitlines()
     )
+
+    cb_op = sgtbx.change_of_basis_op("b,c,a")
+    assert xl.change_basis(
+        cb_op
+    ).get_recalculated_unit_cell().parameters() == pytest.approx(
+        (11.0, 10.0, 10.0, 90.0, 90.0, 90.0)
+    )
