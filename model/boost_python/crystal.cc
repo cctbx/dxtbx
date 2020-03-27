@@ -155,12 +155,14 @@ namespace dxtbx { namespace model { namespace boost_python {
       return boost::python::make_tuple(obj.attr("__dict__"),
                                        crystal.get_A_at_scan_points(),
                                        crystal.get_B_covariance(),
-                                       crystal.get_B_covariance_at_scan_points());
+                                       crystal.get_B_covariance_at_scan_points(),
+                                       crystal.get_recalculated_unit_cell(),
+                                       crystal.get_recalculated_cell_parameter_sd());
     }
 
     static void setstate(boost::python::object obj, boost::python::tuple state) {
       Crystal &crystal = boost::python::extract<Crystal &>(obj)();
-      DXTBX_ASSERT(boost::python::len(state) == 4);
+      DXTBX_ASSERT(boost::python::len(state) == 6);
 
       // restore the object's __dict__
       boost::python::dict d =
@@ -176,9 +178,17 @@ namespace dxtbx { namespace model { namespace boost_python {
       scitbx::af::const_ref<double, scitbx::af::c_grid<3> > cov_B_scanpoints =
         boost::python::extract<scitbx::af::const_ref<double, scitbx::af::c_grid<3> > >(
           state[3]);
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell =
+        boost::python::extract<boost::optional<cctbx::uctbx::unit_cell> >(state[4]);
+      scitbx::af::small<double, 6> recalculated_cell_parameter_sd =
+        boost::python::extract<scitbx::af::small<double, 6> >(state[5]);
       crystal.set_A_at_scan_points(A_scanpoints);
       crystal.set_B_covariance(cov_B);
       crystal.set_B_covariance_at_scan_points(cov_B_scanpoints);
+      if (recalculated_unit_cell) {
+          crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
+      }
+      crystal.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd);
     }
 
     static bool getstate_manages_dict() {
@@ -200,13 +210,15 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        crystal.get_A_at_scan_points(),
                                        crystal.get_B_covariance(),
                                        crystal.get_B_covariance_at_scan_points(),
+                                       crystal.get_recalculated_unit_cell(),
+                                       crystal.get_recalculated_cell_parameter_sd(),
                                        crystal.get_mosaicity());
     }
 
     static void setstate(boost::python::object obj, boost::python::tuple state) {
       MosaicCrystalKabsch2010 &crystal =
         boost::python::extract<MosaicCrystalKabsch2010 &>(obj)();
-      DXTBX_ASSERT(boost::python::len(state) == 5);
+      DXTBX_ASSERT(boost::python::len(state) == 7);
 
       // restore the object's __dict__
       boost::python::dict d =
@@ -222,10 +234,18 @@ namespace dxtbx { namespace model { namespace boost_python {
       scitbx::af::const_ref<double, scitbx::af::c_grid<3> > cov_B_scanpoints =
         boost::python::extract<scitbx::af::const_ref<double, scitbx::af::c_grid<3> > >(
           state[3]);
-      double mosaicity = boost::python::extract<double>(state[4]);
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell =
+        boost::python::extract<boost::optional<cctbx::uctbx::unit_cell> >(state[4]);
+      scitbx::af::small<double, 6> recalculated_cell_parameter_sd =
+        boost::python::extract<scitbx::af::small<double, 6> >(state[5]);
+      double mosaicity = boost::python::extract<double>(state[6]);
       crystal.set_A_at_scan_points(A_scanpoints);
       crystal.set_B_covariance(cov_B);
       crystal.set_B_covariance_at_scan_points(cov_B_scanpoints);
+      if (recalculated_unit_cell) {
+          crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
+      }
+      crystal.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd);
       crystal.set_mosaicity(mosaicity);
     }
   };
@@ -244,6 +264,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        crystal.get_A_at_scan_points(),
                                        crystal.get_B_covariance(),
                                        crystal.get_B_covariance_at_scan_points(),
+                                       crystal.get_recalculated_unit_cell(),
+                                       crystal.get_recalculated_cell_parameter_sd(),
                                        crystal.get_half_mosaicity_deg(),
                                        crystal.get_domain_size_ang());
     }
@@ -251,7 +273,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     static void setstate(boost::python::object obj, boost::python::tuple state) {
       MosaicCrystalSauter2014 &crystal =
         boost::python::extract<MosaicCrystalSauter2014 &>(obj)();
-      DXTBX_ASSERT(boost::python::len(state) == 6);
+      DXTBX_ASSERT(boost::python::len(state) == 8);
 
       // restore the object's __dict__
       boost::python::dict d =
@@ -267,11 +289,19 @@ namespace dxtbx { namespace model { namespace boost_python {
       scitbx::af::const_ref<double, scitbx::af::c_grid<3> > cov_B_scanpoints =
         boost::python::extract<scitbx::af::const_ref<double, scitbx::af::c_grid<3> > >(
           state[3]);
-      double half_mosaicity_deg = boost::python::extract<double>(state[4]);
-      double domain_size_ang = boost::python::extract<double>(state[5]);
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell =
+        boost::python::extract<boost::optional<cctbx::uctbx::unit_cell> >(state[4]);
+      scitbx::af::small<double, 6> recalculated_cell_parameter_sd =
+        boost::python::extract<scitbx::af::small<double, 6> >(state[5]);
+      double half_mosaicity_deg = boost::python::extract<double>(state[6]);
+      double domain_size_ang = boost::python::extract<double>(state[7]);
       crystal.set_A_at_scan_points(A_scanpoints);
       crystal.set_B_covariance(cov_B);
       crystal.set_B_covariance_at_scan_points(cov_B_scanpoints);
+      if (recalculated_unit_cell) {
+          crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
+      }
+      crystal.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd);
       crystal.set_half_mosaicity_deg(half_mosaicity_deg);
       crystal.set_domain_size_ang(domain_size_ang);
     }
