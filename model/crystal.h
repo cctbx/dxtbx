@@ -277,7 +277,8 @@ namespace dxtbx { namespace model {
                             other.A_at_scan_points_.end()),
           cov_B_(other.cov_B_.accessor()),
           cell_sd_(other.cell_sd_),
-          cell_volume_sd_(other.cell_volume_sd_) {
+          cell_volume_sd_(other.cell_volume_sd_),
+          recalculated_unit_cell_(other.recalculated_unit_cell_) {
       std::copy(other.cov_B_.begin(), other.cov_B_.end(), cov_B_.begin());
     }
 
