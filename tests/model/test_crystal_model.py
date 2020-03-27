@@ -610,6 +610,7 @@ def test_recalculated_cell(crystal_class):
     )
 
     assert xl.get_recalculated_unit_cell() is None
+    assert xl.get_recalculated_cell_volume_sd() == 0
 
     uc1 = xl.get_unit_cell()
     uc2 = uctbx.unit_cell((10, 11, 10, 90, 90, 90))
@@ -620,7 +621,9 @@ def test_recalculated_cell(crystal_class):
     assert uc2.is_similar_to(uc3)
 
     xl.set_recalculated_cell_parameter_sd((0.1,) * 6)
+    xl.set_recalculated_cell_volume_sd(0.001)
     assert xl.get_recalculated_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
+    assert xl.get_recalculated_cell_volume_sd() == 0.001
     assert (
         "    Recalculated unit cell: 10.00(10)"
         ", 11.00(10), 10.00(10), 90.00(10), 90.00(10), 90.00(10)"

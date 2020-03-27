@@ -298,9 +298,13 @@ class _(object):
 
         recalculated_unit_cell = self.get_recalculated_unit_cell()
         if recalculated_unit_cell is not None:
-            recalculated_cell_parameter_sd = self.get_recalculated_cell_parameter_sd()
             xl_dict["recalculated_unit_cell"] = recalculated_unit_cell.parameters()
-            xl_dict["recalculated_cell_parameter_sd"] = recalculated_cell_parameter_sd
+            xl_dict[
+                "recalculated_cell_parameter_sd"
+            ] = self.get_recalculated_cell_parameter_sd()
+            xl_dict[
+                "recalculated_cell_volume_sd"
+            ] = self.get_recalculated_cell_volume_sd()
 
         return xl_dict
 
@@ -366,6 +370,10 @@ class _(object):
         recalculated_cell_parameter_sd = d.get("recalculated_cell_parameter_sd")
         if recalculated_cell_parameter_sd is not None:
             xl.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd)
+
+        recalculated_cell_volume_sd = d.get("recalculated_cell_volume_sd")
+        if recalculated_cell_volume_sd is not None:
+            xl.set_recalculated_cell_volume_sd(recalculated_cell_volume_sd)
 
         return xl
 

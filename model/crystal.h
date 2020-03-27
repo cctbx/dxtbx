@@ -235,6 +235,10 @@ namespace dxtbx { namespace model {
     virtual double get_cell_volume_sd_no_calc() const = 0;
     // Get the cell volume standard deviation
     virtual double get_cell_volume_sd() = 0;
+    // Get the recalculated cell volume standard deviation
+    virtual double get_recalculated_cell_volume_sd() const = 0;
+    // Set the recalculated cell volume standard deviation
+    virtual void set_recalculated_cell_volume_sd(double recalculated_cell_volume_sd) = 0;
     virtual void calc_cell_parameter_sd() = 0;
     // Reset unit cell errors
     virtual void reset_unit_cell_errors() = 0;
@@ -281,7 +285,8 @@ namespace dxtbx { namespace model {
           cov_B_(other.cov_B_.accessor()),
           cell_sd_(other.cell_sd_),
           recalculated_cell_sd_(other.recalculated_cell_sd_),
-          cell_volume_sd_(other.cell_volume_sd_) {
+          cell_volume_sd_(other.cell_volume_sd_),
+          recalculated_cell_volume_sd_(other.recalculated_cell_volume_sd_) {
       std::copy(other.cov_B_.begin(), other.cov_B_.end(), cov_B_.begin());
     }
 
@@ -297,7 +302,7 @@ namespace dxtbx { namespace model {
             const vec3<double> &real_space_b,
             const vec3<double> &real_space_c,
             const cctbx::sgtbx::space_group &space_group)
-        : space_group_(space_group), cell_volume_sd_(0) {
+        : space_group_(space_group), cell_volume_sd_(0), recalculated_cell_volume_sd_(0) {
       // Setting matrix at initialisation
       mat3<double> A = mat3<double>(real_space_a[0],
                                     real_space_a[1],
@@ -341,7 +346,7 @@ namespace dxtbx { namespace model {
     Crystal(const mat3<double> &A,
             const cctbx::sgtbx::space_group &space_group,
             const bool &reciprocal = true)
-        : space_group_(space_group), cell_volume_sd_(0) {
+        : space_group_(space_group), cell_volume_sd_(0), recalculated_cell_volume_sd_(0) {
       if (reciprocal) {
         set_A(A);
       } else {
@@ -361,7 +366,8 @@ namespace dxtbx { namespace model {
             scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B,
             scitbx::af::small<double, 6> cell_sd,
             scitbx::af::small<double, 6> recalculated_cell_sd,
-            double cell_volume_sd)
+            double cell_volume_sd,
+            double recalculated_cell_volume_sd)
         : space_group_(space_group),
           unit_cell_(unit_cell),
           recalculated_unit_cell_(recalculated_unit_cell),
@@ -371,7 +377,8 @@ namespace dxtbx { namespace model {
           cov_B_(cov_B),
           cell_sd_(cell_sd),
           recalculated_cell_sd_(recalculated_cell_sd),
-          cell_volume_sd_(cell_volume_sd) {}
+          cell_volume_sd_(cell_volume_sd),
+          recalculated_cell_volume_sd_(recalculated_cell_volume_sd) {}
 
     /**
      * Set the unit cell parameters
@@ -865,6 +872,13 @@ namespace dxtbx { namespace model {
     /**
      * Get the cell volume standard deviation
      */
+    double get_recalculated_cell_volume_sd() const {
+      return recalculated_cell_volume_sd_;
+    }
+
+    /**
+     * Get the cell volume standard deviation
+     */
     double get_cell_volume_sd() {
       if (cov_B_.size() == 0) {
         return -1;
@@ -1050,6 +1064,8 @@ namespace dxtbx { namespace model {
       cov_B_at_scan_points_ = scitbx::af::versa<double, scitbx::af::c_grid<3> >();
       cell_sd_ = scitbx::af::small<double, 6>();
       cell_volume_sd_ = 0;
+      recalculated_cell_sd_ = scitbx::af::small<double, 6>();
+      recalculated_cell_volume_sd_ = 0;
     }
 
     void set_recalculated_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
@@ -1063,6 +1079,10 @@ namespace dxtbx { namespace model {
     void set_recalculated_cell_parameter_sd(
       const scitbx::af::small<double, 6> &unit_cell_sd) {
       recalculated_cell_sd_ = unit_cell_sd;
+    }
+
+    void set_recalculated_cell_volume_sd(double recalculated_cell_volume_sd) {
+      recalculated_cell_volume_sd_ = recalculated_cell_volume_sd;
     }
 
     scitbx::af::small<double, 6> get_recalculated_cell_parameter_sd() const {
@@ -1081,6 +1101,7 @@ namespace dxtbx { namespace model {
     scitbx::af::small<double, 6> cell_sd_;
     scitbx::af::small<double, 6> recalculated_cell_sd_ = scitbx::af::small<double, 6>();
     double cell_volume_sd_;
+    double recalculated_cell_volume_sd_;
   };
 
   /* Extended Crystal class adding a simple value for mosaicity.
@@ -1128,6 +1149,7 @@ namespace dxtbx { namespace model {
       scitbx::af::small<double, 6> cell_sd,
       scitbx::af::small<double, 6> recalculated_cell_sd,
       double cell_volume_sd,
+      double recalculated_cell_volume_sd,
       double mosaicity)
         : Crystal(space_group,
                   unit_cell,
@@ -1138,7 +1160,8 @@ namespace dxtbx { namespace model {
                   cov_B,
                   cell_sd,
                   recalculated_cell_sd,
-                  cell_volume_sd),
+                  cell_volume_sd,
+                  recalculated_cell_volume_sd),
           mosaicity_(mosaicity) {}
 
     /**
@@ -1264,6 +1287,7 @@ namespace dxtbx { namespace model {
       scitbx::af::small<double, 6> cell_sd,
       scitbx::af::small<double, 6> recalculated_cell_sd,
       double cell_volume_sd,
+      double recalculated_cell_volume_sd,
       double half_mosaicity_deg,
       double domain_size_ang)
         : Crystal(space_group,
@@ -1275,7 +1299,8 @@ namespace dxtbx { namespace model {
                   cov_B,
                   cell_sd,
                   recalculated_cell_sd,
-                  cell_volume_sd),
+                  cell_volume_sd,
+                  recalculated_cell_volume_sd),
           half_mosaicity_deg_(half_mosaicity_deg),
           domain_size_ang_(domain_size_ang) {}
 
