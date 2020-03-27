@@ -238,7 +238,8 @@ namespace dxtbx { namespace model {
     // Get the recalculated cell volume standard deviation
     virtual double get_recalculated_cell_volume_sd() const = 0;
     // Set the recalculated cell volume standard deviation
-    virtual void set_recalculated_cell_volume_sd(double recalculated_cell_volume_sd) = 0;
+    virtual void set_recalculated_cell_volume_sd(
+      double recalculated_cell_volume_sd) = 0;
     virtual void calc_cell_parameter_sd() = 0;
     // Reset unit cell errors
     virtual void reset_unit_cell_errors() = 0;
@@ -302,7 +303,9 @@ namespace dxtbx { namespace model {
             const vec3<double> &real_space_b,
             const vec3<double> &real_space_c,
             const cctbx::sgtbx::space_group &space_group)
-        : space_group_(space_group), cell_volume_sd_(0), recalculated_cell_volume_sd_(0) {
+        : space_group_(space_group),
+          cell_volume_sd_(0),
+          recalculated_cell_volume_sd_(0) {
       // Setting matrix at initialisation
       mat3<double> A = mat3<double>(real_space_a[0],
                                     real_space_a[1],
@@ -346,7 +349,9 @@ namespace dxtbx { namespace model {
     Crystal(const mat3<double> &A,
             const cctbx::sgtbx::space_group &space_group,
             const bool &reciprocal = true)
-        : space_group_(space_group), cell_volume_sd_(0), recalculated_cell_volume_sd_(0) {
+        : space_group_(space_group),
+          cell_volume_sd_(0),
+          recalculated_cell_volume_sd_(0) {
       if (reciprocal) {
         set_A(A);
       } else {

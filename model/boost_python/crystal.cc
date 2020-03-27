@@ -183,13 +183,12 @@ namespace dxtbx { namespace model { namespace boost_python {
         boost::python::extract<boost::optional<cctbx::uctbx::unit_cell> >(state[4]);
       scitbx::af::small<double, 6> recalculated_cell_parameter_sd =
         boost::python::extract<scitbx::af::small<double, 6> >(state[5]);
-      double recalculated_cell_volume_sd =
-        boost::python::extract<double>(state[6]);
+      double recalculated_cell_volume_sd = boost::python::extract<double>(state[6]);
       crystal.set_A_at_scan_points(A_scanpoints);
       crystal.set_B_covariance(cov_B);
       crystal.set_B_covariance_at_scan_points(cov_B_scanpoints);
       if (recalculated_unit_cell) {
-          crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
+        crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
       }
       crystal.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd);
       crystal.set_recalculated_cell_volume_sd(recalculated_cell_volume_sd);
@@ -243,14 +242,13 @@ namespace dxtbx { namespace model { namespace boost_python {
         boost::python::extract<boost::optional<cctbx::uctbx::unit_cell> >(state[4]);
       scitbx::af::small<double, 6> recalculated_cell_parameter_sd =
         boost::python::extract<scitbx::af::small<double, 6> >(state[5]);
-      double recalculated_cell_volume_sd =
-        boost::python::extract<double>(state[6]);
+      double recalculated_cell_volume_sd = boost::python::extract<double>(state[6]);
       double mosaicity = boost::python::extract<double>(state[7]);
       crystal.set_A_at_scan_points(A_scanpoints);
       crystal.set_B_covariance(cov_B);
       crystal.set_B_covariance_at_scan_points(cov_B_scanpoints);
       if (recalculated_unit_cell) {
-          crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
+        crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
       }
       crystal.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd);
       crystal.set_recalculated_cell_volume_sd(recalculated_cell_volume_sd);
@@ -302,15 +300,14 @@ namespace dxtbx { namespace model { namespace boost_python {
         boost::python::extract<boost::optional<cctbx::uctbx::unit_cell> >(state[4]);
       scitbx::af::small<double, 6> recalculated_cell_parameter_sd =
         boost::python::extract<scitbx::af::small<double, 6> >(state[5]);
-      double recalculated_cell_volume_sd =
-        boost::python::extract<double>(state[6]);
+      double recalculated_cell_volume_sd = boost::python::extract<double>(state[6]);
       double half_mosaicity_deg = boost::python::extract<double>(state[7]);
       double domain_size_ang = boost::python::extract<double>(state[8]);
       crystal.set_A_at_scan_points(A_scanpoints);
       crystal.set_B_covariance(cov_B);
       crystal.set_B_covariance_at_scan_points(cov_B_scanpoints);
       if (recalculated_unit_cell) {
-          crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
+        crystal.set_recalculated_unit_cell(*recalculated_unit_cell);
       }
       crystal.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd);
       crystal.set_recalculated_cell_volume_sd(recalculated_cell_volume_sd);
@@ -332,8 +329,9 @@ namespace dxtbx { namespace model { namespace boost_python {
     self.set_unit_cell(unit_cell);
   }
 
-  inline void CrystalBase_set_recalculated_unit_cell(CrystalBase &self,
-                                               cctbx::uctbx::unit_cell &unit_cell) {
+  inline void CrystalBase_set_recalculated_unit_cell(
+    CrystalBase &self,
+    cctbx::uctbx::unit_cell &unit_cell) {
     self.set_recalculated_unit_cell(unit_cell);
   }
 
@@ -393,15 +391,19 @@ namespace dxtbx { namespace model { namespace boost_python {
            &CrystalBase::get_B_covariance_at_scan_points)
       .def("get_cell_parameter_sd", &CrystalBase::get_cell_parameter_sd)
       .def("get_cell_volume_sd", &CrystalBase::get_cell_volume_sd)
-      .def("get_recalculated_cell_volume_sd", &CrystalBase::get_recalculated_cell_volume_sd)
-      .def("set_recalculated_cell_volume_sd", &CrystalBase::set_recalculated_cell_volume_sd)
+      .def("get_recalculated_cell_volume_sd",
+           &CrystalBase::get_recalculated_cell_volume_sd)
+      .def("set_recalculated_cell_volume_sd",
+           &CrystalBase::set_recalculated_cell_volume_sd)
       .def("get_cell_parameter_sd_at_scan_point",
            &CrystalBase::get_cell_parameter_sd_at_scan_point)
       .def("reset_unit_cell_errors", &CrystalBase::reset_unit_cell_errors)
       .def("set_recalculated_unit_cell", &CrystalBase_set_recalculated_unit_cell)
       .def("get_recalculated_unit_cell", &CrystalBase::get_recalculated_unit_cell)
-      .def("set_recalculated_cell_parameter_sd", &CrystalBase_set_recalculated_cell_parameter_sd)
-      .def("get_recalculated_cell_parameter_sd", &CrystalBase::get_recalculated_cell_parameter_sd)
+      .def("set_recalculated_cell_parameter_sd",
+           &CrystalBase_set_recalculated_cell_parameter_sd)
+      .def("get_recalculated_cell_parameter_sd",
+           &CrystalBase::get_recalculated_cell_parameter_sd)
       .def("__eq__", &CrystalBase::operator==)
       .def("__ne__", &CrystalBase::operator!=);
 
