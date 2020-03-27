@@ -748,7 +748,6 @@ class ExperimentListFactory(object):
             # In an ideal Python 3 world this would be much more simply FileNotFoundError
             if e.errno == errno.ENOENT:
                 raise
-            pass
         except Exception:
             pass
 
