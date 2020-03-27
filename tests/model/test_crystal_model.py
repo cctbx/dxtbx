@@ -598,8 +598,11 @@ def test_set_scan_varying_B_covariance(crystal_class):
         assert cell_sd_at_scan_point == pytest.approx(cell_sd)
 
 
-def test_recalculated_cell():
-    xl = Crystal(
+@pytest.mark.parametrize(
+    "crystal_class", [Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014]
+)
+def test_recalculated_cell(crystal_class):
+    xl = crystal_class(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),
         real_space_c=(0, 0, 12),
@@ -618,8 +621,8 @@ def test_recalculated_cell():
 
     xl.set_recalculated_cell_parameter_sd((0.1,) * 6)
     assert xl.get_recalculated_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
-
-    assert str(xl).splitlines()[-1] == (
+    assert (
         "    Recalculated unit cell: 10.00(10)"
         ", 11.00(10), 10.00(10), 90.00(10), 90.00(10), 90.00(10)"
+        in str(xl).splitlines()
     )

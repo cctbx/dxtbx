@@ -7,7 +7,12 @@ import pytest
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.model import Crystal, CrystalFactory, MosaicCrystalKabsch2010
+from dxtbx.model import (
+    Crystal,
+    CrystalFactory,
+    MosaicCrystalKabsch2010,
+    MosaicCrystalSauter2014,
+)
 
 
 @pytest.fixture()
@@ -77,8 +82,11 @@ def test_crystal_with_scan_points(example_crystal):
     assert c1 == c2
 
 
-def test_crystal_with_recalculated_cell(example_crystal):
-    c1 = Crystal(**example_crystal)
+@pytest.mark.parametrize(
+    "crystal_class", [Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014]
+)
+def test_crystal_with_recalculated_cell(crystal_class, example_crystal):
+    c1 = crystal_class(**example_crystal)
     uc = c1.get_unit_cell()
     c1.set_recalculated_unit_cell(uc)
     c1.set_recalculated_cell_parameter_sd((0.1,) * 6)
@@ -86,6 +94,7 @@ def test_crystal_with_recalculated_cell(example_crystal):
     d = c1.to_dict()
     c2 = CrystalFactory.from_dict(d)
 
+    assert c2.get_recalculated_unit_cell() is not None
     assert c1.get_recalculated_unit_cell().is_similar_to(
         c2.get_recalculated_unit_cell()
     )
