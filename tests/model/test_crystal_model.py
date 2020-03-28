@@ -636,3 +636,8 @@ def test_recalculated_cell(crystal_class):
     ).get_recalculated_unit_cell().parameters() == pytest.approx(
         (11.0, 10.0, 10.0, 90.0, 90.0, 90.0)
     )
+
+    # Verify that set_recalculated_unit_cell() resets the cell parameter sd's
+    xl.set_recalculated_unit_cell(uctbx.unit_cell((11, 12, 13, 90, 90, 90)))
+    assert xl.get_recalculated_cell_parameter_sd() == ()
+    assert xl.get_recalculated_cell_volume_sd() == 0

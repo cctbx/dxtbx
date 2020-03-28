@@ -1079,6 +1079,8 @@ namespace dxtbx { namespace model {
 
     void set_recalculated_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
       recalculated_unit_cell_ = unit_cell;
+      recalculated_cell_sd_ = scitbx::af::small<double, 6>();
+      recalculated_cell_volume_sd_ = 0;
     }
 
     boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell() const {
