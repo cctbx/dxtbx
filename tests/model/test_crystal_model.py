@@ -152,7 +152,7 @@ def test_crystal_model():
         str(model).replace("-0.0000", " 0.0000")
         == """\
 Crystal:
-    Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
+    Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
     U matrix:  {{ 0.4330, -0.7500,  0.5000},
                 { 0.7891,  0.0474, -0.6124},
@@ -332,7 +332,7 @@ def test_MosaicCrystalKabsch2010():
         str(mosaic_model).replace("-0.0000", " 0.0000")
         == """\
 Crystal:
-    Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
+    Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
     U matrix:  {{ 1.0000,  0.0000,  0.0000},
                 { 0.0000,  1.0000,  0.0000},
@@ -378,7 +378,7 @@ def test_MosaicCrystalSauter2014():
         str(mosaic_model).replace("-0.0000", " 0.0000")
         == """\
 Crystal:
-    Unit cell: (10.000, 11.000, 12.000, 90.000, 90.000, 90.000)
+    Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
     U matrix:  {{ 1.0000,  0.0000,  0.0000},
                 { 0.0000,  1.0000,  0.0000},
@@ -596,3 +596,48 @@ def test_set_scan_varying_B_covariance(crystal_class):
         assert cov_B_at_scan_point == cov_B_2d
         cell_sd_at_scan_point = xl.get_cell_parameter_sd_at_scan_point(i)
         assert cell_sd_at_scan_point == pytest.approx(cell_sd)
+
+
+@pytest.mark.parametrize(
+    "crystal_class", [Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014]
+)
+def test_recalculated_cell(crystal_class):
+    xl = crystal_class(
+        real_space_a=(10, 0, 0),
+        real_space_b=(0, 11, 0),
+        real_space_c=(0, 0, 12),
+        space_group_symbol="P 1",
+    )
+
+    assert xl.get_recalculated_unit_cell() is None
+    assert xl.get_recalculated_cell_volume_sd() == 0
+
+    uc1 = xl.get_unit_cell()
+    uc2 = uctbx.unit_cell((10, 11, 10, 90, 90, 90))
+    xl.set_recalculated_unit_cell(uc2)
+    uc3 = xl.get_recalculated_unit_cell()
+    assert uc3 is not None
+    assert not uc1.is_similar_to(uc2)
+    assert uc2.is_similar_to(uc3)
+
+    xl.set_recalculated_cell_parameter_sd((0.1,) * 6)
+    xl.set_recalculated_cell_volume_sd(0.001)
+    assert xl.get_recalculated_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
+    assert xl.get_recalculated_cell_volume_sd() == 0.001
+    assert (
+        "    Recalculated unit cell: 10.00(10)"
+        ", 11.00(10), 10.00(10), 90.00(10), 90.00(10), 90.00(10)"
+        in str(xl).splitlines()
+    )
+
+    cb_op = sgtbx.change_of_basis_op("b,c,a")
+    assert xl.change_basis(
+        cb_op
+    ).get_recalculated_unit_cell().parameters() == pytest.approx(
+        (11.0, 10.0, 10.0, 90.0, 90.0, 90.0)
+    )
+
+    # Verify that set_recalculated_unit_cell() resets the cell parameter sd's
+    xl.set_recalculated_unit_cell(uctbx.unit_cell((11, 12, 13, 90, 90, 90)))
+    assert xl.get_recalculated_cell_parameter_sd() == ()
+    assert xl.get_recalculated_cell_volume_sd() == 0

@@ -3,11 +3,17 @@ from __future__ import absolute_import, division, print_function
 from builtins import range
 
 import pytest
+import six.moves.cPickle as pickle
 
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.model import Crystal, CrystalFactory, MosaicCrystalKabsch2010
+from dxtbx.model import (
+    Crystal,
+    CrystalFactory,
+    MosaicCrystalKabsch2010,
+    MosaicCrystalSauter2014,
+)
 
 
 @pytest.fixture()
@@ -75,3 +81,27 @@ def test_crystal_with_scan_points(example_crystal):
             assert abs(e1 - e2) <= eps
 
     assert c1 == c2
+
+
+@pytest.mark.parametrize(
+    "crystal_class", [Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014]
+)
+def test_crystal_with_recalculated_cell(crystal_class, example_crystal):
+    c1 = crystal_class(**example_crystal)
+    uc = c1.get_unit_cell()
+    c1.set_recalculated_unit_cell(uc)
+    c1.set_recalculated_cell_parameter_sd((0.1,) * 6)
+    c1.set_recalculated_cell_volume_sd(0.001)
+
+    d = c1.to_dict()
+    c2 = CrystalFactory.from_dict(d)
+    c3 = pickle.loads(pickle.dumps(c1))
+
+    for c in (c2, c3):
+        assert c.get_recalculated_unit_cell() is not None
+        assert c1.get_recalculated_unit_cell().is_similar_to(
+            c.get_recalculated_unit_cell()
+        )
+        assert c1 == c
+        assert c.get_recalculated_cell_parameter_sd() == (0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
+        assert c.get_recalculated_cell_volume_sd() == 0.001

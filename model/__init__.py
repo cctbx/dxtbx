@@ -10,6 +10,7 @@ import six.moves.cPickle as pickle
 
 import boost.python
 import cctbx.crystal
+import cctbx.uctbx
 from libtbx.containers import OrderedSet
 from libtbx.utils import format_float_with_standard_uncertainty
 from scitbx import matrix
@@ -168,10 +169,10 @@ class _(object):
                 format_float_with_standard_uncertainty(v, e, minimum=1.0e-5)
                 for (v, e) in zip(uc, uc_sd)
             ]
-            msg.append("    Unit cell: (" + ", ".join(cell_str) + ")")
+            msg.append("    Unit cell: " + ", ".join(cell_str))
         else:
             msg.append(
-                "    Unit cell: " + "(%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f)" % uc
+                "    Unit cell: " + "%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f" % uc
             )
         msg.append("    Space group: " + sg)
         msg.append("    U matrix:  " + umat[0])
@@ -203,7 +204,7 @@ class _(object):
                     msg.append("  Scan point #%i:" % (i + 1))
                     msg.append(
                         "    Unit cell: "
-                        + "(%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f)" % uc
+                        + "%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f" % uc
                     )
                     msg.append("    U matrix:  " + umat[0])
                     msg.append("               " + umat[1])
@@ -214,6 +215,22 @@ class _(object):
                     msg.append("    A = UB:    " + amat[0])
                     msg.append("               " + amat[1])
                     msg.append("               " + amat[2])
+
+        uc = self.get_recalculated_unit_cell()
+        if uc is not None:
+            uc = uc.parameters()
+            uc_sd = self.get_recalculated_cell_parameter_sd()
+            if len(uc_sd) != 0:
+                cell_str = [
+                    format_float_with_standard_uncertainty(v, e, minimum=1.0e-5)
+                    for (v, e) in zip(uc, uc_sd)
+                ]
+                msg.append("    Recalculated unit cell: " + ", ".join(cell_str))
+            else:
+                msg.append(
+                    "    Recalculated unit cell: "
+                    + "(%5.3f, %5.3f, %5.3f, %5.3f, %5.3f, %5.3f)" % uc
+                )
         return "\n".join(msg)
 
     def __str__(self):
@@ -279,6 +296,16 @@ class _(object):
             except RuntimeError:
                 pass
 
+        recalculated_unit_cell = self.get_recalculated_unit_cell()
+        if recalculated_unit_cell is not None:
+            xl_dict["recalculated_unit_cell"] = recalculated_unit_cell.parameters()
+            xl_dict[
+                "recalculated_cell_parameter_sd"
+            ] = self.get_recalculated_cell_parameter_sd()
+            xl_dict[
+                "recalculated_cell_volume_sd"
+            ] = self.get_recalculated_cell_volume_sd()
+
         return xl_dict
 
     @staticmethod
@@ -335,6 +362,18 @@ class _(object):
             cov_B_at_scan_points = flex.double(cov_B_at_scan_points).as_1d()
             cov_B_at_scan_points.reshape(flex.grid(xl.num_scan_points, 9, 9))
             xl.set_B_covariance_at_scan_points(cov_B_at_scan_points)
+
+        recalculated_unit_cell = d.get("recalculated_unit_cell")
+        if recalculated_unit_cell is not None:
+            xl.set_recalculated_unit_cell(cctbx.uctbx.unit_cell(recalculated_unit_cell))
+
+        recalculated_cell_parameter_sd = d.get("recalculated_cell_parameter_sd")
+        if recalculated_cell_parameter_sd is not None:
+            xl.set_recalculated_cell_parameter_sd(recalculated_cell_parameter_sd)
+
+        recalculated_cell_volume_sd = d.get("recalculated_cell_volume_sd")
+        if recalculated_cell_volume_sd is not None:
+            xl.set_recalculated_cell_volume_sd(recalculated_cell_volume_sd)
 
         return xl
 
