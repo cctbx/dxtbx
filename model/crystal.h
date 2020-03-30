@@ -304,6 +304,7 @@ namespace dxtbx { namespace model {
             const vec3<double> &real_space_c,
             const cctbx::sgtbx::space_group &space_group)
         : space_group_(space_group),
+          recalculated_unit_cell_(boost::none),
           cell_volume_sd_(0),
           recalculated_cell_volume_sd_(0) {
       // Setting matrix at initialisation
@@ -1103,14 +1104,14 @@ namespace dxtbx { namespace model {
   protected:
     cctbx::sgtbx::space_group space_group_;
     cctbx::uctbx::unit_cell unit_cell_;
-    boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell_ = boost::none;
+    boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell_;
     mat3<double> U_;
     mat3<double> B_;
     scitbx::af::shared<mat3<double> > A_at_scan_points_;
     scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B_;
     scitbx::af::versa<double, scitbx::af::c_grid<3> > cov_B_at_scan_points_;
     scitbx::af::small<double, 6> cell_sd_;
-    scitbx::af::small<double, 6> recalculated_cell_sd_ = scitbx::af::small<double, 6>();
+    scitbx::af::small<double, 6> recalculated_cell_sd_;
     double cell_volume_sd_;
     double recalculated_cell_volume_sd_;
   };
