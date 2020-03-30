@@ -7,8 +7,8 @@ import pytest
 from dxtbx.serialize.filename import load_path, resolve_path
 
 
-def test_resolve_path():
-    os.environ["HELLO_WORLD"] = "EXPANDED"
+def test_resolve_path(monkeypatch):
+    monkeypatch.setenv("HELLO_WORLD", "EXPANDED")
     new_path = os.path.join("~", "$HELLO_WORLD", "path")
     path = resolve_path(new_path)
     assert path == os.path.join(os.path.expanduser("~"), "EXPANDED", "path")
@@ -17,8 +17,8 @@ def test_resolve_path():
     assert path == os.path.abspath(os.path.join("EXPANDED", "path"))
 
 
-def test_load_path_deprecated():
-    os.environ["HELLO_WORLD"] = "EXPANDED"
+def test_load_path_deprecated(monkeypatch):
+    monkeypatch.setenv("HELLO_WORLD", "EXPANDED")
     new_path = os.path.join("~", "$HELLO_WORLD", "path")
     with pytest.deprecated_call():
         path = load_path(new_path)
