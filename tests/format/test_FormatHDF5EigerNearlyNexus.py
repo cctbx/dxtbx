@@ -45,8 +45,8 @@ def test_semi_synthetic_dectris_eiger_nearly_nexus(dials_data, tmpdir):
     assert gonio.get_fixed_rotation() == (1, 0, 0, 0, 1, 0, 0, 0, 1)
     assert gonio.get_setting_rotation() == (1, 0, 0, 0, 1, 0, 0, 0, 1)
 
-    assert scan.get_oscillation() == pytest.approx((0, 0.5))
-    assert scan.get_image_range() == (1, 800)
+    assert scan.get_oscillation() == pytest.approx((0, 0))
+    assert scan.get_image_range() == (1, 1)
 
     assert beam.get_wavelength() == pytest.approx(0.980112, abs=1e-5)
     assert beam.get_s0() == pytest.approx((0, 0, -1 / beam.get_wavelength()))
