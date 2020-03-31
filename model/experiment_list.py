@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import copy
+import errno
 import json
 import os
 from builtins import range
@@ -743,6 +744,10 @@ class ExperimentListFactory(object):
         # First try as a JSON file
         try:
             return ExperimentListFactory.from_json_file(filename, check_format)
+        except IOError as e:
+            # In an ideal Python 3 world this would be much more simply FileNotFoundError
+            if e.errno == errno.ENOENT:
+                raise
         except Exception:
             pass
 

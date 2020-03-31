@@ -163,9 +163,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             except RuntimeError as e:
                 assert "DXTBX_ASSERT(D_)" in str(e)
             else:
-                assert (
-                    False
-                )  # shouldn't be reached.  Detector should be initialized only once.
+                assert False  # shouldn't be reached.  Detector should be initialized only once.
         else:
             parent_pg = self._add_panel_group(parent, d)
             pg = parent_pg.add_group()

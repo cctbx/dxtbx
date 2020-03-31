@@ -105,7 +105,7 @@ def find_entries(nx_file, entry):
 
     def visitor(name, obj):
         if "NX_class" in obj.attrs:
-            if obj.attrs["NX_class"] in [
+            if numpy.string_(obj.attrs["NX_class"]) in [
                 numpy.string_("NXentry"),
                 numpy.string_("NXsubentry"),
             ]:
@@ -126,8 +126,8 @@ def find_class(nx_file, nx_class):
     nx_class = numpy.string_(nx_class)
 
     def visitor(name, obj):
-        if "NX_class" in obj.attrs:
-            if obj.attrs["NX_class"] == nx_class:
+        if numpy.string_("NX_class") in obj.attrs:
+            if numpy.string_(obj.attrs["NX_class"]) == nx_class:
                 hits.append(obj)
 
     local_visit(nx_file, visitor)
@@ -564,11 +564,11 @@ def get_change_of_basis(transformation):
     # Change of basis to convert from NeXus to IUCr/ImageCIF convention
     n2i_cob = sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
 
-    axis_type = transformation.attrs["transformation_type"]
+    axis_type = numpy.string_(transformation.attrs["transformation_type"])
 
     vector = n2i_cob * col(transformation.attrs["vector"]).normalize()
     setting = transformation[0]
-    units = transformation.attrs["units"]
+    units = numpy.string_(transformation.attrs["units"])
 
     if "offset" in transformation.attrs:
         offset = n2i_cob * col(transformation.attrs["offset"])
@@ -639,7 +639,7 @@ def get_change_of_basis(transformation):
             )
         )
     else:
-        raise ValueError("Unrecognized tranformation type: %d" % axis_type)
+        raise ValueError("Unrecognized tranformation type: %s" % axis_type)
 
     return cob
 
@@ -655,7 +655,7 @@ def get_depends_on_chain_using_equipment_components(transformation):
     current = transformation
 
     while True:
-        parent_id = current.attrs["depends_on"]
+        parent_id = numpy.string_(current.attrs["depends_on"])
 
         if parent_id == numpy.string_("."):
             return chain
@@ -682,7 +682,7 @@ def get_cumulative_change_of_basis(transformation):
 
     cob = get_change_of_basis(transformation)
 
-    parent_id = transformation.attrs["depends_on"]
+    parent_id = numpy.string_(transformation.attrs["depends_on"])
 
     if parent_id == numpy.string_("."):
         return None, cob

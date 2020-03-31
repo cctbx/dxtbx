@@ -235,9 +235,23 @@ namespace dxtbx { namespace model {
     virtual double get_cell_volume_sd_no_calc() const = 0;
     // Get the cell volume standard deviation
     virtual double get_cell_volume_sd() = 0;
+    // Get the recalculated cell volume standard deviation
+    virtual double get_recalculated_cell_volume_sd() const = 0;
+    // Set the recalculated cell volume standard deviation
+    virtual void set_recalculated_cell_volume_sd(
+      double recalculated_cell_volume_sd) = 0;
     virtual void calc_cell_parameter_sd() = 0;
     // Reset unit cell errors
     virtual void reset_unit_cell_errors() = 0;
+    // Access recalculated unit cell, intended for use by post-integration
+    // refinement algorithms, such as that of dials.two_theta_refine
+    virtual void set_recalculated_unit_cell(
+      const cctbx::uctbx::unit_cell &unit_cell) = 0;
+    virtual boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell()
+      const = 0;
+    virtual void set_recalculated_cell_parameter_sd(
+      const scitbx::af::small<double, 6> &unit_cell_sd) = 0;
+    virtual scitbx::af::small<double, 6> get_recalculated_cell_parameter_sd() const = 0;
   };
 
   /**
@@ -264,13 +278,16 @@ namespace dxtbx { namespace model {
     Crystal(const Crystal &other)
         : space_group_(other.space_group_),
           unit_cell_(other.unit_cell_),
+          recalculated_unit_cell_(other.recalculated_unit_cell_),
           U_(other.U_),
           B_(other.B_),
           A_at_scan_points_(other.A_at_scan_points_.begin(),
                             other.A_at_scan_points_.end()),
           cov_B_(other.cov_B_.accessor()),
           cell_sd_(other.cell_sd_),
-          cell_volume_sd_(other.cell_volume_sd_) {
+          recalculated_cell_sd_(other.recalculated_cell_sd_),
+          cell_volume_sd_(other.cell_volume_sd_),
+          recalculated_cell_volume_sd_(other.recalculated_cell_volume_sd_) {
       std::copy(other.cov_B_.begin(), other.cov_B_.end(), cov_B_.begin());
     }
 
@@ -286,7 +303,10 @@ namespace dxtbx { namespace model {
             const vec3<double> &real_space_b,
             const vec3<double> &real_space_c,
             const cctbx::sgtbx::space_group &space_group)
-        : space_group_(space_group), cell_volume_sd_(0) {
+        : space_group_(space_group),
+          recalculated_unit_cell_(boost::none),
+          cell_volume_sd_(0),
+          recalculated_cell_volume_sd_(0) {
       // Setting matrix at initialisation
       mat3<double> A = mat3<double>(real_space_a[0],
                                     real_space_a[1],
@@ -330,7 +350,9 @@ namespace dxtbx { namespace model {
     Crystal(const mat3<double> &A,
             const cctbx::sgtbx::space_group &space_group,
             const bool &reciprocal = true)
-        : space_group_(space_group), cell_volume_sd_(0) {
+        : space_group_(space_group),
+          cell_volume_sd_(0),
+          recalculated_cell_volume_sd_(0) {
       if (reciprocal) {
         set_A(A);
       } else {
@@ -343,20 +365,26 @@ namespace dxtbx { namespace model {
      */
     Crystal(cctbx::sgtbx::space_group space_group,
             cctbx::uctbx::unit_cell unit_cell,
+            boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell,
             mat3<double> U,
             mat3<double> B,
             scitbx::af::shared<mat3<double> > A_at_scan_points,
             scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B,
             scitbx::af::small<double, 6> cell_sd,
-            double cell_volume_sd)
+            scitbx::af::small<double, 6> recalculated_cell_sd,
+            double cell_volume_sd,
+            double recalculated_cell_volume_sd)
         : space_group_(space_group),
           unit_cell_(unit_cell),
+          recalculated_unit_cell_(recalculated_unit_cell),
           U_(U),
           B_(B),
           A_at_scan_points_(A_at_scan_points),
           cov_B_(cov_B),
           cell_sd_(cell_sd),
-          cell_volume_sd_(cell_volume_sd) {}
+          recalculated_cell_sd_(recalculated_cell_sd),
+          cell_volume_sd_(cell_volume_sd),
+          recalculated_cell_volume_sd_(recalculated_cell_volume_sd) {}
 
     /**
      * Set the unit cell parameters
@@ -602,6 +630,10 @@ namespace dxtbx { namespace model {
         }
         other->set_A_at_scan_points(new_A_at_scan_points.const_ref());
       }
+      if (recalculated_unit_cell_) {
+        other->set_recalculated_unit_cell(
+          recalculated_unit_cell_->change_basis(change_of_basis_op));
+      }
       return other;
     }
 
@@ -699,6 +731,18 @@ namespace dxtbx { namespace model {
       cctbx::uctbx::unit_cell uc_b = other.get_unit_cell();
       if (!uc_a.is_similar_to(uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
         return false;
+      }
+
+      // recalculated unit cell test, if both exist
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_uc_a =
+        get_recalculated_unit_cell();
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_uc_b =
+        other.get_recalculated_unit_cell();
+      if (recalculated_uc_a && recalculated_uc_b) {
+        if (!recalculated_uc_a->is_similar_to(
+              *recalculated_uc_b, uc_rel_length_tolerance, uc_abs_angle_tolerance)) {
+          return false;
+        }
       }
 
       // scan varying tests
@@ -833,6 +877,13 @@ namespace dxtbx { namespace model {
      */
     double get_cell_volume_sd_no_calc() const {
       return cell_volume_sd_;
+    }
+
+    /**
+     * Get the cell volume standard deviation
+     */
+    double get_recalculated_cell_volume_sd() const {
+      return recalculated_cell_volume_sd_;
     }
 
     /**
@@ -1023,18 +1074,46 @@ namespace dxtbx { namespace model {
       cov_B_at_scan_points_ = scitbx::af::versa<double, scitbx::af::c_grid<3> >();
       cell_sd_ = scitbx::af::small<double, 6>();
       cell_volume_sd_ = 0;
+      recalculated_cell_sd_ = scitbx::af::small<double, 6>();
+      recalculated_cell_volume_sd_ = 0;
+    }
+
+    void set_recalculated_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
+      recalculated_unit_cell_ = unit_cell;
+      recalculated_cell_sd_ = scitbx::af::small<double, 6>();
+      recalculated_cell_volume_sd_ = 0;
+    }
+
+    boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell() const {
+      return recalculated_unit_cell_;
+    }
+
+    void set_recalculated_cell_parameter_sd(
+      const scitbx::af::small<double, 6> &unit_cell_sd) {
+      recalculated_cell_sd_ = unit_cell_sd;
+    }
+
+    void set_recalculated_cell_volume_sd(double recalculated_cell_volume_sd) {
+      recalculated_cell_volume_sd_ = recalculated_cell_volume_sd;
+    }
+
+    scitbx::af::small<double, 6> get_recalculated_cell_parameter_sd() const {
+      return recalculated_cell_sd_;
     }
 
   protected:
     cctbx::sgtbx::space_group space_group_;
     cctbx::uctbx::unit_cell unit_cell_;
+    boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell_;
     mat3<double> U_;
     mat3<double> B_;
     scitbx::af::shared<mat3<double> > A_at_scan_points_;
     scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B_;
     scitbx::af::versa<double, scitbx::af::c_grid<3> > cov_B_at_scan_points_;
     scitbx::af::small<double, 6> cell_sd_;
+    scitbx::af::small<double, 6> recalculated_cell_sd_;
     double cell_volume_sd_;
+    double recalculated_cell_volume_sd_;
   };
 
   /* Extended Crystal class adding a simple value for mosaicity.
@@ -1071,23 +1150,30 @@ namespace dxtbx { namespace model {
     /**
      * Constructor for pickling
      */
-    MosaicCrystalKabsch2010(cctbx::sgtbx::space_group space_group,
-                            cctbx::uctbx::unit_cell unit_cell,
-                            mat3<double> U,
-                            mat3<double> B,
-                            scitbx::af::shared<mat3<double> > A_at_scan_points,
-                            scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B,
-                            scitbx::af::small<double, 6> cell_sd,
-                            double cell_volume_sd,
-                            double mosaicity)
+    MosaicCrystalKabsch2010(
+      cctbx::sgtbx::space_group space_group,
+      cctbx::uctbx::unit_cell unit_cell,
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell,
+      mat3<double> U,
+      mat3<double> B,
+      scitbx::af::shared<mat3<double> > A_at_scan_points,
+      scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B,
+      scitbx::af::small<double, 6> cell_sd,
+      scitbx::af::small<double, 6> recalculated_cell_sd,
+      double cell_volume_sd,
+      double recalculated_cell_volume_sd,
+      double mosaicity)
         : Crystal(space_group,
                   unit_cell,
+                  recalculated_unit_cell,
                   U,
                   B,
                   A_at_scan_points,
                   cov_B,
                   cell_sd,
-                  cell_volume_sd),
+                  recalculated_cell_sd,
+                  cell_volume_sd,
+                  recalculated_cell_volume_sd),
           mosaicity_(mosaicity) {}
 
     /**
@@ -1202,24 +1288,31 @@ namespace dxtbx { namespace model {
     /**
      * Constructor for pickling
      */
-    MosaicCrystalSauter2014(cctbx::sgtbx::space_group space_group,
-                            cctbx::uctbx::unit_cell unit_cell,
-                            mat3<double> U,
-                            mat3<double> B,
-                            scitbx::af::shared<mat3<double> > A_at_scan_points,
-                            scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B,
-                            scitbx::af::small<double, 6> cell_sd,
-                            double cell_volume_sd,
-                            double half_mosaicity_deg,
-                            double domain_size_ang)
+    MosaicCrystalSauter2014(
+      cctbx::sgtbx::space_group space_group,
+      cctbx::uctbx::unit_cell unit_cell,
+      boost::optional<cctbx::uctbx::unit_cell> recalculated_unit_cell,
+      mat3<double> U,
+      mat3<double> B,
+      scitbx::af::shared<mat3<double> > A_at_scan_points,
+      scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B,
+      scitbx::af::small<double, 6> cell_sd,
+      scitbx::af::small<double, 6> recalculated_cell_sd,
+      double cell_volume_sd,
+      double recalculated_cell_volume_sd,
+      double half_mosaicity_deg,
+      double domain_size_ang)
         : Crystal(space_group,
                   unit_cell,
+                  recalculated_unit_cell,
                   U,
                   B,
                   A_at_scan_points,
                   cov_B,
                   cell_sd,
-                  cell_volume_sd),
+                  recalculated_cell_sd,
+                  cell_volume_sd,
+                  recalculated_cell_volume_sd),
           half_mosaicity_deg_(half_mosaicity_deg),
           domain_size_ang_(domain_size_ang) {}
 
