@@ -100,7 +100,10 @@ class FullCBFWriter(object):
             basis = metro[key]
             node = panel_group_from_key(key)
             nodename = level_string(key)
-            dname = "AXIS_" + nodename
+            if basis.name:
+                dname = basis.name
+            else:
+                dname = "AXIS_" + nodename
 
             if node.is_panel():
                 panelname = "PANEL_%d" % panel_id
