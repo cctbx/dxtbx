@@ -192,3 +192,9 @@ def test_spectrum_beam():
     assert b1.is_similar_to(b2)
     b2.set_spectrum(spectrum_energies + 50, spectrum_weights)
     assert not b1.is_similar_to(b2)
+
+    b3 = Beam()
+    b1.set_wavelength(1.2)
+    b3.set_wavelength(1.2)
+    assert b1.is_similar_to(b3)
+    assert b3.is_similar_to(b1)

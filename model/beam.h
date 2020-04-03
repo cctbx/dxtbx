@@ -579,6 +579,7 @@ namespace dxtbx { namespace model {
                                                           polarization_fraction_tolerance))
         return false;
       const SpectrumBeam* other = dynamic_cast<const SpectrumBeam* >(&rhs);
+      if (!other) return true;
       return (std::abs(get_weighted_wavelength() - other->get_weighted_wavelength()) <=
               spectrum_weighted_wavelength_tolerance);
     }
