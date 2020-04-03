@@ -29,6 +29,12 @@ namespace dxtbx { namespace model { namespace boost_python {
     return ss.str();
   }
 
+  std::string spectrumbeam_to_string(const SpectrumBeam &beam) {
+    std::stringstream ss;
+    ss << beam;
+    return ss.str();
+  }
+
   struct BeamPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const Beam &obj) {
       return boost::python::make_tuple(obj.get_sample_to_source_direction(),
@@ -65,6 +71,50 @@ namespace dxtbx { namespace model { namespace boost_python {
     static bool getstate_manages_dict() {
       return true;
     }
+  };
+
+  struct SpectrumBeamPickleSuite : boost::python::pickle_suite {
+    static
+    boost::python::tuple getinitargs(const SpectrumBeam &obj) {
+      return boost::python::make_tuple(obj.get_sample_to_source_direction(),
+                                       obj.get_wavelength(),
+                                       obj.get_divergence(),
+                                       obj.get_sigma_divergence(),
+                                       obj.get_polarization_normal(),
+                                       obj.get_polarization_fraction(),
+                                       obj.get_flux(),
+                                       obj.get_transmission(),
+                                       obj.get_spectrum_energies(),
+                                       obj.get_spectrum_weights());
+    }
+
+    static
+    boost::python::tuple getstate(boost::python::object obj)
+    {
+      const SpectrumBeam &beam = boost::python::extract<const SpectrumBeam &>(obj)();
+      return boost::python::make_tuple(
+          obj.attr("__dict__"),
+          beam.get_s0_at_scan_points());
+    }
+
+    static
+    void setstate(boost::python::object obj, boost::python::tuple state)
+    {
+      SpectrumBeam &beam = boost::python::extract<SpectrumBeam&>(obj)();
+      DXTBX_ASSERT(boost::python::len(state) == 2);
+
+      // restore the object's __dict__
+      boost::python::dict d = boost::python::extract<boost::python::dict>(
+          obj.attr("__dict__"))();
+      d.update(state[0]);
+
+      // restore the internal state of the C++ object
+      scitbx::af::const_ref< vec3<double> > s0_list = boost::python::extract<
+        scitbx::af::const_ref< vec3<double> > >(state[1]);
+      beam.set_s0_at_scan_points(s0_list);
+    }
+
+    static bool getstate_manages_dict() { return true; }
   };
 
   static Beam *make_beam(vec3<double> sample_to_source,
@@ -125,6 +175,67 @@ namespace dxtbx { namespace model { namespace boost_python {
                       polarization_fraction,
                       flux,
                       transmission);
+    }
+    return beam;
+  }
+
+  static SpectrumBeam *make_spectrumbeam(vec3<double> sample_to_source,
+                                         double wavelength,
+                                         double divergence,
+                                         double sigma_divergence,
+                                         bool deg) {
+    SpectrumBeam *beam = NULL;
+    if (deg) {
+      beam = new SpectrumBeam(sample_to_source,
+                      wavelength,
+                      deg_as_rad(divergence),
+                      deg_as_rad(sigma_divergence));
+    } else {
+      beam = new SpectrumBeam(sample_to_source, wavelength, divergence, sigma_divergence);
+    }
+    return beam;
+  }
+
+  static SpectrumBeam *make_spectrumbeam_w_s0(vec3<double> s0,
+                              double divergence,
+                              double sigma_divergence,
+                              bool deg) {
+    SpectrumBeam *beam = NULL;
+    if (deg) {
+      beam = new SpectrumBeam(s0, deg_as_rad(divergence), deg_as_rad(sigma_divergence));
+    } else {
+      beam = new SpectrumBeam(s0, divergence, sigma_divergence);
+    }
+    return beam;
+  }
+
+
+  static Beam* make_spectrumbeam_w_all(vec3<double> sample_to_source,
+                               double wavelength,
+                               double divergence, double sigma_divergence,
+                               vec3<double> polarization_normal,
+                               double polarization_fraction,
+                               double flux,
+                               double transmission,
+                               scitbx::af::shared<double> spectrum_energies,
+                               scitbx::af::shared<double> spectrum_weights,
+                               bool deg) {
+    SpectrumBeam *beam = NULL;
+    if (deg) {
+      beam = new SpectrumBeam(sample_to_source, wavelength,
+                      deg_as_rad(divergence),
+                      deg_as_rad(sigma_divergence),
+                      polarization_normal,
+                      polarization_fraction,
+                      flux, transmission,
+                      spectrum_energies, spectrum_weights);
+    } else {
+      beam = new SpectrumBeam(sample_to_source, wavelength,
+                      divergence, sigma_divergence,
+                      polarization_normal,
+                      polarization_fraction,
+                      flux, transmission,
+                      spectrum_energies, spectrum_weights);
     }
     return beam;
   }
@@ -218,6 +329,22 @@ namespace dxtbx { namespace model { namespace boost_python {
     return b;
   }
 
+  template <>
+  boost::python::dict to_dict<SpectrumBeam>(const SpectrumBeam &obj) {
+    boost::python::dict result = to_dict<Beam>(obj);
+    result["spectrum_energies"] = obj.get_spectrum_energies();
+    result["spectrum_weights"] = obj.get_spectrum_weights();
+    return result;
+  }
+
+  template <>
+  SpectrumBeam* from_dict<SpectrumBeam>(boost::python::dict obj) {
+    SpectrumBeam* b = new SpectrumBeam(*from_dict<Beam>(obj));
+    b->set_spectrum(boost::python::extract< scitbx::af::shared<double> >(obj.get("spectrum_energies", scitbx::af::shared<double>())),
+                    boost::python::extract< scitbx::af::shared<double> >(obj.get("spectrum_weights",  scitbx::af::shared<double>())));
+    return b;
+  }
+
   void export_beam() {
     // Export BeamBase
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
@@ -301,7 +428,73 @@ namespace dxtbx { namespace model { namespace boost_python {
       .staticmethod("from_dict")
       .def_pickle(BeamPickleSuite());
 
+    // Export Beam : BeamBase
+    class_ <SpectrumBeam, boost::shared_ptr<SpectrumBeam>, bases <Beam> > ("SpectrumBeam")
+      .def(init<const Beam&>())
+      .def(init<const SpectrumBeam&>())
+      .def(init <vec3 <double>,
+                 double> ((
+          arg("direction"),
+          arg("wavelength"))))
+      .def(init <vec3 <double> > ((
+          arg("s0"))))
+      .def("__init__",
+          make_constructor(
+          &make_spectrumbeam,
+          default_call_policies(), (
+            arg("direction"),
+            arg("wavelength"),
+            arg("divergence"),
+            arg("sigma_divergence"),
+            arg("deg") = true)))
+      .def("__init__",
+          make_constructor(
+          &make_spectrumbeam_w_s0,
+          default_call_policies(), (
+            arg("s0"),
+            arg("divergence"),
+            arg("sigma_divergence"),
+            arg("deg") = true)))
+      .def("__init__",
+          make_constructor(
+          &make_spectrumbeam_w_all,
+          default_call_policies(), (
+            arg("direction"),
+            arg("wavelength"),
+            arg("divergence"),
+            arg("sigma_divergence"),
+            arg("polarization_normal"),
+            arg("polarization_fraction"),
+            arg("flux"),
+            arg("transmission"),
+            arg("spectrum_energies"),
+            arg("spectrum_weights"),
+            arg("deg") = true)))
+      .def("get_spectrum_energies",
+        &SpectrumBeam::get_spectrum_energies)
+      .def("get_spectrum_weights",
+        &SpectrumBeam::get_spectrum_weights)
+      .def("get_weighted_wavelength",
+        &SpectrumBeam::get_weighted_wavelength)
+      .def("set_spectrum",
+        &SpectrumBeam::set_spectrum)
+      .def("is_similar_to",
+           &SpectrumBeam::is_similar_to,
+           (arg("other"),
+            arg("wavelength_tolerance") = 1e-6,
+            arg("direction_tolerance") = 1e-6,
+            arg("polarization_normal_tolerance") = 1e-6,
+            arg("polarization_fraction_tolerance") = 1e-6,
+            arg("spectrum_weighted_wavelength_tolerance") = 1e-6))
+      .def("__str__", &spectrumbeam_to_string)
+      .def("to_dict", &to_dict<SpectrumBeam>)
+      .def("from_dict", &from_dict<SpectrumBeam>,
+        return_value_policy<manage_new_object>())
+      .staticmethod("from_dict")
+      .def_pickle(SpectrumBeamPickleSuite());
+
     scitbx::af::boost_python::flex_wrapper<Beam>::plain("flex_Beam");
+    scitbx::af::boost_python::flex_wrapper<SpectrumBeam>::plain("flex_SpectrumBeam");
   }
 
 }}}  // namespace dxtbx::model::boost_python

@@ -452,6 +452,144 @@ namespace dxtbx { namespace model {
     scitbx::af::shared<vec3<double> > s0_at_scan_points_;
   };
 
+  /** A class to represent a beam with a known spectrum. */
+  class SpectrumBeam : public Beam {
+  public:
+
+    /** Default constructor: initialise all to zero */
+    SpectrumBeam()
+      : Beam(),
+        spectrum_energies_(),
+        spectrum_weights_() {}
+
+    /** Copy constructor */
+    SpectrumBeam(Beam b)
+      : Beam(b),
+        spectrum_energies_(),
+        spectrum_weights_() {}
+
+    /**
+     * Initialise all the beam parameters.
+     * @param direction The beam direction vector.
+     */
+    SpectrumBeam(vec3 <double> s0)
+      : Beam(s0),
+        spectrum_energies_(),
+        spectrum_weights_() {}
+
+    /**
+     * Initialise all the beam parameters. Normalize the direction vector
+     * and give it the length of 1.0 / wavelength
+     * @param wavelength The wavelength of the beam
+     * @param direction The beam direction vector.
+     */
+    SpectrumBeam(vec3 <double> direction, double wavelength)
+      : Beam(direction, wavelength),
+        spectrum_energies_(),
+        spectrum_weights_() {}
+
+    /**
+     * Initialise all the beam parameters.
+     * @param direction The beam direction vector.
+     */
+    SpectrumBeam(vec3 <double> s0, double divergence, double sigma_divergence)
+      : Beam(s0, divergence, sigma_divergence),
+        spectrum_energies_(),
+        spectrum_weights_() {}
+
+    /**
+     * Initialise all the beam parameters. Normalize the direction vector
+     * and give it the length of 1.0 / wavelength
+     * @param wavelength The wavelength of the beam
+     * @param direction The beam direction vector.
+     */
+    SpectrumBeam(vec3 <double> direction, double wavelength,
+         double divergence, double sigma_divergence)
+      : Beam(direction, wavelength, divergence, sigma_divergence),
+        spectrum_energies_(),
+        spectrum_weights_() {}
+
+    SpectrumBeam(vec3 <double> direction, double wavelength,
+         double divergence, double sigma_divergence,
+         vec3<double> polarization_normal,
+         double polarization_fraction,
+         double flux,
+         double transmission)
+      : Beam(direction, wavelength, divergence, sigma_divergence,
+             polarization_normal, polarization_fraction, flux, transmission),
+        spectrum_energies_(),
+        spectrum_weights_() {}
+
+    SpectrumBeam(vec3 <double> direction, double wavelength,
+         double divergence, double sigma_divergence,
+         vec3<double> polarization_normal,
+         double polarization_fraction,
+         double flux, double transmission,
+         scitbx::af::shared<double> spectrum_energies, scitbx::af::shared<double> spectrum_weights)
+      : Beam(direction, wavelength, divergence, sigma_divergence,
+             polarization_normal, polarization_fraction, flux, transmission),
+        spectrum_energies_(spectrum_energies), spectrum_weights_(spectrum_weights){}
+
+    /**
+     * Set the spectrum. X is eV, Y is dimensionless
+     */
+    void set_spectrum(scitbx::af::shared<double> spectrum_energies, scitbx::af::shared<double> spectrum_weights) {
+      DXTBX_ASSERT(spectrum_energies.size() == spectrum_weights.size());
+      spectrum_energies_ = spectrum_energies;
+      spectrum_weights_ = spectrum_weights;
+    }
+
+    /**
+     * Get the spectrum energies (eV)
+     */
+    scitbx::af::shared<double> get_spectrum_energies() const {
+      return spectrum_energies_;
+    }
+
+    /**
+     * Get the spectrum weights
+     */
+    scitbx::af::shared<double> get_spectrum_weights() const {
+      return spectrum_weights_;
+    }
+
+    double get_weighted_wavelength() const {
+      double weighted_sum = 0;
+      double summed_weights = 0;
+      for (size_t i = 0; i < spectrum_energies_.size(); i++) {
+        weighted_sum += spectrum_energies_[i] * spectrum_weights_[i];
+        summed_weights += spectrum_weights_[i];
+      }
+      DXTBX_ASSERT(weighted_sum > 0 && summed_weights > 0);
+      return 12398.4187 / (weighted_sum / summed_weights);
+    }
+
+    /**
+     * Check if two models are similar
+     */
+    bool is_similar_to(const BeamBase &rhs,
+                       double wavelength_tolerance,
+                       double direction_tolerance,
+                       double polarization_normal_tolerance,
+                       double polarization_fraction_tolerance,
+                       double spectrum_weighted_wavelength_tolerance) const {
+      if (!dynamic_cast<const Beam*>(this)->is_similar_to(rhs,
+                                                          wavelength_tolerance, direction_tolerance,
+                                                          polarization_normal_tolerance,
+                                                          polarization_fraction_tolerance))
+        return false;
+      const SpectrumBeam* other = dynamic_cast<const SpectrumBeam* >(&rhs);
+      return (std::abs(get_weighted_wavelength() - other->get_weighted_wavelength()) <=
+              spectrum_weighted_wavelength_tolerance);
+    }
+
+  friend std::ostream& operator<<(std::ostream &os, const SpectrumBeam &b);
+
+  private:
+    scitbx::af::shared<double> spectrum_energies_;
+    scitbx::af::shared<double> spectrum_weights_;
+  };
+
   /** Print beam information */
   inline std::ostream &operator<<(std::ostream &os, const Beam &b) {
     os << "Beam:\n";
@@ -466,6 +604,21 @@ namespace dxtbx { namespace model {
     return os;
   }
 
+  /** Print beam information */
+  inline
+  std::ostream& operator<<(std::ostream &os, const SpectrumBeam &b) {
+    os << "SpectrumBeam:\n";
+    os << "    wavelength: " << b.get_wavelength() << "\n";
+    os << "    sample to source direction : "
+       << b.get_sample_to_source_direction().const_ref() << "\n";
+    os << "    divergence: " << b.get_divergence() << "\n";
+    os << "    sigma divergence: " << b.get_sigma_divergence() << "\n";
+    os << "    polarization normal: " << b.get_polarization_normal().const_ref()
+       << "\n";
+    os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
+    os << "    spectrum weighted wavelength: " << b.get_weighted_wavelength() << "\n";
+    return os;
+  }
 }}  // namespace dxtbx::model
 
 #endif  // DXTBX_MODEL_BEAM_H

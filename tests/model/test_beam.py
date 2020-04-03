@@ -7,8 +7,9 @@ import pytest
 from libtbx.phil import parse
 from scitbx import matrix
 
-from dxtbx.model import Beam
+from dxtbx.model import Beam, SpectrumBeam
 from dxtbx.model.beam import BeamFactory, beam_phil_scope
+from dials.array_family import flex
 
 
 def test_setting_direction_and_wavelength():
@@ -178,3 +179,16 @@ def test_beam_object_comparison():
 def test_beam_self_serialization():
     beam = Beam()
     assert beam == BeamFactory.from_dict(beam.to_dict())
+
+
+def test_spectrum_beam():
+    spectrum_energies = flex.double(range(9450, 9550))
+    spectrum_weights = flex.double(range(len(spectrum_energies)))
+    b1 = SpectrumBeam()
+    b2 = SpectrumBeam()
+    b1.set_spectrum(spectrum_energies, spectrum_weights)
+    b2.set_spectrum(spectrum_energies, spectrum_weights)
+    assert b1.get_weighted_wavelength() == pytest.approx(1.3028567060142213)
+    assert b1.is_similar_to(b2)
+    b2.set_spectrum(spectrum_energies + 50, spectrum_weights)
+    assert not b1.is_similar_to(b2)

@@ -6,7 +6,7 @@ from builtins import object, range
 import libtbx.phil
 
 import pycbf
-from dxtbx_model_ext import Beam
+from dxtbx_model_ext import Beam, SpectrumBeam
 
 beam_phil_scope = libtbx.phil.parse(
     """
@@ -90,7 +90,10 @@ class BeamFactory(object):
         joint.update(d)
 
         # Create the model from the joint dictionary
-        return Beam.from_dict(joint)
+        if "spectrum_energies" in joint:
+            return SpectrumBeam.from_dict(joint)
+        else:
+            return Beam.from_dict(joint)
 
     @staticmethod
     def make_beam(

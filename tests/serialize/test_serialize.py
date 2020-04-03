@@ -7,6 +7,7 @@ from scitbx.array_family import flex
 
 from dxtbx.model import (
     Beam,
+    SpectrumBeam,
     BeamFactory,
     Goniometer,
     GoniometerFactory,
@@ -17,6 +18,30 @@ from dxtbx.model import (
 
 def test_beam():
     b1 = Beam((1, 0, 0), 2, 0.1, 0.1)
+    d = b1.to_dict()
+    b2 = BeamFactory.from_dict(d)
+    assert d["direction"] == (1, 0, 0)
+    assert d["wavelength"] == 2
+    assert d["divergence"] == pytest.approx(0.1)
+    assert d["sigma_divergence"] == pytest.approx(0.1)
+    assert b1 == b2
+    assert "s0_at_scan_points" not in d
+
+    # Test with a template and partial dictionary
+    d2 = {"direction": (0, 1, 0), "divergence": 0.2}
+    b3 = BeamFactory.from_dict(d2, d)
+    assert b3.get_sample_to_source_direction() == (0, 1, 0)
+    assert b3.get_wavelength() == 2
+    assert b3.get_divergence() == pytest.approx(0.2)
+    assert b3.get_sigma_divergence() == pytest.approx(0.1)
+    assert b2 != b3
+
+
+def test_spectrum_beam():
+    b1 = SpectrumBeam((1, 0, 0), 2, 0.1, 0.1)
+    spectrum_energies = flex.double(range(9450, 9550))
+    spectrum_weights = flex.double(range(len(spectrum_energies)))
+    b1.set_spectrum(spectrum_energies, spectrum_weights)
     d = b1.to_dict()
     b2 = BeamFactory.from_dict(d)
     assert d["direction"] == (1, 0, 0)

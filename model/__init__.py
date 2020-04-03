@@ -26,6 +26,7 @@ from dxtbx.model.scan import ScanFactory
 from dxtbx_model_ext import (
     Beam,
     BeamBase,
+    SpectrumBeam,
     Crystal,
     CrystalBase,
     Detector,
@@ -60,6 +61,7 @@ from dxtbx_model_ext import (
 __all__ = (
     "Beam",
     "BeamBase",
+    "SpectrumBeam",
     "BeamFactory",
     "Crystal",
     "CrystalBase",
