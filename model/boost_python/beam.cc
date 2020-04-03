@@ -329,22 +329,6 @@ namespace dxtbx { namespace model { namespace boost_python {
     return b;
   }
 
-  template <>
-  boost::python::dict to_dict<SpectrumBeam>(const SpectrumBeam &obj) {
-    boost::python::dict result = to_dict<Beam>(obj);
-    result["spectrum_energies"] = obj.get_spectrum_energies();
-    result["spectrum_weights"] = obj.get_spectrum_weights();
-    return result;
-  }
-
-  template <>
-  SpectrumBeam* from_dict<SpectrumBeam>(boost::python::dict obj) {
-    SpectrumBeam* b = new SpectrumBeam(*from_dict<Beam>(obj));
-    b->set_spectrum(boost::python::extract< scitbx::af::shared<double> >(obj.get("spectrum_energies", scitbx::af::shared<double>())),
-                    boost::python::extract< scitbx::af::shared<double> >(obj.get("spectrum_weights",  scitbx::af::shared<double>())));
-    return b;
-  }
-
   void export_beam() {
     // Export BeamBase
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
@@ -487,10 +471,6 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("polarization_fraction_tolerance") = 1e-6,
             arg("spectrum_weighted_wavelength_tolerance") = 1e-6))
       .def("__str__", &spectrumbeam_to_string)
-      .def("to_dict", &to_dict<SpectrumBeam>)
-      .def("from_dict", &from_dict<SpectrumBeam>,
-        return_value_policy<manage_new_object>())
-      .staticmethod("from_dict")
       .def_pickle(SpectrumBeamPickleSuite());
 
     scitbx::af::boost_python::flex_wrapper<Beam>::plain("flex_Beam");

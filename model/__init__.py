@@ -130,6 +130,37 @@ class _(object):
                 queue.extend(node)
 
 
+@boost.python.inject_into(SpectrumBeam)
+class _(object):
+    def to_dict(self):
+        """Convert the SpectrumBeam model to a dictionary
+
+        Returns:
+            A dictionary of the parameters
+        """
+
+        d = super(SpectrumBeam, self).to_dict()
+        d["spectrum_energies"] = tuple(self.get_spectrum_energies())
+        d["spectrum_weights"] = tuple(self.get_spectrum_weights())
+        return d
+
+    def from_dict(d):
+        """Convert the dictionary to a SpectrumBeam model
+
+        Params:
+            d The dictionary of parameters
+
+        Returns:
+            The SpectrumBeam model
+        """
+        beam = SpectrumBeam(Beam.from_dict(d))
+        if "spectrum_energies" in d:
+            beam.set_spectrum(
+                flex.double(d["spectrum_energies"]), flex.double(d["spectrum_weights"])
+            )
+        return beam
+
+
 @boost.python.inject_into(Crystal)
 class _(object):
     def show(self, show_scan_varying=False, out=None):
