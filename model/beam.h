@@ -80,6 +80,14 @@ namespace dxtbx { namespace model {
     virtual vec3<double> get_s0_at_scan_point(std::size_t index) const = 0;
     // Reset the scan points
     virtual void reset_scan_points() = 0;
+    // Set the spectrum
+    virtual void set_spectrum(scitbx::af::shared<double> spectrum_energies, scitbx::af::shared<double>) = 0;
+    // Get the spectrum energies
+    virtual scitbx::af::shared<double> get_spectrum_energies() const = 0;
+    // Get the spectrum weights
+    virtual scitbx::af::shared<double> get_spectrum_weights() const = 0;
+    // Get the spectrum weighted wavelength
+    virtual double get_weighted_wavelength() const = 0;
     // Check wavelength and direction are (almost) same
     virtual bool operator==(const BeamBase &rhs) const = 0;
     // Check if two models are similar
@@ -87,7 +95,8 @@ namespace dxtbx { namespace model {
                                double wavelength_tolerance,
                                double direction_tolerance,
                                double polarization_normal_tolerance,
-                               double polarization_fraction_tolerance) const = 0;
+                               double polarization_fraction_tolerance,
+                               double spectrum_weighted_wavelength_tolerance) const = 0;
     // Check wavelength and direction are not (almost) equal.
     virtual bool operator!=(const BeamBase &rhs) const = 0;
     //  Rotate the beam about an axis
@@ -392,7 +401,8 @@ namespace dxtbx { namespace model {
                        double wavelength_tolerance,
                        double direction_tolerance,
                        double polarization_normal_tolerance,
-                       double polarization_fraction_tolerance) const {
+                       double polarization_fraction_tolerance,
+                       double spectrum_weighted_wavelength_tolerance) const {
       // scan varying model checks
       if (get_num_scan_points() != rhs.get_num_scan_points()) {
         return false;
@@ -413,6 +423,14 @@ namespace dxtbx { namespace model {
           return false;
         }
       }
+
+      // spectrum checks
+      if (spectrum_energies_.size() != rhs.get_spectrum_energies().size())
+        return false;
+      if (spectrum_energies_.size())
+        if (!(std::abs(get_weighted_wavelength() - rhs.get_weighted_wavelength()) <=
+                      spectrum_weighted_wavelength_tolerance))
+          return false;
 
       // static model checks
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
@@ -439,6 +457,42 @@ namespace dxtbx { namespace model {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Beam &b);
+    /**
+     * Set the spectrum. X is eV, Y is dimensionless
+     */
+    void set_spectrum(scitbx::af::shared<double> spectrum_energies, scitbx::af::shared<double> spectrum_weights) {
+      DXTBX_ASSERT(spectrum_energies.size() == spectrum_weights.size());
+      spectrum_energies_ = spectrum_energies;
+      spectrum_weights_ = spectrum_weights;
+    }
+
+    /**
+     * Get the spectrum energies (eV)
+     */
+    scitbx::af::shared<double> get_spectrum_energies() const {
+      return spectrum_energies_;
+    }
+
+    /**
+     * Get the spectrum weights
+     */
+    scitbx::af::shared<double> get_spectrum_weights() const {
+      return spectrum_weights_;
+    }
+
+    /**
+     * Get the spectrum weighted wavelength
+     */
+    double get_weighted_wavelength() const {
+      double weighted_sum = 0;
+      double summed_weights = 0;
+      for (size_t i = 0; i < spectrum_energies_.size(); i++) {
+        weighted_sum += spectrum_energies_[i] * spectrum_weights_[i];
+        summed_weights += spectrum_weights_[i];
+      }
+      DXTBX_ASSERT(weighted_sum > 0 && summed_weights > 0);
+      return 12398.4187 / (weighted_sum / summed_weights); //  eV per Å conversion factor
+    }
 
   private:
     double wavelength_;
@@ -450,6 +504,8 @@ namespace dxtbx { namespace model {
     double flux_;
     double transmission_;
     scitbx::af::shared<vec3<double> > s0_at_scan_points_;
+    scitbx::af::shared<double> spectrum_energies_;
+    scitbx::af::shared<double> spectrum_weights_;
   };
 
   /** Print beam information */
@@ -463,6 +519,8 @@ namespace dxtbx { namespace model {
     os << "    polarization normal: " << b.get_polarization_normal().const_ref()
        << "\n";
     os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
+    if (b.get_spectrum_energies().size())
+      os << "    spectrum weighted wavelength: " << b.get_weighted_wavelength() << "\n";
     return os;
   }
 
