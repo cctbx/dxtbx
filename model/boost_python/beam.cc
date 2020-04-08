@@ -99,7 +99,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     return beam;
   }
 
-  static Beam *make_beam_w_all(vec3<double> sample_to_source,
+  static Beam *make_beam_w_most(vec3<double> sample_to_source,
                                double wavelength,
                                double divergence,
                                double sigma_divergence,
@@ -128,6 +128,23 @@ namespace dxtbx { namespace model { namespace boost_python {
                       flux,
                       transmission);
     }
+    return beam;
+  }
+
+  static Beam *make_beam_w_all(vec3<double> sample_to_source,
+                               double wavelength,
+                               double divergence,
+                               double sigma_divergence,
+                               vec3<double> polarization_normal,
+                               double polarization_fraction,
+                               double flux,
+                               double transmission,
+                               scitbx::af::shared<double> spectrum_energies,
+                               scitbx::af::shared<double> spectrum_weights,
+                               bool deg) {
+    Beam *beam = make_beam_w_most(sample_to_source, wavelength, divergence, sigma_divergence,
+                                  polarization_normal, polarization_fraction, flux, transmission, deg);
+    beam->set_spectrum(spectrum_energies, spectrum_weights);
     return beam;
   }
 
@@ -310,6 +327,18 @@ namespace dxtbx { namespace model { namespace boost_python {
           default_call_policies(),
           (arg("s0"), arg("divergence"), arg("sigma_divergence"), arg("deg") = true)))
       .def("__init__",
+           make_constructor(&make_beam_w_most,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("wavelength"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("polarization_normal"),
+                             arg("polarization_fraction"),
+                             arg("flux"),
+                             arg("transmission"),
+                             arg("deg") = true)))
+       .def("__init__",
            make_constructor(&make_beam_w_all,
                             default_call_policies(),
                             (arg("direction"),
@@ -320,6 +349,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("polarization_fraction"),
                              arg("flux"),
                              arg("transmission"),
+                             arg("spectrum_energies"),
+                             arg("spectrum_weights"),
                              arg("deg") = true)))
       .def("__str__", &beam_to_string)
       .def("get_spectrum_energies",
