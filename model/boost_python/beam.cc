@@ -38,7 +38,9 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_polarization_normal(),
                                        obj.get_polarization_fraction(),
                                        obj.get_flux(),
-                                       obj.get_transmission());
+                                       obj.get_transmission(),
+                                       obj.get_spectrum_energies(),
+                                       obj.get_spectrum_weights());
     }
 
     static boost::python::tuple getstate(boost::python::object obj) {
@@ -195,6 +197,16 @@ namespace dxtbx { namespace model { namespace boost_python {
       }
       result["s0_at_scan_points"] = l;
     }
+    if (obj.get_spectrum_energies().size()) {
+      boost::python::list e;
+      boost::python::list w;
+      for (size_t i = 0; i < obj.get_spectrum_energies().size(); i++) {
+        e.append(obj.get_spectrum_energies()[i]);
+        w.append(obj.get_spectrum_weights()[i]);
+      }
+      result["spectrum_energies"] = e;
+      result["spectrum_weights"] = w;
+    }
     return result;
   }
 
@@ -214,6 +226,19 @@ namespace dxtbx { namespace model { namespace boost_python {
       boost::python::list s0_at_scan_points =
         boost::python::extract<boost::python::list>(obj["s0_at_scan_points"]);
       Beam_set_s0_at_scan_points_from_list(*b, s0_at_scan_points);
+    }
+    if (obj.has_key("spectrum_energies")) {
+      DXTBX_ASSERT(obj.has_key("spectrum_weights"));
+      boost::python::list e_list = boost::python::extract<boost::python::list>(obj["spectrum_energies"]);
+      boost::python::list w_list = boost::python::extract<boost::python::list>(obj["spectrum_weights"]);
+      DXTBX_ASSERT(boost::python::len(e_list) == boost::python::len(w_list));
+      scitbx::af::shared<double> e;
+      scitbx::af::shared<double> w;
+      for (size_t i = 0; i < boost::python::len(e_list); i++) {
+        e.push_back(boost::python::extract<double>(e_list[i]));
+        w.push_back(boost::python::extract<double>(w_list[i]));
+      }
+      b->set_spectrum(e, w);
     }
     return b;
   }
@@ -262,7 +287,8 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("wavelength_tolerance") = 1e-6,
             arg("direction_tolerance") = 1e-6,
             arg("polarization_normal_tolerance") = 1e-6,
-            arg("polarization_fraction_tolerance") = 1e-6));
+            arg("polarization_fraction_tolerance") = 1e-6,
+            arg("spectrum_weighted_wavelength_tolerance") = 1e-6));
 
     // Export Beam : BeamBase
     class_<Beam, boost::shared_ptr<Beam>, bases<BeamBase> >("Beam")
@@ -296,6 +322,14 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("transmission"),
                              arg("deg") = true)))
       .def("__str__", &beam_to_string)
+      .def("get_spectrum_energies",
+          &Beam::get_spectrum_energies)
+      .def("get_spectrum_weights",
+          &Beam::get_spectrum_weights)
+      .def("get_weighted_wavelength",
+          &Beam::get_weighted_wavelength)
+      .def("set_spectrum",
+          &Beam::set_spectrum)
       .def("to_dict", &to_dict<Beam>)
       .def("from_dict", &from_dict<Beam>, return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
