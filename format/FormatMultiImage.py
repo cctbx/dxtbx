@@ -70,6 +70,9 @@ class FormatMultiImage(Format):
     def get_beam(self, index=None):
         return self._beam_instance
 
+    def get_spectrum(self, index=None):
+        raise NotImplementedError
+
     def get_scan(self, index=None):
         return self._scan_instance
 

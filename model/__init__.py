@@ -28,6 +28,7 @@ from dxtbx.util import format_float_with_standard_uncertainty
 from dxtbx_model_ext import (
     Beam,
     BeamBase,
+    Spectrum,
     Crystal,
     CrystalBase,
     Detector,
