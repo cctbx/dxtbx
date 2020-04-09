@@ -62,7 +62,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         data = entry.data[0]
 
         # Construct the models
-        self._beam_factory = BeamFactory(beam).model
+        self._beam_factory = BeamFactory(beam)
         self._beam_factory.load_model(0)
 
         self._setup_detector(detector, self._beam_factory.model)
@@ -223,8 +223,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         return self._detector_model
 
     def _beam(self, index=None):
-        self._beam_factory.load_model(index)
-        self._beam_model = self._beam_factory.model
+        self._beam_model = self._beam_factory.load_model(index)
         return self._beam_model
 
     def _scan(self):

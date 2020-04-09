@@ -543,7 +543,7 @@ class BeamFactory(object):
     def load_model(self, index=None):
         # Cached model
         if self.model is not None and index == self.index:
-            return
+            return self.model
 
         # Get the items from the NXbeam class
         wavelength = self.obj.handle["incident_wavelength"]
@@ -569,6 +569,7 @@ class BeamFactory(object):
         # Construct the beam model
         self.index = index
         self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
+        return self.model
 
 
 def get_change_of_basis(transformation):
