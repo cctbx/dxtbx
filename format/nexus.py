@@ -549,10 +549,29 @@ class BeamFactory(object):
             return self.model
 
         # Get the items from the NXbeam class
-        wavelength = self.obj.handle["incident_wavelength"]
-        wavelength_value = None
-        wavelength_weights = self.obj.handle.get("incident_wavelength_weight")
-        wavelength_calculated = self.obj.handle.get("incident_wavelength_calculated")
+        primary_key = "incident_wavelength"
+        wavelength = self.obj.handle[primary_key]
+        spectrum_wavelengths = wavelength
+        spectrum_weights = self.obj.handle.get(primary_key + "_weight")
+
+        # If the wavelength array does not represent spectra, look for spectra
+        # in the variant chain
+        variant_test = wavelength
+        has_variant_spectra = False
+        while spectrum_weights is None:
+            if "variant" in variant_test.attrs:
+                variant_key = variant_test.attrs["variant"]
+                variant_wavelengths = self.obj.handle[variant_key]
+                variant_weights = self.obj.handle.get(variant_key + "_weight")
+                if variant_weights is None:
+                    variant_test = variant_wavelengths  # Keep looking
+                else:
+                    # Found spectra
+                    spectrum_wavelengths = variant_wavelengths
+                    spectrum_weights = variant_weights  # cause while loop to end
+                    has_variant_spectra = True
+            else:
+                break
 
         if index is None:
             index = 0
@@ -569,31 +588,27 @@ class BeamFactory(object):
             )
             return wavelength_value
 
-        if wavelength_calculated is not None:
-            wavelength_value = get_wavelength(wavelength_calculated)
-        elif wavelength_weights is None:
-            wavelength_value = get_wavelength(wavelength)
-
-        if wavelength_weights is None:
+        if spectrum_weights is None:
             # Construct the beam model
+            wavelength_value = get_wavelength(wavelength)
             self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
         else:
             self.model = Beam()
             self.model.set_direction((0, 0, 1))
 
-            wavelength_units = wavelength.attrs["units"]
+            wavelength_units = spectrum_wavelengths.attrs["units"]
 
-            if len(wavelength.shape) > 1:
-                wavelength = wavelength[index]
-                wavelength_weights = wavelength_weights[index]
+            if len(spectrum_wavelengths.shape) > 1:
+                spectrum_wavelengths = spectrum_wavelengths[index]
+                spectrum_weights = spectrum_weights[index]
 
             spectrum_wavelengths = convert_units(
-                wavelength, wavelength_units, "angstrom"
+                spectrum_wavelengths, wavelength_units, "angstrom"
             )
             spectrum_energies = 12398.4187 / spectrum_wavelengths
-            spectrum_weights = wavelength_weights
             self.model.set_spectrum(spectrum_energies, spectrum_weights)
-            if wavelength_value:
+            if has_variant_spectra:
+                wavelength_value = get_wavelength(wavelength)
                 self.model.set_wavelength(wavelength_value)
             else:
                 self.model.set_wavelength(self.model.get_weighted_wavelength())
