@@ -225,8 +225,7 @@ class Format(object):
         """Return the instance of detector base."""
         self.detectorbase_start()
 
-        # XXX Temporary proxy to aid in the transition to dxtbx.  Remove
-        # once completed.
+        # Proxy to link dxtbx to iotbx
         class _detectorbase_proxy(object):
             def __init__(self, format_instance):
                 self._fi = format_instance
