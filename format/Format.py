@@ -242,8 +242,6 @@ class Format(object):
                 try:
                     return self._fi.__getattribute__(name)
                 except AttributeError:
-                    # print >> sys.stderr, \
-                    #    "requesting iotbx.detectors.detectorbase.%s" % name
                     try:
                         return self._fi.detectorbase.__getattribute__(name)
                     except AttributeError:
