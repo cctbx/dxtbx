@@ -600,7 +600,12 @@ class BeamFactory(object):
 
             if len(spectrum_wavelengths.shape) > 1:
                 spectrum_wavelengths = spectrum_wavelengths[index]
+            else:
+                spectrum_wavelengths = spectrum_wavelengths[()]
+            if len(spectrum_weights.shape) > 1:
                 spectrum_weights = spectrum_weights[index]
+            else:
+                spectrum_weights = spectrum_weights[()]
 
             spectrum_wavelengths = convert_units(
                 spectrum_wavelengths, wavelength_units, "angstrom"
