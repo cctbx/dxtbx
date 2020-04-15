@@ -14,17 +14,17 @@ from scitbx.array_family import flex
 
 import dxtbx.ext
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
-class FormatSER(FormatMultiImage, Format):
+class FormatSER(FormatMultiImage, FormatFile):
     def __init__(self, image_file, **kwargs):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         FormatMultiImage.__init__(self, **kwargs)
-        Format.__init__(self, image_file, **kwargs)
+        FormatFile.__init__(self, image_file, **kwargs)
 
     @staticmethod
     def understand(image_file):
@@ -122,23 +122,23 @@ class FormatSER(FormatMultiImage, Format):
         pass
 
     def get_goniometer(self, index=None):
-        return Format.get_goniometer(self)
+        return FormatFile.get_goniometer(self)
 
     def get_detector(self, index=None):
-        return Format.get_detector(self)
+        return FormatFile.get_detector(self)
 
     def get_beam(self, index=None):
-        return Format.get_beam(self)
+        return FormatFile.get_beam(self)
 
     def get_scan(self, index=None):
         if index is None:
-            return Format.get_scan(self)
+            return FormatFile.get_scan(self)
         else:
-            scan = Format.get_scan(self)
+            scan = FormatFile.get_scan(self)
             return scan[index]
 
     def get_image_file(self, index=None):
-        return Format.get_image_file(self)
+        return FormatFile.get_image_file(self)
 
     def get_raw_data(self, index):
         data_offset = self._header_dictionary["DataOffsetArray"][index]

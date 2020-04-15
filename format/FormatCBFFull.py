@@ -15,8 +15,8 @@ from iotbx.detectors.cbf import CBFImage
 from scitbx.array_family import flex
 
 import pycbf
-from dxtbx.format.Format import bz2, gzip
 from dxtbx.format.FormatCBF import FormatCBF
+from dxtbx.format.FormatFile import bz2, gzip
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.image import cbf_read_buffer
 

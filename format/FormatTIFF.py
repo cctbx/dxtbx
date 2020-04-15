@@ -9,7 +9,7 @@ and generate the experimental model representations.
 from __future__ import absolute_import, division, print_function
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatTIFFHelpers import (
     BIG_ENDIAN,
     LITTLE_ENDIAN,
@@ -17,7 +17,7 @@ from dxtbx.format.FormatTIFFHelpers import (
 )
 
 
-class FormatTIFF(Format):
+class FormatTIFF(FormatFile):
     """An image reading class for TIFF format images i.e. those from Dectris
     and Rayonix, which start with a standard TIFF header (which is what is
     handled here) and have their own custom header following, which must

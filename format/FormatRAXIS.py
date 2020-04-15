@@ -70,7 +70,7 @@ from builtins import range
 from iotbx.detectors.raxis import RAXISImage
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 
 
 class RAXISHelper(object):
@@ -81,7 +81,7 @@ class RAXISHelper(object):
         super(RAXISHelper, self).__init__(image_file, **kwargs)
 
     def _start(self):
-        with Format.open_file(self._image_file) as fh:
+        with FormatFile.open_file(self._image_file) as fh:
             self._header_bytes = fh.read(1024)
 
         if self._header_bytes[812:822].strip() in (b"SGI", b"IRIS"):
@@ -135,7 +135,7 @@ class RAXISHelper(object):
         return values
 
 
-class FormatRAXIS(RAXISHelper, Format):
+class FormatRAXIS(RAXISHelper, FormatFile):
     """A class to support the RAXIS detector format from Rigaku."""
 
     @staticmethod
@@ -143,7 +143,7 @@ class FormatRAXIS(RAXISHelper, Format):
         """See if this looks like an RAXIS format image - clue is first
         5 letters of file should be RAXIS."""
 
-        with Format.open_file(image_file) as fh:
+        with FormatFile.open_file(image_file) as fh:
             return fh.read(5) == b"RAXIS"
 
     def _goniometer(self):

@@ -12,7 +12,7 @@ import six.moves.cPickle as pickle
 
 import dxtbx.datablock as datablock
 from dxtbx.datablock import DataBlockFactory
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile as Format
 from dxtbx.imageset import ImageSequence
 from dxtbx.model import Beam, Detector, Goniometer, Scan
 

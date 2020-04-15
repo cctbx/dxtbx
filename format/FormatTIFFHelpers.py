@@ -5,10 +5,9 @@ nature binary so we need to mess with things like byte swapping.
 from __future__ import absolute_import, division, print_function
 
 import struct
-import sys
 from builtins import range
 
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile as Format
 
 LITTLE_ENDIAN = 1234
 BIG_ENDIAN = 4321
@@ -123,15 +122,3 @@ def _read_tiff_image_description(tiff_header, byte_order):
             header_text = tiff_header[start:end].strip()
 
     return header_text
-
-
-if __name__ == "__main__":
-    for arg in sys.argv[1:]:
-        width, height, depth, header, order = read_basic_tiff_header(arg)
-        print("(%d x %d) @ %d + %d" % (width, height, depth, header))
-        tiff_header = Format.open_file(arg, "rb").read(header)
-        text = _read_tiff_image_description(tiff_header, order)
-        if text:
-            print(text)
-        else:
-            print("No text found")

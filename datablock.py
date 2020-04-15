@@ -11,14 +11,15 @@ import os.path
 from builtins import range
 from os.path import abspath, dirname, normpath, splitext
 
+import six
+import six.moves.cPickle as pickle
+
 import libtbx
 from scitbx import matrix
 
 import dxtbx.imageset
 import dxtbx.model
-import six
-import six.moves.cPickle as pickle
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile as Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import get_format_class_for_file

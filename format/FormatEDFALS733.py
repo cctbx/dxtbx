@@ -7,10 +7,10 @@ import sys
 from iotbx.detectors import EDFWrapper
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 
 
-class FormatEDFALS733(Format):
+class FormatEDFALS733(FormatFile):
     """EDF is the ESRF data format.
     In present context, ALS 7.3.3 uses this format for its single-tile Pilatus
     """

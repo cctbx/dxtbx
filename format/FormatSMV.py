@@ -15,10 +15,10 @@ from scitbx.array_family import flex
 
 from dxtbx import IncorrectFormatError
 from dxtbx.ext import is_big_endian, read_uint16, read_uint16_bs
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 
 
-class FormatSMV(Format):
+class FormatSMV(FormatFile):
     """An image reading class for SMV format images i.e. those from ADSC and
     Rigaku which start with:
 

@@ -14,7 +14,7 @@ from scitbx.array_family import flex
 
 import dxtbx
 from dxtbx.datablock import DataBlockFactory
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile as Format
 from dxtbx.imageset import ImageSetFactory
 from dxtbx.model import (
     Beam,

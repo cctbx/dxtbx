@@ -2,15 +2,13 @@
 
 from __future__ import absolute_import, division, print_function
 
-import sys
-
 from iotbx.detectors.marIP import MARIPImage
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 
 
-class FormatMarIP(Format):
+class FormatMarIP(FormatFile):
     """An image reading class for MarIP-format images
     Positive identification:  first 140 bytes contain the string "mar research"
     """
@@ -29,7 +27,7 @@ class FormatMarIP(Format):
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        Format.__init__(self, image_file, **kwargs)
+        FormatFile.__init__(self, image_file, **kwargs)
 
     def detectorbase_start(self):
         pass
@@ -87,8 +85,3 @@ class FormatMarIP(Format):
             osc_width=self.detectorbase.parameters["OSC_RANGE"],
             epoch=None,
         )
-
-
-if __name__ == "__main__":
-    for arg in sys.argv[1:]:
-        print(FormatMarIP.understand(arg))

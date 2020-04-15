@@ -2,12 +2,13 @@ from __future__ import absolute_import, division, print_function
 
 import json
 
+import numpy as np
+
 from scitbx import matrix
 from scitbx.array_family import flex
 
-import numpy as np
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger
 from dxtbx.model.beam import BeamFactory
@@ -28,7 +29,7 @@ except (ImportError, ValueError):
 injected_data = {}
 
 
-class FormatEigerStream(FormatMultiImage, Format):
+class FormatEigerStream(FormatMultiImage, FormatFile):
     """
     A format class to understand an EIGER stream
     """
@@ -55,7 +56,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         self._scan_instance = None
 
         FormatMultiImage.__init__(self, **kwargs)
-        Format.__init__(self, image_file, **kwargs)
+        FormatFile.__init__(self, image_file, **kwargs)
 
         self.setup()
 

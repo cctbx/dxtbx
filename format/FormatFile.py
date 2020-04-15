@@ -96,7 +96,7 @@ class Reader(object):
         return ""
 
 
-class Format(object):
+class FormatFile(object):
     """A base class for the representation and interrogation of diffraction
     image formats, from which all classes for reading the header should be
     inherited. This includes: autoregistration of implementation classes,
@@ -531,7 +531,7 @@ class Format(object):
         """Open file for reading, decompressing silently if necessary,
         caching transparently if possible."""
 
-        if url and Format.is_url(filename):
+        if url and FormatFile.is_url(filename):
             fh_func = functools.partial(urllib.request.urlopen, filename)
 
         elif filename.endswith(".bz2"):

@@ -7,7 +7,6 @@ from __future__ import absolute_import, division, print_function
 
 import os
 import struct
-import sys
 from builtins import range
 
 from boost.python import streambuf
@@ -22,11 +21,11 @@ from dxtbx.ext import (
     read_uint16,
     read_uint32,
 )
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
-class FormatGatanDM4(FormatMultiImage, Format):
+class FormatGatanDM4(FormatMultiImage, FormatFile):
     """An image reading class for images in Gatan Digital Micrograph DM4
     format, which may be multi image stacks.
 
@@ -75,8 +74,10 @@ class FormatGatanDM4(FormatMultiImage, Format):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
+
+        # cannot use super() here as 2 parent class constructors to call
         FormatMultiImage.__init__(self, **kwargs)
-        Format.__init__(self, image_file, **kwargs)
+        FormatFile.__init__(self, image_file, **kwargs)
 
     @staticmethod
     def understand(image_file):
@@ -295,23 +296,23 @@ class FormatGatanDM4(FormatMultiImage, Format):
         return self._num_images
 
     def get_goniometer(self, index=None):
-        return Format.get_goniometer(self)
+        return FormatFile.get_goniometer(self)
 
     def get_detector(self, index=None):
-        return Format.get_detector(self)
+        return FormatFile.get_detector(self)
 
     def get_beam(self, index=None):
-        return Format.get_beam(self)
+        return FormatFile.get_beam(self)
 
     def get_scan(self, index=None):
         if index is None:
-            return Format.get_scan(self)
+            return FormatFile.get_scan(self)
         else:
-            scan = Format.get_scan(self)
+            scan = FormatFile.get_scan(self)
             return scan[index]
 
     def get_image_file(self, index=None):
-        return Format.get_image_file(self)
+        return FormatFile.get_image_file(self)
 
     def _goniometer(self):
         """Dummy goniometer, 'vertical' as the images are viewed"""
@@ -405,8 +406,3 @@ class FormatGatanDM4(FormatMultiImage, Format):
 
         raw_data.reshape(flex.grid(self._image_size[1], self._image_size[0]))
         return raw_data
-
-
-if __name__ == "__main__":
-    for arg in sys.argv[1:]:
-        print(FormatGatanDM4.understand(arg))

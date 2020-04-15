@@ -8,7 +8,7 @@ import numpy as np
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
 
@@ -98,7 +98,7 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
         raise NotImplementedError
 
     def get_image_file(self, index=None):
-        return Format.get_image_file(self)
+        return FormatFile.get_image_file(self)
 
     def get_detector(self, index=None):
         return self._detector_instance

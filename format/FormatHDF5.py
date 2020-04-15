@@ -1,18 +1,16 @@
 from __future__ import absolute_import, division, print_function
 
-import sys
-
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
-class FormatHDF5(FormatMultiImage, Format):
+class FormatHDF5(FormatMultiImage, FormatFile):
     def __init__(self, image_file, **kwargs):
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         FormatMultiImage.__init__(self, **kwargs)
-        Format.__init__(self, image_file, **kwargs)
+        FormatFile.__init__(self, image_file, **kwargs)
 
     @staticmethod
     def understand(image_file):
@@ -21,8 +19,3 @@ class FormatHDF5(FormatMultiImage, Format):
                 return fh.read(8) == b"\211HDF\r\n\032\n"
         except IOError:
             return False
-
-
-if __name__ == "__main__":
-    for arg in sys.argv[1:]:
-        print(FormatHDF5.understand(arg))

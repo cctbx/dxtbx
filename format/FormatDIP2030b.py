@@ -5,10 +5,10 @@ import sys
 from iotbx.detectors.macscience import DIPImage
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 
 
-class FormatDIP2030b(Format):
+class FormatDIP2030b(FormatFile):
     @staticmethod
     def understand(image_file):
         # for MacScience DIP2030b only, file size is exactly 18001024 bytes

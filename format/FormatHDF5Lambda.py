@@ -13,7 +13,7 @@ from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
@@ -132,19 +132,19 @@ class FormatHDF5Lambda(FormatHDF5):
         return data.shape[0]
 
     def get_goniometer(self, index=None):
-        return Format.get_goniometer(self)
+        return FormatFile.get_goniometer(self)
 
     def get_detector(self, index=None):
-        return Format.get_detector(self)
+        return FormatFile.get_detector(self)
 
     def get_beam(self, index=None):
-        return Format.get_beam(self)
+        return FormatFile.get_beam(self)
 
     def get_scan(self, index=None):
         if index is None:
-            return Format.get_scan(self)
+            return FormatFile.get_scan(self)
         else:
-            scan = Format.get_scan(self)
+            scan = FormatFile.get_scan(self)
             return scan[index]
 
     def get_raw_data(self, index):
@@ -154,7 +154,7 @@ class FormatHDF5Lambda(FormatHDF5):
         return flex.int(im)
 
     def get_image_file(self, index=None):
-        return Format.get_image_file(self)
+        return FormatFile.get_image_file(self)
 
 
 if __name__ == "__main__":

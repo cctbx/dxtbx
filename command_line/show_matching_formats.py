@@ -22,7 +22,7 @@ def show_matching_formats(files):
     for filename in files:
         print("\n=== %s ===" % filename)
         if os.path.exists(filename):
-            recurse("Format", filename)
+            recurse("FormatFile", filename)
         else:
             print("File not found.")
 

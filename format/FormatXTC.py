@@ -7,7 +7,7 @@ from libtbx.phil import parse
 from xfel.cxi.cspad_ana import cspad_tbx
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
@@ -49,14 +49,14 @@ class XtcReader(Reader):
         pass
 
 
-class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
+class FormatXTC(FormatMultiImageLazy, FormatStill, FormatFile):
     def __init__(self, image_file, **kwargs):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         FormatMultiImageLazy.__init__(self, **kwargs)
         FormatStill.__init__(self, image_file, **kwargs)
-        Format.__init__(self, image_file, **kwargs)
+        FormatFile.__init__(self, image_file, **kwargs)
         self.current_index = None
         self.current_event = None
         self._psana_runs = {}  # empty container, to prevent breaking other formats

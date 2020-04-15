@@ -7,7 +7,7 @@ from builtins import range
 
 from scitbx.array_family import flex
 
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetLazy
 from dxtbx.model import MultiAxisGoniometer
@@ -54,7 +54,7 @@ class Reader(object):
         return self._filename
 
 
-class FormatMultiImage(Format):
+class FormatMultiImage(FormatFile):
     def __init__(self, **kwargs):
         pass
 

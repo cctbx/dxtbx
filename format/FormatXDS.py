@@ -9,11 +9,11 @@ from rstbx.cftbx.coordinate_frame_helpers import is_recognized_file
 from scitbx import matrix
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.model import Detector
 
 
-class FormatXDS(Format):
+class FormatXDS(FormatFile):
     """An image reading class for XDS files"""
 
     @staticmethod

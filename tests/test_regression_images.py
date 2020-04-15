@@ -259,7 +259,7 @@ def test_format_class_API_assumptions(test_image):
                 multiple_formats |= subtree_multiple
         return known_format_class, multiple_formats
 
-    understood_format, multiple_formats = recurse("Format", test_image)
+    understood_format, multiple_formats = recurse("FormatFile", test_image)
 
     assert not multiple_formats, "image file understood by multiple Format objects"
     # It's a failure if nothing could understand this file

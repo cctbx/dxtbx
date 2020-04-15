@@ -10,10 +10,10 @@ import sys
 import six
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 
 
-class FormatCBF(Format):
+class FormatCBF(FormatFile):
     """An image reading class for CBF format images i.e. those from Dectris
     amongst others. This is just a first base class which will be used to
     determine whether this is really a CBF file."""

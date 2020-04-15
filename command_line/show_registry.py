@@ -33,7 +33,7 @@ def show_registry(filename=None):
     print("Depth  Class name")
     print("    0  Format")
 
-    for class_name in dag["Format"]:
+    for class_name in dag["FormatFile"]:
         print_class(class_name, filename)
 
 

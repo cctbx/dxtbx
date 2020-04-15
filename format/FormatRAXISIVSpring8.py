@@ -4,11 +4,11 @@ import calendar
 import datetime
 import struct
 
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatRAXIS import RAXISHelper
 
 
-class FormatRAXISIVSPring8(RAXISHelper, Format):
+class FormatRAXISIVSPring8(RAXISHelper, FormatFile):
     """Format class for R-AXIS4 images. Currently the only example we have is
     from SPring-8, which requires a reverse axis goniometer. It is not clear how
     to distinguish this detector from others that produce 'R-AXIS4' images that we
@@ -19,7 +19,7 @@ class FormatRAXISIVSPring8(RAXISHelper, Format):
     @staticmethod
     def understand(image_file):
         try:
-            with Format.open_file(image_file, "rb") as fh:
+            with FormatFile.open_file(image_file, "rb") as fh:
                 header = fh.read(1024)
         except IOError:
             return False

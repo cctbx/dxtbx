@@ -6,10 +6,10 @@ from builtins import range
 from iotbx.detectors.bruker import BrukerImage
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 
 
-class FormatBruker(Format):
+class FormatBruker(FormatFile):
     """cctbx has no authoritative sources describing the Bruker format.
     Positive identification:  when listing the header out in 16-byte chunks,
     there are numerous chunks of the form

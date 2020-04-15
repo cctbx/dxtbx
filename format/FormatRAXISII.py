@@ -4,11 +4,11 @@ import sys
 
 from iotbx.detectors.raxis_nonsquare import NonSquareRAXISImage
 
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 from dxtbx.format.FormatRAXIS import RAXISHelper
 
 
-class FormatRAXISII(RAXISHelper, Format):
+class FormatRAXISII(RAXISHelper, FormatFile):
     @staticmethod
     def understand(image_file):
         try:

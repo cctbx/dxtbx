@@ -403,7 +403,7 @@ class ImageSetFactory(object):
             filenames = [template_format % (i + 1) for i in array_range]
 
         # Import here as Format and Imageset have cyclic dependencies
-        from dxtbx.format.Format import Format
+        from dxtbx.format.FormatFile import FormatFile as Format
 
         # Get the format class
         if check_format:
@@ -501,7 +501,7 @@ class ImageSetFactory(object):
     ):
         """Create an image set"""
         # Import here as Format and Imageset have cyclic dependencies
-        from dxtbx.format.Format import Format
+        from dxtbx.format.FormatFile import FormatFile as Format
 
         # So does FormatMultiImage
         from dxtbx.format.FormatMultiImage import FormatMultiImage
@@ -564,7 +564,7 @@ class ImageSetFactory(object):
         # Get the format object and reader
         if format_class is None:
             # Import here as Format and Imageset have cyclic dependencies
-            from dxtbx.format.Format import Format
+            from dxtbx.format.FormatFile import FormatFile as Format
 
             if check_format:
                 format_class = dxtbx.format.Registry.get_format_class_for_file(

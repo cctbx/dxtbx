@@ -5,10 +5,10 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.FormatFile import FormatFile
 
 
-class FormatPY(Format):
+class FormatPY(FormatFile):
     """Let's take an educated guess as to how to recognize a Python
     pickle file containing a dictionary.  Not easy because there are
     three pickle protocols in Python 2.7.  Dangerous because the lowest
