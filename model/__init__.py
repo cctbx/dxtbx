@@ -796,6 +796,8 @@ class _(object):
         from dxtbx.datablock import AutoEncoder
 
         for fname, obj in to_write:
+            beam_spectra_to_pickle(filename, obj)
+
             if compact:
                 separators = (",", ":")
                 indent = None
@@ -856,3 +858,47 @@ class _(object):
         from .experiment_list import ExperimentListFactory
 
         return ExperimentListFactory.from_serialized_format(filename, check_format)
+
+
+def beam_spectra_to_pickle(filename, obj):
+    """
+    Helper function to take an experiment list dictionary and move the
+    spectra to a pickle file
+
+    Args:
+        filename: File name the experiment list will be saved to
+        obj: Experiment list dictionary
+    """
+    if "beam" not in obj:
+        return
+    all_energies = []
+    all_weights = []
+    test = None
+    all_eq = True
+    for beam in obj["beam"]:
+        if "spectrum_energies" not in beam:
+            continue
+        if test is None:
+            test = beam["spectrum_energies"]
+        else:
+            if (test == beam["spectrum_energies"]).count(False):
+                all_eq = False
+                break
+
+    for beam in obj["beam"]:
+        if "spectrum_energies" not in beam:
+            continue
+        if not all_eq or not all_energies:
+            all_energies.append(beam["spectrum_energies"])
+        all_weights.append(beam["spectrum_weights"])
+        del beam["spectrum_energies"]
+        del beam["spectrum_weights"]
+        beam["spectrum_index"] = len(all_weights) - 1
+    if not all_energies:
+        return
+    pickle_filename = os.path.splitext(filename)[0] + "_spectrum.pickle"
+    obj["spectra_pickle"] = pickle_filename
+    with open(str(pickle_filename), "wb") as outfile:
+        pickle.dump(
+            (all_energies, all_weights), outfile, protocol=pickle.HIGHEST_PROTOCOL
+        )

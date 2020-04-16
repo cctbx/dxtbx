@@ -371,8 +371,28 @@ class ExperimentListDict(object):
                 )
             )
 
+        # Read the beam spectra if available
+        self._read_spectra_pickle(el.beams())
+
         # Return the experiment list
         return el
+
+    def _read_spectra_pickle(self, beams):
+        """ Read the beam spectra if available """
+        if "spectra_pickle" not in self._obj:
+            return
+        with open(self._obj["spectra_pickle"], "rb") as infile:
+            all_energies, all_weights = pickle.load(infile)
+        assert len(all_energies) == 1 or len(all_energies) == len(all_weights)
+        for i, beam in enumerate(beams):
+            spectrum_index = self._obj["beam"][i].get("spectrum_index")
+            if spectrum_index is not None:
+                if len(all_energies) == 1:
+                    beam.set_spectrum(all_energies[0], all_weights[spectrum_index])
+                else:
+                    beam.set_spectrum(
+                        all_energies[spectrum_index], all_weights[spectrum_index]
+                    )
 
     def _make_mem_imageset(self, imageset):
         """Can't make a mem imageset from dict."""
