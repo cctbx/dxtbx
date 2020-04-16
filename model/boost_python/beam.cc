@@ -215,14 +215,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       result["s0_at_scan_points"] = l;
     }
     if (obj.get_spectrum_energies().size()) {
-      boost::python::list e;
-      boost::python::list w;
-      for (size_t i = 0; i < obj.get_spectrum_energies().size(); i++) {
-        e.append(obj.get_spectrum_energies()[i]);
-        w.append(obj.get_spectrum_weights()[i]);
-      }
-      result["spectrum_energies"] = e;
-      result["spectrum_weights"] = w;
+      result["spectrum_energies"] = obj.get_spectrum_energies();
+      result["spectrum_weights"] = obj.get_spectrum_weights();
     }
     return result;
   }
@@ -246,16 +240,8 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
     if (obj.has_key("spectrum_energies")) {
       DXTBX_ASSERT(obj.has_key("spectrum_weights"));
-      boost::python::list e_list = boost::python::extract<boost::python::list>(obj["spectrum_energies"]);
-      boost::python::list w_list = boost::python::extract<boost::python::list>(obj["spectrum_weights"]);
-      DXTBX_ASSERT(boost::python::len(e_list) == boost::python::len(w_list));
-      scitbx::af::shared<double> e;
-      scitbx::af::shared<double> w;
-      for (size_t i = 0; i < boost::python::len(e_list); i++) {
-        e.push_back(boost::python::extract<double>(e_list[i]));
-        w.push_back(boost::python::extract<double>(w_list[i]));
-      }
-      b->set_spectrum(e, w);
+      b->set_spectrum(boost::python::extract<scitbx::af::shared<double> >(obj["spectrum_energies"]),
+                      boost::python::extract<scitbx::af::shared<double> >(obj["spectrum_energies"]));
     }
     return b;
   }
