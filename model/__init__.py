@@ -838,9 +838,12 @@ class _(object):
     def as_file(self, filename, **kwargs):
         """Dump experiment list as file."""
         ext = os.path.splitext(filename)[1]
-        j_ext = [".json", ".expt"]
+        h_ext = [".expt"]
+        j_ext = [".json"]
         p_ext = [".p", ".pkl", ".pickle"]
-        if ext.lower() in j_ext:
+        if ext.lower() in h_ext:
+            return self.as_hdf5(filename)
+        elif ext.lower() in j_ext:
             return self.as_json(filename, **kwargs)
         elif ext.lower() in p_ext:
             return self.as_pickle(filename, **kwargs)

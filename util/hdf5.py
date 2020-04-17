@@ -29,14 +29,19 @@ def _dict_to_h5(data, h5_ptr):
         elif isinstance(value, list) and isinstance(value[0], list):
             for j, element in enumerate(value):
                 label = "_%s/%d" % (key, j)
-                if isinstance(element[0], int) or isinstance(element[0], float):
+                if (
+                    len(element) == 0
+                    or isinstance(element[0], int)
+                    or isinstance(element[0], float)
+                ):
                     h5_ptr.create_dataset(label, data=element)
                 elif isinstance(element[0], dict):
                     _element = _list_dict_to_dict_list(element)
                     _dict_to_h5(_element, h5_ptr.create_group("*%s" % label))
                 else:
                     raise TypeError(
-                        "no idea what to do with [[thing]] where thing != dict, int or float"
+                        "no idea what to do with [[thing]] where thing != dict, int or float: %s"
+                        % str(element)
                     )
 
         elif isinstance(value, list) and isinstance(value[0], dict):
