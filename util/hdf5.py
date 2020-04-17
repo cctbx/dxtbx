@@ -38,6 +38,10 @@ def _dict_to_h5(data, h5_ptr):
                 elif isinstance(element[0], dict):
                     _element = _list_dict_to_dict_list(element)
                     _dict_to_h5(_element, h5_ptr.create_group("*%s" % label))
+                elif isinstance(element[0], tuple):
+                    h5_ptr.create_dataset(label, data=element)
+                elif isinstance(element[0], str):
+                    h5_ptr.create_dataset(label, data=numpy.array(element, dtype="S"))
                 else:
                     raise TypeError(
                         "no idea what to do with [[thing]] where thing != dict, int or float: %s"
@@ -63,6 +67,8 @@ def dict_to_h5(data, h5_file_out, prefix):
 
 
 def _h5_value_to_python(value):
+    if hasattr(value, "shape") and len(value.shape) > 1:
+        return _unpack_tuples(value)
     if type(value) == str:
         return value
     else:
@@ -72,6 +78,19 @@ def _h5_value_to_python(value):
             return [s.decode() for s in value]
         else:
             return list(value)
+
+
+def _unpack_tuples(value):
+    if value.dtype == numpy.dtype("int64"):
+        return [
+            tuple([int(value[i, j]) for j in range(value.shape[1])])
+            for i in range(value.shape[0])
+        ]
+    else:
+        return [
+            tuple([value[i, j] for j in range(value.shape[1])])
+            for i in range(value.shape[0])
+        ]
 
 
 def _h5_to_dict(h5_ptr):
@@ -117,6 +136,7 @@ if __name__ == "__main__":
         "keys": dict(zip(string.ascii_uppercase, string.ascii_lowercase)),
         "list_of_dicts": [{"name": "foo", "value": j} for j in range(10)],
         "list_of_lists": [list(range(j)) for j in range(5, 10)],
+        "list_of_lists_of_tuples": [[(j, j + 1, j + 2) for j in range(0, 12, 3)]],
     }
     dict_to_h5(things, "things.h5", "/things")
     other = h5_to_dict("things.h5", "/things")
