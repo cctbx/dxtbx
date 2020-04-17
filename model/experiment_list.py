@@ -35,6 +35,7 @@ from dxtbx.sequence_filenames import template_image_range
 from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
+from dxtbx.util import hdf5
 
 try:
     from typing import Any, Dict, Optional, Tuple
@@ -474,6 +475,10 @@ def _experimentlist_from_file(filename, directory=None):
     """Load a model dictionary from a file."""
     filename = resolve_path(filename, directory=directory)
     try:
+        return ExperimentListFactory.from_hdf5_file(filename)
+    except OSError:
+        pass
+    try:
         with open(filename, "r") as infile:
             return json.load(infile, object_hook=_decode_dict)
     except IOError:
@@ -707,6 +712,17 @@ class ExperimentListFactory(object):
             return ExperimentListFactory.from_json(
                 infile.read(), check_format=check_format, directory=directory
             )
+
+    @staticmethod
+    def from_hdf5_file(filename, check_format=True):
+        """Load an experiment list from a json file."""
+        filename = os.path.abspath(filename)
+        directory = os.path.dirname(filename)
+        return ExperimentListFactory.from_dict(
+            hdf5.h5_to_dict(filename, "/dials/experiment"),
+            check_format=check_format,
+            directory=directory,
+        )
 
     @staticmethod
     def from_pickle_file(filename):
