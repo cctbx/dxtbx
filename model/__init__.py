@@ -23,6 +23,7 @@ from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
+from dxtbx.util import hdf5
 from dxtbx_model_ext import (
     Beam,
     BeamBase,
@@ -710,6 +711,11 @@ class _(object):
         for experiment in self:
             if experiment.imageset.reader().is_single_file_reader():
                 experiment.imageset.reader().nullify_format_instance()
+
+    def as_hdf5(self, filename):
+        """Dump experiment list to HDF5 file"""
+
+        hdf5.dict_to_h5(self.to_dict(), filename, "/dials/experiment")
 
     def as_json(self, filename=None, compact=False, split=False):
         """Dump experiment list as json"""
