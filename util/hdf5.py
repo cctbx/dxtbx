@@ -26,13 +26,25 @@ def _dict_to_h5(data, h5_ptr):
             _dict_to_h5(value, h5_ptr.create_group(key))
         elif isinstance(value, list) and len(value) == 0:
             h5_ptr.create_dataset(key, data=value)
+        elif isinstance(value, list) and isinstance(value[0], list):
+            for j, element in enumerate(value):
+                label = "_%s/%d" % (key, j)
+                if isinstance(element[0], int) or isinstance(element[0], float):
+                    h5_ptr.create_dataset(label, data=element)
+                elif isinstance(element[0], dict):
+                    _element = _list_dict_to_dict_list(element)
+                    _dict_to_h5(_element, h5_ptr.create_group("*%s" % label))
+                else:
+                    raise TypeError(
+                        "no idea what to do with [[thing]] where thing != dict, int or float"
+                    )
+
         elif isinstance(value, list) and isinstance(value[0], dict):
             _value = _list_dict_to_dict_list(value)
             _dict_to_h5(_value, h5_ptr.create_group("*%s" % key))
         elif isinstance(value, list) and isinstance(value[0], str):
             h5_ptr.create_dataset(key, data=numpy.array(value, dtype="S"))
         else:
-            print(key, value)
             h5_ptr.create_dataset(key, data=value)
 
 
@@ -45,6 +57,18 @@ def dict_to_h5(data, h5_file_out, prefix):
         _dict_to_h5(data, out)
 
 
+def _h5_value_to_python(value):
+    if type(value) == str:
+        return value
+    else:
+        if value.dtype == numpy.dtype("int64"):
+            return [int(i) for i in list(value)]
+        elif value.dtype.kind == "S":
+            return [s.decode() for s in value]
+        else:
+            return list(value)
+
+
 def _h5_to_dict(h5_ptr):
     result = {}
     for key in h5_ptr:
@@ -52,17 +76,20 @@ def _h5_to_dict(h5_ptr):
         if isinstance(value, h5py.Group):
             if key.startswith("*"):
                 result[key[1:]] = _dict_list_to_list_dict(_h5_to_dict(value))
+            elif key.startswith("_"):
+                tmp = []
+                for v in value:
+                    if isinstance(v, h5py.Group):
+                        result.append(_h5_to_dict(value[v]))
+                    else:
+                        tmp.append(_h5_value_to_python(value[v]))
+                result[key[1:]] = tmp
             else:
                 result[key] = _h5_to_dict(value)
         else:
             value = value[()]
-            if type(value) == str:
-                result[key] = value
-            else:
-                if value.dtype == numpy.dtype("int64"):
-                    result[key] = [int(i) for i in list(value)]
-                else:
-                    result[key] = list(value)
+            result[key] = _h5_value_to_python(value)
+
     return result
 
 
@@ -88,3 +115,10 @@ if __name__ == "__main__":
     }
     dict_to_h5(things, "things.h5", "/things")
     other = h5_to_dict("things.h5", "/things")
+
+    import json
+
+    original = json.dumps(things, sort_keys=True)
+    reloaded = json.dumps(other, sort_keys=True)
+
+    assert original == reloaded
