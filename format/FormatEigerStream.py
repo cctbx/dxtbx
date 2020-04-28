@@ -2,10 +2,11 @@ from __future__ import absolute_import, division, print_function
 
 import json
 
+import numpy as np
+
 from scitbx import matrix
 from scitbx.array_family import flex
 
-import numpy as np
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage

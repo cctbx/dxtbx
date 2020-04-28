@@ -10,8 +10,8 @@ from scitbx import matrix
 import pycbf
 from dxtbx.model.detector_helpers import (
     detector_helper_sensors,
-    find_undefined_value,
     find_gain_value,
+    find_undefined_value,
     set_detector_distance,
     set_mosflm_beam_centre,
     set_slow_fast_beam_centre_mm,

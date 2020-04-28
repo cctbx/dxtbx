@@ -4,6 +4,7 @@ import calendar
 import os
 
 import pytest
+
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 n_pixels_vertical_gaps = 195 * 7 * 4 * 24

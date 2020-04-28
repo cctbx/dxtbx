@@ -1,8 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
-import procrunner
-import dxtbx
 import os
+
+import procrunner
+
+import dxtbx
 
 
 def test_average(dials_regression, tmpdir):
