@@ -22,7 +22,7 @@ from dxtbx.format.nexus import (
     MaskFactory,
     NXdata,
     NXmxReader,
-    ScanFactory,
+    generate_scan_model,
 )
 
 
@@ -359,7 +359,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self._beam_model = BeamFactory(beam).model
         self._detector_model = DetectorFactory(detector, self._beam_model).model
         self._goniometer_model = GoniometerFactory(sample).model
-        self._scan_model = ScanFactory(sample, detector).model
+        self._scan_model = generate_scan_model(sample, detector)
         self._raw_data = DataFactory(data, cached_information=fixer.data_factory_cache)
 
         # update model for masking Eiger detectors

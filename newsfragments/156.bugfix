@@ -1,0 +1,1 @@
+Fix a bug whereby reading a single-image data set from an Eiger detector would lead to an error.
