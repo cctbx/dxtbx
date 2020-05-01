@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import math
 
+# because we want a round function which does the same on Python 2.7 and 3.x
 from numpy import around as round
 
 
