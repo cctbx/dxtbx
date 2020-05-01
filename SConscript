@@ -101,6 +101,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     )
 
     env.Append(
+        CPPFLAGS='-fsigned-char',
         LIBS=env_etc.libm + ["cctbx", "scitbx_boost_python"] + env_etc.dxtbx_libs,
         LIBPATH=env_etc.dxtbx_lib_paths,
     )
