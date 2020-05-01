@@ -1085,74 +1085,46 @@ def find_scanning_axis(obj):
             return o
 
 
-class ScanFactory(object):
+def generate_scan_model(obj, detector_obj):
     """
-    A class to create a scan model from NXmx stuff
+    Create a scan model from NXmx stuff.
     """
+    # Get the image and oscillation range - need to search for rotations
+    # in dependency tree - if not, find translations or just the thing
+    # the sample depends on
+    try:
+        scan_axis = find_goniometer_rotation(obj)
+    except ValueError:
+        scan_axis = find_scanning_axis(obj)
 
-    def __init__(self, obj, detector_obj):
-        # Get the image and oscillation range - need to search for rotations
-        # in dependency tree - if not, find translations or just the thing
-        # the sample depends on
-        try:
-            scan_axis = find_goniometer_rotation(obj)
-        except ValueError:
-            scan_axis = find_scanning_axis(obj)
+    if scan_axis is None:
+        scan_axis = obj.handle.file[obj.handle["depends_on"][()]]
 
-        if scan_axis is None:
-            scan_axis = obj.handle.file[obj.handle["depends_on"][()]]
+    num_images = len(scan_axis)
+    image_range = (1, num_images)
 
-        image_range = (1, len(scan_axis))
+    rotn = scan_axis.attrs["transformation_type"] == numpy.string_("rotation")
 
-        rotn = scan_axis.attrs["transformation_type"] == numpy.string_("rotation")
+    if num_images > 1 and rotn:
+        oscillation = (float(scan_axis[0]), float(scan_axis[1] - scan_axis[0]))
+    else:
+        # If not a rotation, or only one image, => stills, oscillation range = 0
+        angle = float(scan_axis[0]) if rotn else 0
+        oscillation = (angle, 0)
 
-        if len(scan_axis) > 1:
-            if rotn:
-                oscillation = (float(scan_axis[0]), float(scan_axis[1] - scan_axis[0]))
-            else:
-                # nothing to see here - should really work out how to dig out
-                # the setting for this - but not today
-                oscillation = (0, 0)
-            is_sequence = True
-        else:
-            oscillation = (float(scan_axis[0]), 0.0)
-            is_sequence = False
+    # Get the exposure time
+    if "frame_time" in detector_obj.handle:
+        frame_time = float(detector_obj.handle["frame_time"][()])
+        exposure_time = flex.double(num_images, frame_time)
+        epochs = flex.double(num_images)
+        for i in range(1, len(epochs)):
+            epochs[i] = epochs[i - 1] + exposure_time[i - 1]
+    else:
+        exposure_time = flex.double(num_images, 0)
+        epochs = flex.double(num_images, 0)
 
-        # Get the exposure time
-        num_images = len(scan_axis)
-        if "frame_time" in detector_obj.handle:
-            frame_time = float(detector_obj.handle["frame_time"][()])
-            exposure_time = flex.double(num_images, frame_time)
-            epochs = flex.double(num_images)
-            for i in range(1, len(epochs)):
-                epochs[i] = epochs[i - 1] + exposure_time[i - 1]
-        else:
-            exposure_time = flex.double(num_images, 0)
-            epochs = flex.double(num_images, 0)
-
-        if is_sequence is True:
-
-            # Construct the model
-            self.model = Scan(image_range, oscillation, exposure_time, epochs)
-
-        else:
-
-            # if this is not a sequence, then this is stills, in which case... should
-            # we have scans? and, even if we do, we have a small problem in that
-            # this returns a list of scans which even less works...
-
-            self.model = []
-            for i, image in enumerate(range(image_range[0], image_range[1] + 1)):
-                self.model.append(
-                    Scan(
-                        (image, image),
-                        oscillation,
-                        exposure_time[i : i + 1],
-                        epochs[i : i + 1],
-                    )
-                )
-
-            self.model = None
+    # Construct the model
+    return Scan(image_range, oscillation, exposure_time, epochs)
 
 
 class CrystalFactory(object):
