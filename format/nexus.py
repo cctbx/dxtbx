@@ -1109,7 +1109,8 @@ def generate_scan_model(obj, detector_obj):
         oscillation = (float(scan_axis[0]), float(scan_axis[1] - scan_axis[0]))
     else:
         # If not a rotation, or only one image, => stills, oscillation range = 0
-        oscillation = (float(scan_axis[0]), 0)
+        angle = float(scan_axis[0]) if rotn else 0
+        oscillation = (angle, 0)
 
     # Get the exposure time
     if "frame_time" in detector_obj.handle:
