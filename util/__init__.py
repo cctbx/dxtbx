@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import math
 
-from future.builtins import round
+from numpy import around as round
 
 
 def format_float_with_standard_uncertainty(value, standard_uncertainty, minimum=1e-12):
