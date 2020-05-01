@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import math
 
 
-def format_float_with_standard_uncertainty(value, standard_uncertainty, minimum=1e-15):
+def format_float_with_standard_uncertainty(value, standard_uncertainty, minimum=1e-12):
     """
     Formats a float, including the uncertainty in its value.
 
