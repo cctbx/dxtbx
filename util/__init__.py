@@ -2,8 +2,11 @@ from __future__ import absolute_import, division, print_function
 
 import math
 
-# because we want a round function which does the same on Python 2.7 and 3.x
-from numpy import around as round
+import six
+
+# we want a round function which does the same on Python 2.7 and 3.x
+if six.PY2:
+    from numpy import around as round
 
 
 def format_float_with_standard_uncertainty(value, standard_uncertainty, minimum=1e-12):
