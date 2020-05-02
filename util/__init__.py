@@ -36,8 +36,9 @@ def format_float_with_standard_uncertainty(value, standard_uncertainty, minimum=
         if round(su, 1) < 2:
             su *= 10
             precision += 1
-        fmt_str = "%%.%if(%%i)" % precision
-        return fmt_str % (value, round(su))
+        return "{value:.{precision}f}({irsu})".format(
+            value=value, precision=precision, irsu=int(round(su)),
+        )
     else:
         precision += 1
         su = int(round(standard_uncertainty, precision))
