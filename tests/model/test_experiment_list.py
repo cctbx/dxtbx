@@ -10,6 +10,7 @@ from glob import glob
 import pytest
 import six.moves.cPickle as pickle
 
+from cctbx import sgtbx
 from scitbx.array_family import flex
 
 import dxtbx
@@ -924,3 +925,34 @@ def test_experimentlist_imagesequence_decode(mocker):
     assert len(experiments2.scans()) == 3
     for expt in experiments2:
         assert expt.imageset is experiments2.imagesets()[0]
+
+
+def test_experiment_list_change_basis(dials_data):
+    experiments = ExperimentList()
+    for i in range(4):
+        experiments.extend(
+            ExperimentList.from_file(
+                dials_data("vmxi_proteinase_k_sweeps") / ("experiments_%i.expt" % i),
+                check_format=False,
+            )
+        )
+    reindexed_uc = (68.368, 103.968, 68.368, 90.000, 90.000, 90.000)
+    reindexed_sg = sgtbx.space_group_info("P 4 2 2 (b,c,a)").group()
+    cb_op = sgtbx.change_of_basis_op("-a,-c,-b")
+    for cb_op in (cb_op, [cb_op] * len(experiments)):
+        expts_rdx = experiments.change_basis(cb_op)
+        for expt in expts_rdx:
+            assert expt.crystal.get_unit_cell().parameters() == pytest.approx(
+                reindexed_uc, abs=0.1
+            )
+            assert expt.crystal.get_space_group() == reindexed_sg
+
+    experiments.change_basis(cb_op, in_place=True)
+    for expt in experiments:
+        assert expt.crystal.get_unit_cell().parameters() == pytest.approx(
+            reindexed_uc, abs=0.1
+        )
+        assert expt.crystal.get_space_group() == reindexed_sg
+
+    with pytest.raises(AssertionError):
+        experiments.change_basis([cb_op, cb_op])
