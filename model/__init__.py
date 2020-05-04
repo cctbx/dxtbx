@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+import copy
 import json
 import os
 import sys
@@ -10,6 +11,7 @@ import six.moves.cPickle as pickle
 
 import boost.python
 import cctbx.crystal
+import cctbx.sgtbx
 import cctbx.uctbx
 from libtbx.containers import OrderedSet
 from scitbx import matrix
@@ -856,3 +858,32 @@ class _(object):
         from .experiment_list import ExperimentListFactory
 
         return ExperimentListFactory.from_serialized_format(filename, check_format)
+
+    def change_basis(self, change_of_basis_ops, in_place=False):
+        """
+        Apply change of basis operators to an ExperimentList
+
+        Args:
+            change_of_basis_ops: This can either be a single
+                cctbx.sgtbx.change_of_basis_op to be applied to all experiments, or a
+                list of operators, one per experiment.
+            in_place (bool): Apply the change of basis operations in-place to the
+                current ExperimentList. Default is to return a copy of the
+                ExperimentList.
+
+        Returns:
+            The reindexed ExperimentList
+        """
+        if isinstance(change_of_basis_ops, cctbx.sgtbx.change_of_basis_op):
+            change_of_basis_ops = [change_of_basis_ops] * len(self)
+        assert len(change_of_basis_ops) == len(self), (
+            "Number of change_of_basis_ops (%i) not equal to the number of experiments (%i)"
+            % (len(change_of_basis_ops), len(self))
+        )
+        if in_place:
+            return_expts = self
+        else:
+            return_expts = copy.deepcopy(self)
+        for expt, cb_op in zip(return_expts, change_of_basis_ops):
+            expt.crystal = expt.crystal.change_basis(cb_op)
+        return return_expts
