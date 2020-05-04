@@ -485,16 +485,13 @@ class ExperimentListFactory(object):
 
     @staticmethod
     def from_args(args, verbose=False, unhandled=None):
-        """Try to load experiment from any recognised format."""
+        """Try to load serialised experiments from any recognised format."""
 
         # Create a list for unhandled arguments
         if unhandled is None:
             unhandled = []
 
         experiments = ExperimentList()
-        ## First try as image files
-        # experiments = ExperimentListFactory.from_datablock(
-        # DataBlockFactory.from_args(args, verbose, unhandled1))
 
         # Try to load from serialized formats
         for filename in args:
