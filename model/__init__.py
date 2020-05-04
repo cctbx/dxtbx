@@ -860,6 +860,20 @@ class _(object):
         return ExperimentListFactory.from_serialized_format(filename, check_format)
 
     def change_basis(self, change_of_basis_ops, in_place=False):
+        """
+        Apply change of basis operators to an ExperimentList
+
+        Args:
+            change_of_basis_ops: This can either be a single
+                cctbx.sgtbx.change_of_basis_op to be applied to all experiments, or a
+                list of operators, one per experiment.
+            in_place (bool): Apply the change of basis operations in-place to the
+                current ExperimentList. Default is to return a copy of the
+                ExperimentList.
+
+        Returns:
+            The reindexed ExperimentList
+        """
         if isinstance(change_of_basis_ops, cctbx.sgtbx.change_of_basis_op):
             change_of_basis_ops = [change_of_basis_ops] * len(self)
         assert len(change_of_basis_ops) == len(self), (
