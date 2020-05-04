@@ -927,7 +927,7 @@ def test_experimentlist_imagesequence_decode(mocker):
         assert expt.imageset is experiments2.imagesets()[0]
 
 
-def test_experiment_list_change_basis(dials_data):
+def test_experimentlist_change_basis(dials_data):
     experiments = ExperimentList()
     for i in range(4):
         experiments.extend(
