@@ -12,7 +12,6 @@ import boost.python
 import cctbx.crystal
 import cctbx.uctbx
 from libtbx.containers import OrderedSet
-from libtbx.utils import format_float_with_standard_uncertainty
 from scitbx import matrix
 from scitbx.array_family import flex
 
@@ -23,6 +22,7 @@ from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
+from dxtbx.util import format_float_with_standard_uncertainty
 from dxtbx_model_ext import (
     Beam,
     BeamBase,
