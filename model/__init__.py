@@ -798,7 +798,7 @@ class _(object):
         from dxtbx.datablock import AutoEncoder
 
         for fname, obj in to_write:
-            beam_spectra_to_pickle(filename, obj)
+            beam_spectra_to_h5(filename, obj)
 
             if compact:
                 separators = (",", ":")
@@ -890,7 +890,7 @@ class _(object):
             expt.crystal = expt.crystal.change_basis(cb_op)
         return return_expts
 
-def beam_spectra_to_pickle(filename, obj):
+def beam_spectra_to_h5(filename, obj):
     """
     Helper function to take an experiment list dictionary and move the
     spectra to a pickle file
@@ -926,9 +926,27 @@ def beam_spectra_to_pickle(filename, obj):
         beam["spectrum_index"] = len(all_weights) - 1
     if not all_energies:
         return
-    pickle_filename = os.path.splitext(filename)[0] + "_spectrum.pickle"
-    obj["spectra_pickle"] = pickle_filename
-    with open(str(pickle_filename), "wb") as outfile:
-        pickle.dump(
-            (all_energies, all_weights), outfile, protocol=pickle.HIGHEST_PROTOCOL
-        )
+
+    import h5py
+
+    h5_filename = os.path.splitext(filename)[0] + "_spectrum.h5"
+    obj["spectra_h5"] = h5_filename
+    f = h5py.File(h5_filename, "w")
+
+    def get_stacked_data(data):
+        if len(data) > 1:
+            import numpy as np
+
+            return np.vstack([array.as_numpy_array() for array in data])
+        else:
+            return data[0].as_numpy_array()
+
+    all_energies = get_stacked_data(all_energies)
+    all_weights = get_stacked_data(all_weights)
+
+    f.create_dataset(
+        "all_energies", all_energies.shape, data=all_energies, dtype=all_energies.dtype
+    )
+    f.create_dataset(
+        "all_weights", all_weights.shape, data=all_weights, dtype=all_weights.dtype
+    )
