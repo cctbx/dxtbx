@@ -107,9 +107,7 @@ class FormatSMVRigaku(FormatSMV):
         assert len(self.get_detector()) == 1
         panel = self.get_detector()[0]
         image_size = panel.get_image_size()
-        raw_data = self._get_endianic_raw_data(size=image_size)
-
-        return raw_data
+        return self._get_endianic_raw_data(size=image_size)
 
 
 if __name__ == "__main__":

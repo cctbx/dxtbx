@@ -1,6 +1,6 @@
 """
 ADSC SMV Format for Q315 SN 915, installed at BL38B1 at SPring-8. Resembles
-but FormatSMVADSCSN920 but returns a reverse phi goniometer
+FormatSMVADSCSN920 but returns a reverse phi goniometer
 """
 from __future__ import absolute_import, division, print_function
 
@@ -20,15 +20,6 @@ class FormatSMVADSCSN915(FormatSMVADSCSN):
         size, header = FormatSMVADSCSN.get_smv_header(image_file)
 
         return int(header["DETECTOR_SN"]) == 915
-
-    def get_raw_data(self):
-        """Get the pixel intensities (i.e. read the image and return as a
-        flex array of integers.)"""
-
-        assert len(self.get_detector()) == 1
-        panel = self.get_detector()[0]
-        image_size = panel.get_image_size()
-        return self._get_endianic_raw_data(size=image_size)
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer with reversed

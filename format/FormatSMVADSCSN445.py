@@ -1,7 +1,7 @@
 """
 An implementation of the SMV image reader for ADSC images. Inherits from
 FormatSMVADSC, customised for example on ALS beamline 8.2.1 from back in the
-day which had it's own way of recording beam centre.
+day which had its own way of recording beam centre.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -51,12 +51,3 @@ class FormatSMVADSCSN445(FormatSMVADSCSN):
             gain=self._adsc_module_gain(),
             pedestal=40,
         )
-
-    def get_raw_data(self):
-        """Get the pixel intensities (i.e. read the image and return as a
-        flex array of integers.)"""
-
-        assert len(self.get_detector()) == 1
-        panel = self.get_detector()[0]
-        image_size = panel.get_image_size()
-        return self._get_endianic_raw_data(size=image_size)

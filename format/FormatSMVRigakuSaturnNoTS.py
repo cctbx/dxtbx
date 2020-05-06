@@ -5,7 +5,6 @@ Inherits from FormatSMVRigaku.
 from __future__ import absolute_import, division, print_function
 
 import sys
-from builtins import range
 
 from iotbx.detectors.saturn import SaturnImage
 from scitbx import matrix
@@ -187,15 +186,6 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
         return self._scan_factory.single(
             self._image_file, format, exposure_time, osc_start, osc_range, epoch
         )
-
-    def get_raw_data(self):
-        """Get the pixel intensities (i.e. read the image and return as a
-        flex array of integers.)"""
-
-        assert len(self.get_detector()) == 1
-        panel = self.get_detector()[0]
-        image_size = panel.get_image_size()
-        return self._get_endianic_raw_data(size=image_size)
 
 
 if __name__ == "__main__":

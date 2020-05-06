@@ -188,17 +188,6 @@ class FormatSMVNOIR(FormatSMVRigaku):
         )
         return self._create_single_SVM_scan(epoch)
 
-    def get_raw_data(self):
-        """Get the pixel intensities (i.e. read the image and return as a
-        flex array of integers.)"""
-
-        assert len(self.get_detector()) == 1
-        panel = self.get_detector()[0]
-        image_size = panel.get_image_size()
-        raw_data = self._get_endianic_raw_data(size=image_size)
-
-        return raw_data
-
 
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
