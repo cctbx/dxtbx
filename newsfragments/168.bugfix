@@ -1,0 +1,1 @@
+New Eiger FileWriter produces NeXus compliant files, which exposed a bug in finding axis sample depends on, now fixed.
