@@ -666,7 +666,7 @@ def get_depends_on_chain_using_equipment_components(transformation):
     by grouping them using equipment_component, then the dependency chain will
     skip the intermediate dependencies, listing only the first at each level.
     """
-    chain = []
+    chain = [transformation]
     current = transformation
 
     while True:
