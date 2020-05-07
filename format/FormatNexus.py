@@ -43,6 +43,7 @@ class FormatNexus(FormatHDF5):
         assert len(reader.entries[0].samples) == 1, "Currently only supports 1 NXsample"
         assert (
             len(reader.entries[0].samples[0].beams) == 1
+            or len(reader.entries[0].instruments[0].beams) == 1
         ), "Currently only supports 1 NXbeam"
 
         # Get the NXmx model objects
@@ -50,7 +51,7 @@ class FormatNexus(FormatHDF5):
         self.instrument = instrument = entry.instruments[0]
         detector = instrument.detectors[0]
         sample = entry.samples[0]
-        beam = sample.beams[0]
+        beam = sample.beams[0] if sample.beams else instrument.beams[0]
         data = entry.data[0]
 
         # Construct the models
