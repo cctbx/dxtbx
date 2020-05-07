@@ -400,6 +400,11 @@ class NXinstrument(object):
         for entry in find_class(self.handle, "NXdetector_group"):
             self.detector_groups.append(NXdetector_group(entry))
 
+        # Find the NXbeam
+        self.beams = []
+        for entry in find_class(self.handle, "NXbeam"):
+            self.beams.append(NXbeam(entry))
+
 
 class NXbeam(object):
     """
@@ -418,14 +423,10 @@ class NXsample(object):
     def __init__(self, handle):
         self.handle = handle
 
-        # Find the NXsource
+        # Find the NXbeam
         self.beams = []
         for entry in find_class(self.handle, "NXbeam"):
             self.beams.append(NXbeam(entry))
-
-        # Check we've got stuff
-        if not self.beams:
-            raise NXValidationError("No NXbeam in %s" % self.handle.name)
 
 
 class NXdata(object):
@@ -501,8 +502,10 @@ class NXmxReader(object):
             instruments = entry.instruments
             samples = entry.samples
             print("  > %s" % handle.name)
+            beams = []
             for instrument in instruments:
                 handle = instrument.handle
+                beams += instrument.beams
                 detectors = instrument.detectors
                 print("   > %s" % handle.name)
                 for detector in detectors:
@@ -514,11 +517,11 @@ class NXmxReader(object):
                         print("     > %s" % handle.name)
             for sample in samples:
                 handle = sample.handle
-                beams = sample.beams
+                beams += sample.beams
                 print("   > %s" % handle.name)
-                for beam in beams:
-                    handle = beam.handle
-                    print("    > %s" % handle.name)
+            for beam in beams:
+                handle = beam.handle
+                print("    > %s" % handle.name)
 
 
 def is_nexus_file(filename):
