@@ -14,5 +14,5 @@ def test_format_float_with_standard_uncertainty():
     assert ffwsu(1.234, 0.196) == "1.2(2)"
     assert ffwsu(1.234, 0.193) == "1.23(19)"
     assert ffwsu(90, 0) == "90"
-    assert ffwsu(90., 0) == "90.0"
+    assert ffwsu(90.0, 0) == "90.0"
     assert ffwsu(90 + 1e-14, 0) == "90.0"
