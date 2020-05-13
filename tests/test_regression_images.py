@@ -20,7 +20,7 @@ from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 
 import dxtbx.conftest
 import dxtbx.format.Registry
-from dials.array_family import flex
+from scitbx.array_family import flex
 
 if sys.version_info[:2] >= (3, 6):
     from pathlib import Path
