@@ -56,9 +56,10 @@ try:
 except ImportError:
     gzip = None
 
-
-# import access to all of the factories that we will be needing
-
+try:
+    from typing import List
+except ImportError:
+    pass
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -99,7 +100,20 @@ class Format(object):
     image formats, from which all classes for reading the header should be
     inherited. This includes: autoregistration of implementation classes,
     stubs which need to be overridden and links to static factory methods
-    which will prove to be useful in other implementations."""
+    which will prove to be useful in other implementations.
+
+    Attributes:
+        schemes: List of schemes this Format class supports.
+            An empty string ("") is treated as non-URL filenames, where
+            "file" is treated as explicit file:// support. Format classes
+            that do not support the listed schema will _not_ be called
+            to understand() with the locator - note that this means if a
+            class does not declare "file", it will not get called to
+            understand "file://" URIs passed to it. An empty `schemes` will
+            not ever get called in Format registry searches.
+    """
+
+    schemes = [""]  # type: List[str]
 
     @staticmethod
     def understand(image_file):
