@@ -8,8 +8,18 @@ from __future__ import absolute_import, division, print_function
 
 import pkg_resources
 
+try:
+    import typing
+    from typing import Callable, Dict, List, Maybe, Tuple, Type
+
+    if typing.TYPE_CHECKING:
+        from dxtbx.format.Format import Format
+except ImportError:
+    pass
+
 
 def get_format_class_for(format_class_name):
+    # type: (str) -> Type[Format]
     """Return the named format class
     :param format_class_name: Name of the format class
     :return: The (uninstantiated) class object
@@ -18,9 +28,10 @@ def get_format_class_for(format_class_name):
 
 
 def get_format_class_index():
+    # type: () -> Dict[str, Tuple[Callable[[], Type[Format]], List[str]]]
     """Return a dictionary of all known format classes.
     :return: A dictionary containing entries
-             {format class name: (format class factory function, [base classes])}
+             {format_class_name: (format_class_factory_function, [base_class_names])}
              The factory function takes no arguments and returns an
              uninstantiated format class. This avoids importing all
              format classes.
@@ -40,6 +51,7 @@ def get_format_class_index():
 
 
 def get_format_class_dag():
+    # type: () -> Dict[str, List[str]]
     """Return a directed acyclical graph of the format classes.
     :return: A dictionary with entries
              {format class name: [subformat class names]}
@@ -59,10 +71,11 @@ def get_format_class_dag():
     return dag
 
 
-_format_dag = get_format_class_dag()
+_format_dag = get_format_class_dag()  # type: Dict[str, List[str]]
 
 
 def get_format_class_for_file(image_file, format_hint=None):
+    # type: (str, str) -> Maybe[Type[Format]]
     """Find the best format handler in the registry for given image file
     :param image_file: A string containing the file path to an image
     :param format_hint: An optional string of a format class name that should
