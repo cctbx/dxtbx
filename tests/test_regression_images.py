@@ -20,6 +20,7 @@ from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 
 import dxtbx.conftest
 import dxtbx.format.Registry
+from dials.array_family import flex
 
 if sys.version_info[:2] >= (3, 6):
     from pathlib import Path
@@ -202,6 +203,16 @@ def test_read_image(test_image_for_reading):
         # seems to be just as effective
         instance.get_detectorbase()
         print("  Have detectorbase? ", hasattr(instance, "detectorbase"))
+
+        # Specific test for cctbx/dxtbx#163. This test will fail if char is unsigned.
+        if (
+            "APS_24IDC" in test_image_for_reading
+            and "pilatus_1_0001.cbf" in test_image_for_reading
+        ):
+            d = R_raw_data[0]
+            assert (
+                flex.sum(d.as_1d().select(d.as_1d() >= 0)) == 20108255
+            )  # matches total counts from dxtbx.print_header
 
         # test the older detectorbase interface if available
         if hasattr(instance, "detectorbase"):
