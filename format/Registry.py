@@ -7,6 +7,7 @@ of image formats.
 from __future__ import absolute_import, division, print_function
 
 import pkg_resources
+from six.moves.urllib_parse import urlparse
 
 try:
     import typing
@@ -84,6 +85,9 @@ def get_format_class_for_file(image_file, format_hint=None):
              otherwise None
     """
 
+    # Grab the scheme from this URI
+    scheme = urlparse(image_file).scheme
+
     # If a format hint was given then find all paths through the DAG leading
     # to this format class. Create a set containing all format class names
     # on those paths (priority_formats), and use the information whether a
@@ -108,7 +112,7 @@ def get_format_class_for_file(image_file, format_hint=None):
         # in which case they are preferred over the parent format.
         for child in sorted(_format_dag.get(format_name, []), key=format_sort):
             format_class = get_format_class_for(child)
-            if format_class.understand(image_file):
+            if scheme in format_class.schemes and format_class.understand(image_file):
                 return recurse(child, image_file)
         return get_format_class_for(format_name)
 
@@ -117,7 +121,7 @@ def get_format_class_for_file(image_file, format_hint=None):
     # accepting leaf node
     for format in sorted(_format_dag["Format"], key=format_sort):
         format_class = get_format_class_for(format)
-        if format_class.understand(image_file):
+        if scheme in format_class.schemes and format_class.understand(image_file):
             return recurse(format, image_file)
 
     # There is no class accepting this file, so return None instead

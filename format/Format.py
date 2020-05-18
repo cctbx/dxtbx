@@ -17,8 +17,6 @@ standard_library.install_aliases()
 
 import functools
 import sys
-import urllib.parse
-import urllib.request
 from builtins import range
 from os.path import abspath
 
@@ -58,9 +56,10 @@ try:
 except ImportError:
     gzip = None
 
-
-# import access to all of the factories that we will be needing
-
+try:
+    from typing import List
+except ImportError:
+    pass
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -101,7 +100,20 @@ class Format(object):
     image formats, from which all classes for reading the header should be
     inherited. This includes: autoregistration of implementation classes,
     stubs which need to be overridden and links to static factory methods
-    which will prove to be useful in other implementations."""
+    which will prove to be useful in other implementations.
+
+    Attributes:
+        schemes: List of schemes this Format class supports.
+            An empty string ("") is treated as non-URL filenames, where
+            "file" is treated as explicit file:// support. Format classes
+            that do not support the listed schema will _not_ be called
+            to understand() with the locator - note that this means if a
+            class does not declare "file", it will not get called to
+            understand "file://" URIs passed to it. An empty `schemes` will
+            not ever get called in Format registry searches.
+    """
+
+    schemes = [""]  # type: List[str]
 
     @staticmethod
     def understand(image_file):
@@ -515,25 +527,12 @@ class Format(object):
     #                                                                  #
     ####################################################################
 
-    @staticmethod
-    def is_url(path):
-        """See if the file is a URL."""
-
-        # Windows file paths can get caught up in this - check that the
-        # first letter is one character (which I think should be safe: all
-        # URL types are longer than this right?)
-        scheme = urllib.parse.urlparse(path).scheme
-        return scheme and len(scheme) != 1
-
     @classmethod
-    def open_file(cls, filename, mode="rb", url=False):
+    def open_file(cls, filename, mode="rb"):
         """Open file for reading, decompressing silently if necessary,
         caching transparently if possible."""
 
-        if url and Format.is_url(filename):
-            fh_func = functools.partial(urllib.request.urlopen, filename)
-
-        elif filename.endswith(".bz2"):
+        if filename.endswith(".bz2"):
             if not bz2:
                 raise RuntimeError("bz2 file provided without bz2 module")
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)

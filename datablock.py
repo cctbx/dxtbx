@@ -641,7 +641,7 @@ class OpeningPathIterator(object):
     Any path entries that are a directory will be recursed into, once -
     any further directories found will be ignored. Any path that is not
     a file or directory, or on which IO fails for any reason, will be added
-    to the :attr:`unhandled` list.
+    to the :attr:`uncached` list, but still returned.
     The current expected length of the iterator can be found with
     `len(iterator)` - this can change while iterating, because until a
     directory is encountered it cannot be detected without extra IO
@@ -649,7 +649,9 @@ class OpeningPathIterator(object):
     :attr:`index` attribute.
 
     Attributes:
-        unhandled:  List of paths that could not be handled
+        uncached:   List of paths that failed open_file. This may be a
+                    file that doesn't exist, or something that doesn't
+                    point to a file at all.
         index:      Index of the next path item (alternatively, number
                     of processed path items)
     """
@@ -666,7 +668,7 @@ class OpeningPathIterator(object):
         # Let's keep track of how many we've processed
         self._processed_count = 0
         # List of paths that could not be opened
-        self.unhandled = []
+        self.uncached = []
 
     def __iter__(self):
         return self
@@ -681,7 +683,7 @@ class OpeningPathIterator(object):
         self._processed_count += 1
 
         try:
-            # Attempt to open this path
+            # Attempt to open this 'path'
             Format.open_file(pathname)
         except IOError as e:
             if e.errno == errno.EISDIR:
@@ -699,7 +701,7 @@ class OpeningPathIterator(object):
                 return next(self)
             else:
                 # A non-directory-related IO error
-                self.unhandled.append(pathname)
+                self.uncached.append(pathname)
                 logger.debug("Could not import %s: %s", pathname, os.strerror(e.errno))
 
         return pathname
