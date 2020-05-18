@@ -1,3 +1,28 @@
+DIALS 3.0 (2020-05-18)
+======================
+
+Features
+--------
+
+- A new recalculated unit cell attribute is added to the Crystal model, for use by post-integration cell refinement methods, such as that of dials.two_theta_refine. (#142)
+- Add ExperimentList.change_basis() convenience method. (#166)
+- Allow creation of Format classes that accept URLs instead of files (#173)
+
+
+Bugfixes
+--------
+
+- Fix a bug whereby reading a single-image data set from an Eiger detector would lead to an error. (#156)
+- Fix formatting of unit cell parameters with negligible standard uncertainties (#165)
+- New Eiger FileWriter (20.1.16.56035) produces NeXus compliant files, which exposed a bug in finding axis sample depends on, now fixed. (#168)
+
+
+Misc
+----
+
+- #164
+
+
 DIALS 2.2 (2020-03-15)
 ======================
 
