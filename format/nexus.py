@@ -1067,21 +1067,26 @@ class GoniometerFactory(object):
     """
 
     def __init__(self, obj):
-        axes, angles, axis_names, scan_axis = construct_axes(
-            obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
-        )
-
-        if len(axes) == 1:
-            self.model = dxtbx.model.GoniometerFactory.make_goniometer(
-                axes[0], (1, 0, 0, 0, 1, 0, 0, 0, 1)
-            )
+        if obj.handle["depends_on"][()] == ".":
+            self.model = None
         else:
-            self.model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
-                axes, angles, axis_names, scan_axis
+            axes, angles, axis_names, scan_axis = construct_axes(
+                obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
             )
+
+            if len(axes) == 1:
+                self.model = dxtbx.model.GoniometerFactory.make_goniometer(
+                    axes[0], (1, 0, 0, 0, 1, 0, 0, 0, 1)
+                )
+            else:
+                self.model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
+                    axes, angles, axis_names, scan_axis
+                )
 
 
 def find_goniometer_rotation(obj):
+    if obj.handle["depends_on"][()] == ".":
+        return
     thing = obj.handle.file[obj.handle["depends_on"][()]]
     tree = get_depends_on_chain_using_equipment_components(thing)
     for t in tree:
@@ -1095,6 +1100,8 @@ def find_goniometer_rotation(obj):
 
 
 def find_scanning_axis(obj):
+    if obj.handle["depends_on"][()] == ".":
+        return
     thing = obj.handle.file[obj.handle["depends_on"][()]]
     tree = get_depends_on_chain_using_equipment_components(thing)
     for t in tree:
@@ -1107,6 +1114,9 @@ def generate_scan_model(obj, detector_obj):
     """
     Create a scan model from NXmx stuff.
     """
+    if obj.handle["depends_on"][()] == ".":
+        return
+
     # Get the image and oscillation range - need to search for rotations
     # in dependency tree - if not, find translations or just the thing
     # the sample depends on
