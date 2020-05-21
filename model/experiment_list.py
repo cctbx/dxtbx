@@ -384,7 +384,7 @@ class ExperimentListDict(object):
 
         import h5py
 
-        f = h5py.File(self._obj["spectra_h5"], "r")
+        f = h5py.File(os.path.join(self._directory, self._obj["spectra_h5"]), "r")
         all_energies = f["all_energies"][()]
         all_weights = f["all_weights"][()]
 
@@ -395,11 +395,16 @@ class ExperimentListDict(object):
             spectrum_index = self._obj["beam"][i].get("spectrum_index")
             if spectrum_index is not None:
                 if len(all_energies.shape) == 1:
-                    beam.set_spectrum(all_energies, all_weights[spectrum_index])
+                    spectrum = all_energies
                 else:
-                    beam.set_spectrum(
-                        all_energies[spectrum_index], all_weights[spectrum_index]
-                    )
+                    spectrum = all_energies[spectrum_index]
+
+                if len(all_weights.shape) == 1:
+                    weights = all_weights
+                else:
+                    weights = all_weights[spectrum_index]
+
+                beam.set_spectrum(spectrum, weights)
 
     def _make_mem_imageset(self, imageset):
         """Can't make a mem imageset from dict."""
