@@ -742,8 +742,8 @@ class ExperimentListFactory(object):
         try:
             return ExperimentListFactory.from_json_file(filename, check_format)
         except IOError as e:
-            # In an ideal Python 3 world this would be much more simply FileNotFoundError
-            if e.errno == errno.ENOENT:
+            # In an ideal Python 3 world this would be much more simply FileNotFoundError, PermissionError
+            if e.errno in (errno.ENOENT, errno.EACCES):
                 raise
         except Exception:
             pass
