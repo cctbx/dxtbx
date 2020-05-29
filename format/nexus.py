@@ -880,6 +880,7 @@ class DetectorFactoryFromGroup(object):
                 # Set up the hierarchical detector by iteraing through the dependencies,
                 # starting at the root
                 chain = get_depends_on_chain_using_equipment_components(depends_on)
+                chain.pop(0)  # Do not want fast/slow pixel directions here
                 pg = None
                 for transform in reversed(chain):
                     name = str(os.path.basename(transform.name))
