@@ -106,7 +106,6 @@ namespace dxtbx { namespace format { namespace boost_python {
   template <typename T>
   void image_tile_wrapper(const char *name) {
     typedef ImageTile<T> image_tile_type;
-    typedef typename image_tile_type::array_type array_type;
 
     class_<image_tile_type, boost::shared_ptr<ImageTile<T> > >(name, no_init)
       .def("__init__", make_constructor(&make_image_tile<T>))

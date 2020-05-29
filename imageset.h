@@ -202,10 +202,6 @@ public:
    * @returns The image data
    */
   ImageBuffer get_data(std::size_t index) {
-    typedef scitbx::af::versa<double, scitbx::af::c_grid<2> > double_array;
-    typedef scitbx::af::versa<int, scitbx::af::c_grid<2> > int_array;
-    typedef scitbx::af::c_grid<2> accessor_type;
-
     // Create the return buffer
     ImageBuffer buffer;
 
