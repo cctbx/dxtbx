@@ -10,13 +10,8 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatNexus import FormatNexus
-from dxtbx.format.nexus import (
-    BeamFactory,
-    DataFactory,
-    MaskFactory,
-    NXmxReader,
-    convert_units,
-)
+from dxtbx.format.nexus import BeamFactory_ as BeamFactory
+from dxtbx.format.nexus import DataFactory, MaskFactory, NXmxReader, convert_units
 from dxtbx.model import Detector, Panel, ParallaxCorrectedPxMmStrategy, Scan
 
 
@@ -51,6 +46,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         assert len(reader.entries[0].samples) == 1, "Currently only supports 1 NXsample"
         assert (
             len(reader.entries[0].samples[0].beams) == 1
+            or len(reader.entries[0].instruments[0].beams) == 1
         ), "Currently only supports 1 NXbeam"
 
         # Get the NXmx model objects
@@ -58,13 +54,14 @@ class FormatNexusJungfrauHack(FormatNexus):
         self.instrument = instrument = entry.instruments[0]
         detector = instrument.detectors[0]
         sample = entry.samples[0]
-        beam = sample.beams[0]
+        beam = sample.beams[0] if sample.beams else instrument.beams[0]
         data = entry.data[0]
 
         # Construct the models
-        self._beam_model = BeamFactory(beam).model
+        self._beam_factory = BeamFactory(beam)
+        self._beam_factory.load_model(0)
 
-        self._setup_detector(detector, self._beam_model)
+        self._setup_detector(detector, self._beam_factory.model)
         self._setup_gonio_and_scan(sample, detector)
 
         if self._scan_model:
@@ -222,14 +219,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         return self._detector_model
 
     def _beam(self, index=None):
-        if index is None:
-            index = 0
-
-        entry = self._reader.entries[0]
-        sample = entry.samples[0]
-        beam = sample.beams[0]
-
-        self._beam_model = BeamFactory(beam, index).model
+        self._beam_model = self._beam_factory.load_model(index)
         return self._beam_model
 
     def _scan(self):
@@ -242,7 +232,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         return self._detector()
 
     def get_beam(self, index=None):
-        return self._beam()
+        return self._beam(index)
 
     def get_scan(self, index=None):
         if index is None:
