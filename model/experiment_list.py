@@ -777,6 +777,11 @@ class ExperimentListFactory(object):
             # In an ideal Python 3 world this would be much more simply FileNotFoundError, PermissionError
             if e.errno in (errno.ENOENT, errno.EACCES):
                 raise
+            elif "spectrum" in str(e):
+                raise OSError(
+                    "Corresponding spectra file also needed in order to load experiment %s"
+                    % filename
+                )
         except Exception:
             pass
 
