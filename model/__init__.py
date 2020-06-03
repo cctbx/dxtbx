@@ -931,7 +931,7 @@ def beam_spectra_to_h5(filename, obj):
     import h5py
 
     h5_filename = os.path.splitext(filename)[0] + "_spectrum.h5"
-    obj["spectra_h5"] = os.path.abspath(h5_filename)
+    obj["spectra_h5"] = os.path.basename(h5_filename)
     f = h5py.File(h5_filename, "w")
 
     def get_stacked_data(data):
