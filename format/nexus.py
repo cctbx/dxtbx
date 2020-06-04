@@ -105,7 +105,7 @@ def find_entries(nx_file, entry):
 
     def visitor(name, obj):
         if "NX_class" in obj.attrs:
-            if obj.attrs["NX_class"] in [
+            if numpy.string_(obj.attrs["NX_class"]) in [
                 numpy.string_("NXentry"),
                 numpy.string_("NXsubentry"),
             ]:
@@ -126,8 +126,8 @@ def find_class(nx_file, nx_class):
     nx_class = numpy.string_(nx_class)
 
     def visitor(name, obj):
-        if "NX_class" in obj.attrs:
-            if obj.attrs["NX_class"] == nx_class:
+        if numpy.string_("NX_class") in obj.attrs:
+            if numpy.string_(obj.attrs["NX_class"]) == nx_class:
                 hits.append(obj)
 
     local_visit(nx_file, visitor)
@@ -400,6 +400,11 @@ class NXinstrument(object):
         for entry in find_class(self.handle, "NXdetector_group"):
             self.detector_groups.append(NXdetector_group(entry))
 
+        # Find the NXbeam
+        self.beams = []
+        for entry in find_class(self.handle, "NXbeam"):
+            self.beams.append(NXbeam(entry))
+
 
 class NXbeam(object):
     """
@@ -418,14 +423,10 @@ class NXsample(object):
     def __init__(self, handle):
         self.handle = handle
 
-        # Find the NXsource
+        # Find the NXbeam
         self.beams = []
         for entry in find_class(self.handle, "NXbeam"):
             self.beams.append(NXbeam(entry))
-
-        # Check we've got stuff
-        if not self.beams:
-            raise NXValidationError("No NXbeam in %s" % self.handle.name)
 
 
 class NXdata(object):
@@ -501,8 +502,10 @@ class NXmxReader(object):
             instruments = entry.instruments
             samples = entry.samples
             print("  > %s" % handle.name)
+            beams = []
             for instrument in instruments:
                 handle = instrument.handle
+                beams += instrument.beams
                 detectors = instrument.detectors
                 print("   > %s" % handle.name)
                 for detector in detectors:
@@ -514,11 +517,11 @@ class NXmxReader(object):
                         print("     > %s" % handle.name)
             for sample in samples:
                 handle = sample.handle
-                beams = sample.beams
+                beams += sample.beams
                 print("   > %s" % handle.name)
-                for beam in beams:
-                    handle = beam.handle
-                    print("    > %s" % handle.name)
+            for beam in beams:
+                handle = beam.handle
+                print("    > %s" % handle.name)
 
 
 def is_nexus_file(filename):
@@ -557,6 +560,48 @@ class BeamFactory(object):
         self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
 
 
+class BeamFactory_(object):
+    """
+    A class to create a beam model from NXmx stuff, backported from DIALS 3.0
+    """
+
+    def __init__(self, obj):
+        self.obj = obj
+        self.model = None
+        self.index = None
+
+    def load_model(self, index=None):
+        # Cached model
+        if self.model is not None and index == self.index:
+            return self.model
+
+        # Get the items from the NXbeam class
+        wavelength = self.obj.handle["incident_wavelength"]
+        wavelength_weights = self.obj.handle.get("incident_wavelength_weights")
+        if wavelength.shape in (tuple(), (1,)):
+            wavelength_value = wavelength[()]
+        elif len(wavelength.shape) == 1:
+            if wavelength_weights is None:
+                if index is None:
+                    index = 0
+                wavelength_value = wavelength[index]
+            else:
+                raise NotImplementedError("Spectra not implemented")
+        else:
+            raise NotImplementedError("Spectra not implemented")
+        wavelength_units = wavelength.attrs["units"]
+
+        # Convert wavelength to Angstroms
+        wavelength_value = float(
+            convert_units(wavelength_value, wavelength_units, "angstrom")
+        )
+
+        # Construct the beam model
+        self.index = index
+        self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
+        return self.model
+
+
 def get_change_of_basis(transformation):
     """
     Get the 4x4 homogenous coordinate matrix for a given NXtransformation.
@@ -564,11 +609,11 @@ def get_change_of_basis(transformation):
     # Change of basis to convert from NeXus to IUCr/ImageCIF convention
     n2i_cob = sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
 
-    axis_type = transformation.attrs["transformation_type"]
+    axis_type = numpy.string_(transformation.attrs["transformation_type"])
 
     vector = n2i_cob * col(transformation.attrs["vector"]).normalize()
     setting = transformation[0]
-    units = transformation.attrs["units"]
+    units = numpy.string_(transformation.attrs["units"])
 
     if "offset" in transformation.attrs:
         offset = n2i_cob * col(transformation.attrs["offset"])
@@ -639,7 +684,7 @@ def get_change_of_basis(transformation):
             )
         )
     else:
-        raise ValueError("Unrecognized tranformation type: %d" % axis_type)
+        raise ValueError("Unrecognized tranformation type: %s" % axis_type)
 
     return cob
 
@@ -655,7 +700,7 @@ def get_depends_on_chain_using_equipment_components(transformation):
     current = transformation
 
     while True:
-        parent_id = current.attrs["depends_on"]
+        parent_id = numpy.string_(current.attrs["depends_on"])
 
         if parent_id == numpy.string_("."):
             return chain
@@ -682,7 +727,7 @@ def get_cumulative_change_of_basis(transformation):
 
     cob = get_change_of_basis(transformation)
 
-    parent_id = transformation.attrs["depends_on"]
+    parent_id = numpy.string_(transformation.attrs["depends_on"])
 
     if parent_id == numpy.string_("."):
         return None, cob
@@ -1049,21 +1094,26 @@ class GoniometerFactory(object):
     """
 
     def __init__(self, obj):
-        axes, angles, axis_names, scan_axis = construct_axes(
-            obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
-        )
-
-        if len(axes) == 1:
-            self.model = dxtbx.model.GoniometerFactory.make_goniometer(
-                axes[0], (1, 0, 0, 0, 1, 0, 0, 0, 1)
-            )
+        if obj.handle["depends_on"][()] == ".":
+            self.model = None
         else:
-            self.model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
-                axes, angles, axis_names, scan_axis
+            axes, angles, axis_names, scan_axis = construct_axes(
+                obj.handle.file, obj.handle.file[obj.handle["depends_on"][()]].name
             )
+
+            if len(axes) == 1:
+                self.model = dxtbx.model.GoniometerFactory.make_goniometer(
+                    axes[0], (1, 0, 0, 0, 1, 0, 0, 0, 1)
+                )
+            else:
+                self.model = dxtbx.model.GoniometerFactory.make_multi_axis_goniometer(
+                    axes, angles, axis_names, scan_axis
+                )
 
 
 def find_goniometer_rotation(obj):
+    if obj.handle["depends_on"][()] == ".":
+        return
     thing = obj.handle.file[obj.handle["depends_on"][()]]
     tree = get_depends_on_chain_using_equipment_components(thing)
     for t in tree:
@@ -1077,12 +1127,59 @@ def find_goniometer_rotation(obj):
 
 
 def find_scanning_axis(obj):
+    if obj.handle["depends_on"][()] == ".":
+        return
     thing = obj.handle.file[obj.handle["depends_on"][()]]
     tree = get_depends_on_chain_using_equipment_components(thing)
     for t in tree:
         o = obj.handle.file[t.name]
         if o[()].size > 1:
             return o
+
+
+def generate_scan_model(obj, detector_obj):
+    """
+    Create a scan model from NXmx stuff.
+    """
+    if obj.handle["depends_on"][()] == ".":
+        return
+
+    # Get the image and oscillation range - need to search for rotations
+    # in dependency tree - if not, find translations or just the thing
+    # the sample depends on
+    try:
+        scan_axis = find_goniometer_rotation(obj)
+    except ValueError:
+        scan_axis = find_scanning_axis(obj)
+
+    if scan_axis is None:
+        scan_axis = obj.handle.file[obj.handle["depends_on"][()]]
+
+    num_images = len(scan_axis)
+    image_range = (1, num_images)
+
+    rotn = scan_axis.attrs["transformation_type"] == numpy.string_("rotation")
+
+    if num_images > 1 and rotn:
+        oscillation = (float(scan_axis[0]), float(scan_axis[1] - scan_axis[0]))
+    else:
+        # If not a rotation, or only one image, => stills, oscillation range = 0
+        angle = float(scan_axis[0]) if rotn else 0
+        oscillation = (angle, 0)
+
+    # Get the exposure time
+    if "frame_time" in detector_obj.handle:
+        frame_time = float(detector_obj.handle["frame_time"][()])
+        exposure_time = flex.double(num_images, frame_time)
+        epochs = flex.double(num_images)
+        for i in range(1, len(epochs)):
+            epochs[i] = epochs[i - 1] + exposure_time[i - 1]
+    else:
+        exposure_time = flex.double(num_images, 0)
+        epochs = flex.double(num_images, 0)
+
+    # Construct the model
+    return Scan(image_range, oscillation, exposure_time, epochs)
 
 
 class ScanFactory(object):

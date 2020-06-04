@@ -13,8 +13,8 @@ from scitbx import matrix
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
+from dxtbx.format.nexus import BeamFactory_ as BeamFactory
 from dxtbx.format.nexus import (
-    BeamFactory,
     DataFactory,
     DataFactoryCache,
     DetectorFactory,
@@ -22,7 +22,7 @@ from dxtbx.format.nexus import (
     MaskFactory,
     NXdata,
     NXmxReader,
-    ScanFactory,
+    generate_scan_model,
 )
 
 
@@ -343,6 +343,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         ), "Currently only supports 1 NXdetector_module"
         assert (
             len(reader.entries[0].samples[0].beams) == 1
+            or len(reader.entries[0].instruments[0].beams) == 1
         ), "Currently only supports 1 NXbeam"
 
         # Get the NXmx model objects
@@ -350,16 +351,17 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self.instrument = instrument = entry.instruments[0]
         detector = instrument.detectors[0]
         sample = entry.samples[0]
-        beam = sample.beams[0]
+        beam = sample.beams[0] if sample.beams else instrument.beams[0]
 
         # Use data from original master file
         data = NXdata(fixer.handle_orig[entry.data[0].handle.name])
 
         # Construct the models
-        self._beam_model = BeamFactory(beam).model
-        self._detector_model = DetectorFactory(detector, self._beam_model).model
+        self._beam_factory = BeamFactory(beam)
+        self._beam_factory.load_model(0)
+        self._detector_model = DetectorFactory(detector, self._beam_factory.model).model
         self._goniometer_model = GoniometerFactory(sample).model
-        self._scan_model = ScanFactory(sample, detector).model
+        self._scan_model = generate_scan_model(sample, detector)
         self._raw_data = DataFactory(data, cached_information=fixer.data_factory_cache)
 
         # update model for masking Eiger detectors
@@ -375,7 +377,8 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
     def _detector(self):
         return self._detector_model
 
-    def _beam(self):
+    def _beam(self, index=None):
+        self._beam_model = self._beam_factory.load_model(index)
         return self._beam_model
 
     def _scan(self):
@@ -388,7 +391,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         return self._detector()
 
     def get_beam(self, index=None):
-        return self._beam()
+        return self._beam(index)
 
     def get_scan(self, index=None):
         if index is None:
