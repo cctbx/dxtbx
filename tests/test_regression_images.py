@@ -13,14 +13,15 @@ import sys
 import py.path
 import pytest
 import six
+from six.moves.urllib_parse import urlparse
 
 import libtbx.load_env
 import scitbx.matrix
 from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
+from scitbx.array_family import flex
 
 import dxtbx.conftest
 import dxtbx.format.Registry
-from scitbx.array_family import flex
 
 if sys.version_info[:2] >= (3, 6):
     from pathlib import Path
@@ -251,9 +252,11 @@ def test_format_class_API_assumptions(test_image):
         known_format_class = None
         multiple_formats = False
         for subformat in dag.get(parentformat, []):
-            understood = dxtbx.format.Registry.get_format_class_for(
-                subformat
-            ).understand(filename)
+            format_class = dxtbx.format.Registry.get_format_class_for(subformat)
+            if not urlparse(filename).scheme in format_class.schemes:
+                print("Not matching ", filename, "to", format_class)
+                continue
+            understood = format_class.understand(filename)
             print("%s%s: %s" % ("  " * level, subformat, understood))
             if understood:
                 recursive_format_class, subtree_multiple = recurse(

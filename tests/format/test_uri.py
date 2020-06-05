@@ -3,12 +3,15 @@ Testing URI-passing in the Format class hierarchy
 """
 
 from typing import Type
+from unittest.mock import Mock
 
 import pytest
 
 import dxtbx
 import dxtbx.format.Registry as Registry
+import dxtbx.imageset
 from dxtbx.format.Format import Format
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 @pytest.fixture
@@ -34,7 +37,6 @@ def registry(monkeypatch):
             monkeypatch.setitem(Registry._format_dag, name, [])
             _format_entry = list(Registry._format_dag["Format"]) + [name]
             monkeypatch.setitem(Registry._format_dag, "Format", _format_entry)
-            # Registry._format_dag["Format"].append(name)
 
     return _registry
 
@@ -94,3 +96,62 @@ def test_multiple_scheme_handler(registry, tmp_path):
     filename.touch()
     assert Registry.get_format_class_for_file(str(filename)) is SchemeHandler
     assert _hits == ["scheme://something", str(filename)]
+
+
+def test_no_abs_via_scheme(registry, monkeypatch):
+    # Tries to construct these and relies on pickleable
+    monkeypatch.setattr(dxtbx.imageset, "ImageSetData", Mock())
+    monkeypatch.setattr(dxtbx.imageset, "ImageSet", Mock())
+
+    _hits = []
+
+    class SufficientError(Exception):
+        """Stop when we've reached the test point"""
+
+    class SchemeHandler(Format):
+        schemes = ["scheme"]
+
+        @classmethod
+        def understand(cls, endpoint):
+            return True
+
+        def _start(self):
+            assert self._image_file == "scheme://something"
+            _hits.append(self._image_file)
+            # The second reconstruction call had the issue
+            if len(_hits) == 2:
+                raise SufficientError
+
+    registry.register(SchemeHandler)
+    with pytest.raises(SufficientError):
+        # We don't want to try doing everything here, just check construction
+        ExperimentListFactory.from_filenames(["scheme://something"])
+
+    assert _hits == ["scheme://something", "scheme://something"]
+
+
+def test_no_abs_load_dict(registry):
+    class SufficientError(Exception):
+        """Stop when we've reached the test point"""
+
+    class SchemeHandler(Format):
+        schemes = ["scheme"]
+
+        @classmethod
+        def understand(cls, endpoint):
+            return True
+
+        def _start(self):
+            assert self._image_file == "scheme://something"
+            raise SufficientError
+
+    registry.register(SchemeHandler)
+
+    with pytest.raises(SufficientError):
+        ExperimentListFactory.from_dict(
+            {
+                "__id__": "ExperimentList",
+                "experiment": [{"__id__": "Experiment", "imageset": 0,}],
+                "imageset": [{"__id__": "ImageSet", "images": ["scheme://something"],}],
+            }
+        )

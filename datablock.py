@@ -13,6 +13,7 @@ from os.path import abspath, dirname, normpath, splitext
 
 import six
 import six.moves.cPickle as pickle
+from six.moves.urllib_parse import urlparse
 
 import libtbx
 from scitbx import matrix
@@ -897,7 +898,10 @@ def _create_imageset(records, format_class, format_kwargs=None):
     # Nothing here should have been assigned a template parameter
     assert all(x.template is None for x in records)
     # Extract the filenames from the records
-    filenames = [os.path.abspath(x.filename) for x in records]
+    filenames = [
+        os.path.abspath(x.filename) if not urlparse(x.filename).scheme else x.filename
+        for x in records
+    ]
     # Create the imageset
     imageset = dxtbx.imageset.ImageSetFactory.make_imageset(
         filenames, format_class, format_kwargs=format_kwargs, check_format=False
