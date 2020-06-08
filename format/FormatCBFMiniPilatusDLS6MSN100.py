@@ -10,15 +10,10 @@ import sys
 
 import libtbx
 from cbflib_adaptbx import uncompress
-from cctbx.eltbx import attenuation_coefficient
-from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
-from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.masking import GoniometerMaskerFactory
-from dxtbx.model import ParallaxCorrectedPxMmStrategy
-from dxtbx.model.detector import Detector
 
 # Module positional offsets in x, y, in pixels - for the moment ignoring the
 # rotational offsets as these are not well defined. To be honest these
@@ -184,7 +179,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         proper model of the experiment."""
 
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
-        self._multi_panel = kwargs.get("multi_panel", False)
         super(FormatCBFMiniPilatusDLS6MSN100, self).__init__(image_file, **kwargs)
 
     def _goniometer(self):
@@ -217,129 +211,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
             axes, angles, names, scan_axis=2
         )
 
-    def _detector(self):
-        """Detector model, allowing for small offsets in the positions of 60
-        detector modules"""
-
-        distance = float(self._cif_header_dictionary["Detector_distance"].split()[0])
-
-        beam_xy = (
-            self._cif_header_dictionary["Beam_xy"]
-            .replace("(", "")
-            .replace(")", "")
-            .replace(",", "")
-            .split()[:2]
-        )
-
-        beam_x, beam_y = map(float, beam_xy)
-
-        wavelength = float(self._cif_header_dictionary["Wavelength"].split()[0])
-
-        pixel_xy = (
-            self._cif_header_dictionary["Pixel_size"]
-            .replace("m", "")
-            .replace("x", "")
-            .split()
-        )
-
-        pixel_x, pixel_y = map(float, pixel_xy)
-
-        thickness = float(self._cif_header_dictionary["Silicon"].split()[2]) * 1000.0
-
-        nx = int(self._cif_header_dictionary["X-Binary-Size-Fastest-Dimension"])
-        ny = int(self._cif_header_dictionary["X-Binary-Size-Second-Dimension"])
-
-        overload = int(self._cif_header_dictionary["Count_cutoff"].split()[0])
-        underload = -1
-
-        # take into consideration here the thickness of the sensor also the
-        # wavelength of the radiation (which we have in the same file...)
-        table = attenuation_coefficient.get_table("Si")
-        mu = table.mu_at_angstrom(wavelength) / 10.0
-        t0 = thickness
-
-        # FIXME would also be very nice to be able to take into account the
-        # misalignment of the individual modules given the calibration...
-
-        # single detector or multi-module detector
-
-        pixel_x *= 1000.0
-        pixel_y *= 1000.0
-        distance *= 1000.0
-
-        if not self._multi_panel:
-            detector = self._detector_factory.simple(
-                "PAD",
-                distance,
-                (beam_x * pixel_x, beam_y * pixel_y),
-                "+x",
-                "-y",
-                (pixel_x, pixel_y),
-                (nx, ny),
-                (underload, overload),
-                [],
-                ParallaxCorrectedPxMmStrategy(mu, t0),
-            )
-
-            for f0, f1, s0, s1 in determine_pilatus_mask(detector):
-                detector[0].add_mask(f0 - 1, s0 - 1, f1, s1)
-
-            detector[0].set_thickness(thickness)
-            detector[0].set_material("Si")
-            detector[0].set_mu(mu)
-
-            return detector
-
-        # got to here means 60-panel version
-        d = Detector()
-
-        beam_centre = matrix.col((beam_x * pixel_x, beam_y * pixel_y, 0))
-
-        fast = matrix.col((1.0, 0.0, 0.0))
-        slow = matrix.col((0.0, -1.0, 0.0))
-        s0 = matrix.col((0, 0, -1))
-        origin = (distance * s0) - (fast * beam_centre[0]) - (slow * beam_centre[1])
-
-        root = d.hierarchy()
-        root.set_local_frame(fast.elems, slow.elems, origin.elems)
-
-        xmins = [0, 494, 988, 1482, 1976]
-        xmaxes = [487, 981, 1475, 1969, 2463]
-        ymins = [0, 212, 424, 636, 848, 1060, 1272, 1484, 1696, 1908, 2120, 2332]
-        ymaxes = [195, 407, 619, 831, 1043, 1255, 1467, 1679, 1891, 2103, 2315, 2527]
-
-        self.coords = {}
-
-        fast = matrix.col((1.0, 0.0, 0.0))
-        slow = matrix.col((0.0, 1.0, 0.0))
-        panel_idx = 0
-        for ymin, ymax in zip(ymins, ymaxes):
-            for xmin, xmax in zip(xmins, xmaxes):
-                xmin_mm = xmin * pixel_x
-                ymin_mm = ymin * pixel_y
-
-                origin_panel = fast * xmin_mm + slow * ymin_mm
-
-                panel_name = "Panel%d" % panel_idx
-                panel_idx += 1
-
-                p = d.add_panel()
-                p.set_type("SENSOR_PAD")
-                p.set_name(panel_name)
-                p.set_raw_image_offset((xmin, ymin))
-                p.set_image_size((xmax - xmin, ymax - ymin))
-                p.set_trusted_range((underload, overload))
-                p.set_pixel_size((pixel_x, pixel_y))
-                p.set_thickness(thickness)
-                p.set_material("Si")
-                p.set_mu(mu)
-                p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, t0))
-                p.set_local_frame(fast.elems, slow.elems, origin_panel.elems)
-                p.set_raw_image_offset((xmin, ymin))
-                self.coords[panel_name] = (xmin, ymin, xmax, ymax)
-
-        return d
-
     def get_goniometer_shadow_masker(self, goniometer=None):
         return GoniometerMaskerFactory.mini_kappa(goniometer)
 
@@ -360,20 +231,6 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         )
 
         return pixel_values
-
-    def get_raw_data(self):
-        if not self._multi_panel:
-            return super(FormatCBFMiniPilatusDLS6MSN100, self).get_raw_data()
-
-        if self._raw_data is None:
-            raw_data = self._read_cbf_image()
-            self._raw_data = []
-            d = self.get_detector()
-            for panel in d:
-                xmin, ymin, xmax, ymax = self.coords[panel.get_name()]
-                self._raw_data.append(raw_data[ymin:ymax, xmin:xmax])
-            self._raw_data = tuple(self._raw_data)
-        return self._raw_data
 
 
 if __name__ == "__main__":
