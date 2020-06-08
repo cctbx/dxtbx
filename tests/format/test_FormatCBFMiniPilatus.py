@@ -9,6 +9,7 @@ def test_single_panel(dials_data, tmpdir):
     expts = ExperimentListFactory.from_filenames([filename.strpath])
     assert len(expts) == 1
     assert len(expts[0].detector) == 1
+    assert len(expts[0].imageset.get_raw_data(0)) == 1
 
 
 def test_multi_panel(dials_data, tmpdir):
@@ -20,3 +21,4 @@ def test_multi_panel(dials_data, tmpdir):
     )
     assert len(expts) == 1
     assert len(expts[0].detector) == 60
+    assert len(expts[0].imageset.get_raw_data(0)) == 60
