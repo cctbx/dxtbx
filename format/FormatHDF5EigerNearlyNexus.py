@@ -269,11 +269,8 @@ class EigerNXmxFixer(object):
             # special cases:
             # E-32-0105 - Max IV, vertical axis
 
-            try:
-                key = handle["/entry/instrument/detector/detector_number"][()]
-                default_axis = {"E-32-0105": (0, 1, 0)}[key]
-            except KeyError:
-                default_axis = (-1, 0, 0)
+            key = handle["/entry/instrument/detector/detector_number"][()]
+            default_axis = {b"E-32-0105": (0, 1, 0)}.get(key, (-1, 0, 0))
 
             num_images = 0
             for name in sorted(handle["/entry/data"]):
