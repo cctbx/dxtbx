@@ -632,8 +632,8 @@ class ImageMetadataRecord(object):
         return not self == other
 
 
-class _OpeningPathIterator(object):
-    """Utility class to efficiently open all paths.
+def _openingpathiterator(pathnames):
+    """Utility function to efficiently open all paths.
 
     A path is a potential file or directory.
     Each path will be opened with :meth:`dxtbx.format.Format.open_file`,
@@ -643,28 +643,18 @@ class _OpeningPathIterator(object):
     any further directories found will be ignored. Any path that is not
     a file or directory, or on which IO fails for any reason, will still
     be returned.
+
+    Args:
+        pathnames: Paths to attempt to open
     """
+    # type: (Iterable[str])
 
-    def __init__(self, pathnames):
-        # type: (Iterable[str])
-        """Initialise the path iterator.
+    # Store a tuple of (recurse, pathname) to track what was root level
+    paths = collections.deque((True, x) for x in sorted(pathnames))
 
-        Args:
-            pathnames: Paths to attempt to open
-        """
-        # Store a tuple of (recurse, pathname) to track what was root level
-        self._paths = collections.deque((True, x) for x in sorted(pathnames))
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        """Get the next path to process"""
-        try:
-            # Get the next path from the queue
-            (do_recurse, pathname) = self._paths.popleft()
-        except IndexError:
-            raise StopIteration()
+    while paths:
+        # Get the next path from the queue
+        (do_recurse, pathname) = paths.popleft()
 
         try:
             # Attempt to open this 'path'
@@ -677,19 +667,17 @@ class _OpeningPathIterator(object):
                         os.path.join(pathname, x) for x in os.listdir(pathname)
                     )
                     # ... and add them to our queue. Make sure not to mark for recursion
-                    self._paths.extendleft((False, x) for x in reversed(subdir_paths))
+                    paths.extendleft((False, x) for x in reversed(subdir_paths))
                     logger.debug("Adding %d files from %s", len(subdir_paths), pathname)
                 else:
                     logger.debug("Not adding sub-level directory entry %s", pathname)
                 # Don't return directory instances
-                return next(self)
+                continue
             else:
                 # A non-directory-related IO error
                 logger.debug("Could not import %s: %s", pathname, os.strerror(e.errno))
 
-        return pathname
-
-    next = __next__
+        yield pathname
 
 
 def _merge_model_metadata(
@@ -916,7 +904,7 @@ class DataBlockFilenameImporter(object):
             logger.debug("Added imageset to datablock %d", len(self.datablocks) - 1)
 
         # Process each file given by this path list
-        to_process = _OpeningPathIterator(filenames)
+        to_process = _openingpathiterator(filenames)
         find_format = FormatChecker()
 
         format_groups = collections.OrderedDict()

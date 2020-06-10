@@ -266,13 +266,13 @@ def test_path_iterator(monkeypatch):
     # Replace Format.open_file with a tame version
     monkeypatch.setattr(Format, "open_file", _fake_open_file)
 
-    it = datablock._OpeningPathIterator(["a", "b", "dir", "e"])
-    assert list(x for x in it) == ["a", "b", "dir/c", "dir/d", "e"]
+    it = datablock._openingpathiterator(["a", "b", "dir", "e"])
+    assert list(it) == ["a", "b", "dir/c", "dir/d", "e"]
     listdir.assert_called_once_with("dir")
 
     # Test that the list is sorted
-    it = datablock._OpeningPathIterator(["e", "a", "b", "dir"])
-    assert list(x for x in it) == ["a", "b", "dir/c", "dir/d", "e"]
+    it = datablock._openingpathiterator(["e", "a", "b", "dir"])
+    assert list(it) == ["a", "b", "dir/c", "dir/d", "e"]
 
 
 def test_extract_metadata_record():
