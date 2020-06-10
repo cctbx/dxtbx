@@ -632,7 +632,7 @@ class ImageMetadataRecord(object):
         return not self == other
 
 
-class OpeningPathIterator(object):
+class _OpeningPathIterator(object):
     """Utility class to efficiently open all paths.
 
     A path is a potential file or directory.
@@ -641,20 +641,8 @@ class OpeningPathIterator(object):
     use of :func:`os.stat` will be avoided.
     Any path entries that are a directory will be recursed into, once -
     any further directories found will be ignored. Any path that is not
-    a file or directory, or on which IO fails for any reason, will be added
-    to the :attr:`uncached` list, but still returned.
-    The current expected length of the iterator can be found with
-    `len(iterator)` - this can change while iterating, because until a
-    directory is encountered it cannot be detected without extra IO
-    operations. The number of items processed can be accessed through the
-    :attr:`index` attribute.
-
-    Attributes:
-        uncached:   List of paths that failed open_file. This may be a
-                    file that doesn't exist, or something that doesn't
-                    point to a file at all.
-        index:      Index of the next path item (alternatively, number
-                    of processed path items)
+    a file or directory, or on which IO fails for any reason, will still
+    be returned.
     """
 
     def __init__(self, pathnames):
@@ -666,10 +654,6 @@ class OpeningPathIterator(object):
         """
         # Store a tuple of (recurse, pathname) to track what was root level
         self._paths = collections.deque((True, x) for x in sorted(pathnames))
-        # Let's keep track of how many we've processed
-        self._processed_count = 0
-        # List of paths that could not be opened
-        self.uncached = []
 
     def __iter__(self):
         return self
@@ -681,7 +665,6 @@ class OpeningPathIterator(object):
             (do_recurse, pathname) = self._paths.popleft()
         except IndexError:
             raise StopIteration()
-        self._processed_count += 1
 
         try:
             # Attempt to open this 'path'
@@ -702,21 +685,11 @@ class OpeningPathIterator(object):
                 return next(self)
             else:
                 # A non-directory-related IO error
-                self.uncached.append(pathname)
                 logger.debug("Could not import %s: %s", pathname, os.strerror(e.errno))
 
         return pathname
 
     next = __next__
-
-    def __len__(self):
-        """Get the (current) total of path items"""
-        return len(self._paths) + self._processed_count
-
-    @property
-    def index(self):
-        """Get the number of processed items"""
-        return self._processed_count
 
 
 def _merge_model_metadata(
@@ -943,7 +916,7 @@ class DataBlockFilenameImporter(object):
             logger.debug("Added imageset to datablock %d", len(self.datablocks) - 1)
 
         # Process each file given by this path list
-        to_process = OpeningPathIterator(filenames)
+        to_process = _OpeningPathIterator(filenames)
         find_format = FormatChecker()
 
         format_groups = collections.OrderedDict()
