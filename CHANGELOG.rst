@@ -1,3 +1,15 @@
+DIALS 3.0.1 (2020-06-11)
+========================
+
+Bugfixes
+--------
+
+- Account for beam centre record changing with ADSC 442 move from 8.3.1 to 5.0.1 (#171)
+- Fix handling for hierarchical NeXus detectors (#175)
+- Prevent mangling of URL-based filenames via abspath (#176)
+- Fix incorrect axis detection on MAX IV Eiger and Spring8 (#178)
+
+
 DIALS 3.0 (2020-05-18)
 ======================
 
