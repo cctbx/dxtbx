@@ -21,6 +21,15 @@ def get_count_limit_from_meta(meta_file_name):
     return config_data["countrate_correction_count_cutoff"]
 
 
+def get_bit_depth_from_meta(meta_file_name):
+    with h5py.File(meta_file_name, "r") as f:
+
+        config = f["/config"][()]
+        config_data = ast.literal_eval(config.decode("utf-8"))
+
+    return config_data["bit_depth_image"]
+
+
 class FormatNexusEigerDLS16M(FormatNexus):
     @staticmethod
     def understand(image_file):
@@ -60,6 +69,11 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
         super(FormatNexusEigerDLS16M, self).__init__(image_file, **kwargs)
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
+        try:
+            meta = image_file.replace("_master.h5", "_meta.h5")
+            self._bit_depth_image = get_bit_depth_from_meta(meta)
+        except Exception:
+            self._bit_depth_image = 0
 
     def get_detector(self, index=None):
         if not self._image_file.endswith("_master.h5"):
@@ -103,6 +117,16 @@ class FormatNexusEigerDLS16M(FormatNexus):
             raise RuntimeError(
                 "Don't understand this goniometer: %s" % list(goniometer.get_names())
             )
+
+    def get_raw_data(self, index):
+        data = self._raw_data[index]
+        if self._bit_depth_image:
+            top = 2 ** self._bit_depth_image
+            d1d = data.as_1d()
+            d1d.set_selected(d1d == top - 1, -1)
+            d1d.set_selected(d1d == top - 2, -2)
+
+        return data
 
 
 if __name__ == "__main__":
