@@ -121,7 +121,12 @@ class FormatNexusEigerDLS16M(FormatNexus):
     def get_raw_data(self, index):
         data = self._raw_data[index]
         if self._bit_depth_image:
-            top = 2 ** self._bit_depth_image
+            # if 32 bit then it is a signed int, I think if 8, 16 then it is
+            # unsigned with the highest two values assigned as masking values
+            if self._bit_depth_image == 32:
+                top = 2 ** 31
+            else:
+                top = 2 ** self._bit_depth_image
             d1d = data.as_1d()
             d1d.set_selected(d1d == top - 1, -1)
             d1d.set_selected(d1d == top - 2, -2)
