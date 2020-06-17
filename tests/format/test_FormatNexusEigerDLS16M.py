@@ -109,7 +109,7 @@ def test_masked_i03():
 
     image0 = imageset[0]
 
-    assert flex.min(image0[0]) == -2
+    assert flex.min(image0[0]) == -1.0
     assert flex.max(image0[0]) != 0xFFFF
 
 
