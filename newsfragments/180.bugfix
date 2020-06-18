@@ -1,3 +1,3 @@
-DLS Eiger / NeXus: manually set -2, -1 pixel values from e.g. 0xfffe and 0xfffd
+DLS Eiger / NeXus: fix handling of masked pixels in the image (largely cosmetic as data masked anyway) - manually set -2, -1 pixel values from e.g. 0xffff and 0xfffe or 0x7fffffff
 
 
