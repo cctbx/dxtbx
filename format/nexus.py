@@ -894,10 +894,11 @@ class DetectorFactoryFromGroup(object):
                         numpy.string_("Sillicon"): "Si",
                         numpy.string_("CdTe"): "CdTe",
                         numpy.string_("GaAs"): "GaAs",
-                    }.get(nx_detector.handle["sensor_material"][()])
+                    }.get(numpy.string_(nx_detector.handle["sensor_material"][()]))
                     if not material:
                         raise RuntimeError(
-                            "Unknown material: %s" % nx_detector["sensor_material"][()]
+                            "Unknown material: %s"
+                            % nx_detector.handle["sensor_material"][()]
                         )
                     p.set_material(material)
 
