@@ -97,10 +97,26 @@ def test_rotation_scan_i03_2019_run_4(master_h5):
 
 
 @pytest.mark.skipif(
+    not os.access("/dls/i04/data/2020/cm26459-3/20200617/bs/", os.R_OK),
+    reason="Test images not available",
+)
+def test_masked_i04_32bit():
+    master_h5 = "/dls/i04/data/2020/cm26459-3/20200617/bs/lres_1_master.h5"
+    assert FormatNexusEigerDLS16M.understand(master_h5)
+
+    expts = ExperimentListFactory.from_filenames([master_h5])
+    imageset = expts[0].imageset
+
+    image0 = imageset[0]
+
+    assert flex.max(image0[0]) != 0x7FFFFFFF
+
+
+@pytest.mark.skipif(
     not os.access("/dls/i03/data/2020/cm26458-3/20200617", os.R_OK),
     reason="Test images not available",
 )
-def test_masked_i03():
+def test_masked_i03_16bit():
     master_h5 = "/dls/i03/data/2020/cm26458-3/20200617/test_1_master.h5"
     assert FormatNexusEigerDLS16M.understand(master_h5)
 
