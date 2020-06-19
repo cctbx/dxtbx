@@ -119,11 +119,8 @@ def test_masked_i03_16bit():
 
     expts = ExperimentListFactory.from_filenames([master_h5])
     imageset = expts[0].imageset
-
-    image0 = imageset[0]
-
-    assert flex.min(image0[0]) == -1.0
-    assert flex.max(image0[0]) != 0xFFFF
+    assert flex.min(imageset[0][0]) == -1.0
+    assert flex.max(imageset[0][0]) != 0xFFFF
 
 
 @pytest.mark.skipif(
