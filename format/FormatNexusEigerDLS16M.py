@@ -70,15 +70,15 @@ class FormatNexusEigerDLS16M(FormatNexus):
         super(FormatNexusEigerDLS16M, self).__init__(image_file, **kwargs)
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         try:
-            meta = image_file.replace("_master.h5", "_meta.h5")
+            if self._image_file.endswith("_master.h5"):
+                meta = self._image_file.replace("_master.h5", "_meta.h5")
+            elif self._image_file.endswith(".nxs"):
+                meta = self._image_file.replace(".nxs", "_meta.h5")
             self._bit_depth_image = get_bit_depth_from_meta(meta)
         except Exception:
             self._bit_depth_image = 0
 
     def get_detector(self, index=None):
-        if not self._image_file.endswith("_master.h5"):
-            return self._detector()
-
         # workaround for https://jira.diamond.ac.uk/browse/I03-365
         # read the count limit from the meta file - if anything goes
         # wrong, do nothing
@@ -86,7 +86,10 @@ class FormatNexusEigerDLS16M(FormatNexus):
         detector = self._detector()
 
         try:
-            meta = self._image_file.replace("_master.h5", "_meta.h5")
+            if self._image_file.endswith("_master.h5"):
+                meta = self._image_file.replace("_master.h5", "_meta.h5")
+            elif self._image_file.endswith(".nxs"):
+                meta = self._image_file.replace(".nxs", "_meta.h5")
             limit = get_count_limit_from_meta(meta)
 
             assert limit > 0
@@ -94,6 +97,7 @@ class FormatNexusEigerDLS16M(FormatNexus):
             for panel in detector:
                 trusted = panel.get_trusted_range()
                 panel.set_trusted_range((trusted[0], limit))
+
         except Exception:
             pass
 
