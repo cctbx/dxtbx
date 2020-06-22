@@ -30,26 +30,12 @@ def get_bit_depth_from_meta(meta_file_name):
     return config_data["bit_depth_image"]
 
 
-class FormatNexusEigerDLS16M(FormatNexus):
+class FormatNexusEigerDLS(FormatNexus):
     @staticmethod
     def understand(image_file):
-        """Check to see if this format class can understand the image file.
-
-        Args:
-          image_file (str): The file path of the image file to check.
-
-        Returns:
-          bool: Returns ``True`` if the image_file is understood by this format class,
-          else returns ``False``.
-
-        """
-
-        # this depends on DIALS for the goniometer shadow model; if missing
-        # simply return False
-
         # Get the file handle
         with h5py.File(image_file, "r") as handle:
-            name = FormatNexusEigerDLS16M.get_instrument_name(handle)
+            name = FormatNexusEigerDLS.get_instrument_name(handle)
             if name is None or name.lower() not in (b"i03", b"i04", b"vmxi"):
                 return False
 
@@ -67,7 +53,7 @@ class FormatNexusEigerDLS16M(FormatNexus):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        super(FormatNexusEigerDLS16M, self).__init__(image_file, **kwargs)
+        super(FormatNexusEigerDLS, self).__init__(image_file, **kwargs)
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         try:
             if self._image_file.endswith("_master.h5"):
@@ -140,4 +126,4 @@ class FormatNexusEigerDLS16M(FormatNexus):
 
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
-        print(FormatNexusEigerDLS16M.understand(arg))
+        print(FormatNexusEigerDLS.understand(arg))
