@@ -47,9 +47,6 @@ class FormatNexusEigerDLS4M_vmxi(FormatNexus):
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
 
     def get_detector(self, index=None):
-        if not self._image_file.endswith("_master.h5"):
-            return self._detector()
-
         # workaround for https://jira.diamond.ac.uk/browse/I03-365
         # read the count limit from the meta file - if anything goes
         # wrong, do nothing
@@ -57,7 +54,10 @@ class FormatNexusEigerDLS4M_vmxi(FormatNexus):
         detector = self._detector()
 
         try:
-            meta = self._image_file.replace("_master.h5", "_meta.h5")
+            if self._image_file.endswith("_master.h5"):
+                meta = self._image_file.replace("_master.h5", "_meta.h5")
+            elif self._image_file.endswith(".nxs"):
+                meta = self._image_file.replace(".nxs", "_meta.h5")
             limit = get_count_limit_from_meta(meta)
 
             assert limit > 0
