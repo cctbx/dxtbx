@@ -50,7 +50,7 @@ class FormatNexusEigerDLS16M(FormatNexus):
         # Get the file handle
         with h5py.File(image_file, "r") as handle:
             name = FormatNexusEigerDLS16M.get_instrument_name(handle)
-            if name is None or name.lower() not in (b"i03", b"i04"):
+            if name is None or name.lower() not in (b"i03", b"i04", b"vmxi"):
                 return False
 
         return True
