@@ -799,11 +799,16 @@ class DetectorFactoryFromGroup(object):
                     if "underload_value" in nx_detector.handle
                     else -400
                 )
-                overload = (
-                    float(nx_detector.handle["saturation_value"][()])
-                    if "saturation_value" in nx_detector.handle
-                    else 90000
-                )
+
+                try:
+                    overload = (
+                        float(nx_detector.handle["saturation_value"][()])
+                        if "saturation_value" in nx_detector.handle
+                        else 90000
+                    )
+                except KeyError:
+                    overload = 0
+
                 trusted_range = underload, overload
 
                 fast_pixel_direction_handle = nx_detector_module.handle[
