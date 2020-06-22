@@ -952,9 +952,9 @@ class DetectorFactory(object):
         detector_name = str(nx_detector.name)
 
         # Get the trusted range of pixel values
-        if "saturation_value" in nx_detector:
+        try:
             trusted_range = (-1, float(nx_detector["saturation_value"][()]))
-        else:
+        except KeyError:
             trusted_range = (-1, 99999999)
 
         # Get the detector thickness
