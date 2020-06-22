@@ -801,11 +801,7 @@ class DetectorFactoryFromGroup(object):
                 )
 
                 try:
-                    overload = (
-                        float(nx_detector.handle["saturation_value"][()])
-                        if "saturation_value" in nx_detector.handle
-                        else 90000
-                    )
+                    overload = float(nx_detector.handle["saturation_value"][()])
                 except KeyError:
                     overload = 0
 
