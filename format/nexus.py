@@ -888,24 +888,23 @@ class DetectorFactoryFromGroup(object):
 
                 # Get the detector material
                 if "sensor_material" in nx_detector.handle:
-                    material = str(nx_detector.handle["sensor_material"][()])
+                    material = {
+                        numpy.string_("Si"): "Si",
+                        numpy.string_("Silicon"): "Si",
+                        numpy.string_("Sillicon"): "Si",
+                        numpy.string_("CdTe"): "CdTe",
+                        numpy.string_("GaAs"): "GaAs",
+                    }.get(numpy.string_(nx_detector.handle["sensor_material"][()]))
+                    if not material:
+                        raise RuntimeError(
+                            "Unknown material: %s"
+                            % nx_detector.handle["sensor_material"][()]
+                        )
                     p.set_material(material)
 
                     # Compute the attenuation coefficient.
                     # This will fail for undefined composite materials
                     # mu_at_angstrom returns cm^-1, but need mu in mm^-1
-                    if material == "Si":
-                        pass
-                    elif material == "Silicon":
-                        material = "Si"
-                    elif material == "Sillicon":
-                        material = "Si"
-                    elif material == "CdTe":
-                        pass
-                    elif material == "GaAs":
-                        pass
-                    else:
-                        raise RuntimeError("Unknown material: %s" % material)
                     table = attenuation_coefficient.get_table(material)
                     wavelength = beam.get_wavelength()
                     mu = table.mu_at_angstrom(wavelength) / 10.0
