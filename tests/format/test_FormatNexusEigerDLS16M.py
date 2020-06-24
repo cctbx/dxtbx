@@ -4,7 +4,8 @@ import os
 
 import pytest
 
-from dials.array_family import flex
+from scitbx.array_family import flex
+
 from dxtbx.format.FormatNexusEigerDLS16M import FormatNexusEigerDLS16M
 from dxtbx.masking import SmarGonShadowMasker
 from dxtbx.model.experiment_list import ExperimentListFactory
