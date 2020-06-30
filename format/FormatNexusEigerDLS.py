@@ -25,6 +25,25 @@ def get_bit_depth_from_meta(meta_file_name):
     return config_data["bit_depth_image"]
 
 
+def find_meta_filename(master_like):
+    meta_filename = None
+    f = h5py.File(master_like, "r")
+
+    def _local_visit(name):
+        obj = f[name]
+        if not hasattr(obj, "keys"):
+            return None
+        for k in obj.keys():
+            kclass = obj.get(k, getlink=True, getclass=True)
+            if kclass is h5py._hl.group.ExternalLink:
+                kfile = obj.get(k, getlink=True).filename
+                if kfile.split(".")[0].endswith("meta"):
+                    return kfile
+
+    meta_filename = f.visit(_local_visit)
+    return meta_filename
+
+
 class FormatNexusEigerDLS(FormatNexus):
     @staticmethod
     def understand(image_file):
@@ -40,12 +59,9 @@ class FormatNexusEigerDLS(FormatNexus):
         """Initialise the image structure from the given file."""
 
         super(FormatNexusEigerDLS, self).__init__(image_file, **kwargs)
+        self._meta = find_meta_filename(image_file)
         try:
-            if self._image_file.endswith("_master.h5"):
-                meta = self._image_file.replace("_master.h5", "_meta.h5")
-            elif self._image_file.endswith(".nxs"):
-                meta = self._image_file.replace(".nxs", "_meta.h5")
-            self._bit_depth_image = get_bit_depth_from_meta(meta)
+            self._bit_depth_image = get_bit_depth_from_meta(self._meta)
         except Exception:
             self._bit_depth_image = 0
 
@@ -57,11 +73,7 @@ class FormatNexusEigerDLS(FormatNexus):
         detector = self._detector()
 
         try:
-            if self._image_file.endswith("_master.h5"):
-                meta = self._image_file.replace("_master.h5", "_meta.h5")
-            elif self._image_file.endswith(".nxs"):
-                meta = self._image_file.replace(".nxs", "_meta.h5")
-            limit = get_count_limit_from_meta(meta)
+            limit = get_count_limit_from_meta(self._meta)
 
             assert limit > 0
 
