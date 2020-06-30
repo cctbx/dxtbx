@@ -1,4 +1,1 @@
 DLS Eiger / NeXus: fix handling of masked pixels in the image (largely cosmetic as data masked anyway) - manually set -2, -1 pixel values from e.g. 0xffff and 0xfffe or 0x7fffffff. This will have the effect that the module join regions are no longer marked as overloaded (i.e. yellow.)
-
-
-
