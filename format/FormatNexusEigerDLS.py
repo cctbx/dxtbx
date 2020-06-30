@@ -74,15 +74,15 @@ class FormatNexusEigerDLS(FormatNexus):
 
         try:
             limit = get_count_limit_from_meta(self._meta)
-
             assert limit > 0
-
-            for panel in detector:
-                trusted = panel.get_trusted_range()
-                panel.set_trusted_range((trusted[0], limit))
 
         except Exception:
             pass
+
+        else:
+            for panel in detector:
+                trusted = panel.get_trusted_range()
+                panel.set_trusted_range((trusted[0], limit))
 
         return detector
 
