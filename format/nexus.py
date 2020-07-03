@@ -793,17 +793,18 @@ class DetectorFactoryFromGroup(object):
                     )
                 )
 
-                # Get the trusted range of pixel values
-                underload = (
-                    float(nx_detector.handle["underload_value"][()])
-                    if "underload_value" in nx_detector.handle
-                    else -400
-                )
+                # Get the trusted range of pixel values - if missing use
+                # full range of signed 32 bit int
+
+                try:
+                    underload = float(nx_detector.handle["underload_value"][()])
+                except KeyError:
+                    underload = -0x7FFFFFFF
 
                 try:
                     overload = float(nx_detector.handle["saturation_value"][()])
                 except KeyError:
-                    overload = 0
+                    overload = 0x7FFFFFFF
 
                 trusted_range = underload, overload
 
