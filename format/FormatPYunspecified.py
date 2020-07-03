@@ -3,11 +3,9 @@ from __future__ import absolute_import, division, print_function
 import copy
 import os
 import sys
-from builtins import range
 
 import six
 import six.moves.cPickle as pickle
-from past.builtins import basestring
 
 from iotbx.detectors.cspad_detector_formats import (
     detector_format_version,
@@ -46,7 +44,7 @@ class FormatPYunspecified(FormatPY):
         pass
 
     def _start(self):
-        if isinstance(self._image_file, basestring) and os.path.isfile(
+        if isinstance(self._image_file, six.string_types) and os.path.isfile(
             self._image_file
         ):
             with FormatPYunspecified.open_file(self._image_file, "rb") as fh:
@@ -83,7 +81,7 @@ class FormatPYunspecified(FormatPY):
 
     def start_helper(self, version_token):
 
-        is_file = isinstance(self._image_file, basestring) and os.path.isfile(
+        is_file = isinstance(self._image_file, six.string_types) and os.path.isfile(
             self._image_file
         )
 
