@@ -890,17 +890,16 @@ class DetectorFactoryFromGroup(object):
 
                 # Get the detector material
                 if "sensor_material" in nx_detector.handle:
+                    value = numpy.string_(nx_detector.handle["sensor_material"][()])
                     material = {
                         numpy.string_("Si"): "Si",
                         numpy.string_("Silicon"): "Si",
                         numpy.string_("Sillicon"): "Si",
                         numpy.string_("CdTe"): "CdTe",
                         numpy.string_("GaAs"): "GaAs",
-                    }.get(nx_detector.handle["sensor_material"][()])
+                    }.get(value)
                     if not material:
-                        raise RuntimeError(
-                            "Unknown material: %s" % nx_detector["sensor_material"][()]
-                        )
+                        raise RuntimeError("Unknown material: %s" % value)
                     p.set_material(material)
 
                     # Compute the attenuation coefficient.
