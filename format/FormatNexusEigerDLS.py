@@ -63,8 +63,8 @@ class FormatNexusEigerDLS(FormatNexus):
         """Initialise the image structure from the given file."""
 
         super(FormatNexusEigerDLS, self).__init__(image_file, **kwargs)
-        self._meta = find_meta_filename(image_file)
         try:
+            self._meta = find_meta_filename(image_file)
             self._bit_depth_image = get_bit_depth_from_meta(self._meta)
         except Exception:
             self._bit_depth_image = 0
