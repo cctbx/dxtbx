@@ -52,10 +52,12 @@ class FormatNexusEigerDLS(FormatNexus):
         # Get the file handle
         with h5py.File(image_file, "r") as handle:
             name = FormatNexusEigerDLS.get_instrument_name(handle)
-            if name is None or name.lower() not in (b"i03", b"i04", b"vmxi"):
+            if name is None:
                 return False
+            if name.lower() in (b"i03", b"i04", b"vmxi"):
+                return True
 
-        return True
+        return False
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
