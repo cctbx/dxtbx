@@ -357,6 +357,12 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self._beam_factory = BeamFactory(beam)
         self._beam_factory.load_model(0)
         self._detector_model = DetectorFactory(detector, self._beam_factory.model).model
+
+        # Override the minimum trusted value - for Eiger should be -1
+        for panel in self._detector_model:
+            trusted = panel.get_trusted_range()
+            panel.set_trusted_range((-1, trusted[1]))
+
         self._goniometer_model = GoniometerFactory(sample).model
         self._scan_model = generate_scan_model(sample, detector)
         self._raw_data = DataFactory(data, cached_information=fixer.data_factory_cache)
