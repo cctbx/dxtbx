@@ -952,11 +952,17 @@ class DetectorFactory(object):
             detector_type = "unknown"
         detector_name = str(nx_detector.name)
 
-        # Get the trusted range of pixel values
         try:
-            trusted_range = (-1, float(nx_detector["saturation_value"][()]))
+            underload = float(nx_detector["underload_value"][()])
         except KeyError:
-            trusted_range = (-1, 99999999)
+            underload = -0x7FFFFFFF
+
+        try:
+            overload = float(nx_detector["saturation_value"][()])
+        except KeyError:
+            overload = 0x7FFFFFFF
+
+        trusted_range = underload, overload
 
         # Get the detector thickness
         thickness = nx_detector["sensor_thickness"]
