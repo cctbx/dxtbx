@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import ast
+import os
 
 import h5py
 
@@ -18,7 +19,6 @@ def get_count_limit_from_meta(meta_file_name):
 
 def get_bit_depth_from_meta(meta_file_name):
     with h5py.File(meta_file_name, "r") as f:
-
         config = f["/config"][()]
         config_data = ast.literal_eval(config.decode("utf-8"))
 
@@ -40,8 +40,10 @@ def find_meta_filename(master_like):
                 if kfile.split(".")[0].endswith("meta"):
                     return kfile
 
+    master_dir = os.path.split(master_like)[0]
     meta_filename = f.visit(_local_visit)
-    return meta_filename
+
+    return os.path.join(master_dir, meta_filename)
 
 
 class FormatNexusEigerDLS(FormatNexus):
