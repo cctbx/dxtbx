@@ -5,7 +5,7 @@ import os
 
 import h5py
 
-from dxtbx.format.FormatNexus import FormatNexus
+from dxtbx.format.FormatNexusEiger import FormatNexusEiger
 
 
 def get_count_limit_from_meta(meta_file_name):
@@ -46,7 +46,7 @@ def find_meta_filename(master_like):
     return os.path.join(master_dir, meta_filename)
 
 
-class FormatNexusEigerDLS(FormatNexus):
+class FormatNexusEigerDLS(FormatNexusEiger):
     @staticmethod
     def understand(image_file):
         # Get the file handle
@@ -81,12 +81,13 @@ class FormatNexusEigerDLS(FormatNexus):
             assert limit > 0
 
         except Exception:
-            pass
+            for panel in detector:
+                trusted = panel.get_trusted_range()
+                panel.set_trusted_range((-1, trusted[1]))
 
         else:
             for panel in detector:
-                trusted = panel.get_trusted_range()
-                panel.set_trusted_range((trusted[0], limit))
+                panel.set_trusted_range((-1, limit))
 
         return detector
 
