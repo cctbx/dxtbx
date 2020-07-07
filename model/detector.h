@@ -12,9 +12,6 @@
 #define DXTBX_MODEL_DETECTOR_H
 
 #include <string>
-//#include <boost/geometry.hpp>
-//#include <boost/geometry/geometries/point.hpp>
-//#include <boost/geometry/geometries/polygon.hpp>
 #include <vector>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
