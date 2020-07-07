@@ -757,18 +757,6 @@ namespace dxtbx { namespace model {
       return found_panel;
     }
 
-    /** Check if any panels intersect */
-    //    bool do_panels_intersect() const {
-    //      for (std::size_t j = 0; j < panel_list_->size()-1; ++j) {
-    //        for (std::size_t i = j+1; i < panel_list_->size(); ++i) {
-    //          if (panels_intersect((*panel_list_)[j], (*panel_list_)[i])) {
-    //            return true;
-    //          }
-    //        }
-    //      }
-    //      return false;
-    //    }
-
     /** Rotate the detector about an axis */
     void rotate_around_origin(vec3<double> axis, double angle) {
       for (std::size_t i = 0; i < size(); ++i) {
