@@ -793,17 +793,19 @@ class DetectorFactoryFromGroup(object):
                     )
                 )
 
-                # Get the trusted range of pixel values
-                underload = (
-                    float(nx_detector.handle["underload_value"][()])
-                    if "underload_value" in nx_detector.handle
-                    else -400
-                )
-                overload = (
-                    float(nx_detector.handle["saturation_value"][()])
-                    if "saturation_value" in nx_detector.handle
-                    else 90000
-                )
+                # Get the trusted range of pixel values - if missing use
+                # full range of signed 32 bit int
+
+                try:
+                    underload = float(nx_detector.handle["underload_value"][()])
+                except KeyError:
+                    underload = -0x7FFFFFFF
+
+                try:
+                    overload = float(nx_detector.handle["saturation_value"][()])
+                except KeyError:
+                    overload = 0x7FFFFFFF
+
                 trusted_range = underload, overload
 
                 fast_pixel_direction_handle = nx_detector_module.handle[
@@ -888,18 +890,16 @@ class DetectorFactoryFromGroup(object):
 
                 # Get the detector material
                 if "sensor_material" in nx_detector.handle:
+                    value = numpy.string_(nx_detector.handle["sensor_material"][()])
                     material = {
                         numpy.string_("Si"): "Si",
                         numpy.string_("Silicon"): "Si",
                         numpy.string_("Sillicon"): "Si",
                         numpy.string_("CdTe"): "CdTe",
                         numpy.string_("GaAs"): "GaAs",
-                    }.get(numpy.string_(nx_detector.handle["sensor_material"][()]))
+                    }.get(value)
                     if not material:
-                        raise RuntimeError(
-                            "Unknown material: %s"
-                            % nx_detector.handle["sensor_material"][()]
-                        )
+                        raise RuntimeError("Unknown material: %s" % value)
                     p.set_material(material)
 
                     # Compute the attenuation coefficient.
@@ -952,11 +952,17 @@ class DetectorFactory(object):
             detector_type = "unknown"
         detector_name = str(nx_detector.name)
 
-        # Get the trusted range of pixel values
-        if "saturation_value" in nx_detector:
-            trusted_range = (-1, float(nx_detector["saturation_value"][()]))
-        else:
-            trusted_range = (-1, 99999999)
+        try:
+            underload = float(nx_detector["underload_value"][()])
+        except KeyError:
+            underload = -0x7FFFFFFF
+
+        try:
+            overload = float(nx_detector["saturation_value"][()])
+        except KeyError:
+            overload = 0x7FFFFFFF
+
+        trusted_range = underload, overload
 
         # Get the detector thickness
         thickness = nx_detector["sensor_thickness"]
