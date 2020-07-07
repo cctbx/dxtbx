@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from dxtbx.format.FormatNexus import FormatNexus
+from dxtbx.format.FormatNexusEiger import FormatNexusEiger
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.model.goniometer import Goniometer
 
@@ -18,11 +18,11 @@ pytest.importorskip("h5py")
 
 def test_VMXi_rotation_scan():
     master_h5 = "/dls/mx/data/mx21314/mx21314-27/VMXi-AB0816/well_7/images/image_14364_master.h5"
-    assert FormatNexus.understand(master_h5)
+    assert FormatNexusEiger.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])
     imageset = expts[0].imageset
-    assert imageset.get_format_class() == FormatNexus
+    assert imageset.get_format_class() == FormatNexusEiger
 
     detector = imageset.get_detector()
     gonio = imageset.get_goniometer()
