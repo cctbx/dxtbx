@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 
 import errno
+import logging
 import os
 from builtins import range
 from glob import glob
@@ -956,3 +957,23 @@ def test_experimentlist_change_basis(dials_data):
 
     with pytest.raises(AssertionError):
         experiments.change_basis([cb_op, cb_op])
+
+
+def test_experiment_list_load_pickle_path(dials_data, caplog):
+    """
+    Test that a missing pickle file reference doesn't cause problems.
+
+    This tests that it is possible to load an experiment list from a .expt file that
+    deliberately contains a reference to a non-existent pickle file (a hot pixel mask).
+
+    Implicitly, this is testing that
+    dxtbx.model.experiment_list.ExperimentListDict._load_pickle_path
+    does not throw a FileNotFoundError and instead issues a warning.
+    """
+    data_file = (dials_data("l_cysteine_dials_output") / "11_integrated.expt").strpath
+
+    with caplog.at_level(logging.WARNING):
+        ExperimentList.from_file(data_file)
+
+    if not caplog.records or "non-existent.py" not in caplog.text:
+        pytest.fail("Expected a warning that a pickle file mask could not be found.")

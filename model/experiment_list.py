@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import copy
 import errno
 import json
+import logging
 import os
 from builtins import range
 
@@ -49,6 +50,9 @@ __all__ = [
     "GoniometerComparison",
     "SequenceDiff",
 ]
+
+
+logger = logging.getLogger("dxtbx.model.experiment_list")
 
 
 class InvalidExperimentListError(RuntimeError):
@@ -159,6 +163,8 @@ class ExperimentListDict(object):
         """
         Read a filename from an imageset dict and load if required.
 
+        If the referenced pickle file cannot be found, a warning is issued.
+
         Args:
             imageset_data: The dictionary holding imageset information
             param: The key name to lookup in the imageset dictionary
@@ -167,18 +173,27 @@ class ExperimentListDict(object):
             A tuple of (filename, data) where data has been loaded from
             the pickle file. If there is no key entry then (None, None)
             is returned. If the configuration parameter check_format is
-            False then (filename, None) will be returned.
+            False, or if the referenced pickle file cannot be found,
+            then (filename, None) will be returned.
         """
         if param not in imageset_data:
             return "", None
 
         filename = resolve_path(imageset_data[param], directory=self._directory)
         if self._check_format and filename:
-            with open(filename, "rb") as fh:
-                if six.PY3:
-                    return filename, pickle.load(fh, encoding="bytes")
-                else:
-                    return filename, pickle.load(fh)
+            try:
+                with open(filename, "rb") as fh:
+                    if six.PY3:
+                        return filename, pickle.load(fh, encoding="bytes")
+                    else:
+                        return filename, pickle.load(fh)
+            except FileNotFoundError:
+                # Cry but don't die if your experiment list is served without pickles.
+                logger.warning(
+                    "This file could not be found:\n"
+                    "{}\n"
+                    "It will not be loaded into the instrument model.".format(filename)
+                )
 
         return filename or "", None
 
