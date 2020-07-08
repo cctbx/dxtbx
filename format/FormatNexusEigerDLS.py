@@ -54,7 +54,7 @@ class FormatNexusEigerDLS(FormatNexusEiger):
             name = FormatNexusEigerDLS.get_instrument_name(handle)
             if name is None:
                 return False
-            if name.lower() in (b"i03", b"i04", b"vmxi"):
+            if name.lower() in (b"i03", b"i04", b"i24", b"vmxi"):
                 return True
 
         return False
