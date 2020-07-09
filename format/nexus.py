@@ -220,9 +220,9 @@ def construct_vector(nx_file, item, vector=None):
             elif ttype == numpy.string_("rotation"):
                 if hasattr(value, "__iter__") and len(value):
                     value = value[0]
-                if units == "rad":
+                if numpy.string_(units) == numpy.string_("rad"):
                     deg = False
-                elif units == "deg":
+                elif numpy.string_(units) == numpy.string_("deg"):
                     deg = True
                 else:
                     raise RuntimeError("Invalid units: %s" % units)
