@@ -277,7 +277,7 @@ def construct_axes(nx_file, item, vector=None):
                 if hasattr(value, "__iter__") and len(value):
                     value = value[0]
                 if units == numpy.string_("rad"):
-                    value *= math.pi / 180
+                    value *= 180 / math.pi
                 elif units not in [
                     numpy.string_("deg"),
                     numpy.string_("degree"),
