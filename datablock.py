@@ -401,8 +401,12 @@ class DataBlockTemplateImporter(object):
         """Create a multi file sequence or imageset."""
         # Get the image range
         index = slice(*template_string_number_index(template))
-        first = int(filenames[0][index])
-        last = int(filenames[-1][index])
+        image_range = kwargs.get("image_range")
+        if image_range:
+            first, last = image_range
+        else:
+            first = int(filenames[0][index])
+            last = int(filenames[-1][index])
 
         # Check all images in range are present - if allowed
         if not kwargs.get("allow_incomplete_sequences", False):
