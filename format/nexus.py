@@ -919,28 +919,12 @@ class DetectorFactoryFromGroup(object):
                     )
 
 
-def known_backwards(image_size):
-    """
-    Tests for special cases for known data where image size is backwards from NeXus spec
-
-    image_size is in dxtbx image size order (fast, slow)
-    """
-    return image_size in [
-        (4362, 4148),  # Eiger 2X 16M @ DLS
-        (3262, 3108),  # Eiger 2 9M @ DLS
-        (4371, 4150),  # Eiger 16M @ Spring8
-        (2162, 2068),  # Eiger 2x 4M @ VMXi, DLS
-        (2167, 2070),  # Eiger 1 4M @ VMXi, DLS
-        (3269, 3110),  # Eiger 9M Proxima2A beamline @ SOLEIL
-    ]
-
-
 class DetectorFactory(object):
     """
     A class to create a detector model from NXmx stuff
     """
 
-    def __init__(self, obj, beam):
+    def __init__(self, obj, beam, shape=None):
         # Get the handles
         nx_file = obj.handle.file
         nx_detector = obj.handle
@@ -1039,11 +1023,13 @@ class DetectorFactory(object):
 
         # Construct the detector model
         pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
-        # image size stored slow to fast but dxtbx needs fast to slow
-        image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
 
-        if known_backwards(image_size):
-            image_size = tuple(reversed(image_size))
+        # image size stored slow to fast but dxtbx needs fast to slow - assume
+        # that the shapes being taken as input are slow -> fast
+        if shape:
+            image_size = tuple(reversed(shape[-2:]))
+        else:
+            image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
 
         self.model = Detector()
         self.model.add_panel(
@@ -1227,24 +1213,12 @@ def get_detector_module_slices(detector):
     for module in modules:
         data_origin = module.handle["data_origin"]
         data_size = module.handle["data_size"]
-        if known_backwards((data_size[-1], data_size[-2])):
-            all_slices.append(
-                list(
-                    reversed(
-                        [
-                            slice(int(start), int(start + step), 1)
-                            for start, step in zip(data_origin, data_size)
-                        ]
-                    )
-                )
-            )
-        else:
-            all_slices.append(
-                [
-                    slice(int(start), int(start + step), 1)
-                    for start, step in zip(data_origin, data_size)
-                ]
-            )
+        all_slices.append(
+            [
+                slice(int(start), int(start + step), 1)
+                for start, step in zip(data_origin, data_size)
+            ]
+        )
     return all_slices
 
 
@@ -1335,13 +1309,20 @@ class DataFactory(object):
         self._num_images = 0
         self._lookup = []
         self._offset = [0]
+        self._shape = None
 
         if len(self._datasets) == 1 and max_size:
+            self._shape = self._datasets[0].shape
             self._num_images = max_size
             self._lookup.extend([0] * max_size)
             self._offset.append(max_size)
         else:
             for i, dataset in enumerate(self._datasets):
+                if self._shape is None:
+                    self._shape = dataset.shape
+                else:
+                    assert self._shape[-2:] == dataset.shape[-2:]
+                    self._shape = (self._shape[0] + dataset.shape[0],) + self._shape[1:]
                 self._num_images += dataset.shape[0]
                 self._lookup.extend([i] * dataset.shape[0])
                 self._offset.append(self._num_images)
@@ -1351,6 +1332,9 @@ class DataFactory(object):
 
     def __len__(self):
         return self._num_images
+
+    def shape(self):
+        return self._shape
 
     def __getitem__(self, index):
         d = self._lookup[index]
