@@ -416,9 +416,9 @@ namespace dxtbx { namespace model { namespace boost_python {
                          arg("pixel_size"),
                          arg("image_size"),
                          arg("trusted_range"),
-			 arg("maximum_pixel"),
-                         arg("thickness"),
-                         arg("material"),
+			 arg("maximum_pixel") = 0.0,
+                         arg("thickness") = 0.0,
+                         arg("material") = "",
                          arg("mu") = 0.0)))
       .def("get_pixel_size", &PanelData::get_pixel_size)
       .def("set_pixel_size", &PanelData::set_pixel_size)
