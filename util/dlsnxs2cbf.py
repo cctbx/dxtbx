@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import binascii
 
 import h5py
-import numpy
+import numpy as np
 
 from cbflib_adaptbx import compress
 from scitbx.array_family import flex
@@ -48,9 +48,9 @@ def get_distance_in_mm(f):
     except KeyError:
         D = f["/entry/instrument/detector/detector_distance"]
     d = D[()]
-    if D.attrs["units"] == numpy.string_("m"):
+    if D.attrs["units"] == np.string_("m"):
         d *= 1000
-    elif D.attrs["units"] != numpy.string_("mm"):
+    elif D.attrs["units"] != np.string_("mm"):
         raise RuntimeError(
             "unknown distance unit '%s'" % D.attrs["units"].decode("latin-1")
         )
@@ -141,7 +141,7 @@ def make_cbf(in_name, template):
         header = compute_cbf_header(f, j)
         depth, height, width = f["/entry/data/data_%06d" % block].shape
 
-        data = flex.int(numpy.int32(f["/entry/data/data_%06d" % block][i]))
+        data = flex.int(np.int32(f["/entry/data/data_%06d" % block][i]))
         good = data.as_1d() < 65535
         data.as_1d().set_selected(~good, -2)
 

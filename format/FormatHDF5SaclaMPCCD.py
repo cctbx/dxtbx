@@ -6,7 +6,7 @@ import sys
 from builtins import range
 
 import h5py
-import numpy
+import numpy as np
 
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
@@ -148,7 +148,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             thickness = 0.050
             if sensor.startswith(b"MPCCD-8B"):
                 thickness = 0.300  # Phase 3 sensor
-            orig_mask = numpy.logical_not(h5_handle["metadata/pixelmask"][()])
+            orig_mask = np.logical_not(h5_handle["metadata/pixelmask"][()])
             mask = self.split_panels(orig_mask, bool=True)
         except Exception:
             return
@@ -240,12 +240,10 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             xmin, ymin, xmax, ymax = 0, i * 1024, 512, (i + 1) * 1024
             # To avoid "numpy.ndarray instance is not contiguous"
             if bool:
-                source = numpy.ascontiguousarray(img[ymin:ymax, xmin:xmax])
+                source = np.ascontiguousarray(img[ymin:ymax, xmin:xmax])
                 tmp.append(flex.bool(source))
             else:
-                source = numpy.ascontiguousarray(
-                    img[ymin:ymax, xmin:xmax], dtype=numpy.int32
-                )
+                source = np.ascontiguousarray(img[ymin:ymax, xmin:xmax], dtype=np.int32)
                 tmp.append(flex.int(source))
 
         return tuple(tmp)
@@ -262,7 +260,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             else:
                 h5_handle = h5py.File(self.image_filename, "r")
 
-                data = h5_handle[self.tag]["data"][()]  # .astype(numpy.int32)
+                data = h5_handle[self.tag]["data"][()]  # .astype(np.int32)
                 # [()] forces conversion to ndarray
                 # this is 8192x512 (slow/fast) tiled image
                 h5_handle.close()
@@ -277,11 +275,11 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
         return self.active_areas
 
     def reconst_image(self):
-        det = numpy.empty((self.RECONST_SIZE, self.RECONST_SIZE), dtype="int32")
+        det = np.empty((self.RECONST_SIZE, self.RECONST_SIZE), dtype="int32")
         det.fill(-1)
 
         h5_handle = h5py.File(self.image_filename, "r")
-        data = h5_handle[self.tag]["data"][()].astype(numpy.int32)
+        data = h5_handle[self.tag]["data"][()].astype(np.int32)
         h5_handle.close()
 
         self.active_areas = []
