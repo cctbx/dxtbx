@@ -160,13 +160,13 @@ class EigerNXmxFixer(object):
             fast_axis[0],
             fast_axis[1],
             -fast_axis[2],
-        ]  # swap Z axis to align with Dectis/NeXus documentation
+        ]  # swap Z axis to align with Dectris/NeXus documentation
         slow_axis = handle["/entry/instrument/detector/geometry/orientation/value"][3:6]
         slow_axis = [
             slow_axis[0],
             slow_axis[1],
             -slow_axis[2],
-        ]  # swap Z axis to align with Dectis/NeXus documentation
+        ]  # swap Z axis to align with Dectris/NeXus documentation
         create_scalar(
             group,
             "fast_pixel_direction",
@@ -218,7 +218,7 @@ class EigerNXmxFixer(object):
         detector_offset_vector = handle[
             "/entry/instrument/detector/geometry/translation/distances"
         ][()]
-        # swap Z axis to align with Dectis/NeXus documentation
+        # swap Z axis to align with Dectris/NeXus documentation
         detector_offset_vector = matrix.col(
             (
                 detector_offset_vector[0],
