@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 import uuid
-from builtins import range
 
 import h5py
 import numpy as np

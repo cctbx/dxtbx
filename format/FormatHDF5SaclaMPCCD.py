@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import math
 import os
 import sys
-from builtins import range
 
 import h5py
 import numpy as np

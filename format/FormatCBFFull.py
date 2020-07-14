@@ -7,7 +7,6 @@ but will allow for extension for specific implementations of CBF.
 from __future__ import absolute_import, division, print_function
 
 import sys
-from builtins import range
 
 import numpy as np
 
