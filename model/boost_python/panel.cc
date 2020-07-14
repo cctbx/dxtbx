@@ -141,6 +141,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["image_size"] = obj.get_image_size();
     result["pixel_size"] = obj.get_pixel_size();
     result["trusted_range"] = obj.get_trusted_range();
+    result["maximum_pixel"] = obj.get_maximum_pixel();
     result["thickness"] = obj.get_thickness();
     result["material"] = obj.get_material();
     result["mu"] = obj.get_mu();
@@ -203,6 +204,10 @@ namespace dxtbx { namespace model { namespace boost_python {
     if (obj.has_key("trusted_range")) {
       result->set_trusted_range(
         boost::python::extract<tiny<double, 2> >(obj["trusted_range"]));
+    }
+    if (obj.has_key("maximum_pixel")) {
+      result->set_maximum_pixel(
+        boost::python::extract<double>(obj["maximum_pixel"]));
     }
     return result;
   }
@@ -400,6 +405,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 tiny<double, 2>,
                 tiny<std::size_t, 2>,
                 tiny<double, 2>,
+	        double,
                 double,
                 std::string,
                 double>((arg("type"),
@@ -410,6 +416,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                          arg("pixel_size"),
                          arg("image_size"),
                          arg("trusted_range"),
+			 arg("maximum_pixel"),
                          arg("thickness"),
                          arg("material"),
                          arg("mu") = 0.0)))
@@ -419,6 +426,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_image_size", &PanelData::set_image_size)
       .def("get_trusted_range", &PanelData::get_trusted_range)
       .def("set_trusted_range", &PanelData::set_trusted_range)
+      .def("get_maximum_pixel", &PanelData::get_maximum_pixel)
+      .def("set_maximum_pixel", &PanelData::set_maximum_pixel)
       .def("get_thickness", &PanelData::get_thickness)
       .def("set_thickness", &PanelData::set_thickness)
       .def("get_material", &PanelData::get_material)
@@ -450,6 +459,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 tiny<double, 2>,
                 tiny<std::size_t, 2>,
                 tiny<double, 2>,
+	        double,
                 double,
                 std::string,
                 double,
@@ -461,6 +471,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                               arg("pixel_size"),
                               arg("image_size"),
                               arg("trusted_range"),
+			      arg("maximum_pixel"),
                               arg("thickness"),
                               arg("material"),
                               arg("mu") = 0.0,
@@ -473,6 +484,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 tiny<double, 2>,
                 tiny<std::size_t, 2>,
                 tiny<double, 2>,
+	        double,
                 double,
                 std::string,
                 shared_ptr<PxMmStrategy>,
@@ -485,6 +497,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                               arg("pixel_size"),
                               arg("image_size"),
                               arg("trusted_range"),
+			      arg("maximum_pixel"),
                               arg("thickness"),
                               arg("material"),
                               arg("px_mm"),

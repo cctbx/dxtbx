@@ -79,6 +79,11 @@ detector_phil_scope = libtbx.phil.parse(
         .help = "Override the panel trusted range"
         .short_caption = "Panel trusted range"
 
+      maximum_pixel = None
+        .type = float
+        .help = "Override maximum possible pixel value"
+        .short_caption = "Maximum pixel value"
+
       thickness = None
         .type = float
         .help = "Override the panel thickness"
@@ -232,6 +237,8 @@ class DetectorFactory(object):
                 panel.set_trusted_range(panel_params.trusted_range)
             else:
                 raise RuntimeError("No trusted range set")
+            if panel_params.maximum_pixel is not None:
+                panel.set_maximum_pixel(panel_params.maximum_pixel)
             if panel_params.thickness is not None:
                 panel.set_thickness(panel_params.thickness)
             if panel_params.material is not None:
@@ -333,6 +340,8 @@ class DetectorFactory(object):
                 panel.set_image_size(panel_params.image_size)
             if panel_params.trusted_range is not None:
                 panel.set_trusted_range(panel_params.trusted_range)
+            if panel_params.maximum_pixel is not None:
+                panel.set_maximum_pixel(panel_params.maximum_pixel)
             if panel_params.thickness is not None:
                 panel.set_thickness(panel_params.thickness)
             if panel_params.material is not None:
@@ -492,6 +501,7 @@ class DetectorFactory(object):
         pixel_size,
         image_size,
         trusted_range=(0.0, 1.0e6),
+        maximum_pixel=0.0,
         px_mm=None,
         name="Panel",
         thickness=0.0,
@@ -517,6 +527,7 @@ class DetectorFactory(object):
         p.set_pixel_size(tuple(map(float, pixel_size)))
         p.set_image_size(tuple(map(int, image_size)))
         p.set_trusted_range(tuple(map(float, trusted_range)))
+        p.set_maximum_pixel(maximum_pixel)
         p.set_thickness(thickness)
         p.set_material(material)
         p.set_mu(mu)
@@ -538,6 +549,7 @@ class DetectorFactory(object):
         pixel_size,
         image_size,
         trusted_range=(0.0, 0.0),
+        maximum_pixel=0.0,
         mask=[],
         px_mm=None,
         mu=0.0,
@@ -582,6 +594,7 @@ class DetectorFactory(object):
             pixel_size,
             image_size,
             trusted_range,
+            maximum_pixel,
             px_mm,
             mu=mu,
             gain=gain,
@@ -603,6 +616,7 @@ class DetectorFactory(object):
         pixel_size,
         image_size,
         trusted_range=(0.0, 0.0),
+        maximum_pixel=0.0,
         mask=[],
         px_mm=None,
         mu=0.0,
@@ -654,6 +668,7 @@ class DetectorFactory(object):
             pixel_size,
             image_size,
             trusted_range,
+            maximum_pixel,
             px_mm,
             mu=mu,
             gain=gain,
@@ -673,6 +688,7 @@ class DetectorFactory(object):
         pixel,
         size,
         trusted_range=(0.0, 0.0),
+        maximum_pixel=0.0,
         mask=[],
         px_mm=None,
         mu=0.0,
@@ -700,6 +716,7 @@ class DetectorFactory(object):
             pixel,
             size,
             trusted_range,
+            maximum_pixel,
             px_mm,
             mu=mu,
             gain=gain,

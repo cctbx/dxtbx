@@ -33,6 +33,7 @@ namespace dxtbx { namespace model {
         : pixel_size_(0.0, 0.0),
           image_size_(0, 0),
           trusted_range_(0.0, 0.0),
+          maximum_pixel_(0.0),
           thickness_(0.0),
           mu_(0.0),
           raw_image_offset_(0, 0) {}
@@ -46,12 +47,14 @@ namespace dxtbx { namespace model {
               tiny<double, 2> pixel_size,
               tiny<std::size_t, 2> image_size,
               tiny<double, 2> trusted_range,
+	      double maximum_pixel,
               double thickness,
               std::string material,
               double mu)
         : pixel_size_(pixel_size),
           image_size_(image_size),
           trusted_range_(trusted_range),
+          maximum_pixel_(maximum_pixel),
           thickness_(thickness),
           material_(material),
           mu_(mu),
@@ -93,6 +96,20 @@ namespace dxtbx { namespace model {
       trusted_range_ = trusted_range;
     }
 
+    /** Set the maximum possible value for a pixel */
+    double get_maximum_pixel() const {
+      if (maximum_pixel_ > 0) {
+	return maximum_pixel_;
+      } else {
+	return trusted_range_[1];
+      }
+    }
+
+    /** Get the maximum possible value for a pixel */
+    void set_maximum_pixel(double maximum_pixel) {
+      maximum_pixel_ = maximum_pixel;
+    }
+    
     /** Get the thickness */
     double get_thickness() const {
       return thickness_;
@@ -196,6 +213,7 @@ namespace dxtbx { namespace model {
     tiny<double, 2> pixel_size_;
     tiny<std::size_t, 2> image_size_;
     tiny<double, 2> trusted_range_;
+    double maximum_pixel_;
     double thickness_;
     std::string material_;
     double mu_;
