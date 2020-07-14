@@ -206,8 +206,7 @@ namespace dxtbx { namespace model { namespace boost_python {
         boost::python::extract<tiny<double, 2> >(obj["trusted_range"]));
     }
     if (obj.has_key("maximum_pixel")) {
-      result->set_maximum_pixel(
-        boost::python::extract<double>(obj["maximum_pixel"]));
+      result->set_maximum_pixel(boost::python::extract<double>(obj["maximum_pixel"]));
     }
     return result;
   }
@@ -405,7 +404,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 tiny<double, 2>,
                 tiny<std::size_t, 2>,
                 tiny<double, 2>,
-	        double,
+                double,
                 double,
                 std::string,
                 double>((arg("type"),
@@ -416,7 +415,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                          arg("pixel_size"),
                          arg("image_size"),
                          arg("trusted_range"),
-			 arg("maximum_pixel") = 0.0,
+                         arg("maximum_pixel") = 0.0,
                          arg("thickness") = 0.0,
                          arg("material") = "",
                          arg("mu") = 0.0)))
@@ -459,7 +458,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 tiny<double, 2>,
                 tiny<std::size_t, 2>,
                 tiny<double, 2>,
-	        double,
+                double,
                 double,
                 std::string,
                 double,
@@ -471,7 +470,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                               arg("pixel_size"),
                               arg("image_size"),
                               arg("trusted_range"),
-			      arg("maximum_pixel"),
+                              arg("maximum_pixel"),
                               arg("thickness"),
                               arg("material"),
                               arg("mu") = 0.0,
@@ -484,7 +483,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 tiny<double, 2>,
                 tiny<std::size_t, 2>,
                 tiny<double, 2>,
-	        double,
+                double,
                 double,
                 std::string,
                 shared_ptr<PxMmStrategy>,
@@ -497,7 +496,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                               arg("pixel_size"),
                               arg("image_size"),
                               arg("trusted_range"),
-			      arg("maximum_pixel"),
+                              arg("maximum_pixel"),
                               arg("thickness"),
                               arg("material"),
                               arg("px_mm"),
