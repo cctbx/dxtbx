@@ -58,15 +58,20 @@ class FormatBrukerPhotonII(FormatBruker):
 
         _, omega, phi, chi = map(float, self.header_dict["ANGLES"].split())
         scan_axis = ["NONE", "2THETA", "OMEGA", "PHI", "CHI", "X", "Y", "Z"]
-        scan_axis = scan_axis[int(self.header_dict["AXIS"])]
+        i_scan_axis = int(self.header_dict["AXIS"])
+        scan_axis = scan_axis[i_scan_axis]
         names = flex.std_string(("PHI", "CHI", "OMEGA"))
         scan_axis = flex.first_index(names, scan_axis)
         if scan_axis is None:
             scan_axis = "OMEGA"  # default
 
         # https://journals.iucr.org/d/issues/2014/10/00/dz5309/dz5309sup1.pdf
-        axes = flex.vec3_double(((0, -1, 0), (0, 0, 1), (0, 1, 0)))
-        omega -= 180
+        axes = flex.vec3_double(((-1, 0, 0), (0, 0, 1), (1, 0, 0)))
+        incr = float(self.header_dict["INCREME"].split()[0])
+        if incr < 0:
+            ax_to_reverse = axes[i_scan_axis]
+            ax_reversed = tuple((-x for x in ax_to_reverse))
+            axes[i_scan_axis] = ax_reversed
         angles = flex.double((phi, chi, omega))
 
         return self._goniometer_factory.make_multi_axis_goniometer(
@@ -99,20 +104,21 @@ class FormatBrukerPhotonII(FormatBruker):
         overload = float(self.header_dict["CCDPARM"].split()[-1])
         underload = -1
 
-        fast = matrix.col((1, 0, 0))
-        slow = matrix.col((0, 1, 0))
+        fast = matrix.col((0, -1, 0))
+        slow = matrix.col((-1, 0, 0))
         beam = matrix.col((0, 0, 1))
         pixel_mm = 5.0 / float(self.header_dict["DETTYPE"].split()[1])
         beam_pixel = [float(bp) for bp in self.header_dict["CENTER"].split()[:-3:-1]]
         distance_mm = 10.0 * float(self.header_dict["DISTANC"].split()[1])
+        distance_mm = 38
         origin = (
             -distance_mm * beam
             - fast * pixel_mm * beam_pixel[1]
             - slow * pixel_mm * beam_pixel[0]
         )
         # 2theta rotation appears to be around the slow axis
-        origin = origin.rotate_around_origin(slow, two_theta, deg=True)
-        fast = fast.rotate_around_origin(slow, two_theta, deg=True)
+        origin = origin.rotate_around_origin(-slow, two_theta, deg=True)
+        fast = fast.rotate_around_origin(-slow, two_theta, deg=True)
         pixel_size = pixel_mm, pixel_mm
         # ncols is nfast, nrows is nslow
         image_size = (
