@@ -27,9 +27,10 @@ def create_detector(offset):
             # Origin
             (0.172, 0.172),  # Pixel size
             (512, 512),  # Image size
-            (0, 1000),  # Trusted range
-            0.1,  # Thickness
-            "Si",  # Material
+            trusted_range=(0, 1000),  # Trusted range
+            maximum_pixel=0,
+            thickness=0.1,  # Thickness
+            material="Si",  # Material
             identifier="123",
         )
     )
@@ -131,10 +132,11 @@ def test_parallax_correction():
             (0, 0, 200),  # Origin
             (0.172, 0.172),  # Pixel size
             (512, 512),  # Image size
-            (0, 1000),  # Trusted range
-            0.0,  # Thickness
-            "",  # Material
-            ParallaxCorrectedPxMmStrategy(mu, t0),
+            trusted_range=(0, 1000),  # Trusted range
+            maximum_pixel=0,
+            thickness=0.0,  # Thickness
+            material="",  # Material
+            px_mm=ParallaxCorrectedPxMmStrategy(mu, t0),
         )
     )
     for i in range(10000):

@@ -83,7 +83,17 @@ def test_beam_plane_intersection():
 
     # Create a detector object
     panel = Panel(
-        "", "", fast_axis, slow_axis, origin, pixel_size, image_size, (0, 0), 0.0, ""
+        "",
+        "",
+        fast_axis,
+        slow_axis,
+        origin,
+        pixel_size,
+        image_size,
+        trusted_range=(0, 0),
+        maximum_pixel=0.0,
+        thickness=0.0,
+        material="",
     )
 
     # Create the intersection object
@@ -154,7 +164,17 @@ def test_plane_to_lab_transform():
 
     # Create a detector object
     panel = Panel(
-        "", "", fast_axis, slow_axis, origin, pixel_size, image_size, (0, 0), 0.0, ""
+        "",
+        "",
+        fast_axis,
+        slow_axis,
+        origin,
+        pixel_size,
+        image_size,
+        trusted_range=(0, 0),
+        maximum_pixel=0.0,
+        thickness=0.0,
+        material="",
     )
 
     # Create the intersection object
@@ -210,7 +230,17 @@ def test_forward_and_reverse_transform():
 
     # Create a detector object
     panel = Panel(
-        "", "", fast_axis, slow_axis, origin, pixel_size, image_size, (0, 0), 0.0, ""
+        "",
+        "",
+        fast_axis,
+        slow_axis,
+        origin,
+        pixel_size,
+        image_size,
+        trusted_range=(0, 0),
+        maximum_pixel=0.0,
+        thickness=0.0,
+        material="",
     )
 
     # Create the intersection object and transform object

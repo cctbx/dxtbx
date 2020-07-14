@@ -1041,10 +1041,11 @@ class DetectorFactory(object):
                 tuple(origin),
                 pixel_size,
                 image_size,
-                trusted_range,
-                thickness_value,
-                material,
-                mu,
+                trusted_range=trusted_range,
+                maximum_pixel=0,
+                thickness=thickness_value,
+                material=material,
+                mu=mu,
             )
         )
 
