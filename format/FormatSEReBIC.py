@@ -60,7 +60,7 @@ class FormatSEReBIC(FormatSER):
             "-y",
             pixel_size,
             image_size,
-            trusted_range,
+            trusted_range=trusted_range,
         )
         # The gain of the CetaD is thought to be > 26.0 at 200 keV. That of
         # the standard Ceta is about 7.

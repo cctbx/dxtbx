@@ -63,8 +63,8 @@ class FormatSMVADSCDBG(FormatSMVADSC):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            (underload, overload),
-            [],
+            trusted_range=(underload, overload),
+            mask=[],
         )
 
 

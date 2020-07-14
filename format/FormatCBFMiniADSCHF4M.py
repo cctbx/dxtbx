@@ -105,9 +105,9 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
             "-y",
             (1000 * pixel_x, 1000 * pixel_y),
             (nx, ny),
-            (underload, overload),
-            [],
-            ParallaxCorrectedPxMmStrategy(mu, t0),
+            trusted_range=(underload, overload),
+            mask=[],
+            px_mm=ParallaxCorrectedPxMmStrategy(mu, t0),
         )
         """
     for f0, f1, s0, s1 in determine_pilatus_mask(detector):

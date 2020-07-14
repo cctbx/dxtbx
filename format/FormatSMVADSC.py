@@ -175,8 +175,8 @@ class FormatSMVADSC(FormatSMV):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            self._adsc_trusted_range(),
-            [],
+            trusted_range=self._adsc_trusted_range(),
+            mask=[],
             gain=self._adsc_module_gain(),
             pedestal=int(self._header_dictionary.get("IMAGE_PEDESTAL", 0)),
         )

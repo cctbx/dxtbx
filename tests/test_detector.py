@@ -18,8 +18,8 @@ def test_detector():
         "-y",
         (0.172, 0.172),
         (516, 590),
-        (0, 1024),
-        [],
+        trusted_range=(0, 1024),
+        mask=[],
     )
     assert DetectorFactory.two_theta(
         "CCD",
@@ -31,8 +31,8 @@ def test_detector():
         30,
         (0.07, 0.07),
         (1042, 1042),
-        (0, 1024),
-        [],
+        trusted_range=(0, 1024),
+        mask=[],
     )
 
     dxtbx_dir = libtbx.env.dist_path("dxtbx")

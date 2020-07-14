@@ -117,8 +117,8 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
             "-y",
             pixel_size,
             image_size,
-            (underload, overload),
-            [],
+            trusted_range=(underload, overload),
+            mask=[],
             gain=gain,
         )
 

@@ -337,7 +337,7 @@ class FormatGatanDM4(FormatMultiImage, Format):
             "-y",
             pixel_size,
             image_size,
-            trusted_range,
+            trusted_range=trusted_range,
         )
         # Not sure what the gain is. A Gatan OneView has a scintillator and fibre
         # optic, so is not a direct detection camera and probably has gain != 1

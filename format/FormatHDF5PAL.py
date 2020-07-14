@@ -77,8 +77,8 @@ class FormatHDF5PAL(FormatHDF5):
             "-y",
             (pixel_size, pixel_size),
             (image_size, image_size),
-            trusted_range,
-            [],
+            trusted_range=trusted_range,
+            mask=[],
         )
 
     def _beam(self, index=None):

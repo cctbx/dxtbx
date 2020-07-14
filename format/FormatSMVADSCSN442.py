@@ -64,8 +64,8 @@ class FormatSMVADSCSN442(FormatSMVADSCSN):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            trusted_range,
-            [],
+            trusted_range=trusted_range,
+            mask=[],
             gain=self._adsc_module_gain(),
             pedestal=40,
         )

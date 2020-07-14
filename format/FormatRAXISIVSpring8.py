@@ -56,8 +56,8 @@ class FormatRAXISIVSPring8(RAXISHelper, Format):
             "+y",
             (values["dx"], values["dy"]),
             (values["nx"], values["ny"]),
-            (0, 1000000),
-            [],
+            trusted_range=(0, 1000000),
+            mask=[],
         )
 
     def _beam(self):

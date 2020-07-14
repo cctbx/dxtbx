@@ -56,8 +56,8 @@ class FormatSMVADSCSNAPSID19(FormatSMVADSCSN):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            self._adsc_trusted_range(),
-            [],
+            trusted_range=self._adsc_trusted_range(),
+            mask=[],
             gain=self._adsc_module_gain(),
         )
 

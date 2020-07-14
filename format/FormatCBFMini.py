@@ -169,8 +169,8 @@ class FormatCBFMini(FormatCBF):
             "-y",
             (1000 * pixel_x, 1000 * pixel_y),
             (nx, ny),
-            (underload, overload),
-            [],
+            trusted_range=(underload, overload),
+            mask=[],
             px_mm=px_mm,
         )
 

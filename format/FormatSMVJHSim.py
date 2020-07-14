@@ -91,8 +91,8 @@ class FormatSMVJHSim(FormatSMV):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            (underload, overload),
-            [],
+            trusted_range=(underload, overload),
+            mask=[],
             pedestal=int(self._header_dictionary.get("ADC_OFFSET", 1)),
         )
 
