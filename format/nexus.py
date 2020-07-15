@@ -1435,11 +1435,19 @@ class MaskFactory(object):
                 if self.mask is None:
                     self.mask = []
                 if "pixel_mask" in handle:
+                    shape = handle["pixel_mask"].shape
                     all_slices = get_detector_module_slices(obj)
+                    if len(all_slices) == 1:
+                        all_slices = [[slice(0, shape[0], 1), slice(0, shape[1], 1)]]
                     self.mask.extend(list(make_mask(handle["pixel_mask"], index)))
                 elif "detectorSpecific" in handle:
                     if "pixel_mask" in handle["detectorSpecific"]:
+                        shape = handle["detectorSpecific"]["pixel_mask"].shape
                         all_slices = get_detector_module_slices(obj)
+                        if len(all_slices) == 1:
+                            all_slices = [
+                                [slice(0, shape[0], 1), slice(0, shape[1], 1)]
+                            ]
                         self.mask.extend(
                             list(
                                 make_mask(
