@@ -374,8 +374,8 @@ namespace dxtbx { namespace boost_python {
       result.append(data.tile(i).data());
     }
 
-    // Return the image
-    return result;
+    // Return the image - don't copy
+    return std::move(result);
   }
 
   /**
