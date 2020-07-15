@@ -6,16 +6,18 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def show_mask_info():
-    el = ExperimentListFactory.from_filenames(sys.argv[1:])
+    try:
+        el = ExperimentListFactory.from_filenames(sys.argv[1:])
+    except FileNotFoundError as e:
+        sys.exit(str(e))
 
-    for j, e in enumerate(el):
-        i = e.imageset
-        d = e.detector
+    for i in el.imagesets():
+        d = i.get_detector()
         m = i.get_mask(0)
-        print(f"---- Experiment {j} ----")
+        print(f"---- ----")
         print(d)
-        for i, _m in enumerate(m):
-            print(f"Module {i} has {_m.count(False)} masked pixels of {_m.size()}")
+        for j, _m in enumerate(m):
+            print(f"Module {j} has {_m.count(False)} masked pixels of {_m.size()}")
 
 
 if __name__ == "__main__":
