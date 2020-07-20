@@ -100,7 +100,7 @@ class EigerNXmxFixer(object):
 
         # Add detector type
         create_scalar(
-            handle["entry/instrument/detector"], "type", "S4", np.string_("PIXEL")
+            handle["entry/instrument/detector"], "type", "S5", np.string_("PIXEL")
         )
 
         # Move the beam
