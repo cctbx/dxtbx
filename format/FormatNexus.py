@@ -74,15 +74,15 @@ class FormatNexus(FormatHDF5):
                 len(reader.entries[0].instruments[0].detectors[0].modules) == 1
             ), "Currently only supports 1 NXdetector_module unless in a detector group"
 
-            self._detector_model = DetectorFactory(
-                detector, self._beam_factory.model
-            ).model
             self._raw_data = DataFactory(data, max_size=num_images)
+            self._detector_model = DetectorFactory(
+                detector, self._beam_factory.model, shape=self._raw_data.shape()
+            ).model
         else:
+            self._raw_data = detectorgroupdatafactory(data, instrument)
             self._detector_model = DetectorFactoryFromGroup(
                 instrument, self._beam_factory.model
             ).model
-            self._raw_data = detectorgroupdatafactory(data, instrument)
 
     def _setup_gonio_and_scan(self, sample, detector):
         """Set up rotation-specific models"""

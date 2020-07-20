@@ -793,17 +793,19 @@ class DetectorFactoryFromGroup(object):
                     )
                 )
 
-                # Get the trusted range of pixel values
-                underload = (
-                    float(nx_detector.handle["underload_value"][()])
-                    if "underload_value" in nx_detector.handle
-                    else -400
-                )
-                overload = (
-                    float(nx_detector.handle["saturation_value"][()])
-                    if "saturation_value" in nx_detector.handle
-                    else 90000
-                )
+                # Get the trusted range of pixel values - if missing use
+                # full range of signed 32 bit int
+
+                try:
+                    underload = float(nx_detector.handle["underload_value"][()])
+                except KeyError:
+                    underload = -0x7FFFFFFF
+
+                try:
+                    overload = float(nx_detector.handle["saturation_value"][()])
+                except KeyError:
+                    overload = 0x7FFFFFFF
+
                 trusted_range = underload, overload
 
                 fast_pixel_direction_handle = nx_detector_module.handle[
@@ -888,18 +890,16 @@ class DetectorFactoryFromGroup(object):
 
                 # Get the detector material
                 if "sensor_material" in nx_detector.handle:
+                    value = numpy.string_(nx_detector.handle["sensor_material"][()])
                     material = {
                         numpy.string_("Si"): "Si",
                         numpy.string_("Silicon"): "Si",
                         numpy.string_("Sillicon"): "Si",
                         numpy.string_("CdTe"): "CdTe",
                         numpy.string_("GaAs"): "GaAs",
-                    }.get(numpy.string_(nx_detector.handle["sensor_material"][()]))
+                    }.get(value)
                     if not material:
-                        raise RuntimeError(
-                            "Unknown material: %s"
-                            % nx_detector.handle["sensor_material"][()]
-                        )
+                        raise RuntimeError("Unknown material: %s" % value)
                     p.set_material(material)
 
                     # Compute the attenuation coefficient.
@@ -919,27 +919,12 @@ class DetectorFactoryFromGroup(object):
                     )
 
 
-def known_backwards(image_size):
-    """
-    Tests for special cases for known data where image size is backwards from NeXus spec
-
-    image_size is in dxtbx image size order (fast, slow)
-    """
-    return image_size in [
-        (4362, 4148),  # Eiger 2X 16M @ DLS
-        (4371, 4150),  # Eiger 16M @ Spring8
-        (2162, 2068),  # Eiger 2x 4M @ VMXi, DLS
-        (2167, 2070),  # Eiger 1 4M @ VMXi, DLS
-        (3269, 3110),  # Eiger 9M Proxima2A beamline @ SOLEIL
-    ]
-
-
 class DetectorFactory(object):
     """
     A class to create a detector model from NXmx stuff
     """
 
-    def __init__(self, obj, beam):
+    def __init__(self, obj, beam, shape=None):
         # Get the handles
         nx_file = obj.handle.file
         nx_detector = obj.handle
@@ -952,11 +937,17 @@ class DetectorFactory(object):
             detector_type = "unknown"
         detector_name = str(nx_detector.name)
 
-        # Get the trusted range of pixel values
-        if "saturation_value" in nx_detector:
-            trusted_range = (-1, float(nx_detector["saturation_value"][()]))
-        else:
-            trusted_range = (-1, 99999999)
+        try:
+            underload = float(nx_detector["underload_value"][()])
+        except KeyError:
+            underload = -0x7FFFFFFF
+
+        try:
+            overload = float(nx_detector["saturation_value"][()])
+        except KeyError:
+            overload = 0x7FFFFFFF
+
+        trusted_range = underload, overload
 
         # Get the detector thickness
         thickness = nx_detector["sensor_thickness"]
@@ -1032,11 +1023,13 @@ class DetectorFactory(object):
 
         # Construct the detector model
         pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
-        # image size stored slow to fast but dxtbx needs fast to slow
-        image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
 
-        if known_backwards(image_size):
-            image_size = tuple(reversed(image_size))
+        # image size stored slow to fast but dxtbx needs fast to slow - assume
+        # that the shapes being taken as input are slow -> fast
+        if shape:
+            image_size = tuple(reversed(shape[-2:]))
+        else:
+            image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
 
         self.model = Detector()
         self.model.add_panel(
@@ -1220,24 +1213,12 @@ def get_detector_module_slices(detector):
     for module in modules:
         data_origin = module.handle["data_origin"]
         data_size = module.handle["data_size"]
-        if known_backwards((data_size[-1], data_size[-2])):
-            all_slices.append(
-                list(
-                    reversed(
-                        [
-                            slice(int(start), int(start + step), 1)
-                            for start, step in zip(data_origin, data_size)
-                        ]
-                    )
-                )
-            )
-        else:
-            all_slices.append(
-                [
-                    slice(int(start), int(start + step), 1)
-                    for start, step in zip(data_origin, data_size)
-                ]
-            )
+        all_slices.append(
+            [
+                slice(int(start), int(start + step), 1)
+                for start, step in zip(data_origin, data_size)
+            ]
+        )
     return all_slices
 
 
@@ -1328,13 +1309,20 @@ class DataFactory(object):
         self._num_images = 0
         self._lookup = []
         self._offset = [0]
+        self._shape = None
 
         if len(self._datasets) == 1 and max_size:
+            self._shape = self._datasets[0].shape
             self._num_images = max_size
             self._lookup.extend([0] * max_size)
             self._offset.append(max_size)
         else:
             for i, dataset in enumerate(self._datasets):
+                if self._shape is None:
+                    self._shape = dataset.shape
+                else:
+                    assert self._shape[-2:] == dataset.shape[-2:]
+                    self._shape = (self._shape[0] + dataset.shape[0],) + self._shape[1:]
                 self._num_images += dataset.shape[0]
                 self._lookup.extend([i] * dataset.shape[0])
                 self._offset.append(self._num_images)
@@ -1344,6 +1332,9 @@ class DataFactory(object):
 
     def __len__(self):
         return self._num_images
+
+    def shape(self):
+        return self._shape
 
     def __getitem__(self, index):
         d = self._lookup[index]
