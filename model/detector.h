@@ -12,9 +12,6 @@
 #define DXTBX_MODEL_DETECTOR_H
 
 #include <string>
-//#include <boost/geometry.hpp>
-//#include <boost/geometry/geometries/point.hpp>
-//#include <boost/geometry/geometries/polygon.hpp>
 #include <vector>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
@@ -759,18 +756,6 @@ namespace dxtbx { namespace model {
       }
       return found_panel;
     }
-
-    /** Check if any panels intersect */
-    //    bool do_panels_intersect() const {
-    //      for (std::size_t j = 0; j < panel_list_->size()-1; ++j) {
-    //        for (std::size_t i = j+1; i < panel_list_->size(); ++i) {
-    //          if (panels_intersect((*panel_list_)[j], (*panel_list_)[i])) {
-    //            return true;
-    //          }
-    //        }
-    //      }
-    //      return false;
-    //    }
 
     /** Rotate the detector about an axis */
     void rotate_around_origin(vec3<double> axis, double angle) {
