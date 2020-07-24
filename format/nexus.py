@@ -287,7 +287,7 @@ def construct_axes(nx_file, item, vector=None):
 
                 # is the axis moving? Check the values for this axis
                 v = item[()]
-                if min(v) < max(v):
+                if hasattr(v, "__iter__") and min(v) < max(v):
                     is_scan_axis = True
                 else:
                     is_scan_axis = False
@@ -962,7 +962,7 @@ class DetectorFactory(object):
             numpy.string_("Sillicon"): "Si",
             numpy.string_("CdTe"): "CdTe",
             numpy.string_("GaAs"): "GaAs",
-        }.get(nx_detector["sensor_material"][()])
+        }.get(numpy.string_(nx_detector["sensor_material"][()]))
         if not material:
             raise RuntimeError(
                 "Unknown material: %s" % nx_detector["sensor_material"][()]
@@ -1087,7 +1087,7 @@ def find_goniometer_rotation(obj):
         if o.attrs["transformation_type"] == numpy.string_("rotation"):
             # if this is changing, assume is scan axis
             v = o[()]
-            if min(v) < max(v):
+            if hasattr(v, "__iter__") and min(v) < max(v):
                 return o
     raise ValueError("no rotation found")
 
@@ -1294,7 +1294,7 @@ class DataFactory(object):
             # datasets in this context mean ones which contain diffraction images
             # so must have ndim > 1 - for example omega can also be nexus data set
             # but with 1 dimension...
-            if ohk.ndim == 1:
+            if ohk.ndim <= 1:
                 continue
 
             datasets.append(
