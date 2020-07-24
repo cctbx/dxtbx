@@ -1,3 +1,36 @@
+DIALS 3.0.4 (2020-07-20)
+========================
+
+- HDF5 / NeXus: Read image dimensions directly from dataset shape instead of
+  reported image_size, as latter can sometimes be backwards (#189)
+- Support image_range when importing images into an ImageSet so only a subset
+  of the images are used
+- Diamond-specific Eiger/Nexus: Fix handling of masked pixels in the image so
+  that module join regions are no longer marked as overloaded (i.e. yellow) in
+  the image viewer (#180)
+
+
+DIALS 3.0.2 (2020-06-23)
+========================
+
+Bugfixes
+--------
+
+- Fix sensor-material handling for Jungfrau 4M and 16M detectors
+
+
+DIALS 3.0.1 (2020-06-11)
+========================
+
+Bugfixes
+--------
+
+- Account for beam centre record changing with ADSC 442 move from 8.3.1 to 5.0.1 (#171)
+- Fix handling for hierarchical NeXus detectors (#175)
+- Prevent mangling of URL-based filenames via abspath (#176)
+- Fix incorrect axis detection on MAX IV Eiger and Spring8 (#178)
+
+
 DIALS 3.0 (2020-05-18)
 ======================
 

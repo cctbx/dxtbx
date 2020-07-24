@@ -17,8 +17,10 @@ standard_library.install_aliases()
 
 import functools
 import sys
+import os
 from builtins import range
-from os.path import abspath
+
+from six.moves.urllib_parse import urlparse
 
 import libtbx
 
@@ -296,7 +298,7 @@ class Format(object):
     @classmethod
     def get_imageset(
         Class,
-        filenames,
+        input_filenames,
         beam=None,
         detector=None,
         goniometer=None,
@@ -315,8 +317,10 @@ class Format(object):
         # Import here to avoid cyclic imports
         from dxtbx.imageset import ImageSet, ImageSetData, ImageSequence
 
-        # Get filename absolute paths
-        filenames = tuple(map(abspath, filenames))
+        # Get filename absolute paths, for entries that are filenames
+        filenames = [
+            os.path.abspath(x) if not urlparse(x).scheme else x for x in input_filenames
+        ]
 
         # Make it a dict
         if format_kwargs is None:

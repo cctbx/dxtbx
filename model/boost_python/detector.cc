@@ -206,7 +206,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       const Detector &detector = boost::python::extract<const Detector &>(obj);
       boost::python::dict data;
 
-      // Convert panel array into pythoh list of panels
+      // Convert panel array into python list of panels
       boost::python::list panels;
       for (std::size_t i = 0; i < detector.size(); ++i) {
         panels.append(detector[i]);
@@ -267,120 +267,6 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
   };
 
-  /* struct DetectorPickleSuite : boost::python::pickle_suite { */
-
-  /*   static */
-  /*   boost::python::tuple getstate(boost::python::object obj) { */
-  /*     unsigned int version = 2; */
-  /*     const Detector &detector = boost::python::extract<const Detector&>(obj); */
-  /*     boost::python::dict data = to_dict<Detector>(detector); */
-  /*     return boost::python::make_tuple( */
-  /*       version, */
-  /*       data); */
-  /*   } */
-
-  /*   static */
-  /*   void setstate(boost::python::object obj, boost::python::tuple state) { */
-  /*     Detector *detector = boost::python::extract<Detector*>(obj); */
-  /*     DXTBX_ASSERT(len(state) == 2); */
-  /*     unsigned int version = boost::python::extract<unsigned int>(state[0]); */
-  /*     DXTBX_ASSERT(version == 2); */
-  /*     boost::python::dict data =
-   * boost::python::extract<boost::python::dict>(state[1]); */
-  /*     detector_from_dict(detector, data); */
-  /*   } */
-
-  /*   static bool getstate_manages_dict() { return true; } */
-  /* }; */
-
-  /* struct DetectorPickleSuite : boost::python::pickle_suite { */
-
-  /*   static */
-  /*   boost::python::dict getnode_state(const Detector::Node* root) { */
-  /*     boost::python::dict result; */
-  /*     result["panel"] = PanelPickleSuite::getstate(boost::python::object(root)); */
-  /*     boost::python::list children; */
-  /*     for (std::size_t i = 0; i < root->size(); ++i) { */
-  /*       Detector::const_node_pointer node = (*root)[i]; */
-  /*       if (node->is_panel()) { */
-  /*         std::size_t idx = node->index(); */
-  /*         boost::python::dict panel; */
-  /*         panel["panel"] = idx; */
-  /*         children.append(panel); */
-  /*       } else { */
-  /*         children.append(getnode_state(node)); */
-  /*       } */
-  /*     } */
-  /*     result["children"] = children; */
-  /*     return result; */
-  /*   } */
-
-  /*   static */
-  /*   boost::python::tuple getstate(boost::python::object obj) { */
-  /*     using namespace boost::python; */
-
-  /*     unsigned int version = 2; */
-  /*     const Detector &detector = boost::python::extract<const Detector&>(obj); */
-  /*     boost::python::dict data; */
-  /*     boost::python::list panels; */
-  /*     for (std::size_t i = 0; i < boost::python::len(obj); ++i) { */
-  /*       panels.append(detector[i]); */
-  /*     } */
-  /*     data["panels"] = panels; */
-  /*     data["hierarchy"] = DetectorPickleSuite::getnode_state(detector.root()); */
-  /*     return boost::python::make_tuple( */
-  /*       version, */
-  /*       data); */
-  /*   } */
-
-  /*   void setnode_state( */
-  /*       boost::python::dict obj, */
-  /*       Detector::Node *node, */
-  /*       boost::python::list panels, */
-  /*       scitbx::af::ref<bool> used) { */
-  /*     if (obj.contains("panel")) { */
-  /*       std::size_t idx = boost::python::extract<std::size_t>(obj["panel"]); */
-  /*       DXTBX_ASSERT(used.size() == boost::python::len(panels)); */
-  /*       DXTBX_ASSERT(idx < boost::python::len(panels)); */
-  /*       DXTBX_ASSERT(used[idx] == false); */
-  /*       used[idx] = true; */
-  /*       boost::python::dict panel_dict =
-   * boost::python::extract<boost::python::dict>(panels[idx]); */
-  /*       Panel *panel = PanelPickleSuite::setstate(panel_dict); */
-  /*       node->add_panel(*panel, idx); */
-  /*       delete panel; */
-  /*     } else { */
-  /*       Panel *panel = from_dict<Panel>(obj); */
-  /*       node = node->add_group(*panel); */
-  /*       for (std::size_t i = 0; i < boost::python::len(obj["children"]); ++i) { */
-  /*         boost::python::dict child =
-   * boost::python::extract<boost::python::dict>(obj["children"][i]); */
-  /*         node_from_dict(child, node, panels, used); */
-  /*       } */
-  /*       delete panel; */
-  /*     } */
-  /*   } */
-
-  /*   static */
-  /*   void setstate(boost::python::object obj, boost::python::tuple state) { */
-  /*     using namespace boost::python; */
-  /*     Detector *detector = boost::python::extract<Detector*>(obj); */
-  /*     DXTBX_ASSERT(len(state) == 2); */
-  /*     unsigned int version = extract<unsigned int>(state[0]); */
-  /*     DXTBX_ASSERT(version == 2); */
-  /*     boost::python::dict data =
-   * boost::python::extract<boost::python::dict>(state[1]); */
-  /*     boost::python::list panels =
-   * boost::python::extract<boost::python::list>(data["panels"]); */
-  /*     boost::python::dict hierarchy =
-   * boost::python::extract<boost::python::dict>(obj["hierarchy"]); */
-  /*     scitbx::af::shared<bool> used(boost::python::len(panels), false); */
-  /*     setnode_state(hierarchy, result->root(), panels, used.ref()); */
-  /*     for (std::size_t i = 0; i < used.size(); ++i) { */
-  /*       DXTBX_ASSERT(used[i] == true); */
-  /*     } */
-  /*   } */
-  /* }; */
 
   void export_detector() {
     using namespace boost::python;

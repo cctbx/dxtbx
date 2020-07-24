@@ -13,6 +13,7 @@ from os.path import abspath, dirname, normpath, splitext
 
 import six
 import six.moves.cPickle as pickle
+from six.moves.urllib_parse import urlparse
 
 import libtbx
 from scitbx import matrix
@@ -400,8 +401,12 @@ class DataBlockTemplateImporter(object):
         """Create a multi file sequence or imageset."""
         # Get the image range
         index = slice(*template_string_number_index(template))
-        first = int(filenames[0][index])
-        last = int(filenames[-1][index])
+        image_range = kwargs.get("image_range")
+        if image_range:
+            first, last = image_range
+        else:
+            first = int(filenames[0][index])
+            last = int(filenames[-1][index])
 
         # Check all images in range are present - if allowed
         if not kwargs.get("allow_incomplete_sequences", False):
@@ -631,8 +636,8 @@ class ImageMetadataRecord(object):
         return not self == other
 
 
-class OpeningPathIterator(object):
-    """Utility class to efficiently open all paths.
+def _openingpathiterator(pathnames):
+    """Utility function to efficiently open all paths.
 
     A path is a potential file or directory.
     Each path will be opened with :meth:`dxtbx.format.Format.open_file`,
@@ -640,47 +645,20 @@ class OpeningPathIterator(object):
     use of :func:`os.stat` will be avoided.
     Any path entries that are a directory will be recursed into, once -
     any further directories found will be ignored. Any path that is not
-    a file or directory, or on which IO fails for any reason, will be added
-    to the :attr:`uncached` list, but still returned.
-    The current expected length of the iterator can be found with
-    `len(iterator)` - this can change while iterating, because until a
-    directory is encountered it cannot be detected without extra IO
-    operations. The number of items processed can be accessed through the
-    :attr:`index` attribute.
+    a file or directory, or on which IO fails for any reason, will still
+    be returned.
 
-    Attributes:
-        uncached:   List of paths that failed open_file. This may be a
-                    file that doesn't exist, or something that doesn't
-                    point to a file at all.
-        index:      Index of the next path item (alternatively, number
-                    of processed path items)
+    Args:
+        pathnames: Paths to attempt to open
     """
+    # type: (Iterable[str])
 
-    def __init__(self, pathnames):
-        # type: (Iterable[str])
-        """Initialise the path iterator.
+    # Store a tuple of (recurse, pathname) to track what was root level
+    paths = collections.deque((True, x) for x in sorted(pathnames))
 
-        Args:
-            pathnames: Paths to attempt to open
-        """
-        # Store a tuple of (recurse, pathname) to track what was root level
-        self._paths = collections.deque((True, x) for x in sorted(pathnames))
-        # Let's keep track of how many we've processed
-        self._processed_count = 0
-        # List of paths that could not be opened
-        self.uncached = []
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        """Get the next path to process"""
-        try:
-            # Get the next path from the queue
-            (do_recurse, pathname) = self._paths.popleft()
-        except IndexError:
-            raise StopIteration()
-        self._processed_count += 1
+    while paths:
+        # Get the next path from the queue
+        (do_recurse, pathname) = paths.popleft()
 
         try:
             # Attempt to open this 'path'
@@ -693,29 +671,17 @@ class OpeningPathIterator(object):
                         os.path.join(pathname, x) for x in os.listdir(pathname)
                     )
                     # ... and add them to our queue. Make sure not to mark for recursion
-                    self._paths.extendleft((False, x) for x in reversed(subdir_paths))
+                    paths.extendleft((False, x) for x in reversed(subdir_paths))
                     logger.debug("Adding %d files from %s", len(subdir_paths), pathname)
                 else:
                     logger.debug("Not adding sub-level directory entry %s", pathname)
                 # Don't return directory instances
-                return next(self)
+                continue
             else:
                 # A non-directory-related IO error
-                self.uncached.append(pathname)
                 logger.debug("Could not import %s: %s", pathname, os.strerror(e.errno))
 
-        return pathname
-
-    next = __next__
-
-    def __len__(self):
-        """Get the (current) total of path items"""
-        return len(self._paths) + self._processed_count
-
-    @property
-    def index(self):
-        """Get the number of processed items"""
-        return self._processed_count
+        yield pathname
 
 
 def _merge_model_metadata(
@@ -897,7 +863,10 @@ def _create_imageset(records, format_class, format_kwargs=None):
     # Nothing here should have been assigned a template parameter
     assert all(x.template is None for x in records)
     # Extract the filenames from the records
-    filenames = [os.path.abspath(x.filename) for x in records]
+    filenames = [
+        os.path.abspath(x.filename) if not urlparse(x.filename).scheme else x.filename
+        for x in records
+    ]
     # Create the imageset
     imageset = dxtbx.imageset.ImageSetFactory.make_imageset(
         filenames, format_class, format_kwargs=format_kwargs, check_format=False
@@ -939,7 +908,7 @@ class DataBlockFilenameImporter(object):
             logger.debug("Added imageset to datablock %d", len(self.datablocks) - 1)
 
         # Process each file given by this path list
-        to_process = OpeningPathIterator(filenames)
+        to_process = _openingpathiterator(filenames)
         find_format = FormatChecker()
 
         format_groups = collections.OrderedDict()

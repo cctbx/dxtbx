@@ -11,6 +11,27 @@ from dxtbx.model.goniometer import Goniometer
 pytest.importorskip("h5py")
 
 
+def test_biomax_vertical_goniometer_at_diamond(tmpdir):
+    master_h5 = (
+        "/dls/science/groups/scisoft/DIALS/"
+        "regression-test-data/biomax-eiger-moche/tau1-tau_1_master.h5"
+    )
+
+    if not os.access(master_h5, os.R_OK):
+        pytest.skip("Test data not available")
+
+    assert FormatHDF5EigerNearlyNexus.understand(master_h5)
+
+    expts = ExperimentListFactory.from_filenames([master_h5])
+    imageset = expts[0].imageset
+    assert imageset.get_format_class() == FormatHDF5EigerNearlyNexus
+
+    gonio = imageset.get_goniometer()
+
+    assert isinstance(gonio, Goniometer)
+    assert gonio.get_rotation_axis() == (0, 1, 0)
+
+
 def test_semi_synthetic_dectris_eiger_nearly_nexus(dials_data, tmpdir):
     master_h5 = dials_data("image_examples").join("dectris_eiger_master.h5").strpath
 

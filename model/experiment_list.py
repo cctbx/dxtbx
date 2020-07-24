@@ -9,6 +9,7 @@ from builtins import range
 import pkg_resources
 import six
 import six.moves.cPickle as pickle
+from six.moves.urllib_parse import urlparse
 
 from dxtbx.datablock import (
     BeamComparison,
@@ -413,7 +414,8 @@ class ExperimentListDict(object):
     def _make_stills(self, imageset, format_kwargs=None):
         """Make a still imageset."""
         filenames = [
-            resolve_path(p, directory=self._directory) for p in imageset["images"]
+            resolve_path(p, directory=self._directory) if not urlparse(p).scheme else p
+            for p in imageset["images"]
         ]
         indices = None
         if "single_file_indices" in imageset:

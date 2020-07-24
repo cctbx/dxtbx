@@ -6,6 +6,8 @@ day which had its own way of recording beam centre.
 
 from __future__ import absolute_import, division, print_function
 
+import time
+
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN
 
 
@@ -28,9 +30,25 @@ class FormatSMVADSCSN442(FormatSMVADSCSN):
         one of these on a two-theta stage. Assert that the beam centre is
         provided in the Mosflm coordinate frame."""
 
+        # this detector lived two lives - it moved on May 14, 2007 to ALS 5.0.1
+        # where the denzo beam centre was removed
+
+        date_str = self._header_dictionary["DATE"]
+        format_string = "%a %b %d %H:%M:%S %Y"
+        tm = time.strptime(date_str, format_string)
+
+        als831 = True
+        if tm.tm_year > 2006 or (tm.tm_year == 2006 and tm.tm_yday >= 134):
+            als831 = False
+
+        if als831:
+            beam_x = float(self._header_dictionary["DENZO_X_BEAM"])
+            beam_y = float(self._header_dictionary["DENZO_Y_BEAM"])
+        else:
+            beam_x = float(self._header_dictionary["BEAM_CENTER_X"])
+            beam_y = float(self._header_dictionary["BEAM_CENTER_Y"])
+
         distance = float(self._header_dictionary["DISTANCE"])
-        beam_x = float(self._header_dictionary["DENZO_X_BEAM"])
-        beam_y = float(self._header_dictionary["DENZO_Y_BEAM"])
         pixel_size = float(self._header_dictionary["PIXEL_SIZE"])
         image_size = (
             float(self._header_dictionary["SIZE1"]),
