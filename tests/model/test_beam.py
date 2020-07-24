@@ -6,10 +6,10 @@ import pytest
 
 from libtbx.phil import parse
 from scitbx import matrix
+from scitbx.array_family import flex
 
 from dxtbx.model import Beam
 from dxtbx.model.beam import BeamFactory, beam_phil_scope
-from dials.array_family import flex
 
 
 def test_setting_direction_and_wavelength():
