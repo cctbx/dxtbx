@@ -267,7 +267,6 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
   };
 
-
   void export_detector() {
     using namespace boost::python;
 
