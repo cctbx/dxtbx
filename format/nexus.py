@@ -212,6 +212,8 @@ def construct_vector(nx_file, item, vector=None):
             units = item.attrs["units"]
             ttype = item.attrs["transformation_type"]
             vector = matrix.col(item.attrs["vector"])
+            # we should probably be using offset if we could ... but we can't
+            # offset = matrix.col(item.attrs.get("offset", (0.0, 0.0, 0.0)))
             if ttype == numpy.string_("translation"):
                 value = convert_units(value, units, "mm")
                 if hasattr(value, "__iter__") and len(value) == 1:
@@ -998,11 +1000,20 @@ class DetectorFactory(object):
         )
         slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
 
-        # Get the origin vector - working around if absent
-        module_offset = nx_module["module_offset"]
-        origin = construct_vector(nx_file, module_offset.name)
-        if origin.elems[0] == 0.0 and origin.elems[1] == 0:
-            origin = -(origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis)
+        # Get the origin vector -
+        # - use module offset if present and not null
+        # - use legacy beam if module offset present and null
+        # - ignore completely if absent and derive the origin from dependencies
+
+        if "module_offset" in nx_module:
+            module_offset = nx_module["module_offset"]
+            origin = construct_vector(nx_file, module_offset.name)
+            if origin.elems[0] == 0.0 and origin.elems[1] == 0:
+                origin = -(
+                    origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis
+                )
+        else:
+            raise RuntimeError("currently no way to get origin")
 
         # Change of basis to convert from NeXus to IUCr/ImageCIF convention
         cob = matrix.sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
