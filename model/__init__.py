@@ -64,6 +64,7 @@ __all__ = (
     "Beam",
     "BeamBase",
     "BeamFactory",
+    "Spectrum",
     "Crystal",
     "CrystalBase",
     "CrystalFactory",
