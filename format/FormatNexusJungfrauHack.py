@@ -223,10 +223,6 @@ class FormatNexusJungfrauHack(FormatNexus):
     def _detector(self):
         return self._detector_model
 
-    def _beam(self, index=None):
-        self._beam_model = self._beam_factory.load_model(index)
-        return self._beam_model
-
     def _scan(self):
         return self._scan_model
 

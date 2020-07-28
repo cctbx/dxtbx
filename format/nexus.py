@@ -545,6 +545,10 @@ class BeamFactory(object):
         self.index = None
         self.spectrum = None
 
+    def read_models(self, index=None):
+        self.load_model(index)
+        return self.model, self.spectrum
+
     def load_model(self, index=None):
         # Cached model
         if self.model is not None and index == self.index:

@@ -5,13 +5,8 @@
 #define DXTBX_MODEL_SPECTRUM_H
 
 #include <iostream>
-#include <cmath>
-#include <scitbx/vec3.h>
 #include <scitbx/array_family/shared.h>
-#include <scitbx/array_family/simple_io.h>
-#include <scitbx/array_family/simple_tiny_io.h>
 #include <dxtbx/error.h>
-#include "model_helpers.h"
 
 namespace dxtbx { namespace model {
   typedef scitbx::af::shared<double> vecd;
@@ -34,7 +29,7 @@ namespace dxtbx { namespace model {
     virtual ~Spectrum() {}
 
     /* Get the spectrum energies (eV) */
-    vecd get_energies() const {
+    vecd get_energies_eV() const {
       return energies_;
     }
 
@@ -43,7 +38,7 @@ namespace dxtbx { namespace model {
       return weights_;
     }
 
-    double get_weighted_wavelength() const {
+    double get_weighted_energy_eV() const {
       if (energies_.size() == 0)
         return 0;
       double weighted_sum = 0;
@@ -53,7 +48,11 @@ namespace dxtbx { namespace model {
         summed_weights += weights_[i];
       }
       DXTBX_ASSERT(weighted_sum > 0 && summed_weights > 0);
-      return 12398.4187 / (weighted_sum / summed_weights); //  eV per Å conversion factor
+      return weighted_sum / summed_weights;
+    }
+
+    double get_weighted_wavelength() const {
+      return 12398.4187 / get_weighted_energy_eV(); //  eV per Å conversion factor
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Spectrum &s);

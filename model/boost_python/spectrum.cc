@@ -5,7 +5,6 @@
 #include <boost/python/def.hpp>
 #include <string>
 #include <sstream>
-#include <scitbx/constants.h>
 #include <dxtbx/model/spectrum.h>
 #include <dxtbx/model/boost_python/to_from_dict.h>
 #include <scitbx/array_family/boost_python/flex_wrapper.h>
@@ -24,29 +23,21 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   struct SpectrumPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const Spectrum &obj) {
-      return boost::python::make_tuple(obj.get_energies(),
+      return boost::python::make_tuple(obj.get_energies_eV(),
                                        obj.get_weights());
     }
 
     static boost::python::tuple getstate(boost::python::object obj) {
-      //const Spectrum &spectrum = boost::python::extract<const Spectrum &>(obj)();
       return boost::python::make_tuple(obj.attr("__dict__"));
-                                       //beam.get_s0_at_scan_points());
     }
 
     static void setstate(boost::python::object obj, boost::python::tuple state) {
-      //Spectrum &spectrum = boost::python::extract<Spectrum &>(obj)();
       DXTBX_ASSERT(boost::python::len(state) == 2);
 
       // restore the object's __dict__
       boost::python::dict d =
         boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
       d.update(state[0]);
-
-      // restore the internal state of the C++ object
-      //scitbx::af::const_ref<vec3<double> > s0_list =
-      //  boost::python::extract<scitbx::af::const_ref<vec3<double> > >(state[1]);
-      //beam.set_s0_at_scan_points(s0_list);
     }
 
     static bool getstate_manages_dict() {
@@ -57,7 +48,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<Spectrum>(const Spectrum &obj) {
     boost::python::dict result;
-    result["energies"] = obj.get_energies();
+    result["energies"] = obj.get_energies_eV();
     result["weights"] = obj.get_weights();
     return result;
   }
@@ -75,8 +66,9 @@ namespace dxtbx { namespace model { namespace boost_python {
     class_<Spectrum, boost::shared_ptr<Spectrum> >("Spectrum")
       .def(init<const Spectrum &>())
       .def(init<vecd, vecd>((arg("energies"), arg("weights"))))
-      .def("get_energies", &Spectrum::get_energies)
+      .def("get_energies_eV", &Spectrum::get_energies_eV)
       .def("get_weights", &Spectrum::get_weights)
+      .def("get_weighted_energy_eV", &Spectrum::get_weighted_energy_eV)
       .def("get_weighted_wavelength", &Spectrum::get_weighted_wavelength)
       .def("__str__", &spectrum_to_string)
       .def("to_dict", &to_dict<Spectrum>)
