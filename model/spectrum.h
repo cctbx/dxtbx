@@ -23,8 +23,7 @@ namespace dxtbx { namespace model {
      * @param energies The spectrum weights (unitless)
      */
     Spectrum(vecd energies, vecd weights)
-        : energies_(energies),
-          weights_(weights) {}
+        : energies_(energies), weights_(weights), emin_(0.0), emax_(0.0) {}
 
     virtual ~Spectrum() {}
 
@@ -38,9 +37,45 @@ namespace dxtbx { namespace model {
       return weights_;
     }
 
+    /* Helper function to compute bandwidth - assumes that the input spectrum
+       is somewhat background subtracted */
+
+    void bandwidth_98_percent() {
+      if (energies_.size() == 0) return;
+
+      std::vector<double> cdf;
+      double total = 0;
+
+      /* Compute CDF */
+      for (size_t i = 0; i < energies_.size(); i++) {
+        total += weights_[i];
+        cdf.push_back(total);
+      }
+
+      /* Scan CDF to find 1%, 99% points */
+      for (size_t i = 0; i < energies_.size(); i++) {
+        if (cdf[i] < 0.01 * total) emin_ = energies_[i];
+        if (cdf[i] > 0.99 * total) {
+          emax_ = energies_[i];
+          break;
+        }
+      }
+    }
+
+    /* Get the bandwidth range */
+    double get_emin_ev() {
+      if ((emin_ == 0) && (emax_ == 0)) bandwidth_98_percent();
+      return emin_;
+    }
+
+    /* Get the bandwidth range */
+    double get_emax_ev() {
+      if ((emin_ == 0) && (emax_ == 0)) bandwidth_98_percent();
+      return emax_;
+    }
+
     double get_weighted_energy_eV() const {
-      if (energies_.size() == 0)
-        return 0;
+      if (energies_.size() == 0) return 0;
       double weighted_sum = 0;
       double summed_weights = 0;
       for (size_t i = 0; i < energies_.size(); i++) {
@@ -52,7 +87,7 @@ namespace dxtbx { namespace model {
     }
 
     double get_weighted_wavelength() const {
-      return 12398.4187 / get_weighted_energy_eV(); //  eV per Å conversion factor
+      return 12398.4187 / get_weighted_energy_eV();  //  eV per Å conversion factor
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Spectrum &s);
@@ -60,6 +95,8 @@ namespace dxtbx { namespace model {
   private:
     vecd energies_;
     vecd weights_;
+
+    double emin_, emax_;
   };
 
   /** Print Spectrum information */

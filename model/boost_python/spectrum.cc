@@ -23,8 +23,7 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   struct SpectrumPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const Spectrum &obj) {
-      return boost::python::make_tuple(obj.get_energies_eV(),
-                                       obj.get_weights());
+      return boost::python::make_tuple(obj.get_energies_eV(), obj.get_weights());
     }
 
     static boost::python::tuple getstate(boost::python::object obj) {
@@ -55,9 +54,8 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   template <>
   Spectrum *from_dict<Spectrum>(boost::python::dict obj) {
-    Spectrum *s = new Spectrum(
-      boost::python::extract<vecd>(obj["energies"]),
-      boost::python::extract<vecd>(obj["weights"]));
+    Spectrum *s = new Spectrum(boost::python::extract<vecd>(obj["energies"]),
+                               boost::python::extract<vecd>(obj["weights"]));
     return s;
   }
 
@@ -70,6 +68,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_weights", &Spectrum::get_weights)
       .def("get_weighted_energy_eV", &Spectrum::get_weighted_energy_eV)
       .def("get_weighted_wavelength", &Spectrum::get_weighted_wavelength)
+      .def("get_emin_ev", &Spectrum::get_emin_ev)
+      .def("get_emax_ev", &Spectrum::get_emax_ev)
       .def("__str__", &spectrum_to_string)
       .def("to_dict", &to_dict<Spectrum>)
       .def("from_dict", &from_dict<Spectrum>, return_value_policy<manage_new_object>())
