@@ -23,7 +23,9 @@ namespace dxtbx { namespace model {
      * @param energies The spectrum weights (unitless)
      */
     Spectrum(vecd energies, vecd weights)
-        : energies_(energies), weights_(weights), emin_(0.0), emax_(0.0) {}
+        : energies_(energies), weights_(weights), emin_(0.0), emax_(0.0) {
+      compute_weighted_energy();
+    }
 
     virtual ~Spectrum() {}
 
@@ -75,7 +77,14 @@ namespace dxtbx { namespace model {
     }
 
     double get_weighted_energy_eV() const {
-      if (energies_.size() == 0) return 0;
+      return weighted_energy_;
+    }
+
+    void compute_weighted_energy() {
+      if (energies_.size() == 0) {
+        weighted_energy_ = 0;
+        return;
+      }
       double weighted_sum = 0;
       double summed_weights = 0;
       for (size_t i = 0; i < energies_.size(); i++) {
@@ -83,7 +92,7 @@ namespace dxtbx { namespace model {
         summed_weights += weights_[i];
       }
       DXTBX_ASSERT(weighted_sum > 0 && summed_weights > 0);
-      return weighted_sum / summed_weights;
+      weighted_energy_ = weighted_sum / summed_weights;
     }
 
     double get_weighted_wavelength() const {
@@ -97,6 +106,8 @@ namespace dxtbx { namespace model {
     vecd weights_;
 
     double emin_, emax_;
+
+    double weighted_energy_;
   };
 
   /** Print Spectrum information */
