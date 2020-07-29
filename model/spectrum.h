@@ -66,13 +66,13 @@ namespace dxtbx { namespace model {
     }
 
     /* Get the bandwidth range */
-    double get_emin_ev() {
+    double get_emin_eV() {
       if ((emin_ == 0) && (emax_ == 0)) bandwidth_98_percent();
       return emin_;
     }
 
     /* Get the bandwidth range */
-    double get_emax_ev() {
+    double get_emax_eV() {
       if ((emin_ == 0) && (emax_ == 0)) bandwidth_98_percent();
       return emax_;
     }

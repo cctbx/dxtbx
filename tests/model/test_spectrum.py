@@ -33,7 +33,7 @@ def test_spectrum_bandwidth():
 
     spectrum = Spectrum(e, c)
 
-    emin, emax = spectrum.get_emin_ev(), spectrum.get_emax_ev()
+    emin, emax = spectrum.get_emin_eV(), spectrum.get_emax_eV()
 
     assert emin == pytest.approx(11840, abs=2)
     assert emax == pytest.approx(11876, abs=2)
