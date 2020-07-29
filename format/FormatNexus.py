@@ -99,7 +99,7 @@ class FormatNexus(FormatHDF5):
         return self._detector_model
 
     def _beam(self, index=None):
-        self._beam_model = self._beam_factory.load_model(index)
+        self._beam_model, _ = self._beam_factory.read_models(index)
         return self._beam_model
 
     def _scan(self):
@@ -113,6 +113,10 @@ class FormatNexus(FormatHDF5):
 
     def get_beam(self, index=None):
         return self._beam(index)
+
+    def get_spectrum(self, index=None):
+        self._beam_model, _ = self._beam_factory.read_models(index)
+        return self._beam_factory.spectrum
 
     def get_scan(self, index=None):
         if index is None:

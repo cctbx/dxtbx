@@ -497,26 +497,32 @@ class Format(object):
 
     def _goniometer(self):
         """Overload this method to read the image file however you like so
-        long as the result is an goniometer."""
+        long as the result is a goniometer."""
         return None
 
     def _detector(self):
         """Overload this method to read the image file however you like so
-        long as the result is an detector."""
+        long as the result is a detector."""
         return None
 
     def _beam(self):
         """Overload this method to read the image file however you like so
-        long as the result is an beam."""
+        long as the result is a beam."""
         return None
 
     def _scan(self):
         """Overload this method to read the image file however you like so
-        long as the result is an scan."""
+        long as the result is a scan."""
         return None
 
     def get_static_mask(self):
         """Overload this method to override the static mask."""
+        return None
+
+    def get_spectrum(self):
+        """ Overload this method to read the image file however you like so
+        long as the result is a spectrum
+        """
         return None
 
     def get_goniometer_shadow_masker(self, goniometer=None):

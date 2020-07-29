@@ -102,6 +102,19 @@ class _(object):
         """Get format class name"""
         return self.data().get_format_class()
 
+    def get_spectrum(self, index):
+        """Get the spectrum if available"""
+        kwargs = self.params()
+        if self.data().has_single_file_reader():
+            format_instance = self.get_format_class().get_instance(
+                self.data().get_master_path(), **kwargs
+            )
+        else:
+            format_instance = self.get_format_class().get_instance(
+                self.get_path(index), **kwargs
+            )
+        return format_instance.get_spectrum(self.indices()[index])
+
     def params(self):
         """Get the parameters"""
         return self.data().get_params()
