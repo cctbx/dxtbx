@@ -67,6 +67,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_energies_eV", &Spectrum::get_energies_eV)
       .def("get_weights", &Spectrum::get_weights)
       .def("get_weighted_energy_eV", &Spectrum::get_weighted_energy_eV)
+      .def("get_weighted_energy_variance", &Spectrum::get_weighted_energy_variance)
       .def("get_weighted_wavelength", &Spectrum::get_weighted_wavelength)
       .def("get_emin_ev", &Spectrum::get_emin_ev)
       .def("get_emax_ev", &Spectrum::get_emax_ev)

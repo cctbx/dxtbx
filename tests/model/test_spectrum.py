@@ -39,6 +39,23 @@ def test_spectrum_bandwidth():
     assert emax == pytest.approx(11876, abs=2)
 
 
+def test_spectrum_weighted_mean_variance():
+
+    p = 11900.0
+    h = 10000.0
+    w = 5.0
+
+    e, c = __generate_simple(p, h, w)
+
+    spectrum = Spectrum(e, c)
+
+    mean = spectrum.get_weighted_energy_eV()
+    variance = spectrum.get_weighted_energy_variance()
+
+    assert mean == pytest.approx(p, abs=1e-3)
+    assert variance == pytest.approx(w * w, abs=1e-3)
+
+
 def __generate_spectrum():
     energies = flex.double()
     counts = flex.double()
@@ -54,6 +71,19 @@ def __generate_spectrum():
         c = random.random() * 100 - 50
         for p, h, w in zip(peaks, heights, widths):
             c += h * math.exp(-(((ev - p) / w) ** 2))
+        energies.append(ev)
+        counts.append(c)
+
+    return energies, counts
+
+
+def __generate_simple(peak, height, width):
+    energies = flex.double()
+    counts = flex.double()
+
+    for dev in range(118000, 120000):
+        ev = 0.1 * dev
+        c = height * math.exp(-0.5 * (((ev - peak) / width) ** 2))
         energies.append(ev)
         counts.append(c)
 

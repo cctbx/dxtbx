@@ -80,19 +80,27 @@ namespace dxtbx { namespace model {
       return weighted_energy_;
     }
 
+    double get_weighted_energy_variance() const {
+      return weighted_energy_variance_;
+    }
+
     void compute_weighted_energy() {
       if (energies_.size() == 0) {
         weighted_energy_ = 0;
         return;
       }
       double weighted_sum = 0;
+      double weighted_sum_sq = 0;
       double summed_weights = 0;
       for (size_t i = 0; i < energies_.size(); i++) {
         weighted_sum += energies_[i] * weights_[i];
+        weighted_sum_sq += energies_[i] * energies_[i] * weights_[i];
         summed_weights += weights_[i];
       }
       DXTBX_ASSERT(weighted_sum > 0 && summed_weights > 0);
       weighted_energy_ = weighted_sum / summed_weights;
+      weighted_energy_variance_ =
+        weighted_sum_sq / summed_weights - (weighted_energy_ * weighted_energy_);
     }
 
     double get_weighted_wavelength() const {
@@ -108,6 +116,7 @@ namespace dxtbx { namespace model {
     double emin_, emax_;
 
     double weighted_energy_;
+    double weighted_energy_variance_;
   };
 
   /** Print Spectrum information */
