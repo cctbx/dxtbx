@@ -5,6 +5,7 @@
 #define DXTBX_MODEL_SPECTRUM_H
 
 #include <iostream>
+#include <vector>
 #include <scitbx/array_family/shared.h>
 #include <dxtbx/error.h>
 
