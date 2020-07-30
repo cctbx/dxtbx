@@ -17,12 +17,12 @@ def test_to_xds(dials_data, tmpdir):
     sequence = ImageSetFactory.new(file_names)[0]
     to_xds = xds.to_xds(sequence)
     s1 = to_xds.XDS_INP()
-    expected = (
+    expected_f = (
         """\
 DETECTOR=PILATUS MINIMUM_VALID_PIXEL_VALUE=0 OVERLOAD=495976
 SENSOR_THICKNESS= 0.320
 !SENSOR_MATERIAL / THICKNESS Si 0.320
-!SILICON= 3.960382
+!SILICON= %%s
 DIRECTION_OF_DETECTOR_X-AXIS= 1.00000 0.00000 0.00000
 DIRECTION_OF_DETECTOR_Y-AXIS= 0.00000 1.00000 0.00000
 NX=2463 NY=2527 QX=0.1720 QY=0.1720
@@ -57,7 +57,11 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
 """
         % dials_data("centroid_test_data").join("centroid_????.cbf").strpath
     )
-    assert s1 == expected
+
+    # universe changed once, so be flexible
+    expected = [expected_f % a for a in ["3.960382", "3.960386"]]
+
+    assert s1 in expected
     real_space_a = (-5.327642, -39.034747, -4.988286)
     real_space_b = (-35.253495, 7.596265, -22.127661)
     real_space_c = (-22.673623, -1.486119, 35.793463)

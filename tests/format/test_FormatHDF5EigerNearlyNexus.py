@@ -56,7 +56,7 @@ def test_semi_synthetic_dectris_eiger_nearly_nexus(dials_data, tmpdir):
     assert panel.get_fast_axis() == (1, 0, 0)
     assert panel.get_slow_axis() == (0, -1, 0)
     assert panel.get_thickness() == pytest.approx(0.45)
-    assert panel.get_mu() == pytest.approx(3.96763)
+    assert panel.get_mu() == pytest.approx(3.96764, abs=1e-4)
     assert panel.get_material() == "Si"
     assert panel.get_origin() == pytest.approx((-120.556, 118.982, -134.255), abs=1e-3)
     assert panel.get_distance() == pytest.approx(134.255)
