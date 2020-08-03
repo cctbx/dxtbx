@@ -1076,10 +1076,8 @@ class DetectorFactory(object):
         normal = fast_axis.cross(slow_axis)
         slow_axis = -fast_axis.cross(normal)
 
-        fast_axis, slow_axis, origin = detector_fast_slow_origin(nx_file)
-        fast_axis = numpy.array(fast_axis.elems)
-        slow_axis = numpy.array(slow_axis.elems)
-        origin = numpy.array(origin.elems)
+        if verify_nxmx(nx_file):
+            fast_axis, slow_axis, origin = detector_fast_slow_origin(nx_file)
 
         # Compute the attenuation coefficient.
         # This will fail for undefined composite materials
@@ -1518,6 +1516,19 @@ class MaskFactory(object):
             self.mask = tuple(self.mask)
 
 
+def verify_nxmx(f):
+    """Verify that this claims to be an NXmx file"""
+
+    if b"/entry/definition" not in f:
+        return False
+
+    definition = f[b"/entry/definition"][()]
+    if definition != numpy.string_("NXmx"):
+        return False
+
+    return True
+
+
 def axis_rt(axis, setting=None):
     if axis.type == b"rotation":
         if setting:
@@ -1603,14 +1614,6 @@ def detector_fast_slow_origin(f):
     # assert for the moment that these _do not_ have independent offsets
     nil = numpy.array((0.0, 0.0, 0.0))
 
-    foff = fast.attrs.get(b"offset", nil)
-    if not numpy.array_equal(foff, nil):
-        raise ValueError("fast axis has offset")
-
-    soff = slow.attrs.get(b"offset", nil)
-    if not numpy.array_equal(soff, nil):
-        raise ValueError("slow axis has offset")
-
     axis = collections.namedtuple(
         "axis", ("id", "type", "equipment", "depends_on", "vector", "offset")
     )
@@ -1669,7 +1672,10 @@ def detector_fast_slow_origin(f):
 
         rts[a.id] = axis_rt(a, sets.get(a.id, None))
 
-    origin = matrix.col(nil)
+    foff = matrix.col(fast.attrs.get(b"offset", nil))
+    soff = matrix.col(slow.attrs.get(b"offset", nil))
+
+    origin = foff + soff
     fast_vector = list(fast.attrs[b"vector"])
     slow_vector = list(slow.attrs[b"vector"])
     depends = fast.attrs[b"depends_on"]
