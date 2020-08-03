@@ -212,6 +212,8 @@ def construct_vector(nx_file, item, vector=None):
             units = item.attrs["units"]
             ttype = item.attrs["transformation_type"]
             vector = matrix.col(item.attrs["vector"])
+            # we should probably be using offset if we could ... but we can't
+            # offset = matrix.col(item.attrs.get("offset", (0.0, 0.0, 0.0)))
             if ttype == numpy.string_("translation"):
                 value = convert_units(value, units, "mm")
                 if hasattr(value, "__iter__") and len(value) == 1:
@@ -220,9 +222,9 @@ def construct_vector(nx_file, item, vector=None):
             elif ttype == numpy.string_("rotation"):
                 if hasattr(value, "__iter__") and len(value):
                     value = value[0]
-                if units == "rad":
+                if units == numpy.string_("rad"):
                     deg = False
-                elif units == "deg":
+                elif units == numpy.string_("deg"):
                     deg = True
                 else:
                     raise RuntimeError("Invalid units: %s" % units)
@@ -287,7 +289,7 @@ def construct_axes(nx_file, item, vector=None):
 
                 # is the axis moving? Check the values for this axis
                 v = item[()]
-                if min(v) < max(v):
+                if hasattr(v, "__iter__") and min(v) < max(v):
                     is_scan_axis = True
                 else:
                     is_scan_axis = False
@@ -1013,7 +1015,7 @@ class DetectorFactory(object):
             numpy.string_("Sillicon"): "Si",
             numpy.string_("CdTe"): "CdTe",
             numpy.string_("GaAs"): "GaAs",
-        }.get(nx_detector["sensor_material"][()])
+        }.get(numpy.string_(nx_detector["sensor_material"][()]))
         if not material:
             raise RuntimeError(
                 "Unknown material: %s" % nx_detector["sensor_material"][()]
@@ -1049,11 +1051,20 @@ class DetectorFactory(object):
         )
         slow_axis = matrix.col(slow_pixel_direction_vector).normalize()
 
-        # Get the origin vector - working around if absent
-        module_offset = nx_module["module_offset"]
-        origin = construct_vector(nx_file, module_offset.name)
-        if origin.elems[0] == 0.0 and origin.elems[1] == 0:
-            origin = -(origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis)
+        # Get the origin vector -
+        # - use module offset if present and not null
+        # - use legacy beam if module offset present and null
+        # - ignore completely if absent and derive the origin from dependencies
+
+        if "module_offset" in nx_module:
+            module_offset = nx_module["module_offset"]
+            origin = construct_vector(nx_file, module_offset.name)
+            if origin.elems[0] == 0.0 and origin.elems[1] == 0:
+                origin = -(
+                    origin + legacy_beam_x * fast_axis + legacy_beam_y * slow_axis
+                )
+        else:
+            raise RuntimeError("currently no way to get origin")
 
         # Change of basis to convert from NeXus to IUCr/ImageCIF convention
         cob = matrix.sqr((-1, 0, 0, 0, 1, 0, 0, 0, -1))
@@ -1143,7 +1154,7 @@ def find_goniometer_rotation(obj):
         if o.attrs["transformation_type"] == numpy.string_("rotation"):
             # if this is changing, assume is scan axis
             v = o[()]
-            if min(v) < max(v):
+            if hasattr(v, "__iter__") and min(v) < max(v):
                 return o
     raise ValueError("no rotation found")
 
@@ -1350,7 +1361,7 @@ class DataFactory(object):
             # datasets in this context mean ones which contain diffraction images
             # so must have ndim > 1 - for example omega can also be nexus data set
             # but with 1 dimension...
-            if ohk.ndim == 1:
+            if ohk.ndim <= 1:
                 continue
 
             datasets.append(
