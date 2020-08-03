@@ -11,6 +11,7 @@ from dxtbx.format.FormatPYunspecified import (
     FormatPYunspecifiedInMemory,
 )
 from dxtbx.format.FormatStill import FormatStill
+from iotbx.detectors.npy import image_dict_to_unicode
 
 
 class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
@@ -25,10 +26,11 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
         try:
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
                 if six.PY3:
-                    data = pickle.load(fh, encoding="bytes")  # lgtm
+                    data = image_dict_to_unicode(
+                        pickle.load(fh, encoding="bytes")
+                    )  # lgtm
                     # the '# lgtm' comment disables an lgtm false positive and
                     # can be removed once we move to Python 3 only
-                    data = {key.decode("ascii"): value for key, value in data.items()}
                 else:
                     data = pickle.load(fh)
         except IOError:
