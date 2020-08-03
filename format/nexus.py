@@ -1065,6 +1065,11 @@ class DetectorFactory(object):
         normal = fast_axis.cross(slow_axis)
         slow_axis = -fast_axis.cross(normal)
 
+        fast_axis, slow_axis, origin = detector_fast_slow_origin(nx_file)
+        fast_axis = numpy.array(fast_axis.elems)
+        slow_axis = numpy.array(slow_axis.elems)
+        origin = numpy.array(origin.elems)
+
         # Compute the attenuation coefficient.
         # This will fail for undefined composite materials
         # mu_at_angstrom returns cm^-1, but need mu in mm^-1
