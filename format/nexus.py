@@ -1076,8 +1076,17 @@ class DetectorFactory(object):
         normal = fast_axis.cross(slow_axis)
         slow_axis = -fast_axis.cross(normal)
 
+        # Try to construct a proper model of the experimental geometry
+        # from the dependency hierarchy, falling back on the previous values
+        # if fails
+
         if verify_nxmx(nx_file):
-            fast_axis, slow_axis, origin = detector_fast_slow_origin(nx_file)
+            try:
+                fso = detector_fast_slow_origin(nx_file)
+            except TypeError:
+                pass
+            else:
+                fast_axis, slow_axis, origin = fso
 
         # Compute the attenuation coefficient.
         # This will fail for undefined composite materials
