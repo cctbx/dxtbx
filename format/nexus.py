@@ -197,6 +197,11 @@ def visit_dependencies(nx_file, item, visitor=None):
             raise RuntimeError("'%s' contains no depends_on attribute" % depends_on)
 
 
+# FIXME see below I think the current implementation here is somewhat broken
+# as offsets are not respected. This is still however used elsewhere so not
+# yet ready to strip out completely
+
+
 def construct_vector(nx_file, item, vector=None):
     """
     Walk the dependency chain and create the absolute vector
@@ -212,8 +217,6 @@ def construct_vector(nx_file, item, vector=None):
             units = item.attrs["units"]
             ttype = item.attrs["transformation_type"]
             vector = matrix.col(item.attrs["vector"])
-            # we should probably be using offset if we could ... but we can't
-            # offset = matrix.col(item.attrs.get("offset", (0.0, 0.0, 0.0)))
             if ttype == numpy.string_("translation"):
                 value = convert_units(value, units, "mm")
                 if hasattr(value, "__iter__") and len(value) == 1:
