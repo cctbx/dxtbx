@@ -1,1 +1,1 @@
-HDF5 / NeXus: correctly pass the mask with get_static_mask() not get_mask(); includes bug fix where Eiger data report incorrect data_size. 
+HDF5 / NeXus: correctly use the mask if available.
