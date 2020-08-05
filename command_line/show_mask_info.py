@@ -1,4 +1,4 @@
-# LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.show_mask_info
+# LIBTBX_SET_DISPATCHER_NAME dxtbx.show_mask_info
 
 import sys
 
