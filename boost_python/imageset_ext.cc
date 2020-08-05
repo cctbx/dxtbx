@@ -374,8 +374,12 @@ namespace dxtbx { namespace boost_python {
       result.append(data.tile(i).data());
     }
 
-    // Return the image
+    // Return the image - don't copy
+#if __cplusplus > 199711L
+    return std::move(result);
+#else
     return result;
+#endif
   }
 
   /**
