@@ -246,7 +246,7 @@ class FormatNexusJungfrauHack(FormatNexus):
     def get_raw_data(self, index):
         return self._raw_data[index]
 
-    def get_mask(self, index=None, goniometer=None):
+    def get_static_mask(self, index=None, goniometer=None):
         return MaskFactory(self.instrument.detectors, index).mask
 
     def get_num_images(self):
