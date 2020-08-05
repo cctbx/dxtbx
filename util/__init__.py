@@ -58,4 +58,8 @@ def show_mask_info(expt_list):
         print(f"---- ----")
         print(d)
         for j, _m in enumerate(m):
-            print(f"Module {j} has {_m.count(False)} masked pixels of {_m.size()}")
+            print(
+                "Module {} has {} masked pixels of {}".format(
+                    j, _m.count(False), _m.size()
+                )
+            )
