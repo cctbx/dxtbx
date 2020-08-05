@@ -55,7 +55,7 @@ def show_mask_info(expt_list):
     for i in expt_list.imagesets():
         d = i.get_detector()
         m = i.get_mask(0)
-        print(f"---- ----")
+        print("---- ----")
         print(d)
         for j, _m in enumerate(m):
             print(
