@@ -153,6 +153,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         target="#/lib/dxtbx_model_ext",
         source=[
             "model/boost_python/beam.cc",
+            "model/boost_python/spectrum.cc",
             "model/boost_python/goniometer.cc",
             "model/boost_python/kappa_goniometer.cc",
             "model/boost_python/multi_axis_goniometer.cc",

@@ -7,9 +7,8 @@ but will allow for extension for specific implementations of CBF.
 from __future__ import absolute_import, division, print_function
 
 import sys
-from builtins import range
 
-import numpy
+import numpy as np
 
 from iotbx.detectors.cbf import CBFImage
 from scitbx.array_family import flex
@@ -188,14 +187,14 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         # handle floats vs ints
         if dtype == b"signed 32-bit integer":
             array_string = cbf.get_integerarray_as_string()
-            self._raw_data = flex.int(numpy.fromstring(array_string, numpy.int32))
+            self._raw_data = flex.int(np.fromstring(array_string, np.int32))
             parameters = cbf.get_integerarrayparameters_wdims_fs()
             slow, mid, fast = (parameters[11], parameters[10], parameters[9])
             assert slow == 1  # sections not supported
             array_size = mid, fast
         elif dtype == b"signed 64-bit real IEEE":
             array_string = cbf.get_realarray_as_string()
-            self._raw_data = flex.double(numpy.fromstring(array_string, numpy.float))
+            self._raw_data = flex.double(np.fromstring(array_string, np.float))
             parameters = cbf.get_realarrayparameters_wdims_fs()
             slow, mid, fast = (parameters[7], parameters[6], parameters[5])
             assert slow == 1  # sections not supported

@@ -4,7 +4,7 @@ import os
 import sys
 
 import h5py
-import numpy
+import numpy as np
 
 from scitbx.array_family import flex
 
@@ -108,7 +108,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
 
         if self._raw_data is None:
             h5_handle = h5py.File(self.image_filename, "r")
-            data = h5_handle[self.tag]["data"][()].astype(numpy.int32)
+            data = h5_handle[self.tag]["data"][()].astype(np.int32)
             h5_handle.close()
             self._raw_data = flex.int(data)
 

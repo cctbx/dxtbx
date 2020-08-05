@@ -19,6 +19,7 @@ from scitbx.matrix import col, sqr
 import dxtbx.model
 from dxtbx.model import (
     Beam,
+    Spectrum,
     Crystal,
     Detector,
     Panel,
@@ -220,9 +221,9 @@ def construct_vector(nx_file, item, vector=None):
             elif ttype == numpy.string_("rotation"):
                 if hasattr(value, "__iter__") and len(value):
                     value = value[0]
-                if units == "rad":
+                if numpy.string_(units) == numpy.string_("rad"):
                     deg = False
-                elif units == "deg":
+                elif numpy.string_(units) == numpy.string_("deg"):
                     deg = True
                 else:
                     raise RuntimeError("Invalid units: %s" % units)
@@ -542,6 +543,11 @@ class BeamFactory(object):
         self.obj = obj
         self.model = None
         self.index = None
+        self.spectrum = None
+
+    def read_models(self, index=None):
+        self.load_model(index)
+        return self.model, self.spectrum
 
     def load_model(self, index=None):
         # Cached model
@@ -549,29 +555,75 @@ class BeamFactory(object):
             return self.model
 
         # Get the items from the NXbeam class
-        wavelength = self.obj.handle["incident_wavelength"]
-        wavelength_weights = self.obj.handle.get("incident_wavelength_weights")
-        if wavelength.shape in (tuple(), (1,)):
-            wavelength_value = wavelength[()]
-        elif len(wavelength.shape) == 1:
-            if wavelength_weights is None:
-                if index is None:
-                    index = 0
-                wavelength_value = wavelength[index]
+        primary_key = "incident_wavelength"
+        wavelength = self.obj.handle[primary_key]
+        spectrum_wavelengths = wavelength
+        spectrum_weights = self.obj.handle.get(primary_key + "_weight")
+
+        # If the wavelength array does not represent spectra, look for spectra
+        # in the variant chain
+        variant_test = wavelength
+        has_variant_spectra = False
+        while spectrum_weights is None:
+            if "variant" in variant_test.attrs:
+                variant_key = variant_test.attrs["variant"]
+                variant_wavelengths = self.obj.handle[variant_key]
+                variant_weights = self.obj.handle.get(variant_key + "_weight")
+                if variant_weights is None:
+                    variant_test = variant_wavelengths  # Keep looking
+                else:
+                    # Found spectra
+                    spectrum_wavelengths = variant_wavelengths
+                    spectrum_weights = variant_weights  # cause while loop to end
+                    has_variant_spectra = True
             else:
-                raise NotImplementedError("Spectra not implemented")
-        else:
-            raise NotImplementedError("Spectra not implemented")
-        wavelength_units = wavelength.attrs["units"]
+                break
 
-        # Convert wavelength to Angstroms
-        wavelength_value = float(
-            convert_units(wavelength_value, wavelength_units, "angstrom")
-        )
-
-        # Construct the beam model
+        if index is None:
+            index = 0
         self.index = index
-        self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
+
+        def get_wavelength(wavelength):
+            if wavelength.shape in (tuple(), (1,)):
+                wavelength_value = wavelength[()]
+            else:
+                wavelength_value = wavelength[index]
+            wavelength_units = wavelength.attrs["units"]
+            wavelength_value = float(
+                convert_units(wavelength_value, wavelength_units, "angstrom")
+            )
+            return wavelength_value
+
+        if spectrum_weights is None:
+            # Construct the beam model
+            wavelength_value = get_wavelength(wavelength)
+            self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
+        else:
+            self.model = Beam()
+            self.model.set_direction((0, 0, 1))
+
+            wavelength_units = spectrum_wavelengths.attrs["units"]
+
+            if len(spectrum_wavelengths.shape) > 1:
+                spectrum_wavelengths = spectrum_wavelengths[index]
+            else:
+                spectrum_wavelengths = spectrum_wavelengths[()]
+            if len(spectrum_weights.shape) > 1:
+                spectrum_weights = spectrum_weights[index]
+            else:
+                spectrum_weights = spectrum_weights[()]
+
+            spectrum_wavelengths = convert_units(
+                spectrum_wavelengths, wavelength_units, "angstrom"
+            )
+            spectrum_energies = 12398.4187 / spectrum_wavelengths
+            self.spectrum = Spectrum(spectrum_energies, spectrum_wavelengths)
+
+            if has_variant_spectra:
+                wavelength_value = get_wavelength(wavelength)
+                self.model.set_wavelength(wavelength_value)
+            else:
+                self.model.set_wavelength(self.spectrum.get_weighted_wavelength())
         return self.model
 
 

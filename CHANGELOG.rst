@@ -1,3 +1,15 @@
+DIALS 3.0.4 (2020-07-20)
+========================
+
+- HDF5 / NeXus: Read image dimensions directly from dataset shape instead of
+  reported image_size, as latter can sometimes be backwards (#189)
+- Support image_range when importing images into an ImageSet so only a subset
+  of the images are used
+- Diamond-specific Eiger/Nexus: Fix handling of masked pixels in the image so
+  that module join regions are no longer marked as overloaded (i.e. yellow) in
+  the image viewer (#180)
+
+
 DIALS 3.0.2 (2020-06-23)
 ========================
 

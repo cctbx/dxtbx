@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import string
 
 import h5py
-import numpy
+import numpy as np
 
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
@@ -107,11 +107,11 @@ class FormatNexusJungfrauHack(FormatNexus):
         detector_material = clean_string(str(material))
         material = {
             "Si": "Si",
-            numpy.string_("Si"): "Si",
-            numpy.string_("Silicon"): "Si",
-            numpy.string_("Sillicon"): "Si",
-            numpy.string_("CdTe"): "CdTe",
-            numpy.string_("GaAs"): "GaAs",
+            np.string_("Si"): "Si",
+            np.string_("Silicon"): "Si",
+            np.string_("Sillicon"): "Si",
+            np.string_("CdTe"): "CdTe",
+            np.string_("GaAs"): "GaAs",
         }.get(detector_material)
         if not material:
             raise RuntimeError("Unknown material: %s" % detector_material)
@@ -222,10 +222,6 @@ class FormatNexusJungfrauHack(FormatNexus):
 
     def _detector(self):
         return self._detector_model
-
-    def _beam(self, index=None):
-        self._beam_model = self._beam_factory.load_model(index)
-        return self._beam_model
 
     def _scan(self):
         return self._scan_model
