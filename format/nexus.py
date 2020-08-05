@@ -19,12 +19,12 @@ from scitbx.matrix import col, sqr
 import dxtbx.model
 from dxtbx.model import (
     Beam,
-    Spectrum,
     Crystal,
     Detector,
     Panel,
     ParallaxCorrectedPxMmStrategy,
     Scan,
+    Spectrum,
 )
 
 try:

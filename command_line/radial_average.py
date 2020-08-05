@@ -10,7 +10,9 @@ from builtins import range
 
 import numpy as np
 
+import cctbx.miller
 import iotbx.phil
+from cctbx.crystal import symmetry
 from libtbx import easy_pickle
 from libtbx.utils import Sorry, Usage
 from scitbx.array_family import flex
@@ -19,9 +21,6 @@ from xfel import radial_average
 
 import dxtbx.datablock
 from dxtbx.model.experiment_list import ExperimentListFactory
-
-from cctbx.crystal import symmetry
-import cctbx.miller
 
 master_phil = iotbx.phil.parse(
     """
