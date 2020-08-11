@@ -7,6 +7,7 @@ import numpy as np
 
 from scitbx import matrix
 from scitbx.array_family import flex
+from cctbx import factor_ev_angstrom
 
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatHDF5 import FormatHDF5
@@ -84,7 +85,7 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
         sacla_config = run_info["sacla_config"]
         eV = sacla_config["photon_energy_in_eV"].value
 
-        return self._beam_factory.simple(12398.4 / eV)
+        return self._beam_factory.simple(factor_ev_angstrom / eV)
 
     def get_num_images(self):
         return len(self._images)

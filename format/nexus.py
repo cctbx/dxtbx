@@ -15,6 +15,7 @@ from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
+from cctbx import factor_ev_angstrom
 
 import dxtbx.model
 from dxtbx.model import (
@@ -616,7 +617,7 @@ class BeamFactory(object):
             spectrum_wavelengths = convert_units(
                 spectrum_wavelengths, wavelength_units, "angstrom"
             )
-            spectrum_energies = 12398.4187 / spectrum_wavelengths
+            spectrum_energies = factor_ev_angstrom / spectrum_wavelengths
             self.spectrum = Spectrum(spectrum_energies, spectrum_wavelengths)
 
             if has_variant_spectra:
