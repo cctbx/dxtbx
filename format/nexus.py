@@ -1613,7 +1613,7 @@ def detector_fast_slow_origin(f):
     if b"depends_on" in detector:
         depends_on = detector[b"depends_on"][()]
     elif b"depends_on" in detector.attrs:
-        depends_on = detector.atrs[b"depends_on"]
+        depends_on = detector.attrs[b"depends_on"]
     else:
         raise ValueError("no depends_on found in /entry/instrument/detector")
 
