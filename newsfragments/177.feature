@@ -1,1 +1,0 @@
-Add generic multi-panel support for FormatCBFMiniPilatus and subclasses. Data matching format classes inheriting from FormatCBFMiniPilatus can now be imported with the option multi_panel=True to treat the detector as multiple panels, instead of a single panel comprising the whole detector.

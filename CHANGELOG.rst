@@ -1,3 +1,25 @@
+DIALS 3.1 (2020-08-17)
+======================
+
+Features
+--------
+
+- Add generic multi-panel support for FormatCBFMiniPilatus and subclasses. Data
+  matching format classes inheriting from FormatCBFMiniPilatus can now be
+  imported with the option multi_panel=True to treat the detector as multiple
+  panels, instead of a single panel comprising the whole detector. (#177)
+- New tool ``dxtbx.show_mask_info`` to show the number of masked pixels for each module (#198)
+- **Experimental - Alpha API**: Add Spectrum as a read-only class obtainable from
+  an imageset, and implement reading spectra from NeXus files. (#201)
+
+
+Bugfixes
+--------
+
+- Better handle string conversion when NeXus files (#190)
+- HDF5 / NeXus: Correctly use the mask if available. (#198)
+
+
 DIALS 3.0.4 (2020-07-20)
 ========================
 
