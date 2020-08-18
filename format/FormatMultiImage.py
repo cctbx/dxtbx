@@ -236,8 +236,13 @@ class FormatMultiImage(Format):
                 detector = []
                 goniometer = []
                 scan = []
-                for i in range(format_instance.get_num_images()):
-                    if (single_file_indices is None) or (i in single_file_indices):
+                num_images = format_instance.get_num_images()
+                for i in range(num_images):
+                    if (
+                        single_file_indices is None
+                        or len(single_file_indices) == num_images
+                        or i in single_file_indices
+                    ):
                         beam.append(format_instance.get_beam(i))
                         detector.append(format_instance.get_detector(i))
                         goniometer.append(format_instance.get_goniometer(i))
