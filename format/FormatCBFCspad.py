@@ -4,10 +4,11 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import range
 
+import pycbf
+
 from cctbx.eltbx import attenuation_coefficient
 from scitbx.matrix import col, sqr
 
-import pycbf
 from dxtbx.format.FormatCBFFull import FormatCBFFullStill
 from dxtbx.format.FormatCBFMultiTileHierarchy import FormatCBFMultiTileHierarchyStill
 from dxtbx.model import ParallaxCorrectedPxMmStrategy

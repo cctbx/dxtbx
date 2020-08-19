@@ -3,10 +3,11 @@ from __future__ import absolute_import, division, print_function
 import os
 from builtins import object, range
 
+import pycbf
+
 import libtbx.phil
 from scitbx.array_family import flex
 
-import pycbf
 from dxtbx.model.scan_helpers import scan_helper_image_files, scan_helper_image_formats
 from dxtbx_model_ext import Scan
 

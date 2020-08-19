@@ -4,12 +4,12 @@ import sys
 from builtins import range
 
 import numpy as np
+import psana
 
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
 
-import psana
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector
 

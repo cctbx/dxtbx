@@ -13,6 +13,7 @@ from xfel.command_line.cspad_detector_congruence import iterate_detector_at_leve
 
 import dials.util
 from dials.util.options import OptionParser
+
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.serialize import dump
 

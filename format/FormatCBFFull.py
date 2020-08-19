@@ -9,11 +9,11 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 import numpy as np
+import pycbf
 
 from iotbx.detectors.cbf import CBFImage
 from scitbx.array_family import flex
 
-import pycbf
 from dxtbx.format.Format import bz2, gzip
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatStill import FormatStill

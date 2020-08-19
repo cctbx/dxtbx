@@ -3,11 +3,12 @@ from __future__ import absolute_import, division, print_function
 import os
 from builtins import object, range
 
+import pycbf
+
 import libtbx.phil
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 
-import pycbf
 from dxtbx.model.detector_helpers import (
     detector_helper_sensors,
     find_gain_value,

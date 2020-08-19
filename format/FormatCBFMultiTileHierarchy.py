@@ -10,11 +10,12 @@ import struct
 import sys
 from builtins import range
 
+import pycbf
+
 from libtbx.utils import Sorry
 from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
 
-import pycbf
 from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile, FormatCBFMultiTileStill
 from dxtbx.model import Detector
 

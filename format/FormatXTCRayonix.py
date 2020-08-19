@@ -2,10 +2,11 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 
+import psana
+
 from libtbx.phil import parse
 from scitbx.array_family import flex
 
-import psana
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 
 try:

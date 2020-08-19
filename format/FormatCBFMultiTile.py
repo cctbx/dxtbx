@@ -6,10 +6,10 @@ import sys
 from builtins import range
 
 import numpy
+import pycbf
 
 from scitbx.array_family import flex
 
-import pycbf
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
