@@ -10,7 +10,7 @@ import struct
 import sys
 from builtins import range
 
-from boost.python import streambuf
+from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
 
 from dxtbx import IncorrectFormatError
