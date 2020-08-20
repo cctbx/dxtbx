@@ -5,9 +5,9 @@ import sys
 import h5py
 import numpy as np
 
+from cctbx import factor_ev_angstrom
 from scitbx import matrix
 from scitbx.array_family import flex
-from cctbx import factor_ev_angstrom
 
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatHDF5 import FormatHDF5
