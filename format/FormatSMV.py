@@ -10,7 +10,7 @@ representations.
 
 from __future__ import absolute_import, division, print_function
 
-from boost.python import streambuf
+from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
 
 from dxtbx import IncorrectFormatError
