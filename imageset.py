@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import range
 
-import boost.python
+import boost_adaptbx.boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
@@ -17,7 +17,7 @@ from dxtbx_imageset_ext import (
     ImageSetData,
 )
 
-ext = boost.python.import_ext("dxtbx_ext")
+ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
 __all__ = (
     "ExternalLookup",
@@ -61,7 +61,7 @@ class MemReader(object):
         return ""
 
 
-@boost.python.inject_into(ImageSet)
+@boost_adaptbx.boost.python.inject_into(ImageSet)
 class _(object):
     """
     A class to inject additional methods into the imageset class
@@ -222,7 +222,7 @@ class ImageSetLazy(ImageSet):
         return super(ImageSetLazy, self).get_gain(index)
 
 
-@boost.python.inject_into(ImageSequence)
+@boost_adaptbx.boost.python.inject_into(ImageSequence)
 class _(object):
     def __getitem__(self, item):
         """Get an item from the sequence stream.

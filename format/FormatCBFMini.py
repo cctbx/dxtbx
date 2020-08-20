@@ -12,7 +12,7 @@ import sys
 
 import pycbf
 
-from boost.python import streambuf
+from boost_adaptbx.boost.python import streambuf
 from cbflib_adaptbx import uncompress
 from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.pilatus_minicbf import PilatusImage
