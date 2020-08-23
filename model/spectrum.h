@@ -106,7 +106,8 @@ namespace dxtbx { namespace model {
     }
 
     double get_weighted_wavelength() const {
-      return scitbx::constants::factor_ev_angstrom / get_weighted_energy_eV();  //  eV per Å conversion factor
+      return scitbx::constants::factor_ev_angstrom
+             / get_weighted_energy_eV();  //  eV per Å conversion factor
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Spectrum &s);
