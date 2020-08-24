@@ -3,10 +3,11 @@ from __future__ import absolute_import, division, print_function
 import math
 from builtins import object, range
 
+import pycbf
+
 import libtbx.phil
 from scitbx.array_family import flex
 
-import pycbf
 from dxtbx_model_ext import Goniometer, KappaGoniometer, MultiAxisGoniometer
 
 __all__ = [

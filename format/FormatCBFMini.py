@@ -10,6 +10,8 @@ import binascii
 import os
 import sys
 
+import pycbf
+
 from boost_adaptbx.boost.python import streambuf
 from cbflib_adaptbx import uncompress
 from cctbx import factor_ev_angstrom
@@ -17,7 +19,6 @@ from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.pilatus_minicbf import PilatusImage
 from scitbx.array_family import flex
 
-import pycbf
 from dxtbx.ext import read_int32
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp

@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function
 import sys
 from builtins import range
 
+from matplotlib import pylab
+
 from scitbx.array_family import flex
 
 from dxtbx.datablock import DataBlockFactory
@@ -19,7 +21,6 @@ if __name__ == "__main__":
     assert isinstance(px_mm, ParallaxCorrectedPxMmStrategy)
     print("Mu: %f mm^-1 " % px_mm.mu())
     print("t0: %f mm" % px_mm.t0())
-    from matplotlib import pylab
 
     image_size = detector[0].get_image_size()[::-1]
     xcorr = flex.double(flex.grid(image_size))

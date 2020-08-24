@@ -4,6 +4,7 @@ import sys
 from builtins import range
 
 import numpy as np
+import psana
 
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
@@ -12,13 +13,12 @@ from scitbx.matrix import col
 from xfel.cftbx.detector.cspad_cbf_tbx import read_slac_metrology
 from xfel.cxi.cspad_ana.cspad_tbx import env_distance
 
-import psana
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 try:
-    from xfel.cxi.cspad_ana import cspad_tbx
     from xfel.cftbx.detector import cspad_cbf_tbx
+    from xfel.cxi.cspad_ana import cspad_tbx
 except ImportError:
     # xfel not configured
     pass

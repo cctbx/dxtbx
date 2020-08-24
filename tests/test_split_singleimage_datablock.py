@@ -6,7 +6,6 @@ import pytest
 
 from dxtbx.datablock import DataBlockDumper, DataBlockFactory
 
-
 """
 Test deserializing a datablock that has single file indices while using check_format = True or False
 """
