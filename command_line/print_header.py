@@ -15,6 +15,9 @@ def print_header():
     for arg in sys.argv[1:]:
         print("=== %s ===" % arg)
         format_class = dxtbx.format.Registry.get_format_class_for_file(arg)
+        if not format_class:
+            print("No format class found that can understand %s" % arg)
+            continue
         print("Using header reader: %s" % format_class.__name__)
         i = format_class(arg)
         beam = i.get_beam()

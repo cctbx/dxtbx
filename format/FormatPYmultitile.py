@@ -13,6 +13,8 @@ from xfel.cftbx.detector.cspad_detector import CSPadDetector
 from dxtbx.format.FormatPY import FormatPY
 from dxtbx.model import Detector
 
+from iotbx.detectors.npy import image_dict_to_unicode
+
 
 class FormatPYmultitile(FormatPY):
     @staticmethod
@@ -21,7 +23,7 @@ class FormatPYmultitile(FormatPY):
             with FormatPYmultitile.open_file(image_file, "rb") as fh:
                 if six.PY3:
                     data = pickle.load(fh, encoding="bytes")
-                    data = {key.decode("ascii"): value for key, value in data.items()}
+                    data = image_dict_to_unicode(data)
                 else:
                     data = pickle.load(fh)
         except IOError:
