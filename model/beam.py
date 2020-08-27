@@ -71,7 +71,6 @@ class BeamFactory(object):
         if params.beam.polarization_fraction is not None:
             beam.set_polarization_fraction(params.beam.polarization_fraction)
 
-        # Return the model
         return beam
 
     @staticmethod

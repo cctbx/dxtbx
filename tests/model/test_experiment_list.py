@@ -339,7 +339,6 @@ def experiment_list():
             )
         )
 
-    # Return the list of experiments
     return experiments
 
 

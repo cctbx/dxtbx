@@ -45,7 +45,6 @@ def compact_simple_list(match):
         )
     ).lstrip()
 
-    # Return the string
     return match.group(1) + list_string
 
 

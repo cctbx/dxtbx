@@ -307,7 +307,6 @@ class DataBlock(object):
         result["goniometer"] = [gg.to_dict() for gg in g]
         result["scan"] = [ss.to_dict() for ss in s]
 
-        # Return the data block as a dictionary
         return result
 
 
@@ -450,7 +449,6 @@ class DataBlockTemplateImporter(object):
             format_kwargs=kwargs.get("format_kwargs"),
         )
 
-        # Return the imageset
         return imageset
 
 
@@ -1104,7 +1102,6 @@ class DataBlockFilenameImporter(object):
                 )
             )
 
-        # Return the records
         return records
 
     def _create_multi_file_imageset(self, format_class, records, format_kwargs=None):
@@ -1147,7 +1144,6 @@ class DataBlockFilenameImporter(object):
                 imageset.set_goniometer(r.goniometer, i)
                 imageset.set_scan(r.scan, i)
 
-        # Return the imageset
         return imageset
 
     def _create_single_file_imageset(self, format_class, filename, format_kwargs=None):
@@ -1419,7 +1415,6 @@ class DataBlockDictImporter(object):
             else:
                 raise RuntimeError("expected ImageSet/ImageSequence, got %s" % ident)
 
-        # Return the datablock
         return DataBlock(imagesets)
 
 
@@ -1477,7 +1472,6 @@ class DataBlockFactory(object):
             except Exception:
                 unhandled.append(filename)
 
-        # Return the datablocks
         return datablocks
 
     @staticmethod

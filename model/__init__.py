@@ -673,7 +673,6 @@ class _(object):
             if name not in result:
                 result[name] = [x.to_dict() for x in models]
 
-        # Return the dictionary
         return result
 
     def to_datablocks(self):

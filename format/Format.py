@@ -470,7 +470,6 @@ class Format(object):
                 else:
                     iset.external_lookup.mask.data = ImageBool(static_mask)
 
-        # Return the imageset
         return iset
 
     def get_image_file(self):

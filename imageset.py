@@ -318,7 +318,6 @@ def _analyse_files(filenames):
         # Append the items to the group list
         file_groups.append((template, indices, is_sequence))
 
-    # Return the groups of files
     return file_groups
 
 
@@ -365,7 +364,6 @@ class ImageSetFactory(object):
                 if not ignore_unknown:
                     raise
 
-        # Return the imageset list
         return imagesetlist
 
     @staticmethod
@@ -436,7 +434,6 @@ class ImageSetFactory(object):
             check_format=check_format,
         )
 
-        # Return the sequence
         return [sequence]
 
     @staticmethod

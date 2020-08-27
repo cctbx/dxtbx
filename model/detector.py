@@ -416,7 +416,6 @@ class DetectorFactory(object):
                 if len(group_params.panel) != 0:
                     raise RuntimeError("Can't reassign panels in groups")
 
-        # Return the detector
         return detector
 
     @staticmethod
@@ -460,7 +459,6 @@ class DetectorFactory(object):
                 detector, beam, slow_fast_beam_centre_mm, panel_id=panel_id
             )
 
-        # Return the model
         return detector
 
     @staticmethod

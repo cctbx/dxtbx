@@ -120,7 +120,6 @@ class GoniometerFactory(object):
             rotation_axis = goniometer.get_rotation_axis_datum()
             goniometer.set_rotation_axis_datum([-x for x in rotation_axis])
 
-        # Return the model
         return goniometer
 
     @staticmethod
@@ -226,7 +225,6 @@ class GoniometerFactory(object):
             if params.goniometer.scan_axis is not None:
                 raise RuntimeError("Can not override scan axis")
 
-        # Return the model
         return goniometer
 
     @staticmethod

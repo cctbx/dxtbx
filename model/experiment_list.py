@@ -151,7 +151,6 @@ class ExperimentListDict(object):
             elif not isinstance(value, int):
                 raise TypeError("expected int or str, got %s" % type(value))
 
-        # Return the model list
         return mlist
 
     def _load_pickle_path(self, imageset_data, param):
@@ -372,7 +371,6 @@ class ExperimentListDict(object):
                 )
             )
 
-        # Return the experiment list
         return el
 
     def _make_mem_imageset(self, imageset):
@@ -508,7 +506,6 @@ class ExperimentListFactory(object):
                     print("Could not load experiments from %s: %s" % (filename, str(e)))
                 unhandled.append(filename)
 
-        # Return the experiments
         return experiments
 
     @staticmethod
@@ -645,7 +642,6 @@ class ExperimentListFactory(object):
         # Check the list is consistent
         assert experiments.is_consistent()
 
-        # Return the experiments
         return experiments
 
     @staticmethod
@@ -685,7 +681,6 @@ class ExperimentListFactory(object):
         # Check the list is consistent
         assert experiments.is_consistent()
 
-        # Return the experiments
         return experiments
 
     @staticmethod
@@ -730,7 +725,6 @@ class ExperimentListFactory(object):
         # Set the crystal in the experiment list
         assert len(experiments) == 1
 
-        # Return the experiment list
         return experiments
 
     @staticmethod

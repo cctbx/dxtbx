@@ -96,7 +96,6 @@ class ScanFactory(object):
         if params.scan.batch_offset is not None:
             scan.set_batch_offset(params.scan.batch_offset)
 
-        # Return the model
         return scan
 
     @staticmethod
