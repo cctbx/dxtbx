@@ -17,4 +17,4 @@ def test_noninteger_pedestal(dials_regression, tmpdir):
         f.write(data.replace(b"DIM=2;\n", b"DIM=2;\nIMAGE_PEDESTAL=42.0;\n"))
 
     # Make sure this loads
-    dxtbx.load(str(test_file))
+    dxtbx.load(test_file)
