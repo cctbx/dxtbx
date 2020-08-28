@@ -178,7 +178,7 @@ class FormatXTCJungfrau(FormatXTC):
                 p.set_local_frame(fast.elems, slow.elems, origin.elems)
                 p.set_pixel_size((pixel_size, pixel_size))
                 p.set_image_size((dim_fast // 4, dim_slow // 2))
-                p.set_trusted_range((-1, 2e6))
+                p.set_trusted_range((-10, 2e6))
                 p.set_name(val)
         self._cached_detector[run.run()] = d
         return d
@@ -224,7 +224,7 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
             slow_direction="-y",
             pixel_size=(0.075, 0.075),
             image_size=(1030, 1064),
-            trusted_range=(-1, 2e6),
+            trusted_range=(-10, 2e6),
             mask=[],
         )
 
