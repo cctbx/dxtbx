@@ -403,7 +403,11 @@ class ImageSetFactory(object):
             # Get the template format
             pfx = template.split("#")[0]
             sfx = template.split("#")[-1]
-            template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
+            template_format = "%s%%0%dd%s" % (
+                pfx.replace("%", "%%"),
+                template.count("#"),
+                sfx.replace("%", "%%"),
+            )
 
             # Get the template image range
             if image_range is None:
@@ -450,7 +454,11 @@ class ImageSetFactory(object):
         if count > 0:
             pfx = template.split("#")[0]
             sfx = template.split("#")[-1]
-            template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
+            template_format = "%s%%0%dd%s" % (
+                pfx.replace("%", "%%"),
+                template.count("#"),
+                sfx.replace("%", "%%"),
+            )
             filenames = [template_format % index for index in indices]
         else:
             filenames = [template]
@@ -475,7 +483,11 @@ class ImageSetFactory(object):
         if count > 0:
             pfx = template.split("#")[0]
             sfx = template.split("#")[-1]
-            template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
+            template_format = "%s%%0%dd%s" % (
+                pfx.replace("%", "%%"),
+                template.count("#"),
+                sfx.replace("%", "%%"),
+            )
             filenames = [template_format % index for index in indices]
         else:
             filenames = [template]
@@ -489,7 +501,11 @@ class ImageSetFactory(object):
         # Get the template format
         pfx = template.split("#")[0]
         sfx = template.split("#")[-1]
-        template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
+        template_format = "%s%%0%dd%s" % (
+            pfx.replace("%", "%%"),
+            template.count("#"),
+            sfx.replace("%", "%%"),
+        )
 
         # Set the image range
         array_range = range(min(indices) - 1, max(indices))
@@ -559,7 +575,11 @@ class ImageSetFactory(object):
         if count > 0:
             pfx = template.split("#")[0]
             sfx = template.split("#")[-1]
-            template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
+            template_format = "%s%%0%dd%s" % (
+                pfx.replace("%", "%%"),
+                template.count("#"),
+                sfx.replace("%", "%%"),
+            )
             filenames = [template_format % index for index in indices]
         else:
             template_format = None
