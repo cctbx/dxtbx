@@ -175,7 +175,13 @@ class FormatXTCEpix(FormatXTC):
                     asic_in_sensor_id = asic_num % 2  # this number will be 0 or 1
                     id_slow = sensor_id * (dim_slow // 2)
                     id_fast = asic_in_sensor_id * (dim_fast // 2)
-                    origin = col((xx[id_slow][id_fast], yy[id_slow][id_fast], 0,))
+                    origin = col(
+                        (
+                            xx[id_slow][id_fast],
+                            yy[id_slow][id_fast],
+                            0,
+                        )
+                    )
                     fp = col((xx[id_slow][id_fast + 1], yy[id_slow][id_fast + 1], 0))
                     sp = col((xx[id_slow + 1][id_fast], yy[id_slow + 1][id_fast], 0))
                     fast = (fp - origin).normalize()
