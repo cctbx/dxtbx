@@ -102,7 +102,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
 
     env.Append(
         LIBS=env_etc.libm + ["cctbx", "scitbx_boost_python"] + env_etc.dxtbx_libs,
-        LIBPATH=env_etc.dxtbx_lib_paths,
+        LIBPATH=env_etc.dxtbx_lib_paths + env_etc.dxtbx_hdf5_lib_paths,
     )
 
     if env_etc.clang_version:
@@ -113,7 +113,6 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         target="#lib/dxtbx_ext",
         source=["boost_python/to_ewald_sphere_helpers.cc", "boost_python/ext.cpp"],
         LIBS=env_etc.libs_python + env_etc.libm + env_etc.dxtbx_libs,
-        LIBPATH=env_etc.dxtbx_lib_paths,
     )
 
     nexus = env.SharedLibrary(
@@ -123,7 +122,6 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         + env_etc.libm
         + env_etc.dxtbx_libs
         + env_etc.dxtbx_hdf5_libs,
-        LIBPATH=env_etc.dxtbx_lib_paths + env_etc.dxtbx_hdf5_lib_paths,
     )
 
     imageset = env.SharedLibrary(
@@ -133,7 +131,6 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         + env_etc.libm
         + env_etc.dxtbx_libs
         + env_etc.dxtbx_hdf5_libs,
-        LIBPATH=env_etc.dxtbx_lib_paths + env_etc.dxtbx_hdf5_lib_paths,
     )
 
     image = env.SharedLibrary(
@@ -146,7 +143,6 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         + env_etc.libm
         + env_etc.dxtbx_libs
         + env_etc.dxtbx_hdf5_libs,
-        LIBPATH=env_etc.dxtbx_lib_paths + env_etc.dxtbx_hdf5_lib_paths,
     )
 
     model = env.SharedLibrary(
@@ -169,7 +165,6 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
             "model/boost_python/model_ext.cc",
         ],
         LIBS=env_etc.libs_python + env_etc.libm + env_etc.dxtbx_libs + env["LIBS"],
-        LIBPATH=env_etc.dxtbx_lib_paths,
     )
 
     env.SConscript("masking/SConscript", exports={"env": env})
