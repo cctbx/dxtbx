@@ -2,10 +2,10 @@ from __future__ import absolute_import, division, print_function
 
 import os
 from builtins import range
-from unittest.mock import patch
 
 import pytest
 import six.moves.cPickle as pickle
+from mock import patch
 
 from scitbx.array_family import flex
 
