@@ -1,3 +1,13 @@
+DIALS 3.1.1 (2020-09-01)
+========================
+
+Bugfixes
+--------
+
+- Don't crash handling FormatSMVADSC images with floating-point pedestal values (#216)
+- Allow importing filenames with special format characters like % (#214)
+
+
 DIALS 3.1 (2020-08-17)
 ======================
 
