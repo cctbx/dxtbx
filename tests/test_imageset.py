@@ -561,10 +561,7 @@ def test_multi_panel_gain_map(dials_regression):
     "multi_panel,expected_panel_count",
     (
         (False, 24),
-        (
-            True,
-            120,
-        ),
+        (True, 120),
     ),
 )
 def test_multi_panel(multi_panel, expected_panel_count, dials_regression):

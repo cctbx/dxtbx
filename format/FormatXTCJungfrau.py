@@ -170,13 +170,7 @@ class FormatXTCJungfrau(FormatXTC):
                 asic_in_sensor_id = asic_num % 4  # this number will be 0,1,2 or 3
                 id_slow = sensor_id * (dim_slow // 2)
                 id_fast = asic_in_sensor_id * (dim_fast // 4)
-                origin = col(
-                    (
-                        xx[id_slow][id_fast],
-                        yy[id_slow][id_fast],
-                        0,
-                    )
-                )
+                origin = col((xx[id_slow][id_fast], yy[id_slow][id_fast], 0))
                 fp = col((xx[id_slow][id_fast + 1], yy[id_slow][id_fast + 1], 0))
                 sp = col((xx[id_slow + 1][id_fast], yy[id_slow + 1][id_fast], 0))
                 fast = (fp - origin).normalize()
