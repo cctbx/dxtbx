@@ -157,7 +157,7 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
             pixel_size,
             image_size,
             (underload, overload),
-            pedestal=int(self._header_dictionary.get("IMAGE_PEDESTAL"), 0),
+            pedestal=float(self._header_dictionary.get("IMAGE_PEDESTAL"), 0),
         )
 
     def _beam(self):
