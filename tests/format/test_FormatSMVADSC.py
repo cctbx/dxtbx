@@ -4,9 +4,7 @@ import dxtbx
 
 
 def test_noninteger_pedestal(dials_regression, tmpdir):
-    filename = os.path.join(
-        dials_regression, "image_examples/APS_14BMC/q315_1_001.img",
-    )
+    filename = os.path.join(dials_regression, "image_examples/APS_14BMC/q315_1_001.img")
     # Read this file in as data
     with open(filename, "rb") as f:
         data = f.read()
