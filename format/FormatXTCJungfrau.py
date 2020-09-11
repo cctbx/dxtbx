@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import os
 import sys
 from builtins import range
 
@@ -27,6 +28,9 @@ jungfrau_locator_str = """
     monolithic = False
       .type = bool
       .help = switch to FormatXTCJungfrauMonolithic if True. Used for LS49 image averaging
+    use_big_pixels = True
+      .type = bool
+      .help = account for multi-sized pixels in the 512x1024 Jungfrau panels, forming a 514x1030 pixel panel
   }
 """
 
@@ -56,6 +60,8 @@ class FormatXTCJungfrau(FormatXTC):
         return any(["jungfrau" in src.lower() for src in params.detector_address])
 
     def get_raw_data(self, index):
+        from xfel.util import jungfrau
+
         d = FormatXTCJungfrau.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
@@ -69,6 +75,15 @@ class FormatXTCJungfrau(FormatXTC):
         data = data.astype(np.float64)
         self._raw_data = []
         for module_count, module in enumerate(d.hierarchy()):
+
+            if (
+                self.params.jungfrau.use_big_pixels
+                and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
+            ):
+                panel_data = jungfrau.correct_panel(data[module_count])
+                self._raw_data.append(flex.double(panel_data))
+                continue
+
             for asic_count, asic in enumerate(module):
                 fdim, sdim = asic.get_image_size()
                 sensor_id = asic_count // 4  # There are 2X4 asics per module
@@ -145,12 +160,12 @@ class FormatXTCJungfrau(FormatXTC):
 
         # Now deal with modules
         for module_num in range(len(root.get_list_of_children())):
-            pg1 = pg0.add_group()
             module = root.get_list_of_children()[module_num]
             module_basis = basis_from_geo(module)
             origin = col((module_basis * col((0, 0, 0, 1)))[0:3])
             fast = col((module_basis * col((1, 0, 0, 1)))[0:3]) - origin
             slow = col((module_basis * col((0, 1, 0, 1)))[0:3]) - origin
+            pg1 = pg0.add_group()
             pg1.set_local_frame(fast.elems, slow.elems, origin.elems)
             pg1.set_name("D%dM%d" % (det_num, module_num))
 
@@ -163,7 +178,6 @@ class FormatXTCJungfrau(FormatXTC):
             # Now deal with ASICs
             for asic_num in range(8):
                 val = "ARRAY_D0M%dA%d" % (module_num, asic_num)
-                p = pg1.add_panel()
                 dim_slow = xx.shape[0]
                 dim_fast = xx.shape[1]
                 sensor_id = asic_num // 4  # There are 2X4 asics per module
@@ -175,11 +189,25 @@ class FormatXTCJungfrau(FormatXTC):
                 sp = col((xx[id_slow + 1][id_fast], yy[id_slow + 1][id_fast], 0))
                 fast = (fp - origin).normalize()
                 slow = (sp - origin).normalize()
+                p = pg1.add_panel()
                 p.set_local_frame(fast.elems, slow.elems, origin.elems)
                 p.set_pixel_size((pixel_size, pixel_size))
-                p.set_image_size((dim_fast // 4, dim_slow // 2))
                 p.set_trusted_range((-10, 2e6))
                 p.set_name(val)
+                if (
+                    self.params.jungfrau.use_big_pixels
+                    and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
+                ):
+                    p.set_image_size((1030, 514))
+                    break
+                else:
+                    p.set_image_size((dim_fast // 4, dim_slow // 2))
+
+        if (
+            self.params.jungfrau.use_big_pixels
+            and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
+        ):
+            assert len(d) == 8
         self._cached_detector[run.run()] = d
         return d
 
