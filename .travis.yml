@@ -18,7 +18,6 @@ jobs:
       addons: false
       cache: false
       before_cache: false
-      dist: xenial
       python: 3.7
       script:
          - python3 -m compileall -q *
@@ -93,7 +92,6 @@ jobs:
       addons: false
       cache: false
       before_cache: false
-      dist: xenial
       python: 3.7
       script:
          - .travis/run-flake8
