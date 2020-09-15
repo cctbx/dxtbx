@@ -51,25 +51,7 @@ jobs:
          - $HOME/build_dials/modules/dxtbx/.travis/build-for 40m
 
     - stage: test
-      before_script:
-         # Inject DXTBX. Again.
-         - rm -rf $HOME/build_dials/modules/dxtbx
-         - mv $HOME/build/cctbx/dxtbx $HOME/build_dials/modules/dxtbx
-
-         # Enter CCTBX environment
-         - cd $HOME/build_dials/build
-         - . setpaths.sh
-
-         # If needed allow up to further 30 minutes worth of building time
-         - $HOME/build_dials/modules/dxtbx/.travis/build-for 30m if_required
-
-      script:
-         # Finally. Do what we are here for. Run tests. Yay.
-         - cd $HOME/build_dials/modules/dxtbx
-         - pytest -ra -n 2
-         - .travis/check-working-directory-is-clean
-
-    - name: "Test"
+      name: "Test"
       before_script:
          # Inject DXTBX. Again.
          - rm -rf $HOME/build_dials/modules/dxtbx
