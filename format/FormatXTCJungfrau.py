@@ -11,8 +11,10 @@ from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
 
+from cctbx.eltbx import attenuation_coefficient
+
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
-from dxtbx.model import Detector
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 try:
     from xfel.cxi.cspad_ana import cspad_tbx
@@ -50,6 +52,8 @@ class FormatXTCJungfrau(FormatXTC):
         self.n_images = len(self.times)
         self._cached_detector = {}
         self._cached_psana_detectors = {}
+        self._beam_index = None
+        self._beam_cache = None
 
     @staticmethod
     def understand(image_file):
@@ -103,7 +107,10 @@ class FormatXTCJungfrau(FormatXTC):
         return FormatXTCJungfrau._detector(self, index)
 
     def get_beam(self, index=None):
-        return self._beam(index)
+        if self._beam_index != index:
+            self._beam_index = index
+            self._beam_cache = self._beam(index)
+        return self._beam_cache
 
     def _beam(self, index=None):
         """Returns a simple model for the beam"""
@@ -194,6 +201,19 @@ class FormatXTCJungfrau(FormatXTC):
                 p.set_pixel_size((pixel_size, pixel_size))
                 p.set_trusted_range((-10, 2e6))
                 p.set_name(val)
+
+                thickness, material = 0.32, "Si"
+                p.set_thickness(thickness)  # mm
+                p.set_material(material)
+                # Compute the attenuation coefficient.
+                # This will fail for undefined composite materials
+                # mu_at_angstrom returns cm^-1, but need mu in mm^-1
+                table = attenuation_coefficient.get_table(material)
+                wavelength = self.get_beam(index).get_wavelength()
+                mu = table.mu_at_angstrom(wavelength) / 10.0
+                p.set_mu(mu)
+                p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, thickness))
+
                 if (
                     self.params.jungfrau.use_big_pixels
                     and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
