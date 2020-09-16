@@ -39,6 +39,9 @@ locator_str = """
   calib_dir = None
     .type = str
     .help = Specifiy path to custom calib directory if needed
+  use_ffb = False
+    .type = bool
+    .help = Run on the ffb if possible. Only for active users!
 """
 locator_scope = parse(locator_str)
 
@@ -179,6 +182,13 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 ",".join(["%d" % r for r in params.run]),
                 params.mode,
             )
+
+            if params.use_ffb:
+                # as ffb is only at SLAC, ok to hardcode /reg/d here
+                img += ":dir=/reg/d/ffb/%s/%s/xtc" % (
+                    params.experiment[0:3],
+                    params.experiment,
+                )
         else:
             img = params.data_source
         return psana.DataSource(img)
