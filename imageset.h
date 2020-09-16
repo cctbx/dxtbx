@@ -1070,6 +1070,11 @@ public:
     return !(*this == other);
   }
 
+  void clear_cache() {
+    data_cache_ = DataCache<ImageBuffer>();
+    double_raw_data_cache_ = DataCache<Image<double> >();
+  }
+
 protected:
   ImageSetData data_;
   scitbx::af::shared<std::size_t> indices_;
