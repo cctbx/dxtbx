@@ -1,0 +1,1 @@
+When averaging images using MPI, use reduce to improve performance

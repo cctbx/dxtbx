@@ -6,18 +6,29 @@ import procrunner
 
 import dxtbx
 
+import pytest
 
-def test_average(dials_regression, tmpdir):
+
+@pytest.mark.parametrize("use_mpi", [True, False])
+def test_average(dials_regression, tmpdir, use_mpi):
+    # Only allow MPI tests if we've got MPI capabilities
+    if use_mpi:
+        pytest.importorskip("mpi4py")
+
     data = os.path.join(
         dials_regression,
         "image_examples",
         "SACLA_MPCCD_Cheetah",
         "run266702-0-subset.h5",
     )
+    if use_mpi:
+        command = "mpirun"
+        mpargs = "-n 2 dxtbx.image_average".split()
+    else:
+        command = "dxtbx.image_average"
+        mpargs = "-n 2".split()
     result = procrunner.run(
-        ["dxtbx.image_average"]
-        + "-v -a avg.cbf -s stddev.cbf -m max.cbf".split()
-        + [data],
+        [command] + mpargs + "-v -a avg.cbf -s stddev.cbf -m max.cbf".split() + [data],
         working_directory=tmpdir,
     )
     assert not result.returncode and not result.stderr
