@@ -19,10 +19,7 @@ from dxtbx_imageset_ext import (
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
-try:
-    from typing import Iterable, List
-except ImportError:
-    pass
+from typing import Iterable, List
 
 __all__ = (
     "ExternalLookup",
