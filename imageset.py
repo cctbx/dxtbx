@@ -35,8 +35,7 @@ __all__ = (
 )
 
 
-def _expand_template(template, indices):
-    # type: (str, Iterable[int]) -> List[str]
+def _expand_template(template: str, indices: Iterable[int]) -> List[str]:
     """Expand a template string to a list of filenames.
 
     Args:
