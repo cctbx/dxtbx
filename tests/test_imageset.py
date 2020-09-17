@@ -503,7 +503,7 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
     for image in images:
         (directory / image.basename).symlink_to(image)
     template = str(directory / "centroid_####.cbf")
-    sequence = ImageSetFactory.make_sequence(template, list(range(1, 10)))
+    sequence = ImageSetFactory.make_sequence(template, range(1, 10))
     assert len(sequence) == 9
 
     sequences = ImageSetFactory.new(
