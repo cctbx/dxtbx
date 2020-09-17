@@ -1070,6 +1070,11 @@ public:
     return !(*this == other);
   }
 
+  /**
+   * Clear the imageset cache. Useful for when many imagesets are
+   * held in memory. After reading an image the cache can be
+   * manually cleared before moving onto the next imageset.
+   */
   void clear_cache() {
     data_cache_ = DataCache<ImageBuffer>();
     double_raw_data_cache_ = DataCache<Image<double> >();
