@@ -493,6 +493,30 @@ def test_imagesetfactory(centroid_files, dials_data):
     assert len(sequence) == 4
 
 
+def test_make_sequence_with_percent_character(dials_data, tmp_path):
+    images = [
+        dials_data("centroid_test_data").join(f"centroid_{i:04}.cbf")
+        for i in range(1, 10)
+    ]
+    directory = tmp_path / "test%"
+    directory.mkdir()
+    for image in images:
+        (directory / image.basename).symlink_to(image)
+    template = str(directory / "centroid_####.cbf")
+    sequence = ImageSetFactory.make_sequence(template, range(1, 10))
+    assert len(sequence) == 9
+
+    sequences = ImageSetFactory.new(
+        [str(directory / image.basename) for image in images]
+    )
+    assert len(sequences) == 1
+    assert len(sequences[0]) == 9
+
+    sequences = ImageSetFactory.from_template(template)
+    assert len(sequences) == 1
+    assert len(sequences[0]) == 9
+
+
 def test_pickle_imageset(centroid_files):
     sequence = ImageSetFactory.new(centroid_files)[0]
 

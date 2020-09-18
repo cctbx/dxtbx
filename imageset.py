@@ -19,6 +19,8 @@ from dxtbx_imageset_ext import (
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
+from typing import Iterable, List
+
 __all__ = (
     "ExternalLookup",
     "ExternalLookupItemBool",
@@ -31,6 +33,19 @@ __all__ = (
     "ImageSequence",
     "MemReader",
 )
+
+
+def _expand_template(template: str, indices: Iterable[int]) -> List[str]:
+    """Expand a template string to a list of filenames.
+
+    Args:
+        template: The template string, with a block of '#' to replace
+        indices:  The numeric indices to insert
+    """
+    pfx = template.split("#")[0]
+    sfx = template.split("#")[-1]
+    count = template.count("#")
+    return [f"{pfx}{index:0{count}}{sfx}" for index in indices]
 
 
 class MemReader(object):
@@ -392,26 +407,18 @@ class ImageSetFactory(object):
             assert not check_headers
 
         # Check the template is valid
-        if template.count("#") == 0:
-            if "master" not in template:
-                raise ValueError("Invalid template")
-            filenames = [template]
-        else:
-
-            # Get the template format
-            pfx = template.split("#")[0]
-            sfx = template.split("#")[-1]
-            template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
-
+        if "#" in template:
             # Get the template image range
             if image_range is None:
                 image_range = template_image_range(template)
 
             # Set the image range
-            array_range = range(image_range[0] - 1, image_range[1])
-
-            # Create the sequence file list
-            filenames = [template_format % (i + 1) for i in array_range]
+            indices = range(image_range[0], image_range[1] + 1)
+            filenames = _expand_template(template, indices)
+        else:
+            if "master" not in template:
+                raise ValueError("Invalid template")
+            filenames = [template]
 
         # Import here as Format and Imageset have cyclic dependencies
         from dxtbx.format.Format import Format
@@ -443,17 +450,10 @@ class ImageSetFactory(object):
         template, indices, is_sequence = filelist
 
         # Get the template format
-        count = template.count("#")
-        if count > 0:
-            pfx = template.split("#")[0]
-            sfx = template.split("#")[-1]
-            template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
-            filenames = [template_format % index for index in indices]
+        if "#" in template:
+            filenames = sorted(_expand_template(template, indices))
         else:
             filenames = [template]
-
-        # Sort the filenames
-        filenames = sorted(filenames)
 
         # Get the format object
         format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
@@ -464,42 +464,18 @@ class ImageSetFactory(object):
     @staticmethod
     def _create_sequence(filelist, check_headers):
         """Create a sequence"""
-        # Extract info from filelist
         template, indices, is_sequence = filelist
 
-        # Get the template format
-        count = template.count("#")
-        if count > 0:
-            pfx = template.split("#")[0]
-            sfx = template.split("#")[-1]
-            template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
-            filenames = [template_format % index for index in indices]
+        # Expand the template if necessary
+        if "#" in template:
+            filenames = sorted(_expand_template(template, indices))
         else:
             filenames = [template]
-
-        # Sort the filenames
-        filenames = sorted(filenames)
 
         # Get the format object
         format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
 
-        # Get the template format
-        pfx = template.split("#")[0]
-        sfx = template.split("#")[-1]
-        template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
-
-        # Set the image range
-        array_range = range(min(indices) - 1, max(indices))
-
-        # Create the sequence file list
-        filenames = [template_format % (i + 1) for i in array_range]
-
-        sequence = format_class.get_imageset(
-            filenames, template=template, as_sequence=True
-        )
-
-        # Return the sequence
-        return sequence
+        return format_class.get_imageset(filenames, template=template, as_sequence=True)
 
     @staticmethod
     def make_imageset(
@@ -552,18 +528,10 @@ class ImageSetFactory(object):
         indices = sorted(indices)
 
         # Get the template format
-        count = template.count("#")
-        if count > 0:
-            pfx = template.split("#")[0]
-            sfx = template.split("#")[-1]
-            template_format = "%s%%0%dd%s" % (pfx, template.count("#"), sfx)
-            filenames = [template_format % index for index in indices]
+        if "#" in template:
+            filenames = sorted(_expand_template(template, indices))
         else:
-            template_format = None
             filenames = [template]
-
-        # Sort the filenames
-        filenames = sorted(filenames)
 
         # Set the image range
         array_range = (min(indices) - 1, max(indices))
@@ -583,7 +551,7 @@ class ImageSetFactory(object):
             else:
                 format_class = Format
 
-        sequence = format_class.get_imageset(
+        return format_class.get_imageset(
             filenames,
             beam=beam,
             detector=detector,
@@ -595,9 +563,6 @@ class ImageSetFactory(object):
             check_format=check_format,
             single_file_indices=list(range(*array_range)),
         )
-
-        # Return the sequence
-        return sequence
 
     @staticmethod
     def imageset_from_anyset(imageset):
