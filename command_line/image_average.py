@@ -309,9 +309,15 @@ def run(argv=None):
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
         iterable = [i for n, i in enumerate(iterable) if (n + rank) % size == 0]
-        r_nfail, r_nmemb, r_max_img, r_sum_distance, r_sum_img, r_ssq_img, r_sum_wavelength = worker(
-            iterable
-        )
+        (
+            r_nfail,
+            r_nmemb,
+            r_max_img,
+            r_sum_distance,
+            r_sum_img,
+            r_ssq_img,
+            r_sum_wavelength,
+        ) = worker(iterable)
 
         nfail = np.array([0])
         nmemb = np.array([0])
