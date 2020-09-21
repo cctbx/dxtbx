@@ -566,10 +566,10 @@ class ImageSetFactory(object):
         filenames = sorted(filenames)
 
         # Set the image range
-        array_range = (min(indices) - 1, max(indices))
+        image_range = (min(indices), max(indices))
         if scan is not None:
-            assert array_range == scan.get_array_range()
-            scan.set_batch_offset(array_range[0])
+            assert image_range == scan.get_image_range()
+            scan.set_batch_offset(image_range[0] - 1)
 
         # Get the format object and reader
         if format_class is None:
@@ -593,7 +593,7 @@ class ImageSetFactory(object):
             template=template,
             as_sequence=True,
             check_format=check_format,
-            single_file_indices=list(range(*array_range)),
+            single_file_indices=list(range(image_range[0] - 1, image_range[1])),
         )
 
         # Return the sequence

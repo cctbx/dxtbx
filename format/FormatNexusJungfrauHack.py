@@ -70,8 +70,8 @@ class FormatNexusJungfrauHack(FormatNexus):
         self._setup_gonio_and_scan(sample, detector)
 
         if self._scan_model:
-            array_range = self._scan_model.get_array_range()
-            num_images = array_range[1] - array_range[0]
+            image_range = self._scan_model.get_image_range()
+            num_images = image_range[1] - image_range[0] + 1
         else:
             num_images = 0
 

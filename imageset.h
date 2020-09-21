@@ -41,6 +41,7 @@ using model::Panel;
 using model::Scan;
 using scitbx::rad_as_deg;
 using scitbx::af::int2;
+using scitbx::af::double2;
 
 namespace detail {
 
@@ -1287,9 +1288,17 @@ public:
   }
 
   /**
+   * @returns the image range
+   */
+  int2 get_image_range() const {
+    DXTBX_ASSERT(scan_ != NULL);
+    return scan_->get_image_range();
+  }
+
+  /**
    * @returns the array range
    */
-  int2 get_array_range() const {
+  double2 get_array_range() const {
     DXTBX_ASSERT(scan_ != NULL);
     return scan_->get_array_range();
   }
@@ -1363,9 +1372,9 @@ public:
     DXTBX_ASSERT(scan.get() != NULL);
     if (scan->get_num_images() != size()) {
       DXTBX_ASSERT(scan_ != NULL);
-      int i0 = scan->get_array_range()[0];
-      int i1 = scan->get_array_range()[1];
-      int j0 = scan_->get_array_range()[0];
+      int i0 = scan->get_image_range()[0] - 1;
+      int i1 = scan->get_image_range()[1];
+      int j0 = scan_->get_image_range()[0] - 1;
       DXTBX_ASSERT(i0 >= j0);
       DXTBX_ASSERT(i1 > i0);
       std::size_t n = i1 - i0;

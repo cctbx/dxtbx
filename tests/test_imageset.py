@@ -312,7 +312,7 @@ class TestImageSequence(object):
 
         # Run a load of tests
         assert len(sequence) == len(centroid_files)
-        assert sequence.get_array_range() == (0, 9)
+        assert sequence.get_image_range() == (1, 9)
         self.tst_get_item(sequence)
         assert_is_iterable(sequence)
         self.tst_paths(sequence, centroid_files)
@@ -326,7 +326,7 @@ class TestImageSequence(object):
             _ = sequence[9]
 
         sequence2 = sequence[3:7]
-        assert sequence2.get_array_range() == (3, 7)
+        assert sequence2.get_image_range() == (4, 7)
         _ = sequence2[0]
         with pytest.raises(RuntimeError):
             _ = sequence2[5]
@@ -505,6 +505,7 @@ def test_pickle_imageset(centroid_files):
 
     assert sequence.get_template() == sequence2.get_template()
     assert sequence.get_array_range() == sequence2.get_array_range()
+    assert sequence.get_image_range() == sequence2.get_image_range()
     assert sequence.get_beam() == sequence2.get_beam()
     assert sequence.get_goniometer() == sequence2.get_goniometer()
     assert sequence.get_scan() == sequence2.get_scan()

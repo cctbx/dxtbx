@@ -696,6 +696,7 @@ namespace dxtbx { namespace boost_python {
       .def("set_detector", &ImageSequence::set_detector)
       .def("set_goniometer", &ImageSequence::set_goniometer)
       .def("set_scan", &ImageSequence::set_scan)
+      .def("get_image_range", &ImageSequence::get_image_range)
       .def("get_array_range", &ImageSequence::get_array_range)
       .def("complete_set", &ImageSequence::complete_sequence)
       .def("partial_set", &ImageSequence::partial_sequence)
