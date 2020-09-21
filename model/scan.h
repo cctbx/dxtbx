@@ -192,8 +192,8 @@ namespace dxtbx { namespace model {
     }
 
     /** Get the array range (zero based) */
-    vec2<int> get_array_range() const {
-      return vec2<int>(image_range_[0] - 1, image_range_[1]);
+    vec2<double> get_array_range() const {
+      return vec2<double>((double) image_range_[0] - 1, (double) image_range_[1]);
     }
 
     /** Get the oscillation */
@@ -394,7 +394,7 @@ namespace dxtbx { namespace model {
     }
 
     /** Check if the index is valid */
-    bool is_image_index_valid(double index) const {
+    bool is_image_index_valid(int index) const {
       return (image_range_[0] <= index && index <= image_range_[1]);
     }
 
@@ -406,7 +406,7 @@ namespace dxtbx { namespace model {
 
     /** Check if the array index is valid */
     bool is_array_index_valid(double index) const {
-      return is_image_index_valid(index + 1);
+      return ((double) image_range_[0] - 1.0 <= index && index <= (double) image_range_[1]);
     }
 
     /**
