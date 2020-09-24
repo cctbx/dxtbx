@@ -122,6 +122,8 @@ namespace dxtbx { namespace format { namespace boost_python {
     DXTBX_ASSERT(status2 >= 0);
     std::cout << "Decompressed " << std::endl;
 
+    free(chunk);
+
     return data;
   }
 
