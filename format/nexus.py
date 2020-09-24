@@ -32,11 +32,39 @@ try:
         dataset_as_flex_double,
         dataset_as_flex_float,
         dataset_as_flex_int,
+        image_as_flex_double,
+        image_as_flex_float,
+        image_as_flex_int,
     )
 except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
     if "SIT_ROOT" not in os.environ:
         raise
+
+
+def image_as_flex(dataset, index):
+    if numpy.issubdtype(dataset.dtype, numpy.integer):
+        return image_as_flex_int(dataset.id.id, index)
+    else:
+        assert numpy.issubdtype(dataset.dtype, numpy.floating)
+        if dataset.dtype in [
+            numpy.half,
+            numpy.single,
+            numpy.float_,
+            numpy.float16,
+            numpy.float32,
+        ]:
+            return image_as_flex_float(dataset.id.id, index)
+        elif dataset.dtype in [
+            numpy.double,
+            numpy.longfloat,
+            numpy.float64,
+            numpy.float96,
+            numpy.float128,
+        ]:
+            return image_as_flex_double(dataset.id.id, index)
+        else:
+            assert False, "unknown floating data type (%s)" % str(dataset.dtype)
 
 
 def dataset_as_flex(dataset, selection):
@@ -1401,12 +1429,14 @@ class DataFactory(object):
             data = self._datasets[d].accessor()
             self._cache = (self._datasets[d].file, data)
 
-        N, height, width = self._datasets[d].shape
+        return image_as_flex(dataset=data, index=i)
+
+        """N, height, width = self._datasets[d].shape
         data_as_flex = dataset_as_flex(
             data, (slice(i, i + 1, 1), slice(0, height, 1), slice(0, width, 1))
         )
         data_as_flex.reshape(flex.grid(data_as_flex.all()[1:]))
-        return data_as_flex
+        return data_as_flex"""
 
 
 def detectorgroupdatafactory(obj, instrument):

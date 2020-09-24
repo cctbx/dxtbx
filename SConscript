@@ -118,7 +118,13 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
 
     nexus = env.SharedLibrary(
         target="#/lib/dxtbx_format_nexus_ext",
-        source=["format/boost_python/nexus_ext.cc"],
+        source=[
+            "format/boost_python/bitshuffle.c",
+            "format/boost_python/lz4.c",
+            "format/boost_python/bitshuffle_core.c",
+            "format/boost_python/iochain.c",
+            "format/boost_python/nexus_ext.cc",
+        ],
         LIBS=env_etc.libs_python
         + env_etc.libm
         + env_etc.dxtbx_libs
