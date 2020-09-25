@@ -108,7 +108,7 @@ namespace dxtbx { namespace format { namespace boost_python {
 
     herr_t status0 = H5Dget_chunk_storage_size(dataset_id, offset, &size);
     DXTBX_ASSERT(status0 >= 0);
-    char * chunk = (char *) malloc(size);
+    char * chunk = (char *) malloc(size * datasize);
 
     // read the raw data to the buffer (chunk)
     uint32_t filter = 0;
@@ -116,7 +116,7 @@ namespace dxtbx { namespace format { namespace boost_python {
     DXTBX_ASSERT(status1 >= 0);
 
     // decompress using bshuf to the data array
-    bshuf_decompress_lz4(chunk + 12, &(data[0]), size, datasize, 0);
+    bshuf_decompress_lz4(chunk + 12, &(data[0]), dims[0] * dims[1], datasize, 0);
 
     free(chunk);
 
