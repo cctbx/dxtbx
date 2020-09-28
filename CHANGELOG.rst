@@ -1,3 +1,16 @@
+DIALS 3.1.3 (2020-09-28)
+========================
+
+Bugfixes
+--------
+
+- ``dxtbx.image_average``: Better use of MPI to avoid errors and increase
+  performance (#207)
+- Update DLS I23 bad pixel mask after detector has been cleaned, fixing
+  previously bad modules. (#220)
+- Change default bit depth for DLS eigers where header information is missing
+
+
 DIALS 3.1.1 (2020-09-01)
 ========================
 
