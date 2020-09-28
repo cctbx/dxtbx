@@ -8,8 +8,8 @@ from builtins import range
 import dxtbx
 
 
-def main():
-    frame = sys.argv[1]
+def run(args=None):
+    frame = args or sys.argv[1]
     powers = [2 ** n for n in range(20)]
 
     for j in range(powers[-1] + 1):
@@ -20,4 +20,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run()

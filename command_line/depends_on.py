@@ -71,5 +71,9 @@ def depends_on(in_name):
     f.close()
 
 
+def run(args=None):
+    depends_on(args or sys.argv[1])
+
+
 if __name__ == "__main__":
-    depends_on(sys.argv[1])
+    run()

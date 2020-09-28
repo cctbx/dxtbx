@@ -28,5 +28,9 @@ def read_sequence(list_of_images):
         print("Reading %d frames took %.2fs" % (len(indices), t1 - t0))
 
 
+def run(args=None):
+    return read_sequence(args or sys.argv[1:])
+
+
 if __name__ == "__main__":
-    read_sequence(sys.argv[1:])
+    run()

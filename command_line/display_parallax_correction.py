@@ -10,8 +10,9 @@ from scitbx.array_family import flex
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
-if __name__ == "__main__":
-    datablocks = DataBlockFactory.from_args(sys.argv[1:])
+
+def run(args=None):
+    datablocks = DataBlockFactory.from_args(args or sys.argv[1:])
     assert len(datablocks) == 1
     detectors = datablocks[0].unique_detectors()
     assert len(detectors) == 1
@@ -43,5 +44,9 @@ if __name__ == "__main__":
     )
     fig.subplots_adjust(right=0.8)
     cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
-    cbar = fig.colorbar(im, cax=cax)
+    fig.colorbar(im, cax=cax)
     pylab.show()
+
+
+if __name__ == "__main__":
+    run()

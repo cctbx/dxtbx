@@ -27,5 +27,9 @@ def show_matching_formats(files):
             print("File not found.")
 
 
+def run(args=None):
+    show_matching_formats(args or sys.argv[1:])
+
+
 if __name__ == "__main__":
-    show_matching_formats(sys.argv[1:])
+    run()

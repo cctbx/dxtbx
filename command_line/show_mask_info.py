@@ -6,7 +6,8 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.util import show_mask_info
 
 
-def main(filenames):
+def run(args):
+    filenames = args or sys.argv[1:]
     try:
         el = ExperimentListFactory.from_filenames(filenames)
     except FileNotFoundError as e:
@@ -16,4 +17,4 @@ def main(filenames):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    run()

@@ -17,7 +17,11 @@ def overload(image_file):
     return False
 
 
-if __name__ == "__main__":
-    for image_file in sys.argv[1:]:
+def run(args=None):
+    for image_file in args or sys.argv[1:]:
         if overload(image_file):
             print(image_file)
+
+
+if __name__ == "__main__":
+    run()

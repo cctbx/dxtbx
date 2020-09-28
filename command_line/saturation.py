@@ -29,7 +29,12 @@ def saturation(image_file):
         )
 
 
-if __name__ == "__main__":
-    for image_file in sys.argv[1:]:
+def run(args=None):
+    args = args or sys.argv[1:]
+    for image_file in args:
         i, s = saturation(image_file)
         print("%6d %.6f" % (i, s))
+
+
+if __name__ == "__main__":
+    run()

@@ -11,5 +11,9 @@ def print_matching_images(image):
         print(mi)
 
 
+def run(args=None):
+    return print_matching_images(args or sys.argv[1])
+
+
 if __name__ == "__main__":
-    print_matching_images(sys.argv[1])
+    run()

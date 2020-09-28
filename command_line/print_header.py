@@ -8,11 +8,11 @@ import dxtbx.format.Registry
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
-def print_header():
+def print_header(args=None):
+    args = args or sys.argv[1:]
     # this will do the lookup for every frame - this is strictly not needed
     # if all frames are from the same instrument
-
-    for arg in sys.argv[1:]:
+    for arg in args:
         print("=== %s ===" % arg)
         format_class = dxtbx.format.Registry.get_format_class_for_file(arg)
         if not format_class:
@@ -52,5 +52,9 @@ def print_header():
                 print("Could not read image data")
 
 
+def run(args=None):
+    print_header(args)
+
+
 if __name__ == "__main__":
-    print_header()
+    run()
