@@ -1,6 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
-import sys
+import argparse
 
 from dxtbx import load
 
@@ -18,7 +16,10 @@ def overload(image_file):
 
 
 def run(args=None):
-    for image_file in args or sys.argv[1:]:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("image_file", nargs="+")
+    options = parser.parse_args(args)
+    for image_file in options.image_file:
         if overload(image_file):
             print(image_file)
 
