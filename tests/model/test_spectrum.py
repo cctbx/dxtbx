@@ -5,11 +5,10 @@ import random
 
 import pytest
 
+from cctbx import factor_ev_angstrom
 from scitbx.array_family import flex
 
 from dxtbx.model import Spectrum
-
-from cctbx import factor_ev_angstrom
 
 
 def test_spectrum():

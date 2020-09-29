@@ -7,13 +7,12 @@ from time import strptime
 import six
 import six.moves.cPickle as pickle
 
+from iotbx.detectors.npy import image_dict_to_unicode
 from scitbx.matrix import col
 from xfel.cftbx.detector.cspad_detector import CSPadDetector
 
 from dxtbx.format.FormatPY import FormatPY
 from dxtbx.model import Detector
-
-from iotbx.detectors.npy import image_dict_to_unicode
 
 
 class FormatPYmultitile(FormatPY):

@@ -2,12 +2,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+import pickle
 import sys
+
 import six
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
-import pickle
 
 
 class FormatPY(Format):

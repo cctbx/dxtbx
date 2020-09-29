@@ -7,11 +7,10 @@ from builtins import range
 import numpy as np
 import psana
 
+from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
-
-from cctbx.eltbx import attenuation_coefficient
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
@@ -129,8 +128,9 @@ class FormatXTCJungfrau(FormatXTC):
         return None
 
     def _detector(self, index=None):
-        from xfel.cftbx.detector.cspad_cbf_tbx import basis_from_geo
         from PSCalib.SegGeometryStore import sgs
+
+        from xfel.cftbx.detector.cspad_cbf_tbx import basis_from_geo
 
         run = self.get_run_from_index(index)
         if run.run() in self._cached_detector:
