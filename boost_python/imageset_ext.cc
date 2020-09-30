@@ -446,6 +446,34 @@ namespace dxtbx { namespace boost_python {
     return result;
   }
 
+  typedef std::list<ImageBuffer> ImageBufferList;
+  typedef std::list<ImageBuffer>::iterator imagebufferlistit;
+
+  boost::python::list ImageSet_get_raw_images(ImageSet &self,
+    std::size_t start_index,
+    std::size_t end_index,
+    std::size_t nthreads) {
+    boost::python::list frames;
+
+    ImageBufferList images = self.get_raw_images(start_index, end_index, nthreads);
+
+    for (imagebufferlistit it = images.begin(); it != images.end(); ++it){
+      ImageBuffer buffer = *it;
+      boost::python::tuple result;
+      if (buffer.is_int()) {
+        result = image_as_tuple<int>(buffer.as_int());
+      } else if (buffer.is_double()) {
+        result = image_as_tuple<double>(buffer.as_double());
+      } else if (buffer.is_float()) {
+        result = image_as_tuple<float>(buffer.as_float());
+      } else {
+        throw DXTBX_ERROR("Problem reading raw data");
+      }
+      frames.append(result);
+    }
+    return frames;
+  }
+
   boost::python::tuple ImageSet_get_corrected_data(ImageSet &self, std::size_t index) {
     return image_as_tuple<double>(self.get_corrected_data(index));
   }
@@ -626,6 +654,7 @@ namespace dxtbx { namespace boost_python {
       .def("__len__", &ImageSet::size)
       .def("has_dynamic_mask", &ImageSet::has_dynamic_mask)
       .def("get_raw_data", &ImageSet_get_raw_data)
+      .def("get_raw_images", &ImageSet_get_raw_images)
       .def("get_corrected_data", &ImageSet_get_corrected_data)
       .def("get_gain", &ImageSet_get_gain)
       .def("get_pedestal", &ImageSet_get_pedestal)

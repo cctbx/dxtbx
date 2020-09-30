@@ -1416,6 +1416,25 @@ class DataFactory(object):
     def shape(self):
         return self._shape
 
+    def get_frames(self, first_index, last_index, nthreads=1):
+
+        ##FIXME write a threaded version of image_as_flex in c++
+        frames = []
+        for index in range(first_index, last_index + 1):
+            d = self._lookup[index]
+            i = index - self._offset[d]
+
+            # a lock-free most-recently-used file handle cache based on
+            # immutability of python tuples
+            cached_handle = self._cache
+            if self._datasets[d].file == cached_handle[0]:
+                data = cached_handle[1]
+            else:
+                data = self._datasets[d].accessor()
+                self._cache = (self._datasets[d].file, data)
+            frames.append(image_as_flex(dataset=data, index=i))
+        return frames
+
     def __getitem__(self, index):
         d = self._lookup[index]
         i = index - self._offset[d]
@@ -1429,14 +1448,12 @@ class DataFactory(object):
             data = self._datasets[d].accessor()
             self._cache = (self._datasets[d].file, data)
 
-        return image_as_flex(dataset=data, index=i)
-
-        """N, height, width = self._datasets[d].shape
+        N, height, width = self._datasets[d].shape
         data_as_flex = dataset_as_flex(
             data, (slice(i, i + 1, 1), slice(0, height, 1), slice(0, width, 1))
         )
         data_as_flex.reshape(flex.grid(data_as_flex.all()[1:]))
-        return data_as_flex"""
+        return data_as_flex
 
 
 def detectorgroupdatafactory(obj, instrument):

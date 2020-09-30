@@ -12,6 +12,7 @@
 #ifndef DXTBX_IMAGESET_H
 #define DXTBX_IMAGESET_H
 
+#include <list>
 #include <map>
 
 #include <boost/python.hpp>
@@ -220,6 +221,35 @@ public:
       buffer = get_image_buffer_from_object(data);
     }
     return buffer;
+  }
+
+  typedef std::list<ImageBuffer> ImageBufferList;
+
+  ImageBufferList get_frames(std::size_t start_index, std::size_t end_index, std::size_t nthreads=1){
+
+    ImageBufferList result;
+
+    boost::python::object data = reader_.attr("read_multiple_images")(
+      start_index, end_index, nthreads);
+     //have actually read the data now - list of 2D flex arrays
+
+    std::string name =
+      boost::python::extract<std::string>(data[0].attr("__class__").attr("__name__"))();
+
+    // now put the data into an ImageBuffer class.
+    if (name == "tuple") {
+      for (int i=0; i < boost::python::len(data); i++){
+        ImageBuffer buffer = get_image_buffer_from_tuple(
+          boost::python::extract<boost::python::tuple>(data[i])());
+        result.push_back(buffer);
+      }
+    } else {
+      for (int i=0; i < boost::python::len(data); i++){
+        ImageBuffer buffer = get_image_buffer_from_object(data[i]);
+        result.push_back(buffer);
+      }
+    }
+    return result;
   }
 
   /**
@@ -629,6 +659,17 @@ public:
     data_cache_.index = index;
     data_cache_.image = image;
     return image;
+  }
+
+  ImageSetData::ImageBufferList get_raw_images(
+    std::size_t start_index,
+    std::size_t end_index,
+    std::size_t nthreads){
+    DXTBX_ASSERT(start_index < indices_.size());
+    DXTBX_ASSERT(end_index < indices_.size());
+    ImageSetData::ImageBufferList images = data_.get_frames(
+      indices_[start_index], indices_[end_index], nthreads);
+    return images;
   }
 
   /**

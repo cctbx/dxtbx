@@ -105,3 +105,21 @@ class FormatNexusEigerDLS(FormatNexusEiger):
             d1d.set_selected(d1d == top - 2, -2)
 
         return data
+
+    def get_raw_images(self, first_index, last_index, nthreads=1):
+        frames = []
+        data = self._raw_data.get_frames(first_index, last_index, nthreads)
+        for f in data:
+            if self._bit_depth_image:
+                # if 32 bit then it is a signed int, I think if 8, 16 then it is
+                # unsigned with the highest two values assigned as masking values
+                if self._bit_depth_image == 32:
+                    top = 2 ** 31
+                else:
+                    top = 2 ** self._bit_depth_image
+                d1d = f.as_1d()
+                d1d.set_selected(d1d == top - 1, -1)
+                d1d.set_selected(d1d == top - 2, -2)
+            frames.append(f)
+
+        return frames

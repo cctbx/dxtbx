@@ -35,6 +35,10 @@ class Reader(object):
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
         return format_instance.get_raw_data(index)
 
+    def read_multiple_images(self, start_index, end_index, nthreads=1):
+        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
+        return format_instance.get_raw_images(start_index, end_index, nthreads)
+
     def paths(self):
         return [self._filename]
 
@@ -78,6 +82,14 @@ class FormatMultiImage(Format):
 
     def get_raw_data(self, index=None):
         raise NotImplementedError
+
+    def get_raw_images(self, start, end, nthreads=1):
+        """Method to allow multithreaded reading of multiple
+        images if defined by the format class."""
+        images = []
+        for i in range(start, end + 1):
+            images.append(self.get_raw_data(i))
+        return images
 
     def get_detectorbase(self, index=None):
         raise NotImplementedError
