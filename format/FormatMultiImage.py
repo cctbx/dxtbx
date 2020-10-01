@@ -228,33 +228,23 @@ class FormatMultiImage(Format):
                 indices=single_file_indices,
             )
 
+            if single_file_indices is None:
+                single_file_indices = list(range(format_instance.get_num_images()))
+
             # If any are None then read from format
             if [beam, detector, goniometer, scan].count(None) != 0:
 
                 # Get list of models
-                beam = []
-                detector = []
-                goniometer = []
-                scan = []
                 num_images = format_instance.get_num_images()
-                for i in range(num_images):
-                    if (
-                        single_file_indices is None
-                        or len(single_file_indices) == num_images
-                        or i in single_file_indices
-                    ):
-                        beam.append(format_instance.get_beam(i))
-                        detector.append(format_instance.get_detector(i))
-                        goniometer.append(format_instance.get_goniometer(i))
-                        scan.append(format_instance.get_scan(i))
-                    else:
-                        beam.append(None)
-                        detector.append(None)
-                        goniometer.append(None)
-                        scan.append(None)
-
-            if single_file_indices is None:
-                single_file_indices = list(range(format_instance.get_num_images()))
+                beam = [None for _ in range(num_images)]
+                detector = [None for _ in range(num_images)]
+                goniometer = [None for _ in range(num_images)]
+                scan = [None for _ in range(num_images)]
+                for i in single_file_indices:
+                    beam[i] = format_instance.get_beam(i)
+                    detector[i] = format_instance.get_detector(i)
+                    goniometer[i] = format_instance.get_goniometer(i)
+                    scan[i] = format_instance.get_scan(i)
 
             # Set the list of models
             for i in range(len(single_file_indices)):
