@@ -737,17 +737,9 @@ def update_sources(options):
     repositories = {
         source.split("/")[1]: {"base-repository": source, "branch-local": "master"}
         for source in (
-            "cctbx/annlib_adaptbx",
             "cctbx/cctbx_project",
             "cctbx/dxtbx",
-            "dials/annlib",
             "dials/cbflib",
-            "dials/ccp4io",
-            "dials/ccp4io_adaptbx",
-            "dials/clipper",
-            "dials/dials",
-            "dials/gui_resources",
-            "dials/tntbx",
         )
     }
     repositories["cctbx_project"] = {
@@ -756,13 +748,6 @@ def update_sources(options):
         "branch-remote": "master",
         "branch-local": "stable",
     }
-    del repositories["annlib"]
-    del repositories["annlib_adaptbx"]
-    del repositories["ccp4io"]
-    del repositories["ccp4io_adaptbx"]
-    del repositories["clipper"]
-    del repositories["gui_resources"]
-    del repositories["tntbx"]
 
     for source, setting in options.branch:
         if source not in repositories:
