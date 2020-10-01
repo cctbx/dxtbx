@@ -829,10 +829,6 @@ def refresh_build():
 def configure_build(options):
     if os.name == "nt":
         conda_python = os.path.join(os.getcwd(), "conda_base", "python.exe")
-    elif sys.platform.startswith("darwin"):
-        conda_python = os.path.join(
-            "..", "conda_base", "python.app", "Contents", "MacOS", "python"
-        )
     else:
         conda_python = os.path.join("..", "conda_base", "bin", "python")
 
