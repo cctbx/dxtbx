@@ -16,12 +16,11 @@ import dxtbx.tests.imagelist
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import Beam, Detector, Panel
+from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def test_single_file_indices(dials_regression):
-    from dxtbx.model.beam import BeamFactory
-
     def dummy_beam():
         return BeamFactory.simple(1.0)
 

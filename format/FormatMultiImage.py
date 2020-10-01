@@ -232,7 +232,7 @@ class FormatMultiImage(Format):
                 single_file_indices = list(range(format_instance.get_num_images()))
 
             # If any are None then read from format
-            if [beam, detector, goniometer, scan].count(None) != 0:
+            if not all((beam, detector, goniometer, scan)):
 
                 # Get list of models
                 num_images = format_instance.get_num_images()
@@ -247,11 +247,11 @@ class FormatMultiImage(Format):
                     scan[i] = format_instance.get_scan(i)
 
             # Set the list of models
-            for i in range(len(single_file_indices)):
-                iset.set_beam(beam[single_file_indices[i]], i)
-                iset.set_detector(detector[single_file_indices[i]], i)
-                iset.set_goniometer(goniometer[single_file_indices[i]], i)
-                iset.set_scan(scan[single_file_indices[i]], i)
+            for i, index in enumerate(single_file_indices):
+                iset.set_beam(beam[index], i)
+                iset.set_detector(detector[index], i)
+                iset.set_goniometer(goniometer[index], i)
+                iset.set_scan(scan[index], i)
 
         else:
 
