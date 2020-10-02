@@ -3,9 +3,9 @@ from __future__ import absolute_import, division, print_function
 import os
 from builtins import range
 
+import mock
 import pytest
 import six.moves.cPickle as pickle
-from mock import patch
 
 from scitbx.array_family import flex
 
@@ -24,7 +24,7 @@ def test_single_file_indices(dials_regression):
     def dummy_beam():
         return BeamFactory.simple(1.0)
 
-    with patch.object(
+    with mock.patch.object(
         dxtbx.format.FormatHDF5SaclaMPCCD.FormatHDF5SaclaMPCCD,
         "_beam",
         side_effect=dummy_beam,
@@ -36,9 +36,25 @@ def test_single_file_indices(dials_regression):
             "run266702-0-subset.h5",
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
-        _ = format_class.get_imageset([filename], single_file_indices=[1])
+        format_class.get_imageset([filename], single_file_indices=[1])
         # check we didn't load a model for every image in the container
         assert obj.call_count == 2
+
+    with mock.patch.object(
+        dxtbx.format.FormatHDF5SaclaMPCCD.FormatHDF5SaclaMPCCD,
+        "_beam",
+        side_effect=dummy_beam,
+    ) as obj:
+        filename = os.path.join(
+            dials_regression,
+            "image_examples",
+            "SACLA_MPCCD_Cheetah",
+            "run266702-0-subset.h5",
+        )
+        format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
+        format_class.get_imageset([filename])  # No single_file_indices
+        # check we did load a model for every image in the container
+        assert obj.call_count == 4
 
 
 @pytest.mark.parametrize(
