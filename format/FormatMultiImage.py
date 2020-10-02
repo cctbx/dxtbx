@@ -201,7 +201,7 @@ class FormatMultiImage(Format):
         assert not (as_sequence and lazy), "No lazy support for sequences"
 
         if single_file_indices is not None:
-            assert len(single_file_indices) > 0
+            assert len(single_file_indices)
             single_file_indices = flex.size_t(single_file_indices)
 
         # Create an imageset or sequence

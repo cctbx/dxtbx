@@ -20,7 +20,8 @@ from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
-def test_single_file_indices(dials_regression):
+@pytest.mark.parametrize("indices,expected_call_count", ((None, 4), ([1], 2)))
+def test_single_file_indices(indices, expected_call_count, dials_regression):
     def dummy_beam():
         return BeamFactory.simple(1.0)
 
@@ -36,25 +37,8 @@ def test_single_file_indices(dials_regression):
             "run266702-0-subset.h5",
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
-        format_class.get_imageset([filename], single_file_indices=[1])
-        # check we didn't load a model for every image in the container
-        assert obj.call_count == 2
-
-    with mock.patch.object(
-        dxtbx.format.FormatHDF5SaclaMPCCD.FormatHDF5SaclaMPCCD,
-        "_beam",
-        side_effect=dummy_beam,
-    ) as obj:
-        filename = os.path.join(
-            dials_regression,
-            "image_examples",
-            "SACLA_MPCCD_Cheetah",
-            "run266702-0-subset.h5",
-        )
-        format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
-        format_class.get_imageset([filename])  # No single_file_indices
-        # check we did load a model for every image in the container
-        assert obj.call_count == 4
+        format_class.get_imageset([filename], single_file_indices=indices)
+        assert obj.call_count == expected_call_count
 
 
 @pytest.mark.parametrize(
