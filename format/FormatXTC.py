@@ -4,7 +4,6 @@ import functools
 import sys
 
 from libtbx.phil import parse
-from xfel.cxi.cspad_ana import cspad_tbx
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
@@ -14,8 +13,11 @@ from dxtbx.format.FormatStill import FormatStill
 
 try:
     import psana
+
+    from xfel.cxi.cspad_ana import cspad_tbx
 except ImportError:
     psana = None
+    cspad_tbx = None
 
 locator_str = """
   experiment = None
@@ -80,7 +82,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         If PSANA fails to read it, then input may not be an xtc/smd file. If success, then OK.
         If detector_address is not provided, a command line promp will try to get the address
         from the user"""
-        if not psana:
+        if not psana or not cspad_tbx:
             return False
         try:
             params = FormatXTC.params_from_phil(locator_scope, image_file)
