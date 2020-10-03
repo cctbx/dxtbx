@@ -15,7 +15,7 @@ import time
 from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.adsc_minicbf import ADSCHF4MImage
 
-from dxtbx import uncompress
+from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 

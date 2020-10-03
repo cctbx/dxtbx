@@ -8,7 +8,7 @@ import sys
 
 from cctbx.eltbx import attenuation_coefficient
 
-from dxtbx import uncompress
+from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv

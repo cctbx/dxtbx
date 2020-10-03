@@ -9,12 +9,6 @@ import libtbx.load_env
 
 import dxtbx.format.Registry
 
-try:
-    from dxtbx_ext import compress, uncompress  # noqa: F401
-except (ModuleNotFoundError, ImportError):
-    pass
-
-
 if sys.version_info.major == 2:
     warnings.warn(
         "Python 2 is no longer supported. "

@@ -7,7 +7,7 @@ import numpy as np
 
 from scitbx.array_family import flex
 
-from dxtbx import compress
+from dxtbx.ext import compress
 
 
 def get_mask(nfast, nslow):

@@ -10,7 +10,7 @@ import sys
 
 from scitbx import matrix
 
-from dxtbx import uncompress
+from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 
 

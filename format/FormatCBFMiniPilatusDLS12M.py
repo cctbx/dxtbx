@@ -12,7 +12,7 @@ import libtbx
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 
-from dxtbx import uncompress
+from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.masking import GoniometerMaskerFactory
