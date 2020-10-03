@@ -20,7 +20,7 @@ if libtbx.env.build_options.use_conda:
     boost_python = get_boost_library_with_python_version(
         "boost_python", env_etc.conda_libpath
     )
-    env.Append(LIBPATH=env_etc.conda_libpath)
+    env_etc.Append(LIBPATH=env_etc.conda_libpath)
     include_paths.extend(env_etc.conda_cpppath)
 else:
     boost_python = "boost_python"
