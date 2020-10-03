@@ -16,7 +16,7 @@ env_etc.dxtbx_common_includes = [
     env_etc.boost_include,
     env_etc.dxtbx_include,
 ] + env_etc.cbflib_common_includes
-env_etc.dxtbx_libs = ["tiff", "cbf"]
+env_etc.dxtbx_libs = ["tiff", "cbf", "boost_python"]
 env_etc.dxtbx_hdf5_libs = ["hdf5"]
 env_etc.dxtbx_lib_paths = [
     env_etc.base_lib,
