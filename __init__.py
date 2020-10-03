@@ -8,7 +8,12 @@ import warnings
 import libtbx.load_env
 
 import dxtbx.format.Registry
-from dxtbx_ext import compress, uncompress  # noqa: F401
+
+try:
+    from dxtbx_ext import compress, uncompress  # noqa: F401
+except ModuleNotFoundError:
+    pass
+
 
 if sys.version_info.major == 2:
     warnings.warn(
