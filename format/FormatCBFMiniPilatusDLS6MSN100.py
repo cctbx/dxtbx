@@ -9,9 +9,9 @@ import binascii
 import sys
 
 import libtbx
-from cbflib_adaptbx import uncompress
 from scitbx.array_family import flex
 
+from dxtbx import uncompress
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.masking import GoniometerMaskerFactory
 
