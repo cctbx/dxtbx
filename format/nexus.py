@@ -1429,7 +1429,6 @@ class DataFactory(object):
 
         if numpy.issubdtype(dataset.dtype, numpy.integer):
             reader = ThreadedDecompressint(dataset.id.id, index0, index1, nthreads)
-            print("int")
         else:
             assert numpy.issubdtype(dataset.dtype, numpy.floating)
             if dataset.dtype in [
@@ -1442,7 +1441,6 @@ class DataFactory(object):
                 reader = ThreadedDecompressfloat(
                     dataset.id.id, index0, index1, nthreads
                 )
-                print("float")
             elif dataset.dtype in [
                 numpy.double,
                 numpy.longfloat,
@@ -1453,7 +1451,6 @@ class DataFactory(object):
                 reader = ThreadedDecompressdouble(
                     dataset.id.id, index0, index1, nthreads
                 )
-                print("double")
             else:
                 assert False, "unknown floating data type (%s)" % str(dataset.dtype)
 

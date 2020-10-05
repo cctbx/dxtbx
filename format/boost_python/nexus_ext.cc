@@ -146,7 +146,6 @@ namespace dxtbx { namespace format { namespace boost_python {
   template <class T>
   std::list<scitbx::af::versa<T, scitbx::af::flex_grid<> > > ThreadedDecompress<T>::read_frames()
   {
-    std::cout << "starting to read frames" << std::endl;
     pthread_t *threads;
     pthread_mutex_init(&hdf_mutex, NULL);
     pthread_mutex_init(&result_mutex, NULL);
@@ -188,7 +187,6 @@ namespace dxtbx { namespace format { namespace boost_python {
   template <class T>
   void * ThreadedDecompress<T>::worker()
   {
-    std::cout << "in worker" << std::endl;
     while (1) {
       chunk_t chunk = this->next();
       if (chunk.size == 0) {
@@ -198,16 +196,11 @@ namespace dxtbx { namespace format { namespace boost_python {
       scitbx::af::versa<T, scitbx::af::flex_grid<> > data(
         grid, scitbx::af::init_functor_null<T>());
 
-      std::cout << "about to decompress" << std::endl;
       /* decompress chunk - which starts 12 bytes in... */
-      std::cout << dims[0] * dims[1] << " " << datasize << " " << std::endl;
       bshuf_decompress_lz4(chunk.chunk + 12, &(data[0]), dims[0] * dims[1], datasize, 0);
 
-      std::cout << "about to free" << std::endl;
       free(chunk.chunk);
-      std::cout << "about to save" << std::endl;
       this->save_result(chunk.index, &data);
-      std::cout << "done" << std::endl;
     }
     return NULL;
   }
@@ -221,7 +214,6 @@ namespace dxtbx { namespace format { namespace boost_python {
 
     pthread_mutex_lock(&hdf_mutex);
 
-    std::cout << start_index_ << " " << job << std::endl;
     offset[0] = start_index_ + job;
     offset[1] = 0;
     offset[2] = 0;
