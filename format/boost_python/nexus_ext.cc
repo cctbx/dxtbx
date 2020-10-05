@@ -73,76 +73,23 @@ namespace dxtbx { namespace format { namespace boost_python {
                    &data[0]);
   }
 
+  typedef struct chunk_t {
+    char *chunk;
+    size_t size;
+    int index;
+  } chunk_t;
+
   template<class T> class ThreadedDecompress {
   public:
 
-    ThreadedDecompress() {}
-
-    typedef struct chunk_t {
-      char *chunk;
-      size_t size;
-      int index;
-    } chunk_t;
-
+    std::list<scitbx::af::versa<T, scitbx::af::flex_grid<> > > read_frames();
     ThreadedDecompress(
       hid_t dataset_id,
       const hsize_t start_index,
       const hsize_t end_index,
-      const size_t n_threads)
-      : dataset_id_(dataset_id),
-        start_index_(start_index),
-        end_index_(end_index),
-        n_threads_(n_threads),
-        nframes(end_index - start_index + 1),
-        result_list(nframes) {
+      const size_t n_threads);
 
-          job = 0;
-          datatype = H5Dget_type(dataset_id);
-          datasize = H5Tget_size(datatype);
-
-          // Do a check on the data
-          hid_t file_space_id = H5Dget_space(dataset_id);
-          std::size_t rank = H5Sget_simple_extent_ndims(file_space_id);
-          DXTBX_ASSERT(rank == 3);
-
-          // Now get the dimensions of the data i.e. image size.
-          std::vector<hsize_t> dataset_dims(rank);
-          H5Sget_simple_extent_dims(file_space_id, &dataset_dims[0], NULL);
-
-          // Create the data array
-          // first make the grid
-
-          dims[0] = dataset_dims[1];
-          dims[1] = dataset_dims[2];
-          grid(dims);
-          //int size = dims[0] * dims[1]; //i.e. image size
-
-        }
-
-    std::list<scitbx::af::versa<T, scitbx::af::flex_grid<> > > read_frames() {
-
-      pthread_t *threads;
-
-      pthread_mutex_init(&hdf_mutex, NULL);
-      pthread_mutex_init(&result_mutex, NULL);
-
-      threads = (pthread_t *)malloc(sizeof(pthread_t) * n_threads_);
-
-      for (int j = 0; j < n_threads_; j++) {
-        pthread_create(&threads[j], NULL,  &ThreadedDecompress::worker, NULL);
-      }
-
-      for (int j = 0; j < n_threads_; j++) {
-        pthread_join(threads[j], NULL);
-      }
-
-      pthread_mutex_destroy(&hdf_mutex);
-      pthread_mutex_destroy(&result_mutex);
-
-      return result_list;
-    }
-
-  protected:
+  private:
 
     hid_t dataset_id_;
     const hsize_t start_index_, end_index_;
@@ -157,71 +104,148 @@ namespace dxtbx { namespace format { namespace boost_python {
     hsize_t job;
     std::list<scitbx::af::versa<T, scitbx::af::flex_grid<> > > result_list;
 
-
-    void save_result(int index, scitbx::af::versa<T, scitbx::af::flex_grid<> > *result) {
-      pthread_mutex_lock(&result_mutex);
-      typename std::list<scitbx::af::versa<T, scitbx::af::flex_grid<> > >::iterator it;
-      std::advance(it, index);
-      result_list.erase(it);
-      result_list.insert(it, *result);
-      pthread_mutex_unlock(&result_mutex);
-    }
-
-    void * worker(void * nonsense) {
-
-      while (1) {
-        chunk_t chunk = next();
-        if (chunk.size == 0) {
-          return NULL;
-        }
-
-        scitbx::af::versa<T, scitbx::af::flex_grid<> > data(
-          grid, scitbx::af::init_functor_null<T>());
-
-        /* decompress chunk - which starts 12 bytes in... */
-        bshuf_decompress_lz4((chunk.chunk) + 12, &(data[0]), dims[0] * dims[1], datasize, 0);
-
-        free(chunk.chunk);
-        save_result(chunk.index, &data);
-      }
-      return NULL;
-    }
-
-    chunk_t next() {
-      uint32_t filter = 0;
-      hsize_t offset[3], size;
-      chunk_t chunk;
-
-      pthread_mutex_lock(&hdf_mutex);
-
-      offset[0] = start_index_ + job;
-      offset[1] = 0;
-      offset[2] = 0;
-      job += 1;
-
-      if (job > nframes) {
-        pthread_mutex_unlock(&hdf_mutex);
-        chunk.size = 0;
-        chunk.chunk = NULL;
-        chunk.index = 0;
-        return chunk;
-      }
-
-      herr_t status0 = H5Dget_chunk_storage_size(dataset_id_, offset, &size);
-      DXTBX_ASSERT(status0 >= 0);
-      chunk.index = offset[0];
-      chunk.size = (int)size;
-      chunk.chunk = (char *)malloc(size * datasize);
-
-      herr_t status1 = H5DOread_chunk(dataset_id_, H5P_DEFAULT, offset, &filter, chunk.chunk);
-      DXTBX_ASSERT(status1 >= 0);
-      pthread_mutex_unlock(&hdf_mutex);
-      return chunk;
-    }
-
+    static void * staticEntryPoint(void * c);
+    void * worker();
+    void save_result(int index, scitbx::af::versa<T, scitbx::af::flex_grid<> > *result);
+    chunk_t next();
 
   };
 
+
+  template <class T>
+  ThreadedDecompress<T>::ThreadedDecompress(
+    hid_t dataset_id,
+    const hsize_t start_index,
+    const hsize_t end_index,
+    const size_t n_threads)
+    : dataset_id_(dataset_id),
+      start_index_(start_index),
+      end_index_(end_index),
+      n_threads_(n_threads),
+      nframes(end_index - start_index + 1),
+      result_list(nframes)
+  {
+    job = 0;
+    datatype = H5Dget_type(dataset_id);
+    datasize = H5Tget_size(datatype);
+
+    // Do a check on the data
+    hid_t file_space_id = H5Dget_space(dataset_id);
+    std::size_t rank = H5Sget_simple_extent_ndims(file_space_id);
+    DXTBX_ASSERT(rank == 3);
+
+    // Now get the dimensions of the data i.e. image size.
+    std::vector<hsize_t> dataset_dims(rank);
+    H5Sget_simple_extent_dims(file_space_id, &dataset_dims[0], NULL);
+
+    dims[0] = dataset_dims[1];
+    dims[1] = dataset_dims[2];
+    grid(dims);
+  }
+
+  template <class T>
+  std::list<scitbx::af::versa<T, scitbx::af::flex_grid<> > > ThreadedDecompress<T>::read_frames()
+  {
+    std::cout << "starting to read frames" << std::endl;
+    pthread_t *threads;
+    pthread_mutex_init(&hdf_mutex, NULL);
+    pthread_mutex_init(&result_mutex, NULL);
+
+    threads = (pthread_t *)malloc(sizeof(pthread_t) * n_threads_);
+
+    for (int j = 0; j < n_threads_; j++) {
+      pthread_create(&threads[j], NULL,  this->staticEntryPoint, this);
+    }
+
+    for (int j = 0; j < n_threads_; j++) {
+      pthread_join(threads[j], NULL);
+    }
+
+    pthread_mutex_destroy(&hdf_mutex);
+    pthread_mutex_destroy(&result_mutex);
+
+    return result_list;
+  }
+
+  template <class T>
+  void * ThreadedDecompress<T>::staticEntryPoint(void * c)
+  {
+      ((ThreadedDecompress<T> *) c)->worker();
+      return NULL;
+  }
+
+  template <class T>
+  void ThreadedDecompress<T>::save_result(int index, scitbx::af::versa<T, scitbx::af::flex_grid<> > *result)
+  {
+    pthread_mutex_lock(&result_mutex);
+    typename std::list<scitbx::af::versa<T, scitbx::af::flex_grid<> > >::iterator it;
+    std::advance(it, index);
+    result_list.erase(it);
+    result_list.insert(it, *result);
+    pthread_mutex_unlock(&result_mutex);
+  }
+
+  template <class T>
+  void * ThreadedDecompress<T>::worker()
+  {
+    std::cout << "in worker" << std::endl;
+    while (1) {
+      chunk_t chunk = this->next();
+      if (chunk.size == 0) {
+        return NULL;
+      }
+
+      scitbx::af::versa<T, scitbx::af::flex_grid<> > data(
+        grid, scitbx::af::init_functor_null<T>());
+
+      std::cout << "about to decompress" << std::endl;
+      /* decompress chunk - which starts 12 bytes in... */
+      std::cout << dims[0] * dims[1] << " " << datasize << " " << std::endl;
+      bshuf_decompress_lz4(chunk.chunk + 12, &(data[0]), dims[0] * dims[1], datasize, 0);
+
+      std::cout << "about to free" << std::endl;
+      free(chunk.chunk);
+      std::cout << "about to save" << std::endl;
+      this->save_result(chunk.index, &data);
+      std::cout << "done" << std::endl;
+    }
+    return NULL;
+  }
+
+  template <class T>
+  chunk_t ThreadedDecompress<T>::next()
+  {
+    uint32_t filter = 0;
+    hsize_t offset[3], size;
+    chunk_t chunk;
+
+    pthread_mutex_lock(&hdf_mutex);
+
+    std::cout << start_index_ << " " << job << std::endl;
+    offset[0] = start_index_ + job;
+    offset[1] = 0;
+    offset[2] = 0;
+    job += 1;
+
+    if (job > nframes) {
+      pthread_mutex_unlock(&hdf_mutex);
+      chunk.size = 0;
+      chunk.chunk = NULL;
+      chunk.index = 0;
+      return chunk;
+    }
+
+    herr_t status0 = H5Dget_chunk_storage_size(dataset_id_, offset, &size);
+    DXTBX_ASSERT(status0 >= 0);
+    chunk.index = offset[0];
+    chunk.size = (int)size;
+    chunk.chunk = (char *)malloc(size * datasize);
+
+    herr_t status1 = H5DOread_chunk(dataset_id_, H5P_DEFAULT, offset, &filter, chunk.chunk);
+    DXTBX_ASSERT(status1 >= 0);
+    pthread_mutex_unlock(&hdf_mutex);
+    return chunk;
+  }
 
   template <typename T>
   inline scitbx::af::versa<T, scitbx::af::flex_grid<> > image_as_flex(
@@ -335,16 +359,20 @@ namespace dxtbx { namespace format { namespace boost_python {
     return data;
   }
 
-  template<typename T>
   void export_threadeddecompress()
   {
-      class_<ThreadedDecompress<T>>("ThreadedDecompress", no_init)
-          .def(init<hid_t &,
-                    const hsize_t &,
-                    const hsize_t &,
-                    const size_t &>(
+      class_<ThreadedDecompress<int>>("ThreadedDecompressint", no_init)
+          .def(init<hid_t, const hsize_t, const hsize_t, const size_t>(
               (arg("dataset_id"), arg("start_index"), arg("end_index"), arg("n_threads"))))
-          .def("read_frames", &ThreadedDecompress<T>::read_frames);
+          .def("read_frames", &ThreadedDecompress<int>::read_frames);
+      class_<ThreadedDecompress<float>>("ThreadedDecompressfloat", no_init)
+          .def(init<hid_t, const hsize_t, const hsize_t, const size_t>(
+              (arg("dataset_id"), arg("start_index"), arg("end_index"), arg("n_threads"))))
+          .def("read_frames", &ThreadedDecompress<float>::read_frames);
+      class_<ThreadedDecompress<double>>("ThreadedDecompressdouble", no_init)
+          .def(init<hid_t, const hsize_t, const hsize_t, const size_t>(
+              (arg("dataset_id"), arg("start_index"), arg("end_index"), arg("n_threads"))))
+          .def("read_frames", &ThreadedDecompress<double>::read_frames);
   }
 
   BOOST_PYTHON_MODULE(dxtbx_format_nexus_ext) {
@@ -354,9 +382,7 @@ namespace dxtbx { namespace format { namespace boost_python {
     def("image_as_flex_int", &image_as_flex<int>);
     def("image_as_flex_double", &image_as_flex<double>);
     def("image_as_flex_float", &image_as_flex<float>);
-    export_threadeddecompress<int>();
-    export_threadeddecompress<float>();
-    export_threadeddecompress<double>();
+    export_threadeddecompress();
   }
 
 }}}  // namespace dxtbx::format::boost_python

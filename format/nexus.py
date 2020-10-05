@@ -29,6 +29,9 @@ from dxtbx.model import (
 
 try:
     from dxtbx_format_nexus_ext import (
+        ThreadedDecompressdouble,
+        ThreadedDecompressfloat,
+        ThreadedDecompressint,
         dataset_as_flex_double,
         dataset_as_flex_float,
         dataset_as_flex_int,
@@ -1418,22 +1421,44 @@ class DataFactory(object):
 
     def get_frames(self, first_index, last_index, nthreads=1):
 
-        ##FIXME write a threaded version of image_as_flex in c++
-        frames = []
-        for index in range(first_index, last_index + 1):
-            d = self._lookup[index]
-            i = index - self._offset[d]
+        d = self._lookup[first_index]
+        index0 = first_index - self._offset[d]
+        dataset = self._datasets[d].accessor()
+        d = self._lookup[last_index]
+        index1 = last_index - self._offset[d]
 
-            # a lock-free most-recently-used file handle cache based on
-            # immutability of python tuples
-            cached_handle = self._cache
-            if self._datasets[d].file == cached_handle[0]:
-                data = cached_handle[1]
+        if numpy.issubdtype(dataset.dtype, numpy.integer):
+            reader = ThreadedDecompressint(dataset.id.id, index0, index1, nthreads)
+            print("int")
+        else:
+            assert numpy.issubdtype(dataset.dtype, numpy.floating)
+            if dataset.dtype in [
+                numpy.half,
+                numpy.single,
+                numpy.float_,
+                numpy.float16,
+                numpy.float32,
+            ]:
+                reader = ThreadedDecompressfloat(
+                    dataset.id.id, index0, index1, nthreads
+                )
+                print("float")
+            elif dataset.dtype in [
+                numpy.double,
+                numpy.longfloat,
+                numpy.float64,
+                numpy.float96,
+                numpy.float128,
+            ]:
+                reader = ThreadedDecompressdouble(
+                    dataset.id.id, index0, index1, nthreads
+                )
+                print("double")
             else:
-                data = self._datasets[d].accessor()
-                self._cache = (self._datasets[d].file, data)
-            frames.append(image_as_flex(dataset=data, index=i))
-        return frames
+                assert False, "unknown floating data type (%s)" % str(dataset.dtype)
+
+        images = reader.read_frames()
+        return images
 
     def __getitem__(self, index):
         d = self._lookup[index]
