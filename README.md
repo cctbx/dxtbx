@@ -4,7 +4,7 @@
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/dials/dxtbx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dials/dxtbx/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/dials/dxtbx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dials/dxtbx/alerts/)
-[![Coverage](https://codecov.io/github/dials/dxtbx/coverage.svg?branch=master)](https://codecov.io/github/dials/dxtbx?branch=master)
+[![Coverage](https://codecov.io/gh/cctbx/dxtbx/branch/master/graph/badge.svg)](https://codecov.io/gh/cctbx/dxtbx)
 
 A [cctbx](https://cctbx.github.io/)-style toolbox to describe single-crystal diffraction experiments, where
 a monochromatic beam is used to illuminate a sample which is rotated during
