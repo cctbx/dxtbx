@@ -6,9 +6,13 @@ from builtins import object
 from operator import itemgetter
 
 import numpy as np
-import sklearn.cluster
 
 from scitbx import matrix
+
+try:
+    from sklearn import cluster
+except ImportError:
+    cluster = None
 
 
 def read_xds_xparm(xds_xparm_file):
@@ -328,21 +332,21 @@ def project_2d(detector):
 
     # For multi-panel detectors cluster fast, slow axes by DBSCAN to get a
     # consensus X, Y for the 2D plane
-    cluster_axes = False
-    if len(detector) > 1:
-        cluster_axes = True
+    clustered_axes = False
+    if len(detector) > 1 and cluster:
+        clustered_axes = True
         axes = []
         for panel in detector:
             axes.append(panel.get_fast_axis())
             axes.append(panel.get_slow_axis())
-        clusters = sklearn.cluster.DBSCAN(eps=0.1, min_samples=2).fit_predict(axes)
+        clusters = cluster.DBSCAN(eps=0.1, min_samples=2).fit_predict(axes)
         nclusters = max(clusters) + 1
 
         # Revert to single panel mode if clustering is unsucessful
         if nclusters < 2:
-            cluster_axes = False
+            clustered_axes = False
 
-    if cluster_axes:
+    if clustered_axes:
         summed_axes = [matrix.col((0, 0, 0)) for i in range(nclusters)]
         for axis, cluster in zip(axes, clusters):
             summed_axes[cluster] += matrix.col(axis)
