@@ -14,7 +14,7 @@ class FormatNexusEiger(FormatNexus):
                 det = handle["/entry/instrument/detector/description"][()]
                 if det.lower().startswith(b"eiger"):
                     return True
-            except KeyError:
+            except (KeyError, AttributeError):
                 pass
 
         return False
