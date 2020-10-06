@@ -1,6 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
-import sys
+import argparse
 
 import h5py
 
@@ -24,7 +22,7 @@ def depends_on(in_name):
         if hasattr(thing, "keys"):
             for k in thing:
                 try:
-                    finder(thing[k], path="%s/%s" % (path, k))
+                    finder(thing[k], path=f"{path}/{k}")
                 except (IOError, TypeError, ValueError, KeyError):
                     pass
 
@@ -54,22 +52,31 @@ def depends_on(in_name):
     at = "."
     depth = 0
     while at in inverted:
-        print("%s+ %s" % (" " * depth, at))
+        print(f"{' ' * depth}+ {at}")
         at = inverted[at]
         depth += 2
-    print("%s+ %s" % (" " * depth, at))
+    print(f"{' ' * depth}+ {at}")
     print("")
 
-    print("Sample at %s depends on:" % sample)
+    print(f"Sample at {sample} depends on:")
     if "depends_on" in f[sample]:
         print(f[sample]["depends_on"][()])
     elif hasattr(f[sample], "attrs") and "depends_on" in f[sample].attrs:
         print(f[sample].attrs["depends_on"])
     else:
-        print("%s -> depends_on not found" % sample)
+        print(f"{sample} -> depends_on not found")
 
     f.close()
 
 
+def run(args=None):
+    parser = argparse.ArgumentParser(
+        description="Print depends_on hierarchy for Nexus files"
+    )
+    parser.add_argument("filename", help="The nexus file")
+    opts = parser.parse_args(args)
+    depends_on(opts.filename)
+
+
 if __name__ == "__main__":
-    depends_on(sys.argv[1])
+    run()

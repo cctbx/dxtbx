@@ -1,11 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
 import math
+import sys
 from builtins import range
 
 from libtbx.phil import parse
 from libtbx.test_utils import approx_equal
-from libtbx.utils import Sorry
 from scitbx.array_family import flex
 from scitbx.math.superpose import least_squares_fit
 from scitbx.matrix import col
@@ -55,228 +55,219 @@ repeat_until_converged = True
 )
 
 
-class Script(object):
-    """Class to parse the command line options."""
+@dials.util.show_mail_handle_errors()
+def run(args=None):
+    usage = "usage: dxtbx.detector_superpose reference.json moving.json "
+    parser = OptionParser(
+        usage=usage,
+        sort_options=True,
+        phil=phil_scope,
+        check_format=False,
+        epilog=help_message,
+    )
+    params, options = parser.parse_args(args, show_diff_phil=True)
 
-    def __init__(self):
-        """Set the expected options."""
-        # Create the option parser
-        usage = "usage: dxtbx.detector_superpose reference.json moving.json "
-        self.parser = OptionParser(
-            usage=usage,
-            sort_options=True,
-            phil=phil_scope,
-            check_format=False,
-            epilog=help_message,
+    reference_experiments = ExperimentListFactory.from_json_file(
+        params.reference_experiments, check_format=False
+    )
+    if len(reference_experiments.detectors()) != 1:
+        sys.exit("Error: Please ensure reference has only 1 detector model")
+    reference = reference_experiments.detectors()[0]
+
+    moving_experiments = ExperimentListFactory.from_json_file(
+        params.moving_experiments, check_format=False
+    )
+    if len(moving_experiments.detectors()) != 1:
+        sys.exit("Error: Please ensure moving has only 1 detector model")
+    moving = moving_experiments.detectors()[0]
+
+    # Get list of panels to compare
+    if params.panel_list is None or len(params.panel_list) == 0:
+        assert len(reference) == len(moving), "Detectors not same length"
+        panel_ids = list(range(len(reference)))
+    else:
+        max_p_id = max(params.panel_list)
+        assert max_p_id < len(reference), (
+            "Reference detector must be at least %d panels long given the panel list"
+            % (max_p_id + 1)
         )
-
-    def run(self):
-        """Parse the options."""
-        # Parse the command line arguments
-        params, options = self.parser.parse_args(show_diff_phil=True)
-
-        reference_experiments = ExperimentListFactory.from_json_file(
-            params.reference_experiments, check_format=False
+        assert max_p_id < len(
+            moving
+        ), "Moving detector must be at least %d panels long given the panel list" % (
+            max_p_id + 1
         )
-        if len(reference_experiments.detectors()) != 1:
-            raise Sorry("Please ensure reference has only 1 detector model")
-        reference = reference_experiments.detectors()[0]
+        panel_ids = params.panel_list
 
-        moving_experiments = ExperimentListFactory.from_json_file(
-            params.moving_experiments, check_format=False
-        )
-        if len(moving_experiments.detectors()) != 1:
-            raise Sorry("Please ensure moving has only 1 detector model")
-        moving = moving_experiments.detectors()[0]
+    if params.fit_target == "centers":
+        assert (
+            len(panel_ids) >= 3
+        ), "When using centers as target for superpose, detector needs at least 3 panels"
 
-        # Get list of panels to compare
-        if params.panel_list is None or len(params.panel_list) == 0:
-            assert len(reference) == len(moving), "Detectors not same length"
-            panel_ids = list(range(len(reference)))
-        else:
-            max_p_id = max(params.panel_list)
-            assert max_p_id < len(reference), (
-                "Reference detector must be at least %d panels long given the panel list"
-                % (max_p_id + 1)
-            )
-            assert max_p_id < len(moving), (
-                "Moving detector must be at least %d panels long given the panel list"
-                % (max_p_id + 1)
-            )
-            panel_ids = params.panel_list
+    def rmsd_from_centers(a, b):
+        assert len(a) == len(b)
+        assert len(a) % 4 == len(b) % 4 == 0
+        ca = flex.vec3_double()
+        cb = flex.vec3_double()
+        for i in range(len(a) // 4):
+            ca.append(a[i : i + 4].mean())
+            cb.append(b[i : i + 4].mean())
+        return 1000 * math.sqrt((ca - cb).sum_sq() / len(ca))
 
-        if params.fit_target == "centers":
-            assert (
-                len(panel_ids) >= 3
-            ), "When using centers as target for superpose, detector needs at least 3 panels"
+    cycles = 0
+    while True:
+        cycles += 1
 
-        def rmsd_from_centers(a, b):
-            assert len(a) == len(b)
-            assert len(a) % 4 == len(b) % 4 == 0
-            ca = flex.vec3_double()
-            cb = flex.vec3_double()
-            for i in range(len(a) // 4):
-                ca.append(a[i : i + 4].mean())
-                cb.append(b[i : i + 4].mean())
-            return 1000 * math.sqrt((ca - cb).sum_sq() / len(ca))
-
-        cycles = 0
-        while True:
-            cycles += 1
-
-            # Treat panels as a list of 4 sites (corners) or 1 site (centers) for use with lsq superpose
-            reference_sites = flex.vec3_double()
-            moving_sites = flex.vec3_double()
-            for panel_id in panel_ids:
-                for detector, sites in zip(
-                    [reference, moving], [reference_sites, moving_sites]
-                ):
-                    panel = detector[panel_id]
-                    size = panel.get_image_size()
-                    corners = flex.vec3_double(
-                        [
-                            panel.get_pixel_lab_coord(point)
-                            for point in [
-                                (0, 0),
-                                (0, size[1] - 1),
-                                (size[0] - 1, size[1] - 1),
-                                (size[0] - 1, 0),
-                            ]
-                        ]
-                    )
-                    if params.fit_target == "corners":
-                        sites.extend(corners)
-                    elif params.fit_target == "centers":
-                        sites.append(corners.mean())
-
-            # Compute super position
-            rmsd = 1000 * math.sqrt(
-                (reference_sites - moving_sites).sum_sq() / len(reference_sites)
-            )
-            print("RMSD before fit: %.1f microns" % rmsd)
-            if params.fit_target == "corners":
-                rmsd = rmsd_from_centers(reference_sites, moving_sites)
-                print("RMSD of centers before fit: %.1f microns" % rmsd)
-            lsq = least_squares_fit(reference_sites, moving_sites)
-            rmsd = 1000 * math.sqrt(
-                (reference_sites - lsq.other_sites_best_fit()).sum_sq()
-                / len(reference_sites)
-            )
-            print("RMSD of fit: %.1f microns" % rmsd)
-            if params.fit_target == "corners":
-                rmsd = rmsd_from_centers(reference_sites, lsq.other_sites_best_fit())
-                print("RMSD of fit of centers: %.1f microns" % rmsd)
-            (
-                angle,
-                axis,
-            ) = lsq.r.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
-                deg=True
-            )
-            print(
-                "Axis and angle of rotation: (%.3f, %.3f, %.3f), %.2f degrees"
-                % (axis[0], axis[1], axis[2], angle)
-            )
-            print(
-                "Translation (x, y, z, in microns): (%.3f, %.3f, %.3f)"
-                % (1000 * lsq.t).elems
-            )
-
-            # Apply the shifts
-            if params.apply_at_hierarchy_level is None:
-                iterable = moving
-            else:
-                iterable = iterate_detector_at_level(
-                    moving.hierarchy(), level=params.apply_at_hierarchy_level
-                )
-
-            for group in iterable:
-                fast = col(group.get_fast_axis())
-                slow = col(group.get_slow_axis())
-                ori = col(group.get_origin())
-
-                group.set_frame(lsq.r * fast, lsq.r * slow, (lsq.r * ori) + lsq.t)
-
-            if not params.repeat_until_converged:
-                break
-
-            if approx_equal(angle, 0.0, out=None) and approx_equal(
-                (1000 * lsq.t).length(), 0.0, out=None
-            ):
-                print("Converged after", cycles, "cycles")
-                break
-            else:
-                print("Movement not close to zero, repeating fit")
-                print()
-
-        dump.experiment_list(moving_experiments, params.output_experiments)
-
-        moved_sites = flex.vec3_double()
+        # Treat panels as a list of 4 sites (corners) or 1 site (centers) for use with lsq superpose
+        reference_sites = flex.vec3_double()
+        moving_sites = flex.vec3_double()
         for panel_id in panel_ids:
-            panel = moving[panel_id]
-            size = panel.get_image_size()
-            corners = flex.vec3_double(
-                [
-                    panel.get_pixel_lab_coord(point)
-                    for point in [
-                        (0, 0),
-                        (0, size[1] - 1),
-                        (size[0] - 1, size[1] - 1),
-                        (size[0] - 1, 0),
+            for detector, sites in zip(
+                [reference, moving], [reference_sites, moving_sites]
+            ):
+                panel = detector[panel_id]
+                size = panel.get_image_size()
+                corners = flex.vec3_double(
+                    [
+                        panel.get_pixel_lab_coord(point)
+                        for point in [
+                            (0, 0),
+                            (0, size[1] - 1),
+                            (size[0] - 1, size[1] - 1),
+                            (size[0] - 1, 0),
+                        ]
                     ]
-                ]
-            )
-            if params.fit_target == "corners":
-                moved_sites.extend(corners)
-            elif params.fit_target == "centers":
-                moved_sites.append(corners.mean())
+                )
+                if params.fit_target == "corners":
+                    sites.extend(corners)
+                elif params.fit_target == "centers":
+                    sites.append(corners.mean())
 
-        # Re-compute RMSD after moving detector components
+        # Compute super position
+        rmsd = 1000 * math.sqrt(
+            (reference_sites - moving_sites).sum_sq() / len(reference_sites)
+        )
+        print("RMSD before fit: %.1f microns" % rmsd)
+        if params.fit_target == "corners":
+            rmsd = rmsd_from_centers(reference_sites, moving_sites)
+            print("RMSD of centers before fit: %.1f microns" % rmsd)
+        lsq = least_squares_fit(reference_sites, moving_sites)
+        rmsd = 1000 * math.sqrt(
+            (reference_sites - lsq.other_sites_best_fit()).sum_sq()
+            / len(reference_sites)
+        )
+        print("RMSD of fit: %.1f microns" % rmsd)
+        if params.fit_target == "corners":
+            rmsd = rmsd_from_centers(reference_sites, lsq.other_sites_best_fit())
+            print("RMSD of fit of centers: %.1f microns" % rmsd)
+        (
+            angle,
+            axis,
+        ) = lsq.r.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
+            deg=True
+        )
+        print(
+            "Axis and angle of rotation: (%.3f, %.3f, %.3f), %.2f degrees"
+            % (axis[0], axis[1], axis[2], angle)
+        )
+        print(
+            "Translation (x, y, z, in microns): (%.3f, %.3f, %.3f)"
+            % (1000 * lsq.t).elems
+        )
+
+        # Apply the shifts
+        if params.apply_at_hierarchy_level is None:
+            iterable = moving
+        else:
+            iterable = iterate_detector_at_level(
+                moving.hierarchy(), level=params.apply_at_hierarchy_level
+            )
+
+        for group in iterable:
+            fast = col(group.get_fast_axis())
+            slow = col(group.get_slow_axis())
+            ori = col(group.get_origin())
+
+            group.set_frame(lsq.r * fast, lsq.r * slow, (lsq.r * ori) + lsq.t)
+
+        if not params.repeat_until_converged:
+            break
+
+        if approx_equal(angle, 0.0, out=None) and approx_equal(
+            (1000 * lsq.t).length(), 0.0, out=None
+        ):
+            print("Converged after", cycles, "cycles")
+            break
+        else:
+            print("Movement not close to zero, repeating fit")
+            print()
+
+    dump.experiment_list(moving_experiments, params.output_experiments)
+
+    moved_sites = flex.vec3_double()
+    for panel_id in panel_ids:
+        panel = moving[panel_id]
+        size = panel.get_image_size()
+        corners = flex.vec3_double(
+            [
+                panel.get_pixel_lab_coord(point)
+                for point in [
+                    (0, 0),
+                    (0, size[1] - 1),
+                    (size[0] - 1, size[1] - 1),
+                    (size[0] - 1, 0),
+                ]
+            ]
+        )
+        if params.fit_target == "corners":
+            moved_sites.extend(corners)
+        elif params.fit_target == "centers":
+            moved_sites.append(corners.mean())
+
+    # Re-compute RMSD after moving detector components
+    rmsd = 1000 * math.sqrt(
+        (reference_sites - moved_sites).sum_sq() / len(reference_sites)
+    )
+    print("RMSD of fit after movement: %.1f microns" % rmsd)
+    if params.fit_target == "corners":
+        rmsd = rmsd_from_centers(reference_sites, moved_sites)
+        print("RMSD of fit of centers after movement: %.1f microns" % rmsd)
+
+    if params.panel_list is not None:
+        reference_sites = flex.vec3_double()
+        moved_sites = flex.vec3_double()
+        for panel_id in range(len(reference)):
+            for detector, sites in zip(
+                [reference, moving], [reference_sites, moved_sites]
+            ):
+                panel = detector[panel_id]
+                size = panel.get_image_size()
+                corners = flex.vec3_double(
+                    [
+                        panel.get_pixel_lab_coord(point)
+                        for point in [
+                            (0, 0),
+                            (0, size[1] - 1),
+                            (size[0] - 1, size[1] - 1),
+                            (size[0] - 1, 0),
+                        ]
+                    ]
+                )
+                if params.fit_target == "corners":
+                    sites.extend(corners)
+                elif params.fit_target == "centers":
+                    sites.append(corners.mean())
+        # Re-compute RMSD for full detector after moving detector components
         rmsd = 1000 * math.sqrt(
             (reference_sites - moved_sites).sum_sq() / len(reference_sites)
         )
-        print("RMSD of fit after movement: %.1f microns" % rmsd)
+        print("RMSD of whole detector fit after movement: %.1f microns" % rmsd)
         if params.fit_target == "corners":
             rmsd = rmsd_from_centers(reference_sites, moved_sites)
-            print("RMSD of fit of centers after movement: %.1f microns" % rmsd)
-
-        if params.panel_list is not None:
-            reference_sites = flex.vec3_double()
-            moved_sites = flex.vec3_double()
-            for panel_id in range(len(reference)):
-                for detector, sites in zip(
-                    [reference, moving], [reference_sites, moved_sites]
-                ):
-                    panel = detector[panel_id]
-                    size = panel.get_image_size()
-                    corners = flex.vec3_double(
-                        [
-                            panel.get_pixel_lab_coord(point)
-                            for point in [
-                                (0, 0),
-                                (0, size[1] - 1),
-                                (size[0] - 1, size[1] - 1),
-                                (size[0] - 1, 0),
-                            ]
-                        ]
-                    )
-                    if params.fit_target == "corners":
-                        sites.extend(corners)
-                    elif params.fit_target == "centers":
-                        sites.append(corners.mean())
-            # Re-compute RMSD for full detector after moving detector components
-            rmsd = 1000 * math.sqrt(
-                (reference_sites - moved_sites).sum_sq() / len(reference_sites)
+            print(
+                "RMSD of whole detector fit of centers after movement: %.1f microns"
+                % rmsd
             )
-            print("RMSD of whole detector fit after movement: %.1f microns" % rmsd)
-            if params.fit_target == "corners":
-                rmsd = rmsd_from_centers(reference_sites, moved_sites)
-                print(
-                    "RMSD of whole detector fit of centers after movement: %.1f microns"
-                    % rmsd
-                )
 
 
 if __name__ == "__main__":
-    with dials.util.show_mail_on_error():
-        script = Script()
-        script.run()
+    run()
