@@ -11,10 +11,8 @@ from scitbx import matrix
 
 try:
     import sklearn.cluster
-
-    have_sklearn = True
 except ImportError:
-    have_sklearn = False
+    sklearn = None
 
 
 def read_xds_xparm(xds_xparm_file):
