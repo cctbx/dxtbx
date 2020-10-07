@@ -44,6 +44,10 @@ def test_semi_synthetic_dectris_eiger_nearly_nexus(dials_data, tmpdir):
     imageset = expts[0].imageset
     assert imageset.get_format_class() == FormatHDF5EigerNearlyNexus
 
+    image = imageset.get_raw_data(0)[0]
+    assert min(image) == 0
+    assert max(image) == 65535
+
     detector = imageset.get_detector()
     gonio = imageset.get_goniometer()
     scan = imageset.get_scan()

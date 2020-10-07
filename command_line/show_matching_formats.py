@@ -1,7 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
+import argparse
 import os
-import sys
 
 import dxtbx.format.Registry
 
@@ -13,19 +11,26 @@ def recurse(parentformat, filename):
         understood = dxtbx.format.Registry.get_format_class_for(subformat).understand(
             filename
         )
-        print("%s: %s" % (subformat, understood))
+        print(f"{subformat}: {understood}")
         if understood:
             recurse(subformat, filename)
 
 
 def show_matching_formats(files):
     for filename in files:
-        print("\n=== %s ===" % filename)
+        print(f"\n=== {filename} ===")
         if os.path.exists(filename):
             recurse("Format", filename)
         else:
             print("File not found.")
 
 
+def run(args=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filenames", metavar="IMAGE", nargs="+")
+    options = parser.parse_args(args)
+    show_matching_formats(options.filenames)
+
+
 if __name__ == "__main__":
-    show_matching_formats(sys.argv[1:])
+    run()

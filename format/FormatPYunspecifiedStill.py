@@ -6,12 +6,13 @@ import sys
 
 import six
 
+from iotbx.detectors.npy import image_dict_to_unicode
+
 from dxtbx.format.FormatPYunspecified import (
     FormatPYunspecified,
     FormatPYunspecifiedInMemory,
 )
 from dxtbx.format.FormatStill import FormatStill
-from iotbx.detectors.npy import image_dict_to_unicode
 
 
 class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):

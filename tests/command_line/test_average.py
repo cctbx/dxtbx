@@ -3,10 +3,9 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import procrunner
+import pytest
 
 import dxtbx
-
-import pytest
 
 
 @pytest.mark.parametrize("use_mpi", [True, False])

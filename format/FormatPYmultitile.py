@@ -7,18 +7,23 @@ from time import strptime
 import six
 import six.moves.cPickle as pickle
 
+from iotbx.detectors.npy import image_dict_to_unicode
 from scitbx.matrix import col
-from xfel.cftbx.detector.cspad_detector import CSPadDetector
+
+try:
+    from xfel.cftbx.detector.cspad_detector import CSPadDetector
+except ImportError:
+    CSPadDetector = None
 
 from dxtbx.format.FormatPY import FormatPY
 from dxtbx.model import Detector
-
-from iotbx.detectors.npy import image_dict_to_unicode
 
 
 class FormatPYmultitile(FormatPY):
     @staticmethod
     def understand(image_file):
+        if not CSPadDetector:
+            return False
         try:
             with FormatPYmultitile.open_file(image_file, "rb") as fh:
                 if six.PY3:

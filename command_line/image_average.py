@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 import copy
 import sys
 from builtins import range
+
 import numpy as np
 
 import libtbx.load_env
