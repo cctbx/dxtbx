@@ -333,7 +333,7 @@ def project_2d(detector):
     # For multi-panel detectors cluster fast, slow axes by DBSCAN to get a
     # consensus X, Y for the 2D plane
     clustered_axes = False
-    if len(detector) > 1 and have_sklearn:
+    if sklearn and len(detector) > 1:
         clustered_axes = True
         axes = []
         for panel in detector:
