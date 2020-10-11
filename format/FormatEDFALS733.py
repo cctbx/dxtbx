@@ -76,7 +76,7 @@ class FormatEDFALS733(Format):
         """Return the scan information for this image."""
         return self._scan_factory.single(
             filename=self._image_file,
-            format="EDF",
+            format=None,
             exposure_times=self.detectorbase.parameters["count_time"],
             osc_start=0.0,
             osc_width=0.0,

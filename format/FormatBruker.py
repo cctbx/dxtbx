@@ -146,7 +146,7 @@ class FormatBruker(Format):
 
         return self._scan_factory.single(
             filename=self._image_file,
-            format="BrukerCCD",
+            format=None,
             # It's not at all clear how to recover the exposure time from the header
             # or even whether it is recorded.
             # XXX Here it will simply be set to a default number.

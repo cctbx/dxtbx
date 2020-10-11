@@ -149,7 +149,7 @@ class FormatBrukerPhotonII(FormatBruker):
 
         return self._scan_factory.single(
             filename=self._image_file,
-            format="BrukerCCD",
+            format=None,
             exposure_times=1,
             osc_start=start,
             osc_width=incr,

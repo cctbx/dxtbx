@@ -52,7 +52,7 @@ class FormatRAXISII(RAXISHelper, Format):
 
         return self._scan_factory.single(
             filename=self._image_file,
-            format="Raxis2 image plate",
+            format=None,
             exposure_times=1,
             osc_start=self.detectorbase.parameters["OSC_START"],
             osc_width=self.detectorbase.parameters["OSC_RANGE"],
