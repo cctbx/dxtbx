@@ -158,7 +158,7 @@ class ScanFactory(object):
 
         if format is not None:
             warnings.warn(
-                "using format in scan is now deprecated", warnings.DeprecationWarning
+                "using format in scan is now deprecated", warnings.DeprecationWarning, stacklevel=2
             )
 
         index = scan_helper_image_files.image_to_index(os.path.split(filename)[-1])
