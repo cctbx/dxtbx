@@ -179,8 +179,6 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
         """Return the scan information for this image."""
 
         rotation = self.get_rotation()
-
-        format = self._scan_factory.format("SMV")
         epoch = 0
 
         exposure_time = rotation[3]
@@ -188,7 +186,7 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
         osc_range = rotation[2]
 
         return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+            self._image_file, None, exposure_time, osc_start, osc_range, epoch
         )
 
 

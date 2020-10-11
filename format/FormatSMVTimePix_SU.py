@@ -79,7 +79,6 @@ class FormatSMVTimePix_SU(FormatSMV):
 
     def _scan(self):
         """Return the scan information for this image."""
-        format = self._scan_factory.format("SMV")
         exposure_time = float(self._header_dictionary["TIME"])
         epoch = None
 
@@ -103,7 +102,7 @@ class FormatSMVTimePix_SU(FormatSMV):
         osc_range = float(self._header_dictionary["OSC_RANGE"])
 
         return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+            self._image_file, None, exposure_time, osc_start, osc_range, epoch
         )
 
 

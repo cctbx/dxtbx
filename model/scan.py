@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import warnings
 from builtins import object, range
 
 import pycbf
@@ -8,7 +9,7 @@ import pycbf
 import libtbx.phil
 from scitbx.array_family import flex
 
-from dxtbx.model.scan_helpers import scan_helper_image_files, scan_helper_image_formats
+from dxtbx.model.scan_helpers import scan_helper_image_files
 from dxtbx_model_ext import Scan
 
 scan_phil_scope = libtbx.phil.parse(
@@ -155,6 +156,11 @@ class ScanFactory(object):
     def single(filename, format, exposure_times, osc_start, osc_width, epoch):
         """Construct an scan instance for a single image."""
 
+        if format is not None:
+            warnings.warn(
+                "using format in scan is now deprecated", warnings.DeprecationWarning
+            )
+
         index = scan_helper_image_files.image_to_index(os.path.split(filename)[-1])
         if epoch is None:
             epoch = 0.0
@@ -228,29 +234,3 @@ class ScanFactory(object):
             )
             for index in indices
         ]
-
-    @staticmethod
-    def format(name):
-        """Return the correct format token for a given name, for example:
-
-        cbf, CBF
-        smv, SMV
-        tiff, tif, TIFF
-        raxis, RAXIS
-        mar, MAR
-
-        to the appropriate static token which will be used as a handle
-        everywhere else in this."""
-
-        if name.upper() == "CBF":
-            return scan_helper_image_formats.FORMAT_CBF
-        elif name.upper() == "SMV":
-            return scan_helper_image_formats.FORMAT_SMV
-        elif name.upper() == "TIF" or name.upper() == "TIFF":
-            return scan_helper_image_formats.FORMAT_TIFF
-        elif name.upper() == "RAXIS":
-            return scan_helper_image_formats.FORMAT_RAXIS
-        elif name.upper() == "MAR":
-            return scan_helper_image_formats.FORMAT_MAR
-
-        raise RuntimeError("name %s not known" % name)

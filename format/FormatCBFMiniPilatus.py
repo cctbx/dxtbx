@@ -179,8 +179,6 @@ class FormatCBFMiniPilatus(FormatCBFMini):
     def _scan(self):
         """Return the scan information for this image."""
 
-        format = self._scan_factory.format("CBF")
-
         exposure_time = float(self._cif_header_dictionary["Exposure_period"].split()[0])
 
         osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
@@ -189,7 +187,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
 
         return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, timestamp
+            self._image_file, None, exposure_time, osc_start, osc_range, timestamp
         )
 
     def get_vendortype(self):

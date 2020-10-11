@@ -6,7 +6,7 @@ from builtins import range
 import pytest
 
 from dxtbx.model.scan import ScanFactory
-from dxtbx.model.scan_helpers import scan_helper_image_files, scan_helper_image_formats
+from dxtbx.model.scan_helpers import scan_helper_image_files
 
 
 @pytest.fixture
@@ -52,14 +52,6 @@ def test_helper_image_files(image_test_dir):
     assert scan_helper_image_files.image_to_index("image_6.8kev_1_001.cbf") == 1
 
 
-def test_helper_image_formats():
-    """Test the static methods and properties in scan_helper_image_formats."""
-
-    assert scan_helper_image_formats.check_format(scan_helper_image_formats.FORMAT_CBF)
-    # suspend this test pending further discussion -- Nick Sauter
-    # assert(not(scan_helper_image_formats.check_format('CBF')))
-
-
 def test_xScanFactory(image_test_dir):
     """Test out the ScanFactory."""
 
@@ -70,7 +62,7 @@ def test_xScanFactory(image_test_dir):
             scan_helper_image_files.template_directory_index_to_image(
                 template, image_test_dir, j + 1
             ),
-            scan_helper_image_formats.FORMAT_CBF,
+            None,
             1.0,
             18 + 0.5 * j,
             0.5,

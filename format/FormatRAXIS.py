@@ -235,7 +235,6 @@ class FormatRAXIS(RAXISHelper, Format):
         # We expect an invalid goniometer section, indicated by wrong magic number
         magic_no = struct.unpack(">i", header[852:856])
 
-        format = self._scan_factory.format("RAXIS")
         exposure_time = struct.unpack(f, header[536:540])[0]
 
         y, m, d = map(int, header[256:268].strip().split(b"-"))
@@ -255,5 +254,5 @@ class FormatRAXIS(RAXISHelper, Format):
         osc_range = osc_end - osc_start
 
         return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+            self._image_file, None, exposure_time, osc_start, osc_range, epoch
         )
