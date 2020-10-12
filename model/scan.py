@@ -156,6 +156,7 @@ class ScanFactory(object):
     def single(filename, format, exposure_times, osc_start, osc_width, epoch):
         """Construct an scan instance for a single image."""
 
+        # https://github.com/cctbx/dxtbx/issues/232
         if format is not None:
             warnings.warn(
                 "using format in scan is now deprecated", warnings.DeprecationWarning, stacklevel=2
