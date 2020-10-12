@@ -1,3 +1,12 @@
+DIALS 3.1.4 (2020-10-12)
+========================
+
+Bugfixes
+--------
+
+- Handle more errors using Eiger-Nexus files
+
+
 DIALS 3.1.3 (2020-09-28)
 ========================
 
