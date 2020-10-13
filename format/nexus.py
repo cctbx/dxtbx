@@ -29,9 +29,9 @@ from dxtbx.model import (
 
 try:
     from dxtbx_format_nexus_ext import (
-        dataset_as_flex_int,
         dataset_as_flex_double,
         dataset_as_flex_float,
+        dataset_as_flex_int,
     )
 except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
@@ -616,7 +616,7 @@ class BeamFactory(object):
             spectrum_wavelengths = convert_units(
                 spectrum_wavelengths, wavelength_units, "angstrom"
             )
-            spectrum_energies = 12398.4187 / spectrum_wavelengths
+            spectrum_energies = cctbx.factor_ev_angstrom / spectrum_wavelengths
             self.spectrum = Spectrum(spectrum_energies, spectrum_wavelengths)
 
             if has_variant_spectra:

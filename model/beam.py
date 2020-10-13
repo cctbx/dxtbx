@@ -3,9 +3,10 @@ from __future__ import absolute_import, division, print_function
 import math
 from builtins import object, range
 
+import pycbf
+
 import libtbx.phil
 
-import pycbf
 from dxtbx_model_ext import Beam
 
 beam_phil_scope = libtbx.phil.parse(
@@ -70,7 +71,6 @@ class BeamFactory(object):
         if params.beam.polarization_fraction is not None:
             beam.set_polarization_fraction(params.beam.polarization_fraction)
 
-        # Return the model
         return beam
 
     @staticmethod

@@ -84,7 +84,6 @@ def to_imageset(input_filename, extra_filename=None):
         scan=scan,
     )[0]
 
-    # Return the imageset
     return imageset
 
 

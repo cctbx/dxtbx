@@ -3,10 +3,11 @@ from __future__ import absolute_import, division, print_function
 import math
 from builtins import object, range
 
+import pycbf
+
 import libtbx.phil
 from scitbx.array_family import flex
 
-import pycbf
 from dxtbx_model_ext import Goniometer, KappaGoniometer, MultiAxisGoniometer
 
 __all__ = [
@@ -119,7 +120,6 @@ class GoniometerFactory(object):
             rotation_axis = goniometer.get_rotation_axis_datum()
             goniometer.set_rotation_axis_datum([-x for x in rotation_axis])
 
-        # Return the model
         return goniometer
 
     @staticmethod
@@ -225,7 +225,6 @@ class GoniometerFactory(object):
             if params.goniometer.scan_axis is not None:
                 raise RuntimeError("Can not override scan axis")
 
-        # Return the model
         return goniometer
 
     @staticmethod

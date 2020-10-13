@@ -4,7 +4,6 @@ import functools
 import sys
 
 from libtbx.phil import parse
-from xfel.cxi.cspad_ana import cspad_tbx
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
@@ -14,8 +13,11 @@ from dxtbx.format.FormatStill import FormatStill
 
 try:
     import psana
+
+    from xfel.cxi.cspad_ana import cspad_tbx
 except ImportError:
     psana = None
+    cspad_tbx = None
 
 locator_str = """
   experiment = None
@@ -39,6 +41,12 @@ locator_str = """
   calib_dir = None
     .type = str
     .help = Specifiy path to custom calib directory if needed
+  use_ffb = False
+    .type = bool
+    .help = Run on the ffb if possible. Only for active users!
+  wavelength_offset = None
+    .type = float
+    .help = Optional constant shift to apply to each wavelength
 """
 locator_scope = parse(locator_str)
 
@@ -69,6 +77,14 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 master_phil=locator_scope, user_phil=image_file, strict=True
             )
         assert self.params.mode == "idx", "idx mode should be used for analysis"
+
+        self._ds = FormatXTC._get_datasource(image_file, self.params)
+        self.populate_events()
+        self.n_images = len(self.times)
+
+        self._cached_psana_detectors = {}
+        self._beam_index = None
+        self._beam_cache = None
         self._initialized = True
 
     @staticmethod
@@ -77,7 +93,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         If PSANA fails to read it, then input may not be an xtc/smd file. If success, then OK.
         If detector_address is not provided, a command line promp will try to get the address
         from the user"""
-        if not psana:
+        if not psana or not cspad_tbx:
             return False
         try:
             params = FormatXTC.params_from_phil(locator_scope, image_file)
@@ -179,6 +195,13 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 ",".join(["%d" % r for r in params.run]),
                 params.mode,
             )
+
+            if params.use_ffb:
+                # as ffb is only at SLAC, ok to hardcode /reg/d here
+                img += ":dir=/reg/d/ffb/%s/%s/xtc" % (
+                    params.experiment[0:3],
+                    params.experiment,
+                )
         else:
             img = params.data_source
         return psana.DataSource(img)
@@ -194,6 +217,15 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         psana_runs = {r.run(): r for r in datasource.runs()}
         return psana_runs
 
+    def _get_psana_detector(self, run):
+        """ Returns the psana detector for the given run """
+        if run.run() not in self._cached_psana_detectors:
+            assert len(self.params.detector_address) == 1
+            self._cached_psana_detectors[run.run()] = psana.Detector(
+                self.params.detector_address[0], run.env()
+            )
+        return self._cached_psana_detectors[run.run()]
+
     def get_psana_timestamp(self, index):
         """Get the cctbx.xfel style event timestamp given an index"""
         evt = self._get_event(index)
@@ -204,6 +236,34 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         nsec = time[1]
 
         return cspad_tbx.evt_timestamp((sec, nsec / 1e6))
+
+    def get_num_images(self):
+        return self.n_images
+
+    def get_beam(self, index=None):
+        return self._beam(index)
+
+    def _beam(self, index=None):
+        """Returns a simple model for the beam"""
+        if index is None:
+            index = 0
+        if self._beam_index != index:
+            self._beam_index = index
+            evt = self._get_event(index)
+            wavelength = cspad_tbx.evt_wavelength(evt)
+            if wavelength is None:
+                self._beam_cache = None
+            else:
+                if self.params.wavelength_offset is not None:
+                    wavelength += self.params.wavelength_offset
+                self._beam_cache = self._beam_factory.simple(wavelength)
+        return self._beam_cache
+
+    def get_goniometer(self, index=None):
+        return None
+
+    def get_scan(self, index=None):
+        return None
 
 
 if __name__ == "__main__":

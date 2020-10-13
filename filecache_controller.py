@@ -67,7 +67,7 @@ class simple_controller(object):
                 try:
                     self._cache_tag = tag
                     self._cache = dxtbx.filecache.lazy_file_cache(open_method())
-                except:  # noqa: E772
+                except:  # noqa: E722
                     # Make sure we leave in a valid state
                     self._cache_tag = None
                     self._cache = None

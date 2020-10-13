@@ -11,6 +11,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 
+import pycbf
 import six
 
 from scitbx.array_family import flex
@@ -21,7 +22,6 @@ from xfel.cftbx.detector.cspad_cbf_tbx import (
 )
 
 import dxtbx.format.Registry
-import pycbf
 
 
 class FullCBFWriter(object):

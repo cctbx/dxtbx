@@ -162,7 +162,7 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
     def understand(image_file):
         is_nexus_still = False
         try:
-            from dxtbx.format.nexus import find_entries, find_class
+            from dxtbx.format.nexus import find_class, find_entries
 
             # Get the file handle
             with h5py.File(image_file, "r") as handle:

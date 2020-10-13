@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 
-from boost.python import streambuf
+from boost_adaptbx.boost.python import streambuf
 from scitbx import matrix
 from scitbx.array_family import flex
 

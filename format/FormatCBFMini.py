@@ -10,13 +10,15 @@ import binascii
 import os
 import sys
 
-from boost.python import streambuf
+import pycbf
+
+from boost_adaptbx.boost.python import streambuf
 from cbflib_adaptbx import uncompress
+from cctbx import factor_ev_angstrom
 from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.pilatus_minicbf import PilatusImage
 from scitbx.array_family import flex
 
-import pycbf
 from dxtbx.ext import read_int32
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
@@ -343,7 +345,7 @@ class FormatCBFMini(FormatCBF):
         count_cutoff = trusted_range[1]
 
         wavelength = beam.get_wavelength()  # get the wavelength in the conventional way
-        energy = 12398.4245 / wavelength
+        energy = factor_ev_angstrom / wavelength
         threshold = energy / 2  # presume normal data collection convention
 
         bad_pixels = 0  # maybe get this from negative pixel values?

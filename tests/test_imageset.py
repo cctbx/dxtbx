@@ -517,6 +517,30 @@ def test_imagesetfactory(centroid_files, dials_data):
     assert len(sequence) == 4
 
 
+def test_make_sequence_with_percent_character(dials_data, tmp_path):
+    images = [
+        dials_data("centroid_test_data").join(f"centroid_{i:04}.cbf")
+        for i in range(1, 10)
+    ]
+    directory = tmp_path / "test%"
+    directory.mkdir()
+    for image in images:
+        (directory / image.basename).symlink_to(image)
+    template = str(directory / "centroid_####.cbf")
+    sequence = ImageSetFactory.make_sequence(template, range(1, 10))
+    assert len(sequence) == 9
+
+    sequences = ImageSetFactory.new(
+        [str(directory / image.basename) for image in images]
+    )
+    assert len(sequences) == 1
+    assert len(sequences[0]) == 9
+
+    sequences = ImageSetFactory.from_template(template)
+    assert len(sequences) == 1
+    assert len(sequences[0]) == 9
+
+
 def test_pickle_imageset(centroid_files):
     sequence = ImageSetFactory.new(centroid_files)[0]
 
@@ -582,7 +606,11 @@ def test_multi_panel_gain_map(dials_regression):
 
 
 @pytest.mark.parametrize(
-    "multi_panel,expected_panel_count", ((False, 24), (True, 120,),),
+    "multi_panel,expected_panel_count",
+    (
+        (False, 24),
+        (True, 120),
+    ),
 )
 def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
     image_path = os.path.join(
@@ -597,3 +625,14 @@ def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
         == len(imageset.get_raw_data(0))
         == expected_panel_count
     )
+
+
+@pytest.mark.xfail(
+    raises=OverflowError, reason="https://github.com/cctbx/dxtbx/issues/213"
+)
+def test_scan_imageset_slice_consistency(dials_data):
+    files = dials_data("centroid_test_data").listdir("*.cbf", sort=True)[1:]
+    expt = ExperimentListFactory.from_filenames(f.strpath for f in files)[0]
+    assert expt.scan[0:8] == expt.scan
+    # The following doesn't work, and expects expt.imageset[1:9]
+    assert expt.imageset[0:8] == expt.imageset

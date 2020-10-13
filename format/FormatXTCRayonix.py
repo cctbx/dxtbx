@@ -2,14 +2,15 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 
+import psana
+
 from libtbx.phil import parse
 from scitbx.array_family import flex
 
-import psana
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 
 try:
-    from xfel.cxi.cspad_ana import cspad_tbx, rayonix_tbx
+    from xfel.cxi.cspad_ana import rayonix_tbx
 except ImportError:
     # xfel not configured
     pass
@@ -30,10 +31,6 @@ class FormatXTCRayonix(FormatXTC):
         super(FormatXTCRayonix, self).__init__(
             image_file, locator_scope=rayonix_locator_scope, **kwargs
         )
-        self._ds = FormatXTCRayonix._get_datasource(image_file, self.params)
-        self._env = self._ds.env()
-        self.populate_events()
-        self.n_images = len(self.times)
 
         cfgs = self._ds.env().configStore()
         rayonix_cfg = cfgs.get(psana.Rayonix.ConfigV2, psana.Source("Rayonix"))
@@ -53,38 +50,17 @@ class FormatXTCRayonix(FormatXTC):
             return False
         return any(["rayonix" in src.lower() for src in params.detector_address])
 
-    def get_raw_data(self, index):
+    def get_raw_data(self, index=None):
+        if index is None:
+            index = 0
         assert len(self.params.detector_address) == 1
-        # det = psana.Detector(self.params.detector_address[0], self._env)
         data = rayonix_tbx.get_data_from_psana_event(
             self._get_event(index), self.params.detector_address[0]
         )
         return flex.double(data)
 
-    def get_num_images(self):
-        return self.n_images
-
     def get_detector(self, index=None):
         return self._detector()
-
-    def get_beam(self, index=None):
-        return self._beam(index)
-
-    def _beam(self, index=None):
-        """Returns a simple model for the beam"""
-        if index is None:
-            index = 0
-        evt = self._get_event(index)
-        wavelength = cspad_tbx.evt_wavelength(evt)
-        if wavelength is None:
-            return None
-        return self._beam_factory.simple(wavelength)
-
-    def get_goniometer(self, index=None):
-        return None
-
-    def get_scan(self, index=None):
-        return None
 
     def _detector(self):
         return self._detector_factory.simple(

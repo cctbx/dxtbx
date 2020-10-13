@@ -8,7 +8,7 @@ import sys
 import time
 from builtins import range
 
-from boost.python import streambuf
+from boost_adaptbx.boost.python import streambuf
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 from scitbx.array_family import flex

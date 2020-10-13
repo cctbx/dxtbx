@@ -67,7 +67,7 @@ class FormatNexusEigerDLS(FormatNexusEiger):
             self._meta = find_meta_filename(image_file)
             self._bit_depth_image = get_bit_depth_from_meta(self._meta)
         except Exception:
-            self._bit_depth_image = 0
+            self._bit_depth_image = 16
 
     def get_detector(self, index=None):
         # workaround for https://jira.diamond.ac.uk/browse/I03-365

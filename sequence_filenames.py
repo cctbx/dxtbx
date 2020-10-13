@@ -138,7 +138,6 @@ def group_files_by_imageset(filenames):
     for t in template:
         matched[t[0]].append(t[1])
 
-    # Return the matched filenames
     return matched
 
 

@@ -76,7 +76,7 @@ class FormatSMVADSC(FormatSMV):
         pedestal that is present"""
 
         if pedestal is None:
-            pedestal = int(self._header_dictionary.get("IMAGE_PEDESTAL", 0))
+            pedestal = float(self._header_dictionary.get("IMAGE_PEDESTAL", 0))
 
         overload = 65535 - pedestal
         underload = -1 - pedestal
@@ -178,7 +178,7 @@ class FormatSMVADSC(FormatSMV):
             self._adsc_trusted_range(),
             [],
             gain=self._adsc_module_gain(),
-            pedestal=int(self._header_dictionary.get("IMAGE_PEDESTAL", 0)),
+            pedestal=float(self._header_dictionary.get("IMAGE_PEDESTAL", 0)),
         )
 
     def _beam(self):

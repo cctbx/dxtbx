@@ -1,1 +1,0 @@
-HDF5 / NeXus: correctly use the mask if available.

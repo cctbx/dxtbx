@@ -9,7 +9,7 @@ from builtins import range
 
 import six.moves.cPickle as pickle
 
-import boost.python
+import boost_adaptbx.boost.python
 import cctbx.crystal
 import cctbx.sgtbx
 import cctbx.uctbx
@@ -105,7 +105,7 @@ __all__ = (
 )
 
 
-@boost.python.inject_into(Detector)
+@boost_adaptbx.boost.python.inject_into(Detector)
 class _(object):
     def iter_panels(self):
         """Iterate through just the panels depth-first."""
@@ -132,7 +132,7 @@ class _(object):
                 queue.extend(node)
 
 
-@boost.python.inject_into(Crystal)
+@boost_adaptbx.boost.python.inject_into(Crystal)
 class _(object):
     def show(self, show_scan_varying=False, out=None):
         if out is None:
@@ -382,7 +382,7 @@ class _(object):
         return xl
 
 
-@boost.python.inject_into(MosaicCrystalKabsch2010)
+@boost_adaptbx.boost.python.inject_into(MosaicCrystalKabsch2010)
 class _(object):
     def as_str(self, show_scan_varying=False):
         return "\n".join(
@@ -439,7 +439,7 @@ class _(object):
         return xl
 
 
-@boost.python.inject_into(MosaicCrystalSauter2014)
+@boost_adaptbx.boost.python.inject_into(MosaicCrystalSauter2014)
 class _(object):
     def as_str(self, show_scan_varying=False):
         return "\n".join(
@@ -510,7 +510,7 @@ class _(object):
         return xl
 
 
-@boost.python.inject_into(Experiment)
+@boost_adaptbx.boost.python.inject_into(Experiment)
 class _(object):
     def load_models(self, index=None):
         """Load the models from the imageset"""
@@ -522,7 +522,7 @@ class _(object):
         self.scan = self.imageset.get_scan(index)
 
 
-@boost.python.inject_into(ExperimentList)
+@boost_adaptbx.boost.python.inject_into(ExperimentList)
 class _(object):
     def __repr__(self):
         if len(self):
@@ -673,7 +673,6 @@ class _(object):
             if name not in result:
                 result[name] = [x.to_dict() for x in models]
 
-        # Return the dictionary
         return result
 
     def to_datablocks(self):

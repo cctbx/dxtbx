@@ -4,8 +4,7 @@ addons:
       - libjpeg62
 
 language: python
-python:
-  - "2.7"
+python: 3.6
 
 cache:
   directories:
@@ -15,6 +14,15 @@ cache:
 jobs:
   include:
     - stage: build
+      name: "Syntax validation"
+      addons: false
+      cache: false
+      before_cache: false
+      python: 3.7
+      script:
+         - python3 -m compileall -q *
+
+    - name: "Build"
       install:
          # Setup a base installation
          - ./.travis/setup-base
@@ -42,53 +50,8 @@ jobs:
          # it will be resumed from that point in the next build.
          - $HOME/build_dials/modules/dxtbx/.travis/build-for 40m
 
-    - name: "Syntax validation - Python 2.7"
-      addons: false
-      cache: false
-      before_cache: false
-      script:
-         - python -m compileall -q -i .travis/python2-supported-files
-
-    - name: "Syntax validation - Python 3.7"
-      addons: false
-      cache: false
-      before_cache: false
-      dist: xenial
-      python: 3.7
-      script:
-         - python3 -m compileall -q *
-
-    - name: "Build - Python 3.6"
-         # Same as above really, but on Python 3 this time
-      python: 3.6
-      install:
-         # Setup a base installation
-         - ./.travis/setup-base3
-
-         # Inject DXTBX
-         - rm -rf $HOME/build_dials/modules/dxtbx
-         - mv $HOME/build/cctbx/dxtbx $HOME/build_dials/modules/dxtbx
-
-         # Update CCTBX
-         - $HOME/build_dials/modules/dxtbx/.travis/clean-cctbx
-         - $HOME/build_dials/modules/dxtbx/.travis/update-cctbx
-
-      before_script:
-         # Enter CCTBX environment
-         - cd $HOME/build_dials/build
-         - cat setpaths.sh
-         - . setpaths.sh
-
-         # Prepare for the build step
-         - libtbx.configure .
-
-      script:
-         # Parallel builds do not work. Only spend at most 40 minutes on a build.
-         # This allows incremental building, so if the build can't be finished within the allotted time
-         # it will be resumed from that point in the next build.
-         - $HOME/build_dials/modules/dxtbx/.travis/build-for 40m
-
     - stage: test
+      name: "Test"
       before_script:
          # Inject DXTBX. Again.
          - rm -rf $HOME/build_dials/modules/dxtbx
@@ -107,32 +70,10 @@ jobs:
          - pytest -ra -n 2
          - .travis/check-working-directory-is-clean
 
-    - name: "Test - Python 3.6"
-         # Same as above really, but on Python 3 this time
-      python: 3.6
-      before_script:
-         # Inject DXTBX. Again.
-         - rm -rf $HOME/build_dials/modules/dxtbx
-         - mv $HOME/build/cctbx/dxtbx $HOME/build_dials/modules/dxtbx
-
-         # Enter CCTBX environment
-         - cd $HOME/build_dials/build
-         - . setpaths.sh
-
-         # If needed allow up to further 30 minutes worth of building time
-         - $HOME/build_dials/modules/dxtbx/.travis/build-for 30m if_required
-
-      script:
-         # Finally. Do what we are here for. Run tests. Yay.
-         - cd $HOME/build_dials/modules/dxtbx
-         - pytest -ra -n 2
-         - .travis/check-working-directory-is-clean
-
-    - name: "Flake8 - Python 3.7"
+    - name: "Flake8"
       addons: false
       cache: false
       before_cache: false
-      dist: xenial
       python: 3.7
       script:
          - .travis/run-flake8

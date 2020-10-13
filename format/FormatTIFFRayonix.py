@@ -7,7 +7,7 @@ import struct
 import sys
 import time
 
-from boost.python import streambuf
+from boost_adaptbx.boost.python import streambuf
 from iotbx.detectors.mar import MARImage
 from scitbx.array_family import flex
 

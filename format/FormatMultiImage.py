@@ -322,5 +322,4 @@ class FormatMultiImage(Format):
                 else:
                     iset.external_lookup.mask.data = ImageBool(static_mask)
 
-        # Return the imageset
         return iset

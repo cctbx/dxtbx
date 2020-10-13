@@ -470,7 +470,6 @@ class Format(object):
                 else:
                     iset.external_lookup.mask.data = ImageBool(static_mask)
 
-        # Return the imageset
         return iset
 
     def get_image_file(self):
@@ -520,7 +519,7 @@ class Format(object):
         return None
 
     def get_spectrum(self):
-        """ Overload this method to read the image file however you like so
+        """Overload this method to read the image file however you like so
         long as the result is a spectrum
         """
         return None
