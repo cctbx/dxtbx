@@ -1,35 +1,29 @@
-from __future__ import absolute_import, division, print_function
+import argparse
 
-import sys
+from dxtbx.format import Registry
 
-import dxtbx.format.Registry
-
-dag = dxtbx.format.Registry.get_format_class_dag()
+dag = Registry.get_format_class_dag()
 
 
-def print_class(class_name, filename=None, depth=1):
-    if filename is None:
-        print("% 5d" % depth, "  " * depth, class_name)
+def print_class(class_name: str, filename: str = None, depth=1):
+    """Print a Format class name if it matches a file"""
+    if filename is None or (
+        Registry.get_format_class_for(class_name).understand(filename)
+    ):
+        print(f"{depth: 5} {'  ' * depth} {class_name}")
     else:
-        format_class = dxtbx.format.Registry.get_format_class_for(class_name)
-        if format_class.understand(filename):
-            print("% 5d" % depth, "  " * depth, class_name)
-        else:
-            return
+        return
+
     for child in dag.get(class_name, []):
         print_class(child, filename, depth + 1)
 
 
-def show_registry(filename=None):
-    if filename is None:
-        extrabit = ""
+def show_registry(filename: str = None):
+    if filename:
+        print(f"Format classes that understand {filename}:")
     else:
-        extrabit = " that understand image %s" % filename
-    print(
-        "Showing hierarchy of classes in the dxtbx registry%s. The root classes are shown with depth of 1, and subclasses are shown indented and with a higher depth number."
-        % extrabit
-    )
-    print()
+        print("Format classes in the dxtbx registry:")
+
     print("Depth  Class name")
     print("    0  Format")
 
@@ -37,8 +31,16 @@ def show_registry(filename=None):
         print_class(class_name, filename)
 
 
+def run(args=None):
+    parser = argparse.ArgumentParser(
+        description="Show hierarchy of dxtbx format classes"
+    )
+    parser.add_argument(
+        "filename", help="Only show classes that understand this file", nargs="?"
+    )
+    opts = parser.parse_args(args)
+    show_registry(opts.filename)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        show_registry(sys.argv[1])
-    else:
-        show_registry()
+    run()

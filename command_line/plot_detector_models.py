@@ -110,7 +110,8 @@ def plot_group(
                 ax.text(vcen[0], vcen[1], vcen[2], "%d" % g.index())
 
 
-def run(args):
+def run(args=None):
+    args = args or sys.argv[1:]
     user_phil = []
     files = []
     for arg in args:
@@ -172,4 +173,4 @@ def run(args):
 
 
 if __name__ == "__main__":
-    run(sys.argv[1:])
+    run()

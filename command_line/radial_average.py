@@ -92,7 +92,9 @@ master_phil = iotbx.phil.parse(
 )
 
 
-def run(args, imageset=None):
+def run(args=None, imageset=None):
+    args = sys.argv[1:] if args is None else args
+
     # Parse input
     try:
         len(args)
@@ -420,4 +422,4 @@ def run(args, imageset=None):
 
 
 if __name__ == "__main__":
-    run(sys.argv[1:])
+    run()

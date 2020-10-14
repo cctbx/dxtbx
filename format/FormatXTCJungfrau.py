@@ -15,12 +15,6 @@ from scitbx.matrix import col
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
-try:
-    from xfel.cxi.cspad_ana import cspad_tbx
-except ImportError:
-    # xfel not configured
-    pass
-
 jungfrau_locator_str = """
   jungfrau {
     dark = True
@@ -45,14 +39,7 @@ class FormatXTCJungfrau(FormatXTC):
         super(FormatXTCJungfrau, self).__init__(
             image_file, locator_scope=jungfrau_locator_scope, **kwargs
         )
-        self._ds = FormatXTC._get_datasource(image_file, self.params)
-        self._env = self._ds.env()
-        self.populate_events()
-        self.n_images = len(self.times)
         self._cached_detector = {}
-        self._cached_psana_detectors = {}
-        self._beam_index = None
-        self._beam_cache = None
 
     @staticmethod
     def understand(image_file):
@@ -62,18 +49,16 @@ class FormatXTCJungfrau(FormatXTC):
             return False
         return any(["jungfrau" in src.lower() for src in params.detector_address])
 
-    def get_raw_data(self, index):
+    def get_raw_data(self, index=None):
         from xfel.util import jungfrau
+
+        if index is None:
+            index = 0
 
         d = FormatXTCJungfrau.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
-        if run.run() not in self._cached_psana_detectors:
-            assert len(self.params.detector_address) == 1
-            self._cached_psana_detectors[run.run()] = psana.Detector(
-                self.params.detector_address[0], self._env
-            )
-        det = self._cached_psana_detectors[run.run()]
+        det = self._get_psana_detector(run)
         data = det.calib(evt)
         data = data.astype(np.float64)
         self._raw_data = []
@@ -99,33 +84,8 @@ class FormatXTCJungfrau(FormatXTC):
         assert len(d) == len(self._raw_data), (len(d), len(self._raw_data))
         return tuple(self._raw_data)
 
-    def get_num_images(self):
-        return self.n_images
-
     def get_detector(self, index=None):
         return FormatXTCJungfrau._detector(self, index)
-
-    def get_beam(self, index=None):
-        if self._beam_index != index:
-            self._beam_index = index
-            self._beam_cache = self._beam(index)
-        return self._beam_cache
-
-    def _beam(self, index=None):
-        """Returns a simple model for the beam"""
-        if index is None:
-            index = 0
-        evt = self._get_event(index)
-        wavelength = cspad_tbx.evt_wavelength(evt)
-        if wavelength is None:
-            return None
-        return self._beam_factory.simple(wavelength)
-
-    def get_goniometer(self, index=None):
-        return None
-
-    def get_scan(self, index=None):
-        return None
 
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
@@ -138,9 +98,8 @@ class FormatXTCJungfrau(FormatXTC):
 
         if index is None:
             index = 0
-        self._env = self._ds.env()
         assert len(self.params.detector_address) == 1
-        self._det = psana.Detector(self.params.detector_address[0], self._env)
+        self._det = psana.Detector(self.params.detector_address[0], run.env())
         geom = self._det.pyda.geoaccess(self._get_event(index).run())
         pixel_size = (
             self._det.pixel_size(self._get_event(index)) / 1000.0
@@ -245,16 +204,13 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
         except Exception:
             return False
 
-    def get_raw_data(self, index):
+    def get_raw_data(self, index=None):
+        if index is None:
+            index = 0
         self.get_detector(index)  # is this line required?
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
-        if run.run() not in self._cached_psana_detectors:
-            assert len(self.params.detector_address) == 1
-            self._cached_psana_detectors[run.run()] = psana.Detector(
-                self.params.detector_address[0], self._env
-            )
-        det = self._cached_psana_detectors[run.run()]
+        det = self._get_psana_detector(run)
         data = det.image(evt)
         data = data.astype(np.float64)
         self._raw_data = flex.double(data)
