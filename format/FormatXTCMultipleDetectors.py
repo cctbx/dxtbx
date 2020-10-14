@@ -18,11 +18,6 @@ multiple_locator_scope = parse(
 
 class FormatXTCMultipleDetectors(FormatXTCRayonix, FormatXTCCspad, FormatXTCJungfrau):
     def __init__(self, image_file, **kwargs):
-        self._ds = FormatXTCMultipleDetectors._get_datasource(image_file, self.params)
-        self._env = self._ds.env()
-        self.populate_events()
-        self.n_images = len(self.times)
-
         if any(["rayonix" in src.lower() for src in self.params.detector_address]):
             FormatXTCRayonix.__init__(self, image_file, **kwargs)
         if any(["cspad" in src.lower() for src in self.params.detector_address]):

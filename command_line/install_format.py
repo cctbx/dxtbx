@@ -79,7 +79,7 @@ setup(
     ).check_returncode()
 
 
-def run():
+def run(args=None):
     parser = optparse.OptionParser(
         usage="dxtbx.install_format (--user | --global) [/path/to/format/class.py] [URL]",
         description=(
@@ -112,7 +112,7 @@ def run():
             "affects all python installations for the current user, files go to ~/.dxtbx)"
         ),
     )
-    options, args = parser.parse_args()
+    options, args = parser.parse_args(args)
 
     if options.glob:
         import libtbx.load_env

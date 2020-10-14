@@ -1,6 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
-import sys
+import argparse
 
 from dxtbx import load
 
@@ -29,7 +27,15 @@ def saturation(image_file):
         )
 
 
-if __name__ == "__main__":
-    for image_file in sys.argv[1:]:
+def run(args=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("images", metavar="IMAGE", help="Image files", nargs="+")
+    options = parser.parse_args(args)
+
+    for image_file in options.images:
         i, s = saturation(image_file)
-        print("%6d %.6f" % (i, s))
+        print(f"{i:6d} {s:.6f}")
+
+
+if __name__ == "__main__":
+    run()

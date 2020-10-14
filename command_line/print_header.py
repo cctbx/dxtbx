@@ -1,6 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
-import sys
+import argparse
 
 from scitbx.array_family import flex
 
@@ -8,17 +6,16 @@ import dxtbx.format.Registry
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
-def print_header():
+def print_header(filenames):
     # this will do the lookup for every frame - this is strictly not needed
     # if all frames are from the same instrument
-
-    for arg in sys.argv[1:]:
-        print("=== %s ===" % arg)
+    for arg in filenames:
+        print(f"=== {arg} ===")
         format_class = dxtbx.format.Registry.get_format_class_for_file(arg)
         if not format_class:
-            print("No format class found that can understand %s" % arg)
+            print(f"No format class found that can understand {arg}")
             continue
-        print("Using header reader: %s" % format_class.__name__)
+        print(f"Using header reader: {format_class.__name__}")
         i = format_class(arg)
         beam = i.get_beam()
         goniometer = i.get_goniometer()
@@ -52,5 +49,12 @@ def print_header():
                 print("Could not read image data")
 
 
+def run(args=None):
+    parser = argparse.ArgumentParser(description="Print headers for images")
+    parser.add_argument("image_files", nargs="+", metavar="FILE", help="Image files")
+    options = parser.parse_args(args)
+    print_header(options.image_files)
+
+
 if __name__ == "__main__":
-    print_header()
+    run()

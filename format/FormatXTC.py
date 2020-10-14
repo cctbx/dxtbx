@@ -44,6 +44,9 @@ locator_str = """
   use_ffb = False
     .type = bool
     .help = Run on the ffb if possible. Only for active users!
+  wavelength_offset = None
+    .type = float
+    .help = Optional constant shift to apply to each wavelength
 """
 locator_scope = parse(locator_str)
 
@@ -74,6 +77,14 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 master_phil=locator_scope, user_phil=image_file, strict=True
             )
         assert self.params.mode == "idx", "idx mode should be used for analysis"
+
+        self._ds = FormatXTC._get_datasource(image_file, self.params)
+        self.populate_events()
+        self.n_images = len(self.times)
+
+        self._cached_psana_detectors = {}
+        self._beam_index = None
+        self._beam_cache = None
         self._initialized = True
 
     @staticmethod
@@ -206,6 +217,15 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         psana_runs = {r.run(): r for r in datasource.runs()}
         return psana_runs
 
+    def _get_psana_detector(self, run):
+        """ Returns the psana detector for the given run """
+        if run.run() not in self._cached_psana_detectors:
+            assert len(self.params.detector_address) == 1
+            self._cached_psana_detectors[run.run()] = psana.Detector(
+                self.params.detector_address[0], run.env()
+            )
+        return self._cached_psana_detectors[run.run()]
+
     def get_psana_timestamp(self, index):
         """Get the cctbx.xfel style event timestamp given an index"""
         evt = self._get_event(index)
@@ -216,6 +236,34 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         nsec = time[1]
 
         return cspad_tbx.evt_timestamp((sec, nsec / 1e6))
+
+    def get_num_images(self):
+        return self.n_images
+
+    def get_beam(self, index=None):
+        return self._beam(index)
+
+    def _beam(self, index=None):
+        """Returns a simple model for the beam"""
+        if index is None:
+            index = 0
+        if self._beam_index != index:
+            self._beam_index = index
+            evt = self._get_event(index)
+            wavelength = cspad_tbx.evt_wavelength(evt)
+            if wavelength is None:
+                self._beam_cache = None
+            else:
+                if self.params.wavelength_offset is not None:
+                    wavelength += self.params.wavelength_offset
+                self._beam_cache = self._beam_factory.simple(wavelength)
+        return self._beam_cache
+
+    def get_goniometer(self, index=None):
+        return None
+
+    def get_scan(self, index=None):
+        return None
 
 
 if __name__ == "__main__":
