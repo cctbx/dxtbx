@@ -1,3 +1,4 @@
+conda-forge::bitshuffle
 conda-forge::boost
 conda-forge::boost-cpp
 conda-forge::bzip2
