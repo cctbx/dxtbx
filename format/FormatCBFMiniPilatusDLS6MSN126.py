@@ -8,9 +8,9 @@ from __future__ import absolute_import, division, print_function
 import binascii
 import sys
 
+from cbflib_adaptbx import uncompress
 from scitbx import matrix
 
-from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 
 

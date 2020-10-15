@@ -9,7 +9,6 @@
 #include <vector>
 #include <limits>
 #include <dxtbx/error.h>
-#include "compression.h"
 
 namespace dxtbx { namespace boost_python {
 
@@ -166,30 +165,6 @@ namespace dxtbx { namespace boost_python {
     return result;
   }
 
-  scitbx::af::flex_int uncompress(const boost::python::object &packed,
-                                  const int &slow,
-                                  const int &fast) {
-    std::string strpacked = boost::python::extract<std::string>(packed);
-    std::size_t sz_buffer = strpacked.size();
-
-    scitbx::af::flex_int z((scitbx::af::flex_grid<>(slow, fast)),
-                           scitbx::af::init_functor_null<int>());
-    int *begin = z.begin();
-
-    dxtbx::boost_python::cbf_decompress(strpacked.c_str(), sz_buffer, begin);
-
-    return z;
-  }
-
-  PyObject *compress(const scitbx::af::flex_int z) {
-    const int *begin = z.begin();
-    std::size_t sz = z.size();
-
-    std::vector<char> packed = dxtbx::boost_python::cbf_compress(begin, sz);
-
-    return PyBytes_FromStringAndSize(&*packed.begin(), packed.size());
-  }
-
   void init_module() {
     using namespace boost::python;
     def("read_uint8", read_uint8, (arg("file"), arg("count")));
@@ -201,8 +176,6 @@ namespace dxtbx { namespace boost_python {
     def("read_int32", read_int32, (arg("file"), arg("count")));
     def("read_float32", read_float32, (arg("file"), arg("count")));
     def("is_big_endian", is_big_endian);
-    def("uncompress", &uncompress, (arg_("packed"), arg_("slow"), arg_("fast")));
-    def("compress", &compress);
   }
 
   void export_to_ewald_sphere_helpers();

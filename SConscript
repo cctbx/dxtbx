@@ -16,19 +16,7 @@ env_etc.dxtbx_common_includes = [
     env_etc.boost_include,
     env_etc.dxtbx_include,
 ] + env_etc.cbflib_common_includes
-
-Import("env_no_includes_boost_python_ext")
-env = env_no_includes_boost_python_ext.Clone()
-if libtbx.env.build_options.use_conda:
-    boost_python = get_boost_library_with_python_version(
-        "boost_python", env_etc.conda_libpath
-    )
-    env.Append(LIBPATH=env_etc.conda_libpath)
-    env_etc.dxtbx_common_includes.extend(env_etc.conda_cpppath)
-else:
-    boost_python = "boost_python"
-
-env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
+env_etc.dxtbx_libs = ["tiff", "cbf"]
 env_etc.dxtbx_hdf5_libs = ["hdf5"]
 env_etc.dxtbx_lib_paths = [
     env_etc.base_lib,
@@ -123,11 +111,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
 
     env.SharedLibrary(
         target="#lib/dxtbx_ext",
-        source=[
-            "boost_python/to_ewald_sphere_helpers.cc",
-            "boost_python/ext.cpp",
-            "boost_python/compression.cc",
-        ],
+        source=["boost_python/to_ewald_sphere_helpers.cc", "boost_python/ext.cpp"],
         LIBS=env_etc.libs_python + env_etc.libm + env_etc.dxtbx_libs,
     )
 

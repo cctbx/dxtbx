@@ -12,10 +12,10 @@ import re
 import sys
 import time
 
+from cbflib_adaptbx import uncompress
 from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.adsc_minicbf import ADSCHF4MImage
 
-from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 

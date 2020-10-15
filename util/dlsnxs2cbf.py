@@ -5,9 +5,8 @@ import binascii
 import h5py
 import numpy as np
 
+from cbflib_adaptbx import compress
 from scitbx.array_family import flex
-
-from dxtbx.ext import compress
 
 
 def get_mask(nfast, nslow):

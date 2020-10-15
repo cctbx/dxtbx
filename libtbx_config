@@ -1,5 +1,5 @@
 {
-    "modules_required_for_use": ["iotbx"],
+    "modules_required_for_use": ["iotbx", "cbflib_adaptbx"],
     "python_required": [
         "dials-data>=2.0.30",
         "mock>=2.0",

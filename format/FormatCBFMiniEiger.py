@@ -6,10 +6,10 @@ import binascii
 import os
 import sys
 
+from cbflib_adaptbx import uncompress
 from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.eiger_minicbf import EigerCBFImage
 
-from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
