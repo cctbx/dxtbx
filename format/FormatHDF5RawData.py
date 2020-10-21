@@ -13,11 +13,7 @@ class FormatRawData(FormatHDF5):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file, "r") as h5_handle:
-            return (
-                len(h5_handle) == 1
-                and "data" in h5_handle
-                and h5_handle["data"].shape[0] == 1
-            )
+            return len(h5_handle) == 1 and "data" in h5_handle
 
     def _start(self):
         self._h5_handle = h5py.File(self.get_image_file(), "r")
