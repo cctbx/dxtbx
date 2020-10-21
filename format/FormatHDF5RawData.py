@@ -30,6 +30,28 @@ class FormatRawData(FormatHDF5):
         return 1
 
 
+class FormatRawDataMulti(FormatHDF5):
+    @staticmethod
+    def understand(image_file):
+        with h5py.File(image_file, "r") as h5_handle:
+            return (
+                len(h5_handle) == 1
+                and "data" in h5_handle
+                and h5_handle["data"].shape[0] > 1
+            )
+
+    def _start(self):
+        self._h5_handle = h5py.File(self.get_image_file(), "r")
+        self._shape = self._h5_handle["data"].shape
+
+    def get_raw_data(self, index):
+        data = self._h5_handle["data"]
+        return flex.int(data[index, :, :])
+
+    def get_num_images(self):
+        return self._shape[0]
+
+
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
         print(FormatRawData.understand(arg))
