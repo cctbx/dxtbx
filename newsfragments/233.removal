@@ -1,0 +1,1 @@
+Deprecate usage of `format=` in `ScanFactory.single` for single-image scans. This will be removed in a future version.
