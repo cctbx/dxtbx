@@ -1,0 +1,1 @@
+Fix error reading nexus files when using hardlinks to detector models
