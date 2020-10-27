@@ -1,1 +1,1 @@
-Deprecate usage of `format=` in `ScanFactory.single` for single-image scans. This will be removed in a future version.
+Deprecate `ScanFactory.single`. Please use `ScanFactory.single_file` without the `format=` argument, which has been removed. `ScanFactory.single` will be removed in a future version.
