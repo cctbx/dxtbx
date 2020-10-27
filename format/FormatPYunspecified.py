@@ -149,8 +149,8 @@ class FormatPYunspecified(FormatPY):
             osc_range = self.detectorbase.deltaphi
             timestamp = self._timesec
 
-            return self._scan_factory.single(
-                self._image_file, None, exposure_time, osc_start, osc_range, timestamp
+            return self._scan_factory.single_file(
+                self._image_file, exposure_time, osc_start, osc_range, timestamp
             )
 
         else:

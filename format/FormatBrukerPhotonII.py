@@ -147,9 +147,8 @@ class FormatBrukerPhotonII(FormatBruker):
             start *= -1
             incr *= -1
 
-        return self._scan_factory.single(
+        return self._scan_factory.single_file(
             filename=self._image_file,
-            format=None,
             exposure_times=1,
             osc_start=start,
             osc_width=incr,

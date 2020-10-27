@@ -144,9 +144,8 @@ class FormatBruker(Format):
     def _scan(self):
         """Return the scan information for this image."""
 
-        return self._scan_factory.single(
+        return self._scan_factory.single_file(
             filename=self._image_file,
-            format=None,
             # It's not at all clear how to recover the exposure time from the header
             # or even whether it is recorded.
             # XXX Here it will simply be set to a default number.

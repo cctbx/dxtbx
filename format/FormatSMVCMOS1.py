@@ -170,8 +170,8 @@ class FormatSMVCMOS1(FormatSMV):
         osc_start = rotation[0]
         osc_range = rotation[2]
 
-        return self._scan_factory.single(
-            self._image_file, None, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
     def get_raw_data(self):

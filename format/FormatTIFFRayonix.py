@@ -165,8 +165,8 @@ class FormatTIFFRayonix(FormatTIFF):
         osc_start = starts[offset]
         osc_range = width
 
-        return self._scan_factory.single(
-            self._image_file, None, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
     ####################################################################

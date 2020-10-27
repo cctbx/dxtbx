@@ -186,8 +186,8 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
         timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
 
-        return self._scan_factory.single(
-            self._image_file, None, exposure_time, osc_start, osc_range, timestamp
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, timestamp
         )
 
     def get_vendortype(self):
