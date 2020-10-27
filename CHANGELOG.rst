@@ -1,3 +1,36 @@
+DIALS 3.2.0 (2020-10-27)
+========================
+
+Features
+--------
+
+- Add clear_cache() method to clear internal imageset cache (#218)
+- Add `dxtbx.model.detector_helpers.project_2d` function, which calculates
+  a 2D projection of the detector panels into a frame aligned to the
+  image. This is intended for use in display tasks for mostly co-planar
+  detectors. (#224)
+- image template: add support for nameNNNN e.g. image1234 as a valid name (#234)
+- `BeamFactory.simple` will now return an unpolarised beam for >~247 KeV beams
+  (e.g. Electron diffraction) (#243)
+
+
+Bugfixes
+--------
+
+- Fix reading of legacy pickle-image files created from Python 3 (#205)
+- Allow importing filenames with special format characters like % (#214)
+- `dxtbx.dlsnxs2cbf`: strip timezone when making CBF file timestamps (#235)
+- Fix error reading nexus files when using hardlinks to detector models (#240)
+- SMV Formats: Use header gain values if present, rather than guessing (#242)
+
+
+Misc
+----
+- We have moved the pytest launchers from cctbx_project to dxtbx. If you run
+  into `libtbx.configure` errors make sure both repositories are up to date (#231)
+- #209, #211, #212, #217, #225, #226, #230
+
+
 DIALS 3.1.4 (2020-10-12)
 ========================
 
