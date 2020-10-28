@@ -109,7 +109,7 @@ class FormatXTCJungfrau(FormatXTC):
         evt = self._get_event(index)
 
         if self._dist_det is None:
-            self._dist_det = psana.Detector('CXI:DS1:MMS:06.RBV')
+            self._dist_det = psana.Detector("CXI:DS1:MMS:06.RBV")
 
         geom = self._det.pyda.geoaccess(evt.run())
         pixel_size = (
@@ -128,9 +128,9 @@ class FormatXTCJungfrau(FormatXTC):
             root_basis = root_basis * sub_basis
         t = root_basis.translation
         if self.params.jungfrau.detz_offset:
-          distance = self._dist_det(evt) + self.params.jungfrau.detz_offset
+            distance = self._dist_det(evt) + self.params.jungfrau.detz_offset
         else:
-          distance = t[2]
+            distance = t[2]
         root_basis.translation = col((t[0], t[1], -distance))
 
         origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
