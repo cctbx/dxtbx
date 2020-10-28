@@ -26,6 +26,10 @@ jungfrau_locator_str = """
     use_big_pixels = True
       .type = bool
       .help = account for multi-sized pixels in the 512x1024 Jungfrau panels, forming a 514x1030 pixel panel
+    detz_offset = None
+      .type = float
+      .help = Distance from back of detector rail to sample interaction region (CXI) \
+              or actual detector distance (XPP/MFX)
   }
 """
 
@@ -106,7 +110,6 @@ class FormatXTCJungfrau(FormatXTC):
 
         if self._dist_det is None:
             self._dist_det = psana.Detector('CXI:DS1:MMS:06.RBV')
-        distance = self._dist_det(evt) + 573.3387
 
         geom = self._det.pyda.geoaccess(evt.run())
         pixel_size = (
@@ -124,6 +127,10 @@ class FormatXTCJungfrau(FormatXTC):
             root = sub
             root_basis = root_basis * sub_basis
         t = root_basis.translation
+        if self.params.jungfrau.detz_offset:
+          distance = self._dist_det(evt) + self.params.jungfrau.detz_offset
+        else:
+          distance = t[2]
         root_basis.translation = col((t[0], t[1], -distance))
 
         origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
