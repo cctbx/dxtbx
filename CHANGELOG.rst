@@ -4,13 +4,13 @@ DIALS 3.2.0 (2020-10-27)
 Features
 --------
 
-- Add clear_cache() method to clear internal imageset cache  (`#218 <https://github.com/cctbx/dxtbx/issues/218>`_)
-- Add `dxtbx.model.detector_helpers.project_2d` function, which calculates
+- Add ``clear_cache()`` method to clear internal imageset cache  (`#218 <https://github.com/cctbx/dxtbx/issues/218>`_)
+- Add ``dxtbx.model.detector_helpers.project_2d`` function, which calculates
   a 2D projection of the detector panels into a frame aligned to the
   image. This is intended for use in display tasks for mostly co-planar
   detectors.  (`#224 <https://github.com/cctbx/dxtbx/issues/224>`_)
-- image template: add support for nameNNNN e.g. image1234 as a valid name  (`#234 <https://github.com/cctbx/dxtbx/issues/234>`_)
-- `BeamFactory.simple` will now return an unpolarised beam for >~247 KeV beams
+- image template: add support for ``nameNNNN`` e.g. ``image1234`` as a valid name  (`#234 <https://github.com/cctbx/dxtbx/issues/234>`_)
+- ``BeamFactory.simple`` will now return an unpolarised beam for >~247 KeV beams
   (e.g. Electron diffraction)  (`#243 <https://github.com/cctbx/dxtbx/issues/243>`_)
 
 
@@ -18,8 +18,8 @@ Bugfixes
 --------
 
 - Fix reading of legacy pickle-image files created from Python 3  (`#205 <https://github.com/cctbx/dxtbx/issues/205>`_)
-- Allow importing filenames with special format characters like %  (`#214 <https://github.com/cctbx/dxtbx/issues/214>`_)
-- `dxtbx.dlsnxs2cbf`: strip timezone when making CBF file timestamps  (`#235 <https://github.com/cctbx/dxtbx/issues/235>`_)
+- Allow importing filenames with special format characters like ``%``  (`#214 <https://github.com/cctbx/dxtbx/issues/214>`_)
+- ``dxtbx.dlsnxs2cbf``: strip timezone when making CBF file timestamps  (`#235 <https://github.com/cctbx/dxtbx/issues/235>`_)
 - Fix error reading nexus files when using hardlinks to detector models  (`#240 <https://github.com/cctbx/dxtbx/issues/240>`_)
 - SMV Formats: Use header gain values if present, rather than guessing  (`#242 <https://github.com/cctbx/dxtbx/issues/242>`_)
 
@@ -27,8 +27,11 @@ Bugfixes
 Misc
 ----
 - We have moved the pytest launchers from cctbx_project to dxtbx. If you run
-  into `libtbx.configure` errors make sure both repositories are up to date  (`#231 <https://github.com/cctbx/dxtbx/issues/231>`_)
-- `#209 <https://github.com/cctbx/dxtbx/issues/209>`_, `#211 <https://github.com/cctbx/dxtbx/issues/211>`_, `#212 <https://github.com/cctbx/dxtbx/issues/212>`_, `#217 <https://github.com/cctbx/dxtbx/issues/217>`_, `#225 <https://github.com/cctbx/dxtbx/issues/225>`_, `#226 <https://github.com/cctbx/dxtbx/issues/226>`_, `#230 <https://github.com/cctbx/dxtbx/issues/230>`_
+  into ``libtbx.configure`` errors make sure both repositories are up to date  (`#231 <https://github.com/cctbx/dxtbx/issues/231>`_)
+- `#209 <https://github.com/cctbx/dxtbx/issues/209>`_, `#211 <https://github.com/cctbx/dxtbx/issues/211>`_,
+  `#212 <https://github.com/cctbx/dxtbx/issues/212>`_, `#217 <https://github.com/cctbx/dxtbx/issues/217>`_,
+  `#225 <https://github.com/cctbx/dxtbx/issues/225>`_, `#226 <https://github.com/cctbx/dxtbx/issues/226>`_,
+  `#230 <https://github.com/cctbx/dxtbx/issues/230>`_
 
 
 DIALS 3.1.4 (2020-10-12)
@@ -159,7 +162,7 @@ DIALS 2.1 (2019-12-16)
 Features
 --------
 
-- With changes in dials.import sequences of stills are imported as individual 
+- With changes in dials.import sequences of stills are imported as individual
   experiments all dereferencing one image set - this is the change set to support
   this on load.  (`#118 <https://github.com/cctbx/dxtbx/issues/118>`_)
 
