@@ -103,14 +103,3 @@ def datablock(obj, outfile, **kwargs):
     """Dump the given object to file."""
     dump = DataBlockDumper(obj)
     dump.as_file(outfile, **kwargs)
-
-
-def experiment_list(obj, outfile):
-    """Dump an experiment list."""
-    warnings.warn(
-        "use .as_file() on the experimentlist directly",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    obj.as_file(outfile)
