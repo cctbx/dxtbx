@@ -3,22 +3,12 @@
 # write and run pytest tests, and an overview of the available features.
 #
 
-import functools
 import os
 import socket
 
-import procrunner
 import pytest
 
 collect_ignore = []
-
-# Disable the Python Development Mode for subprocesses.
-# This is because we have too many warnings and we treat stderr output as test failures.
-# Neither is optimal. This should be removed once we have warnings under control.
-_wrapped_procrunner = functools.partial(
-    procrunner.run, environment_override={"PYTHONDEVMODE": ""}
-)
-procrunner.run = _wrapped_procrunner
 
 
 def dials_regression_path():
