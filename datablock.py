@@ -1601,22 +1601,23 @@ class DataBlockDumper(object):
         """Dump datablock as json."""
 
         dictionary = [db.to_dict() for db in self._datablocks]
-        if compact:
-            json.dump(
-                dictionary,
-                open(filename, "w"),
-                separators=(",", ":"),
-                ensure_ascii=True,
-                cls=AutoEncoder,
-            )
-        else:
-            json.dump(
-                dictionary,
-                open(filename, "w"),
-                indent=2,
-                ensure_ascii=True,
-                cls=AutoEncoder,
-            )
+        with open(filename, "w") as fh:
+            if compact:
+                json.dump(
+                    dictionary,
+                    fh,
+                    separators=(",", ":"),
+                    ensure_ascii=True,
+                    cls=AutoEncoder,
+                )
+            else:
+                json.dump(
+                    dictionary,
+                    fh,
+                    indent=2,
+                    ensure_ascii=True,
+                    cls=AutoEncoder,
+                )
 
     def as_pickle(self, filename=None, **kwargs):
         """Dump datablock as pickle."""
