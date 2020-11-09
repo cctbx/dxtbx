@@ -1139,11 +1139,8 @@ def find_goniometer_rotation(obj):
         if o.attrs["transformation_type"] == numpy.string_("rotation"):
             # if this is changing, assume is scan axis
             v = o[()]
-            try:
-                if min(v) < max(v):
-                    return o
-            except TypeError:
-                continue
+            if v.min() < v.max():
+                return o
     raise ValueError("no rotation found")
 
 
