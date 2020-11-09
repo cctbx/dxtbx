@@ -288,12 +288,9 @@ def construct_axes(nx_file, item, vector=None):
 
                 # is the axis moving? Check the values for this axis
                 v = item[...]
-                try:
-                    if min(v) < max(v):
-                        is_scan_axis = True
-                    else:
-                        is_scan_axis = False
-                except TypeError:
+                if v.min() < v.max():
+                    is_scan_axis = True
+                else:
                     is_scan_axis = False
 
                 # Is different coordinate system called mcstas
