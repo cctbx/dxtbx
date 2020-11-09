@@ -8,6 +8,7 @@ import logging
 import math
 import operator
 import os.path
+import warnings
 from builtins import range
 from os.path import abspath, dirname, normpath, splitext
 
@@ -634,7 +635,7 @@ class ImageMetadataRecord(object):
         return not self == other
 
 
-def _openingpathiterator(pathnames):
+def _openingpathiterator(pathnames: Iterable[str]):
     """Utility function to efficiently open all paths.
 
     A path is a potential file or directory.
@@ -649,7 +650,6 @@ def _openingpathiterator(pathnames):
     Args:
         pathnames: Paths to attempt to open
     """
-    # type: (Iterable[str])
 
     # Store a tuple of (recurse, pathname) to track what was root level
     paths = collections.deque((True, x) for x in sorted(pathnames))
@@ -1596,6 +1596,11 @@ class DataBlockDumper(object):
             self._datablocks = [datablocks]
         else:
             self._datablocks = datablocks
+        warnings.warn(
+            "dxtbx.datablock.DataBlockDumper is deprecated and will be removed in the next release",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def as_json(self, filename=None, compact=False):
         """Dump datablock as json."""
