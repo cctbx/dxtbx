@@ -2,13 +2,8 @@ import h5py
 
 # static enumerations for useless file types
 
-from enum import Enum, auto
-class HDF5_FileType(Enum):
-    DATA=auto()
-    META=auto()
-    MPCCD=auto()
-    NXS=auto()
-    UNKNOWN=auto()
+from enum import Enum
+HDF5_FileType = Enum("HDF5_FileType", "DATA META MPCCD NXS UNKNOWN")
 
 
 def get_hdf5_file_type(hdf5_filename):
