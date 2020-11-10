@@ -33,7 +33,12 @@ class FormatNexusJungfrauHack(FormatNexus):
     def understand(image_file):
         try:
             with h5py.File(image_file, "r") as handle:
-                return "/entry/instrument/JF1M" in handle
+                return any(
+                    [
+                        "/entry/instrument/JF1M" in handle,
+                        "/entry/instrument/JF4M" in handle,
+                    ]
+                )
         except IOError:
             return False
 
@@ -81,6 +86,8 @@ class FormatNexusJungfrauHack(FormatNexus):
         nx_detector = detector.handle
         nx_module = detector.modules[0].handle
 
+        detector_modules = len(detector.modules)
+
         # Get the detector name and type
         if "type" in nx_detector:
             detector_type = str(nx_detector["type"][()])
@@ -103,7 +110,10 @@ class FormatNexusJungfrauHack(FormatNexus):
         # Get the detector material
         material = nx_detector["sensor_material"][()]
         if hasattr(material, "shape"):
-            material = "".join(m.decode() for m in material)
+            try:
+                material = "".join(m.decode() for m in material)
+            except AttributeError:
+                material = material.decode()
         detector_material = clean_string(str(material))
         material = {
             "Si": "Si",
@@ -171,8 +181,11 @@ class FormatNexusJungfrauHack(FormatNexus):
         # Construct the detector model
         pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
         # image size stored slow to fast but dxtbx needs fast to slow
-        image_size = tuple(int(x) for x in reversed(nx_module["data_size"][-2:]))
-        image_size = (1030, 1064)
+
+        if detector_modules == 2:
+            image_size = (1030, 1064)
+        elif detector_modules == 8:
+            image_size = (2060, 2056)
 
         self.model = Detector()
         self.model.add_panel(
@@ -200,7 +213,10 @@ class FormatNexusJungfrauHack(FormatNexus):
 
     def _setup_gonio_and_scan(self, sample, detector):
         with h5py.File(self._image_file, "r") as handle:
-            phi = handle["/entry/sample/goniometer/omega"][()]
+            if "/entry/sample/goniometer/omega" in handle:
+                phi = handle["/entry/sample/goniometer/omega"][()]
+            elif "/entry/sample/transformations/omega" in handle:
+                phi = handle["/entry/sample/transformations/omega"][()]
         image_range = (1, len(phi))
         oscillation = (float(phi[0]), float(phi[1] - phi[0]))
 
