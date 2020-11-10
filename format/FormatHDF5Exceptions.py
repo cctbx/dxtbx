@@ -1,8 +1,7 @@
+from enum import Enum
+
 import h5py
 
-# static enumerations for useless file types
-
-from enum import Enum
 HDF5_FileType = Enum("HDF5_FileType", "DATA META MPCCD NXS UNKNOWN")
 
 
