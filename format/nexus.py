@@ -1429,9 +1429,9 @@ def detectorgroupdatafactory(obj, instrument):
         dataset_name = key
         found_it = False
         for detector in instrument.detectors:
+            detector_name = os.path.basename(detector.handle.name)
             if dataset_name in detector.handle:
                 found_it = True
-                detector_name = os.path.basename(detector.handle.name)
                 if detector_name in mapping:
                     assert (
                         dataset_name not in mapping[detector_name]["dataset_names"]
@@ -1444,6 +1444,20 @@ def detectorgroupdatafactory(obj, instrument):
                         "datasets": [dataset],
                         "detector": detector,
                     }
+                break
+
+            # check to see if ths is a softlink to this data
+            for name in detector.handle:
+                link = detector.handle.get(name, getlink=True)
+                if isinstance(link, h5py.SoftLink):
+                    if os.path.basename(link.path) == key:
+                        found_it = True
+                        mapping[detector_name] = {
+                            "dataset_names": {dataset_name},
+                            "datasets": [dataset],
+                            "detector": detector,
+                        }
+
         assert found_it, "Couldn't match dataset %s to a NXdetector" % dataset_name
 
     # Create a list of multipanel datalist objects
