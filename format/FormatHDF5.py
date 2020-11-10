@@ -4,6 +4,7 @@ import sys
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
+from dxtbx.format.FormatHDF5Exceptions import HDF5_NXS_FILE, hdf5_file_type
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
@@ -18,7 +19,12 @@ class FormatHDF5(FormatMultiImage, Format):
     def understand(image_file):
         try:
             with FormatHDF5.open_file(image_file, "rb") as fh:
-                return fh.read(8) == b"\211HDF\r\n\032\n"
+                if fh.read(8) != b"\211HDF\r\n\032\n":
+                    return False
+            if hdf5_file_type(image_file) == HDF5_NXS_FILE:
+                return True
+            else:
+                return False
         except IOError:
             return False
 
