@@ -112,6 +112,10 @@ class Format(object):
     def ignore(cls):
         return False
 
+    @classmethod
+    def is_abstract(cls):
+        return cls is Format
+
     @staticmethod
     def has_dynamic_shadowing(**kwargs):
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)

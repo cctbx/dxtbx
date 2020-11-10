@@ -8,6 +8,10 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
 class FormatHDF5(FormatMultiImage, Format):
+    @classmethod
+    def is_abstract(cls):
+        return cls is FormatHDF5
+
     def __init__(self, image_file, **kwargs):
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
