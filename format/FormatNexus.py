@@ -171,7 +171,10 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
 
                 for entry in find_entries(handle, "/"):
                     for sample in find_class(entry, "NXsample"):
-                        if "depends_on" not in sample:
+                        if (
+                            "depends_on" not in sample
+                            and "transformations" not in sample
+                        ):
                             is_nexus_still = True
         except IOError:
             return False
