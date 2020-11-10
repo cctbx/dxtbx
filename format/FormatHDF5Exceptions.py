@@ -6,6 +6,7 @@ HDF5_UNKNOWN = -1
 HDF5_NXS_FILE = 0
 HDF5_DATA_FILE = 1
 HDF5_META_FILE = 2
+HDF5_MPCCD = 0
 
 
 def hdf5_file_type(hdf5_filename):
@@ -22,7 +23,12 @@ def hdf5_file_type(hdf5_filename):
         if "config" in top_level and "frame_written" in top_level:
             return HDF5_META_FILE
 
+        # NeXus type files contain only /entry at the top (at the moment)
         if top_level == set(["entry"]):
             return HDF5_NXS_FILE
+
+        # SACLA MPCCD contains "metadata" and ... other stuff
+        if "metadata" in top_level:
+            return HDF5_MPCCD
 
     return HDF5_UNKNOWN
