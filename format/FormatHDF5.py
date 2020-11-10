@@ -18,12 +18,9 @@ class FormatHDF5(FormatMultiImage, Format):
     @staticmethod
     def understand(image_file):
         try:
-            with FormatHDF5.open_file(image_file, "rb") as fh:
-                if fh.read(8) != b"\211HDF\r\n\032\n":
-                    return False
             filetype = get_hdf5_file_type(image_file)
             return filetype in (HDF5_FileType.NXS, HDF5_FileType.MPCCD)
-        except IOError:
+        except (IOError, OSError):
             return False
 
 
