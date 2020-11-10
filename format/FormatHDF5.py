@@ -4,7 +4,7 @@ import sys
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
-from dxtbx.format.FormatHDF5Exceptions import HDF5_NXS_FILE, hdf5_file_type
+from dxtbx.format.FormatHDF5Exceptions import HDF5_FileType, get_hdf5_file_type
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
