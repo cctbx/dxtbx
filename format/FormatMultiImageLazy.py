@@ -12,6 +12,10 @@ class FormatMultiImageLazy(FormatMultiImage):
     """
 
     @classmethod
+    def is_abstract(cls):
+        return cls is FormatMultiImageLazy
+
+    @classmethod
     def get_imageset(
         Class,
         filenames,

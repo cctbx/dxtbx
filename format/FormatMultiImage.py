@@ -58,6 +58,10 @@ class FormatMultiImage(Format):
     def __init__(self, **kwargs):
         pass
 
+    @classmethod
+    def is_abstract(cls):
+        return cls is FormatMultiImage
+
     def get_num_images(self):
         raise NotImplementedError
 

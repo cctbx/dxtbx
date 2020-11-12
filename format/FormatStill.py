@@ -10,6 +10,10 @@ from dxtbx.model.detector import Detector
 
 
 class FormatStill(Format):
+    @classmethod
+    def is_abstract(cls):
+        return cls is FormatStill
+
     def setup(self):
         """Read the image file, construct the information which we will be
         wanting about the experiment from this. N.B. in your implementation
