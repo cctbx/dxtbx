@@ -16,11 +16,16 @@ if sys.version_info.major == 2:
         UserWarning,
     )
 
-if not os.getenv("HDF5_PLUGIN_PATH"):
-    # Set up the plugin path for HDF5 to pick up compression plugins.
-    plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
+plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
+new_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
+if os.path.exists(plugin_path) and not os.path.exists(new_plugin_path):
+    # Set up the plugin path for HDF5 to pick up compression plugins from legacy location
     os.environ["HDF5_PLUGIN_PATH"] = (
         plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
+    )
+    warnings.warn(
+        "You are using an outdated version of the hdf5-external-filter-plugins package.",
+        DeprecationWarning,
     )
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
