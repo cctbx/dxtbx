@@ -16,11 +16,12 @@ if sys.version_info.major == 2:
         UserWarning,
     )
 
-# Set up the plugin path for HDF5 to pick up compression plugins.
-plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
-os.environ["HDF5_PLUGIN_PATH"] = (
-    plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
-)
+if not os.getenv("HDF5_PLUGIN_PATH"):
+    # Set up the plugin path for HDF5 to pick up compression plugins.
+    plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
+    os.environ["HDF5_PLUGIN_PATH"] = (
+        plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
+    )
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
 
