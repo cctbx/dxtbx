@@ -1,0 +1,1 @@
+remove deprecated dxtbx.serialize.dump.experiment_list, dxtbx.serialize.filename.load_path, and as_str argument to dxtbx.serialize.xds.to_xds().XDS_INP()

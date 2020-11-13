@@ -1,1 +1,0 @@
-move pytest launcher from cctbx_project to dxtbx. If you run into libtbx.configure errors make sure both repositories are up to date.

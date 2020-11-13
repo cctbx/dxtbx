@@ -34,7 +34,8 @@ def test_split_single_image_datablock(dials_regression, tmpdir):
     assert get_indices(subblock) == [2]
 
     dumped_filename = "split_datablock.json"
-    dump = DataBlockDumper(subblock)
+    with pytest.warns(DeprecationWarning):
+        dump = DataBlockDumper(subblock)
     dump.as_json(dumped_filename)
 
     db = DataBlockFactory.from_json_file(dumped_filename, check_format=True)[0]

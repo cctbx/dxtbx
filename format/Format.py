@@ -5,20 +5,11 @@ A top-level class to represent image formats which does little else but
 inherit from this. This will also contain links to the static methods
 from the X(component)Factories which will allow construction of e.g.
 goniometers etc. from the headers and hence a format specific factory.
-
-isort:skip_file
 """
 
-from __future__ import absolute_import, division, print_function
-
-from future import standard_library
-
-standard_library.install_aliases()
-
+import bz2
 import functools
-import sys
 import os
-from builtins import range
 
 from six.moves.urllib_parse import urlparse
 
@@ -32,26 +23,6 @@ from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.sequence_filenames import template_regex
-
-
-if sys.hexversion < 0x3040000:
-    # try Python3.3 backport bz2 pypi module first.
-    # this supports multiple compression streams.
-    # to install run  libtbx.pip install bz2file
-    try:
-        import bz2file
-
-        bz2 = bz2file
-    except ImportError:
-        bz2 = None
-else:
-    bz2 = None
-
-if not bz2:
-    try:
-        import bz2
-    except ImportError:
-        bz2 = None
 
 try:
     import gzip
@@ -315,7 +286,7 @@ class Format(object):
 
         """
         # Import here to avoid cyclic imports
-        from dxtbx.imageset import ImageSet, ImageSetData, ImageSequence
+        from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData
 
         # Get filename absolute paths, for entries that are filenames
         filenames = [
@@ -542,8 +513,6 @@ class Format(object):
         caching transparently if possible."""
 
         if filename.endswith(".bz2"):
-            if not bz2:
-                raise RuntimeError("bz2 file provided without bz2 module")
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
 
         elif filename.endswith(".gz"):

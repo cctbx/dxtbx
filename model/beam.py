@@ -191,19 +191,37 @@ class BeamFactory(object):
     def simple(wavelength):
         """Construct a beam object on the principle that the beam is aligned
         with the +z axis, as is quite normal. Also assume the beam has
-        polarization fraction 0.999 and is polarized in the x-z plane."""
+        polarization fraction 0.999 and is polarized in the x-z plane, unless
+        it has a wavelength shorter than 0.05 Å in which case we assume
+        electron diffraction and return an unpolarized beam model."""
 
-        return BeamFactory.make_beam(
-            sample_to_source=(0.0, 0.0, 1.0), wavelength=wavelength
-        )
+        if wavelength > 0.05:
+            return BeamFactory.make_beam(
+                sample_to_source=(0.0, 0.0, 1.0), wavelength=wavelength
+            )
+        else:
+            return BeamFactory.make_polarized_beam(
+                sample_to_source=(0.0, 0.0, 1.0),
+                wavelength=wavelength,
+                polarization=(0, 1, 0),
+                polarization_fraction=0.5,
+            )
 
     @staticmethod
     def simple_directional(sample_to_source, wavelength):
         """Construct a beam with direction and wavelength."""
 
-        return BeamFactory.make_beam(
-            sample_to_source=sample_to_source, wavelength=wavelength
-        )
+        if wavelength > 0.05:
+            return BeamFactory.make_beam(
+                sample_to_source=sample_to_source, wavelength=wavelength
+            )
+        else:
+            return BeamFactory.make_polarized_beam(
+                sample_to_source=sample_to_source,
+                wavelength=wavelength,
+                polarization=(0, 1, 0),
+                polarization_fraction=0.5,
+            )
 
     @staticmethod
     def complex(

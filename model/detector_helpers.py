@@ -1,9 +1,18 @@
 from __future__ import absolute_import, division, print_function
 
+import itertools
 import math
 from builtins import object
+from operator import itemgetter
+
+import numpy as np
 
 from scitbx import matrix
+
+try:
+    import sklearn.cluster
+except ImportError:
+    sklearn = None
 
 
 def read_xds_xparm(xds_xparm_file):
@@ -286,3 +295,112 @@ def set_detector_distance(detector, distance):
     fast_axis = detector[0].get_fast_axis()
     slow_axis = detector[0].get_slow_axis()
     detector[0].set_frame(fast_axis, slow_axis, origin)
+
+
+def project_2d(detector):
+    """
+    Project panel origin, fast and slow onto the best-fitting 2D plane.
+    """
+
+    # Extract panel vertices
+    vertices = []
+    for panel in detector:
+        origin = matrix.col(panel.get_origin())
+        fast = matrix.col(panel.get_fast_axis())
+        slow = matrix.col(panel.get_slow_axis())
+        panel_size = panel.get_image_size_mm()
+        point1 = origin + panel_size[0] * fast
+        point2 = origin + panel_size[1] * slow
+        point3 = origin + panel_size[0] * fast + panel_size[1] * slow
+        vertices.append(origin)
+        vertices.append(point1)
+        vertices.append(point2)
+        vertices.append(point3)
+
+    # Fit a plane by SVD. Modified from https://stackoverflow.com/a/18968498
+    points = np.array(vertices).transpose()
+    centre = points.mean(axis=1)
+    r = points - centre[:, np.newaxis]  # centroid-to-vertex vectors
+    inertia_tensor = np.matmul(r, r.T)
+    u = np.linalg.svd(inertia_tensor)[0]
+    normal = matrix.col(u[:, 2].tolist()).normalize()
+    sum_vertices = matrix.col((0, 0, 0))
+    for v in vertices:
+        sum_vertices += v
+    if normal.dot(sum_vertices) > 0:
+        normal *= -1.0
+
+    # For multi-panel detectors cluster fast, slow axes by DBSCAN to get a
+    # consensus X, Y for the 2D plane
+    clustered_axes = False
+    if sklearn and len(detector) > 1:
+        clustered_axes = True
+        axes = []
+        for panel in detector:
+            axes.append(panel.get_fast_axis())
+            axes.append(panel.get_slow_axis())
+        clusters = sklearn.cluster.DBSCAN(eps=0.1, min_samples=2).fit_predict(axes)
+        nclusters = max(clusters) + 1
+
+        # Revert to single panel mode if clustering is unsucessful
+        if nclusters < 2:
+            clustered_axes = False
+
+    if clustered_axes:
+        summed_axes = [matrix.col((0, 0, 0)) for i in range(nclusters)]
+        for axis, cluster in zip(axes, clusters):
+            summed_axes[cluster] += matrix.col(axis)
+
+        # Combine any two clusters approximately related by inversion
+        all_checked = False
+        while not all_checked:
+            all_checked = True
+            for i, j in itertools.combinations(range(len(summed_axes)), r=2):
+                angle = summed_axes[i].angle(summed_axes[j], deg=True)
+                if 175 < angle < 185:
+                    summed_axes[i] = summed_axes[i] - summed_axes[j]
+                    summed_axes = [e for k, e in enumerate(summed_axes) if k != j]
+                    all_checked = False
+                    break
+        axes = summed_axes
+    # For detectors with few panels or badly misaligned panels, align the
+    # plane using the corners of the detector
+    else:
+        # Find the 4 points furthest from the centre (the detector corners)
+        dists = np.linalg.norm(r, axis=0)
+        threshold = sorted(dists)[-4]
+        corners = np.where(dists >= threshold)[0].tolist()
+        corners = [vertices[e] for e in corners]
+
+        # Extract two spanning axes from these
+        axes = [e - corners[0] for e in corners[1:]]
+        lengths = [ax.length() for ax in axes]
+        axes = [e for _, e in sorted(zip(lengths, axes), key=itemgetter(0))][0:2]
+
+    # Choose whichever axis is closest to lab X for the plane's X
+    labX = matrix.col((1, 0, 0))
+    nearX = [ax.accute_angle(labX) for ax in axes]
+    X = [ax for _, ax in sorted(zip(nearX, axes))][0]
+    if X.dot(labX) < 0:
+        X *= -1
+
+    # Choose Y in the plane and X orthogonal
+    Y = normal.cross(X).normalize()
+    X = Y.cross(normal).normalize()
+
+    # Project centre-shifted origins and fast, slow axes to the plane.
+    origin_2d = []
+    fast_2d = []
+    slow_2d = []
+    centre = matrix.col(centre)
+    for panel in detector:
+        origin = matrix.col(panel.get_origin())
+        centre_to_origin = origin - centre
+        fast = matrix.col(panel.get_fast_axis())
+        slow = matrix.col(panel.get_slow_axis())
+
+        origin_2d.append((centre_to_origin.dot(X), centre_to_origin.dot(Y)))
+        fast_2d.append((fast.dot(X), fast.dot(Y)))
+        slow_2d.append((slow.dot(X), slow.dot(Y)))
+
+    return origin_2d, fast_2d, slow_2d
