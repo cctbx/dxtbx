@@ -1,12 +1,10 @@
-from __future__ import absolute_import, division, print_function
-
 import errno
 import json
 import os
 from collections import namedtuple
 from pprint import pprint
+from unittest import mock
 
-import mock
 import pytest
 import six.moves.cPickle as pickle
 
@@ -25,8 +23,7 @@ def centroid_test_data(dials_regression):
 @pytest.fixture
 def single_sequence_filenames(centroid_test_data):
     filenames = [
-        os.path.join(centroid_test_data, "centroid_000{}.cbf".format(i))
-        for i in range(1, 10)
+        os.path.join(centroid_test_data, f"centroid_000{i}.cbf") for i in range(1, 10)
     ]
     return filenames
 
@@ -34,7 +31,7 @@ def single_sequence_filenames(centroid_test_data):
 @pytest.fixture
 def multiple_sequence_filenames(centroid_test_data):
     filenames = [
-        os.path.join(centroid_test_data, "centroid_000{}.cbf".format(i))
+        os.path.join(centroid_test_data, f"centroid_000{i}.cbf")
         for i in [1, 2, 3, 7, 8, 9]
     ]
     return filenames

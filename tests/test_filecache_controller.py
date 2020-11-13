@@ -1,8 +1,6 @@
-# coding: utf-8
-from __future__ import absolute_import, division, print_function
+from unittest.mock import Mock, create_autospec
 
 import pytest
-from mock import Mock, create_autospec
 
 import dxtbx.filecache
 import dxtbx.filecache_controller as fcc
