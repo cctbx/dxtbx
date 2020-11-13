@@ -12,7 +12,9 @@ class FormatMultiImageLazy(FormatMultiImage):
     """
 
     @classmethod
-    def is_abstract(cls):
+    def is_abstract_format(cls):
+        """This class will not be picked by the dxtbx registry. A derived
+        class should fully understand the experiment."""
         return cls is FormatMultiImageLazy
 
     @classmethod

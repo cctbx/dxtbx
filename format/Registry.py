@@ -126,6 +126,6 @@ def get_format_class_for_file(image_file, format_hint=None):
             result = recurse(format, image_file)
             break
 
-    if result is not None and result.is_abstract():
+    if result and result.is_abstract_format():
         result = None
     return result

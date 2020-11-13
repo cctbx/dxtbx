@@ -9,7 +9,9 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 class FormatHDF5(FormatMultiImage, Format):
     @classmethod
-    def is_abstract(cls):
+    def is_abstract_format(cls):
+        """This class will not be picked by the dxtbx registry. A derived
+        class should fully understand the experiment."""
         return cls is FormatHDF5
 
     def __init__(self, image_file, **kwargs):
