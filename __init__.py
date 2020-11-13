@@ -16,11 +16,20 @@ if sys.version_info.major == 2:
         UserWarning,
     )
 
-# Set up the plugin path for HDF5 to pick up compression plugins.
-plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
-os.environ["HDF5_PLUGIN_PATH"] = (
-    plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
-)
+# DeprecationWarning until 2020-11-30, then UserWarning
+# Remove after DIALS 3.3 release branch is made
+_legacy_plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
+_hdf5_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
+if os.path.exists(_legacy_plugin_path) and not os.path.exists(_hdf5_plugin_path):
+    # Set up the plugin path for HDF5 to pick up compression plugins from legacy location
+    os.environ["HDF5_PLUGIN_PATH"] = (
+        _legacy_plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
+    )
+    warnings.warn(
+        "You are using an outdated version of the hdf5-external-filter-plugins package.\n"
+        "Please update your environment using 'conda install hdf5-external-filter-plugins'",
+        DeprecationWarning,
+    )
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
 
