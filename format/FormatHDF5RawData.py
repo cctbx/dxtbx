@@ -10,6 +10,11 @@ from dxtbx.format.FormatHDF5 import FormatHDF5
 
 
 class FormatRawData(FormatHDF5):
+    @classmethod
+    def ignore(cls):
+        """ Deprecated 11/11/20 """
+        return True
+
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file, "r") as h5_handle:
