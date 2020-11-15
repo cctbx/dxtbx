@@ -31,7 +31,7 @@ void byte_swap_int(char *b) {
 
 bool little_endian() {
   int i = 0x1;
-  char b = ((union_int *) & i)[0].b[0];
+  char b = ((union_int *)&i)[0].b[0];
   if (b == 0) {
     return false;
   } else {
@@ -63,8 +63,8 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
     packed.push_back(-0x80);
 
     if ((-0xf777 <= delta) && (delta < 0x8000)) {
-      s = (short) delta;
-      b = ((union_short *) & s)[0].b;
+      s = (short)delta;
+      b = ((union_short *)&s)[0].b;
 
       if (!le) {
         byte_swap_short(b);
@@ -75,8 +75,8 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
       current += delta;
       continue;
     }
-    s = - 0x8000;
-    b = ((union_short *) & s)[0].b;
+    s = -0x8000;
+    b = ((union_short *)&s)[0].b;
 
     if (!le) {
       byte_swap_short(b);
@@ -87,7 +87,7 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
 
     if ((-0x7fffffff <= delta) && (delta < 0x80000000)) {
       i = delta;
-      b = ((union_int *) & i)[0].b;
+      b = ((union_int *)&i)[0].b;
 
       if (!le) {
         byte_swap_int(b);
@@ -126,8 +126,8 @@ void dxtbx::boost_python::cbf_decompress(const char *packed,
       continue;
     }
 
-    ((union_short *) & s)[0].b[0] = packed[j];
-    ((union_short *) & s)[0].b[1] = packed[j + 1];
+    ((union_short *)&s)[0].b[0] = packed[j];
+    ((union_short *)&s)[0].b[1] = packed[j + 1];
     j += 2;
 
     if (!le) {
@@ -141,14 +141,14 @@ void dxtbx::boost_python::cbf_decompress(const char *packed,
       continue;
     }
 
-    ((union_int *) & i)[0].b[0] = packed[j];
-    ((union_int *) & i)[0].b[1] = packed[j + 1];
-    ((union_int *) & i)[0].b[2] = packed[j + 2];
-    ((union_int *) & i)[0].b[3] = packed[j + 3];
+    ((union_int *)&i)[0].b[0] = packed[j];
+    ((union_int *)&i)[0].b[1] = packed[j + 1];
+    ((union_int *)&i)[0].b[2] = packed[j + 2];
+    ((union_int *)&i)[0].b[3] = packed[j + 3];
     j += 4;
 
     if (!le) {
-      byte_swap_int((char *) & i);
+      byte_swap_int((char *)&i);
     }
 
     current += i;
