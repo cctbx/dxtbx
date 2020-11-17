@@ -111,7 +111,7 @@ def find_entries(nx_file, entry):
                 numpy.string_("NXsubentry"),
             ]:
                 if "definition" in obj:
-                    if obj["definition"][()] == numpy.string_("NXmx"):
+                    if numpy.string_(obj["definition"][()]) == numpy.string_("NXmx"):
                         hits.append(obj)
 
     visitor(entry, nx_file[entry])
@@ -178,11 +178,11 @@ def visit_dependencies(nx_file, item, visitor=None):
     Walk the dependency chain and call a visitor function
     """
     dependency_chain = set()
-    if os.path.basename(item) == "depends_on":
+    if numpy.string_(os.path.basename(item)) == numpy.string_("depends_on"):
         depends_on = nx_file[item][()]
     else:
         depends_on = nx_file[item].attrs["depends_on"]
-    while not depends_on == numpy.string_("."):
+    while not numpy.string_(depends_on) == numpy.string_("."):
         if visitor:
             visitor(nx_file, depends_on)
         if depends_on in dependency_chain:
@@ -213,12 +213,12 @@ def construct_vector(nx_file, item, vector=None):
             units = item.attrs["units"]
             ttype = item.attrs["transformation_type"]
             vector = matrix.col(item.attrs["vector"])
-            if ttype == numpy.string_("translation"):
+            if numpy.string_(ttype) == numpy.string_("translation"):
                 value = convert_units(value, units, "mm")
                 if hasattr(value, "__iter__") and len(value) == 1:
                     value = value[0]
                 self.vector = vector * value + self.vector
-            elif ttype == numpy.string_("rotation"):
+            elif numpy.string_(ttype) == numpy.string_("rotation"):
                 if hasattr(value, "__iter__") and len(value):
                     value = value[0]
                 if numpy.string_(units) == numpy.string_("rad"):
@@ -241,7 +241,7 @@ def construct_vector(nx_file, item, vector=None):
             offset = convert_units(offset, units, "mm")
         else:
             offset = vector * 0.0
-        if ttype == numpy.string_("translation"):
+        if numpy.string_(ttype) == numpy.string_("translation"):
             value = convert_units(value, units, "mm")
             try:
                 vector = vector * value
@@ -272,12 +272,12 @@ def construct_axes(nx_file, item, vector=None):
             units = item.attrs["units"]
             ttype = item.attrs["transformation_type"]
             vector = [float(v) for v in item.attrs["vector"]]
-            if ttype == numpy.string_("translation"):
+            if numpy.string_(ttype) == numpy.string_("translation"):
                 return
-            elif ttype == numpy.string_("rotation"):
+            elif numpy.string_(ttype) == numpy.string_("rotation"):
                 if hasattr(value, "__iter__") and len(value):
                     value = value[0]
-                if units == numpy.string_("rad"):
+                if numpy.string_(units) == numpy.string_("rad"):
                     value *= 180 / math.pi
                 elif units not in [
                     numpy.string_("deg"),
@@ -327,7 +327,7 @@ def construct_axes(nx_file, item, vector=None):
             offset = nx_file[item].attrs["offset"]
         else:
             offset = vector * 0.0
-        if ttype == numpy.string_("translation"):
+        if numpy.string_(ttype) == numpy.string_("translation"):
             value = convert_units(value, units, "mm")
             try:
                 vector = vector * value
@@ -1112,7 +1112,7 @@ class GoniometerFactory(object):
     """
 
     def __init__(self, obj):
-        if obj.handle["depends_on"][()] == ".":
+        if numpy.string_(obj.handle["depends_on"][()]) == numpy.string_("."):
             self.model = None
         else:
             axes, angles, axis_names, scan_axis = construct_axes(
@@ -1130,13 +1130,13 @@ class GoniometerFactory(object):
 
 
 def find_goniometer_rotation(obj):
-    if obj.handle["depends_on"][()] == ".":
+    if numpy.string_(obj.handle["depends_on"][()]) == numpy.string_("."):
         return
     thing = obj.handle.file[obj.handle["depends_on"][()]]
     tree = get_depends_on_chain_using_equipment_components(thing)
     for t in tree:
         o = obj.handle.file[t.name]
-        if o.attrs["transformation_type"] == numpy.string_("rotation"):
+        if numpy.string_(o.attrs["transformation_type"]) == numpy.string_("rotation"):
             # if this is changing, assume is scan axis
             v = o[()]
             if min(v) < max(v):
@@ -1145,7 +1145,7 @@ def find_goniometer_rotation(obj):
 
 
 def find_scanning_axis(obj):
-    if obj.handle["depends_on"][()] == ".":
+    if numpy.string_(obj.handle["depends_on"][()]) == numpy.string_("."):
         return
     thing = obj.handle.file[obj.handle["depends_on"][()]]
     tree = get_depends_on_chain_using_equipment_components(thing)
@@ -1159,7 +1159,7 @@ def generate_scan_model(obj, detector_obj):
     """
     Create a scan model from NXmx stuff.
     """
-    if obj.handle["depends_on"][()] == ".":
+    if numpy.string_(obj.handle["depends_on"][()]) == numpy.string_("."):
         return
 
     # Get the image and oscillation range - need to search for rotations
@@ -1176,7 +1176,9 @@ def generate_scan_model(obj, detector_obj):
     num_images = len(scan_axis)
     image_range = (1, num_images)
 
-    rotn = scan_axis.attrs["transformation_type"] == numpy.string_("rotation")
+    rotn = numpy.string_(scan_axis.attrs["transformation_type"]) == numpy.string_(
+        "rotation"
+    )
 
     if num_images > 1 and rotn:
         oscillation = (float(scan_axis[0]), float(scan_axis[1] - scan_axis[0]))
