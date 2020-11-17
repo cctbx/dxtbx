@@ -1,0 +1,90 @@
+# Variables:
+#   CACHE_VERSION: unique cache identifier
+#   CURRENT_WEEK: weekly changing cache identifier
+#   PYTHON_VERSION: string in the form of "3.x"
+#   TODAY_ISO: today's date in ISO format, eg. "20200531"
+
+steps:
+
+# Obtain a shallow clone of the DXTBX repository.
+# DXTBX will not be able to report proper version numbers
+- checkout: self
+  path: ./dxtbx-checkout
+  fetchDepth: 1
+  displayName: Checkout $(Build.SourceBranch)
+
+# Download other source repositories
+- bash: |
+    set -e
+    mkdir -p modules
+    ln -nsf ../dxtbx-checkout modules/dxtbx
+    python3 modules/dxtbx/.azure-pipelines/bootstrap.py update
+  displayName: Repository checkout (initial)
+  workingDirectory: $(Pipeline.Workspace)
+
+# Download additional source repositories required by cctbx-base (but not dxtbx)
+- bash: |
+    set -e
+    git clone https://github.com/dials/annlib.git modules/annlib
+    git clone https://github.com/dials/annlib_adaptbx.git modules/annlib_adaptbx
+    git clone https://github.com/dials/ccp4io.git modules/ccp4io
+    git clone https://github.com/dials/ccp4io_adaptbx.git modules/ccp4io_adaptbx
+    git clone https://github.com/dials/gui_resources.git modules/gui_resources
+    git clone https://github.com/dials/tntbx.git modules/tntbx
+  displayName: Repository checkout (additional)
+  workingDirectory: $(Pipeline.Workspace)
+
+# Create a new conda environment using the bootstrap script
+- script: |
+    python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --python $(PYTHON_VERSION)
+
+    # Immediately recover disk space used by miniconda installation
+    du -sh miniconda
+    rm -r miniconda
+  displayName: Create python $(PYTHON_VERSION) environment
+  workingDirectory: $(Pipeline.Workspace)
+
+# Install cctbx and testing packages in the conda environment
+- bash: |
+    set -e
+    . conda_base/bin/activate
+    conda install -y cctbx-base dials-data pytest-azurepipelines pytest-cov pytest-timeout
+    echo
+    echo Environment:
+    ls -la
+    echo
+    echo Modules:
+    ls -la modules
+  displayName: Install further dependencies
+  workingDirectory: $(Pipeline.Workspace)
+
+# Build dxtbx
+- bash: |
+    set -e
+    . conda_base/bin/activate
+    mkdir build
+    cd build
+    libtbx.configure dxtbx cbflib_adaptbx
+    make
+  displayName: Build dxtbx
+  workingDirectory: $(Pipeline.Workspace)
+
+# Finally, run the full regression test suite
+- bash: |
+    set -e
+    . conda_base/bin/activate
+    . build/setpaths.sh
+    cd modules/dxtbx
+    export PYTHONDEVMODE=1
+    pytest -v -ra -n auto --basetemp="$(Pipeline.Workspace)/tests" --durations=10 \
+        --cov=$(pwd) --cov-report=html --cov-report=xml --cov-branch \
+        --timeout=5400 --regression || echo "##vso[task.complete result=Failed;]Some tests failed"
+  displayName: Run tests
+  workingDirectory: $(Pipeline.Workspace)
+
+- script: |
+    bash <(curl -s https://codecov.io/bash) -n "Python $(PYTHON_VERSION) $(Agent.OS)"
+  displayName: 'Publish coverage stats'
+  continueOnError: True
+  timeoutInMinutes: 3
+  workingDirectory: $(Pipeline.Workspace)/modules/dxtbx
