@@ -3,18 +3,42 @@ from __future__ import absolute_import, division, print_function
 import os
 from builtins import range
 
+import mock
 import pytest
 import six.moves.cPickle as pickle
 
 from scitbx.array_family import flex
 
+import dxtbx.format.FormatHDF5SaclaMPCCD
 import dxtbx.format.image
 import dxtbx.format.Registry
 import dxtbx.tests.imagelist
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import Beam, Detector, Panel
+from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
+
+
+@pytest.mark.parametrize("indices,expected_call_count", ((None, 4), ([1], 2)))
+def test_single_file_indices(indices, expected_call_count, dials_regression):
+    def dummy_beam():
+        return BeamFactory.simple(1.0)
+
+    with mock.patch.object(
+        dxtbx.format.FormatHDF5SaclaMPCCD.FormatHDF5SaclaMPCCD,
+        "_beam",
+        side_effect=dummy_beam,
+    ) as obj:
+        filename = os.path.join(
+            dials_regression,
+            "image_examples",
+            "SACLA_MPCCD_Cheetah",
+            "run266702-0-subset.h5",
+        )
+        format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
+        format_class.get_imageset([filename], single_file_indices=indices)
+        assert obj.call_count == expected_call_count
 
 
 @pytest.mark.parametrize(
