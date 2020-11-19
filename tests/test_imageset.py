@@ -1,9 +1,6 @@
-from __future__ import absolute_import, division, print_function
-
 import os
-from builtins import range
+from unittest import mock
 
-import mock
 import pytest
 import six.moves.cPickle as pickle
 
@@ -229,7 +226,7 @@ def assert_can_get_detectorbase(obj, indices, outside_index):
         obj.get_detectorbase(outside_index)
 
 
-class TestImageSet(object):
+class TestImageSet:
     def test_imageset(self, centroid_files_and_imageset):
         filenames, imageset = centroid_files_and_imageset
 
@@ -324,7 +321,7 @@ class TestImageSet(object):
         assert detector2 != detector
 
 
-class TestImageSequence(object):
+class TestImageSequence:
     def test(self, centroid_files):
         # Create the format class
         format_class = dxtbx.format.Registry.get_format_class_for_file(
