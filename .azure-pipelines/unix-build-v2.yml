@@ -30,7 +30,6 @@ steps:
     git clone https://github.com/dials/ccp4io.git modules/ccp4io
     git clone https://github.com/dials/ccp4io_adaptbx.git modules/ccp4io_adaptbx
     git clone https://github.com/dials/gui_resources.git modules/gui_resources
-    git clone https://github.com/dials/tntbx.git modules/tntbx
   displayName: Repository checkout (additional)
   workingDirectory: $(Pipeline.Workspace)
 
