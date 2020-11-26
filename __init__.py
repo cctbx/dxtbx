@@ -31,7 +31,9 @@ if os.path.exists(_legacy_plugin_path) and not os.path.exists(_hdf5_plugin_path)
         DeprecationWarning,
     )
 elif os.path.exists(_hdf5_plugin_path):
-    # HDF5 can have trouble finding this when using dials-installer
+    # conda environment created by the DIALS installer
+    # do not have the correct paths set in the HDF5 libraries,
+    # so override the lookup path here just to be safe
     os.environ["HDF5_PLUGIN_PATH"] = (
         _hdf5_plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
     )
