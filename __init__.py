@@ -16,27 +16,36 @@ if sys.version_info.major == 2:
         UserWarning,
     )
 
-# DeprecationWarning until 2020-11-30, then UserWarning
-# Remove after DIALS 3.3 release branch is made
-_legacy_plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
-_hdf5_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
-if os.path.exists(_legacy_plugin_path) and not os.path.exists(_hdf5_plugin_path):
-    # Set up the plugin path for HDF5 to pick up compression plugins from legacy location
-    os.environ["HDF5_PLUGIN_PATH"] = (
-        _legacy_plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
-    )
-    warnings.warn(
-        "You are using an outdated version of the hdf5-external-filter-plugins package.\n"
-        "Please update your environment using 'conda install hdf5-external-filter-plugins'",
-        DeprecationWarning,
-    )
-elif os.path.exists(_hdf5_plugin_path):
-    # conda environment created by the DIALS installer
-    # do not have the correct paths set in the HDF5 libraries,
-    # so override the lookup path here just to be safe
-    os.environ["HDF5_PLUGIN_PATH"] = (
-        _hdf5_plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
-    )
+
+def _ensure_h5_plugin_path() -> None:
+    """
+    Ensures that HDF5 has the conda_base plugin path configured.
+
+    This is called in FormatHDF5.py on format-class initialization.
+
+    Ideally this will be properly configured by the conda environment.
+    However, currently the dials-installer will not install a path-correct
+    conda_base folder, so it needs to be updated manually.
+    """
+    # Remove legacy support after DIALS 3.3 release branch is made
+    _legacy_plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
+    _hdf5_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
+
+    import h5py
+
+    h5_plugin_paths = [h5py.h5pl.get(i).decode() for i in range(h5py.h5pl.size())]
+    if _hdf5_plugin_path not in h5_plugin_paths and os.path.exists(_hdf5_plugin_path):
+        h5py.h5pl.prepend(_hdf5_plugin_path.encode())
+    elif _legacy_plugin_path not in h5_plugin_paths and os.path.exists(
+        _legacy_plugin_path
+    ):
+        h5py.h5pl.prepend(_legacy_plugin_path.encode())
+        warnings.warn(
+            "You are using an outdated version of the hdf5-external-filter-plugins package.\n"
+            "Please update your environment using 'conda install hdf5-external-filter-plugins'",
+            UserWarning,
+        )
+
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
 

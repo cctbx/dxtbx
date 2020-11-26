@@ -1,0 +1,1 @@
+Prevent errors reading eiger data, if h5py is imported before dxtbx
