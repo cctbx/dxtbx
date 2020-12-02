@@ -17,34 +17,42 @@ if sys.version_info.major == 2:
     )
 
 
-def _ensure_h5_plugin_path() -> None:
-    """
-    Ensures that HDF5 has the conda_base plugin path configured.
+# Ensures that HDF5 has the conda_base plugin path configured.
+#
+# Ideally this will be properly configured by the conda environment.
+# However, currently the dials-installer will not install a path-correct
+# conda_base folder, so it needs to be updated manually.
 
-    This is called in FormatHDF5.py on format-class initialization.
+# Warn if user is using an old hdf5-external-filter-plugins
+# Remove after DIALS 3.3 release branch is made
+_legacy_plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
+_new_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
 
-    Ideally this will be properly configured by the conda environment.
-    However, currently the dials-installer will not install a path-correct
-    conda_base folder, so it needs to be updated manually.
-    """
-    # Remove legacy support after DIALS 3.3 release branch is made
-    _legacy_plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
-    _hdf5_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
+# Find out which plugin path we need to inject
+if os.path.exists(_legacy_plugin_path) and not os.path.exists(_new_plugin_path):
+    # Set up the plugin path for HDF5 to pick up compression plugins from legacy location
+    _hdf5_plugin_path = _legacy_plugin_path
+    warnings.warn(
+        "You are using an outdated version of the hdf5-external-filter-plugins package.\n"
+        "Please update your environment using 'conda install hdf5-external-filter-plugins'",
+        UserWarning,
+    )
+else:
+    _hdf5_plugin_path = _new_plugin_path
 
+# Inject via the environment if h5py not used yet, or else use h5py
+if "h5py" not in sys.modules:
+    os.environ["HDF5_PLUGIN_PATH"] = (
+        _hdf5_plugin_path + os.pathsep + os.getenv("HDF5_PLUGIN_PATH", "")
+    )
+else:
+    # We've already loaded h5py, so setting the environment variable won't work
+    # We need to use the h5py API to add a plugin path
     import h5py
 
     h5_plugin_paths = [h5py.h5pl.get(i).decode() for i in range(h5py.h5pl.size())]
-    if _hdf5_plugin_path not in h5_plugin_paths and os.path.exists(_hdf5_plugin_path):
+    if _hdf5_plugin_path not in h5_plugin_paths:
         h5py.h5pl.prepend(_hdf5_plugin_path.encode())
-    elif _legacy_plugin_path not in h5_plugin_paths and os.path.exists(
-        _legacy_plugin_path
-    ):
-        h5py.h5pl.prepend(_legacy_plugin_path.encode())
-        warnings.warn(
-            "You are using an outdated version of the hdf5-external-filter-plugins package.\n"
-            "Please update your environment using 'conda install hdf5-external-filter-plugins'",
-            UserWarning,
-        )
 
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
