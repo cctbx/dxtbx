@@ -4,18 +4,14 @@ scan in their model, as these constructs are not meaningful.
 """
 from __future__ import absolute_import, division, print_function
 
+from dxtbx.format import abstract
 from dxtbx.format.Format import Format
 from dxtbx.model.beam import Beam
 from dxtbx.model.detector import Detector
 
 
+@abstract
 class FormatStill(Format):
-    @classmethod
-    def is_abstract_format(cls):
-        """This class will not be picked by the dxtbx registry. A derived
-        class should fully understand the experiment."""
-        return cls is FormatStill
-
     def setup(self):
         """Read the image file, construct the information which we will be
         wanting about the experiment from this. N.B. in your implementation

@@ -6,6 +6,7 @@ import sys
 from libtbx.phil import parse
 
 from dxtbx import IncorrectFormatError
+from dxtbx.format import abstract
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
@@ -57,13 +58,8 @@ class XtcReader(Reader):
         pass
 
 
+@abstract
 class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
-    @classmethod
-    def is_abstract_format(cls):
-        """This class will not be picked by the dxtbx registry. A derived
-        class should fully understand the experiment."""
-        return cls is FormatXTC
-
     def __init__(self, image_file, **kwargs):
 
         if not self.understand(image_file):

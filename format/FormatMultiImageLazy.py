@@ -1,21 +1,16 @@
 from __future__ import absolute_import, division, print_function
 
+from dxtbx.format import abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
+@abstract
 class FormatMultiImageLazy(FormatMultiImage):
-
     """
     Lazy version of FormatMultiImage that does not instantiate the models ahead of time.
     It creates an ImageSetLazy class and returns it. Saves time when image file contains
     too many images to setup before processing.
     """
-
-    @classmethod
-    def is_abstract_format(cls):
-        """This class will not be picked by the dxtbx registry. A derived
-        class should fully understand the experiment."""
-        return cls is FormatMultiImageLazy
 
     @classmethod
     def get_imageset(

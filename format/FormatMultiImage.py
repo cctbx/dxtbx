@@ -7,6 +7,7 @@ from builtins import range
 
 from scitbx.array_family import flex
 
+from dxtbx.format import abstract
 from dxtbx.format.Format import Format
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetLazy
@@ -54,15 +55,10 @@ class Reader(object):
         return self._filename
 
 
+@abstract
 class FormatMultiImage(Format):
     def __init__(self, **kwargs):
         pass
-
-    @classmethod
-    def is_abstract_format(cls):
-        """This class will not be picked by the dxtbx registry. A derived
-        class should fully understand the experiment."""
-        return cls is FormatMultiImage
 
     def get_num_images(self):
         raise NotImplementedError

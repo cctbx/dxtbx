@@ -3,17 +3,13 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 from dxtbx import IncorrectFormatError
+from dxtbx.format import abstract
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
+@abstract
 class FormatHDF5(FormatMultiImage, Format):
-    @classmethod
-    def is_abstract_format(cls):
-        """This class will not be picked by the dxtbx registry. A derived
-        class should fully understand the experiment."""
-        return cls is FormatHDF5
-
     def __init__(self, image_file, **kwargs):
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)

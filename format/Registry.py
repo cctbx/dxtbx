@@ -119,13 +119,7 @@ def get_format_class_for_file(image_file, format_hint=None):
     # Starting at "Format" and using any potential prioritisation information
     # look for any path through the DAG of formats, stopping at the first
     # accepting leaf node
-    result = None
     for format in sorted(_format_dag["Format"], key=format_sort):
         format_class = get_format_class_for(format)
         if scheme in format_class.schemes and format_class.understand(image_file):
-            result = recurse(format, image_file)
-            break
-
-    if result and result.is_abstract_format():
-        result = None
-    return result
+            return recurse(format, image_file)
