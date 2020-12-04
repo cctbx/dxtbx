@@ -7,8 +7,7 @@ from builtins import range
 
 from scitbx.array_family import flex
 
-from dxtbx.format import abstract
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetLazy
 from dxtbx.model import MultiAxisGoniometer

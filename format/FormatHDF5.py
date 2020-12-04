@@ -3,8 +3,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format import abstract
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 

@@ -6,8 +6,7 @@ import sys
 from libtbx.phil import parse
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format import abstract
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill

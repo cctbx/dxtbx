@@ -2,8 +2,7 @@ import h5py
 import pytest
 
 import dxtbx.format.Registry as Registry
-from dxtbx.format import abstract
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatHDF5 import FormatHDF5
 
 
