@@ -7,6 +7,7 @@ from builtins import range
 import numpy as np
 import psana
 
+from cctbx import factor_kev_angstrom
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
@@ -107,6 +108,7 @@ class FormatXTCJungfrau(FormatXTC):
         assert len(self.params.detector_address) == 1
         self._det = psana.Detector(self.params.detector_address[0], run.env())
         evt = self._get_event(index)
+        wavelength = self.get_beam(index).get_wavelength()
 
         if self._dist_det is None:
             self._dist_det = psana.Detector("CXI:DS1:MMS:06.RBV")
@@ -183,10 +185,10 @@ class FormatXTCJungfrau(FormatXTC):
                 # This will fail for undefined composite materials
                 # mu_at_angstrom returns cm^-1, but need mu in mm^-1
                 table = attenuation_coefficient.get_table(material)
-                wavelength = self.get_beam(index).get_wavelength()
                 mu = table.mu_at_angstrom(wavelength) / 10.0
                 p.set_mu(mu)
                 p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, thickness))
+                p.set_gain(factor_kev_angstrom / wavelength)
 
                 if (
                     self.params.jungfrau.use_big_pixels

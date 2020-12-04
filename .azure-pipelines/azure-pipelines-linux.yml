@@ -37,3 +37,13 @@ jobs:
 
   steps:
   - template: unix-build.yml
+
+- job: linux_prebuilt_cctbx
+  pool:
+    vmImage: ubuntu-latest
+  variables:
+    PYTHON_VERSION: 3.6
+  timeoutInMinutes: 90
+
+  steps:
+  - template: unix-build-v2.yml
