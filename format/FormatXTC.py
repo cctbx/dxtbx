@@ -10,6 +10,7 @@ from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
+import time
 
 try:
     import psana
@@ -257,6 +258,13 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 if self.params.wavelength_offset is not None:
                     wavelength += self.params.wavelength_offset
                 self._beam_cache = self._beam_factory.simple(wavelength)
+            s, nsec = evt.get(psana.EventId).time()
+            evttime = time.gmtime(s)
+            if (
+                evttime.tm_year == 2020 and evttime.tm_mon >= 7
+            ) or evttime.tm_year > 2020:
+                self._beam_cache.set_polarization_normal((1, 0, 0))
+
         return self._beam_cache
 
     def get_goniometer(self, index=None):
