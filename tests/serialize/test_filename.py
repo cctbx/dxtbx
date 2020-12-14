@@ -1,10 +1,6 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 
-import pytest
-
-from dxtbx.serialize.filename import load_path, resolve_path
+from dxtbx.serialize.filename import resolve_path
 
 
 def test_resolve_path(monkeypatch):
@@ -15,11 +11,3 @@ def test_resolve_path(monkeypatch):
     new_path = os.path.join("$HELLO_WORLD", "path")
     path = resolve_path(new_path)
     assert path == os.path.abspath(os.path.join("EXPANDED", "path"))
-
-
-def test_load_path_deprecated(monkeypatch):
-    monkeypatch.setenv("HELLO_WORLD", "EXPANDED")
-    new_path = os.path.join("~", "$HELLO_WORLD", "path")
-    with pytest.deprecated_call():
-        path = load_path(new_path)
-    assert path == resolve_path(new_path)

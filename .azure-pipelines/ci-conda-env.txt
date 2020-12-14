@@ -8,12 +8,11 @@ conda-forge::dials-data
 conda-forge::docutils
 conda-forge::eigen
 conda-forge::future
-conda-forge::h5py
+conda-forge::h5py>=3.1
 conda-forge::hdf5<1.11
-conda-forge::hdf5-external-filter-plugins
+conda-forge::hdf5-external-filter-plugins==0.1.0[build_number='>=5']
 conda-forge::jpeg
 conda-forge::matplotlib-base
-conda-forge::mock
 conda-forge::mrcfile
 conda-forge::numpy>=1.16
 conda-forge::pillow>=5.4.1
@@ -23,7 +22,7 @@ conda-forge::psutil
 conda-forge::pyrtf
 conda-forge::pytest>=4.5
 conda-forge::pytest-forked
-conda-forge::pytest-mock<2.0
+conda-forge::pytest-mock
 conda-forge::pytest-xdist
 conda-forge::requests
 conda-forge::scipy

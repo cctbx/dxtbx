@@ -7,6 +7,7 @@ from builtins import range
 import numpy as np
 import psana
 
+from cctbx import factor_kev_angstrom
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
@@ -26,6 +27,10 @@ jungfrau_locator_str = """
     use_big_pixels = True
       .type = bool
       .help = account for multi-sized pixels in the 512x1024 Jungfrau panels, forming a 514x1030 pixel panel
+    detz_offset = None
+      .type = float
+      .help = Distance from back of detector rail to sample interaction region (CXI) \
+              or actual detector distance (XPP/MFX)
   }
 """
 
@@ -40,6 +45,8 @@ class FormatXTCJungfrau(FormatXTC):
             image_file, locator_scope=jungfrau_locator_scope, **kwargs
         )
         self._cached_detector = {}
+
+        self._dist_det = None
 
     @staticmethod
     def understand(image_file):
@@ -100,7 +107,13 @@ class FormatXTCJungfrau(FormatXTC):
             index = 0
         assert len(self.params.detector_address) == 1
         self._det = psana.Detector(self.params.detector_address[0], run.env())
-        geom = self._det.pyda.geoaccess(self._get_event(index).run())
+        evt = self._get_event(index)
+        wavelength = self.get_beam(index).get_wavelength()
+
+        if self._dist_det is None:
+            self._dist_det = psana.Detector("CXI:DS1:MMS:06.RBV")
+
+        geom = self._det.pyda.geoaccess(evt.run())
         pixel_size = (
             self._det.pixel_size(self._get_event(index)) / 1000.0
         )  # convert to mm
@@ -116,7 +129,11 @@ class FormatXTCJungfrau(FormatXTC):
             root = sub
             root_basis = root_basis * sub_basis
         t = root_basis.translation
-        root_basis.translation = col((t[0], t[1], -t[2]))
+        if self.params.jungfrau.detz_offset:
+            distance = self._dist_det(evt) + self.params.jungfrau.detz_offset
+        else:
+            distance = t[2]
+        root_basis.translation = col((t[0], t[1], -distance))
 
         origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
         fast = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
@@ -168,10 +185,10 @@ class FormatXTCJungfrau(FormatXTC):
                 # This will fail for undefined composite materials
                 # mu_at_angstrom returns cm^-1, but need mu in mm^-1
                 table = attenuation_coefficient.get_table(material)
-                wavelength = self.get_beam(index).get_wavelength()
                 mu = table.mu_at_angstrom(wavelength) / 10.0
                 p.set_mu(mu)
                 p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, thickness))
+                p.set_gain(factor_kev_angstrom / wavelength)
 
                 if (
                     self.params.jungfrau.use_big_pixels
@@ -181,7 +198,6 @@ class FormatXTCJungfrau(FormatXTC):
                     break
                 else:
                     p.set_image_size((dim_fast // 4, dim_slow // 2))
-
         if (
             self.params.jungfrau.use_big_pixels
             and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None

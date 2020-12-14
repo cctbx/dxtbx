@@ -8,6 +8,12 @@ import warnings
 from dxtbx.datablock import DataBlockDumper
 from dxtbx.serialize.imageset import imageset_to_dict
 
+warnings.warn(
+    "dxtbx.serialize.dump is deprecated and will be removed in the next release",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 
 def compact_simple_list(match):
     """Callback function. Given a simple list match, compact it and ensure
@@ -103,14 +109,3 @@ def datablock(obj, outfile, **kwargs):
     """Dump the given object to file."""
     dump = DataBlockDumper(obj)
     dump.as_file(outfile, **kwargs)
-
-
-def experiment_list(obj, outfile):
-    """Dump an experiment list."""
-    warnings.warn(
-        "use .as_file() on the experimentlist directly",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    obj.as_file(outfile)

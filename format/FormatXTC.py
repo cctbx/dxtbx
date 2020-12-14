@@ -10,6 +10,10 @@ from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
+import time
+
+import numpy as np
+from cctbx import factor_ev_angstrom
 
 try:
     import psana
@@ -47,6 +51,16 @@ locator_str = """
   wavelength_offset = None
     .type = float
     .help = Optional constant shift to apply to each wavelength
+  spectrum_eV_per_pixel = None
+    .type = float
+    .help = If not None, use the FEE spectrometer to determine the wavelength. \
+            spectrum_eV_offset should be also specified. A weighted average of \
+            the horizontal projection of the per-shot FEE spectrometer is used.\
+            The equation for each pixel eV is \
+            eV = (spectrum_eV_per_pixel * pixel_number) + spectrum_eV_offset
+  spectrum_eV_offset = None
+    .type = float
+    .help = See spectrum_eV_per_pixel
 """
 locator_scope = parse(locator_str)
 
@@ -86,6 +100,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         self._beam_index = None
         self._beam_cache = None
         self._initialized = True
+        self._fee = None
 
     @staticmethod
     def understand(image_file):
@@ -250,13 +265,33 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         if self._beam_index != index:
             self._beam_index = index
             evt = self._get_event(index)
-            wavelength = cspad_tbx.evt_wavelength(evt)
+            if self.params.spectrum_eV_per_pixel is not None:
+                if self._fee is None:
+                    self._fee = psana.Detector("FEE-SPEC0")
+                fee = self._fee.get(evt)
+                if fee is None:
+                    wavelength = cspad_tbx.evt_wavelength(evt)
+                else:
+                    x = (
+                        self.params.spectrum_eV_per_pixel
+                        * np.array(range(len(fee.hproj())))
+                    ) + self.params.spectrum_eV_offset
+                    wavelength = factor_ev_angstrom / np.average(x, weights=fee.hproj())
+            else:
+                wavelength = cspad_tbx.evt_wavelength(evt)
             if wavelength is None:
                 self._beam_cache = None
             else:
                 if self.params.wavelength_offset is not None:
                     wavelength += self.params.wavelength_offset
                 self._beam_cache = self._beam_factory.simple(wavelength)
+            s, nsec = evt.get(psana.EventId).time()
+            evttime = time.gmtime(s)
+            if (
+                evttime.tm_year == 2020 and evttime.tm_mon >= 7
+            ) or evttime.tm_year > 2020:
+                self._beam_cache.set_polarization_normal((1, 0, 0))
+
         return self._beam_cache
 
     def get_goniometer(self, index=None):

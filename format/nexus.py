@@ -1428,7 +1428,7 @@ def detectorgroupdatafactory(obj, instrument):
             continue
 
         # Map NXdetector names to list of datasets
-        dataset_name = os.path.basename(dataset.name)
+        dataset_name = key
         found_it = False
         for detector in instrument.detectors:
             if dataset_name in detector.handle:

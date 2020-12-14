@@ -5,8 +5,9 @@ import binascii
 import h5py
 import numpy as np
 
-from cbflib_adaptbx import compress
 from scitbx.array_family import flex
+
+from dxtbx.ext import compress
 
 
 def get_mask(nfast, nslow):
@@ -68,7 +69,10 @@ def compute_cbf_header(f, nn=0):
     L = instrument["beam/incident_wavelength"][()]
     A = instrument["attenuator/attenuator_transmission"][()]
 
-    timestamp = f["/entry/start_time"][()].decode()
+    # this timestamp _should_ be in UTC - so can ignore timezone info - at
+    # least for purposes here (causes errors for old versions of dxtbx reading
+    # the data) - 19 chars needed
+    timestamp = f["/entry/start_time"][()].decode()[:19]
     omega = f["/entry/sample/transformations/omega"][()]
     omega_increment = f["/entry/sample/transformations/omega_increment_set"][()]
     chi = f["/entry/sample/transformations/chi"][()]
