@@ -944,7 +944,7 @@ class DetectorFactoryFromGroup(object):
 
                 # Get the detector material
                 if "sensor_material" in nx_detector.handle:
-                    value = numpy.h5str(nx_detector.handle["sensor_material"][()])
+                    value = h5str(nx_detector.handle["sensor_material"][()])
                     material = {
                         "Si": "Si",
                         "Silicon": "Si",
