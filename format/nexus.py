@@ -623,7 +623,7 @@ class BeamFactory(object):
                 spectrum_wavelengths, wavelength_units, "angstrom"
             )
             spectrum_energies = cctbx.factor_ev_angstrom / spectrum_wavelengths
-            self.spectrum = Spectrum(spectrum_energies, spectrum_wavelengths)
+            self.spectrum = Spectrum(spectrum_energies, spectrum_weights)
 
             if has_variant_spectra:
                 wavelength_value = get_wavelength(wavelength)
