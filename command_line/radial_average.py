@@ -154,7 +154,7 @@ def run(args=None, imageset=None):
             color=[colormap(i) for i in np.linspace(0, 0.9, len(params.file_path))]
         )
 
-    if params.mask is not None:
+    if params.mask is not None and not isinstance(params.mask, tuple):
         params.mask = easy_pickle.load(params.mask)
 
     if imageset is None:
