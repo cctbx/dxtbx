@@ -6,7 +6,7 @@ import sys
 from libtbx.phil import parse
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
@@ -71,6 +71,7 @@ class XtcReader(Reader):
         pass
 
 
+@abstract
 class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
 
