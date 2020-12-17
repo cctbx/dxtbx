@@ -1,1 +1,1 @@
-Further improve error message when attempting to import unsupported files
+Improve error message when attempting to import data-only h5 files
