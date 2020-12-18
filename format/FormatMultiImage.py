@@ -13,6 +13,19 @@ from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetLazy
 from dxtbx.model import MultiAxisGoniometer
 
 
+def _add_static_mask_to_iset(format_instance: Format, iset: ImageSet) -> None:
+    """Combine any static mask from a Format with the ImageSet's mask"""
+    if format_instance is not None:
+        static_mask = format_instance.get_static_mask()
+        if static_mask is not None:
+            if not iset.external_lookup.mask.data.empty():
+                for m1, m2 in zip(static_mask, iset.external_lookup.mask.data):
+                    m1 &= m2.data()
+                iset.external_lookup.mask.data = ImageBool(static_mask)
+            else:
+                iset.external_lookup.mask.data = ImageBool(static_mask)
+
+
 class Reader(object):
     def __init__(self, format_class, filenames, num_images=None, **kwargs):
         self.kwargs = kwargs
@@ -118,19 +131,7 @@ class FormatMultiImage(Format):
     ):
         """
         Factory method to create an imageset
-
         """
-
-        def _add_static_mask_to_iset(format_instance, iset):
-            if format_instance is not None:
-                static_mask = format_instance.get_static_mask()
-                if static_mask is not None:
-                    if not iset.external_lookup.mask.data.empty():
-                        for m1, m2 in zip(static_mask, iset.external_lookup.mask.data):
-                            m1 &= m2.data()
-                        iset.external_lookup.mask.data = ImageBool(static_mask)
-                    else:
-                        iset.external_lookup.mask.data = ImageBool(static_mask)
 
         if isinstance(filenames, str):
             filenames = [filenames]
