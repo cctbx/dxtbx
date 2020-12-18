@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from dxtbx.datablock import DataBlockDumper, DataBlockFactory
+from dxtbx.datablock import DataBlockFactory
 
 """
 Test deserializing a datablock that has single file indices while using check_format = True or False
@@ -32,16 +32,3 @@ def test_split_single_image_datablock(dials_regression, tmpdir):
     subblock = DataBlockFactory.from_imageset(subset)[0]
     assert subblock.num_images() == 1
     assert get_indices(subblock) == [2]
-
-    dumped_filename = "split_datablock.json"
-    with pytest.warns(DeprecationWarning):
-        dump = DataBlockDumper(subblock)
-    dump.as_json(dumped_filename)
-
-    db = DataBlockFactory.from_json_file(dumped_filename, check_format=True)[0]
-    assert db.num_images() == 1
-    assert get_indices(db) == [2]
-
-    db = DataBlockFactory.from_json_file(dumped_filename, check_format=False)[0]
-    assert db.num_images() == 1
-    assert get_indices(db) == [2]

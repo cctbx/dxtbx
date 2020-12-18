@@ -5,7 +5,6 @@ import re
 import textwrap
 import warnings
 
-from dxtbx.datablock import DataBlockDumper
 from dxtbx.serialize.imageset import imageset_to_dict
 
 warnings.warn(
@@ -103,9 +102,3 @@ def imageset(obj, outfile, compact=False):
     # Otherwise assume the input is a file and write to it
     else:
         outfile.write(imageset_to_string(obj, compact).encode())
-
-
-def datablock(obj, outfile, **kwargs):
-    """Dump the given object to file."""
-    dump = DataBlockDumper(obj)
-    dump.as_file(outfile, **kwargs)

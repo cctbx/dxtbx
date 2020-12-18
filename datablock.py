@@ -8,9 +8,8 @@ import logging
 import math
 import operator
 import os.path
-import warnings
 from builtins import range
-from os.path import abspath, dirname, normpath, splitext
+from os.path import abspath, dirname, normpath
 
 import six
 import six.moves.cPickle as pickle
@@ -1585,70 +1584,6 @@ class AutoEncoder(json.JSONEncoder):
             return "Auto"
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
-
-
-class DataBlockDumper(object):
-    """Class to help in dumping datablock objects."""
-
-    def __init__(self, datablocks):
-        """Initialise the list of data blocks."""
-        if isinstance(datablocks, DataBlock):
-            self._datablocks = [datablocks]
-        else:
-            self._datablocks = datablocks
-        warnings.warn(
-            "dxtbx.datablock.DataBlockDumper is deprecated and will be removed in the next release",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-    def as_json(self, filename=None, compact=False):
-        """Dump datablock as json."""
-
-        dictionary = [db.to_dict() for db in self._datablocks]
-        with open(filename, "w") as fh:
-            if compact:
-                json.dump(
-                    dictionary,
-                    fh,
-                    separators=(",", ":"),
-                    ensure_ascii=True,
-                    cls=AutoEncoder,
-                )
-            else:
-                json.dump(
-                    dictionary,
-                    fh,
-                    indent=2,
-                    ensure_ascii=True,
-                    cls=AutoEncoder,
-                )
-
-    def as_pickle(self, filename=None, **kwargs):
-        """Dump datablock as pickle."""
-
-        # Get the pickle string
-        text = pickle.dumps(self._datablocks, protocol=pickle.HIGHEST_PROTOCOL)
-
-        # Write the file
-        if filename is not None:
-            with open(filename, "wb") as outfile:
-                outfile.write(text)
-        else:
-            return text
-
-    def as_file(self, filename, **kwargs):
-        """Dump datablocks as file."""
-        ext = splitext(filename)[1]
-        j_ext = [".json"]
-        p_ext = [".p", ".pkl", ".pickle"]
-        if ext.lower() in j_ext:
-            return self.as_json(filename, **kwargs)
-        elif ext.lower() in p_ext:
-            return self.as_pickle(filename, **kwargs)
-        else:
-            ext_str = "|".join(j_ext + p_ext)
-            raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
 
 
 class BeamComparison(object):
