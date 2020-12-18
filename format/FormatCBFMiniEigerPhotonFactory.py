@@ -106,15 +106,13 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
         )
 
     def _scan(self):
-        format = self._scan_factory.format("CBF")
-
         exposure_time = 1  # XXX
         osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
         osc_range = 0.1
         timestamp = 1  # XXX
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, timestamp
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, timestamp
         )
 
     def detectorbase_start(self):

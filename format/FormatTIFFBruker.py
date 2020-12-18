@@ -156,7 +156,6 @@ class FormatTIFFBruker(FormatTIFF):
     def _scan(self):
         """Return the scan information for this image."""
 
-        format = self._scan_factory.format("TIFF")
         exposure_time = self._get_bruker_times()[1]
         epoch = time.mktime(self._get_bruker_timestamp())
 
@@ -165,8 +164,8 @@ class FormatTIFFBruker(FormatTIFF):
         osc_start = starts[offset]
         osc_range = width
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
     ####################################################################

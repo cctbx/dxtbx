@@ -161,8 +161,6 @@ class FormatSMVCMOS1(FormatSMV):
     def _scan(self):
         rotation = self.get_rotation()
 
-        format = self._scan_factory.format("SMV")
-
         time_record = self._header_dictionary["DATE"]
         date_record, ms = time_record.split(".")
         epoch = calendar.timegm(time.strptime(date_record, "%a %b %d %Y %H:%M:%S"))
@@ -172,8 +170,8 @@ class FormatSMVCMOS1(FormatSMV):
         osc_start = rotation[0]
         osc_range = rotation[2]
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
     def get_raw_data(self):
