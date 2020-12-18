@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import os
-
 import pytest
 
 from dxtbx.format.FormatHDF5EigerNearlyNexusSPring8 import (
@@ -10,18 +8,13 @@ from dxtbx.format.FormatHDF5EigerNearlyNexusSPring8 import (
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.model.goniometer import Goniometer
 
-pytestmark = pytest.mark.skipif(
-    not os.access(
-        "/dls/science/groups/scisoft/DIALS/zenodo/1443110/ccp4school2018_bl41xu",
-        os.R_OK,
-    ),
-    reason="Test images not available",
-)
 
-
-def test_spring8_ccp4_2018_zenodo_1443110_data03():
-    # https://zenodo.org/record/1443110#.XD8bD5ynzmE
-    master_h5 = "/dls/science/groups/scisoft/DIALS/zenodo/1443110/ccp4school2018_bl41xu/05/data03/data03_master.h5"
+def test_spring8_ccp4_2018_zenodo_1443110_data03(dials_data):
+    master_h5 = (
+        dials_data("spring8_ccp4_2018")
+        .join("ccp4school2018_bl41xu", "05", "data03", "data03_master.h5")
+        .strpath
+    )
     assert FormatHDF5EigerNearlyNexusSPring8.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])

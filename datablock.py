@@ -391,8 +391,10 @@ class DataBlockTemplateImporter(object):
             fmt = FormatChecker().find_format(paths[0])
             if fmt is None:
                 raise ValueError("Image file %s format is unknown" % paths[0])
-            elif fmt.ignore():
-                raise ValueError("Image file %s format will be ignored" % paths[0])
+            elif fmt.is_abstract():
+                raise ValueError(
+                    f"Image file {paths[0]} appears to be a '{type(fmt).__name__}', but this is an abstract Format"
+                )
             else:
                 imageset = self._create_imageset(fmt, template, paths, **kwargs)
                 append_to_datablocks(imageset)
@@ -922,13 +924,11 @@ class DataBlockFilenameImporter(object):
                 # No format class found?
                 logger.debug("Could not determine format for %s", filename)
                 self.unhandled.append(filename)
-            elif format_class.ignore():
-                # Invalid format class found?
+            elif format_class.is_abstract():
                 logger.debug(
-                    "Found format class %s for %s but is ignored",
-                    str(format_class),
-                    filename,
+                    f"Image file {filename} appears to be a '{format_class.__name__}', but this is an abstract Format"
                 )
+                # Invalid format class found?
                 self.unhandled.append(filename)
             elif issubclass(format_class, FormatMultiImage):
                 imageset = self._create_single_file_imageset(

@@ -5,6 +5,7 @@ from builtins import range
 
 import numpy as np
 
+from cctbx import factor_kev_angstrom
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
@@ -74,6 +75,8 @@ class FormatXTCEpix(FormatXTC):
             index = 0
         assert len(self.params.detector_address) == 1
 
+        wavelength = self.get_beam(index).get_wavelength()
+
         det = self._get_psana_detector(run)
 
         geom = det.pyda.geoaccess(self._get_event(index).run())
@@ -134,6 +137,7 @@ class FormatXTCEpix(FormatXTC):
                 p.set_pixel_size((pixel_size, pixel_size))
                 p.set_image_size((dim_fast // 2, dim_slow // 2))
                 p.set_trusted_range((-1, 2e6))
+                p.set_gain(factor_kev_angstrom / wavelength)
                 p.set_name(val)
         self._cached_detector[run.run()] = d
         return d

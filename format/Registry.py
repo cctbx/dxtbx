@@ -123,6 +123,3 @@ def get_format_class_for_file(image_file, format_hint=None):
         format_class = get_format_class_for(format)
         if scheme in format_class.schemes and format_class.understand(image_file):
             return recurse(format, image_file)
-
-    # There is no class accepting this file, so return None instead
-    return None

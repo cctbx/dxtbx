@@ -3,10 +3,11 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
+@abstract
 class FormatHDF5(FormatMultiImage, Format):
     def __init__(self, image_file, **kwargs):
         if not self.understand(image_file):
