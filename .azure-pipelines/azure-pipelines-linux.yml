@@ -3,10 +3,10 @@ jobs:
   pool:
     vmImage: ubuntu-latest
   dependsOn: setup
+  condition: eq(variables['ENABLE_CACHE'], '1')
   variables:
     CURRENT_WEEK: $[ dependencies.setup.outputs['constants.CURRENT_WEEK'] ]
     TODAY_ISO: $[ dependencies.setup.outputs['constants.TODAY_ISO'] ]
-
   strategy:
     matrix:
       python36:
@@ -19,3 +19,31 @@ jobs:
 
   steps:
   - template: unix-build.yml
+
+- job: linux_uncached
+  pool:
+    vmImage: ubuntu-latest
+  dependsOn: setup
+  condition: eq(variables['ENABLE_CACHE'], '0')
+  variables:
+    CURRENT_WEEK: $[ dependencies.setup.outputs['constants.CURRENT_WEEK'] ]
+    TODAY_ISO: $[ dependencies.setup.outputs['constants.TODAY_ISO'] ]
+    PYTHON_VERSION: 3.6
+    REPOSITORIES_CACHED: false
+    BASE_CACHED: false
+    BUILD_CACHED: false
+    DATA_CACHED: false
+  timeoutInMinutes: 150
+
+  steps:
+  - template: unix-build.yml
+
+- job: linux_prebuilt_cctbx
+  pool:
+    vmImage: ubuntu-latest
+  variables:
+    PYTHON_VERSION: 3.6
+  timeoutInMinutes: 90
+
+  steps:
+  - template: unix-build-v2.yml

@@ -8,6 +8,7 @@ import logging
 import math
 import operator
 import os.path
+import warnings
 from builtins import range
 from os.path import abspath, dirname, normpath, splitext
 
@@ -390,8 +391,10 @@ class DataBlockTemplateImporter(object):
             fmt = FormatChecker().find_format(paths[0])
             if fmt is None:
                 raise ValueError("Image file %s format is unknown" % paths[0])
-            elif fmt.ignore():
-                raise ValueError("Image file %s format will be ignored" % paths[0])
+            elif fmt.is_abstract():
+                raise ValueError(
+                    f"Image file {paths[0]} appears to be a '{type(fmt).__name__}', but this is an abstract Format"
+                )
             else:
                 imageset = self._create_imageset(fmt, template, paths, **kwargs)
                 append_to_datablocks(imageset)
@@ -634,7 +637,7 @@ class ImageMetadataRecord(object):
         return not self == other
 
 
-def _openingpathiterator(pathnames):
+def _openingpathiterator(pathnames: Iterable[str]):
     """Utility function to efficiently open all paths.
 
     A path is a potential file or directory.
@@ -649,7 +652,6 @@ def _openingpathiterator(pathnames):
     Args:
         pathnames: Paths to attempt to open
     """
-    # type: (Iterable[str])
 
     # Store a tuple of (recurse, pathname) to track what was root level
     paths = collections.deque((True, x) for x in sorted(pathnames))
@@ -922,13 +924,11 @@ class DataBlockFilenameImporter(object):
                 # No format class found?
                 logger.debug("Could not determine format for %s", filename)
                 self.unhandled.append(filename)
-            elif format_class.ignore():
-                # Invalid format class found?
+            elif format_class.is_abstract():
                 logger.debug(
-                    "Found format class %s for %s but is ignored",
-                    str(format_class),
-                    filename,
+                    f"Image file {filename} appears to be a '{format_class.__name__}', but this is an abstract Format"
                 )
+                # Invalid format class found?
                 self.unhandled.append(filename)
             elif issubclass(format_class, FormatMultiImage):
                 imageset = self._create_single_file_imageset(
@@ -1596,27 +1596,33 @@ class DataBlockDumper(object):
             self._datablocks = [datablocks]
         else:
             self._datablocks = datablocks
+        warnings.warn(
+            "dxtbx.datablock.DataBlockDumper is deprecated and will be removed in the next release",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def as_json(self, filename=None, compact=False):
         """Dump datablock as json."""
 
         dictionary = [db.to_dict() for db in self._datablocks]
-        if compact:
-            json.dump(
-                dictionary,
-                open(filename, "w"),
-                separators=(",", ":"),
-                ensure_ascii=True,
-                cls=AutoEncoder,
-            )
-        else:
-            json.dump(
-                dictionary,
-                open(filename, "w"),
-                indent=2,
-                ensure_ascii=True,
-                cls=AutoEncoder,
-            )
+        with open(filename, "w") as fh:
+            if compact:
+                json.dump(
+                    dictionary,
+                    fh,
+                    separators=(",", ":"),
+                    ensure_ascii=True,
+                    cls=AutoEncoder,
+                )
+            else:
+                json.dump(
+                    dictionary,
+                    fh,
+                    indent=2,
+                    ensure_ascii=True,
+                    cls=AutoEncoder,
+                )
 
     def as_pickle(self, filename=None, **kwargs):
         """Dump datablock as pickle."""
