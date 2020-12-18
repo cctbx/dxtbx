@@ -4,20 +4,14 @@ import sys
 from builtins import range
 
 import numpy as np
-import psana
 
+from cctbx import factor_kev_angstrom
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector
-
-try:
-    from xfel.cxi.cspad_ana import cspad_tbx
-except ImportError:
-    # xfel not configured
-    pass
 
 epix_locator_str = """
 """
@@ -30,12 +24,7 @@ class FormatXTCEpix(FormatXTC):
         super(FormatXTCEpix, self).__init__(
             image_file, locator_scope=epix_locator_scope, **kwargs
         )
-        self._ds = FormatXTC._get_datasource(image_file, self.params)
-        self._env = self._ds.env()
-        self.populate_events()
-        self.n_images = len(self.times)
         self._cached_detector = {}
-        self._cached_psana_detectors = {}
 
     @staticmethod
     def understand(image_file):
@@ -45,16 +34,13 @@ class FormatXTCEpix(FormatXTC):
             return False
         return any(["epix" in src.lower() for src in params.detector_address])
 
-    def get_raw_data(self, index):
+    def get_raw_data(self, index=None):
+        if index is None:
+            index = 0
         d = FormatXTCEpix.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
-        if run.run() not in self._cached_psana_detectors:
-            assert len(self.params.detector_address) == 1
-            self._cached_psana_detectors[run.run()] = psana.Detector(
-                self.params.detector_address[0], self._env
-            )
-        det = self._cached_psana_detectors[run.run()]
+        det = self._get_psana_detector(run)
         data = det.calib(evt)
         data = data.astype(np.float64)
         # the shape of the epix 10k data is (16, 352, 384)
@@ -73,30 +59,8 @@ class FormatXTCEpix(FormatXTC):
         assert len(d) == len(self._raw_data), (len(d), len(self._raw_data))
         return tuple(self._raw_data)
 
-    def get_num_images(self):
-        return self.n_images
-
     def get_detector(self, index=None):
         return FormatXTCEpix._detector(self, index)
-
-    def get_beam(self, index=None):
-        return self._beam(index)
-
-    def _beam(self, index=None):
-        """Returns a simple model for the beam"""
-        if index is None:
-            index = 0
-        evt = self._get_event(index)
-        wavelength = cspad_tbx.evt_wavelength(evt)
-        if wavelength is None:
-            return None
-        return self._beam_factory.simple(wavelength)
-
-    def get_goniometer(self, index=None):
-        return None
-
-    def get_scan(self, index=None):
-        return None
 
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
@@ -109,13 +73,14 @@ class FormatXTCEpix(FormatXTC):
 
         if index is None:
             index = 0
-        self._env = self._ds.env()
         assert len(self.params.detector_address) == 1
-        self._det = psana.Detector(self.params.detector_address[0], self._env)
-        geom = self._det.pyda.geoaccess(self._get_event(index).run())
-        pixel_size = (
-            self._det.pixel_size(self._get_event(index)) / 1000.0
-        )  # convert to mm
+
+        wavelength = self.get_beam(index).get_wavelength()
+
+        det = self._get_psana_detector(run)
+
+        geom = det.pyda.geoaccess(self._get_event(index).run())
+        pixel_size = det.pixel_size(self._get_event(index)) / 1000.0  # convert to mm
         d = Detector()
         pg0 = d.hierarchy()
         # first deal with D0
@@ -172,6 +137,7 @@ class FormatXTCEpix(FormatXTC):
                 p.set_pixel_size((pixel_size, pixel_size))
                 p.set_image_size((dim_fast // 2, dim_slow // 2))
                 p.set_trusted_range((-1, 2e6))
+                p.set_gain(factor_kev_angstrom / wavelength)
                 p.set_name(val)
         self._cached_detector[run.run()] = d
         return d

@@ -6,10 +6,14 @@ import sys
 from libtbx.phil import parse
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
+import time
+
+import numpy as np
+from cctbx import factor_ev_angstrom
 
 try:
     import psana
@@ -44,6 +48,19 @@ locator_str = """
   use_ffb = False
     .type = bool
     .help = Run on the ffb if possible. Only for active users!
+  wavelength_offset = None
+    .type = float
+    .help = Optional constant shift to apply to each wavelength
+  spectrum_eV_per_pixel = None
+    .type = float
+    .help = If not None, use the FEE spectrometer to determine the wavelength. \
+            spectrum_eV_offset should be also specified. A weighted average of \
+            the horizontal projection of the per-shot FEE spectrometer is used.\
+            The equation for each pixel eV is \
+            eV = (spectrum_eV_per_pixel * pixel_number) + spectrum_eV_offset
+  spectrum_eV_offset = None
+    .type = float
+    .help = See spectrum_eV_per_pixel
 """
 locator_scope = parse(locator_str)
 
@@ -54,6 +71,7 @@ class XtcReader(Reader):
         pass
 
 
+@abstract
 class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
 
@@ -74,7 +92,16 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 master_phil=locator_scope, user_phil=image_file, strict=True
             )
         assert self.params.mode == "idx", "idx mode should be used for analysis"
+
+        self._ds = FormatXTC._get_datasource(image_file, self.params)
+        self.populate_events()
+        self.n_images = len(self.times)
+
+        self._cached_psana_detectors = {}
+        self._beam_index = None
+        self._beam_cache = None
         self._initialized = True
+        self._fee = None
 
     @staticmethod
     def understand(image_file):
@@ -206,6 +233,15 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         psana_runs = {r.run(): r for r in datasource.runs()}
         return psana_runs
 
+    def _get_psana_detector(self, run):
+        """ Returns the psana detector for the given run """
+        if run.run() not in self._cached_psana_detectors:
+            assert len(self.params.detector_address) == 1
+            self._cached_psana_detectors[run.run()] = psana.Detector(
+                self.params.detector_address[0], run.env()
+            )
+        return self._cached_psana_detectors[run.run()]
+
     def get_psana_timestamp(self, index):
         """Get the cctbx.xfel style event timestamp given an index"""
         evt = self._get_event(index)
@@ -216,6 +252,54 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         nsec = time[1]
 
         return cspad_tbx.evt_timestamp((sec, nsec / 1e6))
+
+    def get_num_images(self):
+        return self.n_images
+
+    def get_beam(self, index=None):
+        return self._beam(index)
+
+    def _beam(self, index=None):
+        """Returns a simple model for the beam"""
+        if index is None:
+            index = 0
+        if self._beam_index != index:
+            self._beam_index = index
+            evt = self._get_event(index)
+            if self.params.spectrum_eV_per_pixel is not None:
+                if self._fee is None:
+                    self._fee = psana.Detector("FEE-SPEC0")
+                fee = self._fee.get(evt)
+                if fee is None:
+                    wavelength = cspad_tbx.evt_wavelength(evt)
+                else:
+                    x = (
+                        self.params.spectrum_eV_per_pixel
+                        * np.array(range(len(fee.hproj())))
+                    ) + self.params.spectrum_eV_offset
+                    wavelength = factor_ev_angstrom / np.average(x, weights=fee.hproj())
+            else:
+                wavelength = cspad_tbx.evt_wavelength(evt)
+            if wavelength is None:
+                self._beam_cache = None
+            else:
+                if self.params.wavelength_offset is not None:
+                    wavelength += self.params.wavelength_offset
+                self._beam_cache = self._beam_factory.simple(wavelength)
+            s, nsec = evt.get(psana.EventId).time()
+            evttime = time.gmtime(s)
+            if (
+                evttime.tm_year == 2020 and evttime.tm_mon >= 7
+            ) or evttime.tm_year > 2020:
+                self._beam_cache.set_polarization_normal((1, 0, 0))
+
+        return self._beam_cache
+
+    def get_goniometer(self, index=None):
+        return None
+
+    def get_scan(self, index=None):
+        return None
 
 
 if __name__ == "__main__":

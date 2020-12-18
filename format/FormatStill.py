@@ -4,11 +4,12 @@ scan in their model, as these constructs are not meaningful.
 """
 from __future__ import absolute_import, division, print_function
 
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.model.beam import Beam
 from dxtbx.model.detector import Detector
 
 
+@abstract
 class FormatStill(Format):
     def setup(self):
         """Read the image file, construct the information which we will be

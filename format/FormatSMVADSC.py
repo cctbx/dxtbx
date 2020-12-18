@@ -95,6 +95,10 @@ class FormatSMVADSC(FormatSMV):
         # Values may refer to gain in ADU per incident photon rather than the
         # more appropriate ADU per captured photon.
 
+        # Allow gain set in the header to override the guesswork here
+        if "GAIN" in self._header_dictionary:
+            return float(self._header_dictionary["GAIN"])
+
         # Get the binning level
         bin_lev = str(self._header_dictionary.get("BIN"))
 

@@ -12,7 +12,7 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.model import Beam, Detector, Panel, ParallaxCorrectedPxMmStrategy
-from dxtbx.model.detector_helpers import set_mosflm_beam_centre
+from dxtbx.model.detector_helpers import project_2d, set_mosflm_beam_centre
 
 
 def create_detector(offset):
@@ -34,6 +34,35 @@ def create_detector(offset):
         )
     )
     return detector
+
+
+def create_multipanel_detector(offset, ncols=3, nrows=2):
+    reference_detector = create_detector(offset)
+    reference_panel = reference_detector[0]
+    panel_npix = reference_panel.get_image_size()
+    panel_npix = int(panel_npix[0] / ncols), int(panel_npix[1] / nrows)
+
+    multi_panel_detector = Detector()
+    for i in range(ncols):
+        for j in range(nrows):
+            origin_pix = i * panel_npix[0], j * panel_npix[1]
+            origin = reference_panel.get_pixel_lab_coord(origin_pix)
+            new_panel = Panel(
+                reference_panel.get_type(),
+                reference_panel.get_name() + str(j + i * nrows),
+                reference_panel.get_fast_axis(),
+                reference_panel.get_slow_axis(),
+                origin,
+                reference_panel.get_pixel_size(),
+                panel_npix,
+                reference_panel.get_trusted_range(),
+                reference_panel.get_thickness(),
+                reference_panel.get_material(),
+                identifier=reference_panel.get_identifier(),
+            )
+            multi_panel_detector.add_panel(new_panel)
+
+    return multi_panel_detector
 
 
 @pytest.fixture
@@ -239,3 +268,38 @@ def test_equality():
     # Equality operator on detector objects must identify identical detectors
     detector_moved_copy = create_detector(offset=100)
     assert detector_moved == detector_moved_copy
+
+
+def test_project_2d():
+    # The function project_2d should give the same results even if the
+    # detector is rotated in the laboratory frame
+
+    # Use a multipanel detector
+    detector = create_multipanel_detector(offset=0)
+
+    # Get 2D origin, fast and slow vectors for the detector
+    o, f, s = project_2d(detector)
+
+    # Now rotate the detector by 30 degrees around an arbitrary axis
+    h = detector.hierarchy()
+    fast = matrix.col(h.get_fast_axis())
+    slow = matrix.col(h.get_slow_axis())
+    origin = matrix.col(h.get_origin())
+
+    axis = matrix.col(flex.random_double_point_on_sphere())
+    rot = axis.axis_and_angle_as_r3_rotation_matrix(30, deg=True)
+    for panel in detector:
+        fast = matrix.col(panel.get_fast_axis())
+        slow = matrix.col(panel.get_slow_axis())
+        origin = matrix.col(panel.get_origin())
+        panel.set_frame(rot * fast, rot * slow, rot * origin)
+
+    # Get 2D origin, fast and slow vectors for the rotated detector
+    new_o, new_f, new_s = project_2d(detector)
+
+    for o1, o2 in zip(o, new_o):
+        assert o1 == pytest.approx(o2)
+    for f1, f2 in zip(f, new_f):
+        assert f1 == pytest.approx(f2)
+    for s1, s2 in zip(s, new_s):
+        assert s1 == pytest.approx(s2)

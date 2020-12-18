@@ -5,6 +5,7 @@ include='\.pyi?$|/SConscript$|/libtbx_config$'
 package = "dxtbx"
 package_dir = ".."
 filename = "CHANGELOG.rst"
+issue_format = "`#{issue} <https://github.com/cctbx/dxtbx/issues/{issue}>`_"
 
 [tool.isort]
 sections="FUTURE,STDLIB,THIRDPARTY,CCTBX,DIALS,FIRSTPARTY,LOCALFOLDER"

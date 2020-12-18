@@ -7,6 +7,7 @@ from builtins import range
 import numpy as np
 import psana
 
+from cctbx import factor_kev_angstrom
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
@@ -14,12 +15,6 @@ from scitbx.matrix import col
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
-
-try:
-    from xfel.cxi.cspad_ana import cspad_tbx
-except ImportError:
-    # xfel not configured
-    pass
 
 jungfrau_locator_str = """
   jungfrau {
@@ -32,6 +27,10 @@ jungfrau_locator_str = """
     use_big_pixels = True
       .type = bool
       .help = account for multi-sized pixels in the 512x1024 Jungfrau panels, forming a 514x1030 pixel panel
+    detz_offset = None
+      .type = float
+      .help = Distance from back of detector rail to sample interaction region (CXI) \
+              or actual detector distance (XPP/MFX)
   }
 """
 
@@ -45,14 +44,9 @@ class FormatXTCJungfrau(FormatXTC):
         super(FormatXTCJungfrau, self).__init__(
             image_file, locator_scope=jungfrau_locator_scope, **kwargs
         )
-        self._ds = FormatXTC._get_datasource(image_file, self.params)
-        self._env = self._ds.env()
-        self.populate_events()
-        self.n_images = len(self.times)
         self._cached_detector = {}
-        self._cached_psana_detectors = {}
-        self._beam_index = None
-        self._beam_cache = None
+
+        self._dist_det = None
 
     @staticmethod
     def understand(image_file):
@@ -62,18 +56,16 @@ class FormatXTCJungfrau(FormatXTC):
             return False
         return any(["jungfrau" in src.lower() for src in params.detector_address])
 
-    def get_raw_data(self, index):
+    def get_raw_data(self, index=None):
         from xfel.util import jungfrau
+
+        if index is None:
+            index = 0
 
         d = FormatXTCJungfrau.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
-        if run.run() not in self._cached_psana_detectors:
-            assert len(self.params.detector_address) == 1
-            self._cached_psana_detectors[run.run()] = psana.Detector(
-                self.params.detector_address[0], self._env
-            )
-        det = self._cached_psana_detectors[run.run()]
+        det = self._get_psana_detector(run)
         data = det.calib(evt)
         data = data.astype(np.float64)
         self._raw_data = []
@@ -99,33 +91,8 @@ class FormatXTCJungfrau(FormatXTC):
         assert len(d) == len(self._raw_data), (len(d), len(self._raw_data))
         return tuple(self._raw_data)
 
-    def get_num_images(self):
-        return self.n_images
-
     def get_detector(self, index=None):
         return FormatXTCJungfrau._detector(self, index)
-
-    def get_beam(self, index=None):
-        if self._beam_index != index:
-            self._beam_index = index
-            self._beam_cache = self._beam(index)
-        return self._beam_cache
-
-    def _beam(self, index=None):
-        """Returns a simple model for the beam"""
-        if index is None:
-            index = 0
-        evt = self._get_event(index)
-        wavelength = cspad_tbx.evt_wavelength(evt)
-        if wavelength is None:
-            return None
-        return self._beam_factory.simple(wavelength)
-
-    def get_goniometer(self, index=None):
-        return None
-
-    def get_scan(self, index=None):
-        return None
 
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
@@ -138,10 +105,15 @@ class FormatXTCJungfrau(FormatXTC):
 
         if index is None:
             index = 0
-        self._env = self._ds.env()
         assert len(self.params.detector_address) == 1
-        self._det = psana.Detector(self.params.detector_address[0], self._env)
-        geom = self._det.pyda.geoaccess(self._get_event(index).run())
+        self._det = psana.Detector(self.params.detector_address[0], run.env())
+        evt = self._get_event(index)
+        wavelength = self.get_beam(index).get_wavelength()
+
+        if self._dist_det is None:
+            self._dist_det = psana.Detector("CXI:DS1:MMS:06.RBV")
+
+        geom = self._det.pyda.geoaccess(evt.run())
         pixel_size = (
             self._det.pixel_size(self._get_event(index)) / 1000.0
         )  # convert to mm
@@ -157,7 +129,11 @@ class FormatXTCJungfrau(FormatXTC):
             root = sub
             root_basis = root_basis * sub_basis
         t = root_basis.translation
-        root_basis.translation = col((t[0], t[1], -t[2]))
+        if self.params.jungfrau.detz_offset:
+            distance = self._dist_det(evt) + self.params.jungfrau.detz_offset
+        else:
+            distance = t[2]
+        root_basis.translation = col((t[0], t[1], -distance))
 
         origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
         fast = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
@@ -209,10 +185,10 @@ class FormatXTCJungfrau(FormatXTC):
                 # This will fail for undefined composite materials
                 # mu_at_angstrom returns cm^-1, but need mu in mm^-1
                 table = attenuation_coefficient.get_table(material)
-                wavelength = self.get_beam(index).get_wavelength()
                 mu = table.mu_at_angstrom(wavelength) / 10.0
                 p.set_mu(mu)
                 p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, thickness))
+                p.set_gain(factor_kev_angstrom / wavelength)
 
                 if (
                     self.params.jungfrau.use_big_pixels
@@ -222,7 +198,6 @@ class FormatXTCJungfrau(FormatXTC):
                     break
                 else:
                     p.set_image_size((dim_fast // 4, dim_slow // 2))
-
         if (
             self.params.jungfrau.use_big_pixels
             and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
@@ -245,16 +220,13 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
         except Exception:
             return False
 
-    def get_raw_data(self, index):
+    def get_raw_data(self, index=None):
+        if index is None:
+            index = 0
         self.get_detector(index)  # is this line required?
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
-        if run.run() not in self._cached_psana_detectors:
-            assert len(self.params.detector_address) == 1
-            self._cached_psana_detectors[run.run()] = psana.Detector(
-                self.params.detector_address[0], self._env
-            )
-        det = self._cached_psana_detectors[run.run()]
+        det = self._get_psana_detector(run)
         data = det.image(evt)
         data = data.astype(np.float64)
         self._raw_data = flex.double(data)
