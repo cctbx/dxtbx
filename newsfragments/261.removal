@@ -1,3 +1,1 @@
-Remove ``FormatHDF5RawData`` format class. This was only ever used
-experimentally, and caused confusion when incorrectly importing
-nexus side files.
+Remove ``FormatHDF5RawData`` format class. This was only ever used experimentally, and caused confusion when incorrectly importing nexus side files.
