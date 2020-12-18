@@ -10,6 +10,7 @@ goniometers etc. from the headers and hence a format specific factory.
 import bz2
 import functools
 import os
+from typing import ClassVar, List
 
 from six.moves.urllib_parse import urlparse
 
@@ -29,12 +30,19 @@ try:
 except ImportError:
     gzip = None
 
-try:
-    from typing import List
-except ImportError:
-    pass
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
+
+
+def abstract(cls):
+    """
+    Mark a Format class as abstract, but not it's subclasses.
+
+    This means that it should not be directly used to parse user images.
+    """
+
+    cls._abstract_base = cls
+    return cls
 
 
 class Reader(object):
@@ -68,6 +76,7 @@ class Reader(object):
         return ""
 
 
+@abstract
 class Format(object):
     """A base class for the representation and interrogation of diffraction
     image formats, from which all classes for reading the header should be
@@ -87,6 +96,10 @@ class Format(object):
     """
 
     schemes = [""]  # type: List[str]
+
+    # Which class is the abstract base. Assigned with the @abstract
+    # decorator, and used to check initialization
+    _abstract_base: "ClassVar[Format]" = None
 
     @staticmethod
     def understand(image_file):
@@ -109,8 +122,16 @@ class Format(object):
         return False
 
     @classmethod
-    def ignore(cls):
-        return False
+    def is_abstract(cls) -> bool:
+        """
+        Is this Format class allowed to be instantiated?
+
+        Format classes that describe an abstract class of formats but do
+        not explicitly read a file-format should be marked as such with
+        the dxtbx.format.abstract decorator, and they will not be
+        instantiable or used as a registry match via load lookups.
+        """
+        return cls is cls._abstract_base
 
     @staticmethod
     def has_dynamic_shadowing(**kwargs):
@@ -121,6 +142,14 @@ class Format(object):
 
     def __init__(self, image_file, **kwargs):
         """Initialize a class instance from an image file."""
+
+        # Don't allow abstract instantion
+        # - except for Format, which is used as a placeholder in many
+        # places (e.g. still, check_format=False) so needs to be allowed.
+        if self.is_abstract() and not type(self) is Format:
+            raise TypeError(
+                f"Cannot instantiate: Format class '{type(self).__name__}' is marked abstract"
+            )
 
         self._image_file = image_file
 
