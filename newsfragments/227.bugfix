@@ -1,0 +1,1 @@
+When creating "Lazy" ImageSets the static mask from the image file was not being properly applied
