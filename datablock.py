@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import collections
 import errno
 import itertools
@@ -8,12 +6,8 @@ import logging
 import math
 import operator
 import os.path
-from builtins import range
-from os.path import abspath, dirname, normpath
-
-import six
-import six.moves.cPickle as pickle
-from six.moves.urllib_parse import urlparse
+import pickle
+from urllib.parse import urlparse
 
 import libtbx
 from scitbx import matrix
@@ -49,7 +43,7 @@ def _iterate_with_previous(iterable):
         previous = val
 
 
-class DataBlock(object):
+class DataBlock:
     """High level container for blocks of sequences and imagesets."""
 
     def __init__(self, imagesets=None):
@@ -115,8 +109,7 @@ class DataBlock(object):
 
     def __iter__(self):
         """Iterate through the imagesets."""
-        for iset in self._imagesets:
-            yield iset
+        yield from self._imagesets
 
     def iter_sequences(self):
         """Iterate over sequence groups."""
@@ -169,7 +162,7 @@ class DataBlock(object):
         def abspath_or_none(filename):
             if filename is None or filename == "":
                 return None
-            return abspath(filename)
+            return os.path.abspath(filename)
 
         # Get a list of all the unique models
         b = list(self.unique_beams())
@@ -190,7 +183,10 @@ class DataBlock(object):
                         collections.OrderedDict(
                             [
                                 ("__id__", "ImageSequence"),
-                                ("master", abspath(iset.reader().master_path())),
+                                (
+                                    "master",
+                                    os.path.abspath(iset.reader().master_path()),
+                                ),
                                 (
                                     "mask",
                                     abspath_or_none(iset.external_lookup.mask.filename),
@@ -227,7 +223,7 @@ class DataBlock(object):
                         collections.OrderedDict(
                             [
                                 ("__id__", "ImageSequence"),
-                                ("template", abspath(iset.get_template())),
+                                ("template", os.path.abspath(iset.get_template())),
                                 (
                                     "mask",
                                     abspath_or_none(iset.external_lookup.mask.filename),
@@ -268,7 +264,7 @@ class DataBlock(object):
                 image_list = []
                 for i in range(len(iset)):
                     image_dict = collections.OrderedDict()
-                    image_dict["filename"] = abspath(iset.get_path(i))
+                    image_dict["filename"] = os.path.abspath(iset.get_path(i))
                     image_dict["gain"] = abspath_or_none(
                         iset.external_lookup.gain.filename
                     )
@@ -310,7 +306,7 @@ class DataBlock(object):
         return result
 
 
-class FormatChecker(object):
+class FormatChecker:
     """A helper class to speed up identifying the correct image format by first
     trying the last format that was used."""
 
@@ -352,7 +348,7 @@ class FormatChecker(object):
             yield group_format, group_fnames
 
 
-class DataBlockTemplateImporter(object):
+class DataBlockTemplateImporter:
     """A class to import a datablock from a template."""
 
     def __init__(self, templates, **kwargs):
@@ -373,7 +369,7 @@ class DataBlockTemplateImporter(object):
 
         # For each template do an import
         for template in templates:
-            template = normpath(template)
+            template = os.path.normpath(template)
             paths = sorted(locate_files_matching_template_string(template))
             logger.debug("The following files matched the template string:")
             if len(paths) > 0:
@@ -454,7 +450,7 @@ class DataBlockTemplateImporter(object):
         return imageset
 
 
-class ImageMetadataRecord(object):
+class ImageMetadataRecord:
     """Object to store metadata information.
 
     This is used whilst building the datablocks.  The metadata for each
@@ -662,7 +658,7 @@ def _openingpathiterator(pathnames: Iterable[str]):
         try:
             # Attempt to open this 'path'
             Format.open_file(pathname)
-        except IOError as e:
+        except OSError as e:
             if e.errno == errno.EISDIR:
                 if do_recurse:
                     # We've tried to open a directory. Get all the entries...
@@ -789,7 +785,7 @@ def _create_imagesequence(record, format_class, format_kwargs=None):
     # Create the sequence
     sequence = dxtbx.imageset.ImageSetFactory.make_sequence(
         template=os.path.abspath(record.template),
-        indices=range(index_start, index_end + 1),
+        indices=list(range(index_start, index_end + 1)),
         format_class=format_class,
         beam=record.beam,
         detector=record.detector,
@@ -863,7 +859,7 @@ def _create_imageset(records, format_class, format_kwargs=None):
     assert all(x.template is None for x in records)
     # Extract the filenames from the records
     filenames = [
-        os.path.abspath(x.filename) if not urlparse(x.filename).scheme else x.filename
+        x.filename if urlparse(x.filename).scheme else os.path.abspath(x.filename)
         for x in records
     ]
     # Create the imageset
@@ -879,7 +875,7 @@ def _create_imageset(records, format_class, format_kwargs=None):
     return imageset
 
 
-class DataBlockFilenameImporter(object):
+class DataBlockFilenameImporter:
     """A class to import a datablock from image files."""
 
     def __init__(
@@ -999,7 +995,7 @@ class DataBlockFilenameImporter(object):
         if format_kwargs is None:
             format_kwargs = {}
 
-        class Record(object):
+        class Record:
             def __init__(
                 self,
                 beam=None,
@@ -1115,7 +1111,7 @@ class DataBlockFilenameImporter(object):
 
             # Create the sequence
             imageset = dxtbx.imageset.ImageSetFactory.make_sequence(
-                abspath(records[0].template),
+                os.path.abspath(records[0].template),
                 list(range(*image_range)),
                 format_class,
                 records[0].beam,
@@ -1135,7 +1131,9 @@ class DataBlockFilenameImporter(object):
 
             # make an imageset
             imageset = dxtbx.imageset.ImageSetFactory.make_imageset(
-                list(map(abspath, filenames)), format_class, format_kwargs=format_kwargs
+                list(map(os.path.abspath, filenames)),
+                format_class,
+                format_kwargs=format_kwargs,
             )
             for i, r in enumerate(records):
                 imageset.set_beam(r.beam, i)
@@ -1149,7 +1147,9 @@ class DataBlockFilenameImporter(object):
         """Create an imageset from a multi image file."""
         if format_kwargs is None:
             format_kwargs = {}
-        return format_class.get_imageset(abspath(filename), format_kwargs=format_kwargs)
+        return format_class.get_imageset(
+            os.path.abspath(filename), format_kwargs=format_kwargs
+        )
 
 
 class InvalidDataBlockError(RuntimeError):
@@ -1162,7 +1162,7 @@ class InvalidDataBlockError(RuntimeError):
     """
 
 
-class DataBlockDictImporter(object):
+class DataBlockDictImporter:
     """A class to import a datablock from dictionary."""
 
     def __init__(self, obj, check_format=True, directory=None):
@@ -1215,11 +1215,6 @@ class DataBlockDictImporter(object):
                 scan = None
             return beam, detector, gonio, scan
 
-        if six.PY3:
-            pickle_parameters = {"encoding": "bytes"}
-        else:
-            pickle_parameters = {}
-
         # Loop through all the imagesets
         imagesets = []
         for imageset in obj["imageset"]:
@@ -1252,7 +1247,7 @@ class DataBlockDictImporter(object):
                         if check_format:
                             with open(imageset["mask"], "rb") as infile:
                                 iset.external_lookup.mask.data = ImageBool(
-                                    pickle.load(infile, **pickle_parameters)
+                                    pickle.load(infile, encoding="bytes")
                                 )
                     if "gain" in imageset and imageset["gain"] is not None:
                         imageset["gain"] = resolve_path(
@@ -1262,7 +1257,7 @@ class DataBlockDictImporter(object):
                         if check_format:
                             with open(imageset["gain"], "rb") as infile:
                                 iset.external_lookup.gain.data = ImageDouble(
-                                    pickle.load(infile, **pickle_parameters)
+                                    pickle.load(infile, encoding="bytes")
                                 )
                     if "pedestal" in imageset and imageset["pedestal"] is not None:
                         imageset["pedestal"] = resolve_path(
@@ -1272,7 +1267,7 @@ class DataBlockDictImporter(object):
                         if check_format:
                             with open(imageset["pedestal"], "rb") as infile:
                                 iset.external_lookup.pedestal.data = ImageDouble(
-                                    pickle.load(infile, **pickle_parameters)
+                                    pickle.load(infile, encoding="bytes")
                                 )
                     if "dx" in imageset and imageset["dx"] is not None:
                         imageset["dx"] = resolve_path(
@@ -1281,7 +1276,7 @@ class DataBlockDictImporter(object):
                         iset.external_lookup.dx.filename = imageset["dx"]
                         with open(imageset["dx"], "rb") as infile:
                             iset.external_lookup.dx.data = ImageDouble(
-                                pickle.load(infile, **pickle_parameters)
+                                pickle.load(infile, encoding="bytes")
                             )
                     if "dy" in imageset and imageset["dy"] is not None:
                         imageset["dy"] = resolve_path(
@@ -1290,7 +1285,7 @@ class DataBlockDictImporter(object):
                         iset.external_lookup.dy.filename = imageset["dy"]
                         with open(imageset["dy"], "rb") as infile:
                             iset.external_lookup.dy.data = ImageDouble(
-                                pickle.load(infile, **pickle_parameters)
+                                pickle.load(infile, encoding="bytes")
                             )
                     iset.update_detector_px_mm_data()
                 elif "master" in imageset:
@@ -1317,7 +1312,7 @@ class DataBlockDictImporter(object):
                         if check_format:
                             with open(imageset["mask"], "rb") as infile:
                                 iset.external_lookup.mask.data = ImageBool(
-                                    pickle.load(infile, **pickle_parameters)
+                                    pickle.load(infile, encoding="bytes")
                                 )
                     if "gain" in imageset and imageset["gain"] is not None:
                         imageset["gain"] = resolve_path(imageset["gain"], directory)
@@ -1325,7 +1320,7 @@ class DataBlockDictImporter(object):
                         if check_format:
                             with open(imageset["gain"], "rb") as infile:
                                 iset.external_lookup.gain.data = ImageDouble(
-                                    pickle.load(infile, **pickle_parameters)
+                                    pickle.load(infile, encoding="bytes")
                                 )
                     if "pedestal" in imageset and imageset["pedestal"] is not None:
                         imageset["pedestal"] = resolve_path(
@@ -1335,21 +1330,21 @@ class DataBlockDictImporter(object):
                         if check_format:
                             with open(imageset["pedestal"], "rb") as infile:
                                 iset.external_lookup.pedestal.data = ImageDouble(
-                                    pickle.load(infile, **pickle_parameters)
+                                    pickle.load(infile, encoding="bytes")
                                 )
                     if "dx" in imageset and imageset["dx"] is not None:
                         imageset["dx"] = resolve_path(imageset["dx"], directory)
                         iset.external_lookup.dx.filename = imageset["dx"]
                         with open(imageset["dx"], "rb") as infile:
                             iset.external_lookup.dx.data = ImageDouble(
-                                pickle.load(infile, **pickle_parameters)
+                                pickle.load(infile, encoding="bytes")
                             )
                     if "dy" in imageset and imageset["dy"] is not None:
                         imageset["dy"] = resolve_path(imageset["dy"], directory)
                         iset.external_lookup.dy.filename = imageset["dy"]
                         with open(imageset["dy"], "rb") as infile:
                             iset.external_lookup.dy.data = ImageDouble(
-                                pickle.load(infile, **pickle_parameters)
+                                pickle.load(infile, encoding="bytes")
                             )
                     iset.update_detector_px_mm_data()
                 imagesets.append(iset)
@@ -1377,7 +1372,7 @@ class DataBlockDictImporter(object):
                     if check_format:
                         with open(imageset["mask"], "rb") as infile:
                             iset.external_lookup.mask.data = ImageBool(
-                                pickle.load(infile, **pickle_parameters)
+                                pickle.load(infile, encoding="bytes")
                             )
                 if "gain" in imageset and imageset["gain"] is not None:
                     imageset["gain"] = resolve_path(imageset["gain"], directory)
@@ -1385,7 +1380,7 @@ class DataBlockDictImporter(object):
                     if check_format:
                         with open(imageset["gain"], "rb") as infile:
                             iset.external_lookup.gain.data = ImageDouble(
-                                pickle.load(infile, **pickle_parameters)
+                                pickle.load(infile, encoding="bytes")
                             )
                 if "pedestal" in imageset and imageset["pedestal"] is not None:
                     imageset["pedestal"] = resolve_path(imageset["pedestal"], directory)
@@ -1393,21 +1388,21 @@ class DataBlockDictImporter(object):
                     if check_format:
                         with open(imageset["pedestal"], "rb") as infile:
                             iset.external_lookup.pedestal.data = ImageDouble(
-                                pickle.load(infile, **pickle_parameters)
+                                pickle.load(infile, encoding="bytes")
                             )
                 if "dx" in imageset and imageset["dx"] is not None:
                     imageset["dx"] = resolve_path(imageset["dx"], directory)
                     iset.external_lookup.dx.filename = imageset["dx"]
                     with open(imageset["dx"], "rb") as infile:
                         iset.external_lookup.dx.data = ImageDouble(
-                            pickle.load(infile, **pickle_parameters)
+                            pickle.load(infile, encoding="bytes")
                         )
                 if "dy" in imageset and imageset["dy"] is not None:
                     imageset["dy"] = resolve_path(imageset["dy"], directory)
                     iset.external_lookup.dy.filename = imageset["dy"]
                     with open(imageset["dy"], "rb") as infile:
                         iset.external_lookup.dy.data = ImageDouble(
-                            pickle.load(infile, **pickle_parameters)
+                            pickle.load(infile, encoding="bytes")
                         )
                     iset.update_detector_px_mm_data()
                 imagesets.append(iset)
@@ -1417,7 +1412,7 @@ class DataBlockDictImporter(object):
         return DataBlock(imagesets)
 
 
-class DataBlockImageSetImporter(object):
+class DataBlockImageSetImporter:
     """A class to import a datablock from imagesets."""
 
     def __init__(self, imagesets):
@@ -1432,7 +1427,7 @@ class DataBlockImageSetImporter(object):
                 self.datablocks.append(DataBlock([imageset]))
 
 
-class DataBlockFactory(object):
+class DataBlockFactory:
     """Class for creating DataBlock instances"""
 
     @staticmethod
@@ -1515,9 +1510,9 @@ class DataBlockFactory(object):
     @staticmethod
     def from_json_file(filename, check_format=True):
         """Decode a datablock from a JSON file."""
-        filename = abspath(filename)
-        directory = dirname(filename)
-        with open(filename, "r") as infile:
+        filename = os.path.abspath(filename)
+        directory = os.path.dirname(filename)
+        with open(filename) as infile:
             return DataBlockFactory.from_json(
                 infile.read(), check_format=check_format, directory=directory
             )
@@ -1586,7 +1581,7 @@ class AutoEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class BeamComparison(object):
+class BeamComparison:
     """A class to provide simple beam comparison"""
 
     def __init__(
@@ -1613,7 +1608,7 @@ class BeamComparison(object):
         )
 
 
-class DetectorComparison(object):
+class DetectorComparison:
     """A class to provide simple detector comparison"""
 
     def __init__(
@@ -1634,7 +1629,7 @@ class DetectorComparison(object):
         )
 
 
-class GoniometerComparison(object):
+class GoniometerComparison:
     """A class to provide simple goniometer comparison"""
 
     def __init__(
@@ -1668,7 +1663,7 @@ def _all_approx_equal(a, b, tolerance):
     return all(abs(x[0] - x[1]) < tolerance for x in zip(a, b))
 
 
-class BeamDiff(object):
+class BeamDiff:
     """A class to provide simple beam comparison"""
 
     def __init__(
@@ -1694,19 +1689,19 @@ class BeamDiff(object):
         bf = b.get_polarization_fraction()
         text = []
         if abs(aw - bw) > self.wavelength_tolerance:
-            text.append(" Wavelength: %f, %f" % (aw, bw))
+            text.append(f" Wavelength: {aw:f}, {bw:f}")
         if abs(ad.angle(bd)) > self.direction_tolerance:
-            text.append(" Direction: %s, %s" % (tuple(ad), tuple(bd)))
+            text.append(" Direction: {}, {}".format(tuple(ad), tuple(bd)))
         if abs(an.angle(bn)) > self.polarization_normal_tolerance:
-            text.append(" Polarization Normal: %s, %s" % (tuple(an), tuple(bn)))
+            text.append(" Polarization Normal: {}, {}".format(tuple(an), tuple(bn)))
         if abs(af - bf) > self.polarization_fraction_tolerance:
-            text.append(" Polarization Fraction: %s, %s" % (af, bf))
+            text.append(f" Polarization Fraction: {af}, {bf}")
         if len(text) > 0:
             text = ["Beam:"] + text
         return text
 
 
-class DetectorDiff(object):
+class DetectorDiff:
     """A class to provide simple detector comparison"""
 
     def __init__(
@@ -1736,19 +1731,19 @@ class DetectorDiff(object):
             b_origin = bb.get_origin()
             temp_text = []
             if not _all_equal(a_image_size, b_image_size):
-                temp_text.append("  Image size: %s, %s" % (a_image_size, b_image_size))
+                temp_text.append(f"  Image size: {a_image_size}, {b_image_size}")
             if not _all_approx_equal(a_pixel_size, b_pixel_size, 1e-7):
-                temp_text.append("  Pixel size: %s, %s" % (a_pixel_size, b_pixel_size))
+                temp_text.append(f"  Pixel size: {a_pixel_size}, {b_pixel_size}")
             if not _all_approx_equal(a_trusted_range, b_trusted_range, 1e-7):
                 temp_text.append(
-                    "  Trusted Range: %s, %s" % (a_trusted_range, b_trusted_range)
+                    f"  Trusted Range: {a_trusted_range}, {b_trusted_range}"
                 )
             if not _all_approx_equal(a_fast, b_fast, self.fast_axis_tolerance):
-                temp_text.append("  Fast axis: %s, %s" % (a_fast, b_fast))
+                temp_text.append(f"  Fast axis: {a_fast}, {b_fast}")
             if not _all_approx_equal(a_slow, b_slow, self.slow_axis_tolerance):
-                temp_text.append("  Slow axis: %s, %s" % (a_slow, b_slow))
+                temp_text.append(f"  Slow axis: {a_slow}, {b_slow}")
             if not _all_approx_equal(a_origin, b_origin, self.origin_tolerance):
-                temp_text.append("  Origin: %s, %s" % (a_origin, b_origin))
+                temp_text.append(f"  Origin: {a_origin}, {b_origin}")
             if len(temp_text) > 0:
                 text.append(" panel %d:" % i)
                 text.extend(temp_text)
@@ -1757,7 +1752,7 @@ class DetectorDiff(object):
         return text
 
 
-class GoniometerDiff(object):
+class GoniometerDiff:
     """A class to provide simple goniometer comparison"""
 
     def __init__(
@@ -1779,17 +1774,17 @@ class GoniometerDiff(object):
         b_setting = b.get_setting_rotation()
         text = []
         if abs(a_axis.angle(b_axis)) > self.rotation_axis_tolerance:
-            text.append(" Rotation axis: %s, %s" % (tuple(a_axis), tuple(b_axis)))
+            text.append(" Rotation axis: {}, {}".format(tuple(a_axis), tuple(b_axis)))
         if not _all_approx_equal(a_fixed, b_fixed, self.fixed_rotation_tolerance):
-            text.append(" Fixed rotation: %s, %s" % (a_fixed, b_fixed))
+            text.append(f" Fixed rotation: {a_fixed}, {b_fixed}")
         if not _all_approx_equal(a_setting, b_setting, self.setting_rotation_tolerance):
-            text.append(" Setting rotation: %s, %s" % (a_setting, b_setting))
+            text.append(f" Setting rotation: {a_setting}, {b_setting}")
         if len(text) > 0:
             text = ["Goniometer:"] + text
         return text
 
 
-class ScanDiff(object):
+class ScanDiff:
     """A class to provide scan comparison"""
 
     def __init__(self, scan_tolerance=1e-6):
@@ -1811,23 +1806,19 @@ class ScanDiff(object):
         diff_abs = abs(a_osc_range[1] - b_osc_range[0])
         text = []
         if not (a_image_range[1] + 1 == b_image_range[0]):
-            text.append(
-                " Incompatible image range: %s, %s" % (a_image_range, b_image_range)
-            )
+            text.append(f" Incompatible image range: {a_image_range}, {b_image_range}")
         if abs(a_oscillation[1] - b_oscillation[1]) > eps:
-            text.append(
-                " Incompatible Oscillation: %s, %s" % (a_oscillation, b_oscillation)
-            )
+            text.append(f" Incompatible Oscillation: {a_oscillation}, {b_oscillation}")
         if min(diff_2pi, diff_abs) > eps * a.get_num_images():
             text.append(
-                " Incompatible Oscillation Range: %s, %s" % (a_osc_range, b_osc_range)
+                f" Incompatible Oscillation Range: {a_osc_range}, {b_osc_range}"
             )
         if len(text) > 0:
             text = ["Scan:"] + text
         return text
 
 
-class SequenceDiff(object):
+class SequenceDiff:
     def __init__(self, tolerance):
 
         if tolerance is None:
