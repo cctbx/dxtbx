@@ -1,2 +1,0 @@
-The ``ignore()`` functionality on Format classes has been removed. Such
-classes should be marked as ``@abstract`` instead.

@@ -1,1 +1,0 @@
-Deprecate `ScanFactory.single`. Please use `ScanFactory.single_file` without the `format=` argument, which has been removed. `ScanFactory.single` will be removed in a future version.
