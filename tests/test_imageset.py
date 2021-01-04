@@ -17,8 +17,11 @@ from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
-@pytest.mark.parametrize("indices,expected_call_count", ((None, 4), ([1], 2)))
-def test_single_file_indices(indices, expected_call_count, dials_regression):
+@pytest.mark.parametrize(
+    "indices,expected_call_count,lazy",
+    ((None, 4, False), ([1], 2, False), (None, 2, True), ([1], 1, True)),
+)
+def test_single_file_indices(indices, expected_call_count, lazy, dials_regression):
     def dummy_beam():
         return BeamFactory.simple(1.0)
 
@@ -34,7 +37,7 @@ def test_single_file_indices(indices, expected_call_count, dials_regression):
             "run266702-0-subset.h5",
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
-        format_class.get_imageset([filename], single_file_indices=indices)
+        format_class.get_imageset([filename], single_file_indices=indices, lazy=lazy)
         assert obj.call_count == expected_call_count
 
 
