@@ -15,7 +15,6 @@ import dials.util
 from dials.util.options import OptionParser
 
 from dxtbx.model.experiment_list import ExperimentListFactory
-from dxtbx.serialize import dump
 
 help_message = """
 This program is used to superpose a moving detector onto a reference detector
@@ -201,7 +200,7 @@ def run(args=None):
             print("Movement not close to zero, repeating fit")
             print()
 
-    dump.experiment_list(moving_experiments, params.output_experiments)
+    moving_experiments.as_file(params.output_experiments)
 
     moved_sites = flex.vec3_double()
     for panel_id in panel_ids:
