@@ -19,7 +19,7 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 @pytest.mark.parametrize(
     "indices,expected_call_count,lazy",
-    ((None, 4, False), ([1], 2, False), (None, 2, True), ([1], 1, True)),
+    ((None, 4, False), ([1], 2, False), (None, 2, True), ([1], 2, True)),
 )
 def test_single_file_indices(indices, expected_call_count, lazy, dials_regression):
     def dummy_beam():
@@ -37,8 +37,11 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_regressio
             "run266702-0-subset.h5",
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
-        format_class.get_imageset([filename], single_file_indices=indices, lazy=lazy)
+        iset = format_class.get_imageset(
+            [filename], single_file_indices=indices, lazy=lazy
+        )
         assert obj.call_count == expected_call_count
+        iset.reader().nullify_format_instance()
 
 
 @pytest.mark.parametrize(
@@ -487,6 +490,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
         assert iset.get_detector(i)
         assert iset.get_goniometer(i) is None
         assert iset.get_scan(i) is None
+    iset.reader().nullify_format_instance()
 
 
 def test_imagesetfactory(centroid_files, dials_data):
@@ -603,6 +607,8 @@ def test_multi_panel_gain_map(dials_regression):
     gain_maps = iset.get_gain(0)
     for v, m in zip(gain_values, gain_maps):
         assert m.all_eq(v)
+
+    iset.reader().nullify_format_instance()
 
 
 @pytest.mark.parametrize(
