@@ -10,6 +10,9 @@ import dxtbx
 
 @pytest.mark.parametrize("use_mpi", [True, False])
 def test_average(dials_data, tmpdir, use_mpi):
+    # averager uses cbf handling code in the xfel module
+    pytest.importorskip("xfel")
+
     # Only allow MPI tests if we've got MPI capabilities
     if use_mpi:
         pytest.importorskip("mpi4py")
