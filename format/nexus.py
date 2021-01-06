@@ -1459,55 +1459,45 @@ def detectorgroupdatafactory(obj, instrument):
     )
 
 
-class MaskFactory(object):
-    """
-    A class to create an object to hold the pixel mask data
-    """
+def mask_factory(objects, index=None):
+    """A function to find the pixel mask data from a NeXus file."""
 
-    def __init__(self, objects, index=None):
-        def make_mask(dset, index):
-            i = 0 if index is None else index
-            mask = []
-            for module_slices in all_slices:
-                assert len(dset.shape) in [len(module_slices), len(module_slices) + 1]
-                if len(dset.shape) == len(module_slices):
-                    slices = []  # single image mask
-                else:
-                    slices = [slice(i, i + 1, 1)]  # multi-image mask
-                slices.extend(module_slices)
-                data_as_flex = dataset_as_flex_int(dset.id.id, tuple(slices))
-                data_as_flex.reshape(
-                    flex.grid(data_as_flex.all()[-2:])
-                )  # handle 3 or 4 dimension arrays
-                mask.append(data_as_flex == 0)
-            return tuple(mask)
+    def make_mask(dset, index):
+        i = 0 if index is None else index
+        mask = []
+        for module_slices in all_slices:
+            assert len(dset.shape) in [len(module_slices), len(module_slices) + 1]
+            if len(dset.shape) == len(module_slices):
+                slices = []  # single image mask
+            else:
+                slices = [slice(i, i + 1, 1)]  # multi-image mask
+            slices.extend(module_slices)
+            data_as_flex = dataset_as_flex_int(dset.id.id, tuple(slices))
+            data_as_flex.reshape(
+                flex.grid(data_as_flex.all()[-2:])
+            )  # handle 3 or 4 dimension arrays
+            mask.append(data_as_flex == 0)
+        return tuple(mask)
 
-        self.mask = None
-        for obj in objects:
-            handle = obj.handle
-            if "pixel_mask_applied" in handle and handle["pixel_mask_applied"]:
-                if self.mask is None:
-                    self.mask = []
-                if "pixel_mask" in handle:
-                    shape = handle["pixel_mask"].shape
-                    all_slices = get_detector_module_slices(obj)
-                    if len(all_slices) == 1:
-                        all_slices = [[slice(0, shape[0], 1), slice(0, shape[1], 1)]]
-                    self.mask.extend(list(make_mask(handle["pixel_mask"], index)))
-                elif "detectorSpecific" in handle:
-                    if "pixel_mask" in handle["detectorSpecific"]:
-                        shape = handle["detectorSpecific"]["pixel_mask"].shape
-                        all_slices = get_detector_module_slices(obj)
-                        if len(all_slices) == 1:
-                            all_slices = [
-                                [slice(0, shape[0], 1), slice(0, shape[1], 1)]
-                            ]
-                        self.mask.extend(
-                            list(
-                                make_mask(
-                                    handle["detectorSpecific"]["pixel_mask"], index
-                                )
-                            )
-                        )
-        if self.mask is not None:
-            self.mask = tuple(self.mask)
+    mask = []
+    for obj in objects:
+        handle = obj.handle
+        if "pixel_mask_applied" in handle and handle["pixel_mask_applied"]:
+            # mask has already been appplied to the data, so no need to read it again
+            return None
+        pixel_mask = None
+        if "pixel_mask" in handle:
+            pixel_mask = handle["pixel_mask"]
+        elif (
+            "detectorSpecific" in handle and "pixel_mask" in handle["detectorSpecific"]
+        ):
+            pixel_mask = handle["detectorSpecific"]["pixel_mask"]
+        if pixel_mask is not None:
+            shape = pixel_mask.shape
+            all_slices = get_detector_module_slices(obj)
+            if len(all_slices) == 1:
+                all_slices = [[slice(0, shape[0], 1), slice(0, shape[1], 1)]]
+            mask.extend(list(make_mask(pixel_mask, index)))
+    if not mask:
+        return None
+    return tuple(mask)

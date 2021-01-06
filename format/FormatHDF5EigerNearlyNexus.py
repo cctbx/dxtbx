@@ -18,10 +18,10 @@ from dxtbx.format.nexus import (
     DataFactoryCache,
     DetectorFactory,
     GoniometerFactory,
-    MaskFactory,
     NXdata,
     NXmxReader,
     generate_scan_model,
+    mask_factory,
 )
 
 
@@ -404,7 +404,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         return self._raw_data[index]
 
     def get_static_mask(self, index=None, goniometer=None):
-        return MaskFactory(self.instrument.detectors, index).mask
+        return mask_factory(self.instrument.detectors, index)
 
     def get_num_images(self):
         scan = self._scan()

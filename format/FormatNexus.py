@@ -13,11 +13,11 @@ from dxtbx.format.nexus import (
     DetectorFactory,
     DetectorFactoryFromGroup,
     GoniometerFactory,
-    MaskFactory,
     NXmxReader,
     detectorgroupdatafactory,
     generate_scan_model,
     is_nexus_file,
+    mask_factory,
 )
 
 
@@ -130,7 +130,7 @@ class FormatNexus(FormatHDF5):
         return self._raw_data[index]
 
     def get_static_mask(self, index=None, goniometer=None):
-        return MaskFactory(self.instrument.detectors, index).mask
+        return mask_factory(self.instrument.detectors, index)
 
     def get_num_images(self):
         if self._scan() is not None:

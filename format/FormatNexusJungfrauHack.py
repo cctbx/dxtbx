@@ -13,9 +13,9 @@ from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.format.nexus import (
     BeamFactory,
     DataFactory,
-    MaskFactory,
     NXmxReader,
     convert_units,
+    mask_factory,
 )
 from dxtbx.model import Detector, Panel, ParallaxCorrectedPxMmStrategy, Scan
 
@@ -247,7 +247,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         return self._raw_data[index]
 
     def get_static_mask(self, index=None, goniometer=None):
-        return MaskFactory(self.instrument.detectors, index).mask
+        return mask_factory(self.instrument.detectors, index)
 
     def get_num_images(self):
         if self._scan() is not None:
