@@ -531,6 +531,7 @@ namespace dxtbx { namespace model {
     oscillation[0] = rad_as_deg(oscillation[0]);
     oscillation[1] = rad_as_deg(oscillation[1]);
     os << "Scan:\n";
+    os << "    number of images:   " << s.get_num_images() << "\n";
     os << "    image range:   " << s.get_image_range().const_ref() << "\n";
     os << "    oscillation:   " << oscillation.const_ref() << "\n";
     if (s.num_images_ > 0) {
