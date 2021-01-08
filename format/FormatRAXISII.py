@@ -50,9 +50,8 @@ class FormatRAXISII(RAXISHelper, Format):
     def _scan(self):
         """Return the scan information for this image."""
 
-        return self._scan_factory.single(
+        return self._scan_factory.single_file(
             filename=self._image_file,
-            format="Raxis2 image plate",
             exposure_times=1,
             osc_start=self.detectorbase.parameters["OSC_START"],
             osc_width=self.detectorbase.parameters["OSC_RANGE"],

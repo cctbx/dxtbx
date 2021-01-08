@@ -167,28 +167,3 @@ class scan_helper_image_files(object):
     def template_index_to_image(template, index):
         """Construct the image file name from the template and file index."""
         return template_number2image(template, index)
-
-
-class scan_helper_image_formats(object):
-    """A helper class which enxapsulates the allowed and supported image
-    formats namely CBF, TIFF, SMV, RAXIS, MAR. N.B. there will be some
-    crosstalk between this class and the _image_format classes."""
-
-    FORMAT_CBF = "FORMAT_CBF"
-    FORMAT_TIFF = "FORMAT_TIFF"
-    FORMAT_SMV = "FORMAT_SMV"
-    FORMAT_RAXIS = "FORMAT_RAXIS"
-    FORMAT_MAR = "FORMAT_MAR"
-
-    @staticmethod
-    def check_format(format):
-        if format in [
-            scan_helper_image_formats.FORMAT_CBF,
-            scan_helper_image_formats.FORMAT_TIFF,
-            scan_helper_image_formats.FORMAT_SMV,
-            scan_helper_image_formats.FORMAT_RAXIS,
-            scan_helper_image_formats.FORMAT_MAR,
-        ]:
-            return True
-        print("Format %s may not be supported--contact Nick Sauter" % format)
-        return True

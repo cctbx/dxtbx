@@ -139,8 +139,6 @@ class FormatCBFMiniEiger(FormatCBFMini):
         return beam
 
     def _scan(self):
-        format = self._scan_factory.format("CBF")
-
         exposure_time = float(self._cif_header_dictionary["Exposure_period"].split()[0])
         osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
         osc_range = float(self._cif_header_dictionary["Angle_increment"].split()[0])
@@ -150,8 +148,8 @@ class FormatCBFMiniEiger(FormatCBFMini):
         else:
             timestamp = 0.0
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, timestamp
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, timestamp
         )
 
     def _read_cbf_image(self):

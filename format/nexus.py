@@ -293,8 +293,8 @@ def construct_axes(nx_file, item, vector=None):
                     raise RuntimeError("Invalid units: %s" % units)
 
                 # is the axis moving? Check the values for this axis
-                v = item[()]
-                if min(v) < max(v):
+                v = item[...]
+                if v.min() < v.max():
                     is_scan_axis = True
                 else:
                     is_scan_axis = False
@@ -485,7 +485,7 @@ class NXmxReader(object):
     def __init__(self, filename=None, handle=None):
         # Get the file handle
         if filename is not None:
-            handle = h5py.File(filename, "r")
+            handle = h5py.File(filename, "r", swmr=True)
 
         # Find the NXmx entries
         self.entries = []
@@ -1140,8 +1140,8 @@ def find_goniometer_rotation(obj):
         o = obj.handle.file[t.name]
         if h5str(o.attrs["transformation_type"]) == "rotation":
             # if this is changing, assume is scan axis
-            v = o[()]
-            if min(v) < max(v):
+            v = o[...]
+            if v.min() < v.max():
                 return o
     raise ValueError("no rotation found")
 

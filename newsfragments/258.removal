@@ -1,1 +1,0 @@
-Deprecate the HDF5 plugin discovery patch that is applied when dxtbx is imported before h5py. Please update your HDF5 plugins package.

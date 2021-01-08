@@ -144,15 +144,13 @@ class FormatPYunspecified(FormatPY):
             and self.detectorbase.deltaphi is not None
             and self.detectorbase.deltaphi > 0
         ):
-            format = ""
-
             exposure_time = self.detectorbase.parameters.get("TIME", 1)
             osc_start = self.detectorbase.osc_start
             osc_range = self.detectorbase.deltaphi
             timestamp = self._timesec
 
-            return self._scan_factory.single(
-                self._image_file, format, exposure_time, osc_start, osc_range, timestamp
+            return self._scan_factory.single_file(
+                self._image_file, exposure_time, osc_start, osc_range, timestamp
             )
 
         else:

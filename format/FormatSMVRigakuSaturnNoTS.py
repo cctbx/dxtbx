@@ -175,16 +175,14 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
         """Return the scan information for this image."""
 
         rotation = self.get_rotation()
-
-        format = self._scan_factory.format("SMV")
         epoch = 0
 
         exposure_time = rotation[3]
         osc_start = rotation[0]
         osc_range = rotation[2]
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
 

@@ -71,14 +71,13 @@ class FormatSMVADSCSNAPSID19(FormatSMVADSCSN):
         """Return the scan information for this image. There may be
         no timestamps in there..."""
 
-        format = self._scan_factory.format("SMV")
         exposure_time = float(self._header_dictionary["TIME"])
         epoch = 0
         osc_start = float(self._header_dictionary["OSC_START"])
         osc_range = float(self._header_dictionary["OSC_RANGE"])
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
 

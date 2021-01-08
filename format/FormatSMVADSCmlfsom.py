@@ -25,7 +25,6 @@ class FormatSMVADSCmlfsom(FormatSMVADSC):
     def _scan(self):
         """Return the scan information for this image."""
 
-        format = self._scan_factory.format("SMV")
         exposure_time = 1.0  # dummy argument; ought to be explicitly output by MLFSOM!
         epoch = None
 
@@ -33,8 +32,8 @@ class FormatSMVADSCmlfsom(FormatSMVADSC):
         osc_start = float(self._header_dictionary["OSC_START"])
         osc_range = float(self._header_dictionary["OSC_RANGE"])
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
 

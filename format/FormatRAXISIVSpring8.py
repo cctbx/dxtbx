@@ -72,7 +72,6 @@ class FormatRAXISIVSPring8(RAXISHelper, Format):
         f = self._f
         header = self._header_bytes
 
-        scanformat = self._scan_factory.format("RAXIS")
         exposure_time = struct.unpack(f, header[536:540])[0]
 
         y, m, d = map(int, header[256:268].strip().split(b"-"))
@@ -89,6 +88,6 @@ class FormatRAXISIVSPring8(RAXISHelper, Format):
 
         osc_range = osc_end - osc_start
 
-        return self._scan_factory.single(
-            self._image_file, scanformat, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )

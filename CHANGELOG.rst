@@ -1,3 +1,58 @@
+DIALS 3.3.0 (2021-01-04)
+========================
+
+Features
+--------
+
+- ``FormatMultiImage``: When constructing an imageset with the indices of some
+  (not all) single images in the container, we skip reading models for the
+  images that were not requested. In some cases this speeds up imageset
+  construction by 8x. (`#210 <https://github.com/cctbx/dxtbx/issues/210>`_)
+- Read detector distance from the XTC streams for LCLS Jungfrau data (`#246 <https://github.com/cctbx/dxtbx/issues/246>`_)
+- Set the per-shot gain for the ePix and Jungfrau detectors at LCLS. (`#250 <https://github.com/cctbx/dxtbx/issues/250>`_)
+- Allow format classes to be marked as ``@abstract``. This means that they will
+  be considered and returned by the Registry search if they are the best match,
+  but are intended to represent an incomplete "category" of format class that
+  other classes build on, so cannot be instantiated. (`#255 <https://github.com/cctbx/dxtbx/issues/255>`_)
+
+
+Bugfixes
+--------
+
+- When creating "Lazy" ImageSets the static mask from the image file was not being properly applied (`#227 <https://github.com/cctbx/dxtbx/issues/227>`_)
+- Be more robust when handling nexus scan axes (`#252 <https://github.com/cctbx/dxtbx/issues/252>`_)
+- Improve error message when attempting to import data-only h5 files (`#261 <https://github.com/cctbx/dxtbx/issues/261>`_)
+- Fix finding HDF5 plugins when using dials-installer (`#265 <https://github.com/cctbx/dxtbx/issues/265>`_)
+- Prevent errors reading eiger data, if ``h5py`` is imported before dxtbx (`#266 <https://github.com/cctbx/dxtbx/issues/266>`_)
+- Fix errors introduced by moving to ``h5py`` 3.1+ (`#267 <https://github.com/cctbx/dxtbx/issues/267>`_)
+- Improve error message when attempting to import unsupported files (`#1220 <https://github.com/cctbx/dxtbx/issues/1220>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Deprecate ``ScanFactory.single``. Please use ``ScanFactory.single_file``
+  without the `format=` argument, which has been removed. `ScanFactory.single`
+  will be removed in a future version. (`#233 <https://github.com/cctbx/dxtbx/issues/233>`_)
+- Remove deprecated ``dxtbx.serialize.dump.experiment_list``, ``dxtbx.serialize.filename.load_path``,
+  and ``as_str`` argument to ``dxtbx.serialize.xds.to_xds().XDS_INP()`` (`#248 <https://github.com/cctbx/dxtbx/issues/248>`_)
+- The ``ignore()`` functionality on Format classes has been removed. Such
+  classes should be marked as ``@abstract`` instead. (`#255 <https://github.com/cctbx/dxtbx/issues/255>`_)
+- Deprecate the HDF5 plugin discovery patch that is applied when dxtbx is
+  imported before h5py. Please update your HDF5 plugins package. (`#258 <https://github.com/cctbx/dxtbx/issues/258>`_)
+- Remove ``FormatHDF5RawData`` format class. This was only ever used
+  experimentally, and caused confusion when incorrectly importing nexus
+  side files. (`#261 <https://github.com/cctbx/dxtbx/issues/261>`_)
+- The deprecated ``dxtbx.datablock.DataBlockDumper`` and ``serialize.dump``
+  have been removed. (`#269 <https://github.com/cctbx/dxtbx/issues/269>`_)
+
+
+Misc
+----
+
+- `#238 <https://github.com/cctbx/dxtbx/issues/238>`_, `#257 <https://github.com/cctbx/dxtbx/issues/257>`_, `#260 <https://github.com/cctbx/dxtbx/issues/260>`_, `#262 <https://github.com/cctbx/dxtbx/issues/262>`_, `#267 <https://github.com/cctbx/dxtbx/issues/267>`_
+
+
 DIALS 3.2.0 (2020-10-27)
 ========================
 
