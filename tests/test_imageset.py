@@ -18,7 +18,7 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 @pytest.mark.parametrize("indices,expected_call_count", ((None, 4), ([1], 2)))
-def test_single_file_indices(indices, expected_call_count, dials_regression):
+def test_single_file_indices(indices, expected_call_count, dials_data):
     def dummy_beam():
         return BeamFactory.simple(1.0)
 
@@ -28,10 +28,7 @@ def test_single_file_indices(indices, expected_call_count, dials_regression):
         side_effect=dummy_beam,
     ) as obj:
         filename = os.path.join(
-            dials_regression,
-            "image_examples",
-            "SACLA_MPCCD_Cheetah",
-            "run266702-0-subset.h5",
+            dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
         format_class.get_imageset([filename], single_file_indices=indices)
@@ -452,13 +449,10 @@ class TestImageSequence:
 
 
 @pytest.mark.parametrize("lazy", (True, False))
-def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
+def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
     pytest.importorskip("h5py")
     filename = os.path.join(
-        dials_regression,
-        "image_examples",
-        "SACLA_MPCCD_Cheetah",
-        "run266702-0-subset.h5",
+        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
@@ -583,13 +577,10 @@ def test_get_corrected_data(centroid_files):
     assert flex.mean(data3) == pytest.approx(flex.mean(data2) - 1.0 / 2.0)
 
 
-def test_multi_panel_gain_map(dials_regression):
+def test_multi_panel_gain_map(dials_data):
     pytest.importorskip("h5py")
     filename = os.path.join(
-        dials_regression,
-        "image_examples",
-        "SACLA_MPCCD_Cheetah",
-        "run266702-0-subset.h5",
+        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
