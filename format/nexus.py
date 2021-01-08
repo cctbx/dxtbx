@@ -485,7 +485,7 @@ class NXmxReader(object):
     def __init__(self, filename=None, handle=None):
         # Get the file handle
         if filename is not None:
-            handle = h5py.File(filename, "r")
+            handle = h5py.File(filename, "r", swmr=True)
 
         # Find the NXmx entries
         self.entries = []
