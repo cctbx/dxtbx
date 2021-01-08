@@ -7,10 +7,23 @@ from builtins import range
 
 from scitbx.array_family import flex
 
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetLazy
 from dxtbx.model import MultiAxisGoniometer
+
+
+def _add_static_mask_to_iset(format_instance: Format, iset: ImageSet) -> None:
+    """Combine any static mask from a Format with the ImageSet's mask"""
+    if format_instance is not None:
+        static_mask = format_instance.get_static_mask()
+        if static_mask is not None:
+            if not iset.external_lookup.mask.data.empty():
+                for m1, m2 in zip(static_mask, iset.external_lookup.mask.data):
+                    m1 &= m2.data()
+                iset.external_lookup.mask.data = ImageBool(static_mask)
+            else:
+                iset.external_lookup.mask.data = ImageBool(static_mask)
 
 
 class Reader(object):
@@ -54,6 +67,7 @@ class Reader(object):
         return self._filename
 
 
+@abstract
 class FormatMultiImage(Format):
     def __init__(self, **kwargs):
         pass
@@ -118,8 +132,8 @@ class FormatMultiImage(Format):
     ):
         """
         Factory method to create an imageset
-
         """
+
         if isinstance(filenames, str):
             filenames = [filenames]
         elif len(filenames) > 1:
@@ -201,6 +215,7 @@ class FormatMultiImage(Format):
         assert not (as_sequence and lazy), "No lazy support for sequences"
 
         if single_file_indices is not None:
+            assert len(single_file_indices)
             single_file_indices = flex.size_t(single_file_indices)
 
         # Create an imageset or sequence
@@ -219,6 +234,7 @@ class FormatMultiImage(Format):
                     ),
                     indices=single_file_indices,
                 )
+                _add_static_mask_to_iset(format_instance, iset)
                 return iset
             # Create the imageset
             iset = ImageSet(
@@ -228,29 +244,30 @@ class FormatMultiImage(Format):
                 indices=single_file_indices,
             )
 
+            if single_file_indices is None:
+                single_file_indices = range(format_instance.get_num_images())
+
             # If any are None then read from format
-            if [beam, detector, goniometer, scan].count(None) != 0:
+            if not all((beam, detector, goniometer, scan)):
 
                 # Get list of models
-                beam = []
-                detector = []
-                goniometer = []
-                scan = []
-                for i in range(format_instance.get_num_images()):
-                    beam.append(format_instance.get_beam(i))
-                    detector.append(format_instance.get_detector(i))
-                    goniometer.append(format_instance.get_goniometer(i))
-                    scan.append(format_instance.get_scan(i))
-
-            if single_file_indices is None:
-                single_file_indices = list(range(format_instance.get_num_images()))
+                num_images = format_instance.get_num_images()
+                beam = [None] * num_images
+                detector = [None] * num_images
+                goniometer = [None] * num_images
+                scan = [None] * num_images
+                for i in single_file_indices:
+                    beam[i] = format_instance.get_beam(i)
+                    detector[i] = format_instance.get_detector(i)
+                    goniometer[i] = format_instance.get_goniometer(i)
+                    scan[i] = format_instance.get_scan(i)
 
             # Set the list of models
-            for i in range(len(single_file_indices)):
-                iset.set_beam(beam[single_file_indices[i]], i)
-                iset.set_detector(detector[single_file_indices[i]], i)
-                iset.set_goniometer(goniometer[single_file_indices[i]], i)
-                iset.set_scan(scan[single_file_indices[i]], i)
+            for i, index in enumerate(single_file_indices):
+                iset.set_beam(beam[index], i)
+                iset.set_detector(detector[index], i)
+                iset.set_goniometer(goniometer[index], i)
+                iset.set_scan(scan[index], i)
 
         else:
 
@@ -310,15 +327,6 @@ class FormatMultiImage(Format):
                 indices=single_file_indices,
             )
 
-        if format_instance is not None:
-            static_mask = format_instance.get_static_mask()
-            if static_mask is not None:
-                if not iset.external_lookup.mask.data.empty():
-                    for m1, m2 in zip(static_mask, iset.external_lookup.mask.data):
-                        m1 &= m2.data()
-                    iset.external_lookup.mask.data = ImageBool(static_mask)
-                else:
-                    iset.external_lookup.mask.data = ImageBool(static_mask)
+        _add_static_mask_to_iset(format_instance, iset)
 
-        # Return the imageset
         return iset

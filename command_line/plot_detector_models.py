@@ -15,6 +15,7 @@ from libtbx.utils import Sorry
 from scitbx.matrix import col
 
 from dxtbx.datablock import DataBlockFactory
+from dxtbx.model.detector_helpers import project_2d
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 usage = """Plot dxtbx detector models. Provide multiple json files if desired
@@ -30,6 +31,10 @@ phil_scope = parse(
   orthographic = False
     .type = bool
     .help = If true, draw an orthographic projection (IE drop the Z-axis)
+  project_onto = *lab_xy image_plane
+    .type = choice
+    .help = "If doing an orthographic projection, choose whether to project"
+            "onto the laboratory frame or a best-fit plane to the panels"
   panel_numbers = True
     .type = bool
     .help = If true, label panel numbers
@@ -110,7 +115,31 @@ def plot_group(
                 ax.text(vcen[0], vcen[1], vcen[2], "%d" % g.index())
 
 
-def run(args):
+def plot_image_plane_projection(detector, color, ax, panel_numbers=True):
+
+    origin_2d, fast_2d, slow_2d = project_2d(detector)
+
+    for panel, origin, fast, slow in zip(detector, origin_2d, fast_2d, slow_2d):
+        # plot the panel boundaries
+        panel_size = panel.get_image_size_mm()
+        p0 = col(origin)
+        p1 = p0 + panel_size[0] * col(fast)
+        p2 = p0 + panel_size[0] * col(fast) + panel_size[1] * col(slow)
+        p3 = p0 + panel_size[1] * col(slow)
+        v1 = p1 - p0
+        v2 = p3 - p0
+        vcen = ((v2 / 2) + (v1 / 2)) + p0
+        z = list(zip(p0, p1, p2, p3, p0))
+
+        ax.plot(z[0], z[1], color=color)
+
+        if panel_numbers:
+            # Annotate with panel numbers
+            ax.text(vcen[0], vcen[1], "%d" % panel.index())
+
+
+def run(args=None):
+    args = args or sys.argv[1:]
     user_phil = []
     files = []
     for arg in args:
@@ -148,14 +177,18 @@ def run(args):
                 ax = fig.gca()
             else:
                 ax = fig.gca(projection="3d")
-            plot_group(
-                detector.hierarchy(),
-                color,
-                ax,
-                orthographic=params.orthographic,
-                show_origin_vectors=params.show_origin_vectors,
-                panel_numbers=params.panel_numbers,
-            )
+
+            if params.orthographic and params.project_onto == "image_plane":
+                plot_image_plane_projection(detector, color, ax, params.panel_numbers)
+            else:
+                plot_group(
+                    detector.hierarchy(),
+                    color,
+                    ax,
+                    orthographic=params.orthographic,
+                    show_origin_vectors=params.show_origin_vectors,
+                    panel_numbers=params.panel_numbers,
+                )
 
     plt.xlabel("x")
     plt.ylabel("y")
@@ -172,4 +205,4 @@ def run(args):
 
 
 if __name__ == "__main__":
-    run(sys.argv[1:])
+    run()

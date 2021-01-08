@@ -37,7 +37,7 @@ class FormatHDF5PAL(FormatHDF5):
 
     def _start(self):
         self._h5_handle = h5py.File(self.get_image_file(), "r")
-        self._run = self._h5_handle.keys()[0]
+        self._run = list(self._h5_handle.keys())[0]
 
         # currently hardcoded to Rayonix MX225HS
         self._detector_size = 225  # mm

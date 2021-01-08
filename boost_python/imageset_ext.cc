@@ -645,6 +645,7 @@ namespace dxtbx { namespace boost_python {
       .def("as_imageset", &ImageSet::as_imageset)
       .def("complete_set", &ImageSet::complete_set)
       .def("partial_set", &ImageSet::partial_set)
+      .def("clear_cache", &ImageSet::clear_cache)
       .def("__eq__", &ImageSet::operator==)
       .def("__ne__", &ImageSet::operator!=)
       .def("update_detector_px_mm_data", &ImageSet_update_detector_px_mm_data)

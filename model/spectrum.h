@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <scitbx/array_family/shared.h>
+#include <scitbx/constants.h>
 #include <dxtbx/error.h>
 
 namespace dxtbx { namespace model {
@@ -105,7 +106,8 @@ namespace dxtbx { namespace model {
     }
 
     double get_weighted_wavelength() const {
-      return 12398.4187 / get_weighted_energy_eV();  //  eV per Å conversion factor
+      return scitbx::constants::factor_ev_angstrom
+             / get_weighted_energy_eV();  //  eV per Å conversion factor
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Spectrum &s);

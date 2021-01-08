@@ -47,6 +47,9 @@ def template_regex(filename):
             # last number in the filename standing between _ and .
             #  NO2_0100.sequence.18keV
             r"(.*?\.)([0-9]+)(.*)",
+            # filename ends with numbers
+            #  img0815
+            r"()([0-9]+)(.*)",
         ]
         # last number in the filename before a .
         #  NO2.00100.sequence.18keV or image-00001.cbf
@@ -138,7 +141,6 @@ def group_files_by_imageset(filenames):
     for t in template:
         matched[t[0]].append(t[1])
 
-    # Return the matched filenames
     return matched
 
 

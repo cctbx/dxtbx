@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import pycbf
+
 from dxtbx.format.image import cbf_read_buffer
 from dxtbx.model.detector import DetectorFactory
 

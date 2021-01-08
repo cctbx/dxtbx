@@ -1,10 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
+from dxtbx.format.Format import abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
+@abstract
 class FormatMultiImageLazy(FormatMultiImage):
-
     """
     Lazy version of FormatMultiImage that does not instantiate the models ahead of time.
     It creates an ImageSetLazy class and returns it. Saves time when image file contains

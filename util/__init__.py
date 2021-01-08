@@ -40,10 +40,26 @@ def format_float_with_standard_uncertainty(value, standard_uncertainty, minimum=
             su *= 10
             precision += 1
         return "{value:.{precision}f}({irsu})".format(
-            value=value, precision=precision, irsu=int(round(su)),
+            value=value, precision=precision, irsu=int(round(su))
         )
     else:
         precision += 1
         su = int(round(standard_uncertainty, precision))
         fmt_str = "%.0f(%i)"
         return fmt_str % (round(value, precision), su)
+
+
+def show_mask_info(expt_list):
+    """Print the number of masked pixels for each module in the detector,
+    for each experiment in the input list."""
+    for i in expt_list.imagesets():
+        d = i.get_detector()
+        m = i.get_mask(0)
+        print("---- ----")
+        print(d)
+        for j, _m in enumerate(m):
+            print(
+                "Module {} has {} masked pixels of {}".format(
+                    j, _m.count(False), _m.size()
+                )
+            )

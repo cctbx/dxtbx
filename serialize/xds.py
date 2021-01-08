@@ -1,7 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
-import warnings
-
 from cctbx import uctbx
 from cctbx.eltbx import attenuation_coefficient
 from cctbx.sgtbx import space_group, space_group_symbols
@@ -84,7 +80,6 @@ def to_imageset(input_filename, extra_filename=None):
         scan=scan,
     )[0]
 
-    # Return the imageset
     return imageset
 
 
@@ -289,14 +284,7 @@ class to_xds(object):
         real_space_b=None,
         real_space_c=None,
         job_card="XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT",
-        as_str=None,
     ):
-        if as_str:
-            warnings.warn(
-                "as_str= parameter is deprecated and will be removed in the future",
-                DeprecationWarning,
-                stacklevel=2,
-            )
         result = []
 
         assert [real_space_a, real_space_b, real_space_c].count(None) in (0, 3)

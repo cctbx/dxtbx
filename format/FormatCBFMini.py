@@ -10,14 +10,15 @@ import binascii
 import os
 import sys
 
-from boost.python import streambuf
-from cbflib_adaptbx import uncompress
+import pycbf
+
+from boost_adaptbx.boost.python import streambuf
+from cctbx import factor_ev_angstrom
 from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.pilatus_minicbf import PilatusImage
 from scitbx.array_family import flex
 
-import pycbf
-from dxtbx.ext import read_int32
+from dxtbx.ext import read_int32, uncompress
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
@@ -213,8 +214,6 @@ class FormatCBFMini(FormatCBF):
         return beam
 
     def _scan(self):
-        format = self._scan_factory.format("CBF")
-
         exposure_time = float(self._cif_header_dictionary["Exposure_period"].split()[0])
         osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
         osc_range = float(self._cif_header_dictionary["Angle_increment"].split()[0])
@@ -224,8 +223,8 @@ class FormatCBFMini(FormatCBF):
         else:
             timestamp = 0.0
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, timestamp
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, timestamp
         )
 
     def _read_cbf_image(self):
@@ -343,7 +342,7 @@ class FormatCBFMini(FormatCBF):
         count_cutoff = trusted_range[1]
 
         wavelength = beam.get_wavelength()  # get the wavelength in the conventional way
-        energy = 12398.4245 / wavelength
+        energy = factor_ev_angstrom / wavelength
         threshold = energy / 2  # presume normal data collection convention
 
         bad_pixels = 0  # maybe get this from negative pixel values?

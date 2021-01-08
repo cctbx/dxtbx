@@ -5,20 +5,12 @@ A top-level class to represent image formats which does little else but
 inherit from this. This will also contain links to the static methods
 from the X(component)Factories which will allow construction of e.g.
 goniometers etc. from the headers and hence a format specific factory.
-
-isort:skip_file
 """
 
-from __future__ import absolute_import, division, print_function
-
-from future import standard_library
-
-standard_library.install_aliases()
-
+import bz2
 import functools
-import sys
 import os
-from builtins import range
+from typing import ClassVar, List
 
 from six.moves.urllib_parse import urlparse
 
@@ -33,37 +25,24 @@ from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.sequence_filenames import template_regex
 
-
-if sys.hexversion < 0x3040000:
-    # try Python3.3 backport bz2 pypi module first.
-    # this supports multiple compression streams.
-    # to install run  libtbx.pip install bz2file
-    try:
-        import bz2file
-
-        bz2 = bz2file
-    except ImportError:
-        bz2 = None
-else:
-    bz2 = None
-
-if not bz2:
-    try:
-        import bz2
-    except ImportError:
-        bz2 = None
-
 try:
     import gzip
 except ImportError:
     gzip = None
 
-try:
-    from typing import List
-except ImportError:
-    pass
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
+
+
+def abstract(cls):
+    """
+    Mark a Format class as abstract, but not it's subclasses.
+
+    This means that it should not be directly used to parse user images.
+    """
+
+    cls._abstract_base = cls
+    return cls
 
 
 class Reader(object):
@@ -97,6 +76,7 @@ class Reader(object):
         return ""
 
 
+@abstract
 class Format(object):
     """A base class for the representation and interrogation of diffraction
     image formats, from which all classes for reading the header should be
@@ -116,6 +96,10 @@ class Format(object):
     """
 
     schemes = [""]  # type: List[str]
+
+    # Which class is the abstract base. Assigned with the @abstract
+    # decorator, and used to check initialization
+    _abstract_base: "ClassVar[Format]" = None
 
     @staticmethod
     def understand(image_file):
@@ -138,8 +122,16 @@ class Format(object):
         return False
 
     @classmethod
-    def ignore(cls):
-        return False
+    def is_abstract(cls) -> bool:
+        """
+        Is this Format class allowed to be instantiated?
+
+        Format classes that describe an abstract class of formats but do
+        not explicitly read a file-format should be marked as such with
+        the dxtbx.format.abstract decorator, and they will not be
+        instantiable or used as a registry match via load lookups.
+        """
+        return cls is cls._abstract_base
 
     @staticmethod
     def has_dynamic_shadowing(**kwargs):
@@ -150,6 +142,14 @@ class Format(object):
 
     def __init__(self, image_file, **kwargs):
         """Initialize a class instance from an image file."""
+
+        # Don't allow abstract instantion
+        # - except for Format, which is used as a placeholder in many
+        # places (e.g. still, check_format=False) so needs to be allowed.
+        if self.is_abstract() and not type(self) is Format:
+            raise TypeError(
+                f"Cannot instantiate: Format class '{type(self).__name__}' is marked abstract"
+            )
 
         self._image_file = image_file
 
@@ -315,7 +315,7 @@ class Format(object):
 
         """
         # Import here to avoid cyclic imports
-        from dxtbx.imageset import ImageSet, ImageSetData, ImageSequence
+        from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData
 
         # Get filename absolute paths, for entries that are filenames
         filenames = [
@@ -470,7 +470,6 @@ class Format(object):
                 else:
                     iset.external_lookup.mask.data = ImageBool(static_mask)
 
-        # Return the imageset
         return iset
 
     def get_image_file(self):
@@ -520,7 +519,7 @@ class Format(object):
         return None
 
     def get_spectrum(self):
-        """ Overload this method to read the image file however you like so
+        """Overload this method to read the image file however you like so
         long as the result is a spectrum
         """
         return None
@@ -543,8 +542,6 @@ class Format(object):
         caching transparently if possible."""
 
         if filename.endswith(".bz2"):
-            if not bz2:
-                raise RuntimeError("bz2 file provided without bz2 module")
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
 
         elif filename.endswith(".gz"):

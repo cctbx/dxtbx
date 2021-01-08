@@ -2,17 +2,16 @@
 
 """Tool to benchmark overall time cost for simply reading data"""
 
-from __future__ import absolute_import, division, print_function
-
-import sys
+import argparse
 import time
+from typing import List
 
 from dxtbx.imageset import ImageSetFactory
 
 
-def read_sequence(list_of_images):
+def read_sequence(images: List[str]):
 
-    sequences = ImageSetFactory.new(list_of_images)
+    sequences = ImageSetFactory.new(images)
 
     for sequence in sequences:
         print(sequence.get_detector())
@@ -25,8 +24,17 @@ def read_sequence(list_of_images):
             sequence.get_raw_data(i)
         t1 = time.time()
 
-        print("Reading %d frames took %.2fs" % (len(indices), t1 - t0))
+        print(f"Reading {len(indices)} frames took {t1-t0:.2f}s")
+
+
+def run(args=None):
+    parser = argparse.ArgumentParser(
+        description="Benchmark the time to read a set of images"
+    )
+    parser.add_argument("images", metavar="IMAGE", help="Images to read", nargs="+")
+    options = parser.parse_args(args)
+    return read_sequence(options.images)
 
 
 if __name__ == "__main__":
-    read_sequence(sys.argv[1:])
+    run()

@@ -7,7 +7,7 @@ import struct
 import sys
 import time
 
-from boost.python import streambuf
+from boost_adaptbx.boost.python import streambuf
 from iotbx.detectors.mar import MARImage
 from scitbx.array_family import flex
 
@@ -157,7 +157,6 @@ class FormatTIFFRayonix(FormatTIFF):
     def _scan(self):
         """Return the scan information for this image."""
 
-        format = self._scan_factory.format("TIFF")
         exposure_time = self._get_rayonix_times()[1]
         epoch = time.mktime(self._get_rayonix_timestamp())
 
@@ -166,8 +165,8 @@ class FormatTIFFRayonix(FormatTIFF):
         osc_start = starts[offset]
         osc_range = width
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
     ####################################################################

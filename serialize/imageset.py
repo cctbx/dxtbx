@@ -38,7 +38,6 @@ def basic_imageset_to_dict(imageset):
 
     """
 
-    # Return the dictionary representation
     return collections.OrderedDict(
         [
             ("__id__", "imageset"),
@@ -63,7 +62,6 @@ def imagesequence_to_dict(sequence):
 
     """
 
-    # Return the dictionary representation
     return collections.OrderedDict(
         [
             ("__id__", "imageset"),
@@ -129,7 +127,6 @@ def basic_imageset_from_dict(d, directory=None):
     imageset.set_beam(BeamFactory.from_dict(d.get("beam"), beam_dict))
     imageset.set_detector(DetectorFactory.from_dict(d.get("detector"), detector_dict))
 
-    # Return the imageset
     return imageset
 
 
@@ -191,7 +188,6 @@ def imagesequence_from_dict(d, check_format=True, directory=None):
             sequence.external_lookup.pedestal.filename = path
             sequence.external_lookup.pedestal.data = ImageDouble(pickle.load(infile))
 
-    # Return the sequence
     return sequence
 
 

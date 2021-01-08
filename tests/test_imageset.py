@@ -1,20 +1,41 @@
-from __future__ import absolute_import, division, print_function
-
 import os
-from builtins import range
+from unittest import mock
 
 import pytest
 import six.moves.cPickle as pickle
 
 from scitbx.array_family import flex
 
+import dxtbx.format.FormatHDF5SaclaMPCCD
 import dxtbx.format.image
 import dxtbx.format.Registry
 import dxtbx.tests.imagelist
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import Beam, Detector, Panel
+from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
+
+
+@pytest.mark.parametrize("indices,expected_call_count", ((None, 4), ([1], 2)))
+def test_single_file_indices(indices, expected_call_count, dials_regression):
+    def dummy_beam():
+        return BeamFactory.simple(1.0)
+
+    with mock.patch.object(
+        dxtbx.format.FormatHDF5SaclaMPCCD.FormatHDF5SaclaMPCCD,
+        "_beam",
+        side_effect=dummy_beam,
+    ) as obj:
+        filename = os.path.join(
+            dials_regression,
+            "image_examples",
+            "SACLA_MPCCD_Cheetah",
+            "run266702-0-subset.h5",
+        )
+        format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
+        format_class.get_imageset([filename], single_file_indices=indices)
+        assert obj.call_count == expected_call_count
 
 
 @pytest.mark.parametrize(
@@ -205,7 +226,7 @@ def assert_can_get_detectorbase(obj, indices, outside_index):
         obj.get_detectorbase(outside_index)
 
 
-class TestImageSet(object):
+class TestImageSet:
     def test_imageset(self, centroid_files_and_imageset):
         filenames, imageset = centroid_files_and_imageset
 
@@ -300,7 +321,7 @@ class TestImageSet(object):
         assert detector2 != detector
 
 
-class TestImageSequence(object):
+class TestImageSequence:
     def test(self, centroid_files):
         # Create the format class
         format_class = dxtbx.format.Registry.get_format_class_for_file(
@@ -493,6 +514,30 @@ def test_imagesetfactory(centroid_files, dials_data):
     assert len(sequence) == 4
 
 
+def test_make_sequence_with_percent_character(dials_data, tmp_path):
+    images = [
+        dials_data("centroid_test_data").join(f"centroid_{i:04}.cbf")
+        for i in range(1, 10)
+    ]
+    directory = tmp_path / "test%"
+    directory.mkdir()
+    for image in images:
+        (directory / image.basename).symlink_to(image)
+    template = str(directory / "centroid_####.cbf")
+    sequence = ImageSetFactory.make_sequence(template, range(1, 10))
+    assert len(sequence) == 9
+
+    sequences = ImageSetFactory.new(
+        [str(directory / image.basename) for image in images]
+    )
+    assert len(sequences) == 1
+    assert len(sequences[0]) == 9
+
+    sequences = ImageSetFactory.from_template(template)
+    assert len(sequences) == 1
+    assert len(sequences[0]) == 9
+
+
 def test_pickle_imageset(centroid_files):
     sequence = ImageSetFactory.new(centroid_files)[0]
 
@@ -558,7 +603,11 @@ def test_multi_panel_gain_map(dials_regression):
 
 
 @pytest.mark.parametrize(
-    "multi_panel,expected_panel_count", ((False, 24), (True, 120,),),
+    "multi_panel,expected_panel_count",
+    (
+        (False, 24),
+        (True, 120),
+    ),
 )
 def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
     image_path = os.path.join(
@@ -573,3 +622,14 @@ def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
         == len(imageset.get_raw_data(0))
         == expected_panel_count
     )
+
+
+@pytest.mark.xfail(
+    raises=OverflowError, reason="https://github.com/cctbx/dxtbx/issues/213"
+)
+def test_scan_imageset_slice_consistency(dials_data):
+    files = dials_data("centroid_test_data").listdir("*.cbf", sort=True)[1:]
+    expt = ExperimentListFactory.from_filenames(f.strpath for f in files)[0]
+    assert expt.scan[0:8] == expt.scan
+    # The following doesn't work, and expects expt.imageset[1:9]
+    assert expt.imageset[0:8] == expt.imageset

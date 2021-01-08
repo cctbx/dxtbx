@@ -6,6 +6,7 @@ import sys
 import h5py
 import numpy as np
 
+from cctbx import factor_ev_angstrom
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
@@ -97,7 +98,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         eV = h5_handle[self.tag]["photon_energy_ev"][()]
         h5_handle.close()
 
-        return self._beam_factory.simple(12398.4 / eV)
+        return self._beam_factory.simple(factor_ev_angstrom / eV)
 
     def get_num_images(self):
         return len(self._images)

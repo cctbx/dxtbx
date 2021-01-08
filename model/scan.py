@@ -1,13 +1,15 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import warnings
 from builtins import object, range
+
+import pycbf
 
 import libtbx.phil
 from scitbx.array_family import flex
 
-import pycbf
-from dxtbx.model.scan_helpers import scan_helper_image_files, scan_helper_image_formats
+from dxtbx.model.scan_helpers import scan_helper_image_files
 from dxtbx_model_ext import Scan
 
 scan_phil_scope = libtbx.phil.parse(
@@ -95,7 +97,6 @@ class ScanFactory(object):
         if params.scan.batch_offset is not None:
             scan.set_batch_offset(params.scan.batch_offset)
 
-        # Return the model
         return scan
 
     @staticmethod
@@ -154,7 +155,20 @@ class ScanFactory(object):
     @staticmethod
     def single(filename, format, exposure_times, osc_start, osc_width, epoch):
         """Construct an scan instance for a single image."""
+        # https://github.com/cctbx/dxtbx/issues/232
+        # Deprecated as of 2020/12/18 for 3.3. Remove after 2021/03/01 (for 3.4)
+        warnings.warn(
+            "ScanFactory.single is deprecated. Please use ScanFactory.single_file",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return ScanFactory.single_file(
+            filename, exposure_times, osc_start, osc_width, epoch
+        )
 
+    @staticmethod
+    def single_file(filename, exposure_times, osc_start, osc_width, epoch):
+        """Construct an scan instance for a single image."""
         index = scan_helper_image_files.image_to_index(os.path.split(filename)[-1])
         if epoch is None:
             epoch = 0.0
@@ -228,29 +242,3 @@ class ScanFactory(object):
             )
             for index in indices
         ]
-
-    @staticmethod
-    def format(name):
-        """Return the correct format token for a given name, for example:
-
-        cbf, CBF
-        smv, SMV
-        tiff, tif, TIFF
-        raxis, RAXIS
-        mar, MAR
-
-        to the appropriate static token which will be used as a handle
-        everywhere else in this."""
-
-        if name.upper() == "CBF":
-            return scan_helper_image_formats.FORMAT_CBF
-        elif name.upper() == "SMV":
-            return scan_helper_image_formats.FORMAT_SMV
-        elif name.upper() == "TIF" or name.upper() == "TIFF":
-            return scan_helper_image_formats.FORMAT_TIFF
-        elif name.upper() == "RAXIS":
-            return scan_helper_image_formats.FORMAT_RAXIS
-        elif name.upper() == "MAR":
-            return scan_helper_image_formats.FORMAT_MAR
-
-        raise RuntimeError("name %s not known" % name)

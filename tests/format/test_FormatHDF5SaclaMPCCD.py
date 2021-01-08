@@ -64,7 +64,7 @@ def test_MPCCD_Phase3_21528(dials_data):
     assert imageset.get_goniometer() is None
     assert imageset.get_scan() is None
 
-    assert beam.get_wavelength() == pytest.approx(1.2452843833238922)
+    assert beam.get_wavelength() == pytest.approx(1.2452863763694901)
     assert beam.get_sample_to_source_direction() == (0, 0, 1)
 
 
@@ -130,11 +130,11 @@ def test_combine_with_user_static_mask(dials_data, tmpdir):
     mask = imageset.get_mask(0)
     assert len(mask) == 8
     assert [_.count(False) for _ in mask] == [
-        65333,
+        65332,
         24296,
         24296,
-        63336,
-        63661,
+        63335,
+        63660,
         24296,
         24296,
         66691,

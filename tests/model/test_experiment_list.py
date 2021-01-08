@@ -1,11 +1,5 @@
-# coding: utf-8
-
-from __future__ import absolute_import, division, print_function
-
 import errno
 import os
-from builtins import range
-from glob import glob
 
 import pytest
 import six.moves.cPickle as pickle
@@ -88,33 +82,27 @@ def test_experiment_equality():
     s2 = Scan()
     c2 = Crystal((1, 0, 0), (0, 1, 0), (0, 0, 1), space_group_symbol="P1")
 
-    # Create an experiment
+    # Create a few experiments
     e1 = Experiment(
         beam=b1, detector=d1, goniometer=g1, scan=s1, crystal=c1, imageset=None
     )
-
-    # Create an experiment
     e2 = Experiment(
         beam=b1, detector=d1, goniometer=g1, scan=s1, crystal=c1, imageset=None
     )
-
-    # Create an experiment
     e3 = Experiment(
         beam=b2, detector=d2, goniometer=g2, scan=s2, crystal=c2, imageset=None
     )
 
-    # Check e1 equals e2 but not e3
+    # Check e1 equals e2 and neither equals e3
     assert e1 == e2
     assert e1 != e3
     assert e2 != e3
 
 
-def test_experiment_consistent(dials_regression):
+def test_experiment_consistent(dials_data):
     # Create a sequence
-    sequence_filenames = os.path.join(
-        dials_regression, "centroid_test_data", "centroid*.cbf"
-    )
-    sequence = ImageSetFactory.new(sorted(glob(sequence_filenames)))[0]
+    sequence_filenames = dials_data("centroid_test_data").listdir("centroid*.cbf")
+    sequence = ImageSetFactory.new(sorted(f.strpath for f in sequence_filenames))[0]
 
     # Create experiment with sequence and good scan
     e = Experiment(imageset=sequence, scan=sequence.get_scan())
@@ -339,7 +327,6 @@ def experiment_list():
             )
         )
 
-    # Return the list of experiments
     return experiments
 
 
@@ -640,13 +627,8 @@ def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmpdir):
     assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
 
 
-def test_experimentlist_dumper_dump_with_bad_lookup(dials_regression, tmpdir):
-    tmpdir.chdir()
-
-    filename = os.path.join(
-        dials_regression, "centroid_test_data", "experiments_with_bad_lookup.json"
-    )
-
+def test_experimentlist_dumper_dump_with_bad_lookup(dials_data, tmpdir):
+    filename = dials_data("centroid_test_data") / "experiments_with_bad_lookup.json"
     experiments = ExperimentListFactory.from_json_file(filename, check_format=False)
 
     imageset = experiments[0].imageset
@@ -657,7 +639,7 @@ def test_experimentlist_dumper_dump_with_bad_lookup(dials_regression, tmpdir):
     assert imageset.external_lookup.gain.filename is not None
     assert imageset.external_lookup.pedestal.filename is not None
 
-    filename = "temp.json"
+    filename = tmpdir / "temp.json"
     experiments.as_json(filename)
 
     experiments = ExperimentListFactory.from_json_file(filename, check_format=False)

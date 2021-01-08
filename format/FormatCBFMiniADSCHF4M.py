@@ -12,10 +12,10 @@ import re
 import sys
 import time
 
-from cbflib_adaptbx import uncompress
 from cctbx.eltbx import attenuation_coefficient
 from iotbx.detectors.adsc_minicbf import ADSCHF4MImage
 
+from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
@@ -139,8 +139,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
     def _scan(self):
         """Return the scan information for this image."""
 
-        format = self._scan_factory.format("CBF")
-
         exposure_time = float(self._cif_header_dictionary["Exposure_period"].split()[0])
 
         osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
@@ -148,8 +146,8 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         timestamp = get_adsc_timestamp(self._cif_header_dictionary["timestamp"])
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, timestamp
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, timestamp
         )
 
     def detectorbase_start(self):

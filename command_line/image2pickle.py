@@ -67,9 +67,8 @@ def crop_image_pickle(
     return data
 
 
-def run(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+def run(args=None):
+    args = args or sys.argv[1:]
 
     command_line = (
         libtbx.option_parser.option_parser(
@@ -157,7 +156,7 @@ def run(argv=None):
             dest="overload",
             help="Override the detector overload value (ADU)",
         )
-    ).process(args=argv)
+    ).process(args)
 
     paths = command_line.args
     if len(paths) <= 0:
@@ -356,4 +355,4 @@ def save_image(
 
 
 if __name__ == "__main__":
-    run(sys.argv[1:])
+    run()

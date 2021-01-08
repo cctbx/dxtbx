@@ -88,9 +88,6 @@ dmypy.json
 *.swp
 .vscode
 
-# Python3 migration testing
-.python3-test-failures.new
-
 _*.nb
 *.fdb_latexmk
 *.gz

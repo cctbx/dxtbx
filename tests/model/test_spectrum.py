@@ -5,13 +5,14 @@ import random
 
 import pytest
 
+from cctbx import factor_ev_angstrom
 from scitbx.array_family import flex
 
 from dxtbx.model import Spectrum
 
 
 def test_spectrum():
-    mean_ev_1 = 12398.4187  # 1.0Å
+    mean_ev_1 = factor_ev_angstrom  # 1.0Å
     wavelengths = 2 / 3, 1, 3 / 2
 
     for wavelength in wavelengths:

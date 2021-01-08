@@ -151,7 +151,17 @@ def test_no_abs_load_dict(registry):
         ExperimentListFactory.from_dict(
             {
                 "__id__": "ExperimentList",
-                "experiment": [{"__id__": "Experiment", "imageset": 0,}],
-                "imageset": [{"__id__": "ImageSet", "images": ["scheme://something"],}],
+                "experiment": [
+                    {
+                        "__id__": "Experiment",
+                        "imageset": 0,
+                    }
+                ],
+                "imageset": [
+                    {
+                        "__id__": "ImageSet",
+                        "images": ["scheme://something"],
+                    }
+                ],
             }
         )

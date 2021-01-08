@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 
-from boost.python import streambuf
+from boost_adaptbx.boost.python import streambuf
 from scitbx import matrix
 from scitbx.array_family import flex
 
@@ -147,9 +147,8 @@ class FormatBrukerPhotonII(FormatBruker):
             start *= -1
             incr *= -1
 
-        return self._scan_factory.single(
+        return self._scan_factory.single_file(
             filename=self._image_file,
-            format="BrukerCCD",
             exposure_times=1,
             osc_start=start,
             osc_width=incr,

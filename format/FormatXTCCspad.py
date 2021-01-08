@@ -12,13 +12,12 @@ from scitbx.matrix import col
 from xfel.cftbx.detector.cspad_cbf_tbx import read_slac_metrology
 from xfel.cxi.cspad_ana.cspad_tbx import env_distance
 
-import psana
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 try:
-    from xfel.cxi.cspad_ana import cspad_tbx
     from xfel.cftbx.detector import cspad_cbf_tbx
+    from xfel.cxi.cspad_ana import cspad_tbx
 except ImportError:
     # xfel not configured
     pass
@@ -57,13 +56,8 @@ class FormatXTCCspad(FormatXTC):
         assert (
             self.params.cspad.detz_offset is not None
         ), "Supply a detz_offset for the cspad"
-        self._ds = FormatXTC._get_datasource(image_file, self.params)
-        self._psana_runs = FormatXTC._get_psana_runs(self._ds)
-        self._cache_psana_det()  # NOTE: move to base FormatXTC class
         self._cache_psana_pedestals()  # NOTE: move to base FormatXTC class
-        self._cache_psana_gain()
-        self.populate_events()
-        self.n_images = len(self.times)
+        self._psana_gain_map_cache = {}
 
     @staticmethod
     def understand(image_file):
@@ -73,40 +67,34 @@ class FormatXTCCspad(FormatXTC):
             return False
         return any("cspad" in src.lower() for src in params.detector_address)
 
-    def _cache_psana_gain(self):
+    def _get_psana_gain_map(self, run):
         """
         checks if user wants gain applied and caches a gain map per run
         """
-        self._gain_masks = {}
-        for r in self._psana_runs:
+        if run.run() not in self._psana_gain_map_cache:
             if self.params.cspad.apply_gain_mask:
-                self._gain_masks[r] = self._psana_det[r].gain_mask(r) > 0
+                self._psana_gain_map_cache[run.run()] = (
+                    self._get_psana_detector(run).gain_mask(run) > 0
+                )
             else:
-                self._gain_masks[r] = None
-
-    def _cache_psana_det(self):
-        """Store a psana detector instance for each run"""
-        assert len(self.params.detector_address) == 1
-
-        self._psana_det = {}
-        for run_number, run in self._psana_runs.items():
-            self._psana_det[run_number] = psana.Detector(
-                self.params.detector_address[0], run.env()
-            )
+                self._psana_gain_map_cache[run.run()] = None
 
     def _cache_psana_pedestals(self):
         """Store a pedestal for each psana detector instance"""
         self._pedestals = {}
         for run_number, run in self._psana_runs.items():
-            det = self._psana_det[run_number]
+            det = self._get_psana_detector(run)
             self._pedestals[run_number] = det.pedestals(run)
 
-    def get_raw_data(self, index):
+    def get_raw_data(self, index=None):
+        if index is None:
+            index = 0
         assert len(self.params.detector_address) == 1
         d = self.get_detector(index)
         event = self._get_event(index)
         run_number = event.run()
-        det = self._psana_det[run_number]
+        run = self._psana_runs[run_number]
+        det = self._get_psana_detector(run)
         data = cspad_cbf_tbx.get_psana_corrected_data(
             det,
             event,
@@ -116,7 +104,7 @@ class FormatXTCCspad(FormatXTC):
             apply_gain_mask=self.params.cspad.apply_gain_mask,
             gain_mask_value=None,
             per_pixel_gain=False,
-            gain_mask=self._gain_masks[run_number],
+            gain_mask=self._get_psana_gain_map(run),
         )
         data = data.astype(np.float64)
         self._raw_data = []
@@ -133,41 +121,17 @@ class FormatXTCCspad(FormatXTC):
         assert len(d) == len(self._raw_data)
         return tuple(self._raw_data)
 
-    def get_num_images(self):
-        return self.n_images
-
     def get_detector(self, index=None):
         return FormatXTCCspad._detector(self, index)
-
-    def get_beam(self, index=None):
-        return self._beam(index)
-
-    def _beam(self, index=None):
-        """Returns a simple model for the beam"""
-        if index is None:
-            index = 0
-        evt = self._get_event(index)
-        wavelength = cspad_tbx.evt_wavelength(evt)
-        if wavelength is None:
-            return None
-        return self._beam_factory.simple(wavelength)
-
-    def get_goniometer(self, index=None):
-        return None
-
-    def get_scan(self, index=None):
-        return None
 
     # XXX Implement recursive version
     def _detector(self, index=None):
         if index is None:
             index = 0
 
-        ev = self._get_event(index)
-        run_number = ev.run()
-        run = self._psana_runs[run_number]
-        det = self._psana_det[run_number]
-        geom = det.pyda.geoaccess(run_number)
+        run = self.get_run_from_index(index)
+        det = self._get_psana_detector(run)
+        geom = det.pyda.geoaccess(run.run())
         cob = read_slac_metrology(geometry=geom, include_asic_offset=True)
         distance = env_distance(
             self.params.detector_address[0], run.env(), self.params.cspad.detz_offset

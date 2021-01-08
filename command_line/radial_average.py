@@ -10,7 +10,9 @@ from builtins import range
 
 import numpy as np
 
+import cctbx.miller
 import iotbx.phil
+from cctbx.crystal import symmetry
 from libtbx import easy_pickle
 from libtbx.utils import Sorry, Usage
 from scitbx.array_family import flex
@@ -19,9 +21,6 @@ from xfel import radial_average
 
 import dxtbx.datablock
 from dxtbx.model.experiment_list import ExperimentListFactory
-
-from cctbx.crystal import symmetry
-import cctbx.miller
 
 master_phil = iotbx.phil.parse(
     """
@@ -93,7 +92,9 @@ master_phil = iotbx.phil.parse(
 )
 
 
-def run(args, imageset=None):
+def run(args=None, imageset=None):
+    args = sys.argv[1:] if args is None else args
+
     # Parse input
     try:
         len(args)
@@ -153,7 +154,7 @@ def run(args, imageset=None):
             color=[colormap(i) for i in np.linspace(0, 0.9, len(params.file_path))]
         )
 
-    if params.mask is not None:
+    if params.mask is not None and not isinstance(params.mask, tuple):
         params.mask = easy_pickle.load(params.mask)
 
     if imageset is None:
@@ -421,4 +422,4 @@ def run(args, imageset=None):
 
 
 if __name__ == "__main__":
-    run(sys.argv[1:])
+    run()

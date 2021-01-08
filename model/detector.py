@@ -3,11 +3,12 @@ from __future__ import absolute_import, division, print_function
 import os
 from builtins import object, range
 
+import pycbf
+
 import libtbx.phil
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 
-import pycbf
 from dxtbx.model.detector_helpers import (
     detector_helper_sensors,
     find_gain_value,
@@ -415,7 +416,6 @@ class DetectorFactory(object):
                 if len(group_params.panel) != 0:
                     raise RuntimeError("Can't reassign panels in groups")
 
-        # Return the detector
         return detector
 
     @staticmethod
@@ -459,7 +459,6 @@ class DetectorFactory(object):
                 detector, beam, slow_fast_beam_centre_mm, panel_id=panel_id
             )
 
-        # Return the model
         return detector
 
     @staticmethod

@@ -129,7 +129,7 @@ class FormatNexus(FormatHDF5):
     def get_raw_data(self, index):
         return self._raw_data[index]
 
-    def get_mask(self, index=None, goniometer=None):
+    def get_static_mask(self, index=None, goniometer=None):
         return MaskFactory(self.instrument.detectors, index).mask
 
     def get_num_images(self):
@@ -162,7 +162,7 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
     def understand(image_file):
         is_nexus_still = False
         try:
-            from dxtbx.format.nexus import find_entries, find_class
+            from dxtbx.format.nexus import find_class, find_entries
 
             # Get the file handle
             with h5py.File(image_file, "r") as handle:

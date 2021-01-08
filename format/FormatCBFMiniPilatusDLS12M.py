@@ -9,10 +9,10 @@ import sys
 from builtins import range
 
 import libtbx
-from cbflib_adaptbx import uncompress
 from cctbx.eltbx import attenuation_coefficient
 from scitbx import matrix
 
+from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.masking import GoniometerMaskerFactory
@@ -170,7 +170,11 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         cy = 97  # chip pixels y
         dx = 7  # module gap size
 
-        if timestamp > calendar.timegm((2020, 2, 21, 0, 0, 0)):
+        if timestamp > calendar.timegm((2020, 9, 8, 0, 0, 0)):
+            # 2020 run 4
+            # Detector serviced by Dectris, no bad modules
+            pass
+        elif timestamp > calendar.timegm((2020, 2, 21, 0, 0, 0)):
             # 2020 run 1
             # module @ row 1 column 4
             # blank chip @ row 15 column 4 (chip row 0, column 1)

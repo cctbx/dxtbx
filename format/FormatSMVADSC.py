@@ -76,7 +76,7 @@ class FormatSMVADSC(FormatSMV):
         pedestal that is present"""
 
         if pedestal is None:
-            pedestal = int(self._header_dictionary.get("IMAGE_PEDESTAL", 0))
+            pedestal = float(self._header_dictionary.get("IMAGE_PEDESTAL", 0))
 
         overload = 65535 - pedestal
         underload = -1 - pedestal
@@ -94,6 +94,10 @@ class FormatSMVADSC(FormatSMV):
         # not be expected to be better than 20% and indeed may be worse than that.
         # Values may refer to gain in ADU per incident photon rather than the
         # more appropriate ADU per captured photon.
+
+        # Allow gain set in the header to override the guesswork here
+        if "GAIN" in self._header_dictionary:
+            return float(self._header_dictionary["GAIN"])
 
         # Get the binning level
         bin_lev = str(self._header_dictionary.get("BIN"))
@@ -178,7 +182,7 @@ class FormatSMVADSC(FormatSMV):
             self._adsc_trusted_range(),
             [],
             gain=self._adsc_module_gain(),
-            pedestal=int(self._header_dictionary.get("IMAGE_PEDESTAL", 0)),
+            pedestal=float(self._header_dictionary.get("IMAGE_PEDESTAL", 0)),
         )
 
     def _beam(self):
@@ -190,7 +194,6 @@ class FormatSMVADSC(FormatSMV):
 
     def _scan(self):
         """Return the scan information for this image."""
-        format = self._scan_factory.format("SMV")
         exposure_time = float(self._header_dictionary["TIME"])
         epoch = None
 
@@ -213,8 +216,8 @@ class FormatSMVADSC(FormatSMV):
         osc_start = float(self._header_dictionary["OSC_START"])
         osc_range = abs(float(self._header_dictionary["OSC_RANGE"]))
 
-        return self._scan_factory.single(
-            self._image_file, format, exposure_time, osc_start, osc_range, epoch
+        return self._scan_factory.single_file(
+            self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 
     def get_raw_data(self):

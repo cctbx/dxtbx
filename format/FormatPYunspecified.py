@@ -11,7 +11,7 @@ from iotbx.detectors.cspad_detector_formats import (
     detector_format_version,
     reverse_timestamp,
 )
-from iotbx.detectors.npy import NpyImage
+from iotbx.detectors.npy import NpyImage, image_dict_to_unicode
 from scitbx.array_family import flex
 from spotfinder.applications.xfel import cxi_phil
 
@@ -29,13 +29,13 @@ class FormatPYunspecified(FormatPY):
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
                 if six.PY3:
                     data = pickle.load(fh, encoding="bytes")
-                    headers = {key.decode("ascii") for key in data}
+                    data = image_dict_to_unicode(data)
                 else:
                     data = pickle.load(fh)
-                    headers = set(data)
         except IOError:
             return False
 
+        headers = set(data)
         wanted_header_items = {"SIZE1", "SIZE2", "TIMESTAMP"}
 
         return wanted_header_items.issubset(headers)
@@ -50,12 +50,7 @@ class FormatPYunspecified(FormatPY):
             with FormatPYunspecified.open_file(self._image_file, "rb") as fh:
                 if six.PY3:
                     data = pickle.load(fh, encoding="bytes")
-                    data = {
-                        key.decode("ascii"): value.decode("latin-1")
-                        if isinstance(value, bytes)
-                        else value
-                        for key, value in data.items()
-                    }
+                    data = image_dict_to_unicode(data)
                 else:
                     data = pickle.load(fh)
         else:
@@ -149,15 +144,13 @@ class FormatPYunspecified(FormatPY):
             and self.detectorbase.deltaphi is not None
             and self.detectorbase.deltaphi > 0
         ):
-            format = ""
-
             exposure_time = self.detectorbase.parameters.get("TIME", 1)
             osc_start = self.detectorbase.osc_start
             osc_range = self.detectorbase.deltaphi
             timestamp = self._timesec
 
-            return self._scan_factory.single(
-                self._image_file, format, exposure_time, osc_start, osc_range, timestamp
+            return self._scan_factory.single_file(
+                self._image_file, exposure_time, osc_start, osc_range, timestamp
             )
 
         else:
