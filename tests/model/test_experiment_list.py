@@ -692,7 +692,8 @@ def test_experimentlist_with_identifiers():
 def test_load_models(dials_data):
     pytest.importorskip("h5py")
     filename = os.path.join(
-        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
+        dials_data("image_examples"),
+        "SACLA-MPCCD-run266702-0-subset.h5",
     )
 
     # Test different ways of loading the data

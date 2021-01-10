@@ -28,7 +28,8 @@ def test_single_file_indices(indices, expected_call_count, dials_data):
         side_effect=dummy_beam,
     ) as obj:
         filename = os.path.join(
-            dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
+            dials_data("image_examples"),
+            "SACLA-MPCCD-run266702-0-subset.h5",
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
         format_class.get_imageset([filename], single_file_indices=indices)
@@ -452,7 +453,8 @@ class TestImageSequence:
 def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
     pytest.importorskip("h5py")
     filename = os.path.join(
-        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
+        dials_data("image_examples"),
+        "SACLA-MPCCD-run266702-0-subset.h5",
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
@@ -580,7 +582,8 @@ def test_get_corrected_data(centroid_files):
 def test_multi_panel_gain_map(dials_data):
     pytest.importorskip("h5py")
     filename = os.path.join(
-        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
+        dials_data("image_examples"),
+        "SACLA-MPCCD-run266702-0-subset.h5",
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
