@@ -18,7 +18,8 @@ def test_average(dials_data, tmpdir, use_mpi):
         pytest.importorskip("mpi4py")
 
     data = os.path.join(
-        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
+        dials_data("image_examples"),
+        "SACLA-MPCCD-run266702-0-subset.h5",
     )
     if use_mpi:
         command = "mpirun"
