@@ -127,28 +127,27 @@ def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
         list: The list of found NXentry groups.
 
     """
-    hits = []
-    for group in nx_file.values():
-        if h5str(group.attrs.get("NX_class")) == "NXentry":
-            if "definition" in group:
-                if h5str(group["definition"][()]) == "NXmx":
-                    hits.append(group)
-    return hits
+    return [
+        group
+        for group in find_class(nx_file, "NXentry")
+        if "definition" in group and h5str(group["definition"][()]) == "NXmx"
+    ]
 
 
-def find_class(nx_file, nx_class: str):
+def find_class(node: Union[h5py.File, h5py.Group], nx_class: str) -> List[h5py.Group]:
     """
-    Find a given NXclass
+    Find a given NXclass within the current node.
+
+    This function only examines the children of the input node.
+
+    Args:
+        node: The input h5py node (h5py.File or h5py.Group).
+
+    Returns:
+        list: The list of nodes matching the input nx_class.
+
     """
-    hits = []
-
-    def visitor(name, obj):
-        if "NX_class" in obj.attrs:
-            if h5str(obj.attrs["NX_class"]) == nx_class:
-                hits.append(obj)
-
-    local_visit(nx_file, visitor)
-    return hits
+    return [v for v in node.values() if h5str(v.attrs.get("NX_class")) == nx_class]
 
 
 def convert_units(value, input_units, output_units):
