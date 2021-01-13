@@ -4,7 +4,7 @@ import collections
 import itertools
 import math
 import os
-from typing import Union
+from typing import List, Union
 
 import h5py
 import numpy
@@ -111,21 +111,29 @@ def local_visit(nx_file, visitor):
         local_visit(k, visitor)
 
 
-def find_entries(nx_file, entry):
+def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
     """
-    Find NXmx entries
+    Find NXmx entries.
+
+    A valid NeXus file should contain one or more NXentry groups at the top level. Only
+    return those NXentry groups that are specified as following the NXmx definition.
+
+    https://manual.nexusformat.org/classes/base_classes/NXentry.html#nxentry
+
+    Args:
+        nx_file (h5py.File): The input h5py.File instance.
+
+    Returns:
+        list: The list of found NXentry groups.
+
     """
     hits = []
-
-    def visitor(name, obj):
-        if "NX_class" in obj.attrs:
-            if h5str(obj.attrs["NX_class"]) in ["NXentry", "NXsubentry"]:
-                if "definition" in obj:
-                    if h5str(obj["definition"][()]) == "NXmx":
-                        hits.append(obj)
-
-    visitor(entry, nx_file[entry])
-    local_visit(nx_file, visitor)
+    for group in nx_file.values():
+        if "NX_class" in group.attrs:
+            if h5str(group.attrs["NX_class"]) == "NXentry":
+                if "definition" in group:
+                    if h5str(group["definition"][()]) == "NXmx":
+                        hits.append(group)
     return hits
 
 
@@ -489,7 +497,7 @@ class NXmxReader(object):
 
         # Find the NXmx entries
         self.entries = []
-        for entry in find_entries(handle, "/"):
+        for entry in find_entries(handle):
             self.entries.append(NXmxEntry(entry))
 
         # Check we've got some stuff
@@ -537,7 +545,7 @@ def is_nexus_file(filename):
     """
     with h5py.File(filename, "r") as handle:
         # Find the NXmx entries
-        return bool(find_entries(handle, "/"))
+        return bool(find_entries(handle))
 
 
 class BeamFactory(object):
