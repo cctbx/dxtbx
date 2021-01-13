@@ -402,23 +402,21 @@ class NXinstrument(object):
         self.handle = handle
 
         # Find the NXdetector
-        self.detectors = []
-        for entry in find_class(self.handle, "NXdetector"):
-            self.detectors.append(NXdetector(entry))
-
+        self.detectors = [
+            NXdetector(detector) for detector in find_class(self.handle, "NXdetector")
+        ]
         # Check we've got stuff
         if not self.detectors:
             raise NXValidationError("No NXdetector in %s" % self.handle.name)
 
         # Find any detector groups
-        self.detector_groups = []
-        for entry in find_class(self.handle, "NXdetector_group"):
-            self.detector_groups.append(NXdetector_group(entry))
+        self.detector_groups = [
+            NXdetector_group(detector_group)
+            for detector_group in find_class(self.handle, "NXdetector_group")
+        ]
 
         # Find the NXbeam
-        self.beams = []
-        for entry in find_class(self.handle, "NXbeam"):
-            self.beams.append(NXbeam(entry))
+        self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
 
 
 class NXbeam(object):
@@ -439,9 +437,7 @@ class NXsample(object):
         self.handle = handle
 
         # Find the NXbeam
-        self.beams = []
-        for entry in find_class(self.handle, "NXbeam"):
-            self.beams.append(NXbeam(entry))
+        self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
 
 
 class NXdata(object):
@@ -462,19 +458,18 @@ class NXmxEntry(object):
         self.handle = handle
 
         # Find the NXinstrument
-        self.instruments = []
-        for entry in find_class(self.handle, "NXinstrument"):
-            self.instruments.append(NXinstrument(entry))
+        self.instruments = [
+            NXinstrument(instrument)
+            for instrument in find_class(self.handle, "NXinstrument")
+        ]
 
         # Find the NXsample
-        self.samples = []
-        for entry in find_class(self.handle, "NXsample"):
-            self.samples.append(NXsample(entry))
+        self.samples = [
+            NXsample(sample) for sample in find_class(self.handle, "NXsample")
+        ]
 
         # Find the NXdata
-        self.data = []
-        for entry in find_class(self.handle, "NXdata"):
-            self.data.append(NXdata(entry))
+        self.data = [NXdata(data) for data in find_class(self.handle, "NXdata")]
 
         # Check we've got some stuff
         if not self.instruments:
