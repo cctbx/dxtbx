@@ -81,36 +81,6 @@ class NXValidationError(RuntimeError):
     """A specific exception to record validation errors"""
 
 
-def local_visit(nx_file, visitor):
-    """Implementation of visitor to replace node.visititems
-
-    Will dereference soft links but should avoid walking down into external files,
-    I think - not a property that NXgroup.visititems(visitor) has.
-    https://github.com/cctbx/dxtbx/issues/74
-
-    Args:
-      nx_file: hdf5 file node
-      visitor: visitor function to act on children
-    """
-    for key in nx_file.keys():
-        if isinstance(nx_file.get(key, getlink=True), h5py.ExternalLink):
-            # Follow links but do not recurse into external files
-            continue
-
-        # Do not iterate over .values().
-        # As .values() is not a true generator that would mean that all value objects
-        # would have to be represented in memory at the same time. If the value
-        # objects refer to external files then those are kept open until the loop
-        # terminates, at which point all of the file handles are garbage collected
-        # and closed at once.
-        k = nx_file[key]
-
-        if "NX_class" not in k.attrs:
-            continue
-        visitor(k.name, k)
-        local_visit(k, visitor)
-
-
 def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
     """
     Find NXmx entries.
