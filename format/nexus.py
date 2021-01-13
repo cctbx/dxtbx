@@ -129,11 +129,10 @@ def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
     """
     hits = []
     for group in nx_file.values():
-        if "NX_class" in group.attrs:
-            if h5str(group.attrs["NX_class"]) == "NXentry":
-                if "definition" in group:
-                    if h5str(group["definition"][()]) == "NXmx":
-                        hits.append(group)
+        if h5str(group.attrs.get("NX_class")) == "NXentry":
+            if "definition" in group:
+                if h5str(group["definition"][()]) == "NXmx":
+                    hits.append(group)
     return hits
 
 
