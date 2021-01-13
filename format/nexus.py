@@ -136,9 +136,7 @@ def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
 
 def find_class(node: Union[h5py.File, h5py.Group], nx_class: str) -> List[h5py.Group]:
     """
-    Find a given NXclass within the current node.
-
-    This function only examines the children of the input node.
+    Find a given NXclass within the children of the current node.
 
     Args:
         node: The input h5py node (h5py.File or h5py.Group).
@@ -147,7 +145,9 @@ def find_class(node: Union[h5py.File, h5py.Group], nx_class: str) -> List[h5py.G
         list: The list of nodes matching the input nx_class.
 
     """
-    return [v for v in node.values() if h5str(v.attrs.get("NX_class")) == nx_class]
+    return [
+        v for v in node.values() if v and h5str(v.attrs.get("NX_class")) == nx_class
+    ]
 
 
 def convert_units(value, input_units, output_units):
