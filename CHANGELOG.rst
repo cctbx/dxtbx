@@ -1,3 +1,12 @@
+DIALS 3.3.1 (2021-01-18)
+========================
+
+Features
+--------
+
+- NeXus files are now opened in SWMR mode. (`#270 <https://github.com/cctbx/dxtbx/issues/270>`_)
+
+
 DIALS 3.3.0 (2021-01-04)
 ========================
 
