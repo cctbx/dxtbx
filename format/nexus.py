@@ -1419,6 +1419,9 @@ def detectorgroupdatafactory(obj, instrument):
         if key.startswith("_filename_"):
             continue
 
+        if "signal" in obj.handle.attrs and key != obj.handle.attrs["signal"]:
+            continue
+
         # datasets in this context mean ones which contain diffraction images
         # so must have ndim > 1 - for example omega can also be nexus data set
         # but with 1 dimension...
