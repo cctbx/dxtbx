@@ -415,7 +415,7 @@ def test_experimentlist_factory_from_args(monkeypatch, dials_regression):
     # Get the experiments from a list of filenames
     with monkeypatch.context() as m:
         m.setenv("DIALS_REGRESSION", dials_regression)
-        experiments = ExperimentListFactory.from_args(filenames, verbose=True)
+        experiments = ExperimentListFactory.from_args(filenames)
 
     assert len(experiments) == 3
     for experiment in experiments:

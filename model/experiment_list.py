@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import copy
 import errno
 import json
+import logging
 import os
 from builtins import range
 
@@ -49,6 +50,9 @@ __all__ = [
     "GoniometerComparison",
     "SequenceDiff",
 ]
+
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidExperimentListError(RuntimeError):
@@ -484,7 +488,7 @@ class ExperimentListFactory(object):
     """A class to help instantiate experiment lists."""
 
     @staticmethod
-    def from_args(args, verbose=False, unhandled=None):
+    def from_args(args, unhandled=None):
         """Try to load serialised experiments from any recognised format."""
 
         # Create a list for unhandled arguments
@@ -499,11 +503,9 @@ class ExperimentListFactory(object):
                 experiments.extend(
                     ExperimentListFactory.from_serialized_format(filename)
                 )
-                if verbose:
-                    print("Loaded experiments from %s" % filename)
+                logger.debug(f"Loaded experiments from {filename}")
             except Exception as e:
-                if verbose:
-                    print("Could not load experiments from %s: %s" % (filename, str(e)))
+                logger.debug(f"Could not load experiments from {filename}: {e}")
                 unhandled.append(filename)
 
         return experiments
@@ -511,7 +513,6 @@ class ExperimentListFactory(object):
     @staticmethod
     def from_filenames(
         filenames,
-        verbose=False,
         unhandled=None,
         compare_beam=None,
         compare_detector=None,
