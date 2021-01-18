@@ -573,6 +573,11 @@ class _(object):
     def to_dict(self):
         """Serialize the experiment list to dictionary."""
 
+        def abspath_or_none(filename):
+            if filename is None or filename == "":
+                return None
+            return os.path.abspath(filename)
+
         # Check the experiment list is consistent
         assert self.is_consistent()
 
@@ -658,11 +663,11 @@ class _(object):
                 raise TypeError(
                     "expected ImageSet or ImageSequence, got %s" % type(imset)
                 )
-            r["mask"] = imset.external_lookup.mask.filename
-            r["gain"] = imset.external_lookup.gain.filename
-            r["pedestal"] = imset.external_lookup.pedestal.filename
-            r["dx"] = imset.external_lookup.dx.filename
-            r["dy"] = imset.external_lookup.dy.filename
+            r["mask"] = abspath_or_none(imset.external_lookup.mask.filename)
+            r["gain"] = abspath_or_none(imset.external_lookup.gain.filename)
+            r["pedestal"] = abspath_or_none(imset.external_lookup.pedestal.filename)
+            r["dx"] = abspath_or_none(imset.external_lookup.dx.filename)
+            r["dy"] = abspath_or_none(imset.external_lookup.dy.filename)
             r["params"] = imset.params()
             result["imageset"].append(r)
 
@@ -696,6 +701,18 @@ class _(object):
                 imageset["goniometer"] = e["goniometer"]
             if "scan" in e:
                 imageset["scan"] = e["scan"]
+
+            if imageset["__id__"] in ("ImageSet", "ImageGrid"):
+                image_list = []
+                for filename, file_index in zip(
+                    imageset["images"], imageset["single_file_indices"]
+                ):
+                    image_dict = collections.OrderedDict()
+                    image_dict["filename"] = filename
+                    image_dict["image"] = file_index
+                    # imageset["mask"] = dxtbx.datablock.abspath_or_none(.external_lookup.mask.filename)
+                    image_list.append(image_dict)
+                imageset["images"] = image_list
 
         # Remove the experiments
         del obj["experiment"]

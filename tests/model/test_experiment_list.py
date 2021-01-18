@@ -1,5 +1,7 @@
+import collections
 import errno
 import os
+from unittest import mock
 
 import pytest
 import six.moves.cPickle as pickle
@@ -8,6 +10,7 @@ from cctbx import sgtbx
 from scitbx.array_family import flex
 
 import dxtbx
+import dxtbx.model.experiment_list
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSetFactory
@@ -936,3 +939,148 @@ def test_experimentlist_change_basis(dials_data):
 
     with pytest.raises(AssertionError):
         experiments.change_basis([cb_op, cb_op])
+
+
+def test_path_iterator(monkeypatch):
+    """Test the pathname iterator that avoids excessive file calls"""
+
+    @classmethod
+    def _fake_open_file(cls, name):
+        """Mock replacement for Format's open_file"""
+        if name in ["a", "b", "dir/c", "dir/d", "e"]:
+            return mock.Mock()
+        elif name.startswith("dir"):
+            err = IOError()
+            err.errno = errno.EISDIR
+            # raise IOError(errno=errno.EISDIR)
+            raise err
+        assert False
+
+    # Path the lookup of files
+    listdir = mock.Mock(return_value=["c", "dir2", "d"])
+    monkeypatch.setattr(os, "listdir", listdir)
+    # Replace Format.open_file with a tame version
+    monkeypatch.setattr(Format, "open_file", _fake_open_file)
+
+    it = dxtbx.model.experiment_list._openingpathiterator(["a", "b", "dir", "e"])
+    assert list(it) == ["a", "b", "dir/c", "dir/d", "e"]
+    listdir.assert_called_once_with("dir")
+
+    # Test that the list is sorted
+    it = dxtbx.model.experiment_list._openingpathiterator(["e", "a", "b", "dir"])
+    assert list(it) == ["a", "b", "dir/c", "dir/d", "e"]
+
+
+def test_extract_metadata_record():
+    """Make sure we can read a metadataobject from a format instance"""
+    fmt = mock.MagicMock()
+    fmt.get_image_file.return_value = "filename_000.cbf"
+    fmt.get_scan.return_value = None
+    record = dxtbx.model.experiment_list.ImageMetadataRecord.from_format(fmt)
+    assert record.beam is fmt.get_beam()
+    assert record.detector is fmt.get_detector()
+    assert record.goniometer is fmt.get_goniometer()
+    assert record.scan is None
+    assert record.index is None
+
+
+def _equal_but_not_same(thing):
+    object_1 = tuple([thing])
+    object_2 = tuple([thing])
+    assert object_1 == object_2
+    assert object_1 is not object_2
+    return object_1, object_2
+
+
+def test_merge_metadata_record():
+    """Test that merging metadata records works correctly"""
+    beam_a, beam_b = _equal_but_not_same("beam")
+    detector_a, detector_b = _equal_but_not_same("detector")
+    gonio_a, gonio_b = _equal_but_not_same("goniometer")
+
+    a = dxtbx.model.experiment_list.ImageMetadataRecord(
+        beam=beam_a, detector=detector_a, goniometer=gonio_a
+    )
+    b = dxtbx.model.experiment_list.ImageMetadataRecord(
+        beam=beam_b, detector=detector_b, goniometer=gonio_b
+    )
+    pre_hash = hash(a)
+    assert a.beam is not b.beam
+    assert a.detector is not b.detector
+    assert a.goniometer is not b.goniometer
+    # This should do something
+    assert b.merge_metadata_from(a)
+    assert hash(a) == pre_hash, "a changed after merge"
+    # Make sure metadata was merged
+    assert a.beam is b.beam
+    assert a.detector is b.detector
+    assert a.goniometer is b.goniometer
+    # This should NOT do something
+    assert not a.merge_metadata_from(a)
+    assert hash(a) == pre_hash
+
+
+def test_merge_all_metadata():
+    """Test that merging metadata over a whole list of records works"""
+    beam_a, beam_b = _equal_but_not_same("beam")
+    gonio_a, gonio_b = _equal_but_not_same("goniometer")
+
+    a = dxtbx.model.experiment_list.ImageMetadataRecord(
+        beam=beam_a, detector=object(), goniometer=gonio_a
+    )
+    b = dxtbx.model.experiment_list.ImageMetadataRecord(
+        beam=beam_b, detector=object(), goniometer=gonio_b
+    )
+    records = [a, b]
+    dxtbx.model.experiment_list._merge_model_metadata(records)
+    assert a.beam is b.beam
+    assert a.goniometer is b.goniometer
+    assert a.detector is not b.detector
+
+
+def test_merge_scan():
+    """Test merging logic of scans"""
+    scanA = mock.Mock(spec=Scan)
+    scanB = mock.Mock(spec=Scan)
+    recordA = mock.Mock(scan=scanA)
+    recordB = mock.Mock(
+        scan=scanB,
+        beam=recordA.beam,
+        detector=recordA.detector,
+        goniometer=recordA.goniometer,
+    )
+    result = dxtbx.model.experiment_list._merge_scans([recordA, recordB])
+    assert result == [recordA]
+    scanA.append.assert_called_once_with(scanB)
+
+    # Change some metadata in recordB so it doesn't match
+    scanA.reset_mock()
+    recordB.beam = mock.Mock()
+    assert dxtbx.model.experiment_list._merge_scans([recordA, recordB]) == [
+        recordA,
+        recordB,
+    ]
+
+
+def test_groupby_template_none():
+    Fo = collections.namedtuple("Fo", ["template"])
+    objs = [Fo(1), Fo(2), Fo(2), Fo(None), Fo(None), Fo("something")]
+    result = list(dxtbx.model.experiment_list._groupby_template_is_none(objs))
+    assert result == [
+        [Fo(1)],
+        [Fo(2)],
+        [Fo(2)],
+        [Fo(None), Fo(None)],
+        [Fo("something")],
+    ]
+
+
+def test_iterate_with_previous():
+    sample = list(range(5))
+    assert list(dxtbx.model.experiment_list._iterate_with_previous(sample)) == [
+        (None, 0),
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 4),
+    ]
