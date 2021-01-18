@@ -747,14 +747,13 @@ class ExperimentListFactory(object):
         # Now try as a pickle file
         return ExperimentListFactory.from_pickle_file(filename)
 
-
-class ExperimentListTemplateImporter(object):
-    """A class to import an experiment list from a template."""
-
-    def __init__(self, templates, **kwargs):
+    @staticmethod
+    def from_templates(templates, **kwargs):
+        """Import an experiment list from templates"""
         importer = DataBlockTemplateImporter(templates, **kwargs)
-        self.experiments = ExperimentList()
+        experiments = ExperimentList()
         for db in importer.datablocks:
-            self.experiments.extend(
+            experiments.extend(
                 ExperimentListFactory.from_datablock_and_crystal(db, None)
             )
+        return experiments
