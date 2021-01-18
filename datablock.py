@@ -18,6 +18,7 @@ from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import get_format_class_for_file
+from dxtbx.model.experiment_list import ExperimentList, ExperimentListFactory
 from dxtbx.sequence_filenames import (
     locate_files_matching_template_string,
     template_regex,
@@ -875,102 +876,6 @@ def _create_imageset(records, format_class, format_kwargs=None):
     return imageset
 
 
-def datablocks_from_filenames(
-    filenames,
-    unhandled=None,
-    compare_beam=None,
-    compare_detector=None,
-    compare_goniometer=None,
-    scan_tolerance=None,
-    format_kwargs=None,
-):
-    """Import the datablocks from the given filenames."""
-
-    # Init the datablock list
-    datablocks = []
-
-    # A function to append or create a new datablock
-    def append_to_datablocks(iset):
-        try:
-            datablocks[-1].append(iset)
-        except (IndexError, TypeError):
-            # This happens when we already have a datablock with a different format
-            datablocks.append(DataBlock([iset]))
-        logger.debug("Added imageset to datablock %d", len(datablocks) - 1)
-
-    # Process each file given by this path list
-    to_process = _openingpathiterator(filenames)
-    find_format = FormatChecker()
-
-    format_groups = collections.OrderedDict()
-    if format_kwargs is None:
-        format_kwargs = {}
-    for filename in to_process:
-        # We now have a file, pre-opened by Format.open_file (therefore
-        # cached). Determine its type, and prepare to put into a group
-        format_class = find_format.find_format(filename)
-
-        # Verify this makes sense
-        if not format_class:
-            # No format class found?
-            logger.debug("Could not determine format for %s", filename)
-            if unhandled is not None:
-                unhandled.append(filename)
-        elif format_class.is_abstract():
-            logger.debug(
-                f"Image file {filename} appears to be a '{format_class.__name__}', but this is an abstract Format"
-            )
-            # Invalid format class found?
-            if unhandled is not None:
-                unhandled.append(filename)
-        elif issubclass(format_class, FormatMultiImage):
-            imageset = format_class.get_imageset(
-                os.path.abspath(filename), format_kwargs=format_kwargs
-            )
-            format_groups.setdefault(format_class, []).append(imageset)
-            logger.debug("Loaded file: %s", filename)
-        else:
-            format_object = format_class(filename, **format_kwargs)
-            meta = ImageMetadataRecord.from_format(format_object)
-            assert meta.filename == filename
-
-            # Add this entry to our table of formats
-            format_groups.setdefault(format_class, []).append(meta)
-            logger.debug("Loaded metadata of file: %s", filename)
-
-    # Now, build datablocks from these files. Duplicating the logic of
-    # the previous implementation:
-    # - Each change in format goes into its own Datablock
-    # - FormatMultiImage files each have their own ImageSet
-    # - Every set of images forming a scan goes into its own ImageSequence
-    # - Any consecutive still frames that share any metadata with the
-    #   previous still fram get collected into one ImageSet
-
-    # Treat each format as a separate datablock
-    for format_class, records in format_groups.items():
-        if issubclass(format_class, FormatMultiImage):
-            for imageset in records:
-                append_to_datablocks(imageset)
-            continue
-
-        # Merge any consecutive and identical metadata together
-        _merge_model_metadata(
-            records,
-            compare_beam=compare_beam,
-            compare_detector=compare_detector,
-            compare_goniometer=compare_goniometer,
-        )
-        records = _merge_scans(records, scan_tolerance=scan_tolerance)
-        imagesets = _convert_to_imagesets(records, format_class, format_kwargs)
-        imagesets = list(imagesets)
-
-        # Validate this datablock and store it
-        assert imagesets, "Datablock got no imagesets?"
-        for i in imagesets:
-            append_to_datablocks(i)
-    return datablocks
-
-
 class InvalidDataBlockError(RuntimeError):
     """
     Indicates an error whilst validating the experiment list.
@@ -1279,7 +1184,7 @@ class DataBlockFactory:
         format_kwargs=None,
     ):
         """Create a list of data blocks from a list of directory or file names."""
-        return datablocks_from_filenames(
+        expts = ExperimentListFactory.from_filenames(
             filenames,
             unhandled=unhandled,
             compare_beam=compare_beam,
@@ -1288,6 +1193,21 @@ class DataBlockFactory:
             scan_tolerance=scan_tolerance,
             format_kwargs=format_kwargs,
         )
+        datablocks = []
+
+        # Datablocks can only contain imageset with a shared format class, therefore
+        # group the experiments by format class
+        format_groups = collections.OrderedDict()
+        for expt in expts:
+            format_class = expt.imageset.get_format_class()
+            format_groups.setdefault(format_class, ExperimentList())
+            format_groups[format_class].append(expt)
+
+        # Generate a datablock for each format group
+        for format_group, format_expts in format_groups.iteritems():
+            datablocks.extend(format_expts.to_datablocks())
+
+        return datablocks
 
     @staticmethod
     def from_dict(obj, check_format=True, directory=None):
