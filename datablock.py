@@ -875,112 +875,100 @@ def _create_imageset(records, format_class, format_kwargs=None):
     return imageset
 
 
-class DataBlockFilenameImporter:
-    """A class to import a datablock from image files."""
+def datablocks_from_filenames(
+    filenames,
+    unhandled=None,
+    compare_beam=None,
+    compare_detector=None,
+    compare_goniometer=None,
+    scan_tolerance=None,
+    format_kwargs=None,
+):
+    """Import the datablocks from the given filenames."""
 
-    def __init__(
-        self,
-        filenames,
-        compare_beam=None,
-        compare_detector=None,
-        compare_goniometer=None,
-        scan_tolerance=None,
-        format_kwargs=None,
-    ):
-        """Import the datablocks from the given filenames."""
+    # Init the datablock list
+    datablocks = []
 
-        # Init the datablock list
-        self.unhandled = []
-        self.datablocks = []
+    # A function to append or create a new datablock
+    def append_to_datablocks(iset):
+        try:
+            datablocks[-1].append(iset)
+        except (IndexError, TypeError):
+            # This happens when we already have a datablock with a different format
+            datablocks.append(DataBlock([iset]))
+        logger.debug("Added imageset to datablock %d", len(datablocks) - 1)
 
-        # A function to append or create a new datablock
-        def append_to_datablocks(iset):
-            try:
-                self.datablocks[-1].append(iset)
-            except (IndexError, TypeError):
-                # This happens when we already have a datablock with a different format
-                self.datablocks.append(DataBlock([iset]))
-            logger.debug("Added imageset to datablock %d", len(self.datablocks) - 1)
+    # Process each file given by this path list
+    to_process = _openingpathiterator(filenames)
+    find_format = FormatChecker()
 
-        # Process each file given by this path list
-        to_process = _openingpathiterator(filenames)
-        find_format = FormatChecker()
+    format_groups = collections.OrderedDict()
+    if format_kwargs is None:
+        format_kwargs = {}
+    for filename in to_process:
+        # We now have a file, pre-opened by Format.open_file (therefore
+        # cached). Determine its type, and prepare to put into a group
+        format_class = find_format.find_format(filename)
 
-        format_groups = collections.OrderedDict()
-        if format_kwargs is None:
-            format_kwargs = {}
-        for filename in to_process:
-            # We now have a file, pre-opened by Format.open_file (therefore
-            # cached). Determine its type, and prepare to put into a group
-            format_class = find_format.find_format(filename)
-
-            # Verify this makes sense
-            if not format_class:
-                # No format class found?
-                logger.debug("Could not determine format for %s", filename)
-                self.unhandled.append(filename)
-            elif format_class.is_abstract():
-                logger.debug(
-                    f"Image file {filename} appears to be a '{format_class.__name__}', but this is an abstract Format"
-                )
-                # Invalid format class found?
-                self.unhandled.append(filename)
-            elif issubclass(format_class, FormatMultiImage):
-                imageset = self._create_single_file_imageset(
-                    format_class, filename, format_kwargs=format_kwargs
-                )
-                format_groups.setdefault(format_class, []).append(imageset)
-                logger.debug("Loaded file: %s", filename)
-            else:
-                format_object = format_class(filename, **format_kwargs)
-                meta = ImageMetadataRecord.from_format(format_object)
-                assert meta.filename == filename
-
-                # Add this entry to our table of formats
-                format_groups.setdefault(format_class, []).append(meta)
-                logger.debug("Loaded metadata of file: %s", filename)
-
-        # Now, build datablocks from these files. Duplicating the logic of
-        # the previous implementation:
-        # - Each change in format goes into its own Datablock
-        # - FormatMultiImage files each have their own ImageSet
-        # - Every set of images forming a scan goes into its own ImageSequence
-        # - Any consecutive still frames that share any metadata with the
-        #   previous still fram get collected into one ImageSet
-
-        # Treat each format as a separate datablock
-        for format_class, records in format_groups.items():
-            if issubclass(format_class, FormatMultiImage):
-                for imageset in records:
-                    append_to_datablocks(imageset)
-                continue
-
-            # Merge any consecutive and identical metadata together
-            _merge_model_metadata(
-                records,
-                compare_beam=compare_beam,
-                compare_detector=compare_detector,
-                compare_goniometer=compare_goniometer,
+        # Verify this makes sense
+        if not format_class:
+            # No format class found?
+            logger.debug("Could not determine format for %s", filename)
+            if unhandled is not None:
+                unhandled.append(filename)
+        elif format_class.is_abstract():
+            logger.debug(
+                f"Image file {filename} appears to be a '{format_class.__name__}', but this is an abstract Format"
             )
-            records = _merge_scans(records, scan_tolerance=scan_tolerance)
-            imagesets = _convert_to_imagesets(records, format_class, format_kwargs)
-            imagesets = list(imagesets)
+            # Invalid format class found?
+            if unhandled is not None:
+                unhandled.append(filename)
+        elif issubclass(format_class, FormatMultiImage):
+            imageset = format_class.get_imageset(
+                os.path.abspath(filename), format_kwargs=format_kwargs
+            )
+            format_groups.setdefault(format_class, []).append(imageset)
+            logger.debug("Loaded file: %s", filename)
+        else:
+            format_object = format_class(filename, **format_kwargs)
+            meta = ImageMetadataRecord.from_format(format_object)
+            assert meta.filename == filename
 
-            # Validate this datablock and store it
-            assert imagesets, "Datablock got no imagesets?"
-            for i in imagesets:
-                append_to_datablocks(i)
+            # Add this entry to our table of formats
+            format_groups.setdefault(format_class, []).append(meta)
+            logger.debug("Loaded metadata of file: %s", filename)
 
-        # Now we are done. since in an __init__, the caller can now pick the
-        # results out of the .datablocks and .unhandled instance attributes.
+    # Now, build datablocks from these files. Duplicating the logic of
+    # the previous implementation:
+    # - Each change in format goes into its own Datablock
+    # - FormatMultiImage files each have their own ImageSet
+    # - Every set of images forming a scan goes into its own ImageSequence
+    # - Any consecutive still frames that share any metadata with the
+    #   previous still fram get collected into one ImageSet
 
-    def _create_single_file_imageset(self, format_class, filename, format_kwargs=None):
-        """Create an imageset from a multi image file."""
-        if format_kwargs is None:
-            format_kwargs = {}
-        return format_class.get_imageset(
-            os.path.abspath(filename), format_kwargs=format_kwargs
+    # Treat each format as a separate datablock
+    for format_class, records in format_groups.items():
+        if issubclass(format_class, FormatMultiImage):
+            for imageset in records:
+                append_to_datablocks(imageset)
+            continue
+
+        # Merge any consecutive and identical metadata together
+        _merge_model_metadata(
+            records,
+            compare_beam=compare_beam,
+            compare_detector=compare_detector,
+            compare_goniometer=compare_goniometer,
         )
+        records = _merge_scans(records, scan_tolerance=scan_tolerance)
+        imagesets = _convert_to_imagesets(records, format_class, format_kwargs)
+        imagesets = list(imagesets)
+
+        # Validate this datablock and store it
+        assert imagesets, "Datablock got no imagesets?"
+        for i in imagesets:
+            append_to_datablocks(i)
+    return datablocks
 
 
 class InvalidDataBlockError(RuntimeError):
@@ -993,210 +981,135 @@ class InvalidDataBlockError(RuntimeError):
     """
 
 
-class DataBlockDictImporter:
-    """A class to import a datablock from dictionary."""
+def datablocks_from_dict(obj, check_format=True, directory=None):
+    """Get the datablocks from the dictionary."""
 
-    def __init__(self, obj, check_format=True, directory=None):
-        """Get the datablocks from the dictionary."""
-        self.datablocks = self._load_datablocks(obj, check_format, directory)
+    # If we have a list, extract for each dictionary in the list
+    if isinstance(obj, list):
+        return [datablocks_from_dict(dd, check_format, directory) for dd in obj]
+    elif not isinstance(obj, dict):
+        raise InvalidDataBlockError(
+            "Unexpected datablock type {} instead of dict".format(type(obj))
+        )
+    # Make sure the id signature is correct
+    if not obj.get("__id__") == "DataBlock":
+        raise InvalidDataBlockError(
+            "Expected __id__ 'DataBlock', but found {}".format(repr(obj.get("__id__")))
+        )
 
-    def _load_datablocks(self, obj, check_format=True, directory=None):
-        """Create the datablock from a dictionary."""
+    # Get the list of models
+    blist = obj.get("beam", [])
+    dlist = obj.get("detector", [])
+    glist = obj.get("goniometer", [])
+    slist = obj.get("scan", [])
 
-        # If we have a list, extract for each dictionary in the list
-        if isinstance(obj, list):
-            return [self._load_datablocks(dd, check_format, directory) for dd in obj]
-        elif not isinstance(obj, dict):
-            raise InvalidDataBlockError(
-                "Unexpected datablock type {} instead of dict".format(type(obj))
-            )
-        # Make sure the id signature is correct
-        if not obj.get("__id__") == "DataBlock":
-            raise InvalidDataBlockError(
-                "Expected __id__ 'DataBlock', but found {}".format(
-                    repr(obj.get("__id__"))
+    def load_models(obj):
+        try:
+            beam = dxtbx.model.BeamFactory.from_dict(blist[obj["beam"]])
+        except Exception:
+            beam = None
+        try:
+            dobj = dlist[obj["detector"]]
+            detector = dxtbx.model.DetectorFactory.from_dict(dobj)
+        except Exception:
+            detector = None
+        try:
+            gonio = dxtbx.model.GoniometerFactory.from_dict(glist[obj["goniometer"]])
+        except Exception:
+            gonio = None
+        try:
+            scan = dxtbx.model.ScanFactory.from_dict(slist[obj["scan"]])
+        except Exception:
+            scan = None
+        return beam, detector, gonio, scan
+
+    # Loop through all the imagesets
+    imagesets = []
+    for imageset in obj["imageset"]:
+        ident = imageset["__id__"]
+        if "params" in imageset:
+            format_kwargs = imageset["params"]
+        else:
+            format_kwargs = {}
+        if ident == "ImageSequence" or ident == "ImageSweep":
+            beam, detector, gonio, scan = load_models(imageset)
+            if "template" in imageset:
+                template = resolve_path(imageset["template"], directory=directory)
+                i0, i1 = scan.get_image_range()
+                iset = dxtbx.imageset.ImageSetFactory.make_sequence(
+                    template,
+                    list(range(i0, i1 + 1)),
+                    None,
+                    beam,
+                    detector,
+                    gonio,
+                    scan,
+                    check_format,
+                    format_kwargs=format_kwargs,
                 )
-            )
-
-        # Get the list of models
-        blist = obj.get("beam", [])
-        dlist = obj.get("detector", [])
-        glist = obj.get("goniometer", [])
-        slist = obj.get("scan", [])
-
-        def load_models(obj):
-            try:
-                beam = dxtbx.model.BeamFactory.from_dict(blist[obj["beam"]])
-            except Exception:
-                beam = None
-            try:
-                dobj = dlist[obj["detector"]]
-                detector = dxtbx.model.DetectorFactory.from_dict(dobj)
-            except Exception:
-                detector = None
-            try:
-                gonio = dxtbx.model.GoniometerFactory.from_dict(
-                    glist[obj["goniometer"]]
-                )
-            except Exception:
-                gonio = None
-            try:
-                scan = dxtbx.model.ScanFactory.from_dict(slist[obj["scan"]])
-            except Exception:
-                scan = None
-            return beam, detector, gonio, scan
-
-        # Loop through all the imagesets
-        imagesets = []
-        for imageset in obj["imageset"]:
-            ident = imageset["__id__"]
-            if "params" in imageset:
-                format_kwargs = imageset["params"]
-            else:
-                format_kwargs = {}
-            if ident == "ImageSequence" or ident == "ImageSweep":
-                beam, detector, gonio, scan = load_models(imageset)
-                if "template" in imageset:
-                    template = resolve_path(imageset["template"], directory=directory)
-                    i0, i1 = scan.get_image_range()
-                    iset = dxtbx.imageset.ImageSetFactory.make_sequence(
-                        template,
-                        list(range(i0, i1 + 1)),
-                        None,
-                        beam,
-                        detector,
-                        gonio,
-                        scan,
-                        check_format,
-                        format_kwargs=format_kwargs,
+                if "mask" in imageset and imageset["mask"] is not None:
+                    imageset["mask"] = resolve_path(
+                        imageset["mask"], directory=directory
                     )
-                    if "mask" in imageset and imageset["mask"] is not None:
-                        imageset["mask"] = resolve_path(
-                            imageset["mask"], directory=directory
-                        )
-                        iset.external_lookup.mask.filename = imageset["mask"]
-                        if check_format:
-                            with open(imageset["mask"], "rb") as infile:
-                                iset.external_lookup.mask.data = ImageBool(
-                                    pickle.load(infile, encoding="bytes")
-                                )
-                    if "gain" in imageset and imageset["gain"] is not None:
-                        imageset["gain"] = resolve_path(
-                            imageset["gain"], directory=directory
-                        )
-                        iset.external_lookup.gain.filename = imageset["gain"]
-                        if check_format:
-                            with open(imageset["gain"], "rb") as infile:
-                                iset.external_lookup.gain.data = ImageDouble(
-                                    pickle.load(infile, encoding="bytes")
-                                )
-                    if "pedestal" in imageset and imageset["pedestal"] is not None:
-                        imageset["pedestal"] = resolve_path(
-                            imageset["pedestal"], directory=directory
-                        )
-                        iset.external_lookup.pedestal.filename = imageset["pedestal"]
-                        if check_format:
-                            with open(imageset["pedestal"], "rb") as infile:
-                                iset.external_lookup.pedestal.data = ImageDouble(
-                                    pickle.load(infile, encoding="bytes")
-                                )
-                    if "dx" in imageset and imageset["dx"] is not None:
-                        imageset["dx"] = resolve_path(
-                            imageset["dx"], directory=directory
-                        )
-                        iset.external_lookup.dx.filename = imageset["dx"]
-                        with open(imageset["dx"], "rb") as infile:
-                            iset.external_lookup.dx.data = ImageDouble(
+                    iset.external_lookup.mask.filename = imageset["mask"]
+                    if check_format:
+                        with open(imageset["mask"], "rb") as infile:
+                            iset.external_lookup.mask.data = ImageBool(
                                 pickle.load(infile, encoding="bytes")
                             )
-                    if "dy" in imageset and imageset["dy"] is not None:
-                        imageset["dy"] = resolve_path(
-                            imageset["dy"], directory=directory
-                        )
-                        iset.external_lookup.dy.filename = imageset["dy"]
-                        with open(imageset["dy"], "rb") as infile:
-                            iset.external_lookup.dy.data = ImageDouble(
-                                pickle.load(infile, encoding="bytes")
-                            )
-                    iset.update_detector_px_mm_data()
-                elif "master" in imageset:
-                    template = resolve_path(imageset["master"], directory=directory)
-                    i0, i1 = scan.get_image_range()
-                    if not check_format:
-                        format_class = FormatMultiImage
-                    else:
-                        format_class = None
-                    iset = dxtbx.imageset.ImageSetFactory.make_sequence(
-                        template,
-                        list(range(i0, i1 + 1)),
-                        format_class=format_class,
-                        beam=beam,
-                        detector=detector,
-                        goniometer=gonio,
-                        scan=scan,
-                        check_format=check_format,
-                        format_kwargs=format_kwargs,
+                if "gain" in imageset and imageset["gain"] is not None:
+                    imageset["gain"] = resolve_path(
+                        imageset["gain"], directory=directory
                     )
-                    if "mask" in imageset and imageset["mask"] is not None:
-                        imageset["mask"] = resolve_path(imageset["mask"], directory)
-                        iset.external_lookup.mask.filename = imageset["mask"]
-                        if check_format:
-                            with open(imageset["mask"], "rb") as infile:
-                                iset.external_lookup.mask.data = ImageBool(
-                                    pickle.load(infile, encoding="bytes")
-                                )
-                    if "gain" in imageset and imageset["gain"] is not None:
-                        imageset["gain"] = resolve_path(imageset["gain"], directory)
-                        iset.external_lookup.gain.filename = imageset["gain"]
-                        if check_format:
-                            with open(imageset["gain"], "rb") as infile:
-                                iset.external_lookup.gain.data = ImageDouble(
-                                    pickle.load(infile, encoding="bytes")
-                                )
-                    if "pedestal" in imageset and imageset["pedestal"] is not None:
-                        imageset["pedestal"] = resolve_path(
-                            imageset["pedestal"], directory
+                    iset.external_lookup.gain.filename = imageset["gain"]
+                    if check_format:
+                        with open(imageset["gain"], "rb") as infile:
+                            iset.external_lookup.gain.data = ImageDouble(
+                                pickle.load(infile, encoding="bytes")
+                            )
+                if "pedestal" in imageset and imageset["pedestal"] is not None:
+                    imageset["pedestal"] = resolve_path(
+                        imageset["pedestal"], directory=directory
+                    )
+                    iset.external_lookup.pedestal.filename = imageset["pedestal"]
+                    if check_format:
+                        with open(imageset["pedestal"], "rb") as infile:
+                            iset.external_lookup.pedestal.data = ImageDouble(
+                                pickle.load(infile, encoding="bytes")
+                            )
+                if "dx" in imageset and imageset["dx"] is not None:
+                    imageset["dx"] = resolve_path(imageset["dx"], directory=directory)
+                    iset.external_lookup.dx.filename = imageset["dx"]
+                    with open(imageset["dx"], "rb") as infile:
+                        iset.external_lookup.dx.data = ImageDouble(
+                            pickle.load(infile, encoding="bytes")
                         )
-                        iset.external_lookup.pedestal.filename = imageset["pedestal"]
-                        if check_format:
-                            with open(imageset["pedestal"], "rb") as infile:
-                                iset.external_lookup.pedestal.data = ImageDouble(
-                                    pickle.load(infile, encoding="bytes")
-                                )
-                    if "dx" in imageset and imageset["dx"] is not None:
-                        imageset["dx"] = resolve_path(imageset["dx"], directory)
-                        iset.external_lookup.dx.filename = imageset["dx"]
-                        with open(imageset["dx"], "rb") as infile:
-                            iset.external_lookup.dx.data = ImageDouble(
-                                pickle.load(infile, encoding="bytes")
-                            )
-                    if "dy" in imageset and imageset["dy"] is not None:
-                        imageset["dy"] = resolve_path(imageset["dy"], directory)
-                        iset.external_lookup.dy.filename = imageset["dy"]
-                        with open(imageset["dy"], "rb") as infile:
-                            iset.external_lookup.dy.data = ImageDouble(
-                                pickle.load(infile, encoding="bytes")
-                            )
-                    iset.update_detector_px_mm_data()
-                imagesets.append(iset)
-            elif ident == "ImageSet" or ident == "ImageGrid":
-                filenames = [image["filename"] for image in imageset["images"]]
-                indices = [
-                    image["image"] for image in imageset["images"] if "image" in image
-                ]
-                assert len(indices) == 0 or len(indices) == len(filenames)
-                iset = dxtbx.imageset.ImageSetFactory.make_imageset(
-                    filenames, None, check_format, indices, format_kwargs=format_kwargs
+                if "dy" in imageset and imageset["dy"] is not None:
+                    imageset["dy"] = resolve_path(imageset["dy"], directory=directory)
+                    iset.external_lookup.dy.filename = imageset["dy"]
+                    with open(imageset["dy"], "rb") as infile:
+                        iset.external_lookup.dy.data = ImageDouble(
+                            pickle.load(infile, encoding="bytes")
+                        )
+                iset.update_detector_px_mm_data()
+            elif "master" in imageset:
+                template = resolve_path(imageset["master"], directory=directory)
+                i0, i1 = scan.get_image_range()
+                if not check_format:
+                    format_class = FormatMultiImage
+                else:
+                    format_class = None
+                iset = dxtbx.imageset.ImageSetFactory.make_sequence(
+                    template,
+                    list(range(i0, i1 + 1)),
+                    format_class=format_class,
+                    beam=beam,
+                    detector=detector,
+                    goniometer=gonio,
+                    scan=scan,
+                    check_format=check_format,
+                    format_kwargs=format_kwargs,
                 )
-                if ident == "ImageGrid":
-                    grid_size = imageset["grid_size"]
-                    iset = dxtbx.imageset.ImageGrid.from_imageset(iset, grid_size)
-                for i, image in enumerate(imageset["images"]):
-                    beam, detector, gonio, scan = load_models(image)
-                    iset.set_beam(beam, i)
-                    iset.set_detector(detector, i)
-                    iset.set_goniometer(gonio, i)
-                    iset.set_scan(scan, i)
                 if "mask" in imageset and imageset["mask"] is not None:
                     imageset["mask"] = resolve_path(imageset["mask"], directory)
                     iset.external_lookup.mask.filename = imageset["mask"]
@@ -1235,27 +1148,84 @@ class DataBlockDictImporter:
                         iset.external_lookup.dy.data = ImageDouble(
                             pickle.load(infile, encoding="bytes")
                         )
-                    iset.update_detector_px_mm_data()
-                imagesets.append(iset)
-            else:
-                raise RuntimeError("expected ImageSet/ImageSequence, got %s" % ident)
+                iset.update_detector_px_mm_data()
+            imagesets.append(iset)
+        elif ident == "ImageSet" or ident == "ImageGrid":
+            filenames = [image["filename"] for image in imageset["images"]]
+            indices = [
+                image["image"] for image in imageset["images"] if "image" in image
+            ]
+            assert len(indices) == 0 or len(indices) == len(filenames)
+            iset = dxtbx.imageset.ImageSetFactory.make_imageset(
+                filenames, None, check_format, indices, format_kwargs=format_kwargs
+            )
+            if ident == "ImageGrid":
+                grid_size = imageset["grid_size"]
+                iset = dxtbx.imageset.ImageGrid.from_imageset(iset, grid_size)
+            for i, image in enumerate(imageset["images"]):
+                beam, detector, gonio, scan = load_models(image)
+                iset.set_beam(beam, i)
+                iset.set_detector(detector, i)
+                iset.set_goniometer(gonio, i)
+                iset.set_scan(scan, i)
+            if "mask" in imageset and imageset["mask"] is not None:
+                imageset["mask"] = resolve_path(imageset["mask"], directory)
+                iset.external_lookup.mask.filename = imageset["mask"]
+                if check_format:
+                    with open(imageset["mask"], "rb") as infile:
+                        iset.external_lookup.mask.data = ImageBool(
+                            pickle.load(infile, encoding="bytes")
+                        )
+            if "gain" in imageset and imageset["gain"] is not None:
+                imageset["gain"] = resolve_path(imageset["gain"], directory)
+                iset.external_lookup.gain.filename = imageset["gain"]
+                if check_format:
+                    with open(imageset["gain"], "rb") as infile:
+                        iset.external_lookup.gain.data = ImageDouble(
+                            pickle.load(infile, encoding="bytes")
+                        )
+            if "pedestal" in imageset and imageset["pedestal"] is not None:
+                imageset["pedestal"] = resolve_path(imageset["pedestal"], directory)
+                iset.external_lookup.pedestal.filename = imageset["pedestal"]
+                if check_format:
+                    with open(imageset["pedestal"], "rb") as infile:
+                        iset.external_lookup.pedestal.data = ImageDouble(
+                            pickle.load(infile, encoding="bytes")
+                        )
+            if "dx" in imageset and imageset["dx"] is not None:
+                imageset["dx"] = resolve_path(imageset["dx"], directory)
+                iset.external_lookup.dx.filename = imageset["dx"]
+                with open(imageset["dx"], "rb") as infile:
+                    iset.external_lookup.dx.data = ImageDouble(
+                        pickle.load(infile, encoding="bytes")
+                    )
+            if "dy" in imageset and imageset["dy"] is not None:
+                imageset["dy"] = resolve_path(imageset["dy"], directory)
+                iset.external_lookup.dy.filename = imageset["dy"]
+                with open(imageset["dy"], "rb") as infile:
+                    iset.external_lookup.dy.data = ImageDouble(
+                        pickle.load(infile, encoding="bytes")
+                    )
+                iset.update_detector_px_mm_data()
+            imagesets.append(iset)
+        else:
+            raise RuntimeError("expected ImageSet/ImageSequence, got %s" % ident)
 
-        return DataBlock(imagesets)
+    return DataBlock(imagesets)
 
 
-class DataBlockImageSetImporter:
-    """A class to import a datablock from imagesets."""
+def datablocks_from_imagesets(imagesets):
+    """Load a list of datablocks from imagesets."""
 
-    def __init__(self, imagesets):
-        """Load a list of datablocks from imagesets."""
-        self.datablocks = []
-        if not isinstance(imagesets, list):
-            imagesets = [imagesets]
-        for imageset in imagesets:
-            try:
-                self.datablocks[-1].append(imageset)
-            except (IndexError, AssertionError):
-                self.datablocks.append(DataBlock([imageset]))
+    datablocks = []
+    if not isinstance(imagesets, list):
+        imagesets = [imagesets]
+    for imageset in imagesets:
+        try:
+            datablocks[-1].append(imageset)
+        except (IndexError, AssertionError):
+            datablocks.append(DataBlock([imageset]))
+    return datablocks
 
 
 class DataBlockFactory:
@@ -1264,7 +1234,6 @@ class DataBlockFactory:
     @staticmethod
     def from_args(
         args,
-        verbose=None,
         unhandled=None,
         compare_beam=None,
         compare_detector=None,
@@ -1302,7 +1271,6 @@ class DataBlockFactory:
     @staticmethod
     def from_filenames(
         filenames,
-        verbose=None,
         unhandled=None,
         compare_beam=None,
         compare_detector=None,
@@ -1311,23 +1279,20 @@ class DataBlockFactory:
         format_kwargs=None,
     ):
         """Create a list of data blocks from a list of directory or file names."""
-        importer = DataBlockFilenameImporter(
+        return datablocks_from_filenames(
             filenames,
+            unhandled=unhandled,
             compare_beam=compare_beam,
             compare_detector=compare_detector,
             compare_goniometer=compare_goniometer,
             scan_tolerance=scan_tolerance,
             format_kwargs=format_kwargs,
         )
-        if unhandled is not None:
-            unhandled.extend(importer.unhandled)
-        return importer.datablocks
 
     @staticmethod
     def from_dict(obj, check_format=True, directory=None):
         """Create a datablock from a dictionary."""
-        importer = DataBlockDictImporter(obj, check_format, directory)
-        return importer.datablocks
+        return datablocks_from_dict(obj, check_format, directory)
 
     @staticmethod
     def from_json(string, check_format=True, directory=None):
@@ -1362,8 +1327,7 @@ class DataBlockFactory:
     @staticmethod
     def from_imageset(imagesets):
         """Load a datablock from a list of imagesets."""
-        importer = DataBlockImageSetImporter(imagesets)
-        return importer.datablocks
+        return datablocks_from_imagesets(imagesets)
 
     @staticmethod
     def from_imageset_json_file(filename):

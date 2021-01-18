@@ -524,7 +524,6 @@ class ExperimentListFactory(object):
         experiments = ExperimentList()
         for db in DataBlockFactory.from_filenames(
             filenames,
-            verbose=verbose,
             unhandled=unhandled,
             compare_beam=compare_beam,
             compare_detector=compare_detector,
