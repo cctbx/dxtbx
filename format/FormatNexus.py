@@ -157,7 +157,7 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
                     return False
 
                 for entry in nexus.find_entries(handle):
-                    for sample in nexus.find_class(entry, "NXsample"):
+                    for sample in nexus.find_classes(entry, "NXsample"):
                         if "depends_on" not in sample:
                             is_nexus_still = True
         except IOError:

@@ -4,7 +4,7 @@ import collections
 import itertools
 import math
 import os
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import h5py
 import numpy
@@ -99,25 +99,36 @@ def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
     """
     return [
         group
-        for group in find_class(nx_file, "NXentry")
+        for group in find_classes(nx_file, "NXentry")
         if "definition" in group and h5str(group["definition"][()]) == "NXmx"
     ]
 
 
-def find_class(node: Union[h5py.File, h5py.Group], nx_class: str) -> List[h5py.Group]:
+def find_classes(
+    node: Union[h5py.File, h5py.Group], *nx_classes: str
+) -> Union[List[h5py.Group], Tuple[List[h5py.Group]]]:
     """
-    Find a given NXclass within the children of the current node.
+    Find instances of certain NXclasses within the children of the current node.
 
     Args:
         node: The input h5py node (h5py.File or h5py.Group).
+        nx_classes: Names of NXclasses to search for.
 
     Returns:
-        list: The list of nodes matching the input nx_class.
+        The list of matching nodes for each specified NXclass.
 
     """
-    return [
-        v for v in node.values() if v and h5str(v.attrs.get("NX_class")) == nx_class
-    ]
+    results = {nx_class: [] for nx_class in nx_classes}
+
+    for v in filter(None, node.values()):
+        class_name = h5str(v.attrs.get("NX_class"))
+        if class_name in nx_classes:
+            results[class_name].append(v)
+
+    if len(nx_classes) > 1:
+        return tuple(results.values())
+    else:
+        return results[nx_classes[0]]
 
 
 def convert_units(value, input_units, output_units):
@@ -352,9 +363,10 @@ class NXdetector(object):
         self.handle = handle
 
         # Find the NXdetector_modules
-        self.modules = []
-        for entry in find_class(self.handle, "NXdetector_module"):
-            self.modules.append(NXdetector_module(entry))
+        self.modules = [
+            NXdetector_module(entry)
+            for entry in find_classes(self.handle, "NXdetector_module")
+        ]
 
         # Check we've got some stuff
         if not self.modules:
@@ -369,22 +381,18 @@ class NXinstrument(object):
     def __init__(self, handle):
         self.handle = handle
 
-        # Find the NXdetector
-        self.detectors = [
-            NXdetector(detector) for detector in find_class(self.handle, "NXdetector")
-        ]
+        # Find the NXdetector, any detector groups and the NXbeam
+        detectors, detector_groups, beams = find_classes(
+            self.handle, "NXdetector", "NXdetector_group", "NXbeam"
+        )
+
         # Check we've got stuff
-        if not self.detectors:
+        if not detectors:
             raise NXValidationError("No NXdetector in %s" % self.handle.name)
 
-        # Find any detector groups
-        self.detector_groups = [
-            NXdetector_group(detector_group)
-            for detector_group in find_class(self.handle, "NXdetector_group")
-        ]
-
-        # Find the NXbeam
-        self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
+        self.detectors = [NXdetector(detector) for detector in detectors]
+        self.detector_groups = [NXdetector_group(group) for group in detector_groups]
+        self.beams = [NXbeam(beam) for beam in beams]
 
 
 class NXbeam(object):
@@ -405,7 +413,7 @@ class NXsample(object):
         self.handle = handle
 
         # Find the NXbeam
-        self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
+        self.beams = [NXbeam(beam) for beam in find_classes(self.handle, "NXbeam")]
 
 
 class NXdata(object):
@@ -425,27 +433,22 @@ class NXmxEntry(object):
     def __init__(self, handle):
         self.handle = handle
 
-        # Find the NXinstrument
-        self.instruments = [
-            NXinstrument(instrument)
-            for instrument in find_class(self.handle, "NXinstrument")
-        ]
-
-        # Find the NXsample
-        self.samples = [
-            NXsample(sample) for sample in find_class(self.handle, "NXsample")
-        ]
-
-        # Find the NXdata
-        self.data = [NXdata(data) for data in find_class(self.handle, "NXdata")]
+        # Find the NXinstrument, NXsample & NXdata
+        instruments, samples, data_sets = find_classes(
+            self.handle, "NXinstrument", "NXsample", "NXdata"
+        )
 
         # Check we've got some stuff
-        if not self.instruments:
+        if not instruments:
             raise NXValidationError("No NXinstrument in %s" % self.handle.name)
-        if not self.samples:
+        if not samples:
             raise NXValidationError("No NXsample in %s" % self.handle.name)
-        if not self.data:
+        if not data_sets:
             raise NXValidationError("No NXdata in %s" % self.handle.name)
+
+        self.instruments = [NXinstrument(instrument) for instrument in instruments]
+        self.samples = [NXsample(sample) for sample in samples]
+        self.data = [NXdata(data) for data in data_sets]
 
 
 class NXmxReader(object):
@@ -800,10 +803,11 @@ class DetectorFactoryFromGroup(object):
                 detector_type = "unknown"
 
             # get the set of leaf modules (handles nested modules)
-            modules = []
-            for nx_detector_module in nx_detector.modules:
-                if not find_class(nx_detector_module.handle, "NXdetector_module"):
-                    modules.append(nx_detector_module)
+            modules = [
+                module
+                for module in nx_detector.modules
+                if not find_classes(module.handle, "NXdetector_module")
+            ]
 
             # depends_on field for a detector will have NxM entries in it, where
             # N = number of images and M = number of detector modules
@@ -1231,7 +1235,7 @@ def get_detector_module_slices(detector):
     # get the set of leaf modules (handles nested modules)
     modules = []
     for nx_detector_module in detector.modules:
-        if not find_class(nx_detector_module.handle, "NXdetector_module"):
+        if not find_classes(nx_detector_module.handle, "NXdetector_module"):
             modules.append(nx_detector_module)
 
     all_slices = []

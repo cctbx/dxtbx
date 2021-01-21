@@ -68,5 +68,5 @@ def test_find_class_softlink(tmp_path):
         instrument["broken_link"] = h5py.SoftLink("/entry/nonsense")
 
     with h5py.File(h5_file, "r") as fr:
-        assert len(nexus.find_class(fr["/entry/instrument"], "NXbeam")) == 1
-        assert len(nexus.find_class(fr["/entry/sample"], "NXbeam")) == 1
+        assert len(nexus.find_classes(fr["/entry/instrument"], "NXbeam")) == 1
+        assert len(nexus.find_classes(fr["/entry/sample"], "NXbeam")) == 1
