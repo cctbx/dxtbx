@@ -34,7 +34,8 @@ if os.path.exists(_legacy_plugin_path) and not os.path.exists(_new_plugin_path):
     _hdf5_plugin_path = _legacy_plugin_path
     warnings.warn(
         "You are using an outdated version of the hdf5-external-filter-plugins package.\n"
-        "Please update your environment using 'conda update hdf5-external-filter-plugins'",
+        "Please update your environment using\n"
+        "'conda install \"hdf5-external-filter-plugins==0.1.0[build_number='>=5']\"'",
         UserWarning,
     )
 else:
