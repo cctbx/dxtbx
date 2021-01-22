@@ -24,7 +24,7 @@ if sys.version_info.major == 2:
 # conda_base folder, so it needs to be updated manually.
 
 # Warn if user is using an old hdf5-external-filter-plugins
-# Remove after DIALS 3.3 release branch is made
+# Remove after DIALS 3.4 release branch is made
 _legacy_plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
 _new_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
 
