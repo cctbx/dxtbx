@@ -14,6 +14,14 @@ def centroid_test_data(dials_regression):
 
 
 @pytest.fixture
+def single_sequence_filenames(centroid_test_data):
+    filenames = [
+        os.path.join(centroid_test_data, f"centroid_000{i}.cbf") for i in range(1, 10)
+    ]
+    return filenames
+
+
+@pytest.fixture
 def all_image_examples(dials_regression):
     filenames = (
         ("ALS_1231", "q315r_lyso_1_001.img"),
