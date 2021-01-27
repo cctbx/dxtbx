@@ -260,7 +260,7 @@ def run(argv=None):
         return 2
 
     if len(paths) == 1:
-        # test if the iamge is a multi-image
+        # test if the image is a multi-image
         datablocks = DataBlockFactory.from_filenames([paths[0]])
         if not datablocks:
             raise Sorry("Could not read path {}".format(paths[0]))

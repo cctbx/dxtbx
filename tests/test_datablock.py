@@ -1,6 +1,5 @@
 import json
 import os
-from pprint import pprint
 
 import pytest
 import six.moves.cPickle as pickle
@@ -77,49 +76,35 @@ def pickle_then_unpickle(obj):
     return pickle.loads(pickle.dumps(obj))
 
 
+from dxtbx.model.experiment_list import ExperimentListFactory
+
+
 def test_create_single_sequence(single_sequence_filenames):
-    blocks = DataBlockFactory.from_filenames(single_sequence_filenames)
-    assert len(blocks) == 1
-    assert blocks[0].num_images() == 9
-    assert blocks[0].format_class()
-    imageset = blocks[0].extract_imagesets()
-    assert len(imageset) == 1
-    assert len(imageset[0]) == 9
-    sequences = blocks[0].extract_sequences()
-    assert len(sequences) == 1
-    assert len(sequences[0]) == 9
+    experiments = ExperimentListFactory.from_filenames(single_sequence_filenames)
+    assert len(experiments) == 1
+    imagesets = experiments.imagesets()
+    assert imagesets[0].get_format_class()
+    assert len(imagesets) == 1
+    assert len(imagesets[0]) == 9
 
 
 def test_create_multiple_sequences(multiple_sequence_filenames):
-    blocks = DataBlockFactory.from_filenames(multiple_sequence_filenames)
-    assert len(blocks) == 1
-    assert blocks[0].num_images() == 6
-    assert blocks[0].format_class()
-    imageset = blocks[0].extract_imagesets()
-    assert len(imageset) == 2
-    sequences = blocks[0].extract_sequences()
-    assert len(sequences) == 2
-    assert len(sequences[0]) == 3
-    assert len(sequences[1]) == 3
+    experiments = ExperimentListFactory.from_filenames(multiple_sequence_filenames)
+    assert len(experiments) == 2
+    imagesets = experiments.imagesets()
+    assert len(imagesets) == 2
+    assert imagesets[0].get_format_class()
+    assert imagesets[1].get_format_class()
+    assert len(imagesets[0]) == 3
+    assert len(imagesets[1]) == 3
 
 
 def test_create_multiple_blocks(multiple_block_filenames):
-    pprint(multiple_block_filenames)
-    blocks = DataBlockFactory.from_filenames(multiple_block_filenames)
-    assert blocks
-
-    # Block 1
-    assert blocks[0].num_images() == 12
-    imageset = blocks[0].extract_imagesets()
-    assert len(imageset) == 4
-    assert len(imageset[0]) == 9
-    sequences = blocks[0].extract_sequences()
-    assert len(sequences) == 4
-    assert len(sequences[0]) == 9
-
-    pprint([b.num_images() for b in blocks])
-
-    assert len(blocks) == 8
+    experiments = ExperimentListFactory.from_filenames(multiple_block_filenames)
+    assert len(experiments) == 24
+    imagesets = experiments.imagesets()
+    assert len(imagesets) == 24
+    assert [len(im) for im in imagesets] == [9] + [1] * 23
 
 
 def test_pickling(multiple_block_filenames):
@@ -172,18 +157,18 @@ def test_from_null_sequence():
         scan=Scan((1, 10), (0, 0.1)),
     )
 
-    # Create the datablock
-    datablock = DataBlockFactory.from_imageset(sequence)
-    assert len(datablock) == 1
-    datablock = datablock[0]
-    assert datablock.format_class()
-
-    sequences = datablock.extract_sequences()
-    assert len(sequences) == 1
-    assert sequences[0].get_beam() == sequence.get_beam()
-    assert sequences[0].get_detector() == sequence.get_detector()
-    assert sequences[0].get_goniometer() == sequence.get_goniometer()
-    assert sequences[0].get_scan() == sequence.get_scan()
+    # Create the experiments
+    experiments = ExperimentListFactory.from_sequence_and_crystal(
+        sequence, crystal=None
+    )
+    assert len(experiments) == 1
+    imagesets = experiments.imagesets()
+    assert imagesets[0].get_format_class()
+    assert len(imagesets) == 1
+    assert imagesets[0].get_beam() == sequence.get_beam()
+    assert imagesets[0].get_detector() == sequence.get_detector()
+    assert imagesets[0].get_goniometer() == sequence.get_goniometer()
+    assert imagesets[0].get_scan() == sequence.get_scan()
 
 
 def test_with_bad_external_lookup(centroid_test_data):
