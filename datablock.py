@@ -4,6 +4,7 @@ import logging
 import math
 import os.path
 import pickle
+import warnings
 
 import libtbx
 from scitbx import matrix
@@ -29,6 +30,13 @@ class DataBlock:
 
     def __init__(self, imagesets=None):
         """Instantiate from a list of imagesets."""
+
+        warnings.warn(
+            "Datablocks are deprecated; please use Experiments instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         # Try to get a format class
         self._format_class = None
         self._imagesets = []
