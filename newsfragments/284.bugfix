@@ -1,0 +1,1 @@
+Don't interpret windows paths as URIs, causing failure to recognise images
