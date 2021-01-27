@@ -27,6 +27,11 @@ from dxtbx.model import (
 from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactory
 
 
+@pytest.fixture(scope="session")
+def centroid_test_data(dials_regression):
+    return os.path.join(dials_regression, "centroid_test_data")
+
+
 @pytest.fixture
 def single_sequence_filenames(centroid_test_data):
     filenames = [
