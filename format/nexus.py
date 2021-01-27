@@ -1314,7 +1314,9 @@ class MultiPanelDataList(object):
         return tuple(all_data)
 
 
-DataFactoryCache = collections.namedtuple("DataFactoryCache", "ndim shape filename")
+DataFactoryCache = collections.namedtuple(
+    "DataFactoryCache", "ndim shape filename is_virtual"
+)
 
 
 class DataFactory(object):
