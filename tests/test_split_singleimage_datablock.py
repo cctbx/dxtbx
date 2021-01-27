@@ -4,29 +4,32 @@ import os
 
 import pytest
 
-from dxtbx.datablock import DataBlockFactory
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 """
-Test deserializing a datablock that has single file indices while using check_format = True or False
+Test deserializing an experiment list that has single file indices while using check_format = True or False
 """
 
 
-def get_indices(datablock):
-    imageset = datablock.extract_imagesets()[0]
-    return list(imageset.indices())
-
-
-def test_split_single_image_datablock(dials_data, tmpdir):
+def test_split_single_image_imageset(dials_data, tmpdir):
     tmpdir.chdir()
     pytest.importorskip("h5py")
     sacla_file = os.path.join(
-        dials_data("image_examples"),
-        "SACLA-MPCCD-run266702-0-subset.h5",
+        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
     )
-    db = DataBlockFactory.from_filenames([sacla_file])[0]
-    assert db.num_images() == 4
-    imageset = db.extract_imagesets()[0]
-    subset = imageset[2:3]
-    subblock = DataBlockFactory.from_imageset(subset)[0]
-    assert subblock.num_images() == 1
-    assert get_indices(subblock) == [2]
+    expts = ExperimentListFactory.from_filenames([sacla_file])
+    assert len(expts) == 4
+    subset = expts[2:3]
+    assert len(subset) == 1
+    assert list(subset[0].imageset.indices()) == [2]
+
+    dumped_filename = "split.expt"
+    subset.as_file(dumped_filename)
+
+    subset = ExperimentListFactory.from_json_file(dumped_filename, check_format=True)
+    assert len(subset) == 1
+    assert list(subset[0].imageset.indices()) == [2]
+
+    subset = ExperimentListFactory.from_json_file(dumped_filename, check_format=False)
+    assert len(subset) == 1
+    assert list(subset[0].imageset.indices()) == [2]
