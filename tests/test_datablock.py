@@ -5,31 +5,12 @@ import pytest
 import six.moves.cPickle as pickle
 
 from dxtbx.datablock import DataBlockFactory
-from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSequence
-from dxtbx.model import Beam, Detector, Goniometer, Scan
 
 
 @pytest.fixture(scope="session")
 def centroid_test_data(dials_regression):
     return os.path.join(dials_regression, "centroid_test_data")
-
-
-@pytest.fixture
-def single_sequence_filenames(centroid_test_data):
-    filenames = [
-        os.path.join(centroid_test_data, f"centroid_000{i}.cbf") for i in range(1, 10)
-    ]
-    return filenames
-
-
-@pytest.fixture
-def multiple_sequence_filenames(centroid_test_data):
-    filenames = [
-        os.path.join(centroid_test_data, f"centroid_000{i}.cbf")
-        for i in [1, 2, 3, 7, 8, 9]
-    ]
-    return filenames
 
 
 @pytest.fixture
@@ -76,37 +57,6 @@ def pickle_then_unpickle(obj):
     return pickle.loads(pickle.dumps(obj))
 
 
-from dxtbx.model.experiment_list import ExperimentListFactory
-
-
-def test_create_single_sequence(single_sequence_filenames):
-    experiments = ExperimentListFactory.from_filenames(single_sequence_filenames)
-    assert len(experiments) == 1
-    imagesets = experiments.imagesets()
-    assert imagesets[0].get_format_class()
-    assert len(imagesets) == 1
-    assert len(imagesets[0]) == 9
-
-
-def test_create_multiple_sequences(multiple_sequence_filenames):
-    experiments = ExperimentListFactory.from_filenames(multiple_sequence_filenames)
-    assert len(experiments) == 2
-    imagesets = experiments.imagesets()
-    assert len(imagesets) == 2
-    assert imagesets[0].get_format_class()
-    assert imagesets[1].get_format_class()
-    assert len(imagesets[0]) == 3
-    assert len(imagesets[1]) == 3
-
-
-def test_create_multiple_blocks(multiple_block_filenames):
-    experiments = ExperimentListFactory.from_filenames(multiple_block_filenames)
-    assert len(experiments) == 24
-    imagesets = experiments.imagesets()
-    assert len(imagesets) == 24
-    assert [len(im) for im in imagesets] == [9] + [1] * 23
-
-
 def test_pickling(multiple_block_filenames):
     blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames)
     blocks2 = pickle_then_unpickle(blocks1)
@@ -145,30 +95,6 @@ def test_json2(multiple_block_filenames):
                 for i in range(len(im1)):
                     assert im1.get_beam(i) == im2.get_beam(i)
                     assert im1.get_detector(i) == im2.get_detector(i)
-
-
-def test_from_null_sequence():
-    filenames = ["template_%2d.cbf" % (i + 1) for i in range(0, 10)]
-    sequence = Format.get_imageset(
-        filenames,
-        beam=Beam((0, 0, 1)),
-        detector=Detector(),
-        goniometer=Goniometer((1, 0, 0)),
-        scan=Scan((1, 10), (0, 0.1)),
-    )
-
-    # Create the experiments
-    experiments = ExperimentListFactory.from_sequence_and_crystal(
-        sequence, crystal=None
-    )
-    assert len(experiments) == 1
-    imagesets = experiments.imagesets()
-    assert imagesets[0].get_format_class()
-    assert len(imagesets) == 1
-    assert imagesets[0].get_beam() == sequence.get_beam()
-    assert imagesets[0].get_detector() == sequence.get_detector()
-    assert imagesets[0].get_goniometer() == sequence.get_goniometer()
-    assert imagesets[0].get_scan() == sequence.get_scan()
 
 
 def test_with_bad_external_lookup(centroid_test_data):

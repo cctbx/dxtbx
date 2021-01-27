@@ -27,6 +27,58 @@ from dxtbx.model import (
 from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactory
 
 
+@pytest.fixture
+def single_sequence_filenames(centroid_test_data):
+    filenames = [
+        os.path.join(centroid_test_data, f"centroid_000{i}.cbf") for i in range(1, 10)
+    ]
+    return filenames
+
+
+@pytest.fixture
+def multiple_sequence_filenames(centroid_test_data):
+    filenames = [
+        os.path.join(centroid_test_data, f"centroid_000{i}.cbf")
+        for i in [1, 2, 3, 7, 8, 9]
+    ]
+    return filenames
+
+
+@pytest.fixture
+def all_image_examples(dials_regression):
+    filenames = (
+        ("ALS_1231", "q315r_lyso_1_001.img"),
+        ("ALS_501", "als501_q4_1_001.img"),
+        ("ALS_821", "q210_lyso_1_101.img"),
+        ("ALS_831", "q315r_lyso_001.img"),
+        ("APS_14BMC", "q315_1_001.img"),
+        ("APS_17ID", "q210_1_001.img"),
+        ("APS_19ID", "q315_unbinned_a.0001.img"),
+        ("APS_22ID", "mar300.0001"),
+        ("APS_23IDD", "mar300_1_E1.0001"),
+        ("APS_24IDC", "pilatus_1_0001.cbf"),
+        ("APS_24IDC", "q315_1_001.img"),
+        ("CLS1_08ID1", "mar225_2_E0_0001.img"),
+        ("DESY_ID141", "q210_2_001.img"),
+        ("ESRF_BM14", "mar165_001.mccd"),
+        ("ESRF_BM14", "mar225_1_001.mccd"),
+        ("ESRF_ID231", "q315r_7_001.img"),
+        ("RAXIS-HTC", "test1_lysozyme_0111060001.osc"),
+        ("SLS_X06SA", "mar225_2_001.img"),
+        ("SLS_X06SA", "pilatus6m_1_00001.cbf"),
+        ("SRS_101", "mar225_001.img"),
+        ("SRS_142", "q4_1_001.img"),
+        ("SSRL_bl111", "mar325_1_001.mccd"),
+        ("xia2", "merge2cbf_averaged_0001.cbf"),
+    )
+    return [os.path.join(dials_regression, "image_examples", *f) for f in filenames]
+
+
+@pytest.fixture
+def multiple_block_filenames(single_sequence_filenames, all_image_examples):
+    return single_sequence_filenames + all_image_examples
+
+
 def test_experiment_list_extend():
     """Check that the extend method of ExperimentList works."""
     # Create a minimal ExperimentList instance.
@@ -1084,3 +1136,55 @@ def test_iterate_with_previous():
         (2, 3),
         (3, 4),
     ]
+
+
+def test_create_single_sequence(single_sequence_filenames):
+    experiments = ExperimentListFactory.from_filenames(single_sequence_filenames)
+    assert len(experiments) == 1
+    imagesets = experiments.imagesets()
+    assert imagesets[0].get_format_class()
+    assert len(imagesets) == 1
+    assert len(imagesets[0]) == 9
+
+
+def test_create_multiple_sequences(multiple_sequence_filenames):
+    experiments = ExperimentListFactory.from_filenames(multiple_sequence_filenames)
+    assert len(experiments) == 2
+    imagesets = experiments.imagesets()
+    assert len(imagesets) == 2
+    assert imagesets[0].get_format_class()
+    assert imagesets[1].get_format_class()
+    assert len(imagesets[0]) == 3
+    assert len(imagesets[1]) == 3
+
+
+def test_create_multiple_blocks(multiple_block_filenames):
+    experiments = ExperimentListFactory.from_filenames(multiple_block_filenames)
+    assert len(experiments) == 24
+    imagesets = experiments.imagesets()
+    assert len(imagesets) == 24
+    assert [len(im) for im in imagesets] == [9] + [1] * 23
+
+
+def test_from_null_sequence():
+    filenames = ["template_%2d.cbf" % (i + 1) for i in range(0, 10)]
+    sequence = Format.get_imageset(
+        filenames,
+        beam=Beam((0, 0, 1)),
+        detector=Detector(),
+        goniometer=Goniometer((1, 0, 0)),
+        scan=Scan((1, 10), (0, 0.1)),
+    )
+
+    # Create the experiments
+    experiments = ExperimentListFactory.from_sequence_and_crystal(
+        sequence, crystal=None
+    )
+    assert len(experiments) == 1
+    imagesets = experiments.imagesets()
+    assert imagesets[0].get_format_class()
+    assert len(imagesets) == 1
+    assert imagesets[0].get_beam() == sequence.get_beam()
+    assert imagesets[0].get_detector() == sequence.get_detector()
+    assert imagesets[0].get_goniometer() == sequence.get_goniometer()
+    assert imagesets[0].get_scan() == sequence.get_scan()
