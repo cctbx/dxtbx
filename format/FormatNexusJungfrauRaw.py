@@ -1,8 +1,11 @@
-from dxtbx.format.FormatNexus import FormatNexus
 import h5py
 import numpy as np
-from dials.array_family import flex
+
 from cctbx import factor_kev_angstrom
+
+from dials.array_family import flex
+
+from dxtbx.format.FormatNexus import FormatNexus
 
 
 class FormatNexusJungfrauRaw(FormatNexus):
@@ -11,7 +14,7 @@ class FormatNexusJungfrauRaw(FormatNexus):
         with h5py.File(image_file, "r") as handle:
             try:
                 data = handle["/entry/data"]
-                if "pedestal" in data and "gains" in data:
+                if "pedestal" in data and "gains" in data and "raw" not in data:
                     return True
             except (KeyError, AttributeError):
                 pass
