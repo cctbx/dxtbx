@@ -1,7 +1,7 @@
 import h5py
 import numpy as np
 
-from xfel.util.jungfrau import correct_panel
+from xfel.util.jungfrau import pad_stacked_format
 
 from dials.array_family import flex
 
@@ -19,17 +19,6 @@ class FormatNexusJungfrauResRaw(FormatNexus):
             except (KeyError, AttributeError):
                 pass
         return False
-
-    def pad_raw_data(self, raw_img):
-        # NOTE:  currently correct-panel is written for single panels.
-        #  TODO speed this up,  do in one-go,
-        padded = np.vstack(
-            [
-                correct_panel(raw_img[i * 512 : (i + 1) * 512], divide=False)
-                for i in range(32)
-            ]
-        )
-        return padded
 
     @staticmethod
     def slice_correction_array(array, slices):
@@ -59,7 +48,7 @@ class FormatNexusJungfrauResRaw(FormatNexus):
     def get_14bit_component(self, index, as_flex=False):
         data_handle = self._reader.entries[0].data[0].handle
         raw_16bit = data_handle["raw"][index]
-        raw_14bit = self.pad_raw_data(raw_16bit & 0x3FFF)
+        raw_14bit = pad_stacked_format(raw_16bit & 0x3FFF)
         raw_14bit = self.slice_correction_array(np.array([raw_14bit]), self.slices)[
             :, 0
         ]
@@ -72,7 +61,7 @@ class FormatNexusJungfrauResRaw(FormatNexus):
             raise AttributeError("There is not pedestalRMS in the master file ... ")
         data_handle = self._reader.entries[0].data[0].handle
         raw = data_handle["raw"][index]
-        shot_gain_modes = self.pad_raw_data(raw >> 14)
+        shot_gain_modes = pad_stacked_format(raw >> 14)
         shot_gain_modes = self.slice_correction_array(
             np.array([shot_gain_modes]), self.slices
         )
