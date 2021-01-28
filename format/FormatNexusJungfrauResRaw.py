@@ -37,25 +37,35 @@ class FormatNexusJungfrauResRaw(FormatNexus):
             [array[:, slices[i][0], slices[i][1]] for i in range(len(slices))]
         )
 
-    def _pad_and_slice_raw_images(self, images):
-        padded = np.array([self.pad_raw_data(img) for img in images])
-        return self.slice_correction_array(padded, self.slices)
-
     def _start(self):
         super(FormatNexusJungfrauResRaw, self)._start()
         data_handle = self._reader.entries[0].data[0].handle
 
         self.slices = self._raw_data._datalists[0]._all_slices
-        self._gain = self._pad_and_slice_raw_images(data_handle["gains"])
-        self._pedestal = self._pad_and_slice_raw_images(data_handle["pedestal"])
+
+        self._gain = self.slice_correction_array(data_handle["gains"][()], self.slices)
+        self._pedestal = self.slice_correction_array(
+            data_handle["pedestal"][()], self.slices
+        )
         if "pedestalRMS" in data_handle:
-            self._pedestalRMS = self._pad_and_slice_raw_images(
-                data_handle["pedestalRMS"]
+            self._pedestalRMS = self.slice_correction_array(
+                data_handle["pedestalRMS"][()], self.slices
             )
         else:
             self._pedestalRMS = None
 
         self.dxtbx_detector_shape = self._gain[:, 0].shape
+
+    def get_14bit_component(self, index, as_flex=False):
+        data_handle = self._reader.entries[0].data[0].handle
+        raw_16bit = data_handle["raw"][index]
+        raw_14bit = self.pad_raw_data(raw_16bit & 0x3FFF)
+        raw_14bit = self.slice_correction_array(np.array([raw_14bit]), self.slices)[
+            :, 0
+        ]
+        if as_flex:
+            raw_14bit = tuple([flex.double(d.astype(np.float64)) for d in raw_14bit])
+        return raw_14bit
 
     def get_pedestal_rms(self, index, as_flex=True, return_gain_modes=False):
         if self._pedestalRMS is None:
