@@ -86,7 +86,7 @@ def get_format_class_for_file(image_file, format_hint=None):
     """
 
     # Grab the scheme from this URI
-    scheme = urlparse(image_file).scheme
+    scheme = urlparse(image_file).scheme if "://" in image_file else ""
 
     # If a format hint was given then find all paths through the DAG leading
     # to this format class. Create a set containing all format class names

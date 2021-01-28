@@ -1124,7 +1124,7 @@ def _merge_scans(records, scan_tolerance=None):
 
     Args:
         records:        Records to merge
-        scan_tolerance: Percentage of oscillation range to tolerate
+        scan_tolerance: Fraction of oscillation range to tolerate
                         when merging scan records
 
     Returns:
