@@ -158,7 +158,9 @@ class FormatMultiImage(Format):
         # Get the format instance
         assert len(filenames) == 1
         if check_format is True:
-            format_instance = cls(filenames[0], **format_kwargs)
+            cls._current_filename_ = None
+            cls._current_instance_ = None
+            format_instance = cls.get_instance(filenames[0], **format_kwargs)
             if num_images is None and not lazy:
                 # As we now have the actual format class we can get the number
                 # of images from here. This saves having to create another
