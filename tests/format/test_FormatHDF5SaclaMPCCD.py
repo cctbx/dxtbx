@@ -145,9 +145,7 @@ def test_combine_with_user_static_mask(dials_data, tmpdir):
     imageset.reader().nullify_format_instance()
 
 
-@pytest.mark.parametrize(
-    ("clear_cache"), [pytest.param(False, marks=pytest.mark.xfail(strict=True)), True]
-)
+@pytest.mark.parametrize(("clear_cache"), [False, True])
 def test_HDF5_format_caching(dials_data, clear_cache):
     """
     xfail: see https://github.com/cctbx/dxtbx/issues/245
