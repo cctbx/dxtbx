@@ -331,7 +331,9 @@ class Format(object):
 
         # Get the format instance
         if check_format is True:
-            format_instance = Class(filenames[0], **format_kwargs)
+            Class._current_filename_ = None
+            Class._current_instance_ = None
+            format_instance = Class.get_instance(filenames[0], **format_kwargs)
         else:
             format_instance = None
 

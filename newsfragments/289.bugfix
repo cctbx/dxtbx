@@ -1,0 +1,1 @@
+Bug fix for live per-image analysis of HDF5/SWMR files, ensuring that a process can see data for images written after a process first sees a given data file.
