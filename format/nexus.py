@@ -1303,7 +1303,9 @@ class MultiPanelDataList(object):
         return tuple(all_data)
 
 
-DataFactoryCache = collections.namedtuple("DataFactoryCache", "ndim shape filename")
+DataFactoryCache = collections.namedtuple(
+    "DataFactoryCache", "ndim shape filename is_virtual"
+)
 
 
 class DataFactory(object):
@@ -1340,13 +1342,16 @@ class DataFactory(object):
             if ohk.ndim == 1:
                 continue
 
-            datasets.append(
-                DataSetInformation(
-                    accessor=(lambda obj=obj, key=key: obj.handle[key]),
-                    file=filename,
-                    shape=ohk.shape,
-                )
+            dsi = DataSetInformation(
+                accessor=(lambda obj=obj, key=key: obj.handle[key]),
+                file=filename,
+                shape=ohk.shape,
             )
+            if ohk.is_virtual:
+                datasets = [dsi]
+                break
+            else:
+                datasets.append(dsi)
 
         self._datasets = tuple(datasets)
         self._num_images = 0

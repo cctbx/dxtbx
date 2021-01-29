@@ -1,0 +1,1 @@
+Fix bug in ``nexus.DataFactory`` that allowed access to twice as many images as available on disk for VDS nexus files.
