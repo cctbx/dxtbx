@@ -142,6 +142,7 @@ class EigerNXmxFixer(object):
                 shape=shape,
                 ndim=handle_orig_entry.ndim,
                 filename=handle_orig_entry.file.filename,
+                is_virtual=False,
             )
         for d in delete:
             del handle[d]
