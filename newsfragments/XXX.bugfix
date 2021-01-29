@@ -1,0 +1,1 @@
+Bug fix for generating XDS.INP for eiger datasets - ensure that DETECTOR=EIGER (not PILATUS)
