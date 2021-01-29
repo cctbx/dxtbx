@@ -4,7 +4,7 @@ import collections
 import itertools
 import math
 import os
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import h5py
 import numpy
@@ -37,6 +37,8 @@ except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
     if "SIT_ROOT" not in os.environ:
         raise
+
+NXNode = Union[h5py.File, h5py.Group]
 
 
 def h5str(h5_value: Union[str, numpy.string_, bytes]) -> str:
@@ -81,6 +83,45 @@ class NXValidationError(RuntimeError):
     """A specific exception to record validation errors"""
 
 
+def find_classes(node: NXNode, *nx_classes: Optional[str]) -> Tuple[List[h5py.Group]]:
+    """
+    Find instances of multiple NXclass types within the children of the current node.
+
+    Args:
+        node: The input h5py node (h5py.File or h5py.Group).
+        nx_classes: Names of NXclass types to search for.
+
+    Returns:
+        A list of matching nodes for each of the specified NXclass types.
+    """
+    results = {nx_class: [] for nx_class in nx_classes}
+
+    for v in filter(None, node.values()):
+        class_name = h5str(v.attrs.get("NX_class"))
+        if class_name in nx_classes:
+            results[class_name].append(v)
+
+    return tuple(results.values())
+
+
+def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
+    """
+    Find instances of a single NXclass type within the children of the current node.
+
+    This is a convenience function, equivalent to calling find_classes with a single
+    NXclass type name argument and returning the list of matches.
+
+    Args:
+        node: The input h5py node (h5py.File or h5py.Group).
+        nx_class: Names of NXclass type to search for.
+
+    Returns:
+        The list of matching nodes for the specified NXclass type.
+    """
+    (instances,) = find_classes(node, nx_class)
+    return instances
+
+
 def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
     """
     Find NXmx entries.
@@ -99,36 +140,9 @@ def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
     """
     return [
         group
-        for group in find_classes(nx_file, "NXentry")
+        for group in find_class(nx_file, "NXentry")
         if "definition" in group and h5str(group["definition"][()]) == "NXmx"
     ]
-
-
-def find_classes(
-    node: Union[h5py.File, h5py.Group], *nx_classes: str
-) -> Union[List[h5py.Group], Tuple[List[h5py.Group]]]:
-    """
-    Find instances of certain NXclasses within the children of the current node.
-
-    Args:
-        node: The input h5py node (h5py.File or h5py.Group).
-        nx_classes: Names of NXclasses to search for.
-
-    Returns:
-        The list of matching nodes for each specified NXclass.
-
-    """
-    results = {nx_class: [] for nx_class in nx_classes}
-
-    for v in filter(None, node.values()):
-        class_name = h5str(v.attrs.get("NX_class"))
-        if class_name in nx_classes:
-            results[class_name].append(v)
-
-    if len(nx_classes) > 1:
-        return tuple(results.values())
-    else:
-        return results[nx_classes[0]]
 
 
 def convert_units(value, input_units, output_units):
@@ -365,7 +379,7 @@ class NXdetector(object):
         # Find the NXdetector_modules
         self.modules = [
             NXdetector_module(entry)
-            for entry in find_classes(self.handle, "NXdetector_module")
+            for entry in find_class(self.handle, "NXdetector_module")
         ]
 
         # Check we've got some stuff
@@ -413,7 +427,7 @@ class NXsample(object):
         self.handle = handle
 
         # Find the NXbeam
-        self.beams = [NXbeam(beam) for beam in find_classes(self.handle, "NXbeam")]
+        self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
 
 
 class NXdata(object):
@@ -806,7 +820,7 @@ class DetectorFactoryFromGroup(object):
             modules = [
                 module
                 for module in nx_detector.modules
-                if not find_classes(module.handle, "NXdetector_module")
+                if not find_class(module.handle, "NXdetector_module")
             ]
 
             # depends_on field for a detector will have NxM entries in it, where
@@ -1235,7 +1249,7 @@ def get_detector_module_slices(detector):
     # get the set of leaf modules (handles nested modules)
     modules = []
     for nx_detector_module in detector.modules:
-        if not find_classes(nx_detector_module.handle, "NXdetector_module"):
+        if not find_class(nx_detector_module.handle, "NXdetector_module"):
             modules.append(nx_detector_module)
 
     all_slices = []
