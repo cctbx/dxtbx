@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
+import h5py
+import numpy as np
 import procrunner
-
-from scitbx.array_family import flex
 
 from dxtbx.format.FormatCBFMiniEigerDLS16MSN160 import FormatCBFMiniEigerDLS16MSN160
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -35,8 +35,10 @@ def test_dlsnxs2cbf(dials_data, tmpdir):
             for imgset in expts.imagesets()
         ]
     )
-    assert [flex.sum(imgset.get_raw_data(0)[0]) for imgset in expts.imagesets()] == [
-        26990833,
-        27447160,
-        22271214,
-    ]
+
+    with h5py.File(master) as fh:
+        for i, imgset in enumerate(expts.imagesets()):
+            np.testing.assert_equal(
+                fh["/entry/data/data_000001"][i],
+                imgset.get_raw_data(0)[0].as_numpy_array(),
+            )
