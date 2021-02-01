@@ -38,7 +38,9 @@ def test_dlsnxs2cbf(dials_data, tmpdir):
 
     with h5py.File(master) as fh:
         for i, imgset in enumerate(expts.imagesets()):
+            original = fh["/entry/data/data_000001"][i][()]
+            sel = np.where(original < original.max())
             np.testing.assert_equal(
-                fh["/entry/data/data_000001"][i],
-                imgset.get_raw_data(0)[0].as_numpy_array(),
+                fh["/entry/data/data_000001"][i][sel],
+                imgset.get_raw_data(0)[0].as_numpy_array()[sel],
             )
