@@ -299,10 +299,6 @@ class FormatMultiImage(Format):
                 goniometer = format_instance.get_goniometer()
             if scan is None:
                 scan = format_instance.get_scan()
-                if scan is not None:
-                    for f in filenames[1:]:
-                        format_instance = cls(f, **format_kwargs)
-                        scan += format_instance.get_scan()
 
             # Create the masker
             if format_instance is not None:
