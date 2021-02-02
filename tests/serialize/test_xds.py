@@ -136,3 +136,4 @@ def test_vmxi_thaumatin(dials_data):
     to_xds = xds.to_xds(expts[0].imageset)
     s = to_xds.XDS_INP()
     assert "DETECTOR=EIGER" in s
+    assert "SENSOR_THICKNESS= 0.450" in s
