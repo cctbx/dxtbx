@@ -307,7 +307,7 @@ class to_xds(object):
             % (detector, trusted[0] + 1, trusted[1])
         )
 
-        if detector == "PILATUS":
+        if detector in ("PILATUS", "EIGER"):
             result.append(
                 "SENSOR_THICKNESS= %.3f" % self.get_detector()[0].get_thickness()
             )
