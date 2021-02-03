@@ -92,7 +92,7 @@ def find_classes(node: NXNode, *nx_classes: Optional[str]) -> Tuple[List[h5py.Gr
         nx_classes: Names of NXclass types to search for.
 
     Returns:
-        A list of matching nodes for each of the specified NXclass types.
+        A list of matching nodes for each of the specified NX_class types.
     """
     results = {nx_class: [] for nx_class in nx_classes}
 
