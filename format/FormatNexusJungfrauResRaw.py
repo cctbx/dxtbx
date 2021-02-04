@@ -56,7 +56,9 @@ class FormatNexusJungfrauResRaw(FormatNexus):
             raw_14bit = tuple([flex.double(d.astype(np.float64)) for d in raw_14bit])
         return raw_14bit
 
-    def get_pedestal_rms(self, index, as_flex=True, return_gain_modes=False):
+    def get_pedestal_rms(
+        self, index, as_flex=False, return_gain_modes=False, divide_by_gain=True
+    ):
         if self._pedestalRMS is None:
             raise AttributeError("There is not pedestalRMS in the master file ... ")
         data_handle = self._reader.entries[0].data[0].handle
@@ -70,7 +72,12 @@ class FormatNexusJungfrauResRaw(FormatNexus):
         for mode in 0, 1, 3:
             gain_index = mode if mode != 3 else 2  # jungfrau quirk
             sel = shot_gain_modes == mode  # pixels in the gain mode
-            shot_rms[sel] = self._pedestalRMS[:, gain_index][sel]
+            pedestalRms = self._pedestalRMS[:, gain_index]
+            if divide_by_gain:
+                gain = self._gain[:, gain_index]
+                shot_rms[sel] = pedestalRms[sel] / np.abs(gain[sel])
+            else:
+                shot_rms[sel] = pedestalRms[sel]
         if as_flex:
             shot_rms = tuple([flex.double(p) for p in shot_rms])
         return_packet = shot_rms
