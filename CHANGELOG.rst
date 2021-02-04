@@ -1,3 +1,28 @@
+DIALS 3.3.2 (2021-02-01)
+========================
+
+Bugfixes
+--------
+
+- Don't interpret windows paths as URIs, causing failure to import images (`#284 <https://github.com/cctbx/dxtbx/issues/284>`_)
+- Fix bug in ``nexus.DataFactory`` that allowed access to twice as many
+  images as available on disk for VDS nexus files. (`#285 <https://github.com/cctbx/dxtbx/issues/285>`_)
+- Bug fix for live per-image analysis of HDF5/SWMR files, ensuring that
+  a process can see data for images written after a process first sees
+  a given data file. (`#289 <https://github.com/cctbx/dxtbx/issues/289>`_)
+- Bug fix for generating XDS.INP for eiger datasets - ensure that
+  ``DETECTOR=EIGER (not PILATUS)`` (`#292 <https://github.com/cctbx/dxtbx/issues/292>`_)
+
+
+DIALS 3.3.1 (2021-01-18)
+========================
+
+Features
+--------
+
+- NeXus files are now opened in SWMR mode. (`#270 <https://github.com/cctbx/dxtbx/issues/270>`_)
+
+
 DIALS 3.3.0 (2021-01-04)
 ========================
 

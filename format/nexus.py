@@ -4,7 +4,7 @@ import collections
 import itertools
 import math
 import os
-from typing import Union
+from typing import List, Union
 
 import h5py
 import numpy
@@ -81,67 +81,43 @@ class NXValidationError(RuntimeError):
     """A specific exception to record validation errors"""
 
 
-def local_visit(nx_file, visitor):
-    """Implementation of visitor to replace node.visititems
+def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
+    """
+    Find NXmx entries.
 
-    Will dereference soft links but should avoid walking down into external files,
-    I think - not a property that NXgroup.visititems(visitor) has.
-    https://github.com/cctbx/dxtbx/issues/74
+    A valid NeXus file should contain one or more NXentry groups at the top level. Only
+    return those NXentry groups that are specified as following the NXmx definition.
+
+    https://manual.nexusformat.org/classes/base_classes/NXentry.html#nxentry
 
     Args:
-      nx_file: hdf5 file node
-      visitor: visitor function to act on children
+        nx_file (h5py.File): The input h5py.File instance.
+
+    Returns:
+        list: The list of found NXentry groups.
+
     """
-    for key in nx_file.keys():
-        if isinstance(nx_file.get(key, getlink=True), h5py.ExternalLink):
-            # Follow links but do not recurse into external files
-            continue
-
-        # Do not iterate over .values().
-        # As .values() is not a true generator that would mean that all value objects
-        # would have to be represented in memory at the same time. If the value
-        # objects refer to external files then those are kept open until the loop
-        # terminates, at which point all of the file handles are garbage collected
-        # and closed at once.
-        k = nx_file[key]
-
-        if "NX_class" not in k.attrs:
-            continue
-        visitor(k.name, k)
-        local_visit(k, visitor)
+    return [
+        group
+        for group in find_class(nx_file, "NXentry")
+        if "definition" in group and h5str(group["definition"][()]) == "NXmx"
+    ]
 
 
-def find_entries(nx_file, entry):
+def find_class(node: Union[h5py.File, h5py.Group], nx_class: str) -> List[h5py.Group]:
     """
-    Find NXmx entries
+    Find a given NXclass within the children of the current node.
+
+    Args:
+        node: The input h5py node (h5py.File or h5py.Group).
+
+    Returns:
+        list: The list of nodes matching the input nx_class.
+
     """
-    hits = []
-
-    def visitor(name, obj):
-        if "NX_class" in obj.attrs:
-            if h5str(obj.attrs["NX_class"]) in ["NXentry", "NXsubentry"]:
-                if "definition" in obj:
-                    if h5str(obj["definition"][()]) == "NXmx":
-                        hits.append(obj)
-
-    visitor(entry, nx_file[entry])
-    local_visit(nx_file, visitor)
-    return hits
-
-
-def find_class(nx_file, nx_class: str):
-    """
-    Find a given NXclass
-    """
-    hits = []
-
-    def visitor(name, obj):
-        if "NX_class" in obj.attrs:
-            if h5str(obj.attrs["NX_class"]) == nx_class:
-                hits.append(obj)
-
-    local_visit(nx_file, visitor)
-    return hits
+    return [
+        v for v in node.values() if v and h5str(v.attrs.get("NX_class")) == nx_class
+    ]
 
 
 def convert_units(value, input_units, output_units):
@@ -394,23 +370,21 @@ class NXinstrument(object):
         self.handle = handle
 
         # Find the NXdetector
-        self.detectors = []
-        for entry in find_class(self.handle, "NXdetector"):
-            self.detectors.append(NXdetector(entry))
-
+        self.detectors = [
+            NXdetector(detector) for detector in find_class(self.handle, "NXdetector")
+        ]
         # Check we've got stuff
         if not self.detectors:
             raise NXValidationError("No NXdetector in %s" % self.handle.name)
 
         # Find any detector groups
-        self.detector_groups = []
-        for entry in find_class(self.handle, "NXdetector_group"):
-            self.detector_groups.append(NXdetector_group(entry))
+        self.detector_groups = [
+            NXdetector_group(detector_group)
+            for detector_group in find_class(self.handle, "NXdetector_group")
+        ]
 
         # Find the NXbeam
-        self.beams = []
-        for entry in find_class(self.handle, "NXbeam"):
-            self.beams.append(NXbeam(entry))
+        self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
 
 
 class NXbeam(object):
@@ -431,9 +405,7 @@ class NXsample(object):
         self.handle = handle
 
         # Find the NXbeam
-        self.beams = []
-        for entry in find_class(self.handle, "NXbeam"):
-            self.beams.append(NXbeam(entry))
+        self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
 
 
 class NXdata(object):
@@ -454,19 +426,18 @@ class NXmxEntry(object):
         self.handle = handle
 
         # Find the NXinstrument
-        self.instruments = []
-        for entry in find_class(self.handle, "NXinstrument"):
-            self.instruments.append(NXinstrument(entry))
+        self.instruments = [
+            NXinstrument(instrument)
+            for instrument in find_class(self.handle, "NXinstrument")
+        ]
 
         # Find the NXsample
-        self.samples = []
-        for entry in find_class(self.handle, "NXsample"):
-            self.samples.append(NXsample(entry))
+        self.samples = [
+            NXsample(sample) for sample in find_class(self.handle, "NXsample")
+        ]
 
         # Find the NXdata
-        self.data = []
-        for entry in find_class(self.handle, "NXdata"):
-            self.data.append(NXdata(entry))
+        self.data = [NXdata(data) for data in find_class(self.handle, "NXdata")]
 
         # Check we've got some stuff
         if not self.instruments:
@@ -489,7 +460,7 @@ class NXmxReader(object):
 
         # Find the NXmx entries
         self.entries = []
-        for entry in find_entries(handle, "/"):
+        for entry in find_entries(handle):
             self.entries.append(NXmxEntry(entry))
 
         # Check we've got some stuff
@@ -537,7 +508,7 @@ def is_nexus_file(filename):
     """
     with h5py.File(filename, "r") as handle:
         # Find the NXmx entries
-        return bool(find_entries(handle, "/"))
+        return bool(find_entries(handle))
 
 
 class BeamFactory(object):
@@ -1314,7 +1285,9 @@ class MultiPanelDataList(object):
         return tuple(all_data)
 
 
-DataFactoryCache = collections.namedtuple("DataFactoryCache", "ndim shape filename")
+DataFactoryCache = collections.namedtuple(
+    "DataFactoryCache", "ndim shape filename is_virtual"
+)
 
 
 class DataFactory(object):
@@ -1351,13 +1324,16 @@ class DataFactory(object):
             if ohk.ndim == 1:
                 continue
 
-            datasets.append(
-                DataSetInformation(
-                    accessor=(lambda obj=obj, key=key: obj.handle[key]),
-                    file=filename,
-                    shape=ohk.shape,
-                )
+            dsi = DataSetInformation(
+                accessor=(lambda obj=obj, key=key: obj.handle[key]),
+                file=filename,
+                shape=ohk.shape,
             )
+            if ohk.is_virtual:
+                datasets = [dsi]
+                break
+            else:
+                datasets.append(dsi)
 
         self._datasets = tuple(datasets)
         self._num_images = 0

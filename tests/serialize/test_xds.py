@@ -7,6 +7,7 @@ from libtbx.test_utils import approx_equal
 from rstbx.cftbx import coordinate_frame_helpers
 
 from dxtbx.imageset import ImageSetFactory
+from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.serialize import xds
 
 
@@ -127,3 +128,12 @@ SEGMENT_ORGX= 1075.00 SEGMENT_ORGY= 4973.67""",
     s = to_xds.XDS_INP()
     assert "UNTRUSTED_RECTANGLE= 0 488 3604 3800" in s
     assert "UNTRUSTED_RECTANGLE= 1976 2464 3604 3800" in s
+
+
+def test_vmxi_thaumatin(dials_data):
+    master_h5 = dials_data("vmxi_thaumatin") / "image_15799_master.h5"
+    expts = ExperimentListFactory.from_filenames([master_h5.strpath])
+    to_xds = xds.to_xds(expts[0].imageset)
+    s = to_xds.XDS_INP()
+    assert "DETECTOR=EIGER" in s
+    assert "SENSOR_THICKNESS= 0.450" in s

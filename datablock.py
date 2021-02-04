@@ -716,7 +716,7 @@ def _merge_scans(records, scan_tolerance=None):
 
     Args:
         records:        Records to merge
-        scan_tolerance: Percentage of oscillation range to tolerate
+        scan_tolerance: Fraction of oscillation range to tolerate
                         when merging scan records
 
     Returns:
@@ -1787,7 +1787,7 @@ class GoniometerDiff:
 class ScanDiff:
     """A class to provide scan comparison"""
 
-    def __init__(self, scan_tolerance=1e-6):
+    def __init__(self, scan_tolerance=0.03):
         self.scan_tolerance = scan_tolerance
 
     def __call__(self, a, b):
