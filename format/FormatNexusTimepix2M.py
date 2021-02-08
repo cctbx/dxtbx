@@ -16,13 +16,12 @@ class FormatNexusTimepix2M(FormatNexus):
         return False
 
     def __init__(self, image_file, **kwargs):
-
-        super(FormatNexusTimepix2M, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _detector(self):
         """return a detector with additional masking"""
 
-        detector = super(FormatNexusTimepix2M, self)._detector()
+        detector = super()._detector()
 
         # add masks for intermediate regions:
 
