@@ -47,4 +47,7 @@ class FormatNexusTimepix2M(FormatNexus):
                 mm = j * 259
                 detector[0].add_mask(mm - 5, nn, mm, nn + nslow)
 
+        # between modules
+        detector[0].add_mask(0, nslow, nfast, nslow + module_spacing)
+
         return detector
