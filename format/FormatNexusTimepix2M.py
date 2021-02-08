@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import h5py
 
 from dxtbx.format.FormatNexus import FormatNexus
