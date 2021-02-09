@@ -1,0 +1,4 @@
+Utility function to get URL schemes.
+
+Respects Windows file paths. Work towards resolution of
+https://github.com/dials/dials/issues/1583

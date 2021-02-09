@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import math
+from urllib.parse import urlparse
 
 import six
 
@@ -63,3 +64,9 @@ def show_mask_info(expt_list):
                     j, _m.count(False), _m.size()
                 )
             )
+
+
+def get_url_scheme(url):
+    """Extract the URL scheme from the string url, respecting Windows file paths"""
+
+    return urlparse(url).scheme if "://" in url else ""

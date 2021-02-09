@@ -7,7 +7,6 @@ import math
 import operator
 import os.path
 import pickle
-from urllib.parse import urlparse
 
 import libtbx
 from scitbx import matrix
@@ -26,6 +25,7 @@ from dxtbx.sequence_filenames import (
 from dxtbx.serialize import load
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
+from dxtbx.util import get_url_scheme
 
 try:
     from typing import Any, Callable, Dict, Generator, Iterable, List, Type
@@ -859,7 +859,7 @@ def _create_imageset(records, format_class, format_kwargs=None):
     assert all(x.template is None for x in records)
     # Extract the filenames from the records
     filenames = [
-        x.filename if urlparse(x.filename).scheme else os.path.abspath(x.filename)
+        x.filename if get_url_scheme(x.filename) else os.path.abspath(x.filename)
         for x in records
     ]
     # Create the imageset
