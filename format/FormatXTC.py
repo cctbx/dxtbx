@@ -2,7 +2,11 @@ from __future__ import absolute_import, division, print_function
 
 import functools
 import sys
+import time
 
+import numpy as np
+
+from cctbx import factor_ev_angstrom
 from libtbx.phil import parse
 
 from dxtbx import IncorrectFormatError
@@ -10,10 +14,6 @@ from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
-import time
-
-import numpy as np
-from cctbx import factor_ev_angstrom
 
 try:
     import psana

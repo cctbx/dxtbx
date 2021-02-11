@@ -19,7 +19,7 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 @pytest.mark.parametrize(
     "indices,expected_call_count,lazy",
-    ((None, 4, False), ([1], 2, False), (None, 2, True), ([1], 2, True)),
+    ((None, 4, False), ([1], 2, False), (None, 1, True), ([1], 1, True)),
 )
 def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
     def dummy_beam():

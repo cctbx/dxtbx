@@ -13,7 +13,6 @@ from builtins import range
 import pkg_resources
 import six
 import six.moves.cPickle as pickle
-from six.moves.urllib_parse import urlparse
 
 import dxtbx.datablock
 from dxtbx.datablock import (
@@ -42,6 +41,7 @@ from dxtbx.sequence_filenames import template_image_range, template_regex
 from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.serialize.load import _decode_dict
+from dxtbx.util import get_url_scheme
 
 try:
     from typing import (
@@ -399,7 +399,7 @@ class ExperimentListDict(object):
     def _make_stills(self, imageset, format_kwargs=None):
         """Make a still imageset."""
         filenames = [
-            resolve_path(p, directory=self._directory) if not urlparse(p).scheme else p
+            resolve_path(p, directory=self._directory) if not get_url_scheme(p) else p
             for p in imageset["images"]
         ]
         indices = None
@@ -1228,7 +1228,7 @@ def _create_imageset(records, format_class, format_kwargs=None):
     assert all(x.template is None for x in records)
     # Extract the filenames from the records
     filenames = [
-        x.filename if urlparse(x.filename).scheme else os.path.abspath(x.filename)
+        x.filename if get_url_scheme(x.filename) else os.path.abspath(x.filename)
         for x in records
     ]
     # Create the imageset
