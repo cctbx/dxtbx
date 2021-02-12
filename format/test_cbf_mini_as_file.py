@@ -9,9 +9,9 @@ from dxtbx.datablock import (
     DataBlockFactory,
     DetectorComparison,
     GoniometerComparison,
-    SequenceDiff,
 )
 from dxtbx.format.FormatCBFMini import FormatCBFMini
+from dxtbx.model.experiment_list import sequence_diff
 
 
 @pytest.mark.parametrize(
@@ -43,8 +43,7 @@ def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
     d_u_o = pytest.importorskip("dials.util.options")
     tolerance = d_u_o.tolerance_phil_scope.extract().tolerance
 
-    diff = SequenceDiff(tolerance)
-    print("\n".join(diff(imageset, imageset2)))
+    print(sequence_diff(imageset, imageset2, tolerance=tolerance))
 
     assert BeamComparison()(imageset.get_beam(), imageset2.get_beam())
     assert DetectorComparison(origin_tolerance=tolerance.detector.origin)(

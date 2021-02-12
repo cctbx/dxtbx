@@ -7,6 +7,7 @@ import math
 import operator
 import os.path
 import pickle
+import warnings
 
 import libtbx
 from scitbx import matrix
@@ -1820,38 +1821,17 @@ class ScanDiff:
 
 class SequenceDiff:
     def __init__(self, tolerance):
-
-        if tolerance is None:
-            self.b_diff = BeamDiff()
-            self.d_diff = DetectorDiff()
-            self.g_diff = GoniometerDiff()
-            self.s_diff = ScanDiff()
-        else:
-            self.b_diff = BeamDiff(
-                wavelength_tolerance=tolerance.beam.wavelength,
-                direction_tolerance=tolerance.beam.direction,
-                polarization_normal_tolerance=tolerance.beam.polarization_normal,
-                polarization_fraction_tolerance=tolerance.beam.polarization_fraction,
-            )
-
-            self.d_diff = DetectorDiff(
-                fast_axis_tolerance=tolerance.detector.fast_axis,
-                slow_axis_tolerance=tolerance.detector.slow_axis,
-                origin_tolerance=tolerance.detector.origin,
-            )
-
-            self.g_diff = GoniometerDiff(
-                rotation_axis_tolerance=tolerance.goniometer.rotation_axis,
-                fixed_rotation_tolerance=tolerance.goniometer.fixed_rotation,
-                setting_rotation_tolerance=tolerance.goniometer.setting_rotation,
-            )
-
-            self.s_diff = ScanDiff(scan_tolerance=tolerance.scan.oscillation)
+        warnings.warn(
+            "dxtbx.datablock.SequenceDiff is deprecated. "
+            "Use dxtbx.model.experiment_list.sequence_diff instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._tolerance = tolerance
 
     def __call__(self, sequence1, sequence2):
-        text = []
-        text.extend(self.b_diff(sequence1.get_beam(), sequence2.get_beam()))
-        text.extend(self.d_diff(sequence1.get_detector(), sequence2.get_detector()))
-        text.extend(self.g_diff(sequence1.get_goniometer(), sequence2.get_goniometer()))
-        text.extend(self.s_diff(sequence1.get_scan(), sequence2.get_scan()))
-        return text
+        import dxtbx.model.experiment_list  # do not float this import (circular)
+
+        return dxtbx.model.experiment_list.sequence_diff(
+            sequence1, sequence2, tolerance=self._tolerance
+        ).split("\n")
