@@ -1,6 +1,6 @@
 """
 Experimental format for Gatan Digital Micrograph DM4 files. See
-http://www.er-c.org/cbb/info/dmformat/
+https://personal.ntu.edu.sg/cbb/info/dmformat/index.html
 """
 
 from __future__ import absolute_import, division, print_function
@@ -138,7 +138,7 @@ class FormatGatanDM4(FormatMultiImage, Format):
         tag_dir = {}
 
         ltname = struct.unpack(">H", f.read(2))[0]
-        tag_dir["tname"] = f.read(ltname)
+        tag_dir["tname"] = f.read(ltname).decode()
         tag_dir["tlen"] = struct.unpack(">Q", f.read(8))[0]
         tag_dir["sortf"] = struct.unpack("B", f.read(1))[0]
         tag_dir["closef"] = struct.unpack("B", f.read(1))[0]
@@ -168,10 +168,14 @@ class FormatGatanDM4(FormatMultiImage, Format):
             raise ValueError("Unrecognised tag type while reading data")
 
         ltname = struct.unpack(">H", f.read(2))[0]
-        tag["tname"] = f.read(ltname)
+        try:
+            tag["tname"] = f.read(ltname).decode()
+        except UnicodeDecodeError:
+            tag["tname"] = ""
+
         tag["tlen"] = struct.unpack(">Q", f.read(8))[0]
         tag["tend"] = f.tell() + tag["tlen"]
-        assert f.read(4) == "%%%%"
+        assert f.read(4) == b"%%%%"
         tag["ninfo"] = struct.unpack(">Q", f.read(8))[0]
         tag["info"] = struct.unpack(">" + "Q" * tag["ninfo"], f.read(8 * tag["ninfo"]))
 
