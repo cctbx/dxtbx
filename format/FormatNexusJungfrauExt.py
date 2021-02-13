@@ -1,7 +1,12 @@
+import sys
+
 import h5py
 import numpy as np
 
-from xfel.util.jungfrau import pad_stacked_format
+try:
+    from xfel.util.jungfrau import pad_stacked_format
+except ImportError:
+    pass
 
 from dials.array_family import flex
 
@@ -35,6 +40,8 @@ this format class) and B is the hdf5 file provided by SWISSFEL containing the wa
 class FormatNexusJungfrauExt(FormatNexus):
     @staticmethod
     def understand(image_file):
+        if "xfel" not in sys.modules:
+            return False
         with h5py.File(image_file, "r") as handle:
             try:
                 data = handle["/entry/data"]
@@ -58,7 +65,7 @@ class FormatNexusJungfrauExt(FormatNexus):
         )
 
     def _start(self):
-        super(FormatNexusJungfrauExt, self)._start()
+        super()._start()
         data_handle = self._reader.entries[0].data[0].handle
 
         # nexus slices
