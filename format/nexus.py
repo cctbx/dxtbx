@@ -89,7 +89,8 @@ def find_classes(node: NXNode, *nx_classes: Optional[str]) -> Tuple[List[h5py.Gr
 
     Args:
         node: The input h5py node (h5py.File or h5py.Group).
-        nx_classes: Names of NXclass types to search for.
+        nx_classes: Names of NXclass types to search for.  If None, search for children
+            without an NXclass.
 
     Returns:
         A list of matching nodes for each of the specified NX_class types.
@@ -113,13 +114,13 @@ def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
 
     Args:
         node: The input h5py node (h5py.File or h5py.Group).
-        nx_class: Names of NXclass type to search for.
+        nx_class: Names of NXclass type to search for.  If None, search for children
+            without an NXclass.
 
     Returns:
         The list of matching nodes for the specified NXclass type.
     """
-    (instances,) = find_classes(node, nx_class)
-    return instances
+    return find_classes(node, nx_class)[0]
 
 
 def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
