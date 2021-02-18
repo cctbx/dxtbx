@@ -6,6 +6,7 @@ import argparse
 import time
 from typing import List
 
+import dxtbx.util
 from dxtbx.imageset import ImageSetFactory
 
 
@@ -28,6 +29,7 @@ def read_sequence(images: List[str]):
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser(
         description="Benchmark the time to read a set of images"
     )

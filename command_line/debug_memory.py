@@ -2,12 +2,13 @@
 
 import argparse
 import resource
-from builtins import range
 
 import dxtbx
+import dxtbx.util
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser(
         description="Test memory usage by repeatedly loading an image"
     )

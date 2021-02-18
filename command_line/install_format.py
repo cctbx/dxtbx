@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import ast
 import optparse
 import os
@@ -8,6 +6,8 @@ import sys
 import procrunner
 import py
 from six.moves.urllib import request
+
+import dxtbx.util
 
 
 def find_format_classes(directory, base_python_path="dxtbx.format"):
@@ -80,6 +80,7 @@ setup(
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = optparse.OptionParser(
         usage="dxtbx.install_format (--user | --global) [/path/to/format/class.py] [URL]",
         description=(

@@ -1,8 +1,6 @@
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.radial_average
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 
-from __future__ import absolute_import, division, print_function
-
 import math
 import os
 import sys
@@ -20,6 +18,7 @@ from scitbx.matrix import col
 from xfel import radial_average
 
 import dxtbx.datablock
+import dxtbx.util
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 master_phil = iotbx.phil.parse(
@@ -93,6 +92,7 @@ master_phil = iotbx.phil.parse(
 
 
 def run(args=None, imageset=None):
+    dxtbx.util.encode_output_as_utf8()
     args = sys.argv[1:] if args is None else args
 
     # Parse input

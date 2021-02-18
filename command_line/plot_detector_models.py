@@ -1,5 +1,4 @@
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
-from __future__ import absolute_import, division, print_function
 
 import os
 import sys
@@ -14,6 +13,7 @@ from libtbx.phil import parse
 from libtbx.utils import Sorry
 from scitbx.matrix import col
 
+import dxtbx.util
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.model.detector_helpers import project_2d
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -139,6 +139,7 @@ def plot_image_plane_projection(detector, color, ax, panel_numbers=True):
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     args = args or sys.argv[1:]
     user_phil = []
     files = []

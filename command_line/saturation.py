@@ -1,5 +1,6 @@
 import argparse
 
+import dxtbx.util
 from dxtbx import load
 
 
@@ -28,6 +29,7 @@ def saturation(image_file):
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser()
     parser.add_argument("images", metavar="IMAGE", help="Image files", nargs="+")
     options = parser.parse_args(args)
