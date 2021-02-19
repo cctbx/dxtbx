@@ -1,8 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import math
 import sys
-from builtins import range
 
 from libtbx.phil import parse
 from libtbx.test_utils import approx_equal
@@ -14,6 +11,7 @@ from xfel.command_line.cspad_detector_congruence import iterate_detector_at_leve
 import dials.util
 from dials.util.options import OptionParser
 
+import dxtbx.util
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 help_message = """
@@ -56,6 +54,7 @@ repeat_until_converged = True
 
 @dials.util.show_mail_handle_errors()
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     usage = "usage: dxtbx.detector_superpose reference.json moving.json "
     parser = OptionParser(
         usage=usage,

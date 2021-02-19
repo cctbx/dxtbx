@@ -1,13 +1,13 @@
-from __future__ import absolute_import, division, print_function
-
 import ast
 import optparse
 import os
 import sys
+from urllib.request import urlretrieve
 
 import procrunner
 import py
-from six.moves.urllib import request
+
+import dxtbx.util
 
 
 def find_format_classes(directory, base_python_path="dxtbx.format"):
@@ -80,6 +80,7 @@ setup(
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = optparse.OptionParser(
         usage="dxtbx.install_format (--user | --global) [/path/to/format/class.py] [URL]",
         description=(
@@ -144,7 +145,7 @@ def run(args=None):
             if local_file.ext != ".py":
                 local_file = local_file.new(basename=local_file.basename + ".py")
             try:
-                request.urlretrieve(fc, local_file.strpath)
+                urlretrieve(fc, local_file.strpath)
             except Exception:
                 local_file = False
             if local_file and local_file.check(file=1):

@@ -2,6 +2,8 @@ import argparse
 
 import h5py
 
+import dxtbx.util
+
 sample = None
 
 
@@ -70,6 +72,7 @@ def depends_on(in_name):
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser(
         description="Print depends_on hierarchy for Nexus files"
     )
