@@ -3,6 +3,7 @@ import numpy as np
 import procrunner
 import pytest
 
+from dxtbx.command_line.dlsnxs2cbf import parser
 from dxtbx.format.FormatCBFMiniEigerDLS16MSN160 import FormatCBFMiniEigerDLS16MSN160
 from dxtbx.model.experiment_list import ExperimentListFactory
 
@@ -39,3 +40,12 @@ def test_dlsnxs2cbf(dials_data, tmp_path):
                 fh["/entry/data/data_000001"][i][sel],
                 imgset.get_raw_data(0)[0].as_numpy_array()[sel],
             )
+
+
+def test_dlsnxs2cbf_help():
+    result = procrunner.run(["dxtbx.dlsnxs2cbf", "-h"])
+    assert not result.returncode and not result.stderr
+
+    stdout = str(result.stdout)
+    assert parser.description in stdout
+    assert "Template cbf output name e.g. 'image_%04d.cbf'" in stdout
