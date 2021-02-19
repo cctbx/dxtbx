@@ -248,7 +248,7 @@ def test_path_iterator(monkeypatch):
     @classmethod
     def _fake_open_file(cls, name):
         """Mock replacement for Format's open_file"""
-        if name in ["a", "b", os.path.join("dir","c"), os.path.join("dir","d"), "e"]:
+        if name in ["a", "b", os.path.join("dir", "c"), os.path.join("dir", "d"), "e"]:
             return mock.Mock()
         elif name.startswith("dir"):
             err = IOError()
@@ -264,12 +264,24 @@ def test_path_iterator(monkeypatch):
     monkeypatch.setattr(Format, "open_file", _fake_open_file)
 
     it = datablock._openingpathiterator(["a", "b", "dir", "e"])
-    assert list(it) == ["a", "b", os.path.join("dir","c"), os.path.join("dir","d"), "e"]
+    assert list(it) == [
+        "a",
+        "b",
+        os.path.join("dir", "c"),
+        os.path.join("dir", "d"),
+        "e",
+    ]
     listdir.assert_called_once_with("dir")
 
     # Test that the list is sorted
     it = datablock._openingpathiterator(["e", "a", "b", "dir"])
-    assert list(it) == ["a", "b", os.path.join("dir","c"), os.path.join("dir","d"), "e"]
+    assert list(it) == [
+        "a",
+        "b",
+        os.path.join("dir", "c"),
+        os.path.join("dir", "d"),
+        "e",
+    ]
 
 
 def test_extract_metadata_record():
