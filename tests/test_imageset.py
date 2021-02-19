@@ -1,4 +1,6 @@
 import os
+import warnings
+import shutil
 from unittest import mock
 
 import pytest
@@ -524,8 +526,16 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
     ]
     directory = tmp_path / "test%"
     directory.mkdir()
-    for image in images:
-        (directory / image.basename).symlink_to(image)
+    try:
+        for image in images:
+            (directory / image.basename).symlink_to(image)
+    except OSError:
+        warnings.warn(
+            "Copying files where unable to symlink. On Windows, Administrators"
+            " or users with Developer Mode can create symlinks freely."
+        )
+        for image in images:
+            shutil.copy(image, directory)
     template = str(directory / "centroid_####.cbf")
     sequence = ImageSetFactory.make_sequence(template, range(1, 10))
     assert len(sequence) == 9
