@@ -1,8 +1,10 @@
-from __future__ import absolute_import, division, print_function
-
 import procrunner
+import pytest
 
 
+@pytest.mark.xfail(
+    "os.name == 'nt'", reason="crashes python process on Windows", run=False
+)
 def test_dlsnxs2cbf(dials_data, tmpdir):
     screen = dials_data("thaumatin_eiger_screen")
     master = screen.join("Therm_6_1_master.h5")
