@@ -248,7 +248,7 @@ def test_path_iterator(monkeypatch):
     @classmethod
     def _fake_open_file(cls, name):
         """Mock replacement for Format's open_file"""
-        if name in ["a", "b", os.path.join("dir", "c"), os.path.join("dir", "d"), "e"]:
+        if name in ("a", "b", os.path.join("dir", "c"), os.path.join("dir", "d"), "e"):
             return mock.Mock()
         elif name.startswith("dir"):
             err = IOError()

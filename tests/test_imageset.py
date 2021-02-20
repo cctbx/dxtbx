@@ -1,5 +1,4 @@
 import os
-import warnings
 import shutil
 from unittest import mock
 
@@ -528,27 +527,31 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
     directory.mkdir()
     try:
         for image in images:
-            (directory / image.basename).symlink_to(image)
-    except OSError:
-        warnings.warn(
-            "Copying files where unable to symlink. On Windows, Administrators"
-            " or users with Developer Mode can create symlinks freely."
+            try:
+                (directory / image.basename).symlink_to(image)
+            except OSError:
+                shutil.copy(image, directory)
+
+        template = str(directory / "centroid_####.cbf")
+        sequence = ImageSetFactory.make_sequence(template, range(1, 10))
+        assert len(sequence) == 9
+
+        sequences = ImageSetFactory.new(
+            [str(directory / image.basename) for image in images]
         )
+        assert len(sequences) == 1
+        assert len(sequences[0]) == 9
+
+        sequences = ImageSetFactory.from_template(template)
+        assert len(sequences) == 1
+        assert len(sequences[0]) == 9
+
+    finally:  # clean up potentially copied files after running test
         for image in images:
-            shutil.copy(image, directory)
-    template = str(directory / "centroid_####.cbf")
-    sequence = ImageSetFactory.make_sequence(template, range(1, 10))
-    assert len(sequence) == 9
-
-    sequences = ImageSetFactory.new(
-        [str(directory / image.basename) for image in images]
-    )
-    assert len(sequences) == 1
-    assert len(sequences[0]) == 9
-
-    sequences = ImageSetFactory.from_template(template)
-    assert len(sequences) == 1
-    assert len(sequences[0]) == 9
+            try:
+                (directory / image.basename).unlink()
+            except FileNotFoundError:
+                pass
 
 
 def test_pickle_imageset(centroid_files):
