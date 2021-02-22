@@ -1,5 +1,12 @@
+from __future__ import absolute_import, division, print_function
+
+import h5py
+import numpy as np
 import procrunner
 import pytest
+
+from dxtbx.format.FormatCBFMiniEigerDLS16MSN160 import FormatCBFMiniEigerDLS16MSN160
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 @pytest.mark.xfail(
@@ -21,4 +28,23 @@ def test_dlsnxs2cbf(dials_data, tmpdir):
     # check files on disk
 
     for j in (1, 2, 3):
-        assert tmpdir.join("junk_%04d.cbf" % j).check()
+        assert tmpdir.join(f"junk_{j:04d}.cbf").check()
+
+    expts = ExperimentListFactory.from_filenames(
+        [str(tmpdir.join(f"junk_{j+1:04d}.cbf")) for j in range(3)]
+    )
+    assert all(
+        [
+            imgset.get_format_class() == FormatCBFMiniEigerDLS16MSN160
+            for imgset in expts.imagesets()
+        ]
+    )
+
+    with h5py.File(master) as fh:
+        for i, imgset in enumerate(expts.imagesets()):
+            original = fh["/entry/data/data_000001"][i][()]
+            sel = np.where(original < original.max())
+            np.testing.assert_equal(
+                fh["/entry/data/data_000001"][i][sel],
+                imgset.get_raw_data(0)[0].as_numpy_array()[sel],
+            )
