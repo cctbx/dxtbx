@@ -1,46 +1,9 @@
-from __future__ import absolute_import, division, print_function
-
 import json
 import os
-
-import six
+import warnings
 
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.serialize.imageset import imageset_from_dict
-
-
-def _decode_list(data):
-    """Decode a list to str from unicode."""
-    if six.PY3:
-        return data
-    rv = []
-    for item in data:
-        if isinstance(item, six.text_type):
-            item = item.encode("utf-8")
-        elif isinstance(item, list):
-            item = _decode_list(item)
-        elif isinstance(item, dict):
-            item = _decode_dict(item)
-        rv.append(item)
-    return rv
-
-
-def _decode_dict(data):
-    """Decode a dict to str from unicode."""
-    if six.PY3:
-        return data
-    rv = {}
-    for key, value in data.items():
-        if isinstance(key, six.text_type):
-            key = key.encode("utf-8")
-        if isinstance(value, six.text_type):
-            value = value.encode("utf-8")
-        elif isinstance(value, list):
-            value = _decode_list(value)
-        elif isinstance(value, dict):
-            value = _decode_dict(value)
-        rv[key] = value
-    return rv
 
 
 def imageset_from_string(string, directory=None):
@@ -53,9 +16,13 @@ def imageset_from_string(string, directory=None):
         The models
 
     """
-    return imageset_from_dict(
-        json.loads(string, object_hook=_decode_dict), directory=directory
+    warnings.warn(
+        "This function is deprecated and will be removed in the next release",
+        DeprecationWarning,
+        stacklevel=2,
     )
+
+    return imageset_from_dict(json.loads(string), directory=directory)
 
 
 def imageset(filename):
@@ -72,7 +39,7 @@ def imageset(filename):
     filename = os.path.abspath(filename)
     directory = os.path.dirname(filename)
     with open(filename, "r") as infile:
-        return imageset_from_string(infile.read(), directory=directory)
+        return imageset_from_dict(json.load(infile), directory=directory)
 
 
 def datablock(filename, check_format=True):
@@ -112,7 +79,7 @@ def crystal(infile):
 
 
 def experiment_list(infile, check_format=True):
-    """Load an experiment list from a serialzied format."""
+    """Load an experiment list from a serialized format."""
     # Resolve recursive import
     from dxtbx.model.experiment_list import ExperimentListFactory
 

@@ -1,14 +1,9 @@
-from __future__ import absolute_import, division, print_function
-
 import copy
-import errno
 import json
 import os
-from builtins import range
+import pickle
 
 import pkg_resources
-import six
-import six.moves.cPickle as pickle
 
 from dxtbx.datablock import (
     BeamComparison,
@@ -174,10 +169,7 @@ class ExperimentListDict(object):
         filename = resolve_path(imageset_data[param], directory=self._directory)
         if self._check_format and filename:
             with open(filename, "rb") as fh:
-                if six.PY3:
-                    return filename, pickle.load(fh, encoding="bytes")
-                else:
-                    return filename, pickle.load(fh)
+                return filename, pickle.load(fh, encoding="bytes")
 
         return filename or "", None
 
@@ -737,10 +729,8 @@ class ExperimentListFactory(object):
         # First try as a JSON file
         try:
             return ExperimentListFactory.from_json_file(filename, check_format)
-        except IOError as e:
-            # In an ideal Python 3 world this would be much more simply FileNotFoundError, PermissionError
-            if e.errno in (errno.ENOENT, errno.EACCES):
-                raise
+        except (FileNotFoundError, PermissionError):
+            raise
         except Exception:
             pass
 
