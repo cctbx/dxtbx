@@ -1,6 +1,6 @@
 """Format class and assorted helper functions for the LATRD 'Tristan' detector."""
 
-from typing import Iterable, Union
+from typing import Sequence, Union
 
 import h5py
 import numpy as np
@@ -8,7 +8,7 @@ import numpy as np
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.model import Detector
 
-Vector = Union[int, Iterable[int, int]]
+Vector = Union[int, Sequence[int]]
 
 
 def region_size(object_size: Vector, layout: Vector, stride: Vector) -> Vector:
