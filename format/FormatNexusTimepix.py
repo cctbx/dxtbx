@@ -13,14 +13,14 @@ Vector = Union[int, Sequence[int]]
 
 def region_size(object_size: Vector, layout: Vector, stride: Vector) -> Vector:
     """Derive the total size of a grid of objects from their size, layout and stride."""
-    layout = np.full((2,), layout)
+    layout = np.full((2,), layout, dtype=int)
     return object_size + (layout - 1) * stride
 
 
 def object_layout(region_size: Vector, object_size: Vector, stride: Vector) -> Vector:
     """Derive the layout of a grid of objects from the size of the bounding region."""
-    region_size = np.full((2,), region_size)
-    return 1 + (region_size - object_size) / stride
+    region_size = np.full((2,), region_size, dtype=int)
+    return 1 + (region_size - object_size) // stride
 
 
 # Each LATRD module consists of an arrangement of 8 × 2 Timepix3 chips.
@@ -79,10 +79,10 @@ def gap_masks(object_size: Vector, layout: Vector, stride: Vector, inflate: Vect
         Each pixel is represented by a (x, y) vector of its position.
     """
     # Ensure all the arguments are cast to ndarrays of shape (2,).
-    x_size, y_size = np.full((2,), object_size)
-    x_layout, y_layout = np.full((2,), layout) - 1
-    x_stride, y_stride = stride = np.full((2,), stride)
-    x_inflate, y_inflate = np.full((2,), inflate)
+    x_size, y_size = np.full((2,), object_size, dtype=int)
+    x_layout, y_layout = np.full((2,), layout, dtype=int) - 1
+    x_stride, y_stride = stride = np.full((2,), stride, dtype=int)
+    x_inflate, y_inflate = np.full((2,), inflate, dtype=int)
 
     x_span, y_span = region_size(object_size, layout, stride)
 
@@ -101,8 +101,10 @@ def gap_masks(object_size: Vector, layout: Vector, stride: Vector, inflate: Vect
     )
 
     # Get the positions of the bottom-left corner of each gap region.
-    x_gap_pos = x_stride * np.column_stack((np.arange(x_layout), np.zeros(x_layout)))
-    y_gap_pos = y_stride * np.column_stack((np.zeros(y_layout), np.arange(y_layout)))
+    x_gap_pos = np.column_stack((np.arange(x_layout), np.zeros(x_layout, dtype=int)))
+    x_gap_pos *= x_stride
+    y_gap_pos = np.column_stack((np.zeros(y_layout, dtype=int), np.arange(y_layout)))
+    y_gap_pos *= y_stride
 
     # Compute the positions and extents of all the gaps in x & y.
     x_gap_masks = np.add(x_gap_extent, x_gap_pos[:, np.newaxis])
@@ -206,7 +208,7 @@ class FormatNexusTimepix(FormatNexus):
         masks = latrd_masks(self.module_layout, inflate=1)
         # Reshape each mask from a pair of vectors to the four-number list required
         # by dxtbx.model.Panel.add_mask()
-        masks = masks.reshape(masks.shape[0], 4)
+        masks = masks.reshape(masks.shape[0], 4).astype(np.int32)
         # Add all the masks to the detector panel object.
         np.apply_along_axis(lambda mask: detector[0].add_mask(*mask), 1, masks)
 
