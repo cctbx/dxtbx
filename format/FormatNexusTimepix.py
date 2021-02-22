@@ -194,11 +194,11 @@ class FormatNexusTimepix(FormatNexus):
         return False
 
     def __init__(self, image_file, **kwargs):
-        super().__init__(image_file, **kwargs)
-
         with h5py.File(image_file, "r") as handle:
             image_size = handle["/entry/instrument/detector/module/data_size"]
             self.module_layout = object_layout(image_size, module_size, module_stride)
+
+        super().__init__(image_file, **kwargs)
 
     def _detector(self) -> Detector:
         """Ensure that the detector has appropriate masks for the non-sensitive area."""
