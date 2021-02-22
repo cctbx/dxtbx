@@ -1,12 +1,27 @@
-from __future__ import absolute_import, division, print_function
-
 import math
+import sys
+from urllib.parse import urlparse
 
-import six
 
-# we want a round function which does the same on Python 2.7 and 3.x
-if six.PY2:
-    from numpy import around as round
+def encode_output_as_utf8() -> None:
+    """
+    Ensures stdout and stderr are UTF-8 encoded.
+    This avoids crashes on Windows when printing unicode where the output is
+    redirected away from the console into a pipe or file
+    """
+    if hasattr(encode_output_as_utf8, "done"):
+        return
+
+    if sys.stdout.encoding.lower() != "utf-8":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except AttributeError:  # Python 3.1-3.6 compatibility
+            import codecs
+
+            sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+            sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())
+    encode_output_as_utf8.done = True
 
 
 def format_float_with_standard_uncertainty(value, standard_uncertainty, minimum=1e-12):
@@ -63,3 +78,9 @@ def show_mask_info(expt_list):
                     j, _m.count(False), _m.size()
                 )
             )
+
+
+def get_url_scheme(url):
+    """Extract the URL scheme from the string url, respecting Windows file paths"""
+
+    return urlparse(url).scheme if "://" in url else ""

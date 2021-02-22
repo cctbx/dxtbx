@@ -7,7 +7,8 @@ of image formats.
 from __future__ import absolute_import, division, print_function
 
 import pkg_resources
-from six.moves.urllib_parse import urlparse
+
+from dxtbx.util import get_url_scheme
 
 try:
     import typing
@@ -86,7 +87,7 @@ def get_format_class_for_file(image_file, format_hint=None):
     """
 
     # Grab the scheme from this URI
-    scheme = urlparse(image_file).scheme if "://" in image_file else ""
+    scheme = get_url_scheme(image_file)
 
     # If a format hint was given then find all paths through the DAG leading
     # to this format class. Create a set containing all format class names
