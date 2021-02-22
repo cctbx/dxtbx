@@ -1,0 +1,2 @@
+Fix error corrupting data when writing CBF files with large pixel values.
+This affected ``dxtbx.dlsnxs2cbf`` and ``dials.merge_cbf``

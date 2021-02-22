@@ -1,4 +1,5 @@
 #include "compression.h"
+#include <assert.h>
 
 typedef union {
   char b[2];
@@ -62,7 +63,7 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
 
     packed.push_back(-0x80);
 
-    if ((-0xf777 <= delta) && (delta < 0x8000)) {
+    if ((-0x7fff <= delta) && (delta < 0x8000)) {
       s = (short)delta;
       b = ((union_short *)&s)[0].b;
 
@@ -75,6 +76,7 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
       current += delta;
       continue;
     }
+
     s = -0x8000;
     b = ((union_short *)&s)[0].b;
 
@@ -85,21 +87,20 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
     packed.push_back(b[0]);
     packed.push_back(b[1]);
 
-    if ((-0x7fffffff <= delta) && (delta < 0x80000000)) {
-      i = delta;
-      b = ((union_int *)&i)[0].b;
+    assert((-0x7fffffff <= delta) && (delta < 0x80000000));
 
-      if (!le) {
-        byte_swap_int(b);
-      }
+    i = delta;
+    b = ((union_int *)&i)[0].b;
 
-      packed.push_back(b[0]);
-      packed.push_back(b[1]);
-      packed.push_back(b[2]);
-      packed.push_back(b[3]);
-      current += delta;
-      continue;
+    if (!le) {
+      byte_swap_int(b);
     }
+
+    packed.push_back(b[0]);
+    packed.push_back(b[1]);
+    packed.push_back(b[2]);
+    packed.push_back(b[3]);
+    current += delta;
   }
 
   return packed;
@@ -119,7 +120,7 @@ void dxtbx::boost_python::cbf_decompress(const char *packed,
     c = packed[j];
     j += 1;
 
-    if (c != -128) {
+    if (c != -0x80) {
       current += c;
       *values = current;
       values++;
@@ -134,7 +135,7 @@ void dxtbx::boost_python::cbf_decompress(const char *packed,
       byte_swap_short((char *)&s);
     }
 
-    if (s != -32768) {
+    if (s != -0x8000) {
       current += s;
       *values = current;
       values++;
