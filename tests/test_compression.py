@@ -15,5 +15,4 @@ def test_compress_decompress():
     compressed = compress(data)
     uncompressed = uncompress(compressed, x, y)
 
-    for d, u in zip(data, uncompressed):
-        assert d == u
+    assert list(data) == list(uncompressed)
