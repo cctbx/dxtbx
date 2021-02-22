@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace dxtbx { namespace boost_python {
-  void cbf_decompress(const char*, std::size_t, int*);
+  unsigned int cbf_decompress(const char*, std::size_t, int*);
   std::vector<char> cbf_compress(const int*, const std::size_t&);
 }}  // namespace dxtbx::boost_python
 

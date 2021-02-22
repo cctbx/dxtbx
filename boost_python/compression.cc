@@ -105,10 +105,11 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
   return packed;
 }
 
-void dxtbx::boost_python::cbf_decompress(const char *packed,
-                                         std::size_t packed_sz,
-                                         int *values) {
+unsigned int dxtbx::boost_python::cbf_decompress(const char *packed,
+						 std::size_t packed_sz,
+						 int *values) {
   int current = 0;
+  int *original = values;
   unsigned int j = 0;
   short s;
   char c;
@@ -155,4 +156,6 @@ void dxtbx::boost_python::cbf_decompress(const char *packed,
     *values = current;
     values++;
   }
+
+  return values - original;
 }
