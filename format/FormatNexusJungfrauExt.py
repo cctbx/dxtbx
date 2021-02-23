@@ -43,6 +43,10 @@ class FormatNexusJungfrauExt(FormatNexus):
         if "xfel" not in sys.modules:
             return False
         with h5py.File(image_file, "r") as handle:
+            # Note, in the future this class might support more instruments, for now it is tested with the SwissFEL one
+            if handle["/entry/instrument/name"][()] != "SwissFEL ARAMIS BEAMLINE ESB":
+                return False
+
             try:
                 data = handle["/entry/data"]
                 if "pedestal" in data and "gains" in data and "raw" in data:
