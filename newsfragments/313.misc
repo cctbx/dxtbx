@@ -1,1 +1,1 @@
-CBF decompression: add check to verify correct number of values have been decompressed.
+CBF decompression: add check to verify correct number of values have been decompressed, and enforce limit to prevent buffer overflow.

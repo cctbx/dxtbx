@@ -107,7 +107,8 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
 
 unsigned int dxtbx::boost_python::cbf_decompress(const char *packed,
 						 std::size_t packed_sz,
-						 int *values) {
+						 int *values,
+						 std::size_t unpacked_sz) {
   int current = 0;
   int *original = values;
   unsigned int j = 0;
@@ -117,6 +118,9 @@ unsigned int dxtbx::boost_python::cbf_decompress(const char *packed,
   bool le = little_endian();
 
   while (j < packed_sz) {
+    if ((values - original) > unpacked_sz) {
+      break;
+    }
     c = packed[j];
     j += 1;
 
