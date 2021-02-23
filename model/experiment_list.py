@@ -29,7 +29,6 @@ from dxtbx.model import (
 from dxtbx.sequence_filenames import template_image_range
 from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
-from dxtbx.serialize.load import _decode_dict
 from dxtbx.util import get_url_scheme
 
 try:
@@ -467,7 +466,7 @@ def _experimentlist_from_file(filename, directory=None):
     filename = resolve_path(filename, directory=directory)
     try:
         with open(filename, "r") as infile:
-            return json.load(infile, object_hook=_decode_dict)
+            return json.load(infile)
     except IOError:
         raise IOError("unable to read file, %s" % filename)
 
@@ -679,7 +678,7 @@ class ExperimentListFactory(object):
     def from_json(text, check_format=True, directory=None):
         """Load an experiment list from JSON."""
         return ExperimentListFactory.from_dict(
-            json.loads(text, object_hook=_decode_dict),
+            json.loads(text),
             check_format=check_format,
             directory=directory,
         )
