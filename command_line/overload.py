@@ -1,5 +1,6 @@
 import argparse
 
+import dxtbx.util
 from dxtbx import load
 
 
@@ -16,6 +17,7 @@ def overload(image_file):
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser()
     parser.add_argument("image_file", nargs="+")
     options = parser.parse_args(args)

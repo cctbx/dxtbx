@@ -1,9 +1,11 @@
 import argparse
 
+import dxtbx.util
 from dxtbx.sequence_filenames import find_matching_images
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser(
         description="Find images that match a template specification"
     )

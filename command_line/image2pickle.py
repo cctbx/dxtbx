@@ -5,12 +5,9 @@ Convert images of any extant format to pickle files suitable for processing with
 cxi.index.  Note, oscillation values are not preserved.
 """
 
-from __future__ import absolute_import, division, print_function
-
 import math
 import os
 import sys
-from builtins import range
 
 import numpy as np
 
@@ -20,7 +17,7 @@ from libtbx.utils import Usage
 from scitbx.array_family import flex
 from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
 
-import dxtbx
+import dxtbx.util
 
 
 def crop_image_pickle(
@@ -68,6 +65,7 @@ def crop_image_pickle(
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     args = args or sys.argv[1:]
 
     command_line = (

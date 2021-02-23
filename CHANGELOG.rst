@@ -1,3 +1,12 @@
+DIALS 3.3.3 (2021-02-15)
+========================
+
+Bugfixes
+--------
+
+- Fix for missing ``SENSOR_THICKNESS=`` in XDS.INP generated for EIGER datasets introduced in 3.3.1 (`#296 <https://github.com/cctbx/dxtbx/issues/296>`_)
+
+
 DIALS 3.3.2 (2021-02-01)
 ========================
 

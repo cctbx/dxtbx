@@ -5,11 +5,8 @@
 Average images of any dxtbx-supported format. Handles many individual images or single container files.
 """
 
-from __future__ import absolute_import, division, print_function
-
 import copy
 import sys
-from builtins import range
 
 import numpy as np
 
@@ -19,6 +16,7 @@ from libtbx.utils import Sorry, Usage
 from scitbx.array_family import flex
 
 import dxtbx.format.Registry
+import dxtbx.util
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.cbf_writer import FullCBFWriter
 from dxtbx.format.FormatMultiImage import FormatMultiImage
@@ -169,6 +167,7 @@ def run(argv=None):
     """
     if argv is None:
         argv = sys.argv
+    dxtbx.util.encode_output_as_utf8()
     command_line = (
         option_parser.option_parser(
             usage="%s [-v] [-a PATH] [-m PATH] [-s PATH] "
