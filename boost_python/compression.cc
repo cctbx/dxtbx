@@ -117,10 +117,7 @@ unsigned int dxtbx::boost_python::cbf_decompress(const char *packed,
   int i;
   bool le = little_endian();
 
-  while (j < packed_sz) {
-    if ((values - original) > unpacked_sz) {
-      break;
-    }
+  while ((j < packed_sz) && ((values - original) < unpacked_sz)) {
     c = packed[j];
     j += 1;
 
