@@ -24,7 +24,6 @@ from dxtbx.sequence_filenames import (
 )
 from dxtbx.serialize import load
 from dxtbx.serialize.filename import resolve_path
-from dxtbx.serialize.load import _decode_dict
 from dxtbx.util import get_url_scheme
 
 try:
@@ -1502,7 +1501,7 @@ class DataBlockFactory:
     def from_json(string, check_format=True, directory=None):
         """Decode a datablock from JSON string."""
         return DataBlockFactory.from_dict(
-            json.loads(string, object_hook=_decode_dict),
+            json.loads(string),
             check_format=check_format,
             directory=directory,
         )
