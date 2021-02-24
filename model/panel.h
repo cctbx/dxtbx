@@ -400,7 +400,7 @@ namespace dxtbx { namespace model {
 
     /** @returns True/False this is the same as the other */
     bool operator==(const Panel &other) const {
-      return VirtualPanel::operator==(other) && convert_coord_ == other.convert_coord_;
+      return PanelData::operator==(other) && *convert_coord_ == *other.convert_coord_;
     }
 
     /** @returns True/False this is not the same as the other */
