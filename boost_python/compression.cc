@@ -1,4 +1,5 @@
 #include "compression.h"
+#include "dxtbx/error.h"
 #include <assert.h>
 
 typedef union {
@@ -106,17 +107,19 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
   return packed;
 }
 
-void dxtbx::boost_python::cbf_decompress(const char *packed,
-                                         std::size_t packed_sz,
-                                         int *values) {
+unsigned int dxtbx::boost_python::cbf_decompress(const char *packed,
+                                                 std::size_t packed_sz,
+                                                 int *values,
+                                                 std::size_t values_sz) {
   int current = 0;
+  int *original = values;
   unsigned int j = 0;
   short s;
   char c;
   int i;
   bool le = little_endian();
 
-  while (j < packed_sz) {
+  while ((j < packed_sz) && ((values - original) < values_sz)) {
     c = packed[j];
     j += 1;
 
@@ -127,6 +130,7 @@ void dxtbx::boost_python::cbf_decompress(const char *packed,
       continue;
     }
 
+    DXTBX_ASSERT(j + 1 < packed_sz);
     ((union_short *)&s)[0].b[0] = packed[j];
     ((union_short *)&s)[0].b[1] = packed[j + 1];
     j += 2;
@@ -142,6 +146,7 @@ void dxtbx::boost_python::cbf_decompress(const char *packed,
       continue;
     }
 
+    DXTBX_ASSERT(j + 3 < packed_sz);
     ((union_int *)&i)[0].b[0] = packed[j];
     ((union_int *)&i)[0].b[1] = packed[j + 1];
     ((union_int *)&i)[0].b[2] = packed[j + 2];
@@ -156,4 +161,6 @@ void dxtbx::boost_python::cbf_decompress(const char *packed,
     *values = current;
     values++;
   }
+
+  return values - original;
 }
