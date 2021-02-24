@@ -16,8 +16,10 @@ from scitbx.array_family import flex
 import dxtbx
 from dxtbx.model import (
     OffsetParallaxCorrectedPxMmStrategy,
+    OffsetPxMmStrategy,
     Panel,
     ParallaxCorrectedPxMmStrategy,
+    SimplePxMmStrategy,
 )
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
@@ -144,3 +146,36 @@ def test_offset_px_mm_strategy():
 
     pnew = pickle.loads(pickle.dumps(pnew))
     assert pnew == p
+
+
+def test_px_mm_strategy_equality():
+    simple = SimplePxMmStrategy()
+    assert simple == SimplePxMmStrategy()
+
+    parallax_corrected = ParallaxCorrectedPxMmStrategy(1, 1)
+    assert parallax_corrected == ParallaxCorrectedPxMmStrategy(1, 1)
+    assert parallax_corrected != ParallaxCorrectedPxMmStrategy(1, 2)
+    assert parallax_corrected != ParallaxCorrectedPxMmStrategy(2, 1)
+    assert parallax_corrected != simple
+
+    dx = flex.double(flex.grid(10, 10), 1)
+    dy = flex.double(flex.grid(10, 10), 1)
+
+    offset = OffsetPxMmStrategy(dx, dy)
+    assert offset == OffsetPxMmStrategy(dx, dy)
+    assert offset != simple
+    assert offset != parallax_corrected
+
+    offset_parallax_corrected = OffsetParallaxCorrectedPxMmStrategy(1, 1, dx, dy)
+    assert offset_parallax_corrected == OffsetParallaxCorrectedPxMmStrategy(
+        1, 1, dx, dy
+    )
+    assert offset_parallax_corrected != OffsetParallaxCorrectedPxMmStrategy(
+        1, 2, dx, dy
+    )
+    assert offset_parallax_corrected != OffsetParallaxCorrectedPxMmStrategy(
+        2, 1, dx, dy
+    )
+    assert offset_parallax_corrected != simple
+    assert offset_parallax_corrected != parallax_corrected
+    assert offset_parallax_corrected != offset

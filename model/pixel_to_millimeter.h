@@ -62,6 +62,17 @@ namespace dxtbx { namespace model {
       throw DXTBX_ERROR("Overload me");
       return std::string();
     }
+
+    /** @returns True/False this is the same as the other */
+    bool operator==(const PxMmStrategy &other) const {
+      return strategy_name() == other.strategy_name();
+    }
+
+    /** @returns True/False this is not the same as the other */
+    bool operator!=(const PxMmStrategy &other) const {
+      return !(*this == other);
+    }
+
   };
 
   /**
@@ -201,6 +212,16 @@ namespace dxtbx { namespace model {
 
     std::string strategy_name() const {
       return std::string("ParallaxCorrectedPxMmStrategy\n") + mu_t0();
+    }
+
+    /** @returns True/False this is the same as the other */
+    bool operator==(const ParallaxCorrectedPxMmStrategy &other) const {
+      return SimplePxMmStrategy::operator==(other) && mu_ == other.mu_ && t0_ == other.t0_;
+    }
+
+    /** @returns True/False this is not the same as the other */
+    bool operator!=(const ParallaxCorrectedPxMmStrategy &other) const {
+      return !(*this == other);
     }
 
   protected:
