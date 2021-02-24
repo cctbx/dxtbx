@@ -141,11 +141,13 @@ def test_offset_px_mm_strategy():
 
     d = p.to_dict()
 
+    # Panel.from_dict sets the strategy to ParallaxCorrectedPxMmStrategy rather than
+    # OffsetParallaxCorrectedPxMmStrategy as the offsets aren't currently serialized
     pnew = Panel.from_dict(d)
-    assert pnew == p
+    assert pnew != p
 
     pnew = pickle.loads(pickle.dumps(pnew))
-    assert pnew == p
+    assert pnew != p
 
 
 def test_px_mm_strategy_equality():
