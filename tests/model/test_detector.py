@@ -279,6 +279,9 @@ def test_panel_equality():
     panel2.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(1, 1))
     assert panel != panel2
 
+    panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(1, 1))
+    assert panel == panel2
+
 
 def test_project_2d():
     # The function project_2d should give the same results even if the
