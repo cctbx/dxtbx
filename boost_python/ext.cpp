@@ -176,7 +176,8 @@ namespace dxtbx { namespace boost_python {
                            scitbx::af::init_functor_null<int>());
     int *begin = z.begin();
 
-    unsigned int nn = dxtbx::boost_python::cbf_decompress(strpacked.c_str(), sz_buffer, begin, slow * fast);
+    unsigned int nn = dxtbx::boost_python::cbf_decompress(
+      strpacked.c_str(), sz_buffer, begin, slow * fast);
 
     DXTBX_ASSERT(nn == (slow * fast));
 
