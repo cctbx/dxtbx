@@ -1417,6 +1417,11 @@ def detectorgroupdatafactory(obj, instrument):
         if key.startswith("_filename_"):
             continue
 
+        # When multiple datasets are in NXData, it is required to specify one as the signal
+        # In such a case, we skip all datasets except the one flagged as signal
+        if "signal" in obj.handle.attrs and key != obj.handle.attrs["signal"]:
+            continue
+
         # datasets in this context mean ones which contain diffraction images
         # so must have ndim > 1 - for example omega can also be nexus data set
         # but with 1 dimension...
