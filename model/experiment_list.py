@@ -1,15 +1,9 @@
-from __future__ import absolute_import, division, print_function
-
 import copy
-import errno
 import json
 import os
-from builtins import range
+import pickle
 
 import pkg_resources
-import six
-import six.moves.cPickle as pickle
-from six.moves.urllib_parse import urlparse
 
 from dxtbx.datablock import (
     BeamComparison,
@@ -35,7 +29,7 @@ from dxtbx.model import (
 from dxtbx.sequence_filenames import template_image_range
 from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
-from dxtbx.serialize.load import _decode_dict
+from dxtbx.util import get_url_scheme
 
 try:
     from typing import Any, Dict, Optional, Tuple
@@ -174,10 +168,7 @@ class ExperimentListDict(object):
         filename = resolve_path(imageset_data[param], directory=self._directory)
         if self._check_format and filename:
             with open(filename, "rb") as fh:
-                if six.PY3:
-                    return filename, pickle.load(fh, encoding="bytes")
-                else:
-                    return filename, pickle.load(fh)
+                return filename, pickle.load(fh, encoding="bytes")
 
         return filename or "", None
 
@@ -380,7 +371,7 @@ class ExperimentListDict(object):
     def _make_stills(self, imageset, format_kwargs=None):
         """Make a still imageset."""
         filenames = [
-            resolve_path(p, directory=self._directory) if not urlparse(p).scheme else p
+            resolve_path(p, directory=self._directory) if not get_url_scheme(p) else p
             for p in imageset["images"]
         ]
         indices = None
@@ -475,7 +466,7 @@ def _experimentlist_from_file(filename, directory=None):
     filename = resolve_path(filename, directory=directory)
     try:
         with open(filename, "r") as infile:
-            return json.load(infile, object_hook=_decode_dict)
+            return json.load(infile)
     except IOError:
         raise IOError("unable to read file, %s" % filename)
 
@@ -687,7 +678,7 @@ class ExperimentListFactory(object):
     def from_json(text, check_format=True, directory=None):
         """Load an experiment list from JSON."""
         return ExperimentListFactory.from_dict(
-            json.loads(text, object_hook=_decode_dict),
+            json.loads(text),
             check_format=check_format,
             directory=directory,
         )
@@ -737,10 +728,8 @@ class ExperimentListFactory(object):
         # First try as a JSON file
         try:
             return ExperimentListFactory.from_json_file(filename, check_format)
-        except IOError as e:
-            # In an ideal Python 3 world this would be much more simply FileNotFoundError, PermissionError
-            if e.errno in (errno.ENOENT, errno.EACCES):
-                raise
+        except (FileNotFoundError, PermissionError):
+            raise
         except Exception:
             pass
 

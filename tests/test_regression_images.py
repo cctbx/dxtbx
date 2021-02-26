@@ -13,7 +13,6 @@ import sys
 import py.path
 import pytest
 import six
-from six.moves.urllib_parse import urlparse
 
 import libtbx.load_env
 import scitbx.matrix
@@ -22,6 +21,7 @@ from scitbx.array_family import flex
 
 import dxtbx.conftest
 import dxtbx.format.Registry
+from dxtbx.util import get_url_scheme
 
 if sys.version_info[:2] >= (3, 6):
     from pathlib import Path
@@ -253,7 +253,7 @@ def test_format_class_API_assumptions(test_image):
         multiple_formats = False
         for subformat in dag.get(parentformat, []):
             format_class = dxtbx.format.Registry.get_format_class_for(subformat)
-            if not urlparse(filename).scheme in format_class.schemes:
+            if not get_url_scheme(filename) in format_class.schemes:
                 print("Not matching ", filename, "to", format_class)
                 continue
             understood = format_class.understand(filename)

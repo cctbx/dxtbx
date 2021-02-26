@@ -1,5 +1,6 @@
 import argparse
 
+import dxtbx.util
 from dxtbx.format import Registry
 
 dag = Registry.get_format_class_dag()
@@ -32,6 +33,7 @@ def show_registry(filename: str = None):
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser(
         description="Show hierarchy of dxtbx format classes"
     )

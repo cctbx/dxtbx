@@ -12,8 +12,6 @@ import functools
 import os
 from typing import ClassVar, List
 
-from six.moves.urllib_parse import urlparse
-
 import libtbx
 
 import dxtbx.filecache_controller
@@ -24,6 +22,7 @@ from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.sequence_filenames import template_regex
+from dxtbx.util import get_url_scheme
 
 try:
     import gzip
@@ -319,7 +318,7 @@ class Format(object):
 
         # Get filename absolute paths, for entries that are filenames
         filenames = [
-            os.path.abspath(x) if not urlparse(x).scheme else x for x in input_filenames
+            os.path.abspath(x) if not get_url_scheme(x) else x for x in input_filenames
         ]
 
         # Make it a dict
