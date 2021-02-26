@@ -1,0 +1,1 @@
+Check for existence of certain numpy types before using them.
