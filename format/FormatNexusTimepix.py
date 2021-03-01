@@ -1,4 +1,11 @@
-"""Format class and assorted helper functions for the LATRD 'Tristan' detector."""
+"""
+Format class and assorted helper functions for the Large Area Time Resolved Detector.
+
+This supports the experimental LATRD 'Tristan'.  All measurements are in detector
+coordinates, with vector measures having the form (x, y), to match the data set
+`/entry/instrument/detector/module/data_size`.  In the image data, x is the fast
+axis and y is the slow axis.
+"""
 
 from typing import Sequence, Union
 
