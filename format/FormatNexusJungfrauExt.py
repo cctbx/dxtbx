@@ -11,6 +11,7 @@ except ImportError:
 from dials.array_family import flex
 
 from dxtbx.format.FormatNexus import FormatNexus
+from dxtbx.format.nexus import h5str
 
 """
 This class can read a Jungfrau image file that includes, in addition to the corrected data,
@@ -49,7 +50,10 @@ class FormatNexusJungfrauExt(FormatNexus):
             if "name" not in handle["/entry/instrument"]:
                 return False
 
-            if handle["/entry/instrument/name"][()] != "SwissFEL ARAMIS BEAMLINE ESB":
+            if (
+                h5str(handle["/entry/instrument/name"][()])
+                != "SwissFEL ARAMIS BEAMLINE ESB"
+            ):
                 return False
 
             try:
