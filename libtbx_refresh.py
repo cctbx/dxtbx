@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import absolute_import, division, print_function
-
 import ast
 import imp
 import pkgutil
@@ -8,9 +5,29 @@ import sys
 
 import past.builtins  # noqa; lgtm; Ensure package grammar files are generated
 
+import libtbx.load_env
 import libtbx.pkg_utils
 
 import dxtbx.format
+
+exit(
+    ("=" * 80)
+    + """
+
+Your dxtbx repository is still tracking 'master',
+but the main dxtbx branch has been renamed to 'main'.
+
+Please go into your dxtbx repository at %s and run the following commands:
+  git branch -m master main
+  git fetch origin
+  git branch -u origin/main main
+  git pull --rebase
+
+For more information please see https://github.com/cctbx/dxtbx/issues/281
+"""
+    % libtbx.env.dist_path("dxtbx")
+)
+
 
 try:
     import dials.precommitbx.nagger
