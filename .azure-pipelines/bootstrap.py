@@ -738,7 +738,6 @@ def update_sources(options):
         source.split("/")[1]: {"base-repository": source, "branch-local": "master"}
         for source in (
             "cctbx/cctbx_project",
-            "cctbx/dxtbx",
             "dials/cbflib",
         )
     }
@@ -747,6 +746,10 @@ def update_sources(options):
         "effective-repository": "dials/cctbx",
         "branch-remote": "master",
         "branch-local": "stable",
+    }
+    repositories["dxtbx"] = {
+        "base-repository": "cctbx/dxtbx",
+        "branch-local": "main",
     }
 
     for source, setting in options.branch:
