@@ -1823,15 +1823,15 @@ class SequenceDiff:
     def __init__(self, tolerance):
         warnings.warn(
             "dxtbx.datablock.SequenceDiff is deprecated. "
-            "Use dxtbx.model.experiment_list.sequence_diff instead",
+            "Use dxtbx.model.compare.sequence_diff instead",
             DeprecationWarning,
             stacklevel=2,
         )
         self._tolerance = tolerance
 
     def __call__(self, sequence1, sequence2):
-        import dxtbx.model.experiment_list  # do not float this import (circular)
+        import dxtbx.model.compare  # do not float this import (circular)
 
-        return dxtbx.model.experiment_list.sequence_diff(
+        return dxtbx.model.compare.sequence_diff(
             sequence1, sequence2, tolerance=self._tolerance
         ).split("\n")

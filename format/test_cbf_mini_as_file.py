@@ -11,7 +11,7 @@ from dxtbx.datablock import (
     GoniometerComparison,
 )
 from dxtbx.format.FormatCBFMini import FormatCBFMini
-from dxtbx.model.experiment_list import sequence_diff
+from dxtbx.model.compare import sequence_diff
 
 
 @pytest.mark.parametrize(

@@ -1,1 +1,1 @@
-Deprecate datablock.SequenceDiff in favour of model.experiment_list.sequence_diff()
+Deprecate datablock.SequenceDiff in favour of model.compare.sequence_diff()
