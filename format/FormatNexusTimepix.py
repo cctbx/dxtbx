@@ -193,8 +193,10 @@ class FormatNexusTimepix(FormatNexus):
         )
         with h5py.File(image_file, "r") as handle:
             if "/entry/instrument/detector/module/data_size" in handle:
-                size = handle["/entry/instrument/detector/module/data_size"]
-                module_layout = object_layout(size[()], module_size, module_stride)
+                # Note that the data_size is recorded in order slow, fast (i.e. y, x).
+                # We must therefore reverse it to work in conventional x, y order.
+                size = handle["/entry/instrument/detector/module/data_size"][::-1]
+                module_layout = object_layout(size, module_size, module_stride)
                 if tuple(module_layout) in known_module_layouts:
                     return True
 
@@ -202,7 +204,7 @@ class FormatNexusTimepix(FormatNexus):
 
     def __init__(self, image_file, **kwargs):
         with h5py.File(image_file, "r") as handle:
-            image_size = handle["/entry/instrument/detector/module/data_size"]
+            image_size = handle["/entry/instrument/detector/module/data_size"][::-1]
             self.module_layout = object_layout(image_size, module_size, module_stride)
 
         super().__init__(image_file, **kwargs)
