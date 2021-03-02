@@ -8,12 +8,12 @@ from dxtbx.format.FormatNexusEigerDLS import FormatNexusEigerDLS
 from dxtbx.masking import GoniometerMaskerFactory
 from dxtbx.model import MultiAxisGoniometer
 
-VALID_NAMES = [
+VALID_NAMES = {
     b"DIAMOND BEAMLINE I03",
     b"DIAMOND BEAMLINE I04",
-]
+}
 
-LEGACY_NAMES = [b"I03", b"I04"]
+LEGACY_NAMES = {b"I03", b"I04"}
 
 
 class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
