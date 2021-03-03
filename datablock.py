@@ -3,16 +3,15 @@ import errno
 import itertools
 import json
 import logging
-import math
 import operator
 import os.path
 import pickle
+import warnings
 
 import libtbx
-from scitbx import matrix
 
 import dxtbx.imageset
-import dxtbx.model
+import dxtbx.model.compare
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
@@ -1654,17 +1653,7 @@ class GoniometerComparison:
         )
 
 
-def _all_equal(a, b):
-    return all(x[0] == x[1] for x in zip(a, b))
-
-
-def _all_approx_equal(a, b, tolerance):
-    return all(abs(x[0] - x[1]) < tolerance for x in zip(a, b))
-
-
 class BeamDiff:
-    """A class to provide simple beam comparison"""
-
     def __init__(
         self,
         wavelength_tolerance=1e-6,
@@ -1672,185 +1661,106 @@ class BeamDiff:
         polarization_normal_tolerance=1e-6,
         polarization_fraction_tolerance=1e-6,
     ):
+        warnings.warn(
+            "dxtbx.datablock.BeamDiff is deprecated. "
+            "Use dxtbx.model.compare.beam_diff instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.wavelength_tolerance = wavelength_tolerance
         self.direction_tolerance = direction_tolerance
         self.polarization_normal_tolerance = polarization_normal_tolerance
         self.polarization_fraction_tolerance = polarization_fraction_tolerance
 
     def __call__(self, a, b):
-        aw = a.get_wavelength()
-        bw = b.get_wavelength()
-        ad = matrix.col(a.get_sample_to_source_direction())
-        bd = matrix.col(b.get_sample_to_source_direction())
-        an = matrix.col(a.get_polarization_normal())
-        bn = matrix.col(b.get_polarization_normal())
-        af = a.get_polarization_fraction()
-        bf = b.get_polarization_fraction()
-        text = []
-        if abs(aw - bw) > self.wavelength_tolerance:
-            text.append(f" Wavelength: {aw:f}, {bw:f}")
-        if abs(ad.angle(bd)) > self.direction_tolerance:
-            text.append(" Direction: {}, {}".format(tuple(ad), tuple(bd)))
-        if abs(an.angle(bn)) > self.polarization_normal_tolerance:
-            text.append(" Polarization Normal: {}, {}".format(tuple(an), tuple(bn)))
-        if abs(af - bf) > self.polarization_fraction_tolerance:
-            text.append(f" Polarization Fraction: {af}, {bf}")
-        if len(text) > 0:
-            text = ["Beam:"] + text
-        return text
+        return dxtbx.model.compare.beam_diff(
+            a,
+            b,
+            wavelength_tolerance=self.wavelength_tolerance,
+            direction_tolerance=self.direction_tolerance,
+            polarization_normal_tolerance=self.polarization_normal_tolerance,
+            polarization_fraction_tolerance=self.polarization_fraction_tolerance,
+        ).split("\n")
 
 
 class DetectorDiff:
-    """A class to provide simple detector comparison"""
-
     def __init__(
         self, fast_axis_tolerance=1e-6, slow_axis_tolerance=1e-6, origin_tolerance=1e-6
     ):
-
+        warnings.warn(
+            "dxtbx.datablock.DetectorDiff is deprecated. "
+            "Use dxtbx.model.compare.detector_diff instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.fast_axis_tolerance = fast_axis_tolerance
         self.slow_axis_tolerance = slow_axis_tolerance
         self.origin_tolerance = origin_tolerance
 
     def __call__(self, a, b):
-        text = []
-        if len(a) != len(b):
-            text.append("Num Panels: %d, %d" % (len(a), len(b)))
-        for i, (aa, bb) in enumerate(zip(a, b)):
-            a_image_size = aa.get_image_size()
-            b_image_size = bb.get_image_size()
-            a_pixel_size = aa.get_pixel_size()
-            b_pixel_size = bb.get_pixel_size()
-            a_trusted_range = aa.get_trusted_range()
-            b_trusted_range = bb.get_trusted_range()
-            a_fast = aa.get_fast_axis()
-            b_fast = bb.get_fast_axis()
-            a_slow = aa.get_slow_axis()
-            b_slow = bb.get_slow_axis()
-            a_origin = aa.get_origin()
-            b_origin = bb.get_origin()
-            temp_text = []
-            if not _all_equal(a_image_size, b_image_size):
-                temp_text.append(f"  Image size: {a_image_size}, {b_image_size}")
-            if not _all_approx_equal(a_pixel_size, b_pixel_size, 1e-7):
-                temp_text.append(f"  Pixel size: {a_pixel_size}, {b_pixel_size}")
-            if not _all_approx_equal(a_trusted_range, b_trusted_range, 1e-7):
-                temp_text.append(
-                    f"  Trusted Range: {a_trusted_range}, {b_trusted_range}"
-                )
-            if not _all_approx_equal(a_fast, b_fast, self.fast_axis_tolerance):
-                temp_text.append(f"  Fast axis: {a_fast}, {b_fast}")
-            if not _all_approx_equal(a_slow, b_slow, self.slow_axis_tolerance):
-                temp_text.append(f"  Slow axis: {a_slow}, {b_slow}")
-            if not _all_approx_equal(a_origin, b_origin, self.origin_tolerance):
-                temp_text.append(f"  Origin: {a_origin}, {b_origin}")
-            if len(temp_text) > 0:
-                text.append(" panel %d:" % i)
-                text.extend(temp_text)
-        if len(text) > 0:
-            text = ["Detector:"] + text
-        return text
+        return dxtbx.model.compare.detector_diff(
+            a,
+            b,
+            fast_axis_tolerance=self.fast_axis_tolerance,
+            slow_axis_tolerance=self.slow_axis_tolerance,
+            origin_tolerance=self.origin_tolerance,
+        ).split("\n")
 
 
 class GoniometerDiff:
-    """A class to provide simple goniometer comparison"""
-
     def __init__(
         self,
         rotation_axis_tolerance=1e-6,
         fixed_rotation_tolerance=1e-6,
         setting_rotation_tolerance=1e-6,
     ):
+        warnings.warn(
+            "dxtbx.datablock.GoniometerDiff is deprecated. "
+            "Use dxtbx.model.compare.goniometer_diff instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.rotation_axis_tolerance = rotation_axis_tolerance
         self.fixed_rotation_tolerance = fixed_rotation_tolerance
         self.setting_rotation_tolerance = setting_rotation_tolerance
 
     def __call__(self, a, b):
-        a_axis = matrix.col(a.get_rotation_axis())
-        b_axis = matrix.col(b.get_rotation_axis())
-        a_fixed = a.get_fixed_rotation()
-        b_fixed = b.get_fixed_rotation()
-        a_setting = a.get_setting_rotation()
-        b_setting = b.get_setting_rotation()
-        text = []
-        if abs(a_axis.angle(b_axis)) > self.rotation_axis_tolerance:
-            text.append(" Rotation axis: {}, {}".format(tuple(a_axis), tuple(b_axis)))
-        if not _all_approx_equal(a_fixed, b_fixed, self.fixed_rotation_tolerance):
-            text.append(f" Fixed rotation: {a_fixed}, {b_fixed}")
-        if not _all_approx_equal(a_setting, b_setting, self.setting_rotation_tolerance):
-            text.append(f" Setting rotation: {a_setting}, {b_setting}")
-        if len(text) > 0:
-            text = ["Goniometer:"] + text
-        return text
+        return dxtbx.model.compare.goniometer_diff(
+            a,
+            b,
+            rotation_axis_tolerance=self.rotation_axis_tolerance,
+            fixed_rotation_tolerance=self.fixed_rotation_tolerance,
+            setting_rotation_tolerance=self.setting_rotation_tolerance,
+        ).split("\n")
 
 
 class ScanDiff:
-    """A class to provide scan comparison"""
-
     def __init__(self, scan_tolerance=0.03):
+        warnings.warn(
+            "dxtbx.datablock.ScanDiff is deprecated. "
+            "Use dxtbx.model.compare.scan_diff instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.scan_tolerance = scan_tolerance
 
     def __call__(self, a, b):
-        eps = self.scan_tolerance * abs(a.get_oscillation()[1])
-        a_image_range = a.get_image_range()
-        b_image_range = b.get_image_range()
-        a_oscillation = a.get_oscillation()
-        b_oscillation = b.get_oscillation()
-        a_osc_range = a.get_oscillation_range()
-        b_osc_range = b.get_oscillation_range()
-
-        def mod_2pi(x):
-            return x - 2 * math.pi * math.floor(x / (2 * math.pi))
-
-        diff_2pi = abs(mod_2pi(a_osc_range[1]) - mod_2pi(b_osc_range[0]))
-        diff_abs = abs(a_osc_range[1] - b_osc_range[0])
-        text = []
-        if not (a_image_range[1] + 1 == b_image_range[0]):
-            text.append(f" Incompatible image range: {a_image_range}, {b_image_range}")
-        if abs(a_oscillation[1] - b_oscillation[1]) > eps:
-            text.append(f" Incompatible Oscillation: {a_oscillation}, {b_oscillation}")
-        if min(diff_2pi, diff_abs) > eps * a.get_num_images():
-            text.append(
-                f" Incompatible Oscillation Range: {a_osc_range}, {b_osc_range}"
-            )
-        if len(text) > 0:
-            text = ["Scan:"] + text
-        return text
+        return dxtbx.model.compare.scan_diff(
+            a, b, scan_tolerance=self.scan_tolerance
+        ).split("\n")
 
 
 class SequenceDiff:
     def __init__(self, tolerance):
-
-        if tolerance is None:
-            self.b_diff = BeamDiff()
-            self.d_diff = DetectorDiff()
-            self.g_diff = GoniometerDiff()
-            self.s_diff = ScanDiff()
-        else:
-            self.b_diff = BeamDiff(
-                wavelength_tolerance=tolerance.beam.wavelength,
-                direction_tolerance=tolerance.beam.direction,
-                polarization_normal_tolerance=tolerance.beam.polarization_normal,
-                polarization_fraction_tolerance=tolerance.beam.polarization_fraction,
-            )
-
-            self.d_diff = DetectorDiff(
-                fast_axis_tolerance=tolerance.detector.fast_axis,
-                slow_axis_tolerance=tolerance.detector.slow_axis,
-                origin_tolerance=tolerance.detector.origin,
-            )
-
-            self.g_diff = GoniometerDiff(
-                rotation_axis_tolerance=tolerance.goniometer.rotation_axis,
-                fixed_rotation_tolerance=tolerance.goniometer.fixed_rotation,
-                setting_rotation_tolerance=tolerance.goniometer.setting_rotation,
-            )
-
-            self.s_diff = ScanDiff(scan_tolerance=tolerance.scan.oscillation)
+        warnings.warn(
+            "dxtbx.datablock.SequenceDiff is deprecated. "
+            "Use dxtbx.model.compare.sequence_diff instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._tolerance = tolerance
 
     def __call__(self, sequence1, sequence2):
-        text = []
-        text.extend(self.b_diff(sequence1.get_beam(), sequence2.get_beam()))
-        text.extend(self.d_diff(sequence1.get_detector(), sequence2.get_detector()))
-        text.extend(self.g_diff(sequence1.get_goniometer(), sequence2.get_goniometer()))
-        text.extend(self.s_diff(sequence1.get_scan(), sequence2.get_scan()))
-        return text
+        return dxtbx.model.compare.sequence_diff(
+            sequence1, sequence2, tolerance=self._tolerance
+        ).split("\n")
