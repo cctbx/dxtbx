@@ -1,1 +1,1 @@
-Deprecate datablock.SequenceDiff in favour of model.compare.sequence_diff()
+Deprecate datablock.*Diff classes in favour of model.compare.*_diff() functions
