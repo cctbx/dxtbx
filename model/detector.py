@@ -113,6 +113,7 @@ detector_phil_scope = libtbx.phil.parse(
     }
 
     hierarchy
+      .expert_level = 2
       {
 
       name = None
