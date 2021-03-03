@@ -4,6 +4,7 @@ import dxtbx.util.dlsnxs2cbf
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser(description="Convert an nxs file to multiple cbfs")
     parser.add_argument("nexus_file", help="Input nexus file")
     parser.add_argument(

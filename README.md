@@ -4,7 +4,7 @@
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/dials/dxtbx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dials/dxtbx/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/dials/dxtbx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dials/dxtbx/alerts/)
-[![Coverage](https://codecov.io/gh/cctbx/dxtbx/branch/master/graph/badge.svg)](https://codecov.io/gh/cctbx/dxtbx)
+[![Coverage](https://codecov.io/gh/cctbx/dxtbx/branch/main/graph/badge.svg)](https://codecov.io/gh/cctbx/dxtbx)
 [![DOI](https://img.shields.io/badge/DOI-10.1107/S1600576714011996-blue.svg)](https://doi.org/10.1107/S1600576714011996)
 
 A [cctbx](https://cctbx.github.io/)-style toolbox to describe single-crystal diffraction experiments, where
