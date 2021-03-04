@@ -59,6 +59,15 @@ def dataset_as_flex(dataset, selection):
         return dataset_as_flex_int(dataset.id.id, selection)
     else:
         assert numpy.issubdtype(dataset.dtype, numpy.floating)
+        double_types = [
+            numpy.double,
+            numpy.longfloat,
+            numpy.float64,
+        ]
+        if hasattr(numpy, "float96"):
+            double_types.append(numpy.float96)
+        if hasattr(numpy, "float128"):
+            double_types.append(numpy.float128)
         if dataset.dtype in [
             numpy.half,
             numpy.single,
@@ -67,13 +76,7 @@ def dataset_as_flex(dataset, selection):
             numpy.float32,
         ]:
             return dataset_as_flex_float(dataset.id.id, selection)
-        elif dataset.dtype in [
-            numpy.double,
-            numpy.longfloat,
-            numpy.float64,
-            numpy.float96,
-            numpy.float128,
-        ]:
+        elif dataset.dtype in double_types:
             return dataset_as_flex_double(dataset.id.id, selection)
         else:
             assert False, "unknown floating data type (%s)" % str(dataset.dtype)
@@ -1412,6 +1415,11 @@ def detectorgroupdatafactory(obj, instrument):
     mapping = {}
     for key in sorted(obj.handle):
         if key.startswith("_filename_"):
+            continue
+
+        # When multiple datasets are in NXData, it is required to specify one as the signal
+        # In such a case, we skip all datasets except the one flagged as signal
+        if "signal" in obj.handle.attrs and key != obj.handle.attrs["signal"]:
             continue
 
         # datasets in this context mean ones which contain diffraction images

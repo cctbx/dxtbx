@@ -73,6 +73,7 @@ def _generate_all_test_images():
         r"DLS_eBIC/image_0001\.tif$",  # The format is in testing_dxtbx_format_classes/, not dxtbx, so skip the example image [2017:upintheair@r1693]
         r"README$",
         r".*\.(?:pyc?|log|json)$",  # Extensions to ignore
+        r"putative_imgCIF_HDF5_mapping/X4_wide_M1S4_1.nxs",  # See https://github.com/cctbx/dxtbx/issues/321#issuecomment-787731768
     ]
     # Pattern to match item at start of string or after directory indicator
     DIRSTART = r"^(?:.*/)?"
