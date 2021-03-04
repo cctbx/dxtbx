@@ -239,6 +239,9 @@ namespace dxtbx { namespace model {
      * ideal readout position to true readout position - these are
      * *added* to the real valued pixel position when going from mm
      * to pixel
+     *
+     * Note that the equality operators for this class don't explicitly
+     * check the dx, dy offsets for equality.
      */
 
     OffsetPxMmStrategy(scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
@@ -345,6 +348,9 @@ namespace dxtbx { namespace model {
      * ideal readout position to true readout position - these are
      * *added* to the real valued pixel position when going from mm
      * to pixel
+     *
+     * Note that the equality operators for this class don't explicitly
+     * check the dx, dy offsets for equality.
      */
 
     OffsetParallaxCorrectedPxMmStrategy(
