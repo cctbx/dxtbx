@@ -1,3 +1,13 @@
+DIALS 3.3.4 (2021-03-05)
+========================
+
+Bugfixes
+--------
+
+- Fix error corrupting data when writing CBF files with large pixel values.
+  This affected ``dxtbx.dlsnxs2cbf`` and ``dials.merge_cbf`` (`#314 <https://github.com/cctbx/dxtbx/issues/314>`_)
+
+
 DIALS 3.3.3 (2021-02-15)
 ========================
 
