@@ -55,14 +55,9 @@ if sys.platform == "win32" and env_etc.compiler == "win32_cl":
     )
     env_etc.dxtbx_includes.append(libtbx.env.under_base("libtiff"))
 
-    env_etc.dxtbx_libs = ["libtiff", "cbf", "boost_python"]
-    if libtbx.env.build_options.use_conda:
-        # library changes
-        boost_python = get_boost_library_with_python_version(
-            "boost_python", env_etc.conda_libpath
-        )
-        # tiff.lib instead of libtiff.lib for newer libtiff conda packages
-        env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
+    if not libtbx.env.build_options.use_conda:
+        env_etc.dxtbx_libs = ["libtiff", "cbf", "boost_python"]
+    else:
         # add zlib.lib for hdf5
         env_etc.dxtbx_hdf5_libs.append("zlib")
         env_etc.dxtbx_includes.extend(env_etc.conda_cpppath)
