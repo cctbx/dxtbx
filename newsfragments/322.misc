@@ -1,0 +1,1 @@
+Add check to FormatNexusJungfrauExt that ``name`` exists before comparing.
