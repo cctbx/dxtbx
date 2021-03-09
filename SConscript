@@ -41,8 +41,8 @@ env_etc.dxtbx_hdf5_lib_paths = []
 if sys.platform == "win32" and env_etc.compiler == "win32_cl":
 
     if libtbx.env.build_options.use_conda:
-        # This should just be "hdf5", but that is causing linking errors
-        env_etc.dxtbx_hdf5_libs = ["libhdf5"]
+        env_etc.dxtbx_hdf5_libs = ["hdf5"]
+        env_etc.cppdefines = {"H5_BUILT_AS_DYNAMIC_LIB": 1}
         env_etc.dxtbx_hdf5_libs.append("zlib")
         env_etc.dxtbx_includes.extend(env_etc.conda_cpppath)
         env_etc.dxtbx_lib_paths.extend(env_etc.conda_libpath)
@@ -116,6 +116,9 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     if env_etc.clang_version:
         wd = ["-Wno-unused-function"]
         env.Append(CCFLAGS=wd)
+
+    if hasattr(env_etc, "cppdefines"):
+        env.Append(CPPDEFINES=env_etc.cppdefines)
 
     env.SharedLibrary(
         target="#lib/dxtbx_ext",
