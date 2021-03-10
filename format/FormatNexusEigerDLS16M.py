@@ -5,19 +5,20 @@ import h5py
 import libtbx
 
 from dxtbx.format.FormatNexusEigerDLS import FormatNexusEigerDLS
+from dxtbx.format.nexus import h5str
 from dxtbx.masking import GoniometerMaskerFactory
 from dxtbx.model import MultiAxisGoniometer
 
 VALID_NAMES = {
     # "long" names
-    b"DIAMOND BEAMLINE I03",
-    b"DIAMOND BEAMLINE I04",
+    "DIAMOND BEAMLINE I03",
+    "DIAMOND BEAMLINE I04",
     # "short" names
-    b"DLS I03",
-    b"DLS I04",
+    "DLS I03",
+    "DLS I04",
 }
 
-LEGACY_NAMES = {b"I03", b"I04"}
+LEGACY_NAMES = {"I03", "I04"}
 
 
 class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
@@ -25,7 +26,7 @@ class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
     def understand(image_file):
         # Get the file handle
         with h5py.File(image_file, "r") as handle:
-            name = FormatNexusEigerDLS16M.get_instrument_name(handle)
+            name = h5str(FormatNexusEigerDLS16M.get_instrument_name(handle))
             return name and name.upper() in VALID_NAMES | LEGACY_NAMES
 
     def has_dynamic_shadowing(self, **kwargs):
