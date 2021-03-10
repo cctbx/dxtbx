@@ -9,8 +9,12 @@ from dxtbx.masking import GoniometerMaskerFactory
 from dxtbx.model import MultiAxisGoniometer
 
 VALID_NAMES = {
+    # "long" names
     b"DIAMOND BEAMLINE I03",
     b"DIAMOND BEAMLINE I04",
+    # "short" names
+    b"DLS I03",
+    b"DLS I04",
 }
 
 LEGACY_NAMES = {b"I03", b"I04"}
