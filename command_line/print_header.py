@@ -3,6 +3,7 @@ import argparse
 from scitbx.array_family import flex
 
 import dxtbx.format.Registry
+import dxtbx.util
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
@@ -50,6 +51,7 @@ def print_header(filenames):
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser(description="Print headers for images")
     parser.add_argument("image_files", nargs="+", metavar="FILE", help="Image files")
     options = parser.parse_args(args)

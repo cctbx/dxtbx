@@ -87,7 +87,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("to_millimeter", to_millimeter, (arg("panel"), arg("xy")))
       .def("to_pixel", &PxMmStrategy::to_pixel, (arg("panel"), arg("xy")))
       .def("name", &PxMmStrategy::name)
-      .def("__str__", &PxMmStrategy::strategy_name);
+      .def("__str__", &PxMmStrategy::strategy_name)
+      .def("__eq__", &PxMmStrategy::operator==)
+      .def("__ne__", &PxMmStrategy::operator!=);
 
     class_<SimplePxMmStrategy, bases<PxMmStrategy> >("SimplePxMmStrategy")
       .def_pickle(PxMmStrategyPickleSuite());
@@ -97,6 +99,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def(init<double, double>((arg("mu"), arg("t0"))))
       .def("mu", &ParallaxCorrectedPxMmStrategy::mu)
       .def("t0", &ParallaxCorrectedPxMmStrategy::t0)
+      .def("__eq__", &ParallaxCorrectedPxMmStrategy::operator==)
+      .def("__ne__", &ParallaxCorrectedPxMmStrategy::operator!=)
       .def_pickle(ParallaxCorrectedPxMmStrategyPickleSuite());
 
     class_<OffsetPxMmStrategy, bases<PxMmStrategy> >("OffsetPxMmStrategy", no_init)

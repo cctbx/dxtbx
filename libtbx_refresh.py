@@ -1,9 +1,7 @@
-# coding: utf-8
-from __future__ import absolute_import, division, print_function
-
 import ast
 import imp
 import pkgutil
+import sys
 
 import past.builtins  # noqa; lgtm; Ensure package grammar files are generated
 
@@ -17,6 +15,9 @@ try:
     dials.precommitbx.nagger.nag()
 except ImportError:
     pass
+
+if sys.version_info.major == 2:
+    sys.exit("Python 2 is no longer supported")
 
 
 # --- format class registration ---

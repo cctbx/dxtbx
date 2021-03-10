@@ -2,6 +2,7 @@ import argparse
 import os
 
 import dxtbx.format.Registry
+import dxtbx.util
 
 dag = dxtbx.format.Registry.get_format_class_dag()
 
@@ -26,6 +27,7 @@ def show_matching_formats(files):
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", metavar="IMAGE", nargs="+")
     options = parser.parse_args(args)

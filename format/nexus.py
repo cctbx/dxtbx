@@ -4,7 +4,7 @@ import collections
 import itertools
 import math
 import os
-from typing import List, Union
+from typing import List, Optional, Tuple, Union
 
 import h5py
 import numpy
@@ -38,6 +38,8 @@ except ImportError:
     if "SIT_ROOT" not in os.environ:
         raise
 
+NXNode = Union[h5py.File, h5py.Group]
+
 
 def h5str(h5_value: Union[str, numpy.string_, bytes]) -> str:
     """
@@ -57,6 +59,15 @@ def dataset_as_flex(dataset, selection):
         return dataset_as_flex_int(dataset.id.id, selection)
     else:
         assert numpy.issubdtype(dataset.dtype, numpy.floating)
+        double_types = [
+            numpy.double,
+            numpy.longfloat,
+            numpy.float64,
+        ]
+        if hasattr(numpy, "float96"):
+            double_types.append(numpy.float96)
+        if hasattr(numpy, "float128"):
+            double_types.append(numpy.float128)
         if dataset.dtype in [
             numpy.half,
             numpy.single,
@@ -65,13 +76,7 @@ def dataset_as_flex(dataset, selection):
             numpy.float32,
         ]:
             return dataset_as_flex_float(dataset.id.id, selection)
-        elif dataset.dtype in [
-            numpy.double,
-            numpy.longfloat,
-            numpy.float64,
-            numpy.float96,
-            numpy.float128,
-        ]:
+        elif dataset.dtype in double_types:
             return dataset_as_flex_double(dataset.id.id, selection)
         else:
             assert False, "unknown floating data type (%s)" % str(dataset.dtype)
@@ -79,6 +84,46 @@ def dataset_as_flex(dataset, selection):
 
 class NXValidationError(RuntimeError):
     """A specific exception to record validation errors"""
+
+
+def find_classes(node: NXNode, *nx_classes: Optional[str]) -> Tuple[List[h5py.Group]]:
+    """
+    Find instances of multiple NXclass types within the children of the current node.
+
+    Args:
+        node: The input h5py node (h5py.File or h5py.Group).
+        nx_classes: Names of NXclass types to search for.  If None, search for children
+            without an NXclass.
+
+    Returns:
+        A list of matching nodes for each of the specified NX_class types.
+    """
+    results = {nx_class: [] for nx_class in nx_classes}
+
+    for v in filter(None, node.values()):
+        class_name = h5str(v.attrs.get("NX_class"))
+        if class_name in nx_classes:
+            results[class_name].append(v)
+
+    return tuple(results.values())
+
+
+def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
+    """
+    Find instances of a single NXclass type within the children of the current node.
+
+    This is a convenience function, equivalent to calling find_classes with a single
+    NXclass type name argument and returning the list of matches.
+
+    Args:
+        node: The input h5py node (h5py.File or h5py.Group).
+        nx_class: Names of NXclass type to search for.  If None, search for children
+            without an NXclass.
+
+    Returns:
+        The list of matching nodes for the specified NXclass type.
+    """
+    return find_classes(node, nx_class)[0]
 
 
 def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
@@ -101,22 +146,6 @@ def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
         group
         for group in find_class(nx_file, "NXentry")
         if "definition" in group and h5str(group["definition"][()]) == "NXmx"
-    ]
-
-
-def find_class(node: Union[h5py.File, h5py.Group], nx_class: str) -> List[h5py.Group]:
-    """
-    Find a given NXclass within the children of the current node.
-
-    Args:
-        node: The input h5py node (h5py.File or h5py.Group).
-
-    Returns:
-        list: The list of nodes matching the input nx_class.
-
-    """
-    return [
-        v for v in node.values() if v and h5str(v.attrs.get("NX_class")) == nx_class
     ]
 
 
@@ -352,9 +381,10 @@ class NXdetector(object):
         self.handle = handle
 
         # Find the NXdetector_modules
-        self.modules = []
-        for entry in find_class(self.handle, "NXdetector_module"):
-            self.modules.append(NXdetector_module(entry))
+        self.modules = [
+            NXdetector_module(entry)
+            for entry in find_class(self.handle, "NXdetector_module")
+        ]
 
         # Check we've got some stuff
         if not self.modules:
@@ -369,22 +399,18 @@ class NXinstrument(object):
     def __init__(self, handle):
         self.handle = handle
 
-        # Find the NXdetector
-        self.detectors = [
-            NXdetector(detector) for detector in find_class(self.handle, "NXdetector")
-        ]
+        # Find the NXdetector, any detector groups and the NXbeam
+        detectors, detector_groups, beams = find_classes(
+            self.handle, "NXdetector", "NXdetector_group", "NXbeam"
+        )
+
         # Check we've got stuff
-        if not self.detectors:
+        if not detectors:
             raise NXValidationError("No NXdetector in %s" % self.handle.name)
 
-        # Find any detector groups
-        self.detector_groups = [
-            NXdetector_group(detector_group)
-            for detector_group in find_class(self.handle, "NXdetector_group")
-        ]
-
-        # Find the NXbeam
-        self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
+        self.detectors = [NXdetector(detector) for detector in detectors]
+        self.detector_groups = [NXdetector_group(group) for group in detector_groups]
+        self.beams = [NXbeam(beam) for beam in beams]
 
 
 class NXbeam(object):
@@ -425,27 +451,22 @@ class NXmxEntry(object):
     def __init__(self, handle):
         self.handle = handle
 
-        # Find the NXinstrument
-        self.instruments = [
-            NXinstrument(instrument)
-            for instrument in find_class(self.handle, "NXinstrument")
-        ]
-
-        # Find the NXsample
-        self.samples = [
-            NXsample(sample) for sample in find_class(self.handle, "NXsample")
-        ]
-
-        # Find the NXdata
-        self.data = [NXdata(data) for data in find_class(self.handle, "NXdata")]
+        # Find the NXinstrument, NXsample & NXdata
+        instruments, samples, data_sets = find_classes(
+            self.handle, "NXinstrument", "NXsample", "NXdata"
+        )
 
         # Check we've got some stuff
-        if not self.instruments:
+        if not instruments:
             raise NXValidationError("No NXinstrument in %s" % self.handle.name)
-        if not self.samples:
+        if not samples:
             raise NXValidationError("No NXsample in %s" % self.handle.name)
-        if not self.data:
+        if not data_sets:
             raise NXValidationError("No NXdata in %s" % self.handle.name)
+
+        self.instruments = [NXinstrument(instrument) for instrument in instruments]
+        self.samples = [NXsample(sample) for sample in samples]
+        self.data = [NXdata(data) for data in data_sets]
 
 
 class NXmxReader(object):
@@ -800,10 +821,11 @@ class DetectorFactoryFromGroup(object):
                 detector_type = "unknown"
 
             # get the set of leaf modules (handles nested modules)
-            modules = []
-            for nx_detector_module in nx_detector.modules:
-                if not find_class(nx_detector_module.handle, "NXdetector_module"):
-                    modules.append(nx_detector_module)
+            modules = [
+                module
+                for module in nx_detector.modules
+                if not find_class(module.handle, "NXdetector_module")
+            ]
 
             # depends_on field for a detector will have NxM entries in it, where
             # N = number of images and M = number of detector modules
@@ -1393,6 +1415,11 @@ def detectorgroupdatafactory(obj, instrument):
     mapping = {}
     for key in sorted(obj.handle):
         if key.startswith("_filename_"):
+            continue
+
+        # When multiple datasets are in NXData, it is required to specify one as the signal
+        # In such a case, we skip all datasets except the one flagged as signal
+        if "signal" in obj.handle.attrs and key != obj.handle.attrs["signal"]:
             continue
 
         # datasets in this context mean ones which contain diffraction images

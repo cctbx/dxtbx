@@ -534,6 +534,8 @@ namespace dxtbx { namespace model { namespace boost_python {
            return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
       .def("is_", &panel_is)
+      .def("__eq__", &Panel::operator==)
+      .def("__ne__", &Panel::operator!=)
       .def_pickle(PanelPickleSuite());
   }
 
