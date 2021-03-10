@@ -29,44 +29,40 @@ else:
     boost_python = "boost_python"
 
 env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
-env_etc.dxtbx_hdf5_libs = ["hdf5"]
 env_etc.dxtbx_lib_paths = [
     env_etc.base_lib,
     env_etc.libtbx_lib,
     os.path.join(sys.prefix, "lib"),
 ]
+
+env_etc.dxtbx_hdf5_libs = ["hdf5"]
 env_etc.dxtbx_hdf5_lib_paths = []
+
 if sys.platform == "win32" and env_etc.compiler == "win32_cl":
-    env_etc.dxtbx_hdf5_libs = ["libhdf5"]
-    env_etc.dxtbx_includes.append(
-        libtbx.env.under_base(os.path.join("HDF5-1.8.16", "include"))
-    )
-    env_etc.dxtbx_lib_paths = [
-        env_etc.libpath_python,
-        env_etc.libtbx_lib,
-        libtbx.env.under_base("libtiff"),
-    ]
-    env_etc.dxtbx_hdf5_lib_paths = [
-        libtbx.env.under_base(os.path.join("HDF5-1.8.16", "lib"))
-    ]
 
-    env_etc.dxtbx_includes.append(
-        os.path.join(env_etc.cctbx_include, "msvc9.0_include")
-    )
-    env_etc.dxtbx_includes.append(libtbx.env.under_base("libtiff"))
-
-    env_etc.dxtbx_libs = ["libtiff", "cbf", "boost_python"]
     if libtbx.env.build_options.use_conda:
-        # library changes
-        boost_python = get_boost_library_with_python_version(
-            "boost_python", env_etc.conda_libpath
-        )
-        # tiff.lib instead of libtiff.lib for newer libtiff conda packages
-        env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
-        # add zlib.lib for hdf5
+        env_etc.dxtbx_hdf5_libs = ["hdf5"]
+        env_etc.cppdefines = {"H5_BUILT_AS_DYNAMIC_LIB": 1}
         env_etc.dxtbx_hdf5_libs.append("zlib")
         env_etc.dxtbx_includes.extend(env_etc.conda_cpppath)
         env_etc.dxtbx_lib_paths.extend(env_etc.conda_libpath)
+    else:
+        env_etc.dxtbx_lib_paths = [
+            env_etc.libpath_python,
+            env_etc.libtbx_lib,
+            libtbx.env.under_base("libtiff"),
+        ]
+        env_etc.dxtbx_hdf5_lib_paths = [
+            libtbx.env.under_base(os.path.join("HDF5-1.8.16", "lib"))
+        ]
+        env_etc.dxtbx_includes.append(
+            libtbx.env.under_base(os.path.join("HDF5-1.8.16", "include"))
+        )
+        env_etc.dxtbx_includes.append(
+            os.path.join(env_etc.cctbx_include, "msvc9.0_include")
+        )
+        env_etc.dxtbx_includes.append(libtbx.env.under_base("libtiff"))
+        env_etc.dxtbx_libs = ["libtiff", "cbf", "boost_python"]
 
 # for the hdf5.h file - look at where Python is coming from unless is OS X
 # framework build... messy but appears to work on Linux and OS X
@@ -120,6 +116,9 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     if env_etc.clang_version:
         wd = ["-Wno-unused-function"]
         env.Append(CCFLAGS=wd)
+
+    if hasattr(env_etc, "cppdefines"):
+        env.Append(CPPDEFINES=env_etc.cppdefines)
 
     env.SharedLibrary(
         target="#lib/dxtbx_ext",
