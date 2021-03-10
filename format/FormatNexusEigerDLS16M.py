@@ -9,6 +9,9 @@ from dxtbx.format.nexus import h5str
 from dxtbx.masking import GoniometerMaskerFactory
 from dxtbx.model import MultiAxisGoniometer
 
+# These are the instrument names that should be used according to
+# https://manual.nexusformat.org/classes/applications/NXmx.html and
+# https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_diffrn_source.type.html
 VALID_NAMES = {
     # "long" names
     "DIAMOND BEAMLINE I03",
@@ -18,6 +21,7 @@ VALID_NAMES = {
     "DLS I04",
 }
 
+# These legacy names were used up until 2021/03/12
 LEGACY_NAMES = {"I03", "I04"}
 
 
