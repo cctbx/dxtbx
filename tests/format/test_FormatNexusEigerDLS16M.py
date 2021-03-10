@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 import os
 
+import h5py
+import numpy as np
 import pytest
 
 from scitbx.array_family import flex
@@ -189,3 +191,31 @@ def test_screening(dials_data):
     assert len(expts) == 3
     imagesets = expts[0].imageset
     assert imagesets[0].get_format_class() == FormatNexusEigerDLS16M
+
+
+@pytest.mark.parametrize("beamline", ["I03", "I04"])
+def test_understand(beamline, tmp_path):
+    # See https://jira.diamond.ac.uk/browse/MXGDA-3624
+    nxs = tmp_path / "data.nxs"
+    with h5py.File(nxs, mode="w") as fh:
+        entry = fh.create_group("entry")
+        instrument = entry.create_group("instrument")
+        instrument.attrs["short_name"] = np.string_(f"DLS {beamline}")
+        name = instrument.create_dataset(
+            "name", data=np.string_(f"DIAMOND BEAMLINE {beamline}")
+        )
+        name.attrs["short_name"] = np.string_(f"DLS {beamline}")
+    assert FormatNexusEigerDLS16M.understand(nxs)
+
+
+@pytest.mark.parametrize("beamline", ["I03", "I04"])
+def test_understand_legacy(beamline, tmp_path):
+    # See https://jira.diamond.ac.uk/browse/MXGDA-3624
+    nxs = tmp_path / "data.nxs"
+    with h5py.File(nxs, mode="w") as fh:
+        entry = fh.create_group("entry")
+        instrument = entry.create_group("instrument")
+        instrument.attrs["short_name"] = np.string_(f"{beamline}")
+        name = instrument.create_dataset("name", data=np.string_(f"{beamline}"))
+        name.attrs["short_name"] = np.string_(f"{beamline}")
+    assert FormatNexusEigerDLS16M.understand(nxs)
