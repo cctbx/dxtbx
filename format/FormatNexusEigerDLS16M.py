@@ -25,15 +25,8 @@ class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
     def understand(image_file):
         # Get the file handle
         with h5py.File(image_file, "r") as handle:
-            name = FormatNexusEigerDLS.get_instrument_name(handle)
-            if name is None:
-                return False
-            if name.upper() in LEGACY_NAMES:
-                return True
-            if name in VALID_NAMES:
-                return True
-
-        return False
+            name = FormatNexusEigerDLS16M.get_instrument_name(handle)
+            return name and name.upper() in VALID_NAMES | LEGACY_NAMES
 
     def has_dynamic_shadowing(self, **kwargs):
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
