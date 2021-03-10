@@ -19,10 +19,10 @@ VALID_NAMES = {
     # "short" names
     "DLS I03",
     "DLS I04",
+    # "legacy" names used until 2021/03/12
+    "I03",
+    "I04",
 }
-
-# These legacy names were used up until 2021/03/12
-LEGACY_NAMES = {"I03", "I04"}
 
 
 class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
@@ -31,7 +31,7 @@ class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
         # Get the file handle
         with h5py.File(image_file, "r") as handle:
             name = h5str(FormatNexusEigerDLS16M.get_instrument_name(handle))
-            return name and name.upper() in VALID_NAMES | LEGACY_NAMES
+            return name and name.upper() in VALID_NAMES
 
     def has_dynamic_shadowing(self, **kwargs):
         dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
