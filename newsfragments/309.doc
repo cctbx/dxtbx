@@ -1,1 +1,0 @@
-The help message that ought to be displayed when calling ``dxtbx.dlsnxs2cbf -h`` was formerly broken and is now fixed.
