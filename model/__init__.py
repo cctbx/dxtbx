@@ -704,13 +704,10 @@ class _(object):
 
             if imageset["__id__"] in ("ImageSet", "ImageGrid"):
                 image_list = []
-                for filename, file_index in zip(
-                    imageset["images"], imageset["single_file_indices"]
-                ):
+                for file_index, filename in enumerate(imageset["images"]):
                     image_dict = collections.OrderedDict()
                     image_dict["filename"] = filename
                     image_dict["image"] = file_index
-                    # imageset["mask"] = dxtbx.datablock.abspath_or_none(.external_lookup.mask.filename)
                     image_list.append(image_dict)
                 imageset["images"] = image_list
 
