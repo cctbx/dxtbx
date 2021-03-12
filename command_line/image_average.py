@@ -17,9 +17,9 @@ from scitbx.array_family import flex
 
 import dxtbx.format.Registry
 import dxtbx.util
-from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.cbf_writer import FullCBFWriter
 from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def splitit(l, n):
@@ -51,14 +51,12 @@ def splitit(l, n):
 class image_worker(object):
     """Class to compute running sums while reading image data"""
 
-    # Deriving class should implement __init__, load and read
+    # Deriving class should implement __init__ and read
 
     def __call__(self, subset):
         """Worker function for multiprocessing"""
         nfail = 0
         nmemb = 0
-
-        self.load()
 
         for item in subset:
             try:
@@ -97,32 +95,29 @@ class image_worker(object):
 class multi_image_worker(image_worker):
     """Class for reading container files"""
 
-    def __init__(self, command_line, path, imageset):
+    def __init__(self, command_line, path, experiments):
         self.path = path
         self.command_line = command_line
 
-        self.imageset = imageset
-
-    def load(self):
-        """Called by seperate process during multiprocessing"""
-
-        if self.command_line.options.nproc > 1:
-            # Need to re-open the file if HDF5 as HDF5 file handles can't be pickled during multiprocessing
-            self.imageset.reader().nullify_format_instance()
+        self.experiments = experiments
 
     def read(self, n):
         """Read image at postion n"""
         if self.command_line.options.verbose:
             print("Processing %s: %d" % (self.path, n))
 
-        beam = self.imageset.get_beam(n)
-        detector = self.imageset.get_detector(n)
+        expt = self.experiments[n]
+        expt.load_models()
 
-        image_data = self.imageset[n]
+        beam = expt.beam
+        detector = expt.detector
+
+        image_data = expt.imageset[0]
         if not isinstance(image_data, tuple):
             image_data = (image_data,)
         img = tuple(image_data[i].as_1d().as_double() for i in range(len(detector)))
         wavelength = beam.get_wavelength()
+        expt.imageset.clear_cache()
 
         return img, detector.hierarchy().get_distance(), wavelength
 
@@ -132,9 +127,6 @@ class single_image_worker(image_worker):
 
     def __init__(self, command_line):
         self.command_line = command_line
-
-    def load(self):
-        pass  # no additional test needed when loading individual files
 
     def read(self, path):
         if self.command_line.options.verbose:
@@ -258,22 +250,10 @@ def run(argv=None):
         command_line.parser.print_usage(file=sys.stderr)
         return 2
 
+    experiments = ExperimentListFactory.from_filenames([paths[0]], load_models=False)
     if len(paths) == 1:
-        # test if the iamge is a multi-image
-        datablocks = DataBlockFactory.from_filenames([paths[0]])
-        if not datablocks:
-            raise Sorry("Could not read path {}".format(paths[0]))
-
-        assert len(datablocks) == 1
-        datablock = datablocks[0]
-        imagesets = datablock.extract_imagesets()
-        assert len(imagesets) == 1
-        imageset = imagesets[0]
-        if not imageset.reader().is_single_file_reader():
-            raise Usage("Supply more than one image")
-
-        worker = multi_image_worker(command_line, paths[0], imageset)
-        iterable = list(range(len(imageset)))
+        worker = multi_image_worker(command_line, paths[0], experiments)
+        iterable = list(range(len(experiments)))
     else:
         # Multiple images provided
         worker = single_image_worker(command_line)
@@ -289,14 +269,6 @@ def run(argv=None):
     ):
         iterable = iterable[: command_line.options.num_images_max]
     assert len(iterable) >= 2, "Need more than one image to average"
-
-    if len(paths) > 1:
-        datablocks = DataBlockFactory.from_filenames([iterable[0]])
-        assert len(datablocks) == 1
-        datablock = datablocks[0]
-        imagesets = datablock.extract_imagesets()
-        assert len(imagesets) == 1
-        imageset = imagesets[0]
 
     if command_line.options.mpi:
         try:
@@ -402,7 +374,9 @@ def run(argv=None):
     avg_distance = sum_distance / nmemb
     avg_wavelength = sum_wavelength / nmemb
 
-    detector = imageset.get_detector()
+    expt = experiments[0]
+    expt.load_models()
+    detector = expt.detector
     h = detector.hierarchy()
     origin = h.get_local_origin()
     h.set_local_frame(
@@ -410,7 +384,8 @@ def run(argv=None):
         h.get_local_slow_axis(),
         (origin[0], origin[1], -avg_distance),
     )
-    imageset.get_beam().set_wavelength(avg_wavelength)
+    expt.beam.set_wavelength(avg_wavelength)
+    assert expt.beam.get_wavelength() == expt.imageset.get_beam(0).get_wavelength()
 
     # Output the average image, maximum projection image, and standard
     # deviation image, if requested.
@@ -419,7 +394,7 @@ def run(argv=None):
             fast, slow = d.get_image_size()
             avg_img[n].resize(flex.grid(slow, fast))
 
-        writer = FullCBFWriter(imageset=imageset)
+        writer = FullCBFWriter(imageset=expt.imageset)
         cbf = writer.get_cbf_handle(header_only=True)
         writer.add_data_to_cbf(cbf, data=avg_img)
         writer.write_cbf(command_line.options.avg_path, cbf=cbf)
@@ -430,7 +405,7 @@ def run(argv=None):
             max_img[n].resize(flex.grid(slow, fast))
         max_img = tuple(max_img)
 
-        writer = FullCBFWriter(imageset=imageset)
+        writer = FullCBFWriter(imageset=expt.imageset)
         cbf = writer.get_cbf_handle(header_only=True)
         writer.add_data_to_cbf(cbf, data=max_img)
         writer.write_cbf(command_line.options.max_path, cbf=cbf)
@@ -455,7 +430,7 @@ def run(argv=None):
             stddev_img[n].resize(flex.grid(slow, fast))
         stddev_img = tuple(stddev_img)
 
-        writer = FullCBFWriter(imageset=imageset)
+        writer = FullCBFWriter(imageset=expt.imageset)
         cbf = writer.get_cbf_handle(header_only=True)
         writer.add_data_to_cbf(cbf, data=stddev_img)
         writer.write_cbf(command_line.options.stddev_path, cbf=cbf)

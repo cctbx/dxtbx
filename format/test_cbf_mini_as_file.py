@@ -4,14 +4,14 @@ import os
 
 import pytest
 
-from dxtbx.datablock import (
-    BeamComparison,
-    DataBlockFactory,
-    DetectorComparison,
-    GoniometerComparison,
-)
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.model.compare import sequence_diff
+from dxtbx.model.experiment_list import (
+    BeamComparison,
+    DetectorComparison,
+    ExperimentListFactory,
+    GoniometerComparison,
+)
 
 
 @pytest.mark.parametrize(
@@ -23,8 +23,7 @@ from dxtbx.model.compare import sequence_diff
 )
 def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
     filename = os.path.join(dials_regression, image_file)
-    datablock = DataBlockFactory.from_filenames([filename])[0]
-    imageset = datablock.extract_imagesets()[0]
+    imageset = ExperimentListFactory.from_filenames([filename])[0].imageset
 
     FormatCBFMini.as_file(
         imageset.get_detector(),
@@ -35,10 +34,9 @@ def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
         "image_0001.cbf",
     )
 
-    assert datablock.format_class()
+    assert imageset.get_format_class()
 
-    datablock2 = DataBlockFactory.from_filenames(["image_0001.cbf"])[0]
-    imageset2 = datablock2.extract_imagesets()[0]
+    imageset2 = ExperimentListFactory.from_filenames(["image_0001.cbf"])[0].imageset
 
     d_u_o = pytest.importorskip("dials.util.options")
     tolerance = d_u_o.tolerance_phil_scope.extract().tolerance

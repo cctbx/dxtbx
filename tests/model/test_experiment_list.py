@@ -1,5 +1,7 @@
+import collections
 import errno
 import os
+from unittest import mock
 
 import pytest
 import six.moves.cPickle as pickle
@@ -8,6 +10,7 @@ from cctbx import sgtbx
 from scitbx.array_family import flex
 
 import dxtbx
+import dxtbx.model.experiment_list
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSetFactory
@@ -22,6 +25,63 @@ from dxtbx.model import (
     ScanFactory,
 )
 from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactory
+
+
+@pytest.fixture(scope="session")
+def centroid_test_data(dials_regression):
+    return os.path.join(dials_regression, "centroid_test_data")
+
+
+@pytest.fixture
+def single_sequence_filenames(centroid_test_data):
+    filenames = [
+        os.path.join(centroid_test_data, f"centroid_000{i}.cbf") for i in range(1, 10)
+    ]
+    return filenames
+
+
+@pytest.fixture
+def multiple_sequence_filenames(centroid_test_data):
+    filenames = [
+        os.path.join(centroid_test_data, f"centroid_000{i}.cbf")
+        for i in [1, 2, 3, 7, 8, 9]
+    ]
+    return filenames
+
+
+@pytest.fixture
+def all_image_examples(dials_regression):
+    filenames = (
+        ("ALS_1231", "q315r_lyso_1_001.img"),
+        ("ALS_501", "als501_q4_1_001.img"),
+        ("ALS_821", "q210_lyso_1_101.img"),
+        ("ALS_831", "q315r_lyso_001.img"),
+        ("APS_14BMC", "q315_1_001.img"),
+        ("APS_17ID", "q210_1_001.img"),
+        ("APS_19ID", "q315_unbinned_a.0001.img"),
+        ("APS_22ID", "mar300.0001"),
+        ("APS_23IDD", "mar300_1_E1.0001"),
+        ("APS_24IDC", "pilatus_1_0001.cbf"),
+        ("APS_24IDC", "q315_1_001.img"),
+        ("CLS1_08ID1", "mar225_2_E0_0001.img"),
+        ("DESY_ID141", "q210_2_001.img"),
+        ("ESRF_BM14", "mar165_001.mccd"),
+        ("ESRF_BM14", "mar225_1_001.mccd"),
+        ("ESRF_ID231", "q315r_7_001.img"),
+        ("RAXIS-HTC", "test1_lysozyme_0111060001.osc"),
+        ("SLS_X06SA", "mar225_2_001.img"),
+        ("SLS_X06SA", "pilatus6m_1_00001.cbf"),
+        ("SRS_101", "mar225_001.img"),
+        ("SRS_142", "q4_1_001.img"),
+        ("SSRL_bl111", "mar325_1_001.mccd"),
+        ("xia2", "merge2cbf_averaged_0001.cbf"),
+    )
+    return [os.path.join(dials_regression, "image_examples", *f) for f in filenames]
+
+
+@pytest.fixture
+def multiple_block_filenames(single_sequence_filenames, all_image_examples):
+    return single_sequence_filenames + all_image_examples
 
 
 def test_experiment_list_extend():
@@ -415,7 +475,7 @@ def test_experimentlist_factory_from_args(monkeypatch, dials_regression):
     # Get the experiments from a list of filenames
     with monkeypatch.context() as m:
         m.setenv("DIALS_REGRESSION", dials_regression)
-        experiments = ExperimentListFactory.from_args(filenames, verbose=True)
+        experiments = ExperimentListFactory.from_args(filenames)
 
     assert len(experiments) == 3
     for experiment in experiments:
@@ -493,6 +553,30 @@ def test_experimentlist_factory_from_datablock():
     assert experiments[0].goniometer
     assert experiments[0].scan
     assert experiments[0].crystal
+
+
+def test_experimentlist_to_datablock_imageset(dials_data):
+    filenames = [
+        str(f) for f in dials_data("thaumatin_grid_scan").listdir("thau_3_2_*.cbf.bz2")
+    ]
+    imageset = Format.get_imageset(filenames, as_imageset=True)
+    expts = ExperimentListFactory.from_imageset_and_crystal(imageset, crystal=None)
+    datablocks = expts.to_datablocks()
+    assert len(datablocks) == 1
+    assert datablocks[0].num_images() == len(expts) == len(imageset)
+    assert len(datablocks[0].extract_imagesets()) == len(expts)
+
+
+def test_experimentlist_to_datablock_centroid_test_data(dials_data):
+    filenames = [
+        str(f) for f in dials_data("centroid_test_data").listdir("centroid_*.cbf")
+    ]
+    expts = ExperimentListFactory.from_filenames(filenames)
+    datablocks = expts.to_datablocks()
+    assert len(datablocks) == 1
+    assert datablocks[0].num_images() == len(expts[0].imageset)
+    assert len(datablocks[0].extract_imagesets()) == len(expts)
+    assert len(datablocks[0].extract_imagesets()[0]) == len(expts[0].imageset)
 
 
 def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmpdir):
@@ -936,3 +1020,212 @@ def test_experimentlist_change_basis(dials_data):
 
     with pytest.raises(AssertionError):
         experiments.change_basis([cb_op, cb_op])
+
+
+def test_path_iterator(monkeypatch):
+    """Test the pathname iterator that avoids excessive file calls"""
+
+    @classmethod
+    def _fake_open_file(cls, name):
+        """Mock replacement for Format's open_file"""
+        if name in ("a", "b", os.path.join("dir", "c"), os.path.join("dir", "d"), "e"):
+            return mock.Mock()
+        elif name.startswith("dir"):
+            err = IOError()
+            err.errno = errno.EISDIR
+            # raise IOError(errno=errno.EISDIR)
+            raise err
+        assert False
+
+    # Path the lookup of files
+    listdir = mock.Mock(return_value=["c", "dir2", "d"])
+    monkeypatch.setattr(os, "listdir", listdir)
+    # Replace Format.open_file with a tame version
+    monkeypatch.setattr(Format, "open_file", _fake_open_file)
+
+    it = dxtbx.model.experiment_list._openingpathiterator(["a", "b", "dir", "e"])
+    assert list(it) == [
+        "a",
+        "b",
+        os.path.join("dir", "c"),
+        os.path.join("dir", "d"),
+        "e",
+    ]
+    listdir.assert_called_once_with("dir")
+
+    # Test that the list is sorted
+    it = dxtbx.model.experiment_list._openingpathiterator(["e", "a", "b", "dir"])
+    assert list(it) == [
+        "a",
+        "b",
+        os.path.join("dir", "c"),
+        os.path.join("dir", "d"),
+        "e",
+    ]
+
+
+def test_extract_metadata_record():
+    """Make sure we can read a metadataobject from a format instance"""
+    fmt = mock.MagicMock()
+    fmt.get_image_file.return_value = "filename_000.cbf"
+    fmt.get_scan.return_value = None
+    record = dxtbx.model.experiment_list.ImageMetadataRecord.from_format(fmt)
+    assert record.beam is fmt.get_beam()
+    assert record.detector is fmt.get_detector()
+    assert record.goniometer is fmt.get_goniometer()
+    assert record.scan is None
+    assert record.index is None
+
+
+def _equal_but_not_same(thing):
+    object_1 = tuple([thing])
+    object_2 = tuple([thing])
+    assert object_1 == object_2
+    assert object_1 is not object_2
+    return object_1, object_2
+
+
+def test_merge_metadata_record():
+    """Test that merging metadata records works correctly"""
+    beam_a, beam_b = _equal_but_not_same("beam")
+    detector_a, detector_b = _equal_but_not_same("detector")
+    gonio_a, gonio_b = _equal_but_not_same("goniometer")
+
+    a = dxtbx.model.experiment_list.ImageMetadataRecord(
+        beam=beam_a, detector=detector_a, goniometer=gonio_a
+    )
+    b = dxtbx.model.experiment_list.ImageMetadataRecord(
+        beam=beam_b, detector=detector_b, goniometer=gonio_b
+    )
+    pre_hash = hash(a)
+    assert a.beam is not b.beam
+    assert a.detector is not b.detector
+    assert a.goniometer is not b.goniometer
+    # This should do something
+    assert b.merge_metadata_from(a)
+    assert hash(a) == pre_hash, "a changed after merge"
+    # Make sure metadata was merged
+    assert a.beam is b.beam
+    assert a.detector is b.detector
+    assert a.goniometer is b.goniometer
+    # This should NOT do something
+    assert not a.merge_metadata_from(a)
+    assert hash(a) == pre_hash
+
+
+def test_merge_all_metadata():
+    """Test that merging metadata over a whole list of records works"""
+    beam_a, beam_b = _equal_but_not_same("beam")
+    gonio_a, gonio_b = _equal_but_not_same("goniometer")
+
+    a = dxtbx.model.experiment_list.ImageMetadataRecord(
+        beam=beam_a, detector=object(), goniometer=gonio_a
+    )
+    b = dxtbx.model.experiment_list.ImageMetadataRecord(
+        beam=beam_b, detector=object(), goniometer=gonio_b
+    )
+    records = [a, b]
+    dxtbx.model.experiment_list._merge_model_metadata(records)
+    assert a.beam is b.beam
+    assert a.goniometer is b.goniometer
+    assert a.detector is not b.detector
+
+
+def test_merge_scan():
+    """Test merging logic of scans"""
+    scanA = mock.Mock(spec=Scan)
+    scanB = mock.Mock(spec=Scan)
+    recordA = mock.Mock(scan=scanA)
+    recordB = mock.Mock(
+        scan=scanB,
+        beam=recordA.beam,
+        detector=recordA.detector,
+        goniometer=recordA.goniometer,
+    )
+    result = dxtbx.model.experiment_list._merge_scans([recordA, recordB])
+    assert result == [recordA]
+    scanA.append.assert_called_once_with(scanB)
+
+    # Change some metadata in recordB so it doesn't match
+    scanA.reset_mock()
+    recordB.beam = mock.Mock()
+    assert dxtbx.model.experiment_list._merge_scans([recordA, recordB]) == [
+        recordA,
+        recordB,
+    ]
+
+
+def test_groupby_template_none():
+    Fo = collections.namedtuple("Fo", ["template"])
+    objs = [Fo(1), Fo(2), Fo(2), Fo(None), Fo(None), Fo("something")]
+    result = list(dxtbx.model.experiment_list._groupby_template_is_none(objs))
+    assert result == [
+        [Fo(1)],
+        [Fo(2)],
+        [Fo(2)],
+        [Fo(None), Fo(None)],
+        [Fo("something")],
+    ]
+
+
+def test_iterate_with_previous():
+    sample = list(range(5))
+    assert list(dxtbx.model.experiment_list._iterate_with_previous(sample)) == [
+        (None, 0),
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 4),
+    ]
+
+
+def test_create_single_sequence(single_sequence_filenames):
+    experiments = ExperimentListFactory.from_filenames(single_sequence_filenames)
+    assert len(experiments) == 1
+    imagesets = experiments.imagesets()
+    assert imagesets[0].get_format_class()
+    assert len(imagesets) == 1
+    assert len(imagesets[0]) == 9
+
+
+def test_create_multiple_sequences(multiple_sequence_filenames):
+    experiments = ExperimentListFactory.from_filenames(multiple_sequence_filenames)
+    assert len(experiments) == 2
+    imagesets = experiments.imagesets()
+    assert len(imagesets) == 2
+    assert imagesets[0].get_format_class()
+    assert imagesets[1].get_format_class()
+    assert len(imagesets[0]) == 3
+    assert len(imagesets[1]) == 3
+
+
+def test_create_multiple_blocks(multiple_block_filenames):
+    experiments = ExperimentListFactory.from_filenames(multiple_block_filenames)
+    assert len(experiments) == 24
+    imagesets = experiments.imagesets()
+    assert len(imagesets) == 24
+    assert [len(im) for im in imagesets] == [9] + [1] * 23
+
+
+def test_from_null_sequence():
+    filenames = ["template_%2d.cbf" % (i + 1) for i in range(0, 10)]
+    sequence = Format.get_imageset(
+        filenames,
+        beam=Beam((0, 0, 1)),
+        detector=Detector(),
+        goniometer=Goniometer((1, 0, 0)),
+        scan=Scan((1, 10), (0, 0.1)),
+    )
+
+    # Create the experiments
+    experiments = ExperimentListFactory.from_sequence_and_crystal(
+        sequence, crystal=None
+    )
+    assert len(experiments) == 1
+    imagesets = experiments.imagesets()
+    assert imagesets[0].get_format_class()
+    assert len(imagesets) == 1
+    assert imagesets[0].get_beam() == sequence.get_beam()
+    assert imagesets[0].get_detector() == sequence.get_detector()
+    assert imagesets[0].get_goniometer() == sequence.get_goniometer()
+    assert imagesets[0].get_scan() == sequence.get_scan()
