@@ -29,7 +29,7 @@ class DataBlock:
         """Instantiate from a list of imagesets."""
 
         warnings.warn(
-            "Datablocks are deprecated; please use Experiments instead",
+            "Datablocks are deprecated; please use ExperimentLists instead",
             DeprecationWarning,
             stacklevel=2,
         )
