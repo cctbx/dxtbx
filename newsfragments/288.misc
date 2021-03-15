@@ -1,4 +1,0 @@
-* Construct Experiments directly rather than via Datablocks
-* Mark DataBlocks as deprecated
-* Remove some unused/test auxilliary functions
-* Convert some single-method classes to functions

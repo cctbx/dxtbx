@@ -1,3 +1,50 @@
+DIALS 3.4.0 (2021-03-15)
+========================
+
+Features
+--------
+
+- ``FormatHDF5SaclaMPCCD`` is now a "Lazy load" format (`#227 <https://github.com/cctbx/dxtbx/issues/227>`_)
+- Show image counts when displaying ``Scan`` objects (e.g. ``dials.show``) (`#271 <https://github.com/cctbx/dxtbx/issues/271>`_)
+- The ``Scan.append`` default tolerance is increased to 3% of the image width, to
+  accommodate electron diffraction datasets with poor rotation stages. (`#277 <https://github.com/cctbx/dxtbx/issues/277>`_)
+- Preliminary support for images derived from Timepix 2M detector in NeXus / NXmx format (`#298 <https://github.com/cctbx/dxtbx/issues/298>`_)
+- Add function ``dxtbx.util.get_url_scheme``, to identify URL-style image paths in a cross-platform way (`#301 <https://github.com/cctbx/dxtbx/issues/301>`_)
+- Add support for raw data from the SwissFEL Jungfrau 16M detector, including some estimates of pixel errors (`#303 <https://github.com/cctbx/dxtbx/issues/303>`_)
+- CBF decompression: Validate expected image size, and the ``cbf_decompress``
+  function now accepts the output array size, and returns the number of
+  items read. (`#313 <https://github.com/cctbx/dxtbx/issues/313>`_)
+- Include test for equality of ``PxMmStrategy`` in ``Panel`` equality operator. (`#319 <https://github.com/cctbx/dxtbx/issues/319>`_)
+- Format suport for Eiger 16M XE at Diamond - recognise legacy and updated beamline names. (`#323 <https://github.com/cctbx/dxtbx/issues/323>`_)
+- The function ``ExperimentList.from_templates`` has been added for construction convenience (`#333 <https://github.com/cctbx/dxtbx/issues/333>`_)
+
+
+Bugfixes
+--------
+
+- Fix Gatan DM4 format reader. (`#297 <https://github.com/cctbx/dxtbx/issues/297>`_)
+- Fix ``dxtbx.`` commands crashing on Windows when unicode output is directed to a file (`#306 <https://github.com/cctbx/dxtbx/issues/306>`_)
+- ``dxtbx.dlsnxs2cbf``: Properly display help message when passed ``-h`` (`#309 <https://github.com/cctbx/dxtbx/issues/309>`_)
+- Check for existence of certain numpy types before using them. (`#318 <https://github.com/cctbx/dxtbx/issues/318>`_)
+- Correctly link to HDF5 shared libraries on Windows (`#329 <https://github.com/cctbx/dxtbx/issues/329>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- The main development branch of dxtbx was renamed from 'master' to 'main'. (`#281 <https://github.com/cctbx/dxtbx/issues/281>`_)
+- ``DataBlock`` is now deprecated. Please use ``ExperimentList`` instead. (`#288 <https://github.com/cctbx/dxtbx/issues/288>`_)
+- Remove obsolete format ``FormatNexusExternalDataFile`` (`#328 <https://github.com/cctbx/dxtbx/issues/328>`_)
+- The previously deprecated ``ScanFactory.single`` has been removed. Use ``ScanFactory.single_file`` instead. (`#332 <https://github.com/cctbx/dxtbx/issues/332>`_)
+- ``ExperimentListTemplateImporter`` is now deprecated. Please use ``ExperimentList.from_templates``. (`#333 <https://github.com/cctbx/dxtbx/issues/333>`_)
+
+
+Misc
+----
+
+- `#272 <https://github.com/cctbx/dxtbx/issues/272>`_, `#275 <https://github.com/cctbx/dxtbx/issues/275>`_, `#279 <https://github.com/cctbx/dxtbx/issues/279>`_, `#282 <https://github.com/cctbx/dxtbx/issues/282>`_, `#287 <https://github.com/cctbx/dxtbx/issues/287>`_, `#288 <https://github.com/cctbx/dxtbx/issues/288>`_, `#291 <https://github.com/cctbx/dxtbx/issues/291>`_, `#293 <https://github.com/cctbx/dxtbx/issues/293>`_, `#302 <https://github.com/cctbx/dxtbx/issues/302>`_, `#308 <https://github.com/cctbx/dxtbx/issues/308>`_, `#316 <https://github.com/cctbx/dxtbx/issues/316>`_, `#320 <https://github.com/cctbx/dxtbx/issues/320>`_, `#322 <https://github.com/cctbx/dxtbx/issues/322>`_, `#324 <https://github.com/cctbx/dxtbx/issues/324>`_, `#326 <https://github.com/cctbx/dxtbx/issues/326>`_, `#327 <https://github.com/cctbx/dxtbx/issues/327>`_, `#331 <https://github.com/cctbx/dxtbx/issues/331>`_
+
+
 DIALS 3.3.4 (2021-03-05)
 ========================
 
