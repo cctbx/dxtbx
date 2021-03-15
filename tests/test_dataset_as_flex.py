@@ -11,7 +11,7 @@ from dxtbx_format_nexus_ext import (
 )
 
 try:
-    import bitshuffle
+    import bitshuffle.h5
 except ImportError:
     bitshuffle = None
 
