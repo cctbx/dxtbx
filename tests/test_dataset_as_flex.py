@@ -24,6 +24,15 @@ def uncompressed(file, shape, type_name):
     )
 
 
+def gzip(file, shape, type_name):
+    return file.create_dataset(
+        "data",
+        shape,
+        compression="gzip",
+        dtype=type_name,
+    )
+
+
 def bshuf_lz4(file, shape, type_name):
     block_size = 0
     return file.create_dataset(
@@ -39,6 +48,7 @@ def bshuf_lz4(file, shape, type_name):
     "creator",
     [
         uncompressed,
+        gzip,
         pytest.param(
             bshuf_lz4,
             marks=pytest.mark.skipif(
