@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 import os
-import warnings
 from builtins import object, range
 
 import pycbf
@@ -150,20 +149,6 @@ class ScanFactory(object):
             flex.double(list(map(float, epoch_list))),
             batch_offset,
             deg,
-        )
-
-    @staticmethod
-    def single(filename, format, exposure_times, osc_start, osc_width, epoch):
-        """Construct an scan instance for a single image."""
-        # https://github.com/cctbx/dxtbx/issues/232
-        # Deprecated as of 2020/12/18 for 3.3. Remove after 2021/03/01 (for 3.4)
-        warnings.warn(
-            "ScanFactory.single is deprecated. Please use ScanFactory.single_file",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return ScanFactory.single_file(
-            filename, exposure_times, osc_start, osc_width, epoch
         )
 
     @staticmethod

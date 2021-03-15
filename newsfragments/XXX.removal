@@ -1,0 +1,1 @@
+The previously deprecated ``ScanFactory.single`` has bee removed. Use ``ScanFactory.single_file`` instead.
