@@ -1276,4 +1276,5 @@ class ExperimentListTemplateImporter(object):
             DeprecationWarning,
             stacklevel=2,
         )
+        kwargs.pop("verbose", None)
         self.experiments = ExperimentListFactory.from_templates(templates, **kwargs)
