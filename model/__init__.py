@@ -902,3 +902,11 @@ class _(object):
         for expt, cb_op in zip(return_expts, change_of_basis_ops):
             expt.crystal = expt.crystal.change_basis(cb_op)
         return return_expts
+
+    @staticmethod
+    def from_templates(templates, **kwargs):
+        """Import an experiment list from templates"""
+        # Import here to avoid cyclic dependencies
+        from .experiment_list import ExperimentListFactory
+
+        return ExperimentListFactory.from_templates(templates, **kwargs)
