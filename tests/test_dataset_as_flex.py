@@ -11,73 +11,32 @@ from dxtbx_format_nexus_ext import (
 )
 
 
-def test_dataset_as_flex_int():
-    # Create an in-memory HDF5 dataset
-    f = h5py.File("int.h5", "w", driver="core", backing_store=False)
+@pytest.mark.parametrize(
+    "type_name,converter",
+    [
+        ("int", dataset_as_flex_int),
+        ("float", dataset_as_flex_float),
+        ("double", dataset_as_flex_double),
+    ],
+)
+def test_dataset_as_flex(type_name, converter):
+    # Create an in-memory HDF5 dataset with unique name
+    f = h5py.File(type_name + ".h5", "w", driver="core", backing_store=False)
 
     shape = (20, 20, 20)
     dataset = f.create_dataset(
         "data",
         shape,
-        dtype="int",
+        dtype=type_name,
     )
 
     # create some random data
     array = numpy.random.rand(*shape) * 100
-    original = array.astype("int")
+    original = array.astype(type_name)
 
     dataset[:] = original
 
     selection = slice(0, shape[0], 1), slice(0, shape[1], 1), slice(0, shape[2], 1)
-    foo = dataset_as_flex_int(dataset.id.id, selection)
+    foo = converter(dataset.id.id, selection)
 
     assert foo.as_numpy_array() == pytest.approx(original)
-    f.close()
-
-
-def test_dataset_as_flex_float():
-    # Create an in-memory HDF5 dataset
-    f = h5py.File("float.h5", "w", driver="core", backing_store=False)
-
-    shape = (20, 20, 20)
-    dataset = f.create_dataset(
-        "data",
-        shape,
-        dtype="float",
-    )
-
-    # create some random data
-    array = numpy.random.rand(*shape) * 100
-    original = array.astype("float")
-
-    dataset[:] = original
-
-    selection = slice(0, shape[0], 1), slice(0, shape[1], 1), slice(0, shape[2], 1)
-    foo = dataset_as_flex_float(dataset.id.id, selection)
-
-    assert foo.as_numpy_array() == pytest.approx(original)
-    f.close()
-
-
-def test_dataset_as_flex_double():
-    # Create an in-memory HDF5 dataset
-    f = h5py.File("double.h5", "w", driver="core", backing_store=False)
-
-    shape = (20, 20, 20)
-    dataset = f.create_dataset(
-        "data",
-        shape,
-        dtype="double",
-    )
-
-    # create some random data
-    array = numpy.random.rand(*shape) * 100
-    original = array.astype("double")
-
-    dataset[:] = original
-
-    selection = slice(0, shape[0], 1), slice(0, shape[1], 1), slice(0, shape[2], 1)
-    foo = dataset_as_flex_double(dataset.id.id, selection)
-
-    assert foo.as_numpy_array() == pytest.approx(original)
-    f.close()
