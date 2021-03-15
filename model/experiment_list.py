@@ -7,6 +7,7 @@ import logging
 import operator
 import os
 import pickle
+import warnings
 
 import pkg_resources
 
@@ -1262,3 +1263,17 @@ def _create_imagesequence(record, format_class, format_kwargs=None):
         # check_format=False,
     )
     return sequence
+
+
+class ExperimentListTemplateImporter(object):
+    """[DEPRECATED] Import an experiment list from a template.
+
+    To be removed after DIALS v3.5 release branch is made; 3.5 v3.5.0"""
+
+    def __init__(self, templates, **kwargs):
+        warnings.warn(
+            "ExperimentListTemplateImporter is deprecated; Please use ExperimentList.from_templates.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.experiments = ExperimentListFactory.from_templates(templates, **kwargs)
