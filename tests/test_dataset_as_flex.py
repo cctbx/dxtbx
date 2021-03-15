@@ -10,7 +10,43 @@ from dxtbx_format_nexus_ext import (
     dataset_as_flex_int,
 )
 
+try:
+    import bitshuffle
+except ImportError:
+    bitshuffle = None
 
+
+def uncompressed(file, shape, type_name):
+    return file.create_dataset(
+        "data",
+        shape,
+        dtype=type_name,
+    )
+
+
+def bshuf_lz4(file, shape, type_name):
+    block_size = 0
+    return file.create_dataset(
+        "data",
+        shape,
+        compression=bitshuffle.h5.H5FILTER,
+        compression_opts=(block_size, bitshuffle.h5.H5_COMPRESS_LZ4),
+        dtype=type_name,
+    )
+
+
+@pytest.mark.parametrize(
+    "creator",
+    [
+        uncompressed,
+        pytest.param(
+            bshuf_lz4,
+            marks=pytest.mark.skipif(
+                bitshuffle is None, reason="bitshuffle module not available"
+            ),
+        ),
+    ],
+)
 @pytest.mark.parametrize(
     "type_name,converter",
     [
@@ -19,16 +55,12 @@ from dxtbx_format_nexus_ext import (
         ("double", dataset_as_flex_double),
     ],
 )
-def test_dataset_as_flex(type_name, converter):
+def test_dataset_as_flex(type_name, creator, converter):
     # Create an in-memory HDF5 dataset with unique name
     f = h5py.File(type_name + ".h5", "w", driver="core", backing_store=False)
 
     shape = (20, 20, 20)
-    dataset = f.create_dataset(
-        "data",
-        shape,
-        dtype=type_name,
-    )
+    dataset = creator(f, shape, type_name)
 
     # create some random data
     array = numpy.random.rand(*shape) * 100
