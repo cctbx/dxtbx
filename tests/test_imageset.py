@@ -48,12 +48,14 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
     dxtbx.tests.imagelist.smv_images
     + dxtbx.tests.imagelist.tiff_images
     + dxtbx.tests.imagelist.cbf_multitile_images
-    + dxtbx.tests.imagelist.cbf_images,
+    + dxtbx.tests.imagelist.cbf_images
+    + dxtbx.tests.imagelist.mrc_images,
     ids=(
         dxtbx.tests.imagelist.smv_image_ids
         + dxtbx.tests.imagelist.tiff_image_ids
         + dxtbx.tests.imagelist.cbf_multitile_image_ids
         + dxtbx.tests.imagelist.cbf_image_ids
+        + dxtbx.tests.imagelist.mrc_image_ids
     ),
 )
 def test_format(dials_regression, image):
