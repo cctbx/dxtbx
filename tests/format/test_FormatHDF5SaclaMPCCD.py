@@ -29,6 +29,8 @@ def test_static_mask(dials_data):
         assert len(mask) == 8
         assert [m.count(False) for m in mask] == [24296] * 8
 
+    imageset.reader().nullify_format_instance()
+
 
 def test_MPCCD_Phase3_21528(dials_data):
     master_h5 = (
@@ -66,6 +68,7 @@ def test_MPCCD_Phase3_21528(dials_data):
 
     assert beam.get_wavelength() == pytest.approx(1.2452863763694901)
     assert beam.get_sample_to_source_direction() == (0, 0, 1)
+    imageset.reader().nullify_format_instance()
 
 
 def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
@@ -139,3 +142,25 @@ def test_combine_with_user_static_mask(dials_data, tmpdir):
         24296,
         66691,
     ]
+    imageset.reader().nullify_format_instance()
+
+
+@pytest.mark.parametrize(("clear_cache"), [False, True])
+def test_HDF5_format_caching(dials_data, clear_cache):
+    """
+    xfail: see https://github.com/cctbx/dxtbx/issues/245
+    """
+    img_file = "SACLA-MPCCD-Phase3-21528-5images.h5"
+    master_h5 = dials_data("image_examples").join(img_file).strpath
+
+    expts1 = ExperimentListFactory.from_filenames([master_h5])
+    expts1[0].imageset.get_mask(0)
+    if clear_cache:
+        expts1[0].imageset.reader().nullify_format_instance()
+    expts2 = ExperimentListFactory.from_filenames([master_h5])
+
+    for e1, e2 in zip(expts1, expts2):
+        assert (
+            e1.imageset.get_beam().get_wavelength()
+            == e2.imageset.get_beam().get_wavelength()
+        )

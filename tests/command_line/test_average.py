@@ -9,20 +9,20 @@ import dxtbx
 
 
 @pytest.mark.parametrize("use_mpi", [True, False])
-def test_average(dials_regression, tmpdir, use_mpi):
+def test_average(dials_data, tmpdir, use_mpi):
+    # averager uses cbf handling code in the xfel module
+    pytest.importorskip("xfel")
+
     # Only allow MPI tests if we've got MPI capabilities
     if use_mpi:
         pytest.importorskip("mpi4py")
 
     data = os.path.join(
-        dials_regression,
-        "image_examples",
-        "SACLA_MPCCD_Cheetah",
-        "run266702-0-subset.h5",
+        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
     )
     if use_mpi:
         command = "mpirun"
-        mpargs = "-n 2 dxtbx.image_average".split()
+        mpargs = "-n 2 dxtbx.image_average --mpi=True".split()
     else:
         command = "dxtbx.image_average"
         mpargs = "-n 2".split()

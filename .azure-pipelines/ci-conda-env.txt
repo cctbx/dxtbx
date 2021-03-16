@@ -1,5 +1,5 @@
 conda-forge::boost
-conda-forge::boost-cpp
+conda-forge::boost-cpp<1.75
 conda-forge::bzip2
 conda-forge::c-compiler
 conda-forge::conda

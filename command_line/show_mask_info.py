@@ -3,11 +3,12 @@
 import argparse
 import sys
 
+import dxtbx.util
 from dxtbx.model.experiment_list import ExperimentListFactory
-from dxtbx.util import show_mask_info
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", metavar="IMAGE", nargs="+")
     options = parser.parse_args(args)
@@ -16,7 +17,7 @@ def run(args=None):
     except FileNotFoundError as e:
         sys.exit(str(e))
 
-    show_mask_info(el)
+    dxtbx.util.show_mask_info(el)
 
 
 if __name__ == "__main__":

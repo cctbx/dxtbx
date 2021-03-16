@@ -4,35 +4,24 @@ import sys
 
 import h5py
 
+from dxtbx.format import nexus
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
-from dxtbx.format.nexus import (
-    BeamFactory,
-    DataFactory,
-    DetectorFactory,
-    DetectorFactoryFromGroup,
-    GoniometerFactory,
-    NXmxReader,
-    detectorgroupdatafactory,
-    generate_scan_model,
-    is_nexus_file,
-    mask_factory,
-)
 
 
 class FormatNexus(FormatHDF5):
     @staticmethod
     def understand(image_file):
         try:
-            return is_nexus_file(image_file)
+            return nexus.is_nexus_file(image_file)
         except IOError:
             return False
 
     def _start(self):
 
         # Read the file structure
-        self._reader = reader = NXmxReader(self._image_file)
+        self._reader = reader = nexus.NXmxReader(self._image_file)
 
         # Only support 1 set of models at the moment
         assert len(reader.entries) == 1, "Currently only supports 1 NXmx entry"
@@ -55,7 +44,7 @@ class FormatNexus(FormatHDF5):
         data = entry.data[0]
 
         # Construct the models
-        self._beam_factory = BeamFactory(beam)
+        self._beam_factory = nexus.BeamFactory(beam)
         self._beam_factory.load_model(0)
 
         self._setup_gonio_and_scan(sample, detector)
@@ -74,20 +63,20 @@ class FormatNexus(FormatHDF5):
                 len(reader.entries[0].instruments[0].detectors[0].modules) == 1
             ), "Currently only supports 1 NXdetector_module unless in a detector group"
 
-            self._raw_data = DataFactory(data, max_size=num_images)
-            self._detector_model = DetectorFactory(
+            self._raw_data = nexus.DataFactory(data, max_size=num_images)
+            self._detector_model = nexus.DetectorFactory(
                 detector, self._beam_factory.model, shape=self._raw_data.shape()
             ).model
         else:
-            self._raw_data = detectorgroupdatafactory(data, instrument)
-            self._detector_model = DetectorFactoryFromGroup(
+            self._raw_data = nexus.detectorgroupdatafactory(data, instrument)
+            self._detector_model = nexus.DetectorFactoryFromGroup(
                 instrument, self._beam_factory.model
             ).model
 
     def _setup_gonio_and_scan(self, sample, detector):
         """Set up rotation-specific models"""
-        self._goniometer_model = GoniometerFactory(sample).model
-        self._scan_model = generate_scan_model(sample, detector)
+        self._goniometer_model = nexus.GoniometerFactory(sample).model
+        self._scan_model = nexus.generate_scan_model(sample, detector)
 
     def _end(self):
         return
@@ -130,7 +119,7 @@ class FormatNexus(FormatHDF5):
         return self._raw_data[index]
 
     def get_static_mask(self, index=None, goniometer=None):
-        return mask_factory(self.instrument.detectors, index)
+        return nexus.mask_factory(self.instrument.detectors, index)
 
     def get_num_images(self):
         if self._scan() is not None:
@@ -162,15 +151,13 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
     def understand(image_file):
         is_nexus_still = False
         try:
-            from dxtbx.format.nexus import find_class, find_entries
-
             # Get the file handle
             with h5py.File(image_file, "r") as handle:
                 if "/entry/sample/goniometer/omega_increment" in handle:
                     return False
 
-                for entry in find_entries(handle, "/"):
-                    for sample in find_class(entry, "NXsample"):
+                for entry in nexus.find_entries(handle):
+                    for sample in nexus.find_class(entry, "NXsample"):
                         if "depends_on" not in sample:
                             is_nexus_still = True
         except IOError:

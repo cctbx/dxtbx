@@ -398,6 +398,16 @@ namespace dxtbx { namespace model {
 
     friend std::ostream &operator<<(std::ostream &os, const Panel &p);
 
+    /** @returns True/False this is the same as the other */
+    bool operator==(const Panel &other) const {
+      return PanelData::operator==(other) && *convert_coord_ == *other.convert_coord_;
+    }
+
+    /** @returns True/False this is not the same as the other */
+    bool operator!=(const Panel &other) const {
+      return !(*this == other);
+    }
+
   protected:
     double gain_;
     double pedestal_;

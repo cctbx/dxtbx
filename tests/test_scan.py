@@ -92,19 +92,3 @@ def test_xScanFactory(image_test_dir):
 
     (a + b)[1:5]
     (a + b)[:10]
-
-
-def test_single_deprecation(image_test_dir):
-    """Test out the ScanFactory."""
-
-    with pytest.warns(DeprecationWarning):
-        ScanFactory.single(
-            scan_helper_image_files.template_directory_index_to_image(
-                "image_###.dat", image_test_dir, 2
-            ),
-            None,
-            1.0,
-            18 + 0.5,
-            0.5,
-            1,
-        )

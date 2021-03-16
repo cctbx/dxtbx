@@ -1,17 +1,16 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
-from builtins import range
 
 from matplotlib import pylab
 
 from scitbx.array_family import flex
 
+import dxtbx.util
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 
 def run(args=None):
+    dxtbx.util.encode_output_as_utf8()
     datablocks = DataBlockFactory.from_args(args or sys.argv[1:])
     assert len(datablocks) == 1
     detectors = datablocks[0].unique_detectors()

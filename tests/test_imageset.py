@@ -1,4 +1,5 @@
 import os
+import shutil
 from unittest import mock
 
 import pytest
@@ -17,8 +18,11 @@ from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
-@pytest.mark.parametrize("indices,expected_call_count", ((None, 4), ([1], 2)))
-def test_single_file_indices(indices, expected_call_count, dials_regression):
+@pytest.mark.parametrize(
+    "indices,expected_call_count,lazy",
+    ((None, 4, False), ([1], 2, False), (None, 1, True), ([1], 1, True)),
+)
+def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
     def dummy_beam():
         return BeamFactory.simple(1.0)
 
@@ -28,14 +32,15 @@ def test_single_file_indices(indices, expected_call_count, dials_regression):
         side_effect=dummy_beam,
     ) as obj:
         filename = os.path.join(
-            dials_regression,
-            "image_examples",
-            "SACLA_MPCCD_Cheetah",
-            "run266702-0-subset.h5",
+            dials_data("image_examples"),
+            "SACLA-MPCCD-run266702-0-subset.h5",
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
-        format_class.get_imageset([filename], single_file_indices=indices)
+        iset = format_class.get_imageset(
+            [filename], single_file_indices=indices, lazy=lazy
+        )
         assert obj.call_count == expected_call_count
+        iset.reader().nullify_format_instance()
 
 
 @pytest.mark.parametrize(
@@ -452,13 +457,11 @@ class TestImageSequence:
 
 
 @pytest.mark.parametrize("lazy", (True, False))
-def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
+def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
     pytest.importorskip("h5py")
     filename = os.path.join(
-        dials_regression,
-        "image_examples",
-        "SACLA_MPCCD_Cheetah",
-        "run266702-0-subset.h5",
+        dials_data("image_examples"),
+        "SACLA-MPCCD-run266702-0-subset.h5",
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
@@ -484,6 +487,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_regression, lazy):
         assert iset.get_detector(i)
         assert iset.get_goniometer(i) is None
         assert iset.get_scan(i) is None
+    iset.reader().nullify_format_instance()
 
 
 def test_imagesetfactory(centroid_files, dials_data):
@@ -521,21 +525,33 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
     ]
     directory = tmp_path / "test%"
     directory.mkdir()
-    for image in images:
-        (directory / image.basename).symlink_to(image)
-    template = str(directory / "centroid_####.cbf")
-    sequence = ImageSetFactory.make_sequence(template, range(1, 10))
-    assert len(sequence) == 9
+    try:
+        for image in images:
+            try:
+                (directory / image.basename).symlink_to(image)
+            except OSError:
+                shutil.copy(image, directory)
 
-    sequences = ImageSetFactory.new(
-        [str(directory / image.basename) for image in images]
-    )
-    assert len(sequences) == 1
-    assert len(sequences[0]) == 9
+        template = str(directory / "centroid_####.cbf")
+        sequence = ImageSetFactory.make_sequence(template, range(1, 10))
+        assert len(sequence) == 9
 
-    sequences = ImageSetFactory.from_template(template)
-    assert len(sequences) == 1
-    assert len(sequences[0]) == 9
+        sequences = ImageSetFactory.new(
+            [str(directory / image.basename) for image in images]
+        )
+        assert len(sequences) == 1
+        assert len(sequences[0]) == 9
+
+        sequences = ImageSetFactory.from_template(template)
+        assert len(sequences) == 1
+        assert len(sequences[0]) == 9
+
+    finally:  # clean up potentially copied files after running test
+        for image in images:
+            try:
+                (directory / image.basename).unlink()
+            except FileNotFoundError:
+                pass
 
 
 def test_pickle_imageset(centroid_files):
@@ -583,13 +599,11 @@ def test_get_corrected_data(centroid_files):
     assert flex.mean(data3) == pytest.approx(flex.mean(data2) - 1.0 / 2.0)
 
 
-def test_multi_panel_gain_map(dials_regression):
+def test_multi_panel_gain_map(dials_data):
     pytest.importorskip("h5py")
     filename = os.path.join(
-        dials_regression,
-        "image_examples",
-        "SACLA_MPCCD_Cheetah",
-        "run266702-0-subset.h5",
+        dials_data("image_examples"),
+        "SACLA-MPCCD-run266702-0-subset.h5",
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
@@ -600,6 +614,8 @@ def test_multi_panel_gain_map(dials_regression):
     gain_maps = iset.get_gain(0)
     for v, m in zip(gain_values, gain_maps):
         assert m.all_eq(v)
+
+    iset.reader().nullify_format_instance()
 
 
 @pytest.mark.parametrize(

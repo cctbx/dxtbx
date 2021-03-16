@@ -129,7 +129,7 @@ def xds_detector_name(dxtbx_name):
     if "pilatus" in dxtbx_name:
         return "PILATUS"
     if "eiger" in dxtbx_name:
-        return "PILATUS"
+        return "EIGER"
     if "rayonix" in dxtbx_name:
         return "CCDCHESS"
     if "adsc" in dxtbx_name:
@@ -307,7 +307,7 @@ class to_xds(object):
             % (detector, trusted[0] + 1, trusted[1])
         )
 
-        if detector == "PILATUS":
+        if detector in ("PILATUS", "EIGER"):
             result.append(
                 "SENSOR_THICKNESS= %.3f" % self.get_detector()[0].get_thickness()
             )
