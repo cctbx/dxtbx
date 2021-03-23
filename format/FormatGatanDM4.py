@@ -5,7 +5,6 @@ https://personal.ntu.edu.sg/cbb/info/dmformat/index.html
 
 from __future__ import absolute_import, division, print_function
 
-import os
 import struct
 import sys
 from builtins import range
@@ -89,9 +88,6 @@ class FormatGatanDM4(FormatMultiImage, Format):
         if header["version"] != 4:
             return False
         if header["byteord"] not in [0, 1]:
-            return False
-        filesize = os.stat(image_file).st_size
-        if header["rootlen"] != filesize - 24:
             return False
         if header["sortf"] not in [0, 1]:
             return False
