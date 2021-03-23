@@ -7,10 +7,10 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 import re
-import struct
 from math import sqrt
 
 import mrcfile
+from mrcfile.constants import MAP_ID, MAP_ID_OFFSET_BYTES
 
 from scitbx import matrix
 from scitbx.array_family import flex
@@ -25,56 +25,23 @@ logger = logging.getLogger("dials")
 class FormatMRC(Format):
     @staticmethod
     def understand(image_file):
-        try:
-            _ = mrcfile.open(image_file)
-        except ValueError:
-            return False
-        return True
+        with FormatMRC.open_file(image_file, "rb") as fh:
+            start = fh.read(MAP_ID_OFFSET_BYTES + len(MAP_ID))
+            if start[-len(MAP_ID) :] == MAP_ID:
+                return True
+        return False
 
     def _start(self):
         """Open the MRC file, read the metadata into an internal dictionary
         self._header_dictionary, add FEI extended metadata if available"""
 
-        # We will use memmap for uncompressed files, which might be large stacks,
-        # otherwise take advantage of transparent decompression
-        self.open_function = None
-        try:
-            with mrcfile.mmap(self._image_file) as mrc:
-                h = mrc.header
-                self.open_function = mrcfile.mmap
-                # xh = mrc.extended_header
-        except ValueError:
-            pass
-        if self.open_function is None:
-            with mrcfile.open(self._image_file) as mrc:
-                h = mrc.header
-                self.open_function = mrcfile.open
+        with mrcfile.open(self._image_file, header_only=True) as mrc:
+            h = mrc.header
+            xh = mrc.extended_header
 
         self._header_dictionary = self._unpack_header(h)
-
-        fei_xheader_version = None
-        if h["exttyp"].tobytes() == b"FEI1":
-            fei_xheader_version = 1
-        elif h["exttyp"].tobytes() == b"FEI2":
-            fei_xheader_version = 2
-
-        if fei_xheader_version:
-            try:
-                xh = self.read_ext_header(self._image_file, version=fei_xheader_version)
-                self._header_dictionary.update(xh)
-            except KeyError:
-                pass
-
-        # Add a positive pedestal level to images to avoid negative
-        # pixel values if a value is set by the environment variable
-        # ADD_PEDESTAL. This is a nasty workaround! Suitable values might be
-        # +128 for Ceta and +8 for Falcon III (https://doi.org/10.1101/615484)
-        self.pedestal = float(os.environ.get("ADD_PEDESTAL", 0))
-
-        # Set all negative pixel values to zero (after applying the pedestal).
-        # Another nasty hack, while we explore what is the best practice for
-        # images that have negative-valued pixels
-        self.truncate = "TRUNCATE_PIXELS" in os.environ
+        if xh:
+            self._extend_header(xh)
 
     @staticmethod
     def _unpack_header(header):
@@ -83,6 +50,7 @@ class FormatMRC(Format):
         fields = ("nx", "ny", "nz", "mx", "my", "mz")
         for key in fields:
             hd[key] = int(header[key])
+        hd["exttyp"] = header["exttyp"].item()
 
         # For image stacks, NX==MX etc. should always be true. Assert this
         # to ensure we fail on an MRC file of the wrong type.
@@ -92,44 +60,31 @@ class FormatMRC(Format):
 
         return hd
 
-    @staticmethod
-    def read_ext_header(file_name, version=1):
-        """
-        Read FEI extended metadata. Originally based on FeiMrc2Img.py from
-        https://github.com/fei-company/FeiImageFileIO/ courtesy of Lingbo Yu.
-        """
+    def _extend_header(self, xh):
 
-        _sizeof_dtypes = {"i": 4, "q": 8, "f": 4, "d": 8, "?": 1, "s": 16}
-        ext_header_offset = {
-            "alphaTilt": (100, "d"),
-            "integrationTime": (419, "d"),
-            "tilt_axis": (140, "d"),
-            "pixelSpacing": (156, "d"),
-            "acceleratingVoltage": (84, "d"),
-            "camera": (435, "s"),
-            "binning": (427, "i"),
-            "noiseReduction": (467, "?"),
-        }
-        if version == 2:
-            ext_header_offset.update(
-                {
-                    "scanRotation": (768, "d"),
-                    "diffractionPatternRotation": (776, "d"),
-                    "imageRotation": (784, "d"),
-                    "scanModeEnum": (792, "i"),
-                    "acquisitionTimeStamp": (796, "q"),
-                    "detectorCommercialName": (804, "s"),
-                    "startTiltAngle": (820, "d"),
-                    "endTiltAngle": (828, "d"),
-                    "tiltPerImage": (836, "d"),
-                    "tiltSpeed": (844, "d"),
-                    "beamCentreXpx": (852, "i"),
-                    "beamCentreYpx": (856, "i"),
-                    "cfegFlashTimestamp": (860, "q"),
-                    "phasePlatePositionIndex": (868, "i"),
-                    "objectiveApertureName": (872, "s"),
-                }
+        # Extensions from FEI headers only
+        if not self._header_dictionary["exttyp"].startswith(b"FEI"):
+            return
+
+        self._header_dictionary["alphaTilt"] = xh["Alpha tilt"][0]
+        self._header_dictionary["integrationTime"] = xh["Integration time"][0]
+        self._header_dictionary["tilt_axis"] = xh["Tilt axis angle"][0]
+        self._header_dictionary["pixelSpacing"] = xh["Pixel size X"][0]
+        assert self._header_dictionary["pixelSpacing"] == xh["Pixel size Y"][0]
+        self._header_dictionary["acceleratingVoltage"] = xh["HT"][0]
+        self._header_dictionary["camera"] = xh["Camera name"][0]
+        self._header_dictionary["binning"] = xh["Binning Width"][0]
+        self._header_dictionary["noiseReduction"] = xh["Ceta noise reduction"][0]
+        if b"Ceta" in self._header_dictionary["camera"]:
+            # Does this ever differ from the Binning Width from the header?
+            assert (
+                self._header_dictionary["binning"]
+                == 4096 / self._header_dictionary["nx"]
             )
+
+        # Make an assumption for Thermo Fisher (Ceta-D and Falcon) detectors.
+        # Is this stored anywhere else?
+        self._header_dictionary["physicalPixel"] = 14e-6
 
         def cal_wavelength(V0):
             h = 6.626e-34  # Js, Planck's constant
@@ -144,43 +99,45 @@ class FormatMRC(Format):
                 h / sqrt(2 * m * e * V0 * (1 + e * V0 / (2 * m * c * c))) * 1e10
             )  # return wavelength in Angstrom
 
-        ext_header = {}
-        with Format.open_file(file_name, "rb") as f:
-            ext_header["dim"] = struct.unpack("i", f.read(4))[0]
-            for key, (offset, fmt) in ext_header_offset.items():
-                f.seek(1024 + offset)  # Skip MRC main header
-                if "s" not in fmt:
-                    ext_header[key] = struct.unpack(fmt, f.read(_sizeof_dtypes[fmt]))[0]
-                else:
-                    ext_header[key] = b"".join(
-                        struct.unpack(
-                            fmt * _sizeof_dtypes[fmt],
-                            f.read(_sizeof_dtypes[fmt]),
-                        )
-                    ).rstrip(b"\x00")
+        self._header_dictionary["wavelength"] = cal_wavelength(
+            self._header_dictionary["acceleratingVoltage"]
+        )
+        self._header_dictionary["cameraLength"] = (
+            self._header_dictionary["physicalPixel"]
+            * self._header_dictionary["binning"]
+        ) / (
+            self._header_dictionary["pixelSpacing"]
+            * self._header_dictionary["wavelength"]
+            * 1e-10
+        )
 
-        if b"Ceta" in ext_header["camera"]:
-            ext_header["binning"] = 4096 / ext_header["dim"]
-            ext_header["physicalPixel"] = 14e-6
+        # Include FEI2 items. This should be detectable by xh["Metadata version"] >= 2
+        # but in practice this is not used in all files I have seen.
+        if self._header_dictionary["exttyp"] != b"FEI2":
+            return
+        self._header_dictionary["scanRotation"] = xh["Scan rotation"]
+        self._header_dictionary["diffractionPatternRotation"] = xh[
+            "Diffraction pattern rotation"
+        ]
+        self._header_dictionary["imageRotation"] = xh["Image rotation"]
+        self._header_dictionary["scanModeEnum"] = xh["Scan mode enumeration"]
+        self._header_dictionary["acquisitionTimeStamp"] = xh["Acquisition time stamp"]
+        self._header_dictionary["detectorCommercialName"] = xh[
+            "Detector commercial name"
+        ]
+        self._header_dictionary["startTiltAngle"] = xh["Start tilt angle"]
+        self._header_dictionary["endTiltAngle"] = xh["End tilt angle"]
+        self._header_dictionary["tiltPerImage"] = xh["Tilt per image"]
+        self._header_dictionary["tiltSpeed"] = (xh["Tilt speed"],)
+        self._header_dictionary["beamCentreXpx"] = xh["Beam center X pixel"]
+        self._header_dictionary["beamCentreYpx"] = xh["Beam center Y pixel"]
+        self._header_dictionary["cfegFlashTimestamp"] = xh["CFEG flash timestamp"]
+        self._header_dictionary["phasePlatePositionIndex"] = xh[
+            "Phase plate position index"
+        ]
+        self._header_dictionary["objectiveApertureName"] = xh["Objective aperture name"]
 
-        ext_header["wavelength"] = cal_wavelength(ext_header["acceleratingVoltage"])
-        ext_header["cameraLength"] = (
-            ext_header["physicalPixel"] * ext_header["binning"]
-        ) / (ext_header["pixelSpacing"] * ext_header["wavelength"] * 1e-10)
-
-        return ext_header
-
-    def get_raw_data(self):
-
-        with self.open_function(self._image_file) as mrc:
-            image = flex.double(mrc.data.astype("double"))
-
-        image += self.pedestal
-
-        if self.truncate:
-            image.set_selected((image < 0), 0)
-
-        return image
+        return
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer."""
@@ -230,7 +187,6 @@ class FormatMRC(Format):
         else:
             gain = 1.0
             saturation = 1e6
-        saturation += self.pedestal
         trusted_range = (-1000, saturation)
 
         # Beam centre not in the header - set to the image centre
@@ -266,8 +222,8 @@ class FormatMRC(Format):
 class FormatMRCimages(FormatMRC):
     @staticmethod
     def understand(image_file):
-        mrc = mrcfile.open(image_file)
-        return not mrc.is_image_stack()
+        with mrcfile.open(image_file, header_only=True) as mrc:
+            return int(mrc.header["nz"]) == 1
 
     def __init__(self, image_file, **kwargs):
         from dxtbx import IncorrectFormatError
@@ -293,12 +249,19 @@ class FormatMRCimages(FormatMRC):
             index = 1
         return ScanFactory.make_scan((index, index), exposure, oscillation, {index: 0})
 
+    def get_raw_data(self):
+
+        with mrcfile.open(self._image_file) as mrc:
+            image = flex.double(mrc.data.astype("double"))
+
+        return image
+
 
 class FormatMRCstack(FormatMultiImage, FormatMRC):
     @staticmethod
     def understand(image_file):
-        mrc = mrcfile.open(image_file)
-        return mrc.is_image_stack()
+        with mrcfile.open(image_file, header_only=True) as mrc:
+            return int(mrc.header["nz"]) > 1
 
     def __init__(self, image_file, **kwargs):
         from dxtbx import IncorrectFormatError
@@ -331,14 +294,10 @@ class FormatMRCstack(FormatMultiImage, FormatMRC):
         return Format.get_image_file(self)
 
     def get_raw_data(self, index):
+
         # Note MRC files use z, y, x ordering
-        with self.open_function(self._image_file) as mrc:
+        with mrcfile.mmap(self._image_file) as mrc:
             image = flex.double(mrc.data[index, ...].astype("double"))
-
-        image += self.pedestal
-
-        if self.truncate:
-            image.set_selected((image < 0), 0)
 
         return image
 
