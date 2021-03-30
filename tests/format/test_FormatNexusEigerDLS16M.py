@@ -8,6 +8,7 @@ import pytest
 
 from scitbx.array_family import flex
 
+from dxtbx.format.FormatNexusEigerDLS import FormatNexusEigerDLS
 from dxtbx.format.FormatNexusEigerDLS16M import FormatNexusEigerDLS16M
 from dxtbx.masking import SmarGonShadowMasker
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -206,6 +207,7 @@ def test_understand(beamline, tmp_path):
         )
         name.attrs["short_name"] = np.string_(f"DLS {beamline}")
     assert FormatNexusEigerDLS16M.understand(nxs)
+    assert FormatNexusEigerDLS.understand(nxs)
 
 
 @pytest.mark.parametrize("beamline", ["I03", "I04"])
@@ -219,6 +221,7 @@ def test_understand_legacy(beamline, tmp_path):
         name = instrument.create_dataset("name", data=np.string_(f"{beamline}"))
         name.attrs["short_name"] = np.string_(f"{beamline}")
     assert FormatNexusEigerDLS16M.understand(nxs)
+    assert FormatNexusEigerDLS.understand(nxs)
 
 
 def test_do_not_understand_name_none(tmp_path):

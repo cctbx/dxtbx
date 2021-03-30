@@ -56,6 +56,8 @@ class FormatNexusEigerDLS(FormatNexusEiger):
                 return False
             if name.lower() in (b"i03", b"i04", b"i24", b"vmxi"):
                 return True
+            if name.upper().startswith(b"DLS "):
+                return True
 
         return False
 
