@@ -1,3 +1,12 @@
+DIALS 3.4.1 (2021-04-01)
+========================
+
+Bugfixes
+--------
+
+- Nexus: Diamond Light Source beamlines are now properly identified (`#339 <https://github.com/cctbx/dxtbx/issues/339>`_)
+
+
 DIALS 3.4.0 (2021-03-15)
 ========================
 
