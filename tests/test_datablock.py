@@ -155,3 +155,19 @@ def test_with_external_lookup(centroid_test_data):
     assert imageset.external_lookup.mask.data.tile(0).data().all_eq(True)
     assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
     assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
+
+
+@pytest.mark.xfail(
+    raises=AssertionError, reason="https://github.com/cctbx/dxtbx/issues/336"
+)
+def test_single_image_datablock(dials_regression):
+    path = os.path.join(
+        dials_regression,
+        "image_examples",
+        "LCLS_cspad_nexus",
+        "idx-20130301060858401.cbf",
+    )
+    datablocks_cbf = DataBlockFactory.from_filenames([path])
+    datablock_cbf = datablocks_cbf[0]
+    imageset_cbf = datablock_cbf.extract_imagesets()[0]
+    assert imageset_cbf.get_detector(0) is not None
