@@ -1,0 +1,1 @@
+Remove legacy HDF5 plugin handling. Please update your conda environment if you still have issues.
