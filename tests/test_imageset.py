@@ -48,14 +48,12 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
     dxtbx.tests.imagelist.smv_images
     + dxtbx.tests.imagelist.tiff_images
     + dxtbx.tests.imagelist.cbf_multitile_images
-    + dxtbx.tests.imagelist.cbf_images
-    + dxtbx.tests.imagelist.mrc_images,
+    + dxtbx.tests.imagelist.cbf_images,
     ids=(
         dxtbx.tests.imagelist.smv_image_ids
         + dxtbx.tests.imagelist.tiff_image_ids
         + dxtbx.tests.imagelist.cbf_multitile_image_ids
         + dxtbx.tests.imagelist.cbf_image_ids
-        + dxtbx.tests.imagelist.mrc_image_ids
     ),
 )
 def test_format(dials_regression, image):
@@ -70,6 +68,32 @@ def test_format(dials_regression, image):
         reader.read(i)
 
     assert format_class.get_imageset([image])
+
+
+@pytest.fixture(scope="session")
+def image_examples(dials_data):
+
+    return [
+        dials_data("image_examples").join(e).strpath
+        for e in [
+            "ThermoFisher_EPU-D_1.5_001.mrc.gz",
+            "Gatan_float32_zero_array_001.dm4.gz",
+        ]
+    ]
+
+
+def test_other_formats(image_examples):
+    """Test additional image examples in dials_data, not dials_regression"""
+    for image in image_examples:
+        format_class = dxtbx.format.Registry.get_format_class_for_file(image)
+        reader = format_class.get_reader()([image])
+
+        N = len(reader)
+
+        for i in range(N):
+            reader.read(i)
+
+        assert format_class.get_imageset([image])
 
 
 def test_image_tile():
