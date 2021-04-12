@@ -86,6 +86,3 @@ cbf_multitile_image_ids = list(map(id_conversion, cbf_multitile_images))
 
 hdf5_images = ["image_examples/putative_imgCIF_HDF5_mapping/minicbf.h5"]
 hdf5_image_ids = list(map(id_conversion, hdf5_images))
-
-mrc_images = ["image_examples/ThermoFisher_EPU-D_1.5_001.mrc.gz"]
-mrc_image_ids = list(map(id_conversion, mrc_images))
