@@ -38,6 +38,12 @@ except ImportError:
     if "SIT_ROOT" not in os.environ:
         raise
 
+try:
+    import hdf5plugin
+except ImportError:
+    # Import not needed for hdf5-external-filter-plugins
+    pass
+
 NXNode = Union[h5py.File, h5py.Group]
 
 
