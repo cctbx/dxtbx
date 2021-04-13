@@ -1,0 +1,1 @@
+Import ``hdf5plugin`` if it is available.
