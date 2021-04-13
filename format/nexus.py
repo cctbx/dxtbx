@@ -40,8 +40,9 @@ except ImportError:
 
 try:
     import hdf5plugin
-except ImportError:
-    # Import not needed for hdf5-external-filter-plugins
+    assert hdf5plugin
+except ModuleNotFoundError:
+    # Optional dependency that can also be satisfied by hdf5-external-filter-plugins
     pass
 
 NXNode = Union[h5py.File, h5py.Group]
