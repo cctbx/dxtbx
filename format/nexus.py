@@ -1304,14 +1304,32 @@ class MultiPanelDataList(object):
 
         all_data = []
 
+        all_slices = []
         for module_slices in self._all_slices:
             slices = [slice(i, i + 1, 1)]
             slices.extend(module_slices)
-            data_as_flex = dataset_as_flex(self._datasets[d], tuple(slices))
-            data_as_flex.reshape(
-                flex.grid(data_as_flex.all()[-2:])
-            )  # handle 3 or 4 dimension arrays
-            all_data.append(data_as_flex)
+            all_slices.append(slices)
+        assert len(set([len(s) for s in all_slices])) == 1
+        full_slices = []
+        for j in range(len(all_slices[0])):
+            assert len(set([s[j].step for s in all_slices])) == 1
+            full_slices.append(
+                slice(
+                    min([s[j].start for s in all_slices]),
+                    max([s[j].stop for s in all_slices]),
+                    1,
+                )
+            )
+        is_contiguous = True
+        assert is_contiguous
+        data_as_flex = dataset_as_flex(self._datasets[d], tuple(full_slices))
+
+        for slices in all_slices:
+            slices = [slice(0, 1, 1)] + slices[1:]
+            subset = data_as_flex[slices]
+            subset.reshape(flex.grid(subset.all()[-2:]))
+            all_data.append(subset)
+
         return tuple(all_data)
 
 
@@ -1479,6 +1497,7 @@ class MaskFactory(object):
         def make_mask(dset, index):
             i = 0 if index is None else index
             mask = []
+            total_slices = []
             for module_slices in all_slices:
                 assert len(dset.shape) in [len(module_slices), len(module_slices) + 1]
                 if len(dset.shape) == len(module_slices):
@@ -1486,11 +1505,28 @@ class MaskFactory(object):
                 else:
                     slices = [slice(i, i + 1, 1)]  # multi-image mask
                 slices.extend(module_slices)
-                data_as_flex = dataset_as_flex_int(dset.id.id, tuple(slices))
-                data_as_flex.reshape(
-                    flex.grid(data_as_flex.all()[-2:])
-                )  # handle 3 or 4 dimension arrays
-                mask.append(data_as_flex == 0)
+                total_slices.append(slices)
+
+            assert len(set([len(s) for s in total_slices])) == 1
+            full_slices = []
+            for j in range(len(total_slices[0])):
+                assert len(set([s[j].step for s in total_slices])) == 1
+                full_slices.append(
+                    slice(
+                        min([s[j].start for s in total_slices]),
+                        max([s[j].stop for s in total_slices]),
+                        1,
+                    )
+                )
+
+            data_as_flex = dataset_as_flex_int(dset.id.id, tuple(full_slices)) == 0
+            for slices in total_slices:
+                if len(dset.shape) != len(module_slices):
+                    slices = [slice(0, 1, 1)] + slices[1:]
+                subset = data_as_flex[slices]
+                # handle 3 or 4 dimension arrays
+                subset.reshape(flex.grid(subset.all()[-2:]))
+                mask.append(subset)
             return tuple(mask)
 
         self.mask = None
