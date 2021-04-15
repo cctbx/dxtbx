@@ -40,7 +40,7 @@ class FormatMRC(Format):
             xh = mrc.extended_header
 
         self._header_dictionary = self._unpack_header(h)
-        if xh:
+        if len(xh) > 0:
             self._extend_header(xh)
 
     @staticmethod
