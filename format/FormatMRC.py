@@ -40,7 +40,7 @@ class FormatMRC(Format):
             xh = mrc.extended_header
 
         self._header_dictionary = self._unpack_header(h)
-        if xh:
+        if len(xh) > 0:
             self._extend_header(xh)
 
     @staticmethod
@@ -112,30 +112,37 @@ class FormatMRC(Format):
         )
 
         # Include FEI2 items. This should be detectable by xh["Metadata version"] >= 2
-        # but in practice this is not used in all files I have seen.
+        # but in practice this is not used in all files I have seen. We make the
+        # assumption that the first value of each array is relevant for the dataset
+        # whether it is an image or a stack
         if self._header_dictionary["exttyp"] != b"FEI2":
             return
-        self._header_dictionary["scanRotation"] = xh["Scan rotation"]
+        self._header_dictionary["scanRotation"] = xh["Scan rotation"][0]
         self._header_dictionary["diffractionPatternRotation"] = xh[
             "Diffraction pattern rotation"
+        ][0]
+        self._header_dictionary["imageRotation"] = xh["Image rotation"][0]
+        self._header_dictionary["scanModeEnum"] = xh["Scan mode enumeration"][0]
+        self._header_dictionary["acquisitionTimeStamp"] = xh["Acquisition time stamp"][
+            0
         ]
-        self._header_dictionary["imageRotation"] = xh["Image rotation"]
-        self._header_dictionary["scanModeEnum"] = xh["Scan mode enumeration"]
-        self._header_dictionary["acquisitionTimeStamp"] = xh["Acquisition time stamp"]
         self._header_dictionary["detectorCommercialName"] = xh[
             "Detector commercial name"
-        ]
-        self._header_dictionary["startTiltAngle"] = xh["Start tilt angle"]
-        self._header_dictionary["endTiltAngle"] = xh["End tilt angle"]
-        self._header_dictionary["tiltPerImage"] = xh["Tilt per image"]
-        self._header_dictionary["tiltSpeed"] = (xh["Tilt speed"],)
-        self._header_dictionary["beamCentreXpx"] = xh["Beam center X pixel"]
-        self._header_dictionary["beamCentreYpx"] = xh["Beam center Y pixel"]
-        self._header_dictionary["cfegFlashTimestamp"] = xh["CFEG flash timestamp"]
+        ][0]
+        self._header_dictionary["startTiltAngle"] = xh["Start tilt angle"][0]
+        self._header_dictionary["endTiltAngle"] = xh["End tilt angle"][0]
+
+        self._header_dictionary["tiltPerImage"] = xh["Tilt per image"][0]
+        self._header_dictionary["tiltSpeed"] = xh["Tilt speed"][0]
+        self._header_dictionary["beamCentreXpx"] = xh["Beam center X pixel"][0]
+        self._header_dictionary["beamCentreYpx"] = xh["Beam center Y pixel"][0]
+        self._header_dictionary["cfegFlashTimestamp"] = xh["CFEG flash timestamp"][0]
         self._header_dictionary["phasePlatePositionIndex"] = xh[
             "Phase plate position index"
-        ]
-        self._header_dictionary["objectiveApertureName"] = xh["Objective aperture name"]
+        ][0]
+        self._header_dictionary["objectiveApertureName"] = xh[
+            "Objective aperture name"
+        ][0]
 
         return
 
