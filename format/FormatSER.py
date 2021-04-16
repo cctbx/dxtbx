@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 import os
 import re
 import struct
-from builtins import range
 
 from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
@@ -107,13 +106,13 @@ class FormatSER(Format):
         self._header_dictionary = self._read_metadata(self._image_file)
 
     def _goniometer(self):
-        """Dummy goniometer, 'vertical' as the images are viewed. Not completely
-        sure about the handedness yet"""
+        """Dummy goniometer, 'vertical' as the images are viewed. The handedness
+        is set to be appropriate for some datasets obtained from eBIC"""
 
         return self._goniometer_factory.known_axis((0, -1, 0))
 
     def _detector(self):
-        """Dummy detector"""
+        """Dummy Ceta-D detector"""
 
         image_size = (
             self._header_dictionary["ArraySizeX"],
@@ -220,8 +219,6 @@ class FormatSERimages(FormatSER):
     def _scan(self):
         """Dummy scan for this image"""
 
-        exposure_times = 0.0
-
         fname = os.path.split(self._image_file)[-1]
         # assume that the final number before the extension is the image number
         s = fname.split("_")[-1].split(".")[0]
@@ -229,10 +226,11 @@ class FormatSERimages(FormatSER):
             index = int(re.match(".*?([0-9]+)$", s).group(1))
         except AttributeError:
             index = 1
-        epochs = [0]
+        exposure_times = 0.0
         frame = index - 1
         # Dummy scan with a 0.5 deg image
         oscillation = (frame * 0.5, 0.5)
+        epochs = [0]
         return self._scan_factory.make_scan(
             (index, index), exposure_times, oscillation, epochs, deg=True
         )
@@ -264,8 +262,6 @@ class FormatSERstack(FormatMultiImage, FormatSER):
         image_range = (1, nframes)
         exposure_times = 0.0
         oscillation = (0, 0.5)
-
-        # FIXME we do actually have acquisition times, might as well use them
         epochs = [0] * nframes
 
         return self._scan_factory.make_scan(
