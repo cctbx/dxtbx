@@ -1,10 +1,12 @@
 """
 Experimental format for TIA .ser files used by some FEI microscopes. See
-http://www.er-c.org/cbb/info/TIAformat/
+https://personal.ntu.edu.sg/cbb/info/TIAformat/index.html
 """
 
 from __future__ import absolute_import, division, print_function
 
+import os
+import re
 import struct
 from builtins import range
 
@@ -17,14 +19,7 @@ from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
-class FormatSER(FormatMultiImage, Format):
-    def __init__(self, image_file, **kwargs):
-
-        if not self.understand(image_file):
-            raise IncorrectFormatError(self, image_file)
-        FormatMultiImage.__init__(self, **kwargs)
-        Format.__init__(self, image_file, **kwargs)
-
+class FormatSER(Format):
     @staticmethod
     def understand(image_file):
         try:
@@ -108,103 +103,8 @@ class FormatSER(FormatMultiImage, Format):
         return hd
 
     def _start(self):
-        """Open the image file, read useful metadata into an internal dictionary
-        self._header_dictionary"""
-
+        """Open the image file and read useful metadata into an internal dictionary"""
         self._header_dictionary = self._read_metadata(self._image_file)
-
-    def get_num_images(self):
-        return self._header_dictionary["ValidNumberElements"]
-
-    # This is still required for dials_regression/test.py
-    def get_detectorbase(self):
-        pass
-
-    def get_goniometer(self, index=None):
-        return Format.get_goniometer(self)
-
-    def get_detector(self, index=None):
-        return Format.get_detector(self)
-
-    def get_beam(self, index=None):
-        return Format.get_beam(self)
-
-    def get_scan(self, index=None):
-        if index is None:
-            return Format.get_scan(self)
-        else:
-            scan = Format.get_scan(self)
-            return scan[index]
-
-    def get_image_file(self, index=None):
-        return Format.get_image_file(self)
-
-    def get_raw_data(self, index):
-        data_offset = self._header_dictionary["DataOffsetArray"][index]
-        with FormatSER.open_file(self._image_file, "rb") as f:
-            f.seek(data_offset)
-            d = {}
-            d["CalibrationOffsetX"] = struct.unpack("<d", f.read(8))[0]
-            d["CalibrationDeltaX"] = struct.unpack("<d", f.read(8))[0]
-            d["CalibrationElementX"] = struct.unpack("<I", f.read(4))[0]
-            d["CalibrationOffsetY"] = struct.unpack("<d", f.read(8))[0]
-            d["CalibrationDeltaY"] = struct.unpack("<d", f.read(8))[0]
-            d["CalibrationElementY"] = struct.unpack("<I", f.read(4))[0]
-            d["DataType"] = struct.unpack("<H", f.read(2))[0]
-
-            if d["DataType"] == 6:
-                read_pixel = dxtbx.ext.read_int32
-            elif d["DataType"] == 5:
-                read_pixel = dxtbx.ext.read_int16
-            elif d["DataType"] == 3:
-                read_pixel = dxtbx.ext.read_uint32
-            elif d["DataType"] == 2:
-                read_pixel = dxtbx.ext.read_uint16
-            elif d["DataType"] == 1:
-                read_pixel = dxtbx.ext.read_uint8
-            else:
-                raise RuntimeError(
-                    "Image {} data is of an unsupported type".format(index + 1)
-                )
-
-            d["ArraySizeX"] = struct.unpack("<I", f.read(4))[0]
-            d["ArraySizeY"] = struct.unpack("<I", f.read(4))[0]
-            nelts = d["ArraySizeX"] * d["ArraySizeY"]
-            raw_data = read_pixel(streambuf(f), nelts)
-
-        # Check image size is as expected (same as the first image)
-        if d["ArraySizeX"] != self._header_dictionary["ArraySizeX"]:
-            raise RuntimeError(
-                "Image {} has an unexpected array size in X".format(index + 1)
-            )
-        if d["ArraySizeY"] != self._header_dictionary["ArraySizeY"]:
-            raise RuntimeError(
-                "Image {} has an unexpected array size in Y".format(index + 1)
-            )
-
-        image_size = (d["ArraySizeX"], d["ArraySizeY"])
-        raw_data.reshape(flex.grid(image_size[1], image_size[0]))
-
-        return raw_data
-
-
-class FormatSEReBIC(FormatSER):
-    @staticmethod
-    def understand(image_file):
-
-        # check the header looks right
-        try:
-            fmt = FormatSER(image_file)
-        except IncorrectFormatError:
-            return False
-
-        # Read metadata and check the image dimension is supported
-        d = fmt._read_metadata(image_file)
-        image_size = d["ArraySizeX"], d["ArraySizeY"]
-        if image_size not in [(4096, 4096), (2048, 2048)]:
-            return False
-
-        return True
 
     def _goniometer(self):
         """Dummy goniometer, 'vertical' as the images are viewed. Not completely
@@ -259,6 +159,104 @@ class FormatSEReBIC(FormatSER):
             polarization_fraction=0.5,
         )
 
+    def _get_raw_data(self, index):
+        data_offset = self._header_dictionary["DataOffsetArray"][index]
+        with FormatSER.open_file(self._image_file, "rb") as f:
+            f.seek(data_offset)
+            d = {}
+            d["CalibrationOffsetX"] = struct.unpack("<d", f.read(8))[0]
+            d["CalibrationDeltaX"] = struct.unpack("<d", f.read(8))[0]
+            d["CalibrationElementX"] = struct.unpack("<I", f.read(4))[0]
+            d["CalibrationOffsetY"] = struct.unpack("<d", f.read(8))[0]
+            d["CalibrationDeltaY"] = struct.unpack("<d", f.read(8))[0]
+            d["CalibrationElementY"] = struct.unpack("<I", f.read(4))[0]
+            d["DataType"] = struct.unpack("<H", f.read(2))[0]
+
+            if d["DataType"] == 6:
+                read_pixel = dxtbx.ext.read_int32
+            elif d["DataType"] == 5:
+                read_pixel = dxtbx.ext.read_int16
+            elif d["DataType"] == 3:
+                read_pixel = dxtbx.ext.read_uint32
+            elif d["DataType"] == 2:
+                read_pixel = dxtbx.ext.read_uint16
+            elif d["DataType"] == 1:
+                read_pixel = dxtbx.ext.read_uint8
+            else:
+                raise RuntimeError(
+                    "Image {} data is of an unsupported type".format(index + 1)
+                )
+
+            d["ArraySizeX"] = struct.unpack("<I", f.read(4))[0]
+            d["ArraySizeY"] = struct.unpack("<I", f.read(4))[0]
+            nelts = d["ArraySizeX"] * d["ArraySizeY"]
+            raw_data = read_pixel(streambuf(f), nelts)
+
+        # Check image size is as expected (same as the first image)
+        if d["ArraySizeX"] != self._header_dictionary["ArraySizeX"]:
+            raise RuntimeError(
+                "Image {} has an unexpected array size in X".format(index + 1)
+            )
+        if d["ArraySizeY"] != self._header_dictionary["ArraySizeY"]:
+            raise RuntimeError(
+                "Image {} has an unexpected array size in Y".format(index + 1)
+            )
+
+        image_size = (d["ArraySizeX"], d["ArraySizeY"])
+        raw_data.reshape(flex.grid(image_size[1], image_size[0]))
+
+        return raw_data
+
+
+class FormatSERimages(FormatSER):
+    @staticmethod
+    def understand(image_file):
+
+        with FormatSER.open_file(image_file, "rb") as fh:
+            fh.seek(18)
+            nimages = struct.unpack("<I", fh.read(4))[0]
+        return nimages == 1
+
+    def _scan(self):
+        """Dummy scan for this image"""
+
+        exposure_times = 0.0
+
+        fname = os.path.split(self._image_file)[-1]
+        # assume that the final number before the extension is the image number
+        s = fname.split("_")[-1].split(".")[0]
+        try:
+            index = int(re.match(".*?([0-9]+)$", s).group(1))
+        except AttributeError:
+            index = 1
+        epochs = [0]
+        frame = index - 1
+        # Dummy scan with a 0.5 deg image
+        oscillation = (frame * 0.5, 0.5)
+        return self._scan_factory.make_scan(
+            (index, index), exposure_times, oscillation, epochs, deg=True
+        )
+
+    def get_raw_data(self):
+        return self._get_raw_data(0)
+
+
+class FormatSERstack(FormatMultiImage, FormatSER):
+    @staticmethod
+    def understand(image_file):
+
+        with FormatSER.open_file(image_file, "rb") as fh:
+            fh.seek(18)
+            nimages = struct.unpack("<I", fh.read(4))[0]
+        return nimages > 1
+
+    def __init__(self, image_file, **kwargs):
+
+        if not self.understand(image_file):
+            raise IncorrectFormatError(self, image_file)
+        FormatMultiImage.__init__(self, **kwargs)
+        Format.__init__(self, image_file, **kwargs)
+
     def _scan(self):
         """Dummy scan for this stack"""
 
@@ -274,8 +272,27 @@ class FormatSEReBIC(FormatSER):
             image_range, exposure_times, oscillation, epochs, deg=True
         )
 
+    def get_num_images(self):
+        return self._header_dictionary["ValidNumberElements"]
+
+    def get_goniometer(self, index=None):
+        return Format.get_goniometer(self)
+
+    def get_detector(self, index=None):
+        return Format.get_detector(self)
+
+    def get_beam(self, index=None):
+        return Format.get_beam(self)
+
+    def get_scan(self, index=None):
+        if index is None:
+            return Format.get_scan(self)
+        else:
+            scan = Format.get_scan(self)
+            return scan[index]
+
+    def get_image_file(self, index=None):
+        return Format.get_image_file(self)
+
     def get_raw_data(self, index):
-
-        raw_data = super(FormatSEReBIC, self).get_raw_data(index)
-
-        return raw_data
+        return self._get_raw_data(index)
