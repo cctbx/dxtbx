@@ -9,6 +9,14 @@ from scitbx.array_family import flex
 
 from dxtbx.ext import compress
 
+try:
+    import hdf5plugin
+
+    assert hdf5plugin
+except ModuleNotFoundError:
+    # Optional dependency that can also be satisfied by hdf5-external-filter-plugins
+    pass
+
 
 def get_mask(nfast, nslow):
     module_size_fast, module_size_slow = (1028, 512)
