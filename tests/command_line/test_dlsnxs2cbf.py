@@ -1,16 +1,12 @@
 import h5py
 import numpy as np
 import procrunner
-import pytest
 
 from dxtbx.command_line.dlsnxs2cbf import parser
 from dxtbx.format.FormatCBFMiniEigerDLS16MSN160 import FormatCBFMiniEigerDLS16MSN160
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
-@pytest.mark.xfail(
-    "os.name == 'nt'", reason="crashes python process on Windows", run=False
-)
 def test_dlsnxs2cbf(dials_data, tmp_path):
     screen = dials_data("thaumatin_eiger_screen")
     master = screen.join("Therm_6_1_master.h5")
