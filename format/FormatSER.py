@@ -307,7 +307,7 @@ class FormatSER(Format):
 
         # Assume Ceta-D gain unless known to be a Falcon (this neglects standard
         # Ceta gain, which is said to be about 7.0).
-        if b"falcon" in self._header_dictionary["CameraNamePath"].lower():
+        if b"falcon" in self._header_dictionary.get("CameraNamePath", b"").lower():
             gain = 1.0
         else:
             gain = 26.0
