@@ -40,6 +40,7 @@ except ImportError:
 
 try:
     import hdf5plugin
+
     assert hdf5plugin
 except ModuleNotFoundError:
     # Optional dependency that can also be satisfied by hdf5-external-filter-plugins
@@ -152,7 +153,7 @@ def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
     return [
         group
         for group in find_class(nx_file, "NXentry")
-        if "definition" in group and h5str(group["definition"][()]) == "NXmx"
+        if "definition" in group and h5str(group["definition"][()]) in ["NXmx", b"NXmx"]
     ]
 
 
