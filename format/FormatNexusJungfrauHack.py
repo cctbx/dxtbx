@@ -199,8 +199,17 @@ class FormatNexusJungfrauHack(FormatNexus):
         self._detector_model = self.model
 
     def _setup_gonio_and_scan(self, sample, detector):
+
+        omega_places = [
+            "/entry/sample/sample_omega/omega",
+            "/entry/sample/goniometer/omega",
+        ]
+        phi = None
         with h5py.File(self._image_file, "r") as handle:
-            phi = handle["/entry/sample/goniometer/omega"][()]
+            for omega in omega_places:
+                if omega in handle:
+                    phi = handle[omega][()]
+        assert len(phi)
         image_range = (1, len(phi))
         oscillation = (float(phi[0]), float(phi[1] - phi[0]))
 
