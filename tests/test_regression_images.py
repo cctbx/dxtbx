@@ -25,7 +25,9 @@ except ModuleNotFoundError:
 
 try:
     import xfel
-except ModuleNotFoundError:
+except ImportError:
+    # Although ModuleNotFoundError is correct, cctbx may raise an ImportError
+    # when the xfel extension module is not found.
     xfel = None
 
 _files = (
