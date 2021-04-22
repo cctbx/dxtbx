@@ -1,14 +1,12 @@
 """
 Image reading tests against the dials_regression suite
 """
-from __future__ import absolute_import, division, print_function
 
 import bz2
 import gzip
 import os
-import re
 import shutil
-import sys
+from pathlib import Path
 
 import py.path
 import pytest
@@ -23,14 +21,9 @@ import dxtbx.conftest
 import dxtbx.format.Registry
 from dxtbx.util import get_url_scheme
 
-if sys.version_info[:2] >= (3, 6):
-    from pathlib import Path
-else:
-    from pathlib2 import Path
-
 try:
     import h5py
-except ImportError:
+except ModuleNotFoundError:
     h5py = None
 
 
@@ -63,26 +56,6 @@ def _generate_all_test_images():
                 special_h5, marks=pytest.mark.skip(reason="LBL-only file not present")
             ), special_h5
 
-    # Filename patterns to ignore completely
-    ignore_files = [
-        r"\..*",  # Hidden files
-        r"\.svn",  # SVN directories
-        r"ED_From_TIFF",  # removed [2017:jmp@r1618] for unknown reason
-        r"LCLS_cspad_nexus/cxi78513_bslz4_r0014_subset4_\d+\.h5$",  # Non-master files
-        r"LCLS_cspad_nexus/[^/]*\.h5$",  # Incompatible with current nexus definition [2018:asmit@r1902]
-        r"DLS_eBIC/image_0001\.tif$",  # The format is in testing_dxtbx_format_classes/, not dxtbx, so skip the example image [2017:upintheair@r1693]
-        r"README$",
-        r".*\.(?:pyc?|log|json)$",  # Extensions to ignore
-        r"putative_imgCIF_HDF5_mapping/X4_wide_M1S4_1.nxs",  # See https://github.com/cctbx/dxtbx/issues/321#issuecomment-787731768
-    ]
-    # Pattern to match item at start of string or after directory indicator
-    DIRSTART = r"^(?:.*/)?"
-    # Handle windows paths, and ignore case when matching
-    ignore_files = [
-        re.compile((DIRSTART + x).replace(r"/", re.escape(os.sep)), re.IGNORECASE)
-        for x in ignore_files
-    ]
-
     # Try to find dials_regression
     dials_regression = dxtbx.conftest.dials_regression_path()
     if not dials_regression:
@@ -98,26 +71,126 @@ def _generate_all_test_images():
         )
         return
 
+    _files = (
+        "ADSC_CBF/SIM_MX_mod_001.cbf",
+        "ADSC_CBF/thaumatin_die_M1S5_1_asc_0041.cbf",
+        "ALS_1231/q315r_lyso_1_001.img",
+        "ALS_422/lyso_041013a_1_001.img",
+        "ALS_501/als501_q4_1_001.img",
+        "ALS_733/200mMNaCl5pcGlyc_400.edf",
+        "ALS_821/q210_lyso_1_101.img",
+        "ALS_831/q315r_lyso_001.img",
+        "APS_14BMC/q315_1_001.img",
+        "APS_17ID/q210_1_001.img",
+        "APS_19BM/APS1_0.0001",
+        "APS_19ID/q315_unbinned_a.0001.img",
+        "APS_19ID/t1.0001.img.bz2",
+        "APS_22ID/mar300.0001",
+        "APS_23IDD/mar300_1_E1.0001",
+        "APS_24IDC/pilatus_1_0001.cbf",
+        "APS_24IDC/q315_1_001.img",
+        "APS_24IDE_test/thaum-12_1_0001.cbf",
+        "APS_24IDE_test/thaum-12_1_0002.cbf",
+        "APS_24IDE_test/thaum-12_1_0003.cbf",
+        "APS_24IDE_test/thaum-12_1_0004.cbf",
+        "APS_24IDE_test/thaum-12_1_0005.cbf",
+        "APS_24IDE_test/thaum-12_1_0006.cbf",
+        "APS_24IDE_test/thaum-12_1_0007.cbf",
+        "APS_24IDE_test/thaum-12_1_0008.cbf",
+        "APS_24IDE_test/thaum-12_1_0009.cbf",
+        "APS_24IDE_test/thaum-12_1_0010.cbf",
+        "Bruker_PHOTON_II/dan_01_0001.sfrm",
+        "CLS1_08ID1/mar225_2_E0_0001.img",
+        "DESY_BW7B/mar345_01_001.mar2300",
+        "DESY_ID141/q210_2_001.img",
+        "DLS_I02/X4_wide_M1S4_1_0001.cbf",
+        "DLS_I04/grid_full_cbf_0005.cbf",
+        "DLS_I19/I19_P300k_00001.cbf",
+        "DLS_I23/I23_P12M_alpha_0001.cbf",
+        "DLS_I23/germ_13KeV_0001.cbf",
+        "DLS_I24_stills/still_0001.cbf",
+        "DTREK_home_lab/s01f0001.osc",
+        "ESRF_BM14/mar165_001.mccd",
+        "ESRF_BM14/mar225_1_001.mccd",
+        "ESRF_ID231/q315r_7_001.img",
+        "ESRF_ID29/trypsin_1_0001.cbf",
+        "LCLS_CXI/000.pickle",
+        "LCLS_CXI/shot-s00-2011-12-02T21_07Z29.723_00569.pickle",
+        "LCLS_CXI/shot-s04-20111204004533388.pickle",
+        "LCLS_cspad_nexus/idx-20130301060858401.cbf",
+        "LCLS_cspad_nexus/idx-20130301060858601.cbf",
+        "LCLS_cspad_nexus/idx-20130301060858701.cbf",
+        "LCLS_cspad_nexus/idx-20130301060858801.cbf",
+        "LCLS_detectors/Ds1.pickle",
+        "LCLS_detectors/Dsd.pickle",
+        "LCLS_detectors/Sc1.pickle",
+        "LCLS_detectors/andor.pickle",
+        "LCLS_detectors/pnCCD0.pickle",
+        "LCLS_detectors/pnCCD1.pickle",
+        "LCLS_jungfrau/jungfrau_multipanel.cbf",
+        "MLFSOM_simulation/fake_00001.img",
+        "MacScience/reallysurprise_001.ipf",
+        "RAXIS-HTC/test1_lysozyme_0111060001.osc",
+        "RigakuA200/XV10001.img",
+        "SACLA_MPCCD_Cheetah/run266702-0-subset.h5",
+        "SLS_Eiger_16M_as_CBF/insu_with_bs_labelit_0001.cbf",
+        "SLS_Eiger_16M_as_CBF/insu_with_bs_labelit_0901.cbf",
+        "SLS_X06SA/mar225_2_001.img",
+        "SLS_X06SA/pilatus6m_1_00001.cbf",
+        "SPring8_ADSC_SN916/Xtal17-2phi_3_015.cbf",
+        "SPring8_BL12B2_MX225HE/lys001_000001.img",
+        "SPring8_BL12B2_MX225HE/lys001_000091.img",
+        "SPring8_BL26B1_Raxis5/raxis5_000001.img",
+        "SPring8_BL26B1_Raxis5/raxis5_000091.img",
+        "SPring8_BL26B1_SaturnA200/A200_000001.img",
+        "SPring8_BL26B1_SaturnA200/A200_000002.img",
+        "SPring8_BL26B2_MX225/2sec_Al200um_000001.img",
+        "SPring8_BL26B2_MX225/2sec_Al200um_000090.img",
+        "SPring8_BL32XU/lys_00001.img",
+        "SPring8_BL32XU/rayonix225_0001.img",
+        "SPring8_BL32XU/rayonix225hs_0001.img",
+        "SPring8_BL32XU_MX225HS/ds_000001.img",
+        "SPring8_BL32XU_MX225HS/ds_000045.img",
+        "SPring8_BL38B1_MX225HE/bl38b1_001.img",
+        "SPring8_BL38B1_MX225HE/bl38b1_090.img",
+        "SPring8_BL41XU_PILATUS3_6M/data1_000001.cbf",
+        "SPring8_BL41XU_PILATUS3_6M/data1_000901.cbf",
+        "SPring8_BL44XU_MX300HE/bl44xu_lys_000001.img",
+        "SPring8_BL44XU_MX300HE/bl44xu_lys_000002.img",
+        "SRS_101/mar225_001.img",
+        "SRS_142/q4_1_001.img",
+        "SSRL_bl111/mar325_1_001.mccd",
+        "SSRL_bl91/q315_1_001.img",
+        "Texas_A_and_M_University/lyziph6p5_01_0001.sfrm",
+        "XDS/INTEGRATE.HKL",
+        "XDS/XDS_ASCII.HKL",
+        "XDS/XPARM.XDS",
+        "dials-190/whatev1_01_00001.cbf",
+        "dials-190/whatev1_01_00002.cbf",
+        "dials-190/whatev1_02_00001.cbf",
+        "dials-190/whatev1_02_00002.cbf",
+        "dials-190/whatev1_03_00001.cbf",
+        "dials-190/whatev1_03_00002.cbf",
+        "johns_hopkins_raxisII/lys_001.osc",
+        "putative_imgCIF_HDF5_mapping/minicbf.h5",
+        "saturn/lyso_00001.img",
+        "xia2/merge2cbf_averaged_0001.cbf",
+    )
+
     image_dir = os.path.join(dials_regression, "image_examples")
-    # Now look at everything in image_examples
-    for root, dirs, files in os.walk(image_dir):
-        for file in files:
-            full_path = os.path.join(root, file)
-            rel_path = os.path.relpath(full_path, image_dir)
+    for image_posix_path in _files:
+        image_path = image_posix_path.split("/")
+        full_path = os.path.join(image_dir, *image_path)
+        rel_path = os.path.join(*image_path)
 
-            # Test the filename patterns
-            if any(pattern.search(full_path) for pattern in ignore_files):
-                print("Ignoring {}".format(full_path))
-                continue
-
-            # Skip h5 files if h5py is not present
-            if (full_path.endswith(".h5") or full_path.endswith(".nxs")) and not h5py:
-                yield pytest.param(
-                    full_path, marks=pytest.mark.skip(reason="could not import 'h5py'")
-                ), rel_path
-            else:
-                # Give this file back
-                yield (full_path, rel_path)
+        # Skip h5 files if h5py is not present
+        if (full_path.endswith(".h5") or full_path.endswith(".nxs")) and not h5py:
+            yield pytest.param(
+                full_path, marks=pytest.mark.skip(reason="could not import 'h5py'")
+            ), rel_path
+        else:
+            # Give this file back
+            yield (full_path, rel_path)
 
 
 # Generate this list once to use as a fixture
