@@ -29,8 +29,6 @@ except ModuleNotFoundError:
     xfel = None
 
 _files = (
-    "ADSC_CBF/SIM_MX_mod_001.cbf",
-    "ADSC_CBF/thaumatin_die_M1S5_1_asc_0041.cbf",
     "ALS_1231/q315r_lyso_1_001.img",
     "ALS_422/lyso_041013a_1_001.img",
     "ALS_501/als501_q4_1_001.img",
@@ -39,7 +37,6 @@ _files = (
     "ALS_831/q315r_lyso_001.img",
     "APS_14BMC/q315_1_001.img",
     "APS_17ID/q210_1_001.img",
-    "APS_19BM/APS1_0.0001",
     "APS_19ID/q315_unbinned_a.0001.img",
     "APS_19ID/t1.0001.img.bz2",
     "APS_22ID/mar300.0001",
@@ -121,7 +118,6 @@ _files = (
     "dials-190/whatev1_03_00001.cbf",
     "dials-190/whatev1_03_00002.cbf",
     "johns_hopkins_raxisII/lys_001.osc",
-    "putative_imgCIF_HDF5_mapping/minicbf.h5",
     "saturn/lyso_00001.img",
     "xia2/merge2cbf_averaged_0001.cbf",
 )
@@ -147,18 +143,6 @@ def test_read_image(test_image, dials_regression):
 
     if not h5py and test_image.endswith((".h5", ".nxs")):
         pytest.skip("could not import 'h5py'")
-
-    # Explicit list of directories that we expect to fail.
-    # References are to original dials_regression commit that added the exclusion
-    skipped_tests = {
-        "ADSC_CBF": "something wrong with ADSC CBF format reader         [2013:sauter@r12]",
-        "APS_19BM": "APS beamline 19; appears to be an uncorrected image [2013:sauter@r16]",
-        "SACLA_MPCCD_Cheetah": "MPCCD not supported by iotbx             [2016:nakane@r1540]",
-        "putative_imgCIF_HDF5_mapping": "test hdf5 image set not yet supported [2013:aaron@r66]",
-    }
-    if test_image.startswith(tuple(skipped_tests)):
-        reason = skipped_tests[test_image.split("/")[0]]
-        pytest.skip(reason)
 
     if dials_regression:
         test_image = os.path.join(
