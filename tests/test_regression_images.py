@@ -10,7 +10,6 @@ from pathlib import Path
 
 import py.path
 import pytest
-import six
 
 import libtbx.load_env
 import scitbx.matrix
@@ -223,7 +222,7 @@ def test_image_for_reading(test_image):
         reason = skipped_tests[skip_this_test.pop()]
         pytest.skip(reason)
 
-    if six.PY3 and test_image.endswith(".pickle"):
+    if test_image.endswith(".pickle"):
         pytest.skip("Importing .pickle format images is not supported in Python 3")
 
     return test_image
@@ -317,7 +316,7 @@ def test_format_class_API_assumptions(test_image):
     * No .understand() call on any top level format class or a child class
       of another understanding format is allowed to throw an exception.
     """
-    if six.PY3 and test_image.endswith(".pickle"):
+    if test_image.endswith(".pickle"):
         pytest.skip("Importing .pickle format images is not supported in Python 3")
 
     dag = dxtbx.format.Registry.get_format_class_dag()
