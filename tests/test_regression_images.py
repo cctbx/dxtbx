@@ -113,19 +113,10 @@ def _generate_all_test_images():
         "ESRF_BM14/mar225_1_001.mccd",
         "ESRF_ID231/q315r_7_001.img",
         "ESRF_ID29/trypsin_1_0001.cbf",
-        "LCLS_CXI/000.pickle",
-        "LCLS_CXI/shot-s00-2011-12-02T21_07Z29.723_00569.pickle",
-        "LCLS_CXI/shot-s04-20111204004533388.pickle",
         "LCLS_cspad_nexus/idx-20130301060858401.cbf",
         "LCLS_cspad_nexus/idx-20130301060858601.cbf",
         "LCLS_cspad_nexus/idx-20130301060858701.cbf",
         "LCLS_cspad_nexus/idx-20130301060858801.cbf",
-        "LCLS_detectors/Ds1.pickle",
-        "LCLS_detectors/Dsd.pickle",
-        "LCLS_detectors/Sc1.pickle",
-        "LCLS_detectors/andor.pickle",
-        "LCLS_detectors/pnCCD0.pickle",
-        "LCLS_detectors/pnCCD1.pickle",
         "LCLS_jungfrau/jungfrau_multipanel.cbf",
         "MLFSOM_simulation/fake_00001.img",
         "MacScience/reallysurprise_001.ipf",
@@ -222,9 +213,6 @@ def test_image_for_reading(test_image):
         reason = skipped_tests[skip_this_test.pop()]
         pytest.skip(reason)
 
-    if test_image.endswith(".pickle"):
-        pytest.skip("Importing .pickle format images is not supported in Python 3")
-
     return test_image
 
 
@@ -316,9 +304,6 @@ def test_format_class_API_assumptions(test_image):
     * No .understand() call on any top level format class or a child class
       of another understanding format is allowed to throw an exception.
     """
-    if test_image.endswith(".pickle"):
-        pytest.skip("Importing .pickle format images is not supported in Python 3")
-
     dag = dxtbx.format.Registry.get_format_class_dag()
 
     def recurse(parentformat, filename, level=0):
