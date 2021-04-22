@@ -67,6 +67,7 @@ _files = (
     "DLS_I23/I23_P12M_alpha_0001.cbf",
     "DLS_I23/germ_13KeV_0001.cbf",
     "DLS_I24_stills/still_0001.cbf",
+    "DLS_eBIC/nanB_4_singleframe_1.ser.bz2",
     "DTREK_home_lab/s01f0001.osc",
     "ESRF_BM14/mar165_001.mccd",
     "ESRF_BM14/mar225_1_001.mccd",
