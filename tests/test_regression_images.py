@@ -194,9 +194,12 @@ def test_image(request, dials_regression):
     return request.param
 
 
-@pytest.fixture
-def test_image_for_reading(test_image):
-    """Test images, plus xfail marking for things we expect to not read"""
+@pytest.mark.regression
+def test_read_image(test_image):
+    """Test that all the regression images can be read"""
+    if "LCLS" in test_image and not libtbx.env.has_module("xfel"):
+        pytest.skip("Ignoring LCLS because xfel missing")
+        return
 
     # Explicit list of directories that we expect to fail.
     # References are to original dials_regression commit that added the exclusion
@@ -213,23 +216,11 @@ def test_image_for_reading(test_image):
         reason = skipped_tests[skip_this_test.pop()]
         pytest.skip(reason)
 
-    return test_image
-
-
-@pytest.mark.regression
-def test_read_image(test_image_for_reading):
-    """Test that all the regression images can be read"""
-    if "LCLS" in test_image_for_reading and not libtbx.env.has_module("xfel"):
-        pytest.skip("Ignoring LCLS because xfel missing")
-        return
-
-    format_instance = dxtbx.format.Registry.get_format_class_for_file(
-        test_image_for_reading
-    )
-    print("Reading", test_image_for_reading)
+    format_instance = dxtbx.format.Registry.get_format_class_for_file(test_image)
+    print("Reading", test_image)
     print("Format:", format_instance)
     assert format_instance, "no matching format class found"
-    instance = format_instance(test_image_for_reading)
+    instance = format_instance(test_image)
 
     # Test metadata reading
     instance.get_goniometer()
@@ -249,7 +240,7 @@ def test_read_image(test_image_for_reading):
 
     # Test reading of the raw data
     # XDS, HKL we expect to fail for this  - so skip this part for those
-    if not test_image_for_reading[-3:].upper() in {"XDS", "HKL"}:
+    if not test_image[-3:].upper() in {"XDS", "HKL"}:
         try:
             R_raw_data = instance.get_raw_data()
         except TypeError:
@@ -267,10 +258,7 @@ def test_read_image(test_image_for_reading):
         print("  Have detectorbase? ", hasattr(instance, "detectorbase"))
 
         # Specific test for cctbx/dxtbx#163. This test will fail if char is unsigned.
-        if (
-            "APS_24IDC" in test_image_for_reading
-            and "pilatus_1_0001.cbf" in test_image_for_reading
-        ):
+        if "APS_24IDC" in test_image and "pilatus_1_0001.cbf" in test_image:
             d = R_raw_data[0]
             assert (
                 flex.sum(d.as_1d().select(d.as_1d() >= 0)) == 20108255
@@ -278,7 +266,7 @@ def test_read_image(test_image_for_reading):
 
         # test the older detectorbase interface if available
         if hasattr(instance, "detectorbase"):
-            imgfactory = SlipViewerImageFactory(test_image_for_reading)
+            imgfactory = SlipViewerImageFactory(test_image)
             imgfactory.read()
             print("  Detectorbase:", instance.detectorbase.__class__.__name__)
 
