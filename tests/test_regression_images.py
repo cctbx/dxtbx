@@ -166,14 +166,12 @@ def test_read_image(test_image, dials_regression):
 
     for panel in detector:
         d_mat = scitbx.matrix.sqr(panel.get_d_matrix())
-        if d_mat.determinant() == 0:
-            print("  d matrix with zero determinant")
-        if d_mat.determinant() < 0:
-            print("  d matrix with negative determinant")
+        if d_mat.determinant() <= 0:
+            print("  d matrix with non-positive determinant")
 
     # Test reading of the raw data
     # XDS, HKL we expect to fail for this  - so skip this part for those
-    if not test_image[-3:].upper() in {"XDS", "HKL"}:
+    if not test_image.endswith(("XDS", "HKL")):
         try:
             R_raw_data = instance.get_raw_data()
         except TypeError:
