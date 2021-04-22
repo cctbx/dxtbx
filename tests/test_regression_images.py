@@ -8,7 +8,6 @@ import os
 import shutil
 from pathlib import Path
 
-import py.path
 import pytest
 
 import scitbx.matrix
@@ -149,11 +148,6 @@ def test_read_image(test_image, dials_regression):
     if not h5py and test_image.endswith((".h5", ".nxs")):
         pytest.skip("could not import 'h5py'")
 
-    if dials_regression:
-        test_image = os.path.join(
-            dials_regression, "image_examples", *test_image.split("/")
-        )
-
     # Explicit list of directories that we expect to fail.
     # References are to original dials_regression commit that added the exclusion
     skipped_tests = {
@@ -162,12 +156,14 @@ def test_read_image(test_image, dials_regression):
         "SACLA_MPCCD_Cheetah": "MPCCD not supported by iotbx             [2016:nakane@r1540]",
         "putative_imgCIF_HDF5_mapping": "test hdf5 image set not yet supported [2013:aaron@r66]",
     }
-    # Check that the name is an actual folder in the file path
-    path_parts = {x.basename for x in py.path.local(test_image).parts()}
-    skip_this_test = set(skipped_tests) & path_parts
-    if skip_this_test:
-        reason = skipped_tests[skip_this_test.pop()]
+    if test_image.startswith(tuple(skipped_tests)):
+        reason = skipped_tests[test_image.split("/")[0]]
         pytest.skip(reason)
+
+    if dials_regression:
+        test_image = os.path.join(
+            dials_regression, "image_examples", *test_image.split("/")
+        )
 
     format_instance = dxtbx.format.Registry.get_format_class_for_file(test_image)
     print("Reading", test_image)
