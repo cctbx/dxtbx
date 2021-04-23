@@ -1,28 +1,8 @@
 import json
 import os
-import warnings
 
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.serialize.imageset import imageset_from_dict
-
-
-def imageset_from_string(string, directory=None):
-    """Load the string and return the models.
-
-    Params:
-        string The JSON string to load
-
-    Returns:
-        The models
-
-    """
-    warnings.warn(
-        "This function is deprecated and will be removed in the next release",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    return imageset_from_dict(json.loads(string), directory=directory)
 
 
 def imageset(filename):

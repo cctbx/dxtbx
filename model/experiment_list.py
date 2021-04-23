@@ -18,7 +18,6 @@ from dxtbx.datablock import (
     DataBlockTemplateImporter,
     DetectorComparison,
     GoniometerComparison,
-    SequenceDiff,
 )
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
@@ -59,7 +58,6 @@ __all__ = [
     "DetectorComparison",
     "ExperimentListFactory",
     "GoniometerComparison",
-    "SequenceDiff",
 ]
 
 
