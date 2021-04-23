@@ -14,6 +14,10 @@ collect_ignore = []
 def dials_regression_path():
     """Return the absolute path to the dials_regression module as a string.
     This function is used directly by tests/test_regression_images.py"""
+
+    if "DIALS_REGRESSION" in os.environ:
+        return os.environ["DIALS_REGRESSION"]
+
     try:
         import dials_regression as dr
 
