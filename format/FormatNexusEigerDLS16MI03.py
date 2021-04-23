@@ -37,17 +37,10 @@ class FormatNexusEigerDLS16MI03(FormatNexusEigerDLS16M):
         if self._detector_model[0].get_image_size() == (4148, 4362):
             # Full detector mode
             bad_modules = {(2, 5), (3, 5)}
-            for i_col, i_row in bad_modules:
-                self._detector_model[0].add_mask(
-                    (nx + dx) * i_col,
-                    (ny + dy) * i_row,
-                    (nx + dx) * i_col + nx,
-                    (ny + dy) * i_row + ny,
-                )
         else:
             # ROI detector mode
-            i_col = 1
-            i_row = 3
+            bad_modules = {(1, 3)}
+        for i_col, i_row in bad_modules:
             self._detector_model[0].add_mask(
                 (nx + dx) * i_col,
                 (ny + dy) * i_row,
