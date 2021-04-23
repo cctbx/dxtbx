@@ -908,35 +908,6 @@ def test_experimentlist_from_file(monkeypatch, dials_regression, tmpdir):
     assert exp_list[0].beam
 
 
-def test_experimentlist_imagesequence_stills():
-    filenames = [
-        "/Users/rjgildea/tmp/118/Puck3_10_1_000%i.cbf.gz" % i for i in range(1, 4)
-    ]
-    for f in filenames:
-        if not os.path.exists(f):
-            pytest.skip("%s does not exist" % f)
-    experiments = ExperimentListFactory.from_filenames(filenames)
-
-    assert len(experiments) == 3
-    assert len(experiments.imagesets()) == 1
-
-    # Convert experiment list to dict
-    d = experiments.to_dict()
-
-    # Decode the dict to get a new experiment list
-    experiments2 = ExperimentListDict(d).decode()
-
-    # Verify that this experiment is as we expect
-    assert len(experiments2) == 3
-    assert len(experiments2.imagesets()) == 1
-    assert len(experiments2.goniometers()) == 1
-    assert len(experiments2.detectors()) == 1
-    assert len(experiments2.beams()) == 1
-    assert len(experiments2.scans()) == 3
-    for expt in experiments2:
-        assert expt.imageset is experiments2.imagesets()[0]
-
-
 def test_experimentlist_imagesequence_decode(mocker):
     # These models are shared between experiments
     beam = Beam(s0=(0, 0, -1))
