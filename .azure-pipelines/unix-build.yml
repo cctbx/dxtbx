@@ -25,9 +25,6 @@ steps:
     set -eux
     git clone https://github.com/dials/annlib.git modules/annlib
     git clone https://github.com/dials/annlib_adaptbx.git modules/annlib_adaptbx
-    git clone https://github.com/dials/ccp4io.git modules/ccp4io
-    git clone https://github.com/dials/ccp4io_adaptbx.git modules/ccp4io_adaptbx
-    git clone https://github.com/dials/gui_resources.git modules/gui_resources
   displayName: Repository checkout (additional cctbx)
   workingDirectory: $(Pipeline.Workspace)
 
