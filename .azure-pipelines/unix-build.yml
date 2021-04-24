@@ -44,10 +44,10 @@ steps:
 # Install cctbx and testing packages in the conda environment
 # Extract the dials-data version so we can correctly cache regression data.
 - bash: |
-    set -ex
+    set -e
     . conda_base/bin/activate
-    set -u
     conda install -y cctbx-base dials-data pytest-azurepipelines pytest-cov pytest-timeout
+    set -ux
     echo
     echo Environment:
     ls -la
@@ -64,9 +64,9 @@ steps:
 
 # Build dxtbx
 - bash: |
-    set -ex
+    set -e
     . conda_base/bin/activate
-    set -u
+    set -ux
     mkdir build
     cd build
     libtbx.configure dxtbx cbflib_adaptbx
@@ -94,9 +94,9 @@ steps:
 
 # Finally, run the full regression test suite
 - bash: |
-    set -ex
+    set -e
     . conda_base/bin/activate
-    set -u
+    set -ux
     . build/setpaths.sh
     cd modules/dxtbx
     export DIALS_DATA=${PWD}/data
