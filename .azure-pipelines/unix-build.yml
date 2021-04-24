@@ -29,34 +29,25 @@ steps:
   workingDirectory: $(Pipeline.Workspace)
 
 # Create a new conda environment using the bootstrap script
+# Extract the dials-data version so we can correctly cache regression data.
 - script: |
+    set -eux
     python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --python $(PYTHON_VERSION)
 
     # Immediately recover disk space used by miniconda installation
     du -sh miniconda
     rm -r miniconda
-  displayName: Create python $(PYTHON_VERSION) environment
-  workingDirectory: $(Pipeline.Workspace)
 
-# Install cctbx and testing packages in the conda environment
-# Extract the dials-data version so we can correctly cache regression data.
-- bash: |
-    set -e
+    set +ux
     . conda_base/bin/activate
-    conda install -y cctbx-base dials-data pytest-azurepipelines pytest-cov pytest-timeout
     set -ux
-    echo
-    echo Environment:
-    ls -la
-    echo
-    echo Modules:
-    ls -la modules
+
     dials.data info -v
     echo "##vso[task.setvariable variable=DIALS_DATA_VERSION_FULL]$(dials.data info -v | grep version.full)"
     echo "##vso[task.setvariable variable=DIALS_DATA_VERSION]$(dials.data info -v | grep version.major)"
     #                                                                this is a bug in dials-data ^^^^^
     mkdir -p data
-  displayName: Install further dependencies
+  displayName: Create python $(PYTHON_VERSION) environment
   workingDirectory: $(Pipeline.Workspace)
 
 # Build dxtbx

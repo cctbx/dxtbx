@@ -2,6 +2,7 @@ conda-forge::boost
 conda-forge::boost-cpp<1.75
 conda-forge::bzip2
 conda-forge::c-compiler
+conda-forge::cctbx-base==2021.03
 conda-forge::conda
 conda-forge::cxx-compiler
 conda-forge::dials-data
@@ -9,8 +10,8 @@ conda-forge::docutils
 conda-forge::eigen
 conda-forge::future
 conda-forge::h5py>=3.1
-conda-forge::hdf5<1.11
 conda-forge::hdf5-external-filter-plugins==0.1.0[build_number='>=5']
+conda-forge::hdf5<1.11
 conda-forge::jpeg
 conda-forge::matplotlib-base
 conda-forge::mrcfile
@@ -20,10 +21,13 @@ conda-forge::pip
 conda-forge::procrunner>=2.2.0
 conda-forge::psutil
 conda-forge::pyrtf
-conda-forge::pytest>=4.5
+conda-forge::pytest-azurepipelines
+conda-forge::pytest-cov
 conda-forge::pytest-forked
 conda-forge::pytest-mock
+conda-forge::pytest-timeout
 conda-forge::pytest-xdist
+conda-forge::pytest>=4.5
 conda-forge::requests
 conda-forge::scipy
 conda-forge::scons
