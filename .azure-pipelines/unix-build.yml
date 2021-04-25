@@ -32,11 +32,7 @@ steps:
 # Extract the dials-data version so we can correctly cache regression data.
 - script: |
     set -eux
-    python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --python $(PYTHON_VERSION)
-
-    # Immediately recover disk space used by miniconda installation
-    du -sh miniconda
-    rm -r miniconda
+    python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --clean --python $(PYTHON_VERSION)
 
     set +ux
     . conda_base/bin/activate
