@@ -88,7 +88,7 @@ std::vector<char> dxtbx::boost_python::cbf_compress(const int *values,
     packed.push_back(b[0]);
     packed.push_back(b[1]);
 
-    assert((-0x7fffffff <= delta) && (delta < 0x80000000));
+    assert(delta != -0x8000000);
 
     i = delta;
     b = ((union_int *)&i)[0].b;
