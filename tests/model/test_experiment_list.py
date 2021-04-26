@@ -908,13 +908,11 @@ def test_experimentlist_from_file(monkeypatch, dials_regression, tmpdir):
     assert exp_list[0].beam
 
 
-def test_experimentlist_imagesequence_stills():
+def test_experimentlist_imagesequence_stills(dials_data):
     filenames = [
-        "/Users/rjgildea/tmp/118/Puck3_10_1_000%i.cbf.gz" % i for i in range(1, 4)
+        str(dials_data("thaumatin_grid_scan") / f"thau_3_2_{i:04d}.cbf.bz2")
+        for i in range(1, 4)
     ]
-    for f in filenames:
-        if not os.path.exists(f):
-            pytest.skip("%s does not exist" % f)
     experiments = ExperimentListFactory.from_filenames(filenames)
 
     assert len(experiments) == 3
