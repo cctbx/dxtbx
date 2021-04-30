@@ -24,7 +24,7 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage
 
 
 # The read_emi and _parseEntry_emi functions are taken from openNCEM project
-# under the terms of the MIT license.
+# and modified here under the terms of the MIT license.
 #
 # Copyright 2019 the Ncempy developers
 #
@@ -65,16 +65,9 @@ def read_emi(filename):
     else:
         raise TypeError("Filename is supposed to be a string or pathlib.Path")
 
-    # try opening the file
-    try:
-        # open file for reading bytes, as binary and text are intermixed
-        with open(filename, "rb") as f_emi:
-            emi_data = f_emi.read()
-    except IOError:
-        print('Error reading file: "{}"'.format(filename))
-        raise
-    except Exception:
-        raise
+    # Format.open provides transparent decompression
+    with Format.open_file(filename, "rb") as f_emi:
+        emi_data = f_emi.read()
 
     # dict to store _emi stuff
     _emi = {}
@@ -255,7 +248,7 @@ class FormatSER(Format):
             hd["ArraySizeY"] = struct.unpack("<I", f.read(4))[0]
 
         try:
-            emi = read_emi(os.path.splitext(image_file)[0] + ".emi")
+            emi = read_emi(image_file.replace(".ser", ".emi"))
             hd.update(emi)
         except FileNotFoundError:
             pass
