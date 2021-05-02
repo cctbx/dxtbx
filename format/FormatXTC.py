@@ -234,7 +234,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         return psana_runs
 
     def _get_psana_detector(self, run):
-        """ Returns the psana detector for the given run """
+        """Returns the psana detector for the given run"""
         if run.run() not in self._cached_psana_detectors:
             assert len(self.params.detector_address) == 1
             self._cached_psana_detectors[run.run()] = psana.Detector(

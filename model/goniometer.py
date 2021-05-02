@@ -363,7 +363,7 @@ class GoniometerFactory(object):
 
     @staticmethod
     def multi_axis(axes, angles, names, scan_axis):
-        """"""
+        """ """
 
         return GoniometerFactory.make_multi_axis_goniometer(
             axes, angles, names, scan_axis

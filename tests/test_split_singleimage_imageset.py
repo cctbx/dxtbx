@@ -15,7 +15,8 @@ def test_split_single_image_imageset(dials_data, tmpdir):
     tmpdir.chdir()
     pytest.importorskip("h5py")
     sacla_file = os.path.join(
-        dials_data("image_examples"), "SACLA-MPCCD-run266702-0-subset.h5",
+        dials_data("image_examples"),
+        "SACLA-MPCCD-run266702-0-subset.h5",
     )
     expts = ExperimentListFactory.from_filenames([sacla_file])
     assert len(expts) == 4

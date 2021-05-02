@@ -72,7 +72,6 @@ namespace dxtbx { namespace model {
     bool operator!=(const PxMmStrategy &other) const {
       return !(*this == other);
     }
-
   };
 
   /**
@@ -216,7 +215,8 @@ namespace dxtbx { namespace model {
 
     /** @returns True/False this is the same as the other */
     bool operator==(const ParallaxCorrectedPxMmStrategy &other) const {
-      return SimplePxMmStrategy::operator==(other) && mu_ == other.mu_ && t0_ == other.t0_;
+      return SimplePxMmStrategy::operator==(other) && mu_ == other.mu_
+             && t0_ == other.t0_;
     }
 
     /** @returns True/False this is not the same as the other */

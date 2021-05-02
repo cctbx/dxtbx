@@ -40,6 +40,7 @@ except ImportError:
 
 try:
     import hdf5plugin
+
     assert hdf5plugin
 except ModuleNotFoundError:
     # Optional dependency that can also be satisfied by hdf5-external-filter-plugins

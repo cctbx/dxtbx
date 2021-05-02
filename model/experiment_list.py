@@ -192,7 +192,7 @@ class ExperimentListDict(object):
         return filename or "", None
 
     def _imageset_from_imageset_data(self, imageset_data, models):
-        """ Make an imageset from imageset_data - help with refactor decode. """
+        """Make an imageset from imageset_data - help with refactor decode."""
         assert imageset_data is not None
         if "params" in imageset_data:
             format_kwargs = imageset_data["params"]
