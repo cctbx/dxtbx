@@ -26,7 +26,7 @@ class FormatNexusEigerDLS16MI03(FormatNexusEigerDLS16M):
                 )
                 return timestamp > calendar.timegm(
                     (2021, 4, 22, 0, 0, 0)
-                ) and timestamp < calendar.timegm((2021, 5, 4, 0, 0, 0))
+                ) and timestamp < calendar.timegm((2021, 6, 1, 0, 0, 0))
 
     def _start(self):
         super()._start()
