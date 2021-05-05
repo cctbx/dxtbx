@@ -1325,6 +1325,7 @@ class MultiPanelDataList(object):
         data_as_flex = dataset_as_flex(self._datasets[d], tuple(full_slices))
 
         for slices in all_slices:
+            # need to adjust the origin of all the slices
             slices = [slice(0, 1, 1)] + slices[1:]
             subset = data_as_flex[slices]
             subset.reshape(flex.grid(subset.all()[-2:]))
@@ -1500,10 +1501,10 @@ class MaskFactory(object):
             total_slices = []
             for module_slices in all_slices:
                 assert len(dset.shape) in [len(module_slices), len(module_slices) + 1]
-                if len(dset.shape) == len(module_slices):
-                    slices = []  # single image mask
-                else:
+                if len(dset.shape) != len(module_slices):
                     slices = [slice(i, i + 1, 1)]  # multi-image mask
+                else:
+                    slices = []  # single image mask
                 slices.extend(module_slices)
                 total_slices.append(slices)
 
