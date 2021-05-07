@@ -6,7 +6,6 @@ from typing import List, Optional, Tuple, Union
 
 import h5py
 import numpy
-import six
 
 import cctbx.uctbx
 from cctbx.eltbx import attenuation_coefficient
@@ -159,7 +158,7 @@ def convert_units(value, input_units, output_units):
     """
     Hacky utility function to convert units
     """
-    if six.PY3 and isinstance(input_units, bytes):
+    if isinstance(input_units, bytes):
         input_units = input_units.decode("latin-1")
     converters = {
         "m": {

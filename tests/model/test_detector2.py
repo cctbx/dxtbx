@@ -1,8 +1,8 @@
+import pickle
 from copy import deepcopy
 from math import sqrt
 
 import pytest
-import six.moves.cPickle as pickle
 
 from libtbx.phil import parse
 from scitbx import matrix

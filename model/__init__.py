@@ -2,9 +2,8 @@ import collections
 import copy
 import json
 import os
+import pickle
 import sys
-
-import six.moves.cPickle as pickle
 
 import boost_adaptbx.boost.python
 import cctbx.crystal

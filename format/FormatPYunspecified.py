@@ -1,8 +1,7 @@
 import copy
 import os
+import pickle
 import sys
-
-import six.moves.cPickle as pickle
 
 from iotbx.detectors.cspad_detector_formats import (
     detector_format_version,

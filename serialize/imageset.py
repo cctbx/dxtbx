@@ -1,7 +1,6 @@
 import collections
 import os
-
-import six.moves.cPickle as pickle
+import pickle
 
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetFactory

@@ -1,8 +1,7 @@
+import pickle
 import sys
 from calendar import timegm
 from time import strptime
-
-import six.moves.cPickle as pickle
 
 from iotbx.detectors.npy import image_dict_to_unicode
 from scitbx.matrix import col

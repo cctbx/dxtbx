@@ -1,7 +1,6 @@
 import sys
+from io import StringIO
 from math import pi, sqrt
-
-from six.moves import StringIO
 
 from cctbx.crystal_orientation import crystal_orientation
 from cctbx.sgtbx import space_group as SG

@@ -1,8 +1,8 @@
 import copy
+import pickle
 import random
 
 import pytest
-import six.moves.cPickle as pickle
 
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.test_utils import approx_equal

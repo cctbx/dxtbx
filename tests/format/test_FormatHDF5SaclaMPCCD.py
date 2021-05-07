@@ -1,5 +1,6 @@
+import pickle
+
 import pytest
-import six.moves.cPickle as pickle
 
 from scitbx.array_family import flex
 

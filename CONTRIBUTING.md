@@ -131,6 +131,4 @@ message that the code in question is special and care should be taken.
 [Zen of Python]: https://www.python.org/dev/peps/pep-0020/#the-zen-of-python
 [How to Write a Git Commit Message]: https://chris.beams.io/posts/git-commit
 [The Seven Rules]: https://chris.beams.io/posts/git-commit/#seven-rules
-[six]: https://six.readthedocs.io/
-[future]: http://python-future.org/
 

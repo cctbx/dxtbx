@@ -1,4 +1,4 @@
-import six.moves.cPickle as pickle
+import pickle
 
 from dxtbx.model import Beam, Detector, Goniometer, Panel, Scan
 
