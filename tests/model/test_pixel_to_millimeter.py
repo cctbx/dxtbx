@@ -1,9 +1,6 @@
-from __future__ import absolute_import, division, print_function
-
 import math
 import os
 import random
-from builtins import range
 
 import pytest
 import six.moves.cPickle as pickle

@@ -2,10 +2,8 @@
 An implementation of the SMV image reader for Rigaku A200 images.
 Inherits from FormatSMVRigaku.
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
-from builtins import range
 
 from iotbx.detectors.dtrek import DTREKImage
 from scitbx import matrix
@@ -61,7 +59,7 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
         ]
 
         if any(
-            "%s%s" % (detector_prefix, item) not in header
+            f"{detector_prefix}{item}" not in header
             for item in more_wanted_header_items
         ):
             return False
@@ -69,7 +67,7 @@ class FormatSMVRigakuA200(FormatSMVRigaku):
         descriptive_items = ["DETECTOR_IDENTIFICATION", "DETECTOR_DESCRIPTION"]
 
         for header_item in descriptive_items:
-            test = "%s%s" % (detector_prefix, header_item)
+            test = f"{detector_prefix}{header_item}"
             if test in header and (
                 "raxis" in header[test].lower() or "a200" in header[test].lower()
             ):

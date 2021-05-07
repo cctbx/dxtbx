@@ -3,7 +3,6 @@ An implementation of the CBF image reader for Pilatus images, from the Pilatus
 6M SN 100 currently on Diamond I03.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import binascii
 import sys
@@ -37,7 +36,7 @@ class FormatCBFMiniPilatusDLS6MSN126(FormatCBFMiniPilatus):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
-        super(FormatCBFMiniPilatusDLS6MSN126, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. This should

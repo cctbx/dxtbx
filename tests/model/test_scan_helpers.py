@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import random
-from builtins import range
 
 from dxtbx.model import (
     get_mod2pi_angles_in_range,

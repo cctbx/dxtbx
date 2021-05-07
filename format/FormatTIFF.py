@@ -6,7 +6,6 @@ which really will acquire the full image including header information
 and generate the experimental model representations.
 """
 
-from __future__ import absolute_import, division, print_function
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
@@ -52,7 +51,7 @@ class FormatTIFF(Format):
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        super(FormatTIFF, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _start(self):
         """Open the image file, read the image header, copy it into memory

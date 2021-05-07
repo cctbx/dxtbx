@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import dxtbx.data.beamline_defs as dxbd
 
 

@@ -47,13 +47,6 @@ message that the code in question is special and care should be taken.
 - **Code should be written with python 3 syntax** - This means "new" exception
   syntax, print functions, new-style classes, and a smattering of other changes
   — the pre-commit hooks check for this.
-- **Try to write code compatible with python 2 and 3** - we have both
-  [six] and [future] available for help with this, but try to use future to
-  write idiomatic python 3 wherever possible. If you are unsure how to do this,
-  ask for help. Once we are fully python 3 compatible, this will become a
-  requirement, but for now we don't expect most people to be developing on top
-  of python 3. If you get used to it now, it'll be less of a shock when we
-  require and test it.
 - Err on the side of [PEP8] when making any style decision. In particular,
   **use PEP8 as a guide for naming** when you aren't sure the correct form to
   use.

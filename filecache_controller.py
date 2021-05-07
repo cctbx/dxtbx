@@ -1,15 +1,13 @@
 """A simple cache controller. Caching only one file at a time."""
 
-from __future__ import absolute_import, division, print_function
 
 import os
 import threading
-from builtins import object
 
 import dxtbx.filecache
 
 
-class simple_controller(object):
+class simple_controller:
     """A simple cache controller. Caching one file at a time."""
 
     def __init__(self):
@@ -77,7 +75,7 @@ class simple_controller(object):
             return self._cache.open()
 
 
-class non_caching_controller(object):
+class non_caching_controller:
     """A controller that does not do any caching."""
 
     @staticmethod

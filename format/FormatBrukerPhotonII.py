@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 from boost_adaptbx.boost.python import streambuf
@@ -24,7 +22,7 @@ class FormatBrukerPhotonII(FormatBruker):
 
         try:
             header_lines = FormatBruker.read_header_lines(image_file)
-        except IOError:
+        except OSError:
             return False
 
         header_dic = FormatBruker.parse_header(header_lines)
@@ -41,7 +39,7 @@ class FormatBrukerPhotonII(FormatBruker):
 
         try:
             header_lines = FormatBruker.read_header_lines(self._image_file)
-        except IOError:
+        except OSError:
             return False
 
         self.header_dict = FormatBrukerPhotonII.parse_header(header_lines)

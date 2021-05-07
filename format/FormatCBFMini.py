@@ -4,7 +4,6 @@ this will read the header and populate a dictionary of the keyword / value
 pairs.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import binascii
 import os
@@ -69,13 +68,13 @@ class FormatCBFMini(FormatCBF):
         """Initialise the image structure from the given file."""
 
         self._raw_data = None
-        super(FormatCBFMini, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _start(self):
         """Open the image file, read the image header, copy it into a
         dictionary for future reference."""
 
-        super(FormatCBFMini, self)._start()
+        super()._start()
         cif_header = FormatCBF.get_cbf_header(self._image_file)
 
         self._cif_header_dictionary = {}

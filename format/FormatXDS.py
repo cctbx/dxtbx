@@ -1,6 +1,5 @@
 """Format object for XDS files"""
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -27,7 +26,7 @@ class FormatXDS(Format):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        super(FormatXDS, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _start(self):
         """Open the image file as a cbf file handle, and keep this somewhere
@@ -138,7 +137,7 @@ class FormatXDS(Format):
 
     def get_raw_data(self):
         """Get the raw image data. For GXPARM.XDS file raise am exception."""
-        raise IOError("GXPARM.XDS does not support image data!")
+        raise OSError("GXPARM.XDS does not support image data!")
 
 
 if __name__ == "__main__":

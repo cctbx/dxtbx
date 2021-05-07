@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
-from builtins import range
 
 from iotbx.detectors.bruker import BrukerImage
 
@@ -81,7 +78,7 @@ class FormatBruker(Format):
         try:
             with FormatBruker.open_file(image_file, "rb") as fh:
                 tag = fh.read(1024).decode("latin-1", "replace")
-        except IOError:
+        except OSError:
             return False
         matches = 0
         for x in range(0, 1024, 80):
@@ -99,7 +96,7 @@ class FormatBruker(Format):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        super(FormatBruker, self).__init__(str(image_file), **kwargs)
+        super().__init__(str(image_file), **kwargs)
 
     def detectorbase_start(self):
         pass

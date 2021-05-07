@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 from iotbx.detectors.raxis_nonsquare import NonSquareRAXISImage
@@ -14,7 +12,7 @@ class FormatRAXISII(RAXISHelper, Format):
         try:
             with FormatRAXISII.open_file(image_file, "rb") as fh:
                 return fh.read(7) == b"R-AXIS2"
-        except IOError:
+        except OSError:
             return False
 
     def detectorbase_start(self):

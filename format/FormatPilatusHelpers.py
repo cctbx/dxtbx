@@ -3,10 +3,8 @@ Helper methods for class for working with Pilatus images, for instance for
 identifying the regions to be masked.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import collections
-from builtins import range
 
 _Detector = collections.namedtuple(
     "Detector",

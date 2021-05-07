@@ -2,7 +2,6 @@
 An implementation of the CBF image reader for Pilatus images, from the Pilatus
 6M SN 114 currently on Diamond VMXi.
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
 

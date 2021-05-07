@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from iotbx.detectors.hamamatsu import HamamatsuImage
 
 from dxtbx.format.FormatSMVADSC import FormatSMVADSC

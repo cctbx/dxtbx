@@ -3,7 +3,6 @@ An implementation of the SMV image reader for ADSC images. Inherits from
 FormatSMVADSC, customised for example on APS ID19 SN 458 and 914
 which have reversed phi.
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
 

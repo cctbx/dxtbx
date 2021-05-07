@@ -1,12 +1,10 @@
 """An implementation of the CBF image reader for Pilatus images, for the P12M-DLS"""
 
-from __future__ import absolute_import, division, print_function
 
 import binascii
 import calendar
 import math
 import sys
-from builtins import range
 
 import libtbx
 from cctbx.eltbx import attenuation_coefficient
@@ -55,7 +53,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         self._multi_panel = kwargs.get("multi_panel", False)
 
-        super(FormatCBFMiniPilatusDLS12M, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _detector(self):
 

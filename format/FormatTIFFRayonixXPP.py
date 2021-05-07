@@ -6,12 +6,10 @@ distance, wavelength, etc.  Set these values to zero so the images can be at
 least viewed.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import re
 import struct
 import sys
-from builtins import range
 
 from iotbx.detectors.mar import MARImage
 
@@ -69,7 +67,7 @@ class FormatTIFFRayonixXPP(FormatTIFFRayonix):
         proper model of the experiment."""
 
         MARImage._read_header_asserts = lambda self: None
-        super(FormatTIFFRayonixXPP, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     ####################################################################
     #                                                                  #

@@ -18,7 +18,7 @@ def imageset(filename):
     # If the input is a string then open and read from that file
     filename = os.path.abspath(filename)
     directory = os.path.dirname(filename)
-    with open(filename, "r") as infile:
+    with open(filename) as infile:
         return imageset_from_dict(json.load(infile), directory=directory)
 
 
@@ -50,7 +50,7 @@ def crystal(infile):
     """
     # If the input is a string then open and read from that file
     if isinstance(infile, str):
-        with open(infile, "r") as infile:
+        with open(infile) as infile:
             return CrystalFactory.from_dict(json.loads(infile.read()))
 
     # Otherwise assume the input is a file and read from it

@@ -2,12 +2,10 @@
 Helpers for the scan class, which are things for handling e.g. filenames,
 templates and so on.
 """
-from __future__ import absolute_import, division, print_function
 
 import math
 import os
 import re
-from builtins import object
 
 # These are reversed patterns...
 patterns = [
@@ -128,7 +126,7 @@ def template_number2image(template, number):
     return template.replace("#" * length, format % number)
 
 
-class scan_helper_image_files(object):
+class scan_helper_image_files:
     """A helper class which handles things like image names, making templates,
     finding matching images and so on. Currently this just provides aliases
     to existing functions elsewhere, but ultimately it would be good if they

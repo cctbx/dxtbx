@@ -150,7 +150,7 @@ def xds_detector_name(dxtbx_name):
     raise RuntimeError("detector %s unknown" % dxtbx_name)
 
 
-class to_xds(object):
+class to_xds:
     """A class to export contents of a Sequence as XDS.INP or XPARM.XDS."""
 
     def __init__(self, sequence):

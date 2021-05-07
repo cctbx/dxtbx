@@ -4,7 +4,6 @@ amongst others - this will read the header and construct the full model,
 but will allow for extension for specific implementations of CBF.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -41,7 +40,7 @@ class FormatCBFFull(FormatCBF):
 
         # It appears Pycbf can not handle unicode filenames (see dials/dials#256)
         self._raw_data = None
-        super(FormatCBFFull, self).__init__(str(image_file), **kwargs)
+        super().__init__(str(image_file), **kwargs)
 
     def __del__(self):
         self._cbf_handle.__swig_destroy__(self._cbf_handle)

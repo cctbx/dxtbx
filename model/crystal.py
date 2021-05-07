@@ -1,12 +1,10 @@
-from __future__ import absolute_import, division, print_function
-
 from cctbx.sgtbx import space_group as SG
 from scitbx import matrix
 
 from dxtbx_model_ext import Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014
 
 
-class CrystalFactory(object):
+class CrystalFactory:
     @staticmethod
     def from_dict(d, t=None):
         """Convert the dictionary to a crystal model
