@@ -78,8 +78,8 @@ class FormatISISSXD(FormatNXTOFRAW):
         num_images = self.get_num_images()
         raw_data = []
 
-        for i in range(1, num_panels + 1):
-            idx_array = get_detector_idx_array(i, image_size, idx_offset)
+        for n in range(1, num_panels + 1):
+            idx_array = get_detector_idx_array(n, image_size, idx_offset)
             panel_array = np.zeros((idx_array.shape[0], idx_array.shape[1], num_images))
             for c_i, i in enumerate(idx_array):
                 for c_j, j in enumerate(i):
@@ -183,53 +183,54 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def _get_panel_origins(self):
         return (
-            (60.843, 96.0, -236.969),
-            (225.0, 96.0, -96.0),
-            (213.099, 96.0, 120.041),
-            (-62.876, 96.0, 236.438),
-            (-226.0, 96.0, 96.0),
-            (-213.099, 96.0, -120.041),
-            (260.942, -118.534, -96.0),
-            (99.0, -118.534, 260.942),
-            (-259.791, -123.047, 96.0),
-            (-98.0, -118.534, -260.942),
-            (95.0, -277.0, 96.0),
+            (60.843, -96.0, -236.969),
+            (225.0, 96.0, 96.0),
+            (60.843, 96.0, 236.969),
+            (-214.172, 96.0, 118.166),
+            (-226.0, 96.0, -96.0),
+            (-60.843, 96.0, -236.969),
+            (127.502, 256.582, 96.0),
+            (-93.0, 256.582, 127.502),
+            (-124.047, 258.791, -96.0),
+            (94.0, 256.582, -127.502),
+            (95.0, 279.0, 96.0),
         )
 
     def _get_panel_slow_axes(self):
         return (
+            (0.793, 0.0, 0.609),
             (0.0, -1.0, 0.0),
             (0.0, -1.0, 0.0),
             (0.0, -1.0, 0.0),
             (0.0, -1.0, 0.0),
             (0.0, -1.0, 0.0),
-            (0.0, -1.0, 0.0),
-            (-0.695, -0.719, 0.0),
-            (-0.0, -0.719, -0.695),
-            (0.707, -0.707, 0.0),
+            (0.695, -0.719, -0.0),
             (0.0, -0.719, 0.695),
+            (-0.707, -0.707, -0.0),
+            (0.0, -0.719, -0.695),
             (-0.0, 0.0, -1.0),
         )
 
     def _get_panel_fast_axes(self):
         return (
-            (0.793, -0.0, 0.609),
-            (0.0, 0.0, 1.0),
-            (-0.793, 0.0, 0.609),
-            (-0.788, 0.0, -0.616),
-            (0.0, 0.0, -1.0),
-            (0.793, 0.0, -0.609),
-            (-0.0, 0.0, 1.0),
-            (-1.0, 0.0, 0.0),
-            (0.0, 0.0, -1.0),
-            (1.0, 0.0, 0.0),
-            (-1.0, 0.0, 0.0),
+            (0.0, 1.0, 0.0),
+            (-0.0, -0.0, -1.0),
+            (0.793, -0.0, -0.609),
+            (0.788, -0.0, 0.616),
+            (-0.0, -0.0, 1.0),
+            (-0.793, -0.0, 0.609),
+            (0.0, -0.0, -1.0),
+            (1.0, -0.0, -0.0),
+            (-0.0, -0.0, 1.0),
+            (-1.0, -0.0, -0.0),
+            (-1.0, -0.0, -0.0),
         )
 
     def _get_s0(self):
         return (0, 0, 0)
 
     def _get_unit_s0(self):
+        return (0, 0, 1)
         return tuple(self._get_s0() / np.linalg.norm(self._get_s0()))
 
     def _get_beam_direction(self):
@@ -259,7 +260,7 @@ class FormatISISSXD(FormatNXTOFRAW):
     def get_beam(self, idx=None):
         s0 = self._get_s0()
         unit_s0 = self._get_unit_s0()
-        wavelength = -1
+        wavelength = 1
         direction = self._get_beam_direction()
         divergence = self._get_beam_divergence()
         sigma_divergence = self._get_beam_sigma_divergence()
