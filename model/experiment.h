@@ -68,7 +68,8 @@ namespace dxtbx { namespace model {
           profile_(profile),
           imageset_(imageset),
           scaling_model_(scaling_model),
-          identifier_(identifier) {}
+          identifier_(identifier),
+          index_(-1) {}
 
     /**
      * Check if the beam model is the same.
@@ -286,6 +287,20 @@ namespace dxtbx { namespace model {
       return identifier_;
     }
 
+    /**
+     * Set the index
+     */
+    void set_index(int index) {
+      index_ = index;
+    }
+
+    /**
+     * Get the index
+     */
+    int get_index() const {
+      return index_;
+    }
+
   protected:
     boost::shared_ptr<BeamBase> beam_;
     boost::shared_ptr<Detector> detector_;
@@ -296,6 +311,7 @@ namespace dxtbx { namespace model {
     boost::python::object imageset_;
     boost::python::object scaling_model_;
     std::string identifier_;
+    int index_;
   };
 
 }}  // namespace dxtbx::model

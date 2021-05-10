@@ -104,6 +104,8 @@ namespace dxtbx { namespace model { namespace boost_python {
         "scaling_model", &Experiment::get_scaling_model, &Experiment::set_scaling_model)
       .add_property(
         "identifier", &Experiment::get_identifier, &Experiment::set_identifier)
+      .add_property(
+        "index", &Experiment::get_index, &Experiment::set_index)
       .def("__contains__", experiment_contains_pointers::beam())
       .def("__contains__", experiment_contains_pointers::detector())
       .def("__contains__", experiment_contains_pointers::goniometer())

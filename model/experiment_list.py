@@ -608,6 +608,10 @@ class ExperimentListFactory(object):
                     )
                 )
 
+        # Assign indices to experiments
+        for j, expt in enumerate(experiments):
+            expt.index = j
+
         return experiments
 
     @staticmethod
@@ -754,6 +758,10 @@ class ExperimentListFactory(object):
         # Check the list is consistent
         assert experiments.is_consistent()
 
+        # Assign indices to experiments
+        for j, expt in enumerate(experiments):
+            expt.index = j
+
         return experiments
 
     @staticmethod
@@ -798,6 +806,9 @@ class ExperimentListFactory(object):
         # Set the crystal in the experiment list
         assert len(experiments) == 1
 
+        # Assign the index
+        experiments[0].index = 0
+
         return experiments
 
     @staticmethod
@@ -827,6 +838,11 @@ class ExperimentListFactory(object):
             experiments.extend(
                 ExperimentListFactory.from_datablock_and_crystal(db, None)
             )
+
+        # Assign indices to experiments
+        for j, expt in enumerate(experiments):
+            expt.index = j
+
         return experiments
 
 
