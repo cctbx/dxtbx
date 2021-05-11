@@ -11,7 +11,10 @@ from dxtbx.format.Format import Format
 
 try:
     # Try to import the modernised pycbf
+    import pycbf
     from pycbf.img import Img
+
+    print(f"Using modernised pycbf-{pycbf.__version__}")
 except ModuleNotFoundError:
     Img = None
     # Replicate fallback logic from iotbx.detectors.marIP
