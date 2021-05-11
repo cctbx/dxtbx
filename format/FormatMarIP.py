@@ -14,6 +14,8 @@ try:
     import pycbf
     from pycbf.img import Img
 
+    import scitbx.array_family.flex as flex
+
     print(f"Using modernised pycbf-{pycbf.__version__}")
 except ModuleNotFoundError:
     Img = None
@@ -60,7 +62,7 @@ if Img is not None:
 
         def rawdata(self):
             self.read_data()
-            raise NotImplementedError
+            return flex.int(self._img.image)
 
         def columns(self):
             return self._img.columns
