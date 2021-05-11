@@ -15,7 +15,7 @@ env_etc.dxtbx_common_includes = [
     env_etc.boost_adaptbx_include,
     env_etc.boost_include,
     env_etc.dxtbx_include,
-] + env_etc.cbflib_common_includes
+]
 
 Import("env_no_includes_boost_python_ext")
 env = env_no_includes_boost_python_ext.Clone()
@@ -28,7 +28,7 @@ if libtbx.env.build_options.use_conda:
 else:
     boost_python = "boost_python"
 
-env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
+env_etc.dxtbx_libs = ["tiff", boost_python]
 env_etc.dxtbx_lib_paths = [
     env_etc.base_lib,
     env_etc.libtbx_lib,
@@ -62,7 +62,7 @@ if sys.platform == "win32" and env_etc.compiler == "win32_cl":
             os.path.join(env_etc.cctbx_include, "msvc9.0_include")
         )
         env_etc.dxtbx_includes.append(libtbx.env.under_base("libtiff"))
-        env_etc.dxtbx_libs = ["libtiff", "cbf", "boost_python"]
+        env_etc.dxtbx_libs = ["libtiff", "boost_python"]
 
 # for the hdf5.h file - look at where Python is coming from unless is OS X
 # framework build... messy but appears to work on Linux and OS X
