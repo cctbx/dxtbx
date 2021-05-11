@@ -189,7 +189,8 @@ namespace dxtbx { namespace model {
       int index = find(experiment.get_identifier());
       DXTBX_ASSERT(index < 0);
 
-      // Add the experiment
+      // Add the experiment and set the index
+      // experiment.set_index(data_.size())
       data_.push_back(experiment);
     }
 
