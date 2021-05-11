@@ -3,11 +3,13 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import pycbf
+import pytest
 
-from dxtbx.format.image import cbf_read_buffer
+# from dxtbx.format.image import cbf_read_buffer
 from dxtbx.model.detector import DetectorFactory
 
 
+@pytest.mark.skip
 def test_cbf_buffer(dials_regression):
     filename = os.path.join(
         dials_regression, "image_examples", "dials-190", "whatev1_01_00001.cbf"

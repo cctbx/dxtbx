@@ -17,7 +17,8 @@ from scitbx.array_family import flex
 from dxtbx.format.Format import bz2, gzip
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatStill import FormatStill
-from dxtbx.format.image import cbf_read_buffer
+
+# from dxtbx.format.image import cbf_read_buffer
 
 
 class FormatCBFFull(FormatCBF):
