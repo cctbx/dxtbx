@@ -7,8 +7,6 @@ import os
 import sys
 from builtins import range
 
-import six.moves.cPickle as pickle
-
 import boost_adaptbx.boost.python
 import cctbx.crystal
 import cctbx.sgtbx
@@ -833,18 +831,6 @@ class _(object):
                     outfile.write(text)
             else:
                 return text
-
-    def as_pickle(self, filename=None, **kwargs):
-        """Dump experiment list as pickle."""
-        # Get the pickle string
-        text = pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
-
-        # Write the file
-        if filename:
-            with open(str(filename), "wb") as outfile:
-                outfile.write(text)
-        else:
-            return text
 
     def as_file(self, filename, **kwargs):
         """Dump experiment list as file."""
