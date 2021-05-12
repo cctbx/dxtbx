@@ -807,16 +807,7 @@ class ExperimentListFactory(object):
         if hasattr(filename, "__fspath__"):
             filename = filename.__fspath__()  # unwrap PEP-519-style objects
 
-        # First try as a JSON file
-        try:
-            return ExperimentListFactory.from_json_file(filename, check_format)
-        except (FileNotFoundError, PermissionError):
-            raise
-        except Exception:
-            pass
-
-        # Now try as a pickle file
-        return ExperimentListFactory.from_pickle_file(filename)
+        return ExperimentListFactory.from_json_file(filename, check_format)
 
     @staticmethod
     def from_templates(templates, **kwargs):
