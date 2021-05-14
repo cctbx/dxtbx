@@ -2,10 +2,8 @@
 An implementation of the SMV image reader for Rigaku Saturn images, for
 the instrument at CSHL, SN 09040159.
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
-from builtins import range
 
 from scitbx import matrix
 

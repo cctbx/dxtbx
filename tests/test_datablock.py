@@ -1,8 +1,8 @@
 import json
 import os
+import pickle
 
 import pytest
-import six.moves.cPickle as pickle
 
 from dxtbx.datablock import DataBlockFactory
 from dxtbx.imageset import ImageSequence

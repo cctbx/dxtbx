@@ -1,9 +1,5 @@
-# coding: utf-8
-from __future__ import absolute_import, division, print_function
-
 import functools
 import os
-from builtins import range
 
 from scitbx.array_family import flex
 
@@ -26,7 +22,7 @@ def _add_static_mask_to_iset(format_instance: Format, iset: ImageSet) -> None:
                 iset.external_lookup.mask.data = ImageBool(static_mask)
 
 
-class Reader(object):
+class Reader:
     def __init__(self, format_class, filenames, num_images=None, **kwargs):
         self.kwargs = kwargs
         self.format_class = format_class

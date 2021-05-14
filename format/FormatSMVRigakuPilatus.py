@@ -2,11 +2,9 @@
 An implementation of the SMV image reader for Rigaku Pilatus images.
 Inherits from FormatSMVRigaku.
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
 import time
-from builtins import range
 
 from boost_adaptbx.boost.python import streambuf
 from scitbx import matrix

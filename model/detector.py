@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import os
-from builtins import object, range
 
 import pycbf
 
@@ -195,7 +192,7 @@ detector_phil_scope = libtbx.phil.parse(
 )
 
 
-class DetectorFactory(object):
+class DetectorFactory:
     """A factory class for detector objects, which will encapsulate standard
     detector designs to make it a little easier to get started with these. In
     cases where a CBF image is provided a full description can be used, in
@@ -447,9 +444,7 @@ class DetectorFactory(object):
             if len(params.detector.slow_fast_beam_centre) > 2:
                 panel_id = params.detector.slow_fast_beam_centre[2]
             if panel_id >= len(detector):
-                raise IndexError(
-                    "Detector does not have panel index {}".format(panel_id)
-                )
+                raise IndexError(f"Detector does not have panel index {panel_id}")
             px_size_f, px_size_s = detector[0].get_pixel_size()
             slow_fast_beam_centre_mm = (
                 params.detector.slow_fast_beam_centre[0] * px_size_s,

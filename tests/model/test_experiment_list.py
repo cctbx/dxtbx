@@ -1,10 +1,10 @@
 import collections
 import errno
 import os
+import pickle
 from unittest import mock
 
 import pytest
-import six.moves.cPickle as pickle
 
 from cctbx import sgtbx
 from scitbx.array_family import flex

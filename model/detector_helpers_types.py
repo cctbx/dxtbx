@@ -4,19 +4,15 @@ detector types, hashed by the sensor type, image dimensions and pixel
 dimensions.
 """
 
-from __future__ import absolute_import, division, print_function
-
-import io
 import os
 import sys
-from builtins import object
 
 import dxtbx
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.detector_helpers import detector_helper_sensors
 
 
-class detector_helpers_types(object):
+class detector_helpers_types:
     """A singleton class to help with identifying specific detectors used for
     macromolecular crystallography."""
 
@@ -30,7 +26,7 @@ class detector_helpers_types(object):
 
         self._detectors = {}
 
-        with io.open(detector_lib, "r", encoding="ascii") as fh:
+        with open(detector_lib, encoding="ascii") as fh:
             for record in fh:
                 if record.startswith(("Sensor", "-----")):
                     continue

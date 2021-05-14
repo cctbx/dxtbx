@@ -1,9 +1,9 @@
 import os
+import pickle
 import shutil
 from unittest import mock
 
 import pytest
-import six.moves.cPickle as pickle
 
 from scitbx.array_family import flex
 

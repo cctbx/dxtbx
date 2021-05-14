@@ -74,7 +74,7 @@ class InvalidExperimentListError(RuntimeError):
     """
 
 
-class ExperimentListDict(object):
+class ExperimentListDict:
     """A helper class for serializing the experiment list to dictionary (needed
     to save the experiment list to JSON format."""
 
@@ -484,13 +484,13 @@ def _experimentlist_from_file(filename, directory=None):
     """Load a model dictionary from a file."""
     filename = resolve_path(filename, directory=directory)
     try:
-        with open(filename, "r") as infile:
+        with open(filename) as infile:
             return json.load(infile)
-    except IOError:
-        raise IOError("unable to read file, %s" % filename)
+    except OSError:
+        raise OSError("unable to read file, %s" % filename)
 
 
-class ExperimentListFactory(object):
+class ExperimentListFactory:
     """A class to help instantiate experiment lists."""
 
     @staticmethod
@@ -770,7 +770,7 @@ class ExperimentListFactory(object):
         """Load an experiment list from a json file."""
         filename = os.path.abspath(filename)
         directory = os.path.dirname(filename)
-        with open(filename, "r") as infile:
+        with open(filename) as infile:
             return ExperimentListFactory.from_json(
                 infile.read(), check_format=check_format, directory=directory
             )
@@ -1254,7 +1254,7 @@ def _create_imagesequence(record, format_class, format_kwargs=None):
     return sequence
 
 
-class ExperimentListTemplateImporter(object):
+class ExperimentListTemplateImporter:
     """[DEPRECATED] Import an experiment list from a template.
 
     To be removed after DIALS v3.5 release branch is made; 3.5 v3.5.0"""

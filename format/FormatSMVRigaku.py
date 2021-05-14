@@ -2,7 +2,6 @@
 An implementation of the SMV image reader for Rigaku images.
 Inherits from FormatSMV.
 """
-from __future__ import absolute_import, division, print_function
 
 import calendar
 import sys

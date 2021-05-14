@@ -1,9 +1,7 @@
 """Reads a multi-tile CBF image, discovering its detector geometry automatically"""
 
-from __future__ import absolute_import, division, print_function
 
 import sys
-from builtins import range
 
 import numpy
 import pycbf

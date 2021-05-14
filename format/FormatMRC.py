@@ -2,7 +2,6 @@
 standard used in electron microscopy
 (http://www.ccpem.ac.uk/mrc_format/mrc2014.php)"""
 
-from __future__ import absolute_import, division, print_function
 
 import logging
 import os

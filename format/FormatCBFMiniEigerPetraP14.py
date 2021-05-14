@@ -1,6 +1,5 @@
 """An implementation of the CBF image reader for Eiger images"""
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 

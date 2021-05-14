@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import math
 
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
@@ -26,7 +24,7 @@ __all__ = [
 ]
 
 
-class GoniometerMaskerFactory(object):
+class GoniometerMaskerFactory:
     @staticmethod
     def mini_kappa(goniometer, cone_opening_angle=43.60281897270362):
         """Construct a GoniometerShadowMasker for a mini-kappa goniometer.

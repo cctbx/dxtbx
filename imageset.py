@@ -1,7 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
-from builtins import range
-
 import boost_adaptbx.boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
@@ -48,7 +44,7 @@ def _expand_template(template: str, indices: Iterable[int]) -> List[str]:
     return [f"{pfx}{index:0{count}}{sfx}" for index in indices]
 
 
-class MemReader(object):
+class MemReader:
     """A reader for data already loaded in memory"""
 
     def __init__(self, images):
@@ -77,7 +73,7 @@ class MemReader(object):
 
 
 @boost_adaptbx.boost.python.inject_into(ImageSet)
-class _(object):
+class _:
     """
     A class to inject additional methods into the imageset class
     """
@@ -186,7 +182,7 @@ class ImageSetLazy(ImageSet):
         """
         if index is None:
             index = 0
-        item = getattr(super(ImageSetLazy, self), "get_" + item_name)(index)
+        item = getattr(super(), "get_" + item_name)(index)
         if item is None:
             # If check_format=False was used, then _current_instance_ will not be set, so assume a None is correct
             format_class = self.get_format_class()
@@ -226,19 +222,19 @@ class ImageSetLazy(ImageSet):
         if isinstance(item, slice):
             return ImageSetLazy(self.data(), indices=self.indices()[item])
         self._load_models(item)
-        return super(ImageSetLazy, self).__getitem__(item)
+        return super().__getitem__(item)
 
     def get_corrected_data(self, index):
         self._load_models(index)
-        return super(ImageSetLazy, self).get_corrected_data(index)
+        return super().get_corrected_data(index)
 
     def get_gain(self, index):
         self._load_models(index)
-        return super(ImageSetLazy, self).get_gain(index)
+        return super().get_gain(index)
 
 
 @boost_adaptbx.boost.python.inject_into(ImageSequence)
-class _(object):
+class _:
     def __getitem__(self, item):
         """Get an item from the sequence stream.
 
@@ -337,7 +333,7 @@ def _analyse_files(filenames):
 
 
 # FIXME Lots of duplication in this class, need to tidy up
-class ImageSetFactory(object):
+class ImageSetFactory:
     """Factory to create imagesets and sequences."""
 
     @staticmethod

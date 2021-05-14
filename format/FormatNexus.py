@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 import h5py
@@ -15,7 +13,7 @@ class FormatNexus(FormatHDF5):
     def understand(image_file):
         try:
             return nexus.is_nexus_file(image_file)
-        except IOError:
+        except OSError:
             return False
 
     def _start(self):
@@ -160,7 +158,7 @@ class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
                     for sample in nexus.find_class(entry, "NXsample"):
                         if "depends_on" not in sample:
                             is_nexus_still = True
-        except IOError:
+        except OSError:
             return False
         return is_nexus_still
 

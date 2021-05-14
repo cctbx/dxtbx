@@ -3,12 +3,10 @@ Reads a multi-tile CBF image, discovering it's detector geometery
 automatically, and builds a hierarchy if present
 """
 
-from __future__ import absolute_import, division, print_function
 
 import collections
 import struct
 import sys
-from builtins import range
 
 import pycbf
 

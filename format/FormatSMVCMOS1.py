@@ -1,11 +1,9 @@
 """An implementation of the SMV image reader for CMOS1 images, from ALS 4.2.2"""
 
-from __future__ import absolute_import, division, print_function
 
 import calendar
 import sys
 import time
-from builtins import range
 
 from boost_adaptbx.boost.python import streambuf
 from scitbx import matrix
@@ -57,7 +55,7 @@ class FormatSMVCMOS1(FormatSMV):
         ]
 
         if any(
-            "%s%s" % (detector_prefix, item) not in header
+            f"{detector_prefix}{item}" not in header
             for item in more_wanted_header_items
         ):
             return False
@@ -72,12 +70,12 @@ class FormatSMVCMOS1(FormatSMV):
         """Initialise the image structure from the given file, including a
         proper model of the experiment."""
 
-        super(FormatSMVCMOS1, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
         detector_prefixes = self._header_dictionary["DETECTOR_NAMES"].split()
         self._prefix = detector_prefixes[0]
 
     def _start(self):
-        super(FormatSMVCMOS1, self)._start()
+        super()._start()
         self._header_size = int(self._header_dictionary["HEADER_BYTES"])
 
     def _goniometer(self):

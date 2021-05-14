@@ -1,11 +1,8 @@
-from __future__ import absolute_import, division, print_function
-
 import collections
 import copy
 import json
 import os
 import sys
-from builtins import range
 
 import boost_adaptbx.boost.python
 import cctbx.crystal
@@ -104,7 +101,7 @@ __all__ = (
 
 
 @boost_adaptbx.boost.python.inject_into(Detector)
-class _(object):
+class _:
     def iter_panels(self):
         """Iterate through just the panels depth-first."""
         for obj in self.iter_preorder():
@@ -131,7 +128,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(Crystal)
-class _(object):
+class _:
     def show(self, show_scan_varying=False, out=None):
         if out is None:
             out = sys.stdout
@@ -381,7 +378,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(MosaicCrystalKabsch2010)
-class _(object):
+class _:
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -438,7 +435,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(MosaicCrystalSauter2014)
-class _(object):
+class _:
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -509,7 +506,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(Experiment)
-class _(object):
+class _:
     def load_models(self, index=None):
         """Load the models from the imageset"""
         if index is None:
@@ -521,7 +518,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
-class _(object):
+class _:
     def __repr__(self):
         if len(self):
             return "ExperimentList([{}])".format(", ".join(repr(x) for x in self))
@@ -836,14 +833,11 @@ class _(object):
         """Dump experiment list as file."""
         ext = os.path.splitext(filename)[1]
         j_ext = [".json", ".expt"]
-        p_ext = [".p", ".pkl", ".pickle"]
         if ext.lower() in j_ext:
             return self.as_json(filename, **kwargs)
-        elif ext.lower() in p_ext:
-            return self.as_pickle(filename, **kwargs)
         else:
-            ext_str = "|".join(j_ext + p_ext)
-            raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
+            ext_str = "|".join(j_ext)
+            raise RuntimeError(f"expected extension {{{ext_str}}}, got {ext}")
 
     @staticmethod
     def from_file(filename, check_format=True):

@@ -1,7 +1,6 @@
 """
 Format class for the PAL XFEL raw data format
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
 

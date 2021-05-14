@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import math
 import os
 import pickle
@@ -428,7 +426,7 @@ def test_dls_i19_2_diamond_anvil_cell(
     assert mask2[0].count(True) == mask2[0].count(True)
 
 
-class PyGoniometerShadowMasker(object):
+class PyGoniometerShadowMasker:
     def __init__(self, goniometer, extrema_at_datum, axis):
         # axis is an array of size_t the same size as extrema_at_datum,
         # where each element identifies the axis that that coordinate depends on
@@ -651,12 +649,12 @@ class PySmarGonShadowMasker(PyGoniometerShadowMasker):
 
         extrema_at_datum = self.faceA.deep_copy()
         extrema_at_datum.extend(self.faceE)
-        super(PySmarGonShadowMasker, self).__init__(
+        super().__init__(
             goniometer, extrema_at_datum, flex.size_t(extrema_at_datum.size(), 1)
         )
 
     def extrema_at_scan_angle(self, scan_angle):
-        extrema = super(PySmarGonShadowMasker, self).extrema_at_scan_angle(scan_angle)
+        extrema = super().extrema_at_scan_angle(scan_angle)
 
         axes = self.goniometer.get_axes()
         angles = self.goniometer.get_angles()

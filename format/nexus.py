@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import collections
 import itertools
 import math
@@ -8,7 +6,6 @@ from typing import List, Optional, Tuple, Union
 
 import h5py
 import numpy
-import six
 
 import cctbx.uctbx
 from cctbx.eltbx import attenuation_coefficient
@@ -161,7 +158,7 @@ def convert_units(value, input_units, output_units):
     """
     Hacky utility function to convert units
     """
-    if six.PY3 and isinstance(input_units, bytes):
+    if isinstance(input_units, bytes):
         input_units = input_units.decode("latin-1")
     converters = {
         "m": {
@@ -192,7 +189,7 @@ def convert_units(value, input_units, output_units):
     try:
         return converters[input_units][output_units](value)
     except Exception:
-        raise RuntimeError("Can't convert units %r to %r" % (input_units, output_units))
+        raise RuntimeError(f"Can't convert units {input_units!r} to {output_units!r}")
 
 
 def visit_dependencies(nx_file, item, visitor=None):
@@ -226,7 +223,7 @@ def construct_vector(nx_file, item, vector=None):
     Walk the dependency chain and create the absolute vector
     """
 
-    class TransformVisitor(object):
+    class TransformVisitor:
         def __init__(self, vector):
             self.vector = matrix.col(vector)
 
@@ -282,7 +279,7 @@ def construct_axes(nx_file, item, vector=None):
     Walk the dependency chain and create the absolute vector
     """
 
-    class Visitor(object):
+    class Visitor:
         def __init__(self):
             self._axes = flex.vec3_double()
             self._angles = flex.double()
@@ -362,7 +359,7 @@ def construct_axes(nx_file, item, vector=None):
     return visitor.result()
 
 
-class NXdetector_module(object):
+class NXdetector_module:
     """
     A class to hold a handle to NXdetector_module
     """
@@ -371,7 +368,7 @@ class NXdetector_module(object):
         self.handle = handle
 
 
-class NXdetector_group(object):
+class NXdetector_group:
     """
     A class to hold a handle to NXdetector_group
     """
@@ -380,7 +377,7 @@ class NXdetector_group(object):
         self.handle = handle
 
 
-class NXdetector(object):
+class NXdetector:
     """
     A class to handle a handle to NXdetector
     """
@@ -399,7 +396,7 @@ class NXdetector(object):
             raise NXValidationError("No NXdetector_module in %s" % self.handle.name)
 
 
-class NXinstrument(object):
+class NXinstrument:
     """
     A class to hold a handle to NXinstrument
     """
@@ -421,7 +418,7 @@ class NXinstrument(object):
         self.beams = [NXbeam(beam) for beam in beams]
 
 
-class NXbeam(object):
+class NXbeam:
     """
     A class to hold a handle to NXbeam
     """
@@ -430,7 +427,7 @@ class NXbeam(object):
         self.handle = handle
 
 
-class NXsample(object):
+class NXsample:
     """
     A class to hold a handle to NXsample
     """
@@ -442,7 +439,7 @@ class NXsample(object):
         self.beams = [NXbeam(beam) for beam in find_class(self.handle, "NXbeam")]
 
 
-class NXdata(object):
+class NXdata:
     """
     A class to hold a handle to NXdata
     """
@@ -451,7 +448,7 @@ class NXdata(object):
         self.handle = handle
 
 
-class NXmxEntry(object):
+class NXmxEntry:
     """
     A class to hold a handle to NXmx entries
     """
@@ -477,7 +474,7 @@ class NXmxEntry(object):
         self.data = [NXdata(data) for data in data_sets]
 
 
-class NXmxReader(object):
+class NXmxReader:
     """
     A hacky class to read an NXmx file
     """
@@ -540,7 +537,7 @@ def is_nexus_file(filename):
         return bool(find_entries(handle))
 
 
-class BeamFactory(object):
+class BeamFactory:
     """
     A class to create a beam model from NXmx stuff
     """
@@ -770,7 +767,7 @@ def get_cumulative_change_of_basis(transformation):
     return parent, cob
 
 
-class DetectorFactoryFromGroup(object):
+class DetectorFactoryFromGroup:
     """
     A class to create a detector model from a NXdetector_group
     """
@@ -974,7 +971,7 @@ class DetectorFactoryFromGroup(object):
                     )
 
 
-class DetectorFactory(object):
+class DetectorFactory:
     """
     A class to create a detector model from NXmx stuff
     """
@@ -1109,7 +1106,7 @@ class DetectorFactory(object):
             panel.set_type("SENSOR_PAD")
 
 
-class GoniometerFactory(object):
+class GoniometerFactory:
     """
     A class to create a goniometer model from NXmx stuff
     """
@@ -1203,7 +1200,7 @@ def generate_scan_model(obj, detector_obj):
     return Scan(image_range, oscillation, exposure_time, epochs)
 
 
-class CrystalFactory(object):
+class CrystalFactory:
     """
     A class to create a crystal model from NXmx stuff
     """
@@ -1230,7 +1227,7 @@ class CrystalFactory(object):
         )
 
 
-class DetectorGroupDataList(object):
+class DetectorGroupDataList:
     """
     A class to make it easier to access the data from multiple datasets.
     This version brings in all the panels from a detector group with several detectors.
@@ -1277,7 +1274,7 @@ def get_detector_module_slices(detector):
     return all_slices
 
 
-class MultiPanelDataList(object):
+class MultiPanelDataList:
     """
     A class to make it easier to access the data from multiple datasets.
     Also handles multi-panel data as described in a series of NXdetector_modules
@@ -1320,7 +1317,7 @@ DataFactoryCache = collections.namedtuple(
 )
 
 
-class DataFactory(object):
+class DataFactory:
     """
     A class to make it easier to access data from multiple datasets.
     """
@@ -1470,7 +1467,7 @@ def detectorgroupdatafactory(obj, instrument):
     )
 
 
-class MaskFactory(object):
+class MaskFactory:
     """
     A class to create an object to hold the pixel mask data
     """

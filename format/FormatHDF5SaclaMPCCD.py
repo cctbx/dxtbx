@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import math
 import os
 import sys
@@ -57,7 +55,7 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
         self._raw_data = None
         self.index = index
         self.image_filename = image_file
-        super(FormatHDF5SaclaMPCCD, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
         self.PIXEL_SIZE = 50 / 1000  # 50 um
         self.RECONST_SIZE = 2398  # compatible with DataConvert3 -reconst mode
@@ -111,14 +109,14 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
             try:
                 tmp = [float(i) for i in os.environ["MPCCD_GEOMETRY"].split(",")]
                 if len(tmp) != 24:
-                    raise EnvironmentError(
+                    raise OSError(
                         "Environment variable MPCCD_GEOMETRY must contain 24 comma-separated parts"
                     )
                 for i in range(8):
                     self.panel_origins[i] = (-tmp[i * 3], tmp[i * 3 + 1], 0)
                     self.panel_rotations[i] = tmp[i * 3 + 2]
             except Exception as e:
-                raise EnvironmentError(
+                raise OSError(
                     "Invalid MPCCD Geometry specified in environment variable MPCCD_GEOMETRY: {}".format(
                         e
                     )

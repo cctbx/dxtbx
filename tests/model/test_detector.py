@@ -1,11 +1,8 @@
-from __future__ import absolute_import, division, print_function
-
 import copy
+import pickle
 import random
-from builtins import range
 
 import pytest
-import six.moves.cPickle as pickle
 
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.test_utils import approx_equal

@@ -1,6 +1,5 @@
 """An implementation of the CBF image reader for Pilatus images"""
 
-from __future__ import absolute_import, division, print_function
 
 import os
 import sys
@@ -24,7 +23,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         proper model of the experiment."""
 
         self._multi_panel = kwargs.get("multi_panel", False)
-        super(FormatCBFMiniPilatus, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     @staticmethod
     def understand(image_file):
@@ -210,7 +209,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
     def get_raw_data(self):
         if not self._multi_panel:
-            return super(FormatCBFMiniPilatus, self).get_raw_data()
+            return super().get_raw_data()
 
         if self._raw_data is None:
             raw_data = self._read_cbf_image()

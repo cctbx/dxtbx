@@ -4,7 +4,6 @@
 import math
 import os
 import sys
-from builtins import range
 
 import numpy as np
 
@@ -345,9 +344,7 @@ def run(args=None, imageset=None):
                         "%9.3f %9.3f %9.3f\n" % (val, r, std_devs[i])
                     )  # .xye format for GSASII
                 # logger.write("%.3f %.3f %.3f\n"%(val,r,ds[i]))  # include calculated d spacings
-            logger.write(
-                "Maximum %s: %f, value: %f\n" % (params.x_axis, max_x, max_result)
-            )
+            logger.write(f"Maximum {params.x_axis}: {max_x:f}, value: {max_result:f}\n")
 
             if params.show_plots:
                 if params.plot_x_max is not None:

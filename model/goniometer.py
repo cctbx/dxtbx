@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import math
-from builtins import object, range
 
 import pycbf
 
@@ -75,7 +72,7 @@ goniometer_phil_scope = libtbx.phil.parse(
 )
 
 
-class GoniometerFactory(object):
+class GoniometerFactory:
     """A factory class for goniometer objects, which will encapsulate
     some standard goniometer designs to make it a little easier to get
     started with all of this - for cases when we are not using a CBF.

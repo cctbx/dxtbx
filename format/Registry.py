@@ -4,7 +4,6 @@ this is useful for i.e. identifying the best tool to read a given range
 of image formats.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import pkg_resources
 
