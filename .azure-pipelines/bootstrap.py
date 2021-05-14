@@ -82,7 +82,6 @@ def install_micromamba(python):
     else:
         command = "create"
         text_messages = ["Installing", "installation into"]
-    python_requirement = "conda-forge::python=%s.*" % python
 
     command_list = [
         mamba,
@@ -99,7 +98,7 @@ def install_micromamba(python):
         "--channel",
         "conda-forge",
         "--override-channels",
-        python_requirement,
+        "python=%s" % python,
     ]
 
     print(
@@ -852,7 +851,7 @@ def run():
         "--python",
         help="Install this minor version of Python (default: %(default)s)",
         default="3.8",
-        choices=("3.6", "3.7", "3.8"),
+        choices=("3.6", "3.7", "3.8", "3.9"),
     )
     parser.add_argument(
         "--branch",
