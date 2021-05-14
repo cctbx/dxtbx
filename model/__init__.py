@@ -2,7 +2,6 @@ import collections
 import copy
 import json
 import os
-import pickle
 import sys
 
 import boost_adaptbx.boost.python
@@ -829,18 +828,6 @@ class _:
                     outfile.write(text)
             else:
                 return text
-
-    def as_pickle(self, filename=None, **kwargs):
-        """Dump experiment list as pickle."""
-        # Get the pickle string
-        text = pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
-
-        # Write the file
-        if filename:
-            with open(str(filename), "wb") as outfile:
-                outfile.write(text)
-        else:
-            return text
 
     def as_file(self, filename, **kwargs):
         """Dump experiment list as file."""
