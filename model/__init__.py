@@ -833,13 +833,10 @@ class _:
         """Dump experiment list as file."""
         ext = os.path.splitext(filename)[1]
         j_ext = [".json", ".expt"]
-        p_ext = [".p", ".pkl", ".pickle"]
         if ext.lower() in j_ext:
             return self.as_json(filename, **kwargs)
-        elif ext.lower() in p_ext:
-            return self.as_pickle(filename, **kwargs)
         else:
-            ext_str = "|".join(j_ext + p_ext)
+            ext_str = "|".join(j_ext)
             raise RuntimeError(f"expected extension {{{ext_str}}}, got {ext}")
 
     @staticmethod
