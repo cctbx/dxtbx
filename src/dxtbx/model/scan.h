@@ -73,7 +73,7 @@ namespace dxtbx { namespace model {
               num_images_(1 + image_range[1] - image_range[0]),
               total_tof_(total_tof),
               is_tof_(true),
-              oscillation_(0.0, 1E-8),
+              oscillation_(0.0, 0.0),
               batch_offset_(0),
               is_still_(false){
                                                         
