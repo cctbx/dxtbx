@@ -168,8 +168,8 @@ def test_detectorbase(test_image, dials_regression):
     if test_image.endswith(".cbf") and not cbflib_adaptbx:
         pytest.skip("No cbflib_adaptbx: CBF Detectorbase is not available")
 
-    test_image = Path(dials_regression).joinpath(
-        "image_examples", *test_image.split("/")
+    test_image = str(
+        Path(dials_regression).joinpath("image_examples", *test_image.split("/"))
     )
     format_instance = dxtbx.format.Registry.get_format_class_for_file(test_image)
     print("Reading", test_image)
@@ -197,6 +197,9 @@ def test_detectorbase(test_image, dials_regression):
         R_raw_data = instance.get_raw_data()
     except TypeError:
         R_raw_data = instance.get_raw_data(0)
+
+    if not isinstance(R_raw_data, tuple):
+        R_raw_data = (R_raw_data,)
 
     # NOTE dxtbx and image factory arrays are compared here for identical values.
     for Ip, Rp in zip(I_raw_data, R_raw_data):
