@@ -4,6 +4,7 @@ from sys import argv
 
 import h5py
 import numpy as np
+from scipy.constants import Planck, m_n
 
 from dials.array_family import flex
 
@@ -150,6 +151,11 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_time_channels_in_seconds(self):
         bins = self._get_time_channel_bins()
         return [(bins[i] + bins[i + 1]) * 0.5 * 10 ** -6 for i in range(len(bins) - 1)]
+
+    def get_wavelength_channels_in_ang(self):
+        time_channels = self._get_time_channels_in_seconds()
+        L = self._get_primary_flight_path_in_m()
+        return [self.get_tof_wavelength_in_ang(L, i) for i in time_channels]
 
     def _get_primary_flight_path_in_m(self):
         return 8.3
@@ -327,6 +333,9 @@ class FormatISISSXD(FormatNXTOFRAW):
         array_shape = (panel_size[0], panel_size[1], time_channel_size)
         return [i.reshape(array_shape) for i in panel_raw_data]
 
+    def get_tof_wavelength_in_ang(self, L, tof):
+        return ((Planck * tof) / (m_n * L)) * 10 ** 10
+
     def get_reflection_table_from_use_file(self, use_file, specific_panel=None):
 
         import dials_array_family_flex_ext
@@ -400,11 +409,6 @@ class FormatISISSXD(FormatNXTOFRAW):
             dtof_pos = 5
             return get_single_float_value(row, dtof_pos)
 
-        def get_tof_wavelength_in_ang(L0, L, tof):
-            h = 6.62607004e-34
-            m_n = 1.67493e-27
-            return ((h * tof) / (m_n * (L0 + L))) * 10 ** 10
-
         def get_pixel_wavelength_in_ang(
             x, y, tof, L0, centroid_l, pixel_size_in_mm, panel_size_in_px
         ):
@@ -415,7 +419,7 @@ class FormatISISSXD(FormatNXTOFRAW):
             rel_pos = np.sqrt(np.square(rel_x) + np.square(rel_y))
             rel_L = np.sqrt(np.square(rel_pos) + np.square(centroid_l))
 
-            return get_tof_wavelength_in_ang(L0, rel_L, tof)
+            return self.get_tof_wavelength_in_ang(L0 + rel_L, tof)
 
         def get_panel_l(panel_idx):
             panel_l_vals = [
