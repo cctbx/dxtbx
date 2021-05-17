@@ -124,6 +124,20 @@ _files = (
     "xia2/merge2cbf_averaged_0001.cbf",
 )
 
+_files_with_detectorbase = set(_files) - {
+    "Bruker_PHOTON_II/dan_01_0001.sfrm",
+    "DLS_eBIC/nanB_4_singleframe_1.ser.bz2",
+    "LCLS_cspad_nexus/idx-20130301060858401.cbf",
+    "LCLS_cspad_nexus/idx-20130301060858601.cbf",
+    "LCLS_cspad_nexus/idx-20130301060858701.cbf",
+    "LCLS_cspad_nexus/idx-20130301060858801.cbf",
+    "LCLS_jungfrau/jungfrau_multipanel.cbf",
+    "SACLA_MPCCD_Cheetah/run266702-0-subset.h5",
+    "XDS/INTEGRATE.HKL",
+    "XDS/XDS_ASCII.HKL",
+    "XDS/XPARM.XDS",
+}
+
 
 def test_berkeley_special_h5():
     # Handle the special berkeley-only h5 file
@@ -134,6 +148,50 @@ def test_berkeley_special_h5():
     # Run the tests, but without dials_regression fixture, circumventing the path resolution step
     test_read_image(special_h5, dials_regression=None)
     test_format_class_API_assumptions(special_h5, dials_regression=None)
+
+
+@pytest.mark.regression
+@pytest.mark.parametrize("test_image", _files_with_detectorbase)
+def test_detectorbase(test_image, dials_regression):
+    if not xfel and test_image.startswith("LCLS"):
+        pytest.skip("could not import 'xfel'")
+
+    if not h5py and test_image.endswith((".h5", ".nxs")):
+        pytest.skip("could not import 'h5py'")
+
+    test_image = Path(dials_regression).joinpath(
+        "image_examples", *test_image.split("/")
+    )
+    format_instance = dxtbx.format.Registry.get_format_class_for_file(test_image)
+    print("Reading", test_image)
+    print("Format:", format_instance)
+    assert format_instance, "no matching format class found"
+    instance = format_instance(test_image)
+
+    instance.get_detectorbase()
+
+    imgfactory = SlipViewerImageFactory(test_image)
+    imgfactory.read()
+    print("  Detectorbase:", instance.detectorbase.__class__.__name__)
+
+    try:
+        print(imgfactory.rawdata.focus())
+    except AttributeError:
+        # Not all instances have this attribute
+        print("  multireadout")
+
+    I_raw_data = imgfactory.get_raw_data()
+    if not isinstance(I_raw_data, tuple):
+        I_raw_data = (I_raw_data,)
+
+    try:
+        R_raw_data = instance.get_raw_data()
+    except TypeError:
+        R_raw_data = instance.get_raw_data(0)
+
+    # NOTE dxtbx and image factory arrays are compared here for identical values.
+    for Ip, Rp in zip(I_raw_data, R_raw_data):
+        assert (Ip == Rp).all_eq(True)
 
 
 @pytest.mark.regression
@@ -184,41 +242,12 @@ def test_read_image(test_image, dials_regression):
 
         print("%-40s" % format_instance.__name__, R_raw_data[0].focus())
 
-        # Set instance.detectorbase, if available. There used to be a blacklist
-        # of files not to call this with, but relying on the attribute test
-        # seems to be just as effective
-        try:
-            instance.get_detectorbase()
-        except NotImplementedError:
-            pass
-        print("  Have detectorbase? ", hasattr(instance, "detectorbase"))
-
         # Specific test for cctbx/dxtbx#163. This test will fail if char is unsigned.
         if "APS_24IDC" in test_image and "pilatus_1_0001.cbf" in test_image:
             d = R_raw_data[0]
             assert (
                 flex.sum(d.as_1d().select(d.as_1d() >= 0)) == 20108255
             )  # matches total counts from dxtbx.print_header
-
-        # test the older detectorbase interface if available
-        if hasattr(instance, "detectorbase"):
-            imgfactory = SlipViewerImageFactory(test_image)
-            imgfactory.read()
-            print("  Detectorbase:", instance.detectorbase.__class__.__name__)
-
-            try:
-                print(imgfactory.rawdata.focus())
-            except AttributeError:
-                # Not all instances have this attribute
-                print("  multireadout")
-
-            I_raw_data = imgfactory.get_raw_data()
-            if not isinstance(I_raw_data, tuple):
-                I_raw_data = (I_raw_data,)
-
-            # NOTE dxtbx and image factory arrays are compared here for identical values.
-            for Ip, Rp in zip(I_raw_data, R_raw_data):
-                assert (Ip == Rp).all_eq(True)
 
 
 @pytest.mark.parametrize("test_image", _files)
