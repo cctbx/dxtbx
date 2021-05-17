@@ -30,6 +30,12 @@ except ImportError:
     # when the xfel extension module is not found.
     xfel = None
 
+try:
+    import cbflib_adaptbx
+except ModuleNotFoundError:
+    # Detectorbase for CBF won't work
+    cbflib_adaptbx = None
+
 _files = (
     "ALS_1231/q315r_lyso_1_001.img",
     "ALS_422/lyso_041013a_1_001.img",
@@ -158,6 +164,9 @@ def test_detectorbase(test_image, dials_regression):
 
     if not h5py and test_image.endswith((".h5", ".nxs")):
         pytest.skip("could not import 'h5py'")
+
+    if test_image.endswith(".cbf") and not cbflib_adaptbx:
+        pytest.skip("No cbflib_adaptbx: CBF Detectorbase is not available")
 
     test_image = Path(dials_regression).joinpath(
         "image_examples", *test_image.split("/")
