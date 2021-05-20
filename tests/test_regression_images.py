@@ -130,19 +130,22 @@ _files = (
     "xia2/merge2cbf_averaged_0001.cbf",
 )
 
-_files_with_detectorbase = set(_files) - {
-    "Bruker_PHOTON_II/dan_01_0001.sfrm",
-    "DLS_eBIC/nanB_4_singleframe_1.ser.bz2",
-    "LCLS_cspad_nexus/idx-20130301060858401.cbf",
-    "LCLS_cspad_nexus/idx-20130301060858601.cbf",
-    "LCLS_cspad_nexus/idx-20130301060858701.cbf",
-    "LCLS_cspad_nexus/idx-20130301060858801.cbf",
-    "LCLS_jungfrau/jungfrau_multipanel.cbf",
-    "SACLA_MPCCD_Cheetah/run266702-0-subset.h5",
-    "XDS/INTEGRATE.HKL",
-    "XDS/XDS_ASCII.HKL",
-    "XDS/XPARM.XDS",
-}
+_files_with_detectorbase = sorted(
+    set(_files)
+    - {
+        "Bruker_PHOTON_II/dan_01_0001.sfrm",
+        "DLS_eBIC/nanB_4_singleframe_1.ser.bz2",
+        "LCLS_cspad_nexus/idx-20130301060858401.cbf",
+        "LCLS_cspad_nexus/idx-20130301060858601.cbf",
+        "LCLS_cspad_nexus/idx-20130301060858701.cbf",
+        "LCLS_cspad_nexus/idx-20130301060858801.cbf",
+        "LCLS_jungfrau/jungfrau_multipanel.cbf",
+        "SACLA_MPCCD_Cheetah/run266702-0-subset.h5",
+        "XDS/INTEGRATE.HKL",
+        "XDS/XDS_ASCII.HKL",
+        "XDS/XPARM.XDS",
+    }
+)
 
 
 def test_berkeley_special_h5():
