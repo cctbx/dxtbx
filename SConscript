@@ -11,6 +11,7 @@ try:
         # Old pycbf
         raise ImportError
     build_cbf_bindings = False
+    print("NOT BUILDING CBF")
 except ImportError:
     # We have to build CBFlib bindings ourselves
     build_cbf_bindings = True
@@ -132,6 +133,9 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     if env_etc.clang_version:
         wd = ["-Wno-unused-function"]
         env.Append(CCFLAGS=wd)
+
+    if build_cbf_bindings:
+        env.append(CPPDEFINES="BUILD_CBF")
 
     if hasattr(env_etc, "cppdefines"):
         env.Append(CPPDEFINES=env_etc.cppdefines)
