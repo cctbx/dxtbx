@@ -152,7 +152,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         target="#/lib/dxtbx_format_image_ext",
         source=[
             "format/boost_python/image_ext.cc",
-            #"format/boost_python/cbf_read_buffer.cpp",
+            "format/boost_python/cbf_read_buffer.cpp",
         ],
         LIBS=env_etc.libs_python
         + env_etc.libm
