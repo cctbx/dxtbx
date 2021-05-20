@@ -11,7 +11,6 @@ try:
         # Old pycbf
         raise ImportError
     build_cbf_bindings = False
-    print("NOT BUILDING CBF")
 except ImportError:
     # We have to build CBFlib bindings ourselves
     build_cbf_bindings = True
@@ -78,7 +77,7 @@ if sys.platform == "win32" and env_etc.compiler == "win32_cl":
         env_etc.dxtbx_libs = ["libtiff", "boost_python"]
 
 if build_cbf_bindings:
-    env_etc.dxtbx_common_includes.append(env_etc.cbflib_common_includes)
+    env_etc.dxtbx_common_includes.extend(env_etc.cbflib_common_includes)
     env_etc.dxtbx_libs.append("cbf")
 
 # for the hdf5.h file - look at where Python is coming from unless is OS X
@@ -135,7 +134,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         env.Append(CCFLAGS=wd)
 
     if build_cbf_bindings:
-        env.append(CPPDEFINES="BUILD_CBF")
+        env.Append(CPPDEFINES="BUILD_CBF")
 
     if hasattr(env_etc, "cppdefines"):
         env.Append(CPPDEFINES=env_etc.cppdefines)
