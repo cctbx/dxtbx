@@ -6,13 +6,11 @@ writer = FullCBFWriter("data.h5")
 for i in range(10):
   writer.write_cbf("example_%d.cbf"%i, index=i)
 """
-from __future__ import absolute_import, division, print_function
 
 import os
 import sys
 
 import pycbf
-import six
 
 from scitbx.array_family import flex
 from xfel.cftbx.detector.cspad_cbf_tbx import (
@@ -24,7 +22,7 @@ from xfel.cftbx.detector.cspad_cbf_tbx import (
 import dxtbx.format.Registry
 
 
-class FullCBFWriter(object):
+class FullCBFWriter:
     """Class for writing full CBF files from any dxtbx-supported format class"""
 
     def __init__(self, filename=None, imageset=None):
@@ -141,10 +139,7 @@ class FullCBFWriter(object):
 
         # the data block is the root cbf node
         cbf = cbf_wrapper()
-        if six.PY2:
-            cbf.new_datablock(cbf_root)
-        else:
-            cbf.new_datablock(cbf_root.encode())
+        cbf.new_datablock(cbf_root.encode())
 
         # Each category listed here is preceded by the imageCIF description taken from here:
         # http://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/index.html
@@ -468,10 +463,7 @@ class FullCBFWriter(object):
                 array_names.append(cbf.get_value())
                 cbf.next_row()
             except Exception as e:
-                if six.PY2:
-                    e_message = e.message
-                else:
-                    e_message = str(e)
+                e_message = str(e)
 
                 assert "CBF_NOTFOUND" in e_message
                 break
@@ -542,8 +534,7 @@ class FullCBFWriter(object):
                 )
             else:
                 elsize = 8
-                if six.PY3:
-                    byteorder = byteorder.encode()
+                byteorder = byteorder.encode()
                 cbf.set_realarray_wdims_fs(
                     pycbf.CBF_PACKED,
                     binary_id,
@@ -565,8 +556,7 @@ class FullCBFWriter(object):
             cbf = self.get_cbf_handle(index=index, header_only=True)
             self.add_data_to_cbf(cbf, index=index)
 
-        if six.PY3:
-            filename = filename.encode()
+        filename = filename.encode()
         cbf.write_widefile(
             filename, pycbf.CBF, pycbf.MIME_HEADERS | pycbf.MSG_DIGEST | pycbf.PAD_4K, 0
         )

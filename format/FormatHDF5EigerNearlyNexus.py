@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 import uuid
 
@@ -57,7 +55,7 @@ def is_eiger_nearly_nexus_file(filename):
         return False
 
 
-class EigerNXmxFixer(object):
+class EigerNXmxFixer:
     """
     A hacky class to read an NXmx file
     """
@@ -314,7 +312,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
     def understand(image_file):
         try:
             return is_eiger_nearly_nexus_file(image_file)
-        except IOError:
+        except OSError:
             return False
 
     def _start(self):

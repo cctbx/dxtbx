@@ -81,7 +81,7 @@ def test_find_entries(nexus_file):
     with h5py.File(nexus_file, "r") as fr:
         entries = nexus.find_entries(fr)
         assert len(entries) == len(entry_names)
-        assert set(entry.name for entry in entries) == set(entry_names)
+        assert {entry.name for entry in entries} == set(entry_names)
 
 
 def test_find_entries_no_entry(tmp_path):

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from iotbx.detectors.dtrek import DTREKImage
 
 from dxtbx.format.FormatSMVRigakuA200 import FormatSMVRigakuA200

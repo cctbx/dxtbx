@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 
 from dxtbx.format.FormatPYunspecifiedStill import FormatPYunspecifiedStill

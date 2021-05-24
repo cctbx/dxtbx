@@ -3,7 +3,6 @@ Experimental format for TIA .ser files used by some FEI microscopes. See
 https://personal.ntu.edu.sg/cbb/info/TIAformat/index.html
 """
 
-from __future__ import absolute_import, division, print_function
 
 import os
 import re
@@ -172,7 +171,7 @@ class FormatSER(Format):
         try:
             with FormatSER.open_file(image_file, "rb") as fh:
                 tag = fh.read(14)
-        except IOError:
+        except OSError:
             return False
 
         # File should be little endian

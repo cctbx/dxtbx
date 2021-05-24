@@ -4,10 +4,8 @@ the instrument on Diamond Light Source I19 SN 07400090. Inherits from
 FormatSMVRigakuSaturn customizing only the difference (incorrect definition
 of fast and slow directions.)
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
-from builtins import range
 
 from scitbx import matrix
 

@@ -48,7 +48,7 @@ def splitit(l, n):
     return r
 
 
-class image_worker(object):
+class image_worker:
     """Class to compute running sums while reading image data"""
 
     # Deriving class should implement __init__ and read

@@ -1,10 +1,6 @@
-from __future__ import absolute_import, division, print_function
-
 import copy
 import pickle
 import sys
-
-import six
 
 from iotbx.detectors.npy import image_dict_to_unicode
 
@@ -26,15 +22,8 @@ class FormatPYunspecifiedStill(FormatStill, FormatPYunspecified):
 
         try:
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
-                if six.PY3:
-                    data = image_dict_to_unicode(
-                        pickle.load(fh, encoding="bytes")
-                    )  # lgtm
-                    # the '# lgtm' comment disables an lgtm false positive and
-                    # can be removed once we move to Python 3 only
-                else:
-                    data = pickle.load(fh)
-        except IOError:
+                data = image_dict_to_unicode(pickle.load(fh, encoding="bytes"))
+        except OSError:
             return False
 
         if "OSC_START" not in data or "OSC_RANGE" not in data:
@@ -61,7 +50,7 @@ class FormatPYunspecifiedStillInMemory(FormatStill, FormatPYunspecifiedInMemory)
 
     def __init__(self, data, **kwargs):
         """@param data In memory image dictionary, alredy initialized"""
-        super(FormatPYunspecifiedStillInMemory, self).__init__(data, **kwargs)
+        super().__init__(data, **kwargs)
         self._image_file = copy.deepcopy(data)
 
 

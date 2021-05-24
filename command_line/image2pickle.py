@@ -166,7 +166,7 @@ def run(args=None):
 
         try:
             img = dxtbx.load(imgpath)
-        except IOError:
+        except OSError:
             img = None
 
         if img is None:

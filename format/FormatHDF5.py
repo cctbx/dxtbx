@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 from dxtbx import IncorrectFormatError
@@ -20,7 +18,7 @@ class FormatHDF5(FormatMultiImage, Format):
         try:
             with FormatHDF5.open_file(image_file, "rb") as fh:
                 return fh.read(8) == b"\211HDF\r\n\032\n"
-        except IOError:
+        except OSError:
             return False
 
 

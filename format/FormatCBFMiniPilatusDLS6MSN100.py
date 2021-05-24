@@ -3,7 +3,6 @@ An implementation of the CBF image reader for Pilatus images, from the Pilatus
 6M SN 100 currently on Diamond I04.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import binascii
 import sys
@@ -48,7 +47,7 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         proper model of the experiment."""
 
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
-        super(FormatCBFMiniPilatusDLS6MSN100, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. This should

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 from iotbx.detectors.adsc import ADSCImage
@@ -63,7 +61,7 @@ class FormatSMVADSCSN(FormatSMVADSC):
             933: "Q315R",
         }
 
-        super(FormatSMVADSCSN, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _adsc_module_gain(self, model=None):
         """Overload to look the model number up from the serial number table"""
@@ -71,7 +69,7 @@ class FormatSMVADSCSN(FormatSMVADSC):
         if model is None:
             sn = int(self._header_dictionary["DETECTOR_SN"])
             model = self._sn_to_model.get(sn)
-        return super(FormatSMVADSCSN, self)._adsc_module_gain(model=model)
+        return super()._adsc_module_gain(model=model)
 
     def detectorbase_start(self):
 

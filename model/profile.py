@@ -1,11 +1,9 @@
-from __future__ import absolute_import, division, print_function
-
 import logging
 
 import pkg_resources
 
 
-class ProfileModelFactory(object):
+class ProfileModelFactory:
     """
     A factory to create a profile model
     """

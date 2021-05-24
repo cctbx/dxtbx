@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
-from builtins import range
 
 import numpy as np
 
@@ -21,9 +18,7 @@ epix_locator_scope = parse(epix_locator_str + locator_str, process_includes=True
 
 class FormatXTCEpix(FormatXTC):
     def __init__(self, image_file, **kwargs):
-        super(FormatXTCEpix, self).__init__(
-            image_file, locator_scope=epix_locator_scope, **kwargs
-        )
+        super().__init__(image_file, locator_scope=epix_locator_scope, **kwargs)
         self._cached_detector = {}
 
     @staticmethod

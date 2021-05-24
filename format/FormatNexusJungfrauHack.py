@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import string
 
 import h5py
@@ -34,7 +32,7 @@ class FormatNexusJungfrauHack(FormatNexus):
         try:
             with h5py.File(image_file, "r") as handle:
                 return "/entry/instrument/JF1M" in handle
-        except IOError:
+        except OSError:
             return False
 
     def _start(self):

@@ -44,7 +44,7 @@ def abstract(cls):
     return cls
 
 
-class Reader(object):
+class Reader:
     def __init__(self, format_class, filenames, **kwargs):
         self._kwargs = kwargs
         self.format_class = format_class
@@ -76,7 +76,7 @@ class Reader(object):
 
 
 @abstract
-class Format(object):
+class Format:
     """A base class for the representation and interrogation of diffraction
     image formats, from which all classes for reading the header should be
     inherited. This includes: autoregistration of implementation classes,
@@ -239,7 +239,7 @@ class Format(object):
         self.detectorbase_start()
 
         # Proxy to link dxtbx to iotbx
-        class _detectorbase_proxy(object):
+        class _detectorbase_proxy:
             def __init__(self, format_instance):
                 self._fi = format_instance
                 if not hasattr(self, "vendortype"):

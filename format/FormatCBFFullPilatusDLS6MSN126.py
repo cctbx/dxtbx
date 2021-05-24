@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 import libtbx
@@ -40,7 +38,7 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
         """Initialise the image structure from the given file."""
 
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
-        super(FormatCBFFullPilatusDLS6MSN126, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def get_goniometer_shadow_masker(self, goniometer=None):
         if goniometer is None:

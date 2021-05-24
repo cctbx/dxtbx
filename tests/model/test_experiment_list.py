@@ -1,10 +1,10 @@
 import collections
 import errno
 import os
+import pickle
 from unittest import mock
 
 import pytest
-import six.moves.cPickle as pickle
 
 from cctbx import sgtbx
 from scitbx.array_family import flex
@@ -604,12 +604,6 @@ def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmpdi
     elist2 = ExperimentListFactory.from_json_file(filename)
     check(elist1, elist2)
 
-    # Dump as pickle and reload
-    filename = "temp.pickle"
-    elist1.as_pickle(filename)
-    elist2 = ExperimentListFactory.from_pickle_file(filename)
-    check(elist1, elist2)
-
 
 def test_experimentlist_dumper_dump_scan_varying(monkeypatch, dials_regression, tmpdir):
     tmpdir.chdir()
@@ -900,11 +894,6 @@ def test_experimentlist_from_file(monkeypatch, dials_regression, tmpdir):
             os.path.join(dials_regression, "experiment_test_data", "experiment_1.json")
         )
     assert len(exp_list) == 1
-    assert exp_list[0].beam
-    # Try loading from a pickle
-    exp_list.as_pickle(tmpdir / "el.pickle")
-    exp_list_pk = ExperimentList.from_file(tmpdir / "el.pickle")
-    assert len(exp_list_pk) == 1
     assert exp_list[0].beam
 
 

@@ -4,7 +4,6 @@ https://personal.ntu.edu.sg/cbb/info/dmformat/index.html
 """
 
 import struct
-from builtins import range
 
 from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
@@ -96,7 +95,7 @@ def print_tag_hierarchy(tag_list, prefix=""):
         if name == "":
             name = "NONAME"
         if "tags" in tag:  # tag directory
-            print(prefix + "DIR: {}".format(name))
+            print(prefix + f"DIR: {name}")
             prefix += "  "
             print_tag_hierarchy(tag["tags"], prefix)
             prefix = prefix[:-2]

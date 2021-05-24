@@ -1,10 +1,7 @@
-from __future__ import absolute_import, division, print_function
-
 import datetime
 import importlib
 import string
 import unicodedata
-from builtins import bytes
 
 import iotbx.cif.model
 
@@ -13,7 +10,7 @@ def get_beamline_definition(detector_id, **kwargs):
     if isinstance(detector_id, bytes):
         detector_id = detector_id.decode("utf-8", "ignore")
 
-    valid_chars = frozenset("_.%s%s" % (string.ascii_letters, string.digits))
+    valid_chars = frozenset(f"_.{string.ascii_letters}{string.digits}")
     filename = unicodedata.normalize("NFKD", detector_id)
     filename = "".join(c if c in valid_chars else "_" for c in filename)
     while "__" in filename:
@@ -30,7 +27,7 @@ def get_beamline_definition(detector_id, **kwargs):
     return generator_object
 
 
-class template(object):
+class template:
     def CIF_block(self):
         """Interface function to generate a CIF block for this detector."""
         raise RuntimeError("This needs to be overridden.")

@@ -1,8 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 import random
-from builtins import range
 
 from scitbx import matrix
 

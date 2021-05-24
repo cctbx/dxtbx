@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 import libtbx
@@ -49,7 +47,7 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
         """Initialise the image structure from the given file."""
 
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
-        super(FormatCBFMiniEigerDLS16MSN160, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _goniometer(self):
         """Return a model for a multi-axis goniometer.

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import binascii
 
 import h5py
@@ -44,8 +42,8 @@ def depends_on(f):
         if hasattr(thing, "keys"):
             for k in thing:
                 try:
-                    finder(thing[k], path="%s/%s" % (path, k))
-                except (IOError, TypeError, ValueError, KeyError):
+                    finder(thing[k], path=f"{path}/{k}")
+                except (OSError, TypeError, ValueError, KeyError):
                     pass
 
     finder(f, path="")
@@ -117,7 +115,7 @@ _array_data.header_contents
     result.append("# Flat_field: (nil)")
     result.append("# Wavelength %.5f A" % L)
     result.append("# Detector_distance %.5f m" % (D / 1000.0))
-    result.append("# Beam_xy (%.2f, %.2f) pixels" % (Bx, By))
+    result.append(f"# Beam_xy ({Bx:.2f}, {By:.2f}) pixels")
     result.append("# Flux 0.000000")
     result.append("# Filter_transmission %.3f" % A)
     result.append("# Start_angle %.4f deg." % omega[nn])

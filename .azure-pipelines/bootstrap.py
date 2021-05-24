@@ -49,13 +49,11 @@ def install_micromamba(python):
         member = "Library/bin/micromamba.exe"
         url = "https://micromamba.snakepit.net/api/micromamba/win-64/latest"
     else:
-        raise NotImplementedError(
-            "Unsupported platform %s / %s" % (os.name, sys.platform)
-        )
+        raise NotImplementedError(f"Unsupported platform {os.name} / {sys.platform}")
     mamba_prefix = os.path.realpath("micromamba")
     clean_env["MAMBA_ROOT_PREFIX"] = mamba_prefix
     mamba = os.path.join(mamba_prefix, member.split("/")[-1])
-    print("Downloading {url}:".format(url=url), end=" ")
+    print(f"Downloading {url}:", end=" ")
     result = download_to_file(url, os.path.join(mamba_prefix, "micromamba.tar.bz2"))
     if result in (0, -1):
         sys.exit("Micromamba download failed")
@@ -84,7 +82,6 @@ def install_micromamba(python):
     else:
         command = "create"
         text_messages = ["Installing", "installation into"]
-    python_requirement = "conda-forge::python=%s.*" % python
 
     command_list = [
         mamba,
@@ -101,7 +98,7 @@ def install_micromamba(python):
         "--channel",
         "conda-forge",
         "--override-channels",
-        python_requirement,
+        "python=%s" % python,
     ]
 
     print(
@@ -854,7 +851,7 @@ def run():
         "--python",
         help="Install this minor version of Python (default: %(default)s)",
         default="3.8",
-        choices=("3.6", "3.7", "3.8"),
+        choices=("3.6", "3.7", "3.8", "3.9"),
     )
     parser.add_argument(
         "--branch",

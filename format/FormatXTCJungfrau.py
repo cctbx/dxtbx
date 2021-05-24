@@ -1,8 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 import sys
-from builtins import range
 
 import numpy as np
 import psana
@@ -41,9 +38,7 @@ jungfrau_locator_scope = parse(
 
 class FormatXTCJungfrau(FormatXTC):
     def __init__(self, image_file, **kwargs):
-        super(FormatXTCJungfrau, self).__init__(
-            image_file, locator_scope=jungfrau_locator_scope, **kwargs
-        )
+        super().__init__(image_file, locator_scope=jungfrau_locator_scope, **kwargs)
         self._cached_detector = {}
 
         self._dist_det = None

@@ -1,6 +1,5 @@
 """An ImageFormat class to read MarIP-format image"""
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -20,7 +19,7 @@ class FormatMarIP(Format):
         try:
             with FormatMarIP.open_file(image_file, "rb") as fh:
                 return b"mar research" in fh.read(140)
-        except IOError:
+        except OSError:
             return False
 
     def __init__(self, image_file, **kwargs):

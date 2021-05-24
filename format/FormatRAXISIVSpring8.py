@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import calendar
 import datetime
 import struct
@@ -21,7 +19,7 @@ class FormatRAXISIVSPring8(RAXISHelper, Format):
         try:
             with Format.open_file(image_file, "rb") as fh:
                 header = fh.read(1024)
-        except IOError:
+        except OSError:
             return False
 
         # A few items expected to be the same from image to image that we can use

@@ -1,11 +1,8 @@
 """Implementation of a base class to read a pickled Python dictionary."""
 
-from __future__ import absolute_import, division, print_function
 
 import pickle
 import sys
-
-import six
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
@@ -32,13 +29,10 @@ class FormatPY(Format):
                     or tag[0:3] == b"\x80\x05\x95"
                 ):
                     fh.seek(0)
-                    if six.PY3:
-                        pickle.load(fh, encoding="bytes")
-                    else:
-                        pickle.load(fh)
+                    pickle.load(fh, encoding="bytes")
                 else:
                     return False
-        except (IOError, pickle.UnpicklingError):
+        except (OSError, pickle.UnpicklingError):
             return False
         return True
 
@@ -47,7 +41,7 @@ class FormatPY(Format):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        super(FormatPY, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,6 @@ jobs:
   variables:
     CURRENT_WEEK: $[ dependencies.setup.outputs['constants.CURRENT_WEEK'] ]
     TODAY_ISO: $[ dependencies.setup.outputs['constants.TODAY_ISO'] ]
-
   strategy:
     matrix:
       python36:
@@ -15,6 +14,8 @@ jobs:
         PYTHON_VERSION: 3.7
       python38:
         PYTHON_VERSION: 3.8
+      python39:
+        PYTHON_VERSION: 3.9
   timeoutInMinutes: 60
 
   steps:

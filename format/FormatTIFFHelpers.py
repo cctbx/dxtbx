@@ -2,11 +2,9 @@
 Helper code to assist with reading TIFF file headers, which are by their
 nature binary so we need to mess with things like byte swapping.
 """
-from __future__ import absolute_import, division, print_function
 
 import struct
 import sys
-from builtins import range
 
 from dxtbx.format.Format import Format
 

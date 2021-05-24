@@ -1,6 +1,5 @@
 """Print out the resolution (two-theta) of the corners of the detector"""
 
-from __future__ import absolute_import, division, print_function
 
 import math
 import sys

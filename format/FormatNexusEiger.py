@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import h5py
 
 from dxtbx.format.FormatNexus import FormatNexus
@@ -22,7 +20,7 @@ class FormatNexusEiger(FormatNexus):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        super(FormatNexusEiger, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def get_detector(self, index=None):
         # override base detector to assign correct value for minimum

@@ -59,13 +59,11 @@
 # Then some more chunder follows - however I don't think it contains anything
 # useful. So need to read first 1K of the image header.
 
-from __future__ import absolute_import, division, print_function
 
 import calendar
 import datetime
 import math
 import struct
-from builtins import range
 
 from iotbx.detectors.raxis import RAXISImage
 
@@ -73,12 +71,12 @@ from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 
 
-class RAXISHelper(object):
+class RAXISHelper:
     def __init__(self, image_file, **kwargs):
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        super(RAXISHelper, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _start(self):
         with Format.open_file(self._image_file) as fh:
@@ -99,7 +97,7 @@ class RAXISHelper(object):
         """Get the pixel intensities (i.e. read the image and return as a flex array."""
         self.detectorbase_start()
         # super() resolves to the other (true) parent class
-        return super(RAXISHelper, self).get_raw_data()
+        return super().get_raw_data()
 
     def _detector_helper(self):
         """Returns image header values as a dictionary."""

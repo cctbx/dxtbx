@@ -1,7 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
-from builtins import range
-
 import pytest
 
 from libtbx.phil import parse

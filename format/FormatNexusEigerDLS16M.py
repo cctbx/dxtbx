@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import h5py
 
 import libtbx
@@ -45,7 +43,7 @@ class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        super(FormatNexusEigerDLS16M, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
 
     def get_goniometer_shadow_masker(self, goniometer=None):

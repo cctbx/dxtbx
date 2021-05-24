@@ -1,8 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import itertools
 import math
-from builtins import object
 from operator import itemgetter
 
 import numpy as np
@@ -19,7 +16,7 @@ def read_xds_xparm(xds_xparm_file):
     """Parse the XDS XPARM file, which contains a description of the detector
     and experimental geometry, to a dictionary."""
 
-    with open(xds_xparm_file, "r") as fh:
+    with open(xds_xparm_file) as fh:
         data = [float(i) for i in fh.read().split()]
 
     assert len(data) == 42
@@ -136,7 +133,7 @@ def find_gain_value(cbf_handle):
     return cbf_handle.get_doublevalue()
 
 
-class detector_helper_sensors(object):
+class detector_helper_sensors:
     """A helper class which allows enumeration of detector sensor technologies
     which should help in identifying specific detectors when needed. These are
     currently limited to IMAGE_PLATE CCD PAD."""
