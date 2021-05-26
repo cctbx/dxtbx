@@ -150,22 +150,22 @@ def make_cbf(in_name, template):
 
             mime = """
 
-    _array_data.data
-    ;
-    --CIF-BINARY-FORMAT-SECTION--
-    Content-Type: application/octet-stream;
-         conversions="x-CBF_BYTE_OFFSET"
-    Content-Transfer-Encoding: BINARY
-    X-Binary-Size: %d
-    X-Binary-ID: 1
-    X-Binary-Element-Type: "signed 32-bit integer"
-    X-Binary-Element-Byte-Order: LITTLE_ENDIAN
-    X-Binary-Number-of-Elements: %d
-    X-Binary-Size-Fastest-Dimension: %d
-    X-Binary-Size-Second-Dimension: %d
-    X-Binary-Size-Padding: 4095
+_array_data.data
+;
+--CIF-BINARY-FORMAT-SECTION--
+Content-Type: application/octet-stream;
+     conversions="x-CBF_BYTE_OFFSET"
+Content-Transfer-Encoding: BINARY
+X-Binary-Size: %d
+X-Binary-ID: 1
+X-Binary-Element-Type: "signed 32-bit integer"
+X-Binary-Element-Byte-Order: LITTLE_ENDIAN
+X-Binary-Number-of-Elements: %d
+X-Binary-Size-Fastest-Dimension: %d
+X-Binary-Size-Second-Dimension: %d
+X-Binary-Size-Padding: 4095
 
-    """ % (
+""" % (
                 len(compressed),
                 data.size(),
                 data.focus()[1],
@@ -175,7 +175,7 @@ def make_cbf(in_name, template):
             padding = (
                 bytearray(4095)
                 + b"""--CIF-BINARY-FORMAT-SECTION----
-    ;"""
+;"""
             )
 
             with open(template % (j + 1), "wb") as fout:
