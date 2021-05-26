@@ -1,13 +1,8 @@
-from __future__ import absolute_import, division, print_function
-
 import collections
 import copy
 import json
 import os
 import sys
-from builtins import range
-
-import six.moves.cPickle as pickle
 
 import boost_adaptbx.boost.python
 import cctbx.crystal
@@ -106,7 +101,7 @@ __all__ = (
 
 
 @boost_adaptbx.boost.python.inject_into(Detector)
-class _(object):
+class _:
     def iter_panels(self):
         """Iterate through just the panels depth-first."""
         for obj in self.iter_preorder():
@@ -133,7 +128,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(Crystal)
-class _(object):
+class _:
     def show(self, show_scan_varying=False, out=None):
         if out is None:
             out = sys.stdout
@@ -383,7 +378,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(MosaicCrystalKabsch2010)
-class _(object):
+class _:
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -440,7 +435,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(MosaicCrystalSauter2014)
-class _(object):
+class _:
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -511,7 +506,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(Experiment)
-class _(object):
+class _:
     def load_models(self, index=None):
         """Load the models from the imageset"""
         if index is None:
@@ -523,7 +518,7 @@ class _(object):
 
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
-class _(object):
+class _:
     def __repr__(self):
         if len(self):
             return "ExperimentList([{}])".format(", ".join(repr(x) for x in self))
@@ -572,6 +567,11 @@ class _(object):
 
     def to_dict(self):
         """Serialize the experiment list to dictionary."""
+
+        def abspath_or_none(filename):
+            if filename is None or filename == "":
+                return None
+            return os.path.abspath(filename)
 
         # Check the experiment list is consistent
         assert self.is_consistent()
@@ -658,11 +658,11 @@ class _(object):
                 raise TypeError(
                     "expected ImageSet or ImageSequence, got %s" % type(imset)
                 )
-            r["mask"] = imset.external_lookup.mask.filename
-            r["gain"] = imset.external_lookup.gain.filename
-            r["pedestal"] = imset.external_lookup.pedestal.filename
-            r["dx"] = imset.external_lookup.dx.filename
-            r["dy"] = imset.external_lookup.dy.filename
+            r["mask"] = abspath_or_none(imset.external_lookup.mask.filename)
+            r["gain"] = abspath_or_none(imset.external_lookup.gain.filename)
+            r["pedestal"] = abspath_or_none(imset.external_lookup.pedestal.filename)
+            r["dx"] = abspath_or_none(imset.external_lookup.dx.filename)
+            r["dy"] = abspath_or_none(imset.external_lookup.dy.filename)
             r["params"] = imset.params()
             result["imageset"].append(r)
 
@@ -696,6 +696,15 @@ class _(object):
                 imageset["goniometer"] = e["goniometer"]
             if "scan" in e:
                 imageset["scan"] = e["scan"]
+
+            if imageset["__id__"] in ("ImageSet", "ImageGrid"):
+                image_list = []
+                for file_index, filename in enumerate(imageset["images"]):
+                    image_dict = collections.OrderedDict()
+                    image_dict["filename"] = filename
+                    image_dict["image"] = file_index
+                    image_list.append(image_dict)
+                imageset["images"] = image_list
 
         # Remove the experiments
         del obj["experiment"]
@@ -820,30 +829,15 @@ class _(object):
             else:
                 return text
 
-    def as_pickle(self, filename=None, **kwargs):
-        """Dump experiment list as pickle."""
-        # Get the pickle string
-        text = pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
-
-        # Write the file
-        if filename:
-            with open(str(filename), "wb") as outfile:
-                outfile.write(text)
-        else:
-            return text
-
     def as_file(self, filename, **kwargs):
         """Dump experiment list as file."""
         ext = os.path.splitext(filename)[1]
         j_ext = [".json", ".expt"]
-        p_ext = [".p", ".pkl", ".pickle"]
         if ext.lower() in j_ext:
             return self.as_json(filename, **kwargs)
-        elif ext.lower() in p_ext:
-            return self.as_pickle(filename, **kwargs)
         else:
-            ext_str = "|".join(j_ext + p_ext)
-            raise RuntimeError("expected extension {%s}, got %s" % (ext_str, ext))
+            ext_str = "|".join(j_ext)
+            raise RuntimeError(f"expected extension {{{ext_str}}}, got {ext}")
 
     @staticmethod
     def from_file(filename, check_format=True):
@@ -888,3 +882,11 @@ class _(object):
         for expt, cb_op in zip(return_expts, change_of_basis_ops):
             expt.crystal = expt.crystal.change_basis(cb_op)
         return return_expts
+
+    @staticmethod
+    def from_templates(templates, **kwargs):
+        """Import an experiment list from templates"""
+        # Import here to avoid cyclic dependencies
+        from .experiment_list import ExperimentListFactory
+
+        return ExperimentListFactory.from_templates(templates, **kwargs)

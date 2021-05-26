@@ -1,20 +1,13 @@
-from __future__ import absolute_import, division, print_function
-
 import logging
 import os
 import sys
-import warnings
 
 import libtbx.load_env
 
 import dxtbx.format.Registry
 
 if sys.version_info.major == 2:
-    warnings.warn(
-        "Python 2 is no longer supported. "
-        "If you need Python 2.7 support please use the DIALS 2.2 release branch.",
-        UserWarning,
-    )
+    sys.exit("Python 2 is no longer supported")
 
 
 # Ensures that HDF5 has the conda_base plugin path configured.
@@ -23,23 +16,7 @@ if sys.version_info.major == 2:
 # However, currently the dials-installer will not install a path-correct
 # conda_base folder, so it needs to be updated manually.
 
-# Warn if user is using an old hdf5-external-filter-plugins
-# Remove after DIALS 3.4 release branch is made
-_legacy_plugin_path = libtbx.env.under_base(os.path.join("lib", "plugins"))
-_new_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
-
-# Find out which plugin path we need to inject
-if os.path.exists(_legacy_plugin_path) and not os.path.exists(_new_plugin_path):
-    # Set up the plugin path for HDF5 to pick up compression plugins from legacy location
-    _hdf5_plugin_path = _legacy_plugin_path
-    warnings.warn(
-        "You are using an outdated version of the hdf5-external-filter-plugins package.\n"
-        "Please update your environment using\n"
-        "'conda install \"hdf5-external-filter-plugins==0.1.0[build_number='>=5']\"'",
-        UserWarning,
-    )
-else:
-    _hdf5_plugin_path = _new_plugin_path
+_hdf5_plugin_path = libtbx.env.under_base(os.path.join("lib", "hdf5", "plugin"))
 
 # Inject via the environment if h5py not used yet, or else use h5py
 if "h5py" not in sys.modules:
@@ -65,8 +42,8 @@ class IncorrectFormatError(RuntimeError):
     """
 
     def __init__(self, format_instance, filename):
-        super(IncorrectFormatError, self).__init__(
-            "Could not open %s as %s" % (filename, str(format_instance))
+        super().__init__(
+            "Could not open {} as {}".format(filename, str(format_instance))
         )
         self.args = (format_instance, filename)
 

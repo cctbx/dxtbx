@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 
 import procrunner
@@ -23,7 +21,7 @@ def test_average(dials_data, tmpdir, use_mpi):
     )
     if use_mpi:
         command = "mpirun"
-        mpargs = "-n 2 dxtbx.image_average".split()
+        mpargs = "-n 2 dxtbx.image_average --mpi=True".split()
     else:
         command = "dxtbx.image_average"
         mpargs = "-n 2".split()

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import binascii
 
 import h5py
@@ -8,6 +6,14 @@ import numpy as np
 from scitbx.array_family import flex
 
 from dxtbx.ext import compress
+
+try:
+    import hdf5plugin
+
+    assert hdf5plugin
+except ModuleNotFoundError:
+    # Optional dependency that can also be satisfied by hdf5-external-filter-plugins
+    pass
 
 
 def get_mask(nfast, nslow):
@@ -97,7 +103,7 @@ _array_data.header_contents
     result.append("# Flat_field: (nil)")
     result.append("# Wavelength %.5f A" % L)
     result.append("# Detector_distance %.5f m" % (D / 1000.0))
-    result.append("# Beam_xy (%.2f, %.2f) pixels" % (Bx, By))
+    result.append(f"# Beam_xy ({Bx:.2f}, {By:.2f}) pixels")
     result.append("# Flux 0.000000")
     result.append("# Filter_transmission %.3f" % A)
     result.append("# Start_angle %.4f deg." % omega[nn])

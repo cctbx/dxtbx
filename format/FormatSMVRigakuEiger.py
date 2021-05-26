@@ -2,11 +2,9 @@
 An implementation of the SMV image reader for Rigaku Eiger.
 Be aware: this is completely unrelated to the HDF5 Eiger format.
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
 import time
-from builtins import range
 
 from boost_adaptbx.boost.python import streambuf
 from cctbx.eltbx import attenuation_coefficient

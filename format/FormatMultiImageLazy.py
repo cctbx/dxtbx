@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from dxtbx.format.Format import abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 
@@ -29,7 +27,7 @@ class FormatMultiImageLazy(FormatMultiImage):
         lazy=True,
     ):
 
-        return super(FormatMultiImageLazy, Class).get_imageset(
+        return super().get_imageset(
             filenames=filenames,
             beam=beam,
             detector=detector,

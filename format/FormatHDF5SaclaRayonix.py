@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 import sys
 
@@ -35,7 +33,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         self._raw_data = None
         self.index = index
         self.image_filename = image_file
-        super(FormatHDF5SaclaRayonix, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
         # This hard-coded value can be overwritten
         # by RAYONIX_DISTANCE

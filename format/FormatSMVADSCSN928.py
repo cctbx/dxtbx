@@ -3,7 +3,6 @@ An implementation of the SMV image reader for ADSC images. Inherits from
 FormatSMVADSCSN, customised for example on Australian Synchrotron SN 928
 which has reversed phi.
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
 

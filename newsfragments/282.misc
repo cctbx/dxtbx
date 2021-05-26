@@ -1,2 +1,0 @@
-Correct a warning message about using an outdated version of the ``hdf5-external-filter-plugins`` package.
-The suggested command to fix the warning is now given as ``conda install "hdf5-external-filter-plugins==0.1.0[build_number='>=5']"``.

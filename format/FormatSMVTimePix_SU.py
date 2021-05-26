@@ -1,7 +1,6 @@
 """Format classes to specifically recognise images from an electron detector
 with a 2x2 array of Timepix modules, converted to SMV in various ways."""
 
-from __future__ import absolute_import, division, print_function
 
 import calendar
 import sys

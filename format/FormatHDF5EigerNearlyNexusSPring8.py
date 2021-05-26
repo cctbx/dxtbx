@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 import h5py
@@ -23,7 +21,7 @@ class FormatHDF5EigerNearlyNexusSPring8(FormatHDF5EigerNearlyNexus):
         return False
 
     def _start(self):
-        super(FormatHDF5EigerNearlyNexusSPring8, self)._start()
+        super()._start()
         # invert the rotation axis
         rotation_axis = self._goniometer_model.get_rotation_axis_datum()
         self._goniometer_model.set_rotation_axis_datum([-x for x in rotation_axis])

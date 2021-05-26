@@ -8,7 +8,6 @@ including header information and generate the experimental model
 representations.
 """
 
-from __future__ import absolute_import, division, print_function
 
 from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
@@ -85,7 +84,7 @@ class FormatSMV(Format):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        super(FormatSMV, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def _start(self):
         """Open the image file, read the image header, copy the key / value

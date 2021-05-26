@@ -1,6 +1,5 @@
 """An implementation of the TIFF image reader for Rayonix images."""
 
-from __future__ import absolute_import, division, print_function
 
 import datetime
 import struct
@@ -79,7 +78,7 @@ class FormatTIFFRayonix(FormatTIFF):
             self._i = ">i"
             self._ii = ">ii"
 
-        super(FormatTIFFRayonix, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def detectorbase_start(self):
         self.detectorbase = MARImage(self._image_file)

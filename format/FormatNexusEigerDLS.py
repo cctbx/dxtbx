@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import ast
 import os
 
@@ -56,13 +54,15 @@ class FormatNexusEigerDLS(FormatNexusEiger):
                 return False
             if name.lower() in (b"i03", b"i04", b"i24", b"vmxi"):
                 return True
+            if name.upper().startswith(b"DLS "):
+                return True
 
         return False
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
 
-        super(FormatNexusEigerDLS, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
         try:
             self._meta = find_meta_filename(image_file)
             self._bit_depth_image = get_bit_depth_from_meta(self._meta)

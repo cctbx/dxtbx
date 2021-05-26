@@ -76,6 +76,9 @@ namespace dxtbx { namespace format { namespace boost_python {
   inline scitbx::af::versa<T, scitbx::af::flex_grid<> > dataset_as_flex(
     hid_t dataset_id,
     boost::python::tuple selection) {
+    // Check validity of the dataset
+    DXTBX_ASSERT(H5Iis_valid(dataset_id) > 0);
+
     // The number of dimensions
     std::size_t ndims = boost::python::len(selection);
 

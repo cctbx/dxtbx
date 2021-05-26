@@ -1,9 +1,6 @@
-from __future__ import absolute_import, division, print_function
-
 import io
 import os
 import random
-from builtins import range
 
 import libtbx.load_env
 

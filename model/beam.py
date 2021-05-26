@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import math
-from builtins import object, range
 
 import pycbf
 
@@ -40,7 +37,7 @@ beam_phil_scope = libtbx.phil.parse(
 )
 
 
-class BeamFactory(object):
+class BeamFactory:
     """A factory class for beam objects, which encapsulate standard beam
     models. In cases where a full cbf description is available this
     will be used, otherwise simplified descriptions can be applied."""

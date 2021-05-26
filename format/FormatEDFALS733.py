@@ -1,6 +1,5 @@
 """Implementation of an ImageFormat class to read MarIP-format image"""
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -20,7 +19,7 @@ class FormatEDFALS733(Format):
         try:
             with FormatEDFALS733.open_file(image_file, "rb") as fh:
                 tag = fh.read(10)
-        except IOError:
+        except OSError:
             return False
 
         return tag == b"{\nHeaderID"
@@ -30,7 +29,7 @@ class FormatEDFALS733(Format):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        super(FormatEDFALS733, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def detectorbase_start(self):
         pass

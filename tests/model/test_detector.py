@@ -1,10 +1,8 @@
-from __future__ import absolute_import, division, print_function
-
+import copy
+import pickle
 import random
-from builtins import range
 
 import pytest
-import six.moves.cPickle as pickle
 
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.test_utils import approx_equal
@@ -268,6 +266,18 @@ def test_equality():
     # Equality operator on detector objects must identify identical detectors
     detector_moved_copy = create_detector(offset=100)
     assert detector_moved == detector_moved_copy
+
+
+def test_panel_equality():
+    panel = create_detector(offset=0)[0]
+    panel2 = copy.deepcopy(panel)
+    assert panel == panel2
+
+    panel2.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(1, 1))
+    assert panel != panel2
+
+    panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(1, 1))
+    assert panel == panel2
 
 
 def test_project_2d():

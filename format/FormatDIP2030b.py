@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 from iotbx.detectors.macscience import DIPImage
@@ -18,7 +16,7 @@ class FormatDIP2030b(Format):
                 fh.seek(headerstart)
                 rawheader = fh.read(1024)
                 eof = fh.read(1)  # end of file
-        except IOError:
+        except OSError:
             return False
 
         return eof == b"" and rawheader[0:3] == b"DIP"
@@ -28,7 +26,7 @@ class FormatDIP2030b(Format):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        super(FormatDIP2030b, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
 
     def detectorbase_start(self):
         pass

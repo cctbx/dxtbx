@@ -3,11 +3,9 @@ An implementation of the SMV image reader for Rigaku Saturn images.
 Inherits from FormatSMVRigaku.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 import time
-from builtins import range
 
 from iotbx.detectors.noir import NoirImage
 from scitbx import matrix
@@ -63,7 +61,7 @@ class FormatSMVNOIR(FormatSMVRigaku):
         ]
 
         if any(
-            "%s%s" % (detector_prefix, item) not in header
+            f"{detector_prefix}{item}" not in header
             for item in more_wanted_header_items
         ):
             return False
@@ -75,7 +73,7 @@ class FormatSMVNOIR(FormatSMVRigaku):
         proper model of the experiment. Easy from Rigaku Saturn images as
         they contain everything pretty much we need..."""
 
-        super(FormatSMVNOIR, self).__init__(image_file, **kwargs)
+        super().__init__(image_file, **kwargs)
         self.detector_class = "NOIR1"
         self.detector = "adsc"
 

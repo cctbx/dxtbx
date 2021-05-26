@@ -3,7 +3,6 @@ An implementation of the SMV image reader for ADSC images. Inherits from
 FormatSMVADSC, customised for old detector on Diamond Light Source I03,
 correctly accounting for the image pedestal & similar
 """
-from __future__ import absolute_import, division, print_function
 
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN
 

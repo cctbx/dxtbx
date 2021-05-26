@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
-from builtins import range
 
 from iotbx.detectors.bruker import BrukerImage
 from scitbx import matrix

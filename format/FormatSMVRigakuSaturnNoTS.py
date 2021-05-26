@@ -2,7 +2,6 @@
 An implementation of the SMV image reader for Rigaku Saturn images.
 Inherits from FormatSMVRigaku.
 """
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -62,7 +61,7 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
         ]
 
         if any(
-            "%s%s" % (detector_prefix, item) not in header
+            f"{detector_prefix}{item}" not in header
             for item in more_wanted_header_items
         ):
             return False
@@ -70,7 +69,7 @@ class FormatSMVRigakuSaturnNoTS(FormatSMVRigaku):
         descriptive_items = ["DETECTOR_IDENTIFICATION", "DETECTOR_DESCRIPTION"]
 
         for header_item in descriptive_items:
-            test = "%s%s" % (detector_prefix, header_item)
+            test = f"{detector_prefix}{header_item}"
             if test in header and "saturn" in header[test].lower():
                 return True
 

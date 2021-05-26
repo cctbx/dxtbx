@@ -1,5 +1,4 @@
 import argparse
-import json
 import multiprocessing.pool
 import os
 import re
@@ -8,9 +7,9 @@ import socket as pysocket
 import stat
 import subprocess
 import sys
+import tarfile
 import threading
 import time
-import warnings
 import zipfile
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -26,6 +25,8 @@ clean_env = {
 }
 
 devnull = open(os.devnull, "wb")  # to redirect unwanted subprocess output
+allowed_ssh_connections = {}
+concurrent_git_connection_limit = threading.Semaphore(5)
 
 
 def make_executable(filepath):
@@ -36,153 +37,82 @@ def make_executable(filepath):
         os.chmod(filepath, mode)
 
 
-allowed_ssh_connections = {}
-concurrent_git_connection_limit = threading.Semaphore(5)
-
-
-def install_miniconda(location):
-    """Download and install Miniconda3"""
+def install_micromamba(python):
+    """Download and install Micromamba"""
     if sys.platform.startswith("linux"):
-        filename = "Miniconda3-latest-Linux-x86_64.sh"
+        member = "bin/micromamba"
+        url = "https://micromamba.snakepit.net/api/micromamba/linux-64/latest"
     elif sys.platform == "darwin":
-        filename = "Miniconda3-latest-MacOSX-x86_64.sh"
+        member = "bin/micromamba"
+        url = "https://micromamba.snakepit.net/api/micromamba/osx-64/latest"
     elif os.name == "nt":
-        filename = "Miniconda3-latest-Windows-x86_64.exe"
+        member = "Library/bin/micromamba.exe"
+        url = "https://micromamba.snakepit.net/api/micromamba/win-64/latest"
     else:
         raise NotImplementedError(f"Unsupported platform {os.name} / {sys.platform}")
-    url = "https://repo.anaconda.com/miniconda/" + filename
-    filename = os.path.join(location, filename)
-
+    mamba_prefix = os.path.realpath("micromamba")
+    clean_env["MAMBA_ROOT_PREFIX"] = mamba_prefix
+    mamba = os.path.join(mamba_prefix, member.split("/")[-1])
     print(f"Downloading {url}:", end=" ")
-    result = download_to_file(url, filename)
+    result = download_to_file(url, os.path.join(mamba_prefix, "micromamba.tar.bz2"))
     if result in (0, -1):
-        sys.exit("Miniconda download failed")
+        sys.exit("Micromamba download failed")
+    with tarfile.open(
+        os.path.join(mamba_prefix, "micromamba.tar.bz2"), "r:bz2"
+    ) as tar, open(mamba, "wb") as fh:
+        fh.write(tar.extractfile(member).read())
+    make_executable(mamba)
 
-    # run the installer
-    if os.name == "nt":
-        command = [
-            filename,
-            "/InstallationType=JustMe",
-            "/RegisterPython=0",
-            "/AddToPath=0",
-            "/S",
-            "/D=" + location,
-        ]
-    else:
-        command = ["/bin/sh", filename, "-b", "-u", "-p", location]
-
-    print("Installing Miniconda")
-    run_command(command=command, workdir=".")
-
-
-def install_conda(python):
-    # Find relevant conda base installation
-    conda_base = os.path.realpath("miniconda")
-    if os.name == "nt":
-        conda_exe = os.path.join(conda_base, "Scripts", "conda.exe")
-    else:
-        conda_exe = os.path.join(conda_base, "bin", "conda")
-
-    # default environment file for users
-    environment_file = os.path.join(
-        os.path.expanduser("~"), ".conda", "environments.txt"
-    )
-
-    def get_environments():
-        """Return a set of existing conda environment paths"""
-        try:
-            with open(environment_file) as f:
-                paths = f.readlines()
-        except OSError:
-            paths = []
-        environments = {
-            os.path.normpath(env.strip()) for env in paths if os.path.isdir(env.strip())
-        }
-        env_dirs = (
-            os.path.join(conda_base, "envs"),
-            os.path.join(os.path.expanduser("~"), ".conda", "envs"),
-        )
-        for env_dir in env_dirs:
-            if os.path.isdir(env_dir):
-                for d in os.listdir(env_dir):
-                    d = os.path.join(env_dir, d)
-                    if os.path.isdir(d):
-                        environments.add(d)
-
-        return environments
-
-    if os.path.isdir(conda_base) and os.path.isfile(conda_exe):
-        print("Using miniconda installation from", conda_base)
-    else:
-        print("Installing miniconda into", conda_base)
-        install_miniconda(conda_base)
-
-    # verify consistency and check conda version
-    if not os.path.isfile(conda_exe):
-        sys.exit("Conda executable not found at " + conda_exe)
-
-    environments = get_environments()
-
-    conda_info = subprocess.check_output([conda_exe, "info", "--json"], env=clean_env)
+    # verify micromamba works and check version
+    conda_info = subprocess.check_output([mamba, "--version"], env=clean_env)
     if sys.version_info.major > 2:
         conda_info = conda_info.decode("latin-1")
-    conda_info = json.loads(conda_info)
-    for env in environments:
-        if env not in conda_info["envs"]:
-            print("Consistency check:", env, "not in environments:")
-            print(conda_info["envs"])
-            warnings.warn(
-                """
-There is a mismatch between the conda settings in your home directory
-and what "conda info" is reporting. This is not a fatal error, but if
-an error is encountered, please check that your conda installation and
-environments exist and are working.
-""",
-                RuntimeWarning,
-            )
+    print("Using Micromamba version", conda_info.strip())
 
+    # identify packages required for environment
     filename = os.path.join("modules", "dxtbx", ".azure-pipelines", "ci-conda-env.txt")
     if not os.path.isfile(filename):
-        raise RuntimeError(f"The file {filename} is not available")
+        raise RuntimeError(f"The environment file {filename} is not available")
 
-    python_requirement = "conda-forge::python=%s.*" % python
-
-    # make a new environment directory
+    # install a new environment or update an existing one
     prefix = os.path.realpath("conda_base")
+    if os.path.exists(prefix):
+        command = "install"
+        text_messages = ["Updating", "update of"]
+    else:
+        command = "create"
+        text_messages = ["Installing", "installation into"]
 
     command_list = [
-        conda_exe,
-        "create",
+        mamba,
+        "--no-env",
+        "--no-rc",
         "--prefix",
         prefix,
+        "--root-prefix",
+        mamba_prefix,
+        command,
         "--file",
         filename,
         "--yes",
         "--channel",
         "conda-forge",
         "--override-channels",
-        python_requirement,
+        "python=%s" % python,
     ]
-    if os.name == "nt":
-        command_list = [
-            "cmd.exe",
-            "/C",
-            " ".join(
-                [os.path.join(conda_base, "Scripts", "activate"), "base", "&&"]
-                + command_list
-            )
-            .replace("<", "^<")
-            .replace(">", "^>"),
-        ]
+
     print(
-        "Installing dxtbx environment from {filename} with Python {python}".format(
-            filename=filename, python=python
+        "{text} dials environment from {filename} with Python {python}".format(
+            text=text_messages[0], filename=filename, python=python
         )
     )
     for retry in range(5):
         retry += 1
         try:
-            run_command(command=command_list, workdir=".")
+            run_command(
+                command=command_list,
+                workdir=".",
+            )
         except Exception:
             print(
                 """
@@ -204,7 +134,7 @@ The conda environment could not be constructed. Please check that there is a
 working network connection for downloading conda packages.
 """
         )
-    print(f"Completed installation into:\n  {prefix}")
+    print("Completed {text}:\n  {prefix}".format(text=text_messages[1], prefix=prefix))
     with open(os.path.join(prefix, ".condarc"), "w") as fh:
         fh.write(
             """
@@ -738,7 +668,6 @@ def update_sources(options):
         source.split("/")[1]: {"base-repository": source, "branch-local": "master"}
         for source in (
             "cctbx/cctbx_project",
-            "cctbx/dxtbx",
             "dials/cbflib",
         )
     }
@@ -747,6 +676,10 @@ def update_sources(options):
         "effective-repository": "dials/cctbx",
         "branch-remote": "master",
         "branch-local": "stable",
+    }
+    repositories["dxtbx"] = {
+        "base-repository": "cctbx/dxtbx",
+        "branch-local": "main",
     }
 
     for source, setting in options.branch:
@@ -918,7 +851,7 @@ def run():
         "--python",
         help="Install this minor version of Python (default: %(default)s)",
         default="3.8",
-        choices=("3.6", "3.7", "3.8"),
+        choices=("3.6", "3.7", "3.8", "3.9"),
     )
     parser.add_argument(
         "--branch",
@@ -930,6 +863,12 @@ def run():
             "Specify as repository@branch, eg. 'dials@dials-next'"
         ),
     )
+    parser.add_argument(
+        "--clean",
+        help="Remove temporary conda environments and package caches after installation",
+        default=False,
+        action="store_true",
+    )
     options = parser.parse_args()
 
     # Add sources
@@ -938,7 +877,9 @@ def run():
 
     # Build base packages
     if "base" in options.actions:
-        install_conda(options.python)
+        install_micromamba(options.python)
+        if options.clean:
+            shutil.rmtree(os.path.realpath("micromamba"))
 
     # Configure, make
     if "build" in options.actions:

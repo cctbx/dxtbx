@@ -3,7 +3,6 @@ Experimental format for the X-Spectrum LAMBDA detector
 http://www.x-spectrum.de/
 """
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -23,7 +22,7 @@ class FormatHDF5Lambda(FormatHDF5):
     def understand(image_file):
         try:
             tag = FormatHDF5.open_file(image_file, "rb").read(8)
-        except IOError:
+        except OSError:
             return False
 
         # check that this is a HDF5 file (should not have got here if not

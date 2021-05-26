@@ -1,8 +1,9 @@
 import os
+import pickle
+import shutil
 from unittest import mock
 
 import pytest
-import six.moves.cPickle as pickle
 
 from scitbx.array_family import flex
 
@@ -67,6 +68,32 @@ def test_format(dials_regression, image):
         reader.read(i)
 
     assert format_class.get_imageset([image])
+
+
+@pytest.fixture(scope="session")
+def image_examples(dials_data):
+
+    return [
+        dials_data("image_examples").join(e).strpath
+        for e in [
+            "ThermoFisher_EPU-D_1.5_001.mrc.gz",
+            "Gatan_float32_zero_array_001.dm4.gz",
+        ]
+    ]
+
+
+def test_other_formats(image_examples):
+    """Test additional image examples in dials_data, not dials_regression"""
+    for image in image_examples:
+        format_class = dxtbx.format.Registry.get_format_class_for_file(image)
+        reader = format_class.get_reader()([image])
+
+        N = len(reader)
+
+        for i in range(N):
+            reader.read(i)
+
+        assert format_class.get_imageset([image])
 
 
 def test_image_tile():
@@ -524,21 +551,33 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
     ]
     directory = tmp_path / "test%"
     directory.mkdir()
-    for image in images:
-        (directory / image.basename).symlink_to(image)
-    template = str(directory / "centroid_####.cbf")
-    sequence = ImageSetFactory.make_sequence(template, range(1, 10))
-    assert len(sequence) == 9
+    try:
+        for image in images:
+            try:
+                (directory / image.basename).symlink_to(image)
+            except OSError:
+                shutil.copy(image, directory)
 
-    sequences = ImageSetFactory.new(
-        [str(directory / image.basename) for image in images]
-    )
-    assert len(sequences) == 1
-    assert len(sequences[0]) == 9
+        template = str(directory / "centroid_####.cbf")
+        sequence = ImageSetFactory.make_sequence(template, range(1, 10))
+        assert len(sequence) == 9
 
-    sequences = ImageSetFactory.from_template(template)
-    assert len(sequences) == 1
-    assert len(sequences[0]) == 9
+        sequences = ImageSetFactory.new(
+            [str(directory / image.basename) for image in images]
+        )
+        assert len(sequences) == 1
+        assert len(sequences[0]) == 9
+
+        sequences = ImageSetFactory.from_template(template)
+        assert len(sequences) == 1
+        assert len(sequences[0]) == 9
+
+    finally:  # clean up potentially copied files after running test
+        for image in images:
+            try:
+                (directory / image.basename).unlink()
+            except FileNotFoundError:
+                pass
 
 
 def test_pickle_imageset(centroid_files):

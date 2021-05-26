@@ -62,6 +62,16 @@ namespace dxtbx { namespace model {
       throw DXTBX_ERROR("Overload me");
       return std::string();
     }
+
+    /** @returns True/False this is the same as the other */
+    bool operator==(const PxMmStrategy &other) const {
+      return strategy_name() == other.strategy_name();
+    }
+
+    /** @returns True/False this is not the same as the other */
+    bool operator!=(const PxMmStrategy &other) const {
+      return !(*this == other);
+    }
   };
 
   /**
@@ -203,6 +213,17 @@ namespace dxtbx { namespace model {
       return std::string("ParallaxCorrectedPxMmStrategy\n") + mu_t0();
     }
 
+    /** @returns True/False this is the same as the other */
+    bool operator==(const ParallaxCorrectedPxMmStrategy &other) const {
+      return SimplePxMmStrategy::operator==(other) && mu_ == other.mu_
+             && t0_ == other.t0_;
+    }
+
+    /** @returns True/False this is not the same as the other */
+    bool operator!=(const ParallaxCorrectedPxMmStrategy &other) const {
+      return !(*this == other);
+    }
+
   protected:
     double mu_;
     double t0_;
@@ -218,6 +239,9 @@ namespace dxtbx { namespace model {
      * ideal readout position to true readout position - these are
      * *added* to the real valued pixel position when going from mm
      * to pixel
+     *
+     * Note that the equality operators for this class don't explicitly
+     * check the dx, dy offsets for equality.
      */
 
     OffsetPxMmStrategy(scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
@@ -324,6 +348,9 @@ namespace dxtbx { namespace model {
      * ideal readout position to true readout position - these are
      * *added* to the real valued pixel position when going from mm
      * to pixel
+     *
+     * Note that the equality operators for this class don't explicitly
+     * check the dx, dy offsets for equality.
      */
 
     OffsetParallaxCorrectedPxMmStrategy(
