@@ -4,7 +4,7 @@ import pycbf
 
 import libtbx.phil
 
-from dxtbx_model_ext import MonochromaticBeam
+from dxtbx_model_ext import MonochromaticBeam, TOFBeam
 
 beam_phil_scope = libtbx.phil.parse(
     """
@@ -88,6 +88,13 @@ class BeamFactory:
 
         # Create the model from the joint dictionary
         return MonochromaticBeam.from_dict(joint)
+
+    @staticmethod
+    def make_tof_beam(sample_to_source_direction, sample_to_moderator_distance):
+        return TOFBeam(
+            tuple(map(float, sample_to_source_direction)),
+            float(sample_to_moderator_distance),
+        )
 
     @staticmethod
     def make_monochromatic_beam(
