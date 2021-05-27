@@ -60,7 +60,7 @@ class BeamFactory:
         elif reference is None:
             raise RuntimeError("No wavelength set")
         if params.beam.direction is not None:
-            beam.set_direction(params.beam.direction)
+            beam.set_sample_to_source_direction(params.beam.direction)
         elif reference is None:
             raise RuntimeError("No beam direction set")
         if params.beam.polarization_normal is not None:

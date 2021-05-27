@@ -598,7 +598,7 @@ class BeamFactory:
             )
         else:
             self.model = MonochromaticBeam()
-            self.model.set_direction((0, 0, 1))
+            self.model.set_sample_to_source_direction((0, 0, 1))
 
             wavelength_units = spectrum_wavelengths.attrs["units"]
 

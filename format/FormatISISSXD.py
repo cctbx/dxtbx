@@ -279,7 +279,7 @@ class FormatISISSXD(FormatNXTOFRAW):
         beam = BeamFactory.make_monochromatic_beam(
             s0=s0, unit_s0=unit_s0, wavelength=wavelength
         )
-        beam.set_direction(direction)
+        beam.set_sample_to_source_direction(direction)
         beam.set_divergence(divergence)
         beam.set_sigma_divergence(sigma_divergence)
         beam.set_polarization_normal(polarization_normal)

@@ -434,7 +434,7 @@ class TestImageSequence:
 
         # Modify the geometry
         assert len(detector) == 1
-        beam.set_direction((1, 0, 0))
+        beam.set_sample_to_source_direction((1, 0, 0))
         gonio.set_rotation_axis((0, 1, 0))
         detector[0].set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
 

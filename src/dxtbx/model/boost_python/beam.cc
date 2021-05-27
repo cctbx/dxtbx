@@ -84,7 +84,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     return beam;
   }
 
-  static MonochromaticBeam *make_beam_w_s0(vec3<double> s0,
+  static MonochromaticBeam *make_monochromatic_beam_w_s0(vec3<double> s0,
                               double divergence,
                               double sigma_divergence,
                               bool deg) {
@@ -97,7 +97,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     return beam;
   }
 
-  static MonochromaticBeam *make_beam_w_all(vec3<double> sample_to_source,
+  static MonochromaticBeam *make_monochromatic_beam_w_all(vec3<double> sample_to_source,
                                double wavelength,
                                double divergence,
                                double sigma_divergence,
@@ -147,7 +147,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     beam.set_sigma_divergence(deg ? deg_as_rad(sigma_divergence) : sigma_divergence);
   }
 
-  static void rotate_around_origin(MonochromaticBeam &beam,
+  static void rotate_around_origin(BeamBase &beam,
                                    vec3<double> axis,
                                    double angle,
                                    bool deg) {
@@ -218,11 +218,68 @@ namespace dxtbx { namespace model { namespace boost_python {
     return b;
   }
 
+  static TOFBeam *make_tof_beam(vec3<double> sample_to_source,
+                         double moderator_sample_distance) {
+    TOFBeam *beam = NULL;
+    return new TOFBeam(sample_to_source, moderator_sample_distance);
+  }
+
   void export_beam() {
-    // Export BeamBase
+
+    // BeamBase
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
       .def("get_sample_to_source_direction", &BeamBase::get_sample_to_source_direction)
-      .def("set_direction", &MonochromaticBeam::set_direction)
+      .def("set_sample_to_source_direction", &BeamBase::set_sample_to_source_direction)
+      .def("rotate_around_origin",
+           &rotate_around_origin,
+           (arg("axis"), arg("angle"), arg("deg") = true));
+ 
+    // TOFBeam : BeamBase
+    class_<TOFBeam, boost::shared_ptr<TOFBeam>, bases<BeamBase> >("TOFBeam")
+      .def(init<const TOFBeam &>())
+      .def(init<vec3<double>, double>((arg("direction"), arg("sample_to_moderator_distance"))))
+      .def("__init__",
+           make_constructor(&make_tof_beam,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("sample_to_moderator_distance"))))
+      .def("get_sample_to_moderator_distance", &TOFBeam::get_sample_to_moderator_distance)
+      .def("set_sample_to_moderator_distance", &TOFBeam::set_sample_to_moderator_distance);
+
+    // MonochromaticBeam : BeamBase
+    class_<MonochromaticBeam, boost::shared_ptr<MonochromaticBeam>, bases<BeamBase> >("MonochromaticBeam")
+      .def(init<const MonochromaticBeam &>())
+      .def(init<vec3<double>, double>((arg("direction"), arg("wavelength"))))
+      .def(init<vec3<double> >((arg("s0"))))
+      .def("__init__",
+           make_constructor(&make_monochromatic_beam,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("wavelength"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("deg") = true)))
+      .def(
+        "__init__",
+        make_constructor(
+          &make_monochromatic_beam_w_s0,
+          default_call_policies(),
+          (arg("s0"), arg("divergence"), arg("sigma_divergence"), arg("deg") = true)))
+      .def("__init__",
+           make_constructor(&make_monochromatic_beam_w_all,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("wavelength"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("polarization_normal"),
+                             arg("polarization_fraction"),
+                             arg("flux"),
+                             arg("transmission"),
+                             arg("deg") = true)))
+      .def("__str__", &beam_to_string)
+      .def("to_dict", &to_dict<MonochromaticBeam>)
+      .def("from_dict", &from_dict<MonochromaticBeam>, return_value_policy<manage_new_object>())
       .def("get_wavelength", &MonochromaticBeam::get_wavelength)
       .def("set_wavelength", &MonochromaticBeam::set_wavelength)
       .def("get_s0", &MonochromaticBeam::get_s0)
@@ -251,9 +308,6 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_s0_at_scan_points", &MonochromaticBeam::get_s0_at_scan_points)
       .def("get_s0_at_scan_point", &MonochromaticBeam::get_s0_at_scan_point)
       .def("reset_scan_points", &MonochromaticBeam::reset_scan_points)
-      .def("rotate_around_origin",
-           &rotate_around_origin,
-           (arg("axis"), arg("angle"), arg("deg") = true))
       .def("__eq__", &MonochromaticBeam::operator==)
       .def("__ne__", &MonochromaticBeam::operator!=)
       .def("is_similar_to",
@@ -262,42 +316,7 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("wavelength_tolerance") = 1e-6,
             arg("direction_tolerance") = 1e-6,
             arg("polarization_normal_tolerance") = 1e-6,
-            arg("polarization_fraction_tolerance") = 1e-6));
-
-    // Export MonochromaticBeam : BeamBase
-    class_<MonochromaticBeam, boost::shared_ptr<MonochromaticBeam>, bases<BeamBase> >("MonochromaticBeam")
-      .def(init<const MonochromaticBeam &>())
-      .def(init<vec3<double>, double>((arg("direction"), arg("wavelength"))))
-      .def(init<vec3<double> >((arg("s0"))))
-      .def("__init__",
-           make_constructor(&make_monochromatic_beam,
-                            default_call_policies(),
-                            (arg("direction"),
-                             arg("wavelength"),
-                             arg("divergence"),
-                             arg("sigma_divergence"),
-                             arg("deg") = true)))
-      .def(
-        "__init__",
-        make_constructor(
-          &make_beam_w_s0,
-          default_call_policies(),
-          (arg("s0"), arg("divergence"), arg("sigma_divergence"), arg("deg") = true)))
-      .def("__init__",
-           make_constructor(&make_beam_w_all,
-                            default_call_policies(),
-                            (arg("direction"),
-                             arg("wavelength"),
-                             arg("divergence"),
-                             arg("sigma_divergence"),
-                             arg("polarization_normal"),
-                             arg("polarization_fraction"),
-                             arg("flux"),
-                             arg("transmission"),
-                             arg("deg") = true)))
-      .def("__str__", &beam_to_string)
-      .def("to_dict", &to_dict<MonochromaticBeam>)
-      .def("from_dict", &from_dict<MonochromaticBeam>, return_value_policy<manage_new_object>())
+            arg("polarization_fraction_tolerance") = 1e-6))
       .staticmethod("from_dict")
       .def_pickle(BeamPickleSuite());
 
