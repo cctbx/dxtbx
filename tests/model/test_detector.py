@@ -9,13 +9,18 @@ from libtbx.test_utils import approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.model import Beam, Detector, Panel, ParallaxCorrectedPxMmStrategy
-from dxtbx.model.detector_helpers import (
-    get_detector_projection_2d_axes,
-    get_panel_projection_2d_from_axes,
-    set_mosflm_beam_centre,
-)
 from dxtbx.model.experiment_list import ExperimentListFactory
+from dxtbx.model import (
+    Detector,
+    MonochromaticBeam,
+    Panel,
+    ParallaxCorrectedPxMmStrategy,
+)
+from dxtbx.model.detector_helpers import (
+        get_detector_projection_2d_axes,
+        get_panel_projection_2d_from_axes,
+        set_mosflm_beam_centre,
+)
 
 
 def create_detector(offset):
@@ -202,7 +207,7 @@ def test_set_mosflm_beam_centre(detector):
     _ = panel.get_image_size_mm()
 
     s0 = (1.0 / wavelength) * detector_normal
-    beam = Beam(-s0.normalize(), wavelength)
+    beam = MonochromaticBeam(-s0.normalize(), wavelength)
 
     beam_centre = matrix.col(panel.get_beam_centre(beam.get_s0()))
     origin_shift = matrix.col((1, 0.5))
@@ -218,7 +223,7 @@ def test_set_mosflm_beam_centre(detector):
     ).length() < 1e-6
 
     # test resolution methods
-    beam = Beam(direction=(0, 0, 1), wavelength=1.0)
+    beam = MonochromaticBeam(direction=(0, 0, 1), wavelength=1.0)
     d_min1 = detector.get_max_resolution(beam.get_s0())
     d_min2 = detector.get_max_inscribed_resolution(beam.get_s0())
     assert d_min1 < d_min2

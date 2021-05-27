@@ -19,7 +19,7 @@
 
 namespace dxtbx { namespace masking {
 
-  using dxtbx::model::Beam;
+  using dxtbx::model::MonochromaticBeam;
   using dxtbx::model::Panel;
   using scitbx::vec2;
   using scitbx::vec3;
@@ -159,7 +159,7 @@ namespace dxtbx { namespace masking {
    */
   void mask_untrusted_resolution_range(
     scitbx::af::ref<bool, scitbx::af::c_grid<2> > mask,
-    const Beam &beam,
+    const MonochromaticBeam &beam,
     const Panel &panel,
     double d_min,
     double d_max) {
@@ -190,7 +190,7 @@ namespace dxtbx { namespace masking {
      * @param beam The beam model
      * @param panel The panel model
      */
-    ResolutionMaskGenerator(const Beam &beam, const Panel &panel)
+    ResolutionMaskGenerator(const MonochromaticBeam &beam, const Panel &panel)
         : resolution_(
           scitbx::af::c_grid<2>(panel.get_image_size()[1], panel.get_image_size()[0])) {
       vec3<double> s0 = beam.get_s0();

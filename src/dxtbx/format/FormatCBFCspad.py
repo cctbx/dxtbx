@@ -9,7 +9,7 @@ from scitbx.matrix import col, sqr
 from dxtbx.format.FormatCBFFull import FormatCBFFullStill
 from dxtbx.format.FormatCBFMultiTileHierarchy import FormatCBFMultiTileHierarchyStill
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
-from dxtbx.model.beam import Beam, BeamFactory
+from dxtbx.model.beam import BeamFactory, MonochromaticBeam
 from dxtbx.model.detector import Detector, DetectorFactory
 
 
@@ -237,7 +237,7 @@ class FormatCBFFullStillInMemory(FormatCBFFullStill):
             self._detector_instance = detector_instance
 
             beam_instance = self._beam()
-            assert isinstance(beam_instance, Beam)
+            assert isinstance(beam_instance, MonochromaticBeam)
             self._beam_instance = beam_instance
 
         except Exception:

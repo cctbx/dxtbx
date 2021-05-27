@@ -20,7 +20,6 @@ from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.util import format_float_with_standard_uncertainty
 from dxtbx_model_ext import (
-    Beam,
     BeamBase,
     Crystal,
     CrystalBase,
@@ -33,6 +32,7 @@ from dxtbx_model_ext import (
     KappaDirection,
     KappaGoniometer,
     KappaScanAxis,
+    MonochromaticBeam,
     MosaicCrystalKabsch2010,
     MosaicCrystalSauter2014,
     MultiAxisGoniometer,
@@ -55,7 +55,7 @@ from dxtbx_model_ext import (
 )
 
 __all__ = (
-    "Beam",
+    "MonochromaticBeam",
     "BeamBase",
     "BeamFactory",
     "Crystal",

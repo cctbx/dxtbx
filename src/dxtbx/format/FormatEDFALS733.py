@@ -69,7 +69,7 @@ class FormatEDFALS733(Format):
 
     def _beam(self):
         """Return a simple model for the beam."""
-        return self._beam_factory.simple(wavelength=1.0)  # dummy argument
+        return self._beam_factory.simple_monochromatic(wavelength=1.0)  # dummy argument
 
     def _scan(self):
         """Return the scan information for this image."""

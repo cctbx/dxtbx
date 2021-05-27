@@ -83,7 +83,7 @@ class FormatHDF5PAL(FormatHDF5):
     def _beam(self, index=None):
         if index is None:
             index = 0
-        return self._beam_factory.simple(
+        return self._beam_factory.simple_monochromatic(
             self._h5_handle[self._run]["scan_dat/photon_wavelength"][index]
         )
 

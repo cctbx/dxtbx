@@ -73,7 +73,9 @@ class FormatMarIP(Format):
     def _beam(self):
         """Return a simple model for the beam."""
 
-        return self._beam_factory.simple(self.detectorbase.parameters["WAVELENGTH"])
+        return self._beam_factory.simple_monochromatic(
+            self.detectorbase.parameters["WAVELENGTH"]
+        )
 
     def _scan(self):
         """Return the scan information for this image."""

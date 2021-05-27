@@ -262,6 +262,7 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def get_num_images(self):
         return len(self._get_time_channels_in_seconds())
+        return len(self.nxs_file)
 
     def get_beam(self, idx=None):
         s0 = self._get_s0()
@@ -275,7 +276,9 @@ class FormatISISSXD(FormatNXTOFRAW):
         flux = self._get_beam_flux()
         transmission = self._get_beam_transmission()
 
-        beam = BeamFactory.make_beam(s0=s0, unit_s0=unit_s0, wavelength=wavelength)
+        beam = BeamFactory.make_monochromatic_beam(
+            s0=s0, unit_s0=unit_s0, wavelength=wavelength
+        )
         beam.set_direction(direction)
         beam.set_divergence(divergence)
         beam.set_sigma_divergence(sigma_divergence)
@@ -290,11 +293,13 @@ class FormatISISSXD(FormatNXTOFRAW):
         return self._get_detector()
 
     def get_scan(self, idx=None):
+        return None
         tof = self._get_time_channels_in_seconds()
         image_range = (1, len(tof))
         return Scan(tuple(map(int, image_range)), flex.double(list(map(float, tof))))
 
     def get_goniometer(self, idx=None):
+        return None
         return Goniometer()
 
     def _get_panel_size_in_px(self):

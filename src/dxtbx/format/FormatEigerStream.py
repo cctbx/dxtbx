@@ -109,7 +109,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         Create the beam model
         """
         configuration = self.header["configuration"]
-        return BeamFactory.simple(configuration["wavelength"])
+        return BeamFactory.simple_monochromatic(configuration["wavelength"])
 
     def _goniometer(self):
         """

@@ -82,7 +82,7 @@ def test_array(model):
 
 def test_inverted_axis():
     def get_values(invert_y):
-        beam = BeamFactory.simple(wavelength=1)
+        beam = BeamFactory.simple_monochromatic(wavelength=1)
 
         if invert_y:
             y_direction = "-y"

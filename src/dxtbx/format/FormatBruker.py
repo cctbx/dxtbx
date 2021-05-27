@@ -136,7 +136,7 @@ class FormatBruker(Format):
     def _beam(self):
         """Return a simple model for the beam."""
 
-        return self._beam_factory.simple(self.detectorbase.wavelength)
+        return self._beam_factory.simple_monochromatic(self.detectorbase.wavelength)
 
     def _scan(self):
         """Return the scan information for this image."""

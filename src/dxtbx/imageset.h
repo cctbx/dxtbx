@@ -1185,6 +1185,31 @@ protected:
 };
 
 /**
+ * A class to represent images with a ToF dimension
+ */
+class TOFImageSet : public ImageSet{
+
+  TOFImageSet(const ImageSetData &data,
+              scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds)
+      : ImageSet(data),
+        tof_in_seconds_(tof_in_seconds){
+
+    DXTBX_ASSERT(tof_in_seconds.size() == data.size());
+
+    
+
+  }
+
+    
+    
+private:
+  scitbx::af::shared<scitbx::af::shared<double> > tof_in_seconds_;
+
+
+
+};
+
+/**
  * A class to represent a sequence of data
  */
 class ImageSequence : public ImageSet {

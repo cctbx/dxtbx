@@ -23,14 +23,14 @@ namespace dxtbx { namespace model { namespace boost_python {
   using scitbx::deg_as_rad;
   using scitbx::rad_as_deg;
 
-  std::string beam_to_string(const Beam &beam) {
+  std::string beam_to_string(const MonochromaticBeam &beam) {
     std::stringstream ss;
     ss << beam;
     return ss.str();
   }
 
   struct BeamPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(const Beam &obj) {
+    static boost::python::tuple getinitargs(const MonochromaticBeam &obj) {
       return boost::python::make_tuple(obj.get_sample_to_source_direction(),
                                        obj.get_wavelength(),
                                        obj.get_divergence(),
@@ -42,13 +42,13 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
 
     static boost::python::tuple getstate(boost::python::object obj) {
-      const Beam &beam = boost::python::extract<const Beam &>(obj)();
+      const MonochromaticBeam &beam = boost::python::extract<const MonochromaticBeam &>(obj)();
       return boost::python::make_tuple(obj.attr("__dict__"),
                                        beam.get_s0_at_scan_points());
     }
 
     static void setstate(boost::python::object obj, boost::python::tuple state) {
-      Beam &beam = boost::python::extract<Beam &>(obj)();
+      MonochromaticBeam &beam = boost::python::extract<MonochromaticBeam &>(obj)();
       DXTBX_ASSERT(boost::python::len(state) == 2);
 
       // restore the object's __dict__
@@ -67,37 +67,37 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
   };
 
-  static Beam *make_beam(vec3<double> sample_to_source,
+  static MonochromaticBeam *make_monochromatic_beam(vec3<double> sample_to_source,
                          double wavelength,
                          double divergence,
                          double sigma_divergence,
                          bool deg) {
-    Beam *beam = NULL;
+    MonochromaticBeam *beam = NULL;
     if (deg) {
-      beam = new Beam(sample_to_source,
+      beam = new MonochromaticBeam(sample_to_source,
                       wavelength,
                       deg_as_rad(divergence),
                       deg_as_rad(sigma_divergence));
     } else {
-      beam = new Beam(sample_to_source, wavelength, divergence, sigma_divergence);
+      beam = new MonochromaticBeam(sample_to_source, wavelength, divergence, sigma_divergence);
     }
     return beam;
   }
 
-  static Beam *make_beam_w_s0(vec3<double> s0,
+  static MonochromaticBeam *make_beam_w_s0(vec3<double> s0,
                               double divergence,
                               double sigma_divergence,
                               bool deg) {
-    Beam *beam = NULL;
+    MonochromaticBeam *beam = NULL;
     if (deg) {
-      beam = new Beam(s0, deg_as_rad(divergence), deg_as_rad(sigma_divergence));
+      beam = new MonochromaticBeam(s0, deg_as_rad(divergence), deg_as_rad(sigma_divergence));
     } else {
-      beam = new Beam(s0, divergence, sigma_divergence);
+      beam = new MonochromaticBeam(s0, divergence, sigma_divergence);
     }
     return beam;
   }
 
-  static Beam *make_beam_w_all(vec3<double> sample_to_source,
+  static MonochromaticBeam *make_beam_w_all(vec3<double> sample_to_source,
                                double wavelength,
                                double divergence,
                                double sigma_divergence,
@@ -106,9 +106,9 @@ namespace dxtbx { namespace model { namespace boost_python {
                                double flux,
                                double transmission,
                                bool deg) {
-    Beam *beam = NULL;
+    MonochromaticBeam *beam = NULL;
     if (deg) {
-      beam = new Beam(sample_to_source,
+      beam = new MonochromaticBeam(sample_to_source,
                       wavelength,
                       deg_as_rad(divergence),
                       deg_as_rad(sigma_divergence),
@@ -117,7 +117,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                       flux,
                       transmission);
     } else {
-      beam = new Beam(sample_to_source,
+      beam = new MonochromaticBeam(sample_to_source,
                       wavelength,
                       divergence,
                       sigma_divergence,
@@ -129,25 +129,25 @@ namespace dxtbx { namespace model { namespace boost_python {
     return beam;
   }
 
-  static double get_divergence(const Beam &beam, bool deg) {
+  static double get_divergence(const MonochromaticBeam &beam, bool deg) {
     double divergence = beam.get_divergence();
     return deg ? rad_as_deg(divergence) : divergence;
   }
 
-  static double get_sigma_divergence(const Beam &beam, bool deg) {
+  static double get_sigma_divergence(const MonochromaticBeam &beam, bool deg) {
     double sigma_divergence = beam.get_sigma_divergence();
     return deg ? rad_as_deg(sigma_divergence) : sigma_divergence;
   }
 
-  static void set_divergence(Beam &beam, double divergence, bool deg) {
+  static void set_divergence(MonochromaticBeam &beam, double divergence, bool deg) {
     beam.set_divergence(deg ? deg_as_rad(divergence) : divergence);
   }
 
-  static void set_sigma_divergence(Beam &beam, double sigma_divergence, bool deg) {
+  static void set_sigma_divergence(MonochromaticBeam &beam, double sigma_divergence, bool deg) {
     beam.set_sigma_divergence(deg ? deg_as_rad(sigma_divergence) : sigma_divergence);
   }
 
-  static void rotate_around_origin(Beam &beam,
+  static void rotate_around_origin(MonochromaticBeam &beam,
                                    vec3<double> axis,
                                    double angle,
                                    bool deg) {
@@ -155,7 +155,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     beam.rotate_around_origin(axis, angle_rad);
   }
 
-  static void Beam_set_s0_at_scan_points_from_tuple(Beam &beam,
+  static void Beam_set_s0_at_scan_points_from_tuple(MonochromaticBeam &beam,
                                                     boost::python::tuple l) {
     scitbx::af::shared<vec3<double> > s0_list;
     for (std::size_t i = 0; i < boost::python::len(l); ++i) {
@@ -165,7 +165,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     beam.set_s0_at_scan_points(s0_list.const_ref());
   }
 
-  static void Beam_set_s0_at_scan_points_from_list(Beam &beam, boost::python::list l) {
+  static void Beam_set_s0_at_scan_points_from_list(MonochromaticBeam &beam, boost::python::list l) {
     scitbx::af::shared<vec3<double> > s0_list;
     for (std::size_t i = 0; i < boost::python::len(l); ++i) {
       vec3<double> s0 = boost::python::extract<vec3<double> >(l[i]);
@@ -175,7 +175,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   template <>
-  boost::python::dict to_dict<Beam>(const Beam &obj) {
+  boost::python::dict to_dict<MonochromaticBeam>(const MonochromaticBeam &obj) {
     boost::python::dict result;
     result["direction"] = obj.get_sample_to_source_direction();
     result["wavelength"] = obj.get_wavelength();
@@ -199,8 +199,8 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   template <>
-  Beam *from_dict<Beam>(boost::python::dict obj) {
-    Beam *b = new Beam(
+  MonochromaticBeam *from_dict<MonochromaticBeam>(boost::python::dict obj) {
+    MonochromaticBeam *b = new MonochromaticBeam(
       boost::python::extract<vec3<double> >(obj["direction"]),
       boost::python::extract<double>(obj["wavelength"]),
       deg_as_rad(boost::python::extract<double>(obj.get("divergence", 0.0))),
@@ -222,55 +222,55 @@ namespace dxtbx { namespace model { namespace boost_python {
     // Export BeamBase
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
       .def("get_sample_to_source_direction", &BeamBase::get_sample_to_source_direction)
-      .def("set_direction", &Beam::set_direction)
-      .def("get_wavelength", &Beam::get_wavelength)
-      .def("set_wavelength", &Beam::set_wavelength)
-      .def("get_s0", &Beam::get_s0)
-      .def("set_s0", &Beam::set_s0)
-      .def("get_unit_s0", &Beam::get_unit_s0)
-      .def("set_unit_s0", &Beam::set_unit_s0)
+      .def("set_direction", &MonochromaticBeam::set_direction)
+      .def("get_wavelength", &MonochromaticBeam::get_wavelength)
+      .def("set_wavelength", &MonochromaticBeam::set_wavelength)
+      .def("get_s0", &MonochromaticBeam::get_s0)
+      .def("set_s0", &MonochromaticBeam::set_s0)
+      .def("get_unit_s0", &MonochromaticBeam::get_unit_s0)
+      .def("set_unit_s0", &MonochromaticBeam::set_unit_s0)
       .def("get_divergence", &get_divergence, (arg("deg") = true))
       .def("set_divergence", &set_divergence, (arg("divergence"), arg("deg") = true))
       .def("get_sigma_divergence", &get_sigma_divergence, (arg("deg") = true))
       .def("set_sigma_divergence",
            &set_sigma_divergence,
            (arg("sigma_divergence"), arg("deg") = true))
-      .def("get_polarization_normal", &Beam::get_polarization_normal)
-      .def("set_polarization_normal", &Beam::set_polarization_normal)
-      .def("get_polarization_fraction", &Beam::get_polarization_fraction)
-      .def("set_polarization_fraction", &Beam::set_polarization_fraction)
-      .def("get_flux", &Beam::get_flux)
-      .def("set_flux", &Beam::set_flux)
-      .def("get_transmission", &Beam::get_transmission)
-      .def("set_transmission", &Beam::set_transmission)
-      .add_property("num_scan_points", &Beam::get_num_scan_points)
-      .def("get_num_scan_points", &Beam::get_num_scan_points)
-      .def("set_s0_at_scan_points", &Beam::set_s0_at_scan_points)
+      .def("get_polarization_normal", &MonochromaticBeam::get_polarization_normal)
+      .def("set_polarization_normal", &MonochromaticBeam::set_polarization_normal)
+      .def("get_polarization_fraction", &MonochromaticBeam::get_polarization_fraction)
+      .def("set_polarization_fraction", &MonochromaticBeam::set_polarization_fraction)
+      .def("get_flux", &MonochromaticBeam::get_flux)
+      .def("set_flux", &MonochromaticBeam::set_flux)
+      .def("get_transmission", &MonochromaticBeam::get_transmission)
+      .def("set_transmission", &MonochromaticBeam::set_transmission)
+      .add_property("num_scan_points", &MonochromaticBeam::get_num_scan_points)
+      .def("get_num_scan_points", &MonochromaticBeam::get_num_scan_points)
+      .def("set_s0_at_scan_points", &MonochromaticBeam::set_s0_at_scan_points)
       .def("set_s0_at_scan_points", &Beam_set_s0_at_scan_points_from_tuple)
       .def("set_s0_at_scan_points", &Beam_set_s0_at_scan_points_from_list)
-      .def("get_s0_at_scan_points", &Beam::get_s0_at_scan_points)
-      .def("get_s0_at_scan_point", &Beam::get_s0_at_scan_point)
-      .def("reset_scan_points", &Beam::reset_scan_points)
+      .def("get_s0_at_scan_points", &MonochromaticBeam::get_s0_at_scan_points)
+      .def("get_s0_at_scan_point", &MonochromaticBeam::get_s0_at_scan_point)
+      .def("reset_scan_points", &MonochromaticBeam::reset_scan_points)
       .def("rotate_around_origin",
            &rotate_around_origin,
            (arg("axis"), arg("angle"), arg("deg") = true))
-      .def("__eq__", &Beam::operator==)
-      .def("__ne__", &Beam::operator!=)
+      .def("__eq__", &MonochromaticBeam::operator==)
+      .def("__ne__", &MonochromaticBeam::operator!=)
       .def("is_similar_to",
-           &Beam::is_similar_to,
+           &MonochromaticBeam::is_similar_to,
            (arg("other"),
             arg("wavelength_tolerance") = 1e-6,
             arg("direction_tolerance") = 1e-6,
             arg("polarization_normal_tolerance") = 1e-6,
             arg("polarization_fraction_tolerance") = 1e-6));
 
-    // Export Beam : BeamBase
-    class_<Beam, boost::shared_ptr<Beam>, bases<BeamBase> >("Beam")
-      .def(init<const Beam &>())
+    // Export MonochromaticBeam : BeamBase
+    class_<MonochromaticBeam, boost::shared_ptr<MonochromaticBeam>, bases<BeamBase> >("MonochromaticBeam")
+      .def(init<const MonochromaticBeam &>())
       .def(init<vec3<double>, double>((arg("direction"), arg("wavelength"))))
       .def(init<vec3<double> >((arg("s0"))))
       .def("__init__",
-           make_constructor(&make_beam,
+           make_constructor(&make_monochromatic_beam,
                             default_call_policies(),
                             (arg("direction"),
                              arg("wavelength"),
@@ -296,12 +296,12 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("transmission"),
                              arg("deg") = true)))
       .def("__str__", &beam_to_string)
-      .def("to_dict", &to_dict<Beam>)
-      .def("from_dict", &from_dict<Beam>, return_value_policy<manage_new_object>())
+      .def("to_dict", &to_dict<MonochromaticBeam>)
+      .def("from_dict", &from_dict<MonochromaticBeam>, return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
       .def_pickle(BeamPickleSuite());
 
-    scitbx::af::boost_python::flex_wrapper<Beam>::plain("flex_Beam");
+    scitbx::af::boost_python::flex_wrapper<MonochromaticBeam>::plain("flex_Beam");
   }
 
 }}}  // namespace dxtbx::model::boost_python

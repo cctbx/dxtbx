@@ -108,7 +108,7 @@ class ExperimentListDict:
         self._lookups = {
             model: self._extract_models(model, function)
             for model, function in (
-                ("beam", BeamFactory.from_dict),
+                ("beam", BeamFactory.monochromatic_from_dict),
                 ("detector", DetectorFactory.from_dict),
                 ("goniometer", GoniometerFactory.from_dict),
                 ("scan", ScanFactory.from_dict),
@@ -915,7 +915,7 @@ class ImageMetadataRecord:
         filename=None,
         index=None,
     ):
-        # type: (dxtbx.model.Beam, dxtbx.model.Detector, dxtbx.model.Goniometer, dxtbx.model.Scan, str, str, int)
+        # type: (dxtbx.model.MonochromaticBeam, dxtbx.model.Detector, dxtbx.model.Goniometer, dxtbx.model.Scan, str, str, int)
         """
         Args:
             beam:       Stores a beam model

@@ -7,7 +7,7 @@ import pytest
 from libtbx.phil import parse
 from scitbx import matrix
 
-from dxtbx.model import Beam, Detector
+from dxtbx.model import Detector, MonochromaticBeam
 from dxtbx.model.detector import (
     DetectorFactory,
     ParallaxCorrectedPxMmStrategy,
@@ -299,7 +299,7 @@ def test_pickle(detector):
 
 
 def test_from_phil():
-    beam = Beam((0, 0, 1))
+    beam = MonochromaticBeam((0, 0, 1))
 
     params = detector_phil_scope.fetch(
         parse(

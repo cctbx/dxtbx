@@ -4,7 +4,7 @@ import pycbf
 
 import libtbx.phil
 
-from dxtbx_model_ext import Beam
+from dxtbx_model_ext import MonochromaticBeam
 
 beam_phil_scope = libtbx.phil.parse(
     """
@@ -50,7 +50,7 @@ class BeamFactory:
         """
         # Check the input
         if reference is None:
-            beam = Beam()
+            beam = MonochromaticBeam()
         else:
             beam = reference
 
@@ -71,7 +71,7 @@ class BeamFactory:
         return beam
 
     @staticmethod
-    def from_dict(d, t=None):
+    def monochromatic_from_dict(d, t=None):
         """Convert the dictionary to a beam model
 
         Params:
@@ -87,10 +87,10 @@ class BeamFactory:
         joint.update(d)
 
         # Create the model from the joint dictionary
-        return Beam.from_dict(joint)
+        return MonochromaticBeam.from_dict(joint)
 
     @staticmethod
-    def make_beam(
+    def make_monochromatic_beam(
         sample_to_source=None,
         wavelength=None,
         s0=None,
@@ -105,7 +105,7 @@ class BeamFactory:
 
         if sample_to_source:
             assert wavelength
-            return Beam(
+            return MonochromaticBeam(
                 tuple(map(float, sample_to_source)),
                 float(wavelength),
                 float(divergence),
@@ -113,7 +113,7 @@ class BeamFactory:
             )
         elif unit_s0:
             assert wavelength
-            return Beam(
+            return MonochromaticBeam(
                 tuple(-float(x) for x in unit_s0),
                 float(wavelength),
                 float(divergence),
@@ -121,7 +121,7 @@ class BeamFactory:
             )
         else:
             assert s0
-            return Beam(tuple(map(float, s0)))
+            return MonochromaticBeam(tuple(map(float, s0)))
 
     @staticmethod
     def make_polarized_beam(
@@ -150,7 +150,7 @@ class BeamFactory:
 
         if sample_to_source:
             assert wavelength
-            return Beam(
+            return MonochromaticBeam(
                 tuple(map(float, sample_to_source)),
                 float(wavelength),
                 float(divergence),
@@ -162,7 +162,7 @@ class BeamFactory:
             )
         elif unit_s0:
             assert wavelength
-            return Beam(
+            return MonochromaticBeam(
                 tuple(-float(x) for x in unit_s0),
                 float(wavelength),
                 float(divergence),
@@ -174,7 +174,7 @@ class BeamFactory:
             )
         else:
             assert s0
-            return Beam(
+            return MonochromaticBeam(
                 tuple(map(float, s0)),
                 float(divergence),
                 float(sigma_divergence),
@@ -185,7 +185,7 @@ class BeamFactory:
             )
 
     @staticmethod
-    def simple(wavelength):
+    def simple_monochromatic(wavelength):
         """Construct a beam object on the principle that the beam is aligned
         with the +z axis, as is quite normal. Also assume the beam has
         polarization fraction 0.999 and is polarized in the x-z plane, unless
@@ -193,7 +193,7 @@ class BeamFactory:
         electron diffraction and return an unpolarized beam model."""
 
         if wavelength > 0.05:
-            return BeamFactory.make_beam(
+            return BeamFactory.make_monochromatic_beam(
                 sample_to_source=(0.0, 0.0, 1.0), wavelength=wavelength
             )
         else:
@@ -205,11 +205,11 @@ class BeamFactory:
             )
 
     @staticmethod
-    def simple_directional(sample_to_source, wavelength):
+    def simple_directional_monochromatic(sample_to_source, wavelength):
         """Construct a beam with direction and wavelength."""
 
         if wavelength > 0.05:
-            return BeamFactory.make_beam(
+            return BeamFactory.make_monochromatic_beam(
                 sample_to_source=sample_to_source, wavelength=wavelength
             )
         else:
@@ -221,7 +221,7 @@ class BeamFactory:
             )
 
     @staticmethod
-    def complex(
+    def complex_monochromatic(
         sample_to_source, polarization_fraction, polarization_plane_normal, wavelength
     ):
         """Full access to the constructor for cases where we do know everything

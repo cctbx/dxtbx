@@ -115,7 +115,7 @@ def basic_imageset_from_dict(d, directory=None):
     detector_dict = imageset.get_detector(0).to_dict()
 
     # Set models
-    imageset.set_beam(BeamFactory.from_dict(d.get("beam"), beam_dict))
+    imageset.set_beam(BeamFactory.monochromatic_from_dict(d.get("beam"), beam_dict))
     imageset.set_detector(DetectorFactory.from_dict(d.get("detector"), detector_dict))
 
     return imageset
@@ -133,8 +133,8 @@ def imagesequence_from_dict(d, check_format=True, directory=None):
     else:
         image_range = scan_dict.get("image_range")
 
-    # Set the models with the existing models as templates
-    beam = BeamFactory.from_dict(d.get("beam"))
+    # Set the models with the exisiting models as templates
+    beam = BeamFactory.monochromatic_from_dict(d.get("beam"))
     goniometer = GoniometerFactory.from_dict(d.get("goniometer"))
     detector = DetectorFactory.from_dict(d.get("detector"))
     scan = ScanFactory.from_dict(d.get("scan"))

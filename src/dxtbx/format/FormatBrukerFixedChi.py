@@ -99,7 +99,7 @@ class FormatBrukerFixedChi(FormatBruker):
     def _beam(self):
         wavelength = float(self.header_dict["WAVELEN"][0])
 
-        return self._beam_factory.simple(wavelength)
+        return self._beam_factory.simple_monochromatic(wavelength)
 
     def _scan(self):
 

@@ -228,7 +228,7 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
         eV = h5_handle[self.tag]["photon_energy_ev"][()]
         h5_handle.close()
 
-        return self._beam_factory.simple(factor_ev_angstrom / eV)
+        return self._beam_factory.simple_monochromatic(factor_ev_angstrom / eV)
 
     def get_num_images(self):
         return len(self._images)
