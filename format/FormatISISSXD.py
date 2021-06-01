@@ -10,7 +10,7 @@ from dials.array_family import flex
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.FormatNXTOFRAW import FormatNXTOFRAW
-from dxtbx.model import Detector, Goniometer, Scan
+from dxtbx.model import Detector
 from dxtbx.model.beam import BeamFactory
 
 
@@ -157,8 +157,8 @@ class FormatISISSXD(FormatNXTOFRAW):
         L = self._get_primary_flight_path_in_m()
         return [self.get_tof_wavelength_in_ang(L, i) for i in time_channels]
 
-    def _get_primary_flight_path_in_m(self):
-        return 8.3
+    def _get_sample_to_moderator_distance(self):
+        return 8300
 
     def _get_num_panels(self):
         return 11
@@ -239,7 +239,7 @@ class FormatISISSXD(FormatNXTOFRAW):
         return (0, 0, 1)
         return tuple(self._get_s0() / np.linalg.norm(self._get_s0()))
 
-    def _get_beam_direction(self):
+    def _get_sample_to_source_direction(self):
         return (0, 0, -1)
 
     def _get_beam_polarization_normal(self):
@@ -261,46 +261,24 @@ class FormatISISSXD(FormatNXTOFRAW):
         return 0.0
 
     def get_num_images(self):
-        return len(self._get_time_channels_in_seconds())
         return len(self.nxs_file)
 
     def get_beam(self, idx=None):
-        s0 = self._get_s0()
-        unit_s0 = self._get_unit_s0()
-        wavelength = 1
-        direction = self._get_beam_direction()
-        divergence = self._get_beam_divergence()
-        sigma_divergence = self._get_beam_sigma_divergence()
-        polarization_normal = self._get_beam_polarization_normal()
-        polarization_fraction = self._get_beam_polarization_fraction()
-        flux = self._get_beam_flux()
-        transmission = self._get_beam_transmission()
-
-        beam = BeamFactory.make_monochromatic_beam(
-            s0=s0, unit_s0=unit_s0, wavelength=wavelength
+        sample_to_source_dir = self._get_sample_to_source_direction()
+        sample_to_mod_d = self._get_sample_to_moderator_distance()
+        return BeamFactory.make_tof_beam(
+            sample_to_source_direction=sample_to_source_dir,
+            sample_to_moderator_distance=sample_to_mod_d,
         )
-        beam.set_sample_to_source_direction(direction)
-        beam.set_divergence(divergence)
-        beam.set_sigma_divergence(sigma_divergence)
-        beam.set_polarization_normal(polarization_normal)
-        beam.set_polarization_fraction(polarization_fraction)
-        beam.set_flux(flux)
-        beam.set_transmission(transmission)
-
-        return beam
 
     def get_detector(self, idx=None):
         return self._get_detector()
 
     def get_scan(self, idx=None):
         return None
-        tof = self._get_time_channels_in_seconds()
-        image_range = (1, len(tof))
-        return Scan(tuple(map(int, image_range)), flex.double(list(map(float, tof))))
 
     def get_goniometer(self, idx=None):
         return None
-        return Goniometer()
 
     def _get_panel_size_in_px(self):
         return (64, 64)

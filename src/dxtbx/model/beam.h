@@ -59,7 +59,7 @@ namespace dxtbx { namespace model {
       return direction_;
     }
 
-    double get_sample_to_moderator_distance() {
+    double get_sample_to_moderator_distance() const {
       DXTBX_ASSERT(sample_to_moderator_distance_ > 0);
       return sample_to_moderator_distance_;
     }

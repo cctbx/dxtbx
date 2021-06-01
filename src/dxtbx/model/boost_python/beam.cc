@@ -220,8 +220,15 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   static TOFBeam *make_tof_beam(vec3<double> sample_to_source,
                          double moderator_sample_distance) {
-    TOFBeam *beam = NULL;
     return new TOFBeam(sample_to_source, moderator_sample_distance);
+  }
+
+  template<>
+  boost::python::dict to_dict<TOFBeam>(const TOFBeam &obj) {
+    boost::python::dict result;
+    result["direction"] = obj.get_sample_to_source_direction();
+    result["sample_to_moderator_distance"] = obj.get_sample_to_moderator_distance();
+    return result;
   }
 
   void export_beam() {
@@ -244,7 +251,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                             (arg("direction"),
                              arg("sample_to_moderator_distance"))))
       .def("get_sample_to_moderator_distance", &TOFBeam::get_sample_to_moderator_distance)
-      .def("set_sample_to_moderator_distance", &TOFBeam::set_sample_to_moderator_distance);
+      .def("set_sample_to_moderator_distance", &TOFBeam::set_sample_to_moderator_distance)
+      .def("to_dict", &to_dict<TOFBeam>);
 
     // MonochromaticBeam : BeamBase
     class_<MonochromaticBeam, boost::shared_ptr<MonochromaticBeam>, bases<BeamBase> >("MonochromaticBeam")
