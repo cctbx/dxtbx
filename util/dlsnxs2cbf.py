@@ -1,19 +1,12 @@
 import binascii
 
 import h5py
+import hdf5plugin  # noqa; F401
 import numpy as np
 
 from scitbx.array_family import flex
 
 from dxtbx.ext import compress
-
-try:
-    import hdf5plugin
-
-    assert hdf5plugin
-except ModuleNotFoundError:
-    # Optional dependency that can also be satisfied by hdf5-external-filter-plugins
-    pass
 
 
 def get_mask(nfast, nslow):

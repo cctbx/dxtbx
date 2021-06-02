@@ -10,7 +10,7 @@ conda-forge::docutils
 conda-forge::eigen
 conda-forge::future
 conda-forge::h5py>=3.1
-conda-forge::hdf5-external-filter-plugins==0.1.0[build_number='>=5']
+conda-forge::hdf5plugin
 conda-forge::hdf5<1.11
 conda-forge::jpeg
 conda-forge::matplotlib-base
