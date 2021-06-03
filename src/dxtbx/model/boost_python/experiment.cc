@@ -20,8 +20,9 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   using namespace boost::python;
 
+  template<typename Beam>
   struct ExperimentPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(const Experiment &obj) {
+    static boost::python::tuple getinitargs(const Experiment<Beam> &obj) {
       return boost::python::make_tuple(obj.get_beam(),
                                        obj.get_detector(),
                                        obj.get_goniometer(),
@@ -37,45 +38,47 @@ namespace dxtbx { namespace model { namespace boost_python {
   /**
    * Return function pointers to overrides for different types
    */
+  template<typename Beam>
   struct experiment_contains_pointers {
-    typedef bool (Experiment::*beam_type)(const boost::shared_ptr<BeamBase> &) const;
-    typedef bool (Experiment::*detector_type)(
+    typedef bool (Experiment<Beam>::*beam_type)(const boost::shared_ptr<Beam> &) const;
+    typedef bool (Experiment<Beam>::*detector_type)(
       const boost::shared_ptr<Detector> &) const;
-    typedef bool (Experiment::*goniometer_type)(
+    typedef bool (Experiment<Beam>::*goniometer_type)(
       const boost::shared_ptr<Goniometer> &) const;
-    typedef bool (Experiment::*scan_type)(const boost::shared_ptr<Scan> &) const;
-    typedef bool (Experiment::*crystal_type)(
+    typedef bool (Experiment<Beam>::*scan_type)(const boost::shared_ptr<Scan> &) const;
+    typedef bool (Experiment<Beam>::*crystal_type)(
       const boost::shared_ptr<CrystalBase> &) const;
-    typedef bool (Experiment::*object_type)(boost::python::object) const;
+    typedef bool (Experiment<Beam>::*object_type)(boost::python::object) const;
 
     static beam_type beam() {
-      return &Experiment::contains;
+      return &Experiment<Beam>::contains;
     }
 
     static detector_type detector() {
-      return &Experiment::contains;
+      return &Experiment<Beam>::contains;
     }
 
     static goniometer_type goniometer() {
-      return &Experiment::contains;
+      return &Experiment<Beam>::contains;
     }
 
     static scan_type scan() {
-      return &Experiment::contains;
+      return &Experiment<Beam>::contains;
     }
 
     static crystal_type crystal() {
-      return &Experiment::contains;
+      return &Experiment<Beam>::contains;
     }
 
     static object_type object() {
-      return &Experiment::contains;
+      return &Experiment<Beam>::contains;
     }
   };
 
+  template<typename Beam>
   void export_experiment() {
-    class_<Experiment>("Experiment")
-      .def(init<boost::shared_ptr<BeamBase>,
+    class_<Experiment<Beam> >("Experiment")
+      .def(init<boost::shared_ptr<Beam>,
                 boost::shared_ptr<Detector>,
                 boost::shared_ptr<Goniometer>,
                 boost::shared_ptr<Scan>,
@@ -83,7 +86,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 boost::python::object,
                 boost::python::object,
                 boost::python::object,
-                std::string>((arg("beam") = boost::shared_ptr<BeamBase>(),
+                std::string>((arg("beam") = boost::shared_ptr<Beam>(),
                               arg("detector") = boost::shared_ptr<Detector>(),
                               arg("goniometer") = boost::shared_ptr<Goniometer>(),
                               arg("scan") = boost::shared_ptr<Scan>(),
@@ -92,33 +95,33 @@ namespace dxtbx { namespace model { namespace boost_python {
                               arg("imageset") = boost::python::object(),
                               arg("scaling_model") = boost::python::object(),
                               arg("identifier") = "")))
-      .add_property("beam", &Experiment::get_beam, &Experiment::set_beam)
-      .add_property("detector", &Experiment::get_detector, &Experiment::set_detector)
+      .add_property("beam", &Experiment<Beam>::get_beam, &Experiment<Beam>::set_beam)
+      .add_property("detector", &Experiment<Beam>::get_detector, &Experiment<Beam>::set_detector)
       .add_property(
-        "goniometer", &Experiment::get_goniometer, &Experiment::set_goniometer)
-      .add_property("scan", &Experiment::get_scan, &Experiment::set_scan)
-      .add_property("crystal", &Experiment::get_crystal, &Experiment::set_crystal)
-      .add_property("profile", &Experiment::get_profile, &Experiment::set_profile)
-      .add_property("imageset", &Experiment::get_imageset, &Experiment::set_imageset)
+        "goniometer", &Experiment<Beam>::get_goniometer, &Experiment<Beam>::set_goniometer)
+      .add_property("scan", &Experiment<Beam>::get_scan, &Experiment<Beam>::set_scan)
+      .add_property("crystal", &Experiment<Beam>::get_crystal, &Experiment<Beam>::set_crystal)
+      .add_property("profile", &Experiment<Beam>::get_profile, &Experiment<Beam>::set_profile)
+      .add_property("imageset", &Experiment<Beam>::get_imageset, &Experiment<Beam>::set_imageset)
       .add_property(
-        "scaling_model", &Experiment::get_scaling_model, &Experiment::set_scaling_model)
+        "scaling_model", &Experiment<Beam>::get_scaling_model, &Experiment<Beam>::set_scaling_model)
       .add_property(
-        "identifier", &Experiment::get_identifier, &Experiment::set_identifier)
-      .def("__contains__", experiment_contains_pointers::beam())
-      .def("__contains__", experiment_contains_pointers::detector())
-      .def("__contains__", experiment_contains_pointers::goniometer())
-      .def("__contains__", experiment_contains_pointers::scan())
-      .def("__contains__", experiment_contains_pointers::crystal())
-      .def("__contains__", experiment_contains_pointers::object())
-      .def("__eq__", &Experiment::operator==)
-      .def("is_consistent", &Experiment::is_consistent)
+        "identifier", &Experiment<Beam>::get_identifier, &Experiment<Beam>::set_identifier)
+      .def("__contains__", experiment_contains_pointers<Beam>::beam())
+      .def("__contains__", experiment_contains_pointers<Beam>::detector())
+      .def("__contains__", experiment_contains_pointers<Beam>::goniometer())
+      .def("__contains__", experiment_contains_pointers<Beam>::scan())
+      .def("__contains__", experiment_contains_pointers<Beam>::crystal())
+      .def("__contains__", experiment_contains_pointers<Beam>::object())
+      .def("__eq__", &Experiment<Beam>::operator==)
+      .def("is_consistent", &Experiment<Beam>::is_consistent)
       .def("is_still",
-           &Experiment::is_still,
+           &Experiment<Beam>::is_still,
            "Check if this experiment represents a still image")
       .def("is_sequence",
-           &Experiment::is_sequence,
+           &Experiment<Beam>::is_sequence,
            "Check if this experiment represents swept rotation image(s)")
-      .def_pickle(ExperimentPickleSuite());
+      .def_pickle(ExperimentPickleSuite<Beam>());
   }
 
 }}}  // namespace dxtbx::model::boost_python

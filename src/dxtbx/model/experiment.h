@@ -44,6 +44,7 @@ namespace dxtbx { namespace model {
    * Some of these may be set to "None"
    *
    */
+  template<class Beam>
   class Experiment {
   public:
     Experiment() {}
@@ -51,7 +52,7 @@ namespace dxtbx { namespace model {
     /**
      * Initialise the experiment with models
      */
-    Experiment(boost::shared_ptr<BeamBase> beam,
+    Experiment(boost::shared_ptr<Beam> beam,
                boost::shared_ptr<Detector> detector,
                boost::shared_ptr<Goniometer> goniometer,
                boost::shared_ptr<Scan> scan,
@@ -73,7 +74,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if the beam model is the same.
      */
-    bool contains(const boost::shared_ptr<BeamBase> &beam) const {
+    bool contains(const boost::shared_ptr<Beam> &beam) const {
       return beam_ == beam;
     }
 
@@ -109,7 +110,7 @@ namespace dxtbx { namespace model {
      * Check models are the same.
      */
     bool contains(boost::python::object obj) const {
-      boost::python::extract<boost::shared_ptr<BeamBase> > get_beam(obj);
+      boost::python::extract<boost::shared_ptr<Beam> > get_beam(obj);
       boost::python::extract<boost::shared_ptr<Detector> > get_detector(obj);
       boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer(obj);
       boost::python::extract<boost::shared_ptr<Scan> > get_scan(obj);
@@ -163,14 +164,14 @@ namespace dxtbx { namespace model {
     /**
      * Set the beam model
      */
-    void set_beam(boost::shared_ptr<BeamBase> beam) {
+    void set_beam(boost::shared_ptr<Beam> beam) {
       beam_ = beam;
     }
 
     /**
      * Get the beam model
      */
-    boost::shared_ptr<BeamBase> get_beam() const {
+    boost::shared_ptr<Beam> get_beam() const {
       return beam_;
     }
 
@@ -287,7 +288,7 @@ namespace dxtbx { namespace model {
     }
 
   protected:
-    boost::shared_ptr<BeamBase> beam_;
+    boost::shared_ptr<Beam> beam_;
     boost::shared_ptr<Detector> detector_;
     boost::shared_ptr<Goniometer> goniometer_;
     boost::shared_ptr<Scan> scan_;
