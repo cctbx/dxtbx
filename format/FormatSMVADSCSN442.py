@@ -34,7 +34,11 @@ class FormatSMVADSCSN442(FormatSMVADSCSN):
 
         date_str = self._header_dictionary["DATE"]
         format_string = "%a %b %d %H:%M:%S %Y"
-        tm = time.strptime(date_str, format_string)
+        try:
+            tm = time.strptime(date_str, format_string)
+        except ValueError:
+            format_string = "%a %b %d %H:%M:%S %Z %Y"
+            tm = time.strptime(date_str, format_string)
 
         als831 = True
         if tm.tm_year > 2006 or (tm.tm_year == 2006 and tm.tm_yday >= 134):
