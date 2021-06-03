@@ -16,6 +16,7 @@
 #include <dxtbx/error.h>
 #include <vector>
 #include <hdf5.h>
+#include <iostream>
 
 namespace dxtbx { namespace format { namespace boost_python {
 
@@ -122,6 +123,9 @@ namespace dxtbx { namespace format { namespace boost_python {
 
     // Copy the data
     herr_t status2 = custom_read<T>(dataset_id, mem_space_id, file_space_id, data);
+    if (status2 < 0) {
+      H5Eprint2(H5E_DEFAULT, stderr);
+    }
     DXTBX_ASSERT(status2 >= 0);
 
     // Close some stuff
