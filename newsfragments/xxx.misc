@@ -1,0 +1,1 @@
+Print detailed error messages after failure of ``H5Dread`` calls.
