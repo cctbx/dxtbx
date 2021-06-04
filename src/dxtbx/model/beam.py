@@ -48,6 +48,7 @@ class BeamFactory:
         Convert the phil parameters into a beam model
 
         """
+
         # Check the input
         if reference is None:
             beam = MonochromaticBeam()

@@ -135,7 +135,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template<typename Beam>
   struct experiment_list_indices_pointers {
     typedef scitbx::af::shared<std::size_t> (ExperimentList<Beam>::*beam_type)(
-      const boost::shared_ptr<BeamBase> &) const;
+      const boost::shared_ptr<Beam> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList<Beam>::*detector_type)(
       const boost::shared_ptr<Detector> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList<Beam>::*goniometer_type)(
@@ -215,46 +215,45 @@ namespace dxtbx { namespace model { namespace boost_python {
     self.erase(n);
   }
 
-  template<typename Beam>
   void export_experiment_list() {
-    class_<ExperimentList<Beam> >("ExperimentList")
-      .def("__init__", make_constructor(&make_experiment_list<Beam>, default_call_policies()))
-      .def("identifiers", &ExperimentList<Beam>::identifiers)
-      .def("find", &ExperimentList<Beam>::find)
-      .def("append", &ExperimentList<Beam>::append)
-      .def("extend", &ExperimentList<Beam>::extend)
-      .def("clear", &ExperimentList<Beam>::clear)
-      .def("empty", &ExperimentList<Beam>::empty)
-      .def("__getitem__", &experiment_list_getitem, return_internal_reference<>())
-      .def("__getitem__", &experiment_list_getitem_slice)
-      .def("__setitem__", &experiment_list_setitem)
-      .def("__delitem__", &experiment_list_delitem)
-      .def("__iter__", iterator<ExperimentList<Beam>, return_internal_reference<> >())
-      .def("__contains__", experiment_list_contains_pointers<Beam>::beam())
-      .def("__contains__", experiment_list_contains_pointers<Beam>::detector())
-      .def("__contains__", experiment_list_contains_pointers<Beam>::goniometer())
-      .def("__contains__", experiment_list_contains_pointers<Beam>::scan())
-      .def("__contains__", experiment_list_contains_pointers<Beam>::crystal())
-      .def("__contains__", experiment_list_contains_pointers<Beam>::object())
-      .def("replace", experiment_list_replace_pointers<Beam>::beam())
-      .def("replace", experiment_list_replace_pointers<Beam>::detector())
-      .def("replace", experiment_list_replace_pointers<Beam>::goniometer())
-      .def("replace", experiment_list_replace_pointers<Beam>::scan())
-      .def("replace", experiment_list_replace_pointers<Beam>::crystal())
-      .def("replace", experiment_list_replace_pointers<Beam>::object())
-      .def("indices", experiment_list_indices_pointers<Beam>::beam())
-      .def("indices", experiment_list_indices_pointers<Beam>::detector())
-      .def("indices", experiment_list_indices_pointers<Beam>::goniometer())
-      .def("indices", experiment_list_indices_pointers<Beam>::scan())
-      .def("indices", experiment_list_indices_pointers<Beam>::crystal())
-      .def("indices", experiment_list_indices_pointers<Beam>::object())
+    class_<ExperimentList<MonochromaticBeam> >("ExperimentList")
+      .def("__init__", make_constructor(&make_experiment_list<MonochromaticBeam>, default_call_policies()))
+      .def("identifiers", &ExperimentList<MonochromaticBeam>::identifiers)
+      .def("find", &ExperimentList<MonochromaticBeam>::find)
+      .def("append", &ExperimentList<MonochromaticBeam>::append)
+      .def("extend", &ExperimentList<MonochromaticBeam>::extend)
+      .def("clear", &ExperimentList<MonochromaticBeam>::clear)
+      .def("empty", &ExperimentList<MonochromaticBeam>::empty)
+      .def("__getitem__", &experiment_list_getitem<MonochromaticBeam>, return_internal_reference<>())
+      .def("__getitem__", &experiment_list_getitem_slice<MonochromaticBeam>)
+      .def("__setitem__", &experiment_list_setitem<MonochromaticBeam>)
+      .def("__delitem__", &experiment_list_delitem<MonochromaticBeam>)
+      .def("__iter__", iterator<ExperimentList<MonochromaticBeam>, return_internal_reference<> >())
+      .def("__contains__", experiment_list_contains_pointers<MonochromaticBeam>::beam())
+      .def("__contains__", experiment_list_contains_pointers<MonochromaticBeam>::detector())
+      .def("__contains__", experiment_list_contains_pointers<MonochromaticBeam>::goniometer())
+      .def("__contains__", experiment_list_contains_pointers<MonochromaticBeam>::scan())
+      .def("__contains__", experiment_list_contains_pointers<MonochromaticBeam>::crystal())
+      .def("__contains__", experiment_list_contains_pointers<MonochromaticBeam>::object())
+      .def("replace", experiment_list_replace_pointers<MonochromaticBeam>::beam())
+      .def("replace", experiment_list_replace_pointers<MonochromaticBeam>::detector())
+      .def("replace", experiment_list_replace_pointers<MonochromaticBeam>::goniometer())
+      .def("replace", experiment_list_replace_pointers<MonochromaticBeam>::scan())
+      .def("replace", experiment_list_replace_pointers<MonochromaticBeam>::crystal())
+      .def("replace", experiment_list_replace_pointers<MonochromaticBeam>::object())
+      .def("indices", experiment_list_indices_pointers<MonochromaticBeam>::beam())
+      .def("indices", experiment_list_indices_pointers<MonochromaticBeam>::detector())
+      .def("indices", experiment_list_indices_pointers<MonochromaticBeam>::goniometer())
+      .def("indices", experiment_list_indices_pointers<MonochromaticBeam>::scan())
+      .def("indices", experiment_list_indices_pointers<MonochromaticBeam>::crystal())
+      .def("indices", experiment_list_indices_pointers<MonochromaticBeam>::object())
       .def("remove_on_experiment_identifiers",
-           &ExperimentList<Beam>::remove_on_experiment_identifiers)
+           &ExperimentList<MonochromaticBeam>::remove_on_experiment_identifiers)
       .def("select_on_experiment_identifiers",
-           &ExperimentList<Beam>::select_on_experiment_identifiers)
+           &ExperimentList<MonochromaticBeam>::select_on_experiment_identifiers)
       .def("where",
-           &ExperimentList<Beam>::where,
-           (arg("beam") = boost::shared_ptr<BeamBase>(),
+           &ExperimentList<MonochromaticBeam>::where,
+           (arg("beam") = boost::shared_ptr<MonochromaticBeam>(),
             arg("detector") = boost::shared_ptr<Detector>(),
             arg("goniometer") = boost::shared_ptr<Goniometer>(),
             arg("scan") = boost::shared_ptr<Scan>(),
@@ -262,9 +261,57 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("profile") = boost::python::object(),
             arg("imageset") = boost::python::object(),
             arg("scaling_model") = boost::python::object()))
-      .def("is_consistent", &ExperimentList<Beam>::is_consistent)
-      .def("__len__", &ExperimentList<Beam>::size)
-      .def_pickle(ExperimentListPickleSuite<Beam>());
+      .def("is_consistent", &ExperimentList<MonochromaticBeam>::is_consistent)
+      .def("__len__", &ExperimentList<MonochromaticBeam>::size)
+      .def_pickle(ExperimentListPickleSuite<MonochromaticBeam>());
+    class_<ExperimentList<TOFBeam> >("ExperimentList")
+      .def("__init__", make_constructor(&make_experiment_list<TOFBeam>, default_call_policies()))
+      .def("identifiers", &ExperimentList<TOFBeam>::identifiers)
+      .def("find", &ExperimentList<TOFBeam>::find)
+      .def("append", &ExperimentList<TOFBeam>::append)
+      .def("extend", &ExperimentList<TOFBeam>::extend)
+      .def("clear", &ExperimentList<TOFBeam>::clear)
+      .def("empty", &ExperimentList<TOFBeam>::empty)
+      .def("__getitem__", &experiment_list_getitem<TOFBeam>, return_internal_reference<>())
+      .def("__getitem__", &experiment_list_getitem_slice<TOFBeam>)
+      .def("__setitem__", &experiment_list_setitem<TOFBeam>)
+      .def("__delitem__", &experiment_list_delitem<TOFBeam>)
+      .def("__iter__", iterator<ExperimentList<TOFBeam>, return_internal_reference<> >())
+      .def("__contains__", experiment_list_contains_pointers<TOFBeam>::beam())
+      .def("__contains__", experiment_list_contains_pointers<TOFBeam>::detector())
+      .def("__contains__", experiment_list_contains_pointers<TOFBeam>::goniometer())
+      .def("__contains__", experiment_list_contains_pointers<TOFBeam>::scan())
+      .def("__contains__", experiment_list_contains_pointers<TOFBeam>::crystal())
+      .def("__contains__", experiment_list_contains_pointers<TOFBeam>::object())
+      .def("replace", experiment_list_replace_pointers<TOFBeam>::beam())
+      .def("replace", experiment_list_replace_pointers<TOFBeam>::detector())
+      .def("replace", experiment_list_replace_pointers<TOFBeam>::goniometer())
+      .def("replace", experiment_list_replace_pointers<TOFBeam>::scan())
+      .def("replace", experiment_list_replace_pointers<TOFBeam>::crystal())
+      .def("replace", experiment_list_replace_pointers<TOFBeam>::object())
+      .def("indices", experiment_list_indices_pointers<TOFBeam>::beam())
+      .def("indices", experiment_list_indices_pointers<TOFBeam>::detector())
+      .def("indices", experiment_list_indices_pointers<TOFBeam>::goniometer())
+      .def("indices", experiment_list_indices_pointers<TOFBeam>::scan())
+      .def("indices", experiment_list_indices_pointers<TOFBeam>::crystal())
+      .def("indices", experiment_list_indices_pointers<TOFBeam>::object())
+      .def("remove_on_experiment_identifiers",
+           &ExperimentList<TOFBeam>::remove_on_experiment_identifiers)
+      .def("select_on_experiment_identifiers",
+           &ExperimentList<TOFBeam>::select_on_experiment_identifiers)
+      .def("where",
+           &ExperimentList<TOFBeam>::where,
+           (arg("beam") = boost::shared_ptr<TOFBeam>(),
+            arg("detector") = boost::shared_ptr<Detector>(),
+            arg("goniometer") = boost::shared_ptr<Goniometer>(),
+            arg("scan") = boost::shared_ptr<Scan>(),
+            arg("crystal") = boost::shared_ptr<CrystalBase>(),
+            arg("profile") = boost::python::object(),
+            arg("imageset") = boost::python::object(),
+            arg("scaling_model") = boost::python::object()))
+      .def("is_consistent", &ExperimentList<TOFBeam>::is_consistent)
+      .def("__len__", &ExperimentList<TOFBeam>::size)
+      .def_pickle(ExperimentListPickleSuite<TOFBeam>());
   }
 
 }}}  // namespace dxtbx::model::boost_python
