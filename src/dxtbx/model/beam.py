@@ -32,6 +32,10 @@ beam_phil_scope = libtbx.phil.parse(
       .help = "Override the polarization fraction"
       .short_caption = "Polarization fraction"
 
+    sample_to_moderator_distance = None
+        .type = float
+        .help = "Override sample to moderator distance"
+
   }
 """
 )
@@ -49,27 +53,54 @@ class BeamFactory:
 
         """
 
-        # Check the input
-        if reference is None:
-            beam = MonochromaticBeam()
-        else:
-            beam = reference
+        def check_for_required_basic_params(params):
+            if params.beam.direction is None:
+                raise RuntimeError("Cannot create beam: direction not set")
 
-        # Set the parameters
-        if params.beam.wavelength is not None:
-            beam.set_wavelength(params.beam.wavelength)
-        elif reference is None:
-            raise RuntimeError("No wavelength set")
-        if params.beam.direction is not None:
+        def check_for_required_tof_params(params):
+            if params.beam.sample_to_moderator_distance is None:
+                raise RuntimeError(
+                    "Cannot create ToF beam: sample_to_moderator_distance not set"
+                )
+
+        def check_for_required_monochromatic_params(params):
+            if params.beam.wavelength is None:
+                raise RuntimeError(
+                    "Cannot create monochromatic beam: wavelength not set"
+                )
+
+        def tof_from_phil(params, beam):
+
+            check_for_required_basic_params(params)
+            check_for_required_tof_params(params)
+
+            if beam is None:
+                beam = TOFBeam()
+
             beam.set_sample_to_source_direction(params.beam.direction)
-        elif reference is None:
-            raise RuntimeError("No beam direction set")
-        if params.beam.polarization_normal is not None:
-            beam.set_polarization_normal(params.beam.polarization_normal)
-        if params.beam.polarization_fraction is not None:
-            beam.set_polarization_fraction(params.beam.polarization_fraction)
+            beam.set_sample_to_moderator_distance(params.sample_to_moderator_distance)
 
-        return beam
+            return beam
+
+        def monochromatic_from_phil(params, beam):
+
+            check_for_required_basic_params(params)
+            check_for_required_monochromatic_params(params)
+
+            if beam is None:
+                beam = MonochromaticBeam()
+
+            beam.set_wavelength(params.beam.wavelength)
+            if params.beam.polarization_normal is not None:
+                beam.set_polarization_normal(params.beam.polarization_normal)
+            if params.beam.polarization_fraction is not None:
+                beam.set_polarization_fraction(params.beam.polarization_fraction)
+            return beam
+
+        try:
+            return monochromatic_from_phil(reference, params)
+        except RuntimeError:
+            return tof_from_phil(reference, params)
 
     @staticmethod
     def monochromatic_from_dict(d, t=None):
