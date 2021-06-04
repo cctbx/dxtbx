@@ -103,7 +103,7 @@ class BeamFactory:
             return tof_from_phil(reference, params)
 
     @staticmethod
-    def monochromatic_from_dict(d, t=None):
+    def from_dict(d, t=None):
         """Convert the dictionary to a beam model
 
         Params:
@@ -113,13 +113,34 @@ class BeamFactory:
         Returns:
             The beam model
         """
+
+        def check_for_required_keys(d, required_keys, beam_type):
+            required_keys = ["direction"]
+            for i in required_keys:
+                if i not in d:
+                    raise RuntimeError(
+                        f"Cannot create {beam_type}: {i} not in dictionary"
+                    )
+
+        basic_required_keys = ["direction"]
+        monochromatic_required_keys = ["wavelength"]
+        tof_required_keys = ["sample_to_moderator_distance"]
+
         if d is None and t is None:
             return None
+
         joint = t.copy() if t else {}
         joint.update(d)
 
-        # Create the model from the joint dictionary
-        return MonochromaticBeam.from_dict(joint)
+        check_for_required_keys(joint, basic_required_keys, "beam")
+        try:
+            check_for_required_keys(
+                joint, monochromatic_required_keys, "monochromatic beam"
+            )
+            return MonochromaticBeam.from_dict(joint)
+        except RuntimeError:
+            check_for_required_keys(joint, tof_required_keys, "ToF beam")
+            return TOFBeam.from_dict(joint)
 
     @staticmethod
     def make_tof_beam(sample_to_source_direction, sample_to_moderator_distance):
