@@ -108,7 +108,7 @@ class ExperimentListDict:
         self._lookups = {
             model: self._extract_models(model, function)
             for model, function in (
-                ("beam", BeamFactory.monochromatic_from_dict),
+                ("beam", BeamFactory.from_dict),
                 ("detector", DetectorFactory.from_dict),
                 ("goniometer", GoniometerFactory.from_dict),
                 ("scan", ScanFactory.from_dict),

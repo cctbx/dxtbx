@@ -115,7 +115,6 @@ class BeamFactory:
         """
 
         def check_for_required_keys(d, required_keys, beam_type):
-            required_keys = ["direction"]
             for i in required_keys:
                 if i not in d:
                     raise RuntimeError(
