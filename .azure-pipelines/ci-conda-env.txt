@@ -21,6 +21,7 @@ conda-forge::pip
 conda-forge::procrunner>=2.2.0
 conda-forge::psutil
 conda-forge::pyrtf
+conda-forge::pybind11
 conda-forge::pytest-azurepipelines
 conda-forge::pytest-cov
 conda-forge::pytest-forked
