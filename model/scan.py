@@ -157,7 +157,7 @@ class ScanFactory:
 
         # if the oscillation width is negative at this stage it is almost
         # certainly an artefact of the omega end being 0 when the omega start
-        # angle was ~ 360 so it would be ~ -360
+        # angle was ~ 360 so it would be ~ -360 - see dxtbx#378
         if osc_width < -180:
             osc_width += 360
 
