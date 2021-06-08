@@ -154,6 +154,9 @@ class ScanFactory:
         index = scan_helper_image_files.image_to_index(os.path.split(filename)[-1])
         if epoch is None:
             epoch = 0.0
+        if osc_width < 0:
+            osc_width += 360
+
         return ScanFactory.make_scan(
             (index, index), exposure_times, (osc_start, osc_width), {index: epoch}
         )
