@@ -1,18 +1,14 @@
 import io
 import os
 import random
-
-import libtbx.load_env
+from pathlib import Path
 
 import dxtbx.filecache
 
 
 def test_filecache():
-    dxtbx_dir = libtbx.env.dist_path("dxtbx")
-    image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
-
-    with open(image, "rb") as fh:
-        correct_data = fh.read()
+    image = Path(__file__).parent / "phi_scan_001.cbf"
+    correct_data = image.read_bytes()
 
     # Create a caching object
     cache = dxtbx.filecache.lazy_file_cache(open(image, "rb"))
