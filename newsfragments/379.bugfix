@@ -1,1 +1,1 @@
-Resolve error importing .mar2300 data which wraps through 0°
+Handle scan data which wraps through 0° instead of >=360°
