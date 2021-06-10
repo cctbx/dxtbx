@@ -6,11 +6,11 @@ Average images of any dxtbx-supported format. Handles many individual images or 
 """
 
 import copy
+import os
 import sys
 
 import numpy as np
 
-import libtbx.load_env
 from libtbx import easy_mp, option_parser
 from libtbx.utils import Sorry, Usage
 from scitbx.array_family import flex
@@ -160,10 +160,12 @@ def run(argv=None):
     if argv is None:
         argv = sys.argv
     dxtbx.util.encode_output_as_utf8()
+    progname = os.getenv("LIBTBX_DISPATCHER_NAME")
+    if not progname or progname.endswith(".python"):
+        progname = "%prog"
     command_line = (
         option_parser.option_parser(
-            usage="%s [-v] [-a PATH] [-m PATH] [-s PATH] "
-            "image1 image2 [image3 ...]" % libtbx.env.dispatcher_name
+            usage=f"{progname} [-v] [-a PATH] [-m PATH] [-s PATH] image1 image2 [image3 ...]"
         )
         .option(
             None,
