@@ -67,11 +67,12 @@ def crop_image_pickle(
 def run(args=None):
     dxtbx.util.encode_output_as_utf8()
     args = args or sys.argv[1:]
-
+    progname = os.getenv("LIBTBX_DISPATCHER_NAME")
+    if not progname or progname.endswith(".python"):
+        progname = "%prog"
     command_line = (
         libtbx.option_parser.option_parser(
-            usage="%s [-v] [-c] [-s] [-w wavelength] [-d distance] [-p pixel_size] [-x beam_x] [-y beam_y] [-o overload] files"
-            % libtbx.env.dispatcher_name
+            usage=f"{progname} [-v] [-c] [-s] [-w wavelength] [-d distance] [-p pixel_size] [-x beam_x] [-y beam_y] [-o overload] files"
         )
         .option(
             None,
