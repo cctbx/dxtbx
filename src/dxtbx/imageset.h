@@ -151,9 +151,10 @@ protected:
 /**
  * A class to hold data about the imageset
  */
+template<typename Beam>
 class ImageSetData {
 public:
-  typedef boost::shared_ptr<BeamBase> beam_ptr;
+  typedef boost::shared_ptr<Beam> beam_ptr;
   typedef boost::shared_ptr<Detector> detector_ptr;
   typedef boost::shared_ptr<Goniometer> goniometer_ptr;
   typedef boost::shared_ptr<Scan> scan_ptr;
@@ -512,12 +513,13 @@ protected:
 /**
  * A class to represent an imageset
  */
-class ImageSet {
+template<class Beam>
+class ImageSetBase {
 public:
-  typedef ImageSetData::beam_ptr beam_ptr;
-  typedef ImageSetData::detector_ptr detector_ptr;
-  typedef ImageSetData::goniometer_ptr goniometer_ptr;
-  typedef ImageSetData::scan_ptr scan_ptr;
+  typedef typename ImageSetData<Beam>::beam_ptr beam_ptr;
+  typedef typename ImageSetData<Beam>::detector_ptr detector_ptr;
+  typedef typename ImageSetData<Beam>::goniometer_ptr goniometer_ptr;
+  typedef typename ImageSetData<Beam>::scan_ptr scan_ptr;
 
   /**
    * Cache an image
@@ -536,20 +538,20 @@ public:
    * This only here so overloaded functions that
    * never return can be compiled without warnings.
    */
-  ImageSet() {
-    throw DXTBX_ERROR("ImageSet needs imageset data");
+  ImageSetBase() {
+    throw DXTBX_ERROR("ImageSetBase needs imageset data");
   }
 
   /**
    * Destructor
    */
-  virtual ~ImageSet() {}
+  virtual ~ImageSetBase() {}
 
   /**
    * Construct the imageset
    * @param data The imageset data
    */
-  ImageSet(const ImageSetData &data) : data_(data), indices_(data.size()) {
+  ImageSetBase(const ImageSetData<Beam> &data) : data_(data), indices_(data.size()) {
     // Check number of images
     if (data.size() == 0) {
       throw DXTBX_ERROR("No images specified in ImageSetData");
@@ -566,7 +568,7 @@ public:
    * @param data The imageset data
    * @param indices The image indices
    */
-  ImageSet(const ImageSetData &data, const scitbx::af::const_ref<std::size_t> &indices)
+  ImageSetBase(const ImageSetData<Beam> &data, const scitbx::af::const_ref<std::size_t> &indices)
       : data_(data), indices_(indices.begin(), indices.end()) {
     // Check number of images
     if (data.size() == 0) {
@@ -590,7 +592,7 @@ public:
   /**
    * @returns the imageset data
    */
-  ImageSetData data() const {
+  ImageSetData<Beam> data() const {
     return data_;
   }
 
@@ -636,7 +638,7 @@ public:
    * @param index The image index
    * @returns The corrected data array
    */
-  Image<double> get_corrected_data(std::size_t index) {
+  virtual Image<double> get_corrected_data(std::size_t index) {
     typedef scitbx::af::versa<double, scitbx::af::c_grid<2> > array_type;
     typedef scitbx::af::const_ref<double, scitbx::af::c_grid<2> > const_ref_type;
 
@@ -1081,7 +1083,7 @@ public:
   }
 
 protected:
-  ImageSetData data_;
+  ImageSetData<Beam> data_;
   scitbx::af::shared<std::size_t> indices_;
   DataCache<ImageBuffer> data_cache_;
   DataCache<Image<double> > double_raw_data_cache_;
@@ -1093,22 +1095,21 @@ protected:
     }
     Image<double> image = get_raw_data(index).as_double();
     double_raw_data_cache_.index = index;
-    double_raw_data_cache_.image = image;
-    return image;
+    double_raw_data_cache_.image = image;Image
   }
 };
 
 /**
  * Class to represent a grid of images
  */
-class ImageGrid : public ImageSet {
+class ImageGrid : public ImageSet<MonochromaticBeam> {
 public:
   /**
    * Construct the grid
    * @param data The imageset data
    * @param grid_size The size of the grid
    */
-  ImageGrid(const ImageSetData &data, int2 grid_size)
+  ImageGrid(const ImageSetData<MonochromaticBeam> &data, int2 grid_size)
       : ImageSet(data), grid_size_(grid_size) {
     DXTBX_ASSERT(grid_size.all_gt(0));
     DXTBX_ASSERT(grid_size[0] * grid_size[1] == size());
@@ -1120,7 +1121,7 @@ public:
    * @param indices The imageset indices
    * @param grid_size The size of the grid
    */
-  ImageGrid(const ImageSetData &data,
+  ImageGrid(const ImageSetData<MonochromaticBeam> &data,
             const scitbx::af::const_ref<std::size_t> &indices,
             int2 grid_size)
       : ImageSet(data, indices), grid_size_(grid_size) {
@@ -1146,7 +1147,7 @@ public:
    * @param grid_size The grid_size
    * @returns the image grid
    */
-  static ImageGrid from_imageset(const ImageSet &imageset, int2 grid_size) {
+  static ImageGrid from_imageset(const ImageSet<MonochromaticBeam> &imageset, int2 grid_size) {
     ImageGrid result(imageset.data(), imageset.indices().const_ref(), grid_size);
     return result;
   }
@@ -1190,15 +1191,24 @@ protected:
 class TOFImageSet : public ImageSet{
 
   TOFImageSet(const ImageSetData &data,
+              const scitbx::af::const_ref<std::size_t> &indices,
               scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds)
       : ImageSet(data),
         tof_in_seconds_(tof_in_seconds){
 
     DXTBX_ASSERT(tof_in_seconds.size() == data.size());
 
-    
+    // Set the models for each image
+    for (std::size_t i = 0; i < size(); ++i) {
+      int tof_size = data.get_data(i)
+      ImageSet::set_beam_for_image(beam_, i);
+      ImageSet::set_detector_for_image(detector_, i);
+    }
+  }
 
   }
+
+  virtual ~TOFImageSet() {
 
     
     
