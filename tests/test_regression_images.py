@@ -14,7 +14,6 @@ import scitbx.matrix
 from rstbx.slip_viewer.slip_viewer_image_factory import SlipViewerImageFactory
 from scitbx.array_family import flex
 
-import dxtbx.conftest
 import dxtbx.format.Registry
 from dxtbx.util import get_url_scheme
 

@@ -6,7 +6,7 @@ from libtbx.env_config import get_boost_library_with_python_version
 Import("env_etc")
 
 env_etc.dxtbx_dist = libtbx.env.dist_path("dxtbx")
-env_etc.dxtbx_include = os.path.dirname(env_etc.dxtbx_dist)
+env_etc.dxtbx_include = os.path.join(env_etc.dxtbx_dist, "src")
 env_etc.dxtbx_includes = []
 env_etc.dxtbx_common_includes = [
     env_etc.base_include,
@@ -123,16 +123,16 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     env.SharedLibrary(
         target="#lib/dxtbx_ext",
         source=[
-            "boost_python/to_ewald_sphere_helpers.cc",
-            "boost_python/ext.cpp",
-            "boost_python/compression.cc",
+            "src/dxtbx/boost_python/to_ewald_sphere_helpers.cc",
+            "src/dxtbx/boost_python/ext.cpp",
+            "src/dxtbx/boost_python/compression.cc",
         ],
         LIBS=env_etc.libs_python + env_etc.libm + env_etc.dxtbx_libs,
     )
 
     nexus = env.SharedLibrary(
         target="#/lib/dxtbx_format_nexus_ext",
-        source=["format/boost_python/nexus_ext.cc"],
+        source=["src/dxtbx/format/boost_python/nexus_ext.cc"],
         LIBS=env_etc.libs_python
         + env_etc.libm
         + env_etc.dxtbx_libs
@@ -141,7 +141,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
 
     imageset = env.SharedLibrary(
         target="#/lib/dxtbx_imageset_ext",
-        source=["boost_python/imageset_ext.cc"],
+        source=["src/dxtbx/boost_python/imageset_ext.cc"],
         LIBS=env_etc.libs_python
         + env_etc.libm
         + env_etc.dxtbx_libs
@@ -151,8 +151,8 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     image = env.SharedLibrary(
         target="#/lib/dxtbx_format_image_ext",
         source=[
-            "format/boost_python/image_ext.cc",
-            "format/boost_python/cbf_read_buffer.cpp",
+            "src/dxtbx/format/boost_python/image_ext.cc",
+            "src/dxtbx/format/boost_python/cbf_read_buffer.cpp",
         ],
         LIBS=env_etc.libs_python
         + env_etc.libm
@@ -163,23 +163,23 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     model = env.SharedLibrary(
         target="#/lib/dxtbx_model_ext",
         source=[
-            "model/boost_python/beam.cc",
-            "model/boost_python/spectrum.cc",
-            "model/boost_python/goniometer.cc",
-            "model/boost_python/kappa_goniometer.cc",
-            "model/boost_python/multi_axis_goniometer.cc",
-            "model/boost_python/panel.cc",
-            "model/boost_python/detector.cc",
-            "model/boost_python/scan.cc",
-            "model/boost_python/scan_helpers.cc",
-            "model/boost_python/crystal.cc",
-            "model/boost_python/parallax_correction.cc",
-            "model/boost_python/pixel_to_millimeter.cc",
-            "model/boost_python/experiment.cc",
-            "model/boost_python/experiment_list.cc",
-            "model/boost_python/model_ext.cc",
+            "src/dxtbx/model/boost_python/beam.cc",
+            "src/dxtbx/model/boost_python/spectrum.cc",
+            "src/dxtbx/model/boost_python/goniometer.cc",
+            "src/dxtbx/model/boost_python/kappa_goniometer.cc",
+            "src/dxtbx/model/boost_python/multi_axis_goniometer.cc",
+            "src/dxtbx/model/boost_python/panel.cc",
+            "src/dxtbx/model/boost_python/detector.cc",
+            "src/dxtbx/model/boost_python/scan.cc",
+            "src/dxtbx/model/boost_python/scan_helpers.cc",
+            "src/dxtbx/model/boost_python/crystal.cc",
+            "src/dxtbx/model/boost_python/parallax_correction.cc",
+            "src/dxtbx/model/boost_python/pixel_to_millimeter.cc",
+            "src/dxtbx/model/boost_python/experiment.cc",
+            "src/dxtbx/model/boost_python/experiment_list.cc",
+            "src/dxtbx/model/boost_python/model_ext.cc",
         ],
         LIBS=env_etc.libs_python + env_etc.libm + env_etc.dxtbx_libs + env["LIBS"],
     )
 
-    env.SConscript("masking/SConscript", exports={"env": env})
+    env.SConscript("src/dxtbx/masking/SConscript", exports={"env": env})
