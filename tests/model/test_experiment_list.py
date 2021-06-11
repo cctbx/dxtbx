@@ -1216,3 +1216,11 @@ def test_from_null_sequence():
     assert imagesets[0].get_detector() == sequence.get_detector()
     assert imagesets[0].get_goniometer() == sequence.get_goniometer()
     assert imagesets[0].get_scan() == sequence.get_scan()
+
+
+def test_from_templates(dials_data):
+    template = dials_data("insulin", pathlib=True) / "insulin_1_###.img"
+    expts = ExperimentList.from_templates([template])
+    assert len(expts) == 1
+    assert expts[0].imageset.get_template() == str(template)
+    assert len(expts[0].imageset) == 45
