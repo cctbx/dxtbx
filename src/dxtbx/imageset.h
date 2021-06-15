@@ -35,6 +35,8 @@ using format::ImageBuffer;
 using format::ImageTile;
 using masking::GoniometerShadowMasker;
 using model::BeamBase;
+using model::MonochromaticBeam;
+using model::TOFBeam;
 using model::Detector;
 using model::Goniometer;
 using model::Panel;
@@ -154,7 +156,7 @@ protected:
 template<typename Beam>
 class ImageSetData {
 public:
-  typedef boost::shared_ptr<Beam> beam_ptr;
+  typedef typename boost::shared_ptr<Beam> beam_ptr;
   typedef boost::shared_ptr<Detector> detector_ptr;
   typedef boost::shared_ptr<Goniometer> goniometer_ptr;
   typedef boost::shared_ptr<Scan> scan_ptr;
@@ -489,6 +491,7 @@ protected:
 
     // Extract the data
     flex_type a = boost::python::extract<flex_type>(obj)();
+    // TODO get nd from a to assign to c_grid
 
     // Return the image tile
     return ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2> >(
@@ -1023,15 +1026,15 @@ public:
   /**
    * @returns The imageset itself
    */
-  virtual ImageSet as_imageset() const {
+  virtual ImageSetBase as_imageset() const {
     return *this;
   }
 
   /**
    * @returns The complete set
    */
-  virtual ImageSet complete_set() const {
-    return ImageSet(data_);
+  virtual ImageSetBase complete_set() const {
+    return ImageSetBase(data_);
   }
 
   /**
@@ -1039,9 +1042,9 @@ public:
    * @param last The last slice index
    * @returns The partial set
    */
-  virtual ImageSet partial_set(std::size_t first, std::size_t last) const {
+  virtual ImageSetBase partial_set(std::size_t first, std::size_t last) const {
     DXTBX_ASSERT(last > first);
-    return ImageSet(data_,
+    return ImageSetBase(data_,
                     scitbx::af::const_ref<std::size_t>(&indices_[first], last - first));
   }
 
@@ -1050,7 +1053,7 @@ public:
    * @param other The other imageset
    * @returns Are the imagesets the same
    */
-  bool operator==(const ImageSet &other) const {
+  bool operator==(const ImageSetBase &other) const {
     if (size() == other.size()) {
       for (std::size_t i = 0; i < size(); ++i) {
         if (get_path(i) != other.get_path(i)) {
@@ -1068,7 +1071,7 @@ public:
   /**
    * Compare the imageset with another
    */
-  bool operator!=(const ImageSet &other) const {
+  bool operator!=(const ImageSetBase &other) const {
     return !(*this == other);
   }
 
@@ -1095,14 +1098,28 @@ protected:
     }
     Image<double> image = get_raw_data(index).as_double();
     double_raw_data_cache_.index = index;
-    double_raw_data_cache_.image = image;Image
+    double_raw_data_cache_.image = image;
   }
+};
+
+/**
+ * Class to represent a set of images
+ */
+class ImageSet : public ImageSetBase<MonochromaticBeam>{
+public:
+  ImageSet(const ImageSetData<MonochromaticBeam> &data)
+    : ImageSetBase<MonochromaticBeam>(data){}
+    
+  ImageSet(const ImageSetData<MonochromaticBeam> &data, const scitbx::af::const_ref<std::size_t> &indices)
+      : ImageSetBase<MonochromaticBeam>(data, indices) {}
+
+  virtual ~ImageSet(){}
 };
 
 /**
  * Class to represent a grid of images
  */
-class ImageGrid : public ImageSet<MonochromaticBeam> {
+class ImageGrid : public ImageSetBase<MonochromaticBeam> {
 public:
   /**
    * Construct the grid
@@ -1110,7 +1127,7 @@ public:
    * @param grid_size The size of the grid
    */
   ImageGrid(const ImageSetData<MonochromaticBeam> &data, int2 grid_size)
-      : ImageSet(data), grid_size_(grid_size) {
+      : ImageSetBase<MonochromaticBeam>(data), grid_size_(grid_size) {
     DXTBX_ASSERT(grid_size.all_gt(0));
     DXTBX_ASSERT(grid_size[0] * grid_size[1] == size());
   }
@@ -1124,7 +1141,7 @@ public:
   ImageGrid(const ImageSetData<MonochromaticBeam> &data,
             const scitbx::af::const_ref<std::size_t> &indices,
             int2 grid_size)
-      : ImageSet(data, indices), grid_size_(grid_size) {
+      : ImageSetBase<MonochromaticBeam>(data, indices), grid_size_(grid_size) {
     DXTBX_ASSERT(grid_size.all_gt(0));
     DXTBX_ASSERT(grid_size[0] * grid_size[1] == size());
   }
@@ -1147,7 +1164,7 @@ public:
    * @param grid_size The grid_size
    * @returns the image grid
    */
-  static ImageGrid from_imageset(const ImageSet<MonochromaticBeam> &imageset, int2 grid_size) {
+  static ImageGrid from_imageset(const ImageSetBase<MonochromaticBeam> &imageset, int2 grid_size) {
     ImageGrid result(imageset.data(), imageset.indices().const_ref(), grid_size);
     return result;
   }
@@ -1156,18 +1173,18 @@ public:
    * Convert the grid to an imageset
    * @returns An imageset
    */
-  ImageSet as_imageset() const {
-    ImageSet result(data_, indices_.const_ref());
+  ImageSetBase<MonochromaticBeam> as_imageset() const {
+    ImageSetBase<MonochromaticBeam> result(data_, indices_.const_ref());
     return result;
   }
 
   /**
-   * Get the complete seta
+   * Get the complete set
    * @returns The complete sequence
    */
-  ImageSet complete_set() const {
+  ImageSetBase<MonochromaticBeam> complete_set() const {
     throw DXTBX_ERROR("Cannot get complete set from image grid");
-    return ImageSet();
+    return ImageSetBase();
   }
 
   /**
@@ -1176,9 +1193,9 @@ public:
    * @param last The last index
    * @returns The partial sequence
    */
-  ImageSet partial_set(std::size_t first, std::size_t last) const {
+  ImageSetBase<MonochromaticBeam> partial_set(std::size_t first, std::size_t last) const {
     throw DXTBX_ERROR("Cannot get partial set from image grid");
-    return ImageSet();
+    return ImageSetBase<MonochromaticBeam>();
   }
 
 protected:
@@ -1188,41 +1205,43 @@ protected:
 /**
  * A class to represent images with a ToF dimension
  */
-class TOFImageSet : public ImageSet{
+class TOFImageSet : public ImageSetBase<TOFBeam>{
 
-  TOFImageSet(const ImageSetData &data,
+public:
+  TOFImageSet(const ImageSetData<TOFBeam> &data,
+              const beam_ptr &beam,
+              const detector_ptr &detector,
               const scitbx::af::const_ref<std::size_t> &indices,
               scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds)
-      : ImageSet(data),
+      : ImageSetBase<TOFBeam>(data),
+        beam_(beam),
+        detector_(detector),
         tof_in_seconds_(tof_in_seconds){
 
     DXTBX_ASSERT(tof_in_seconds.size() == data.size());
 
     // Set the models for each image
     for (std::size_t i = 0; i < size(); ++i) {
-      int tof_size = data.get_data(i)
-      ImageSet::set_beam_for_image(beam_, i);
-      ImageSet::set_detector_for_image(detector_, i);
+      //int tof_size = data.get_data(i)
+      ImageSetBase::set_beam_for_image(beam_, i);
+      ImageSetBase::set_detector_for_image(detector_, i);
     }
   }
 
-  }
 
-  virtual ~TOFImageSet() {
+  virtual ~TOFImageSet() {}
 
-    
-    
 private:
   scitbx::af::shared<scitbx::af::shared<double> > tof_in_seconds_;
-
-
+  beam_ptr beam_;
+  detector_ptr detector_;
 
 };
 
 /**
  * A class to represent a sequence of data
  */
-class ImageSequence : public ImageSet {
+class ImageSequence : public ImageSetBase<MonochromaticBeam> {
 public:
   /**
    * Construct the sequence
@@ -1232,12 +1251,12 @@ public:
    * @param goniometer The gonioeter model
    * @param scan The scan model
    */
-  ImageSequence(const ImageSetData &data,
+  ImageSequence(const ImageSetData<MonochromaticBeam> &data,
                 const beam_ptr &beam,
                 const detector_ptr &detector,
                 const goniometer_ptr &goniometer,
                 const scan_ptr &scan)
-      : ImageSet(data),
+      : ImageSetBase(data),
         beam_(beam),
         detector_(detector),
         goniometer_(goniometer),
@@ -1252,10 +1271,10 @@ public:
 
     // Set the models for each image
     for (std::size_t i = 0; i < size(); ++i) {
-      ImageSet::set_beam_for_image(beam_, i);
-      ImageSet::set_detector_for_image(detector_, i);
-      ImageSet::set_goniometer_for_image(goniometer_, i);
-      ImageSet::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
+      ImageSetBase::set_beam_for_image(beam_, i);
+      ImageSetBase::set_detector_for_image(detector_, i);
+      ImageSetBase::set_goniometer_for_image(goniometer_, i);
+      ImageSetBase::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
     }
   }
 
@@ -1268,13 +1287,13 @@ public:
    * @param goniometer The gonioeter model
    * @param scan The scan model
    */
-  ImageSequence(const ImageSetData &data,
+  ImageSequence(const ImageSetData<MonochromaticBeam> &data,
                 const scitbx::af::const_ref<std::size_t> &indices,
                 const beam_ptr &beam,
                 const detector_ptr &detector,
                 const goniometer_ptr &goniometer,
                 const scan_ptr &scan)
-      : ImageSet(data, indices),
+      : ImageSetBase(data, indices),
         beam_(beam),
         detector_(detector),
         goniometer_(goniometer),
@@ -1294,10 +1313,10 @@ public:
 
     // Set the models for each image
     for (std::size_t i = 0; i < size(); ++i) {
-      ImageSet::set_beam_for_image(beam_, i);
-      ImageSet::set_detector_for_image(detector_, i);
-      ImageSet::set_goniometer_for_image(goniometer_, i);
-      ImageSet::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
+      ImageSetBase::set_beam_for_image(beam_, i);
+      ImageSetBase::set_detector_for_image(detector_, i);
+      ImageSetBase::set_goniometer_for_image(goniometer_, i);
+      ImageSetBase::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
     }
   }
 
@@ -1313,7 +1332,7 @@ public:
    */
   virtual Image<bool> get_dynamic_mask(std::size_t index) {
     // Get the masker
-    ImageSetData::masker_ptr masker = data_.masker();
+    ImageSetData<MonochromaticBeam>::masker_ptr masker = data_.masker();
 
     // Create return buffer
     Image<bool> dyn_mask;
@@ -1374,7 +1393,7 @@ public:
   void set_beam(const beam_ptr &beam) {
     beam_ = beam;
     for (std::size_t i = 0; i < size(); ++i) {
-      ImageSet::set_beam_for_image(beam_, i);
+      ImageSetBase::set_beam_for_image(beam_, i);
     }
   }
 
@@ -1385,7 +1404,7 @@ public:
   void set_detector(const detector_ptr &detector) {
     detector_ = detector;
     for (std::size_t i = 0; i < size(); ++i) {
-      ImageSet::set_detector_for_image(detector_, i);
+      ImageSetBase::set_detector_for_image(detector_, i);
     }
   }
 
@@ -1396,7 +1415,7 @@ public:
   void set_goniometer(const goniometer_ptr &goniometer) {
     goniometer_ = goniometer;
     for (std::size_t i = 0; i < size(); ++i) {
-      ImageSet::set_goniometer_for_image(goniometer_, i);
+      ImageSetBase::set_goniometer_for_image(goniometer_, i);
     }
   }
 
@@ -1425,7 +1444,7 @@ public:
     DXTBX_ASSERT(scan->get_num_images() == size());
     scan_ = scan;
     for (std::size_t i = 0; i < size(); ++i) {
-      ImageSet::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
+      ImageSetBase::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
     }
   }
 
@@ -1461,8 +1480,8 @@ public:
    * Convert the sequence to an imageset
    * @returns An imageset
    */
-  ImageSet as_imageset() const {
-    ImageSet result(data_, indices_.const_ref());
+  ImageSetBase<MonochromaticBeam> as_imageset() const {
+    ImageSetBase<MonochromaticBeam> result(data_, indices_.const_ref());
     return result;
   }
 
@@ -1470,9 +1489,9 @@ public:
    * Get the complete seta
    * @returns The complete sequence
    */
-  ImageSet complete_set() const {
+  ImageSetBase<MonochromaticBeam> complete_set() const {
     throw DXTBX_ERROR("Cannot get complete set from image sequence");
-    return ImageSet();
+    return ImageSetBase();
   }
 
   /**
@@ -1481,9 +1500,9 @@ public:
    * @param last The last index
    * @returns The partial sequence
    */
-  ImageSet partial_set(std::size_t first, std::size_t last) const {
+  ImageSetBase<MonochromaticBeam> partial_set(std::size_t first, std::size_t last) const {
     throw DXTBX_ERROR("Cannot get partial set from image sequence");
-    return ImageSet();
+    return ImageSetBase();
   }
 
   /**
@@ -1496,7 +1515,7 @@ public:
     for (std::size_t i = 1; i < data_.size(); ++i) {
       scan += detail::safe_dereference(data_.get_scan(i));
     }
-
+   
     // Construct a sequence
     ImageSequence result(
       data_, get_beam(), get_detector(), get_goniometer(), scan_ptr(new Scan(scan)));
@@ -1516,9 +1535,9 @@ public:
     DXTBX_ASSERT(last > first);
 
     // Construct a partial scan
-    Scan scan = detail::safe_dereference(ImageSet::get_scan_for_image(first));
+    Scan scan = detail::safe_dereference(ImageSetBase::get_scan_for_image(first));
     for (std::size_t i = first + 1; i < last; ++i) {
-      scan += detail::safe_dereference(ImageSet::get_scan_for_image(i));
+      scan += detail::safe_dereference(ImageSetBase::get_scan_for_image(i));
     }
 
     // Construct the partial indices
