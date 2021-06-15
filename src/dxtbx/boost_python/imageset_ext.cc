@@ -762,7 +762,7 @@ namespace dxtbx { namespace boost_python {
                             (arg("data"), arg("indices") = boost::python::object())))
       .def_pickle(ImageSetPickleSuite());
 
-    class_<TOFImageSet, bases<ImageSetBase<TOFBeam> > >("TOFImageset", no_init)
+    class_<TOFImageSet, bases<ImageSetBase<TOFBeam> > >("TOFImageSet", no_init)
       .def_pickle(TOFImageSetPickleSuite());
     
 

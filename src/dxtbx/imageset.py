@@ -11,6 +11,7 @@ from dxtbx_imageset_ext import (
     ImageSequence,
     ImageSet,
     ImageSetData,
+    TOFImageSet,
 )
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
@@ -23,6 +24,7 @@ __all__ = (
     "ExternalLookupItemDouble",
     "ImageGrid",
     "ImageSet",
+    "TOFImageSet",
     "ImageSetData",
     "ImageSetFactory",
     "ImageSetLazy",
