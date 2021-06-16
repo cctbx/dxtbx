@@ -290,6 +290,7 @@ class FormatMultiImage(Format):
         ):
 
             num_images = get_num_images(single_file_indices, format_instance)
+            tof_in_seconds = format_instance.get_tof_in_seconds()
             reader = get_reader(cls, filenames, num_images, **format_kwargs)
             vendor = format_instance.get_vendortype()
 
@@ -301,6 +302,7 @@ class FormatMultiImage(Format):
                     params=format_kwargs,
                     format=cls,
                 ),
+                tof_in_seconds=tof_in_seconds,
                 indices=single_file_indices,
             )
 

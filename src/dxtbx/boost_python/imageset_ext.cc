@@ -135,6 +135,30 @@ namespace dxtbx { namespace boost_python {
   }
 
   /**
+   * A constructor for the TOF imageset class
+   */
+  typename boost::shared_ptr<TOFImageSet> make_tof_imageset(const ImageSetData<TOFBeam> &data,
+                                            boost::python::object tof_in_seconds,
+                                            boost::python::object tof_indices,
+                                            boost::python::object indices) {
+
+    if (tof_indices != boost::python::object() && indices != boost::python::object()) {
+      return typename boost::shared_ptr<TOFImageSet>(new TOFImageSet(data,
+        boost::python::extract<scitbx::af::shared<scitbx::af::shared<double> > >(tof_in_seconds)(),
+        boost::python::extract<scitbx::af::const_ref<std::size_t> >(tof_indices)(),
+          boost::python::extract<scitbx::af::const_ref<std::size_t> >(indices)()));
+    }
+    else if (tof_indices != boost::python::object()){
+      return typename boost::shared_ptr<TOFImageSet>(new TOFImageSet(data,
+        boost::python::extract<scitbx::af::shared<scitbx::af::shared<double> > >(tof_in_seconds)(),
+        boost::python::extract<scitbx::af::const_ref<std::size_t> >(tof_indices)()));      
+    }
+
+    return typename boost::shared_ptr<TOFImageSet>(new TOFImageSet(data,
+      boost::python::extract<scitbx::af::shared<scitbx::af::shared<double> > >(tof_in_seconds)()));
+  }
+
+  /**
    * Implement pickling for ImageSetData class
    */
   template<class Beam>
@@ -349,7 +373,8 @@ namespace dxtbx { namespace boost_python {
   
   struct TOFImageSetPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(TOFImageSet obj) {
-      return boost::python::make_tuple(obj.data(), obj.indices());
+      return boost::python::make_tuple(obj.data(), obj.tof_in_seconds(),
+                                       obj.tof_indices(), obj.indices());
     }
   };
 
@@ -763,6 +788,12 @@ namespace dxtbx { namespace boost_python {
       .def_pickle(ImageSetPickleSuite());
 
     class_<TOFImageSet, bases<ImageSetBase<TOFBeam> > >("TOFImageSet", no_init)
+      .def("__init__",
+           make_constructor(&make_tof_imageset,
+                            default_call_policies(),
+                            (arg("data"), arg("tof_in_seconds") = boost::python::object(),
+                            arg("tof_indices") = boost::python::object(),
+                            arg("indices") = boost::python::object())))
       .def_pickle(TOFImageSetPickleSuite());
     
 

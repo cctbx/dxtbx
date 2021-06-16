@@ -1204,37 +1204,51 @@ protected:
 
 /**
  * A class to represent images with a ToF dimension
+              scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds,
  */
 class TOFImageSet : public ImageSetBase<TOFBeam>{
-
 public:
   TOFImageSet(const ImageSetData<TOFBeam> &data,
-              const beam_ptr &beam,
-              const detector_ptr &detector,
-              const scitbx::af::const_ref<std::size_t> &indices,
-              scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds)
-      : ImageSetBase<TOFBeam>(data),
-        beam_(beam),
-        detector_(detector),
-        tof_in_seconds_(tof_in_seconds){
-
-    DXTBX_ASSERT(tof_in_seconds.size() == data.size());
-
-    // Set the models for each image
-    for (std::size_t i = 0; i < size(); ++i) {
-      //int tof_size = data.get_data(i)
-      ImageSetBase::set_beam_for_image(beam_, i);
-      ImageSetBase::set_detector_for_image(detector_, i);
+              const scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds)
+    : ImageSetBase<TOFBeam>(data),
+      tof_in_seconds_(tof_in_seconds){
+      DXTBX_ASSERT(tof_in_seconds.size() == data.size());
     }
-  }
 
+  TOFImageSet(const ImageSetData<TOFBeam> &data, 
+              const scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds,
+              const scitbx::af::const_ref<std::size_t> &tof_indices)
+    : ImageSetBase<TOFBeam>(data),
+      tof_in_seconds_(tof_in_seconds),
+      tof_indices_(tof_indices.begin(), tof_indices.end()) {
+        DXTBX_ASSERT(tof_in_seconds.size() == data.size());
+        DXTBX_ASSERT(tof_indices.size() > 1);
+      }
+
+  TOFImageSet(const ImageSetData<TOFBeam> &data, 
+              const scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds,
+              const scitbx::af::const_ref<std::size_t> &tof_indices,
+              const scitbx::af::const_ref<std::size_t> &indices)
+    : ImageSetBase<TOFBeam>(data, indices),
+      tof_in_seconds_(tof_in_seconds),
+      tof_indices_(tof_indices.begin(), tof_indices.end()) {
+        DXTBX_ASSERT(tof_in_seconds.size() == data.size());
+        DXTBX_ASSERT(tof_indices.size() > 1);
+      }
 
   virtual ~TOFImageSet() {}
+  
+  scitbx::af::shared<std::size_t> tof_indices() const {
+    return tof_indices_;
+  }
+
+  scitbx::af::shared<scitbx::af::shared<double> > tof_in_seconds() const{
+    return tof_in_seconds_;
+  }
 
 private:
+  scitbx::af::shared<std::size_t> tof_indices_;
   scitbx::af::shared<scitbx::af::shared<double> > tof_in_seconds_;
-  beam_ptr beam_;
-  detector_ptr detector_;
 
 };
 

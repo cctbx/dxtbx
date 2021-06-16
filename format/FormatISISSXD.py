@@ -152,6 +152,9 @@ class FormatISISSXD(FormatNXTOFRAW):
         bins = self._get_time_channel_bins()
         return [(bins[i] + bins[i + 1]) * 0.5 * 10 ** -6 for i in range(len(bins) - 1)]
 
+    def get_tof_in_seconds(self):
+        return self._get_time_channels_in_seconds()
+
     def get_wavelength_channels_in_ang(self):
         time_channels = self._get_time_channels_in_seconds()
         L = self._get_primary_flight_path_in_m()
