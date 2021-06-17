@@ -34,6 +34,9 @@ setup_kwargs = {
         "dxtbx.masking": ["boost_python/*"],
         "dxtbx.model": ["boost_python/*"],
     },
+    "entry_points": {
+        "libtbx.precommit": ["dxtbx=dxtbx"],
+    },
 }
 
 build(setup_kwargs)
