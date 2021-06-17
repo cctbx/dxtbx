@@ -1,0 +1,1 @@
+Remove ``DataBlock`` dependency for ``ExperimentListFactory.from_templates()``, add test.
