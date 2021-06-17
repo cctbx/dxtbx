@@ -144,18 +144,18 @@ namespace dxtbx { namespace boost_python {
 
     if (tof_indices != boost::python::object() && indices != boost::python::object()) {
       return typename boost::shared_ptr<TOFImageSet>(new TOFImageSet(data,
-        boost::python::extract<scitbx::af::shared<scitbx::af::shared<double> > >(tof_in_seconds)(),
+        boost::python::extract<scitbx::af::shared<double> >(tof_in_seconds)(),
         boost::python::extract<scitbx::af::const_ref<std::size_t> >(tof_indices)(),
           boost::python::extract<scitbx::af::const_ref<std::size_t> >(indices)()));
     }
     else if (tof_indices != boost::python::object()){
       return typename boost::shared_ptr<TOFImageSet>(new TOFImageSet(data,
-        boost::python::extract<scitbx::af::shared<scitbx::af::shared<double> > >(tof_in_seconds)(),
+        boost::python::extract<scitbx::af::shared<double> >(tof_in_seconds)(),
         boost::python::extract<scitbx::af::const_ref<std::size_t> >(tof_indices)()));      
     }
 
     return typename boost::shared_ptr<TOFImageSet>(new TOFImageSet(data,
-      boost::python::extract<scitbx::af::shared<scitbx::af::shared<double> > >(tof_in_seconds)()));
+      boost::python::extract<scitbx::af::shared<double> >(tof_in_seconds)()));
   }
 
   /**
@@ -794,6 +794,9 @@ namespace dxtbx { namespace boost_python {
                             (arg("data"), arg("tof_in_seconds") = boost::python::object(),
                             arg("tof_indices") = boost::python::object(),
                             arg("indices") = boost::python::object())))
+      .def("get_corrected_data", &TOFImageSet::get_corrected_data)
+      .def("partial_set", &TOFImageSet::partial_set)
+      .def("tof_in_seconds", &TOFImageSet::tof_in_seconds)
       .def_pickle(TOFImageSetPickleSuite());
     
 
