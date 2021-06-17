@@ -16,7 +16,13 @@ steps:
 # Download other source repositories
 - bash: |
     set -eux
-    python3 modules/dxtbx/.azure-pipelines/bootstrap.py update
+
+    # Extract the version of cctbx-base from the conda environment file
+    [[ "$(cat ../modules/dxtbx/.azure-pipelines/ci-conda-env.txt)" =~ cctbx-base==([^:space:]+) ]]
+    cctbx_version="$("${BASH_REMATCH[1]}" | xargs)"
+    echo "Using cctbx conda release ${cctbx_version}"
+
+    python3 modules/dxtbx/.azure-pipelines/bootstrap.py update --branch cctbx_project@"v${cctbx_version}"
   displayName: Repository checkout
   workingDirectory: $(Pipeline.Workspace)
 
