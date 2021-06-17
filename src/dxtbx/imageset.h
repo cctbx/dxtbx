@@ -1042,7 +1042,7 @@ public:
    * @param last The last slice index
    * @returns The partial set
    */
-  virtual ImageSetBase partial_set(std::size_t first, std::size_t last) const {
+  ImageSetBase partial_set(std::size_t first, std::size_t last) const {
     DXTBX_ASSERT(last > first);
     return ImageSetBase(data_,
                     scitbx::af::const_ref<std::size_t>(&indices_[first], last - first));
@@ -1209,32 +1209,105 @@ protected:
 class TOFImageSet : public ImageSetBase<TOFBeam>{
 public:
   TOFImageSet(const ImageSetData<TOFBeam> &data,
-              const scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds)
+              const scitbx::af::shared<double> &tof_in_seconds)
     : ImageSetBase<TOFBeam>(data),
       tof_in_seconds_(tof_in_seconds){
-      DXTBX_ASSERT(tof_in_seconds.size() == data.size());
     }
 
   TOFImageSet(const ImageSetData<TOFBeam> &data, 
-              const scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds,
+              const scitbx::af::shared<double> &tof_in_seconds,
               const scitbx::af::const_ref<std::size_t> &tof_indices)
     : ImageSetBase<TOFBeam>(data),
       tof_in_seconds_(tof_in_seconds),
       tof_indices_(tof_indices.begin(), tof_indices.end()) {
-        DXTBX_ASSERT(tof_in_seconds.size() == data.size());
         DXTBX_ASSERT(tof_indices.size() > 1);
       }
 
   TOFImageSet(const ImageSetData<TOFBeam> &data, 
-              const scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds,
+              const scitbx::af::shared<double>  &tof_in_seconds,
               const scitbx::af::const_ref<std::size_t> &tof_indices,
               const scitbx::af::const_ref<std::size_t> &indices)
     : ImageSetBase<TOFBeam>(data, indices),
       tof_in_seconds_(tof_in_seconds),
       tof_indices_(tof_indices.begin(), tof_indices.end()) {
-        DXTBX_ASSERT(tof_in_seconds.size() == data.size());
         DXTBX_ASSERT(tof_indices.size() > 1);
       }
+
+  TOFImageSet partial_set(std::size_t first, std::size_t last) const {
+      DXTBX_ASSERT(last > first);
+      return TOFImageSet(data_, tof_in_seconds_, 
+        scitbx::af::const_ref<std::size_t>(&tof_indices_[0], tof_indices_.size() - 1),
+        scitbx::af::const_ref<std::size_t>(&indices_[first], last - first));
+  }
+
+
+  virtual Image<double> get_corrected_data(std::size_t index) {
+    typedef scitbx::af::versa<double, scitbx::af::c_grid<2> > array_type;
+    typedef scitbx::af::const_ref<double, scitbx::af::c_grid<2> > const_ref_type;
+
+    // Get the multi-tile data, gain and pedestal
+    DXTBX_ASSERT(index < indices_.size());
+    Image<double> data = get_raw_data_as_double(index);
+    Image<double> gain = get_gain(index);
+    Image<double> dark = get_pedestal(index);
+    DXTBX_ASSERT(gain.n_tiles() == 0 || data.n_tiles() == gain.n_tiles());
+    DXTBX_ASSERT(dark.n_tiles() == 0 || data.n_tiles() == dark.n_tiles());
+
+
+
+    // Loop through tiles
+    Image<double> result;
+    for (std::size_t i = 0; i < data.n_tiles(); ++i) {
+      // Get the data
+      const_ref_type r = data.tile(i).data().const_ref();
+
+      // Get the gain and dark
+      const_ref_type g = gain.n_tiles() > 0
+                           ? gain.tile(i).data().const_ref()
+                           : const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
+      const_ref_type p = dark.n_tiles() > 0
+                           ? dark.tile(i).data().const_ref()
+                           : const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
+
+      // Check gain and dark sizes
+      DXTBX_ASSERT(g.size() == 0 || r.accessor().all_eq(g.accessor()));
+      DXTBX_ASSERT(p.size() == 0 || r.accessor().all_eq(p.accessor()));
+
+      if (p.size() == 0 && g.size() == 0) {
+        // Nothing to apply, save the copy
+        result.push_back(ImageTile<double>(data.tile(i).data()));
+      } else {
+        // Create the result array
+        array_type c(r.accessor(),
+                     scitbx::af::init_functor_null<array_type::value_type>());
+
+        // Copy the data values
+        std::uninitialized_copy(r.begin(), r.end(), c.begin());
+
+        // Apply dark
+        if (p.size() > 0) {
+          for (std::size_t j = 0; j < r.size(); ++j) {
+            c[j] = c[j] - p[j];
+          }
+        }
+
+        // Apply gain
+        if (g.size() > 0) {
+          for (std::size_t j = 0; j < r.size(); ++j) {
+            DXTBX_ASSERT(g[j] > 0);
+            c[j] = c[j] / g[j];
+          }
+        }
+
+        // Add the image tile
+        result.push_back(ImageTile<double>(c));
+      }
+    }
+
+    // Return the result
+    return result;
+  }
+
 
   virtual ~TOFImageSet() {}
   
@@ -1242,13 +1315,13 @@ public:
     return tof_indices_;
   }
 
-  scitbx::af::shared<scitbx::af::shared<double> > tof_in_seconds() const{
+  scitbx::af::shared<double> tof_in_seconds() const{
     return tof_in_seconds_;
   }
 
 private:
   scitbx::af::shared<std::size_t> tof_indices_;
-  scitbx::af::shared<scitbx::af::shared<double> > tof_in_seconds_;
+  scitbx::af::shared<double> tof_in_seconds_;
 
 };
 
