@@ -14,7 +14,6 @@ import dxtbx.datablock
 from dxtbx.datablock import (
     BeamComparison,
     DataBlockFactory,
-    DataBlockTemplateImporter,
     DetectorComparison,
     GoniometerComparison,
 )
@@ -32,7 +31,12 @@ from dxtbx.model import (
     ProfileModelFactory,
     ScanFactory,
 )
-from dxtbx.sequence_filenames import template_image_range, template_regex
+from dxtbx.sequence_filenames import (
+    locate_files_matching_template_string,
+    template_image_range,
+    template_regex,
+    template_string_number_index,
+)
 from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.util import get_url_scheme
@@ -811,12 +815,85 @@ class ExperimentListFactory:
     @staticmethod
     def from_templates(templates, **kwargs):
         """Import an experiment list from templates"""
-        importer = DataBlockTemplateImporter(templates, **kwargs)
+        assert "verbose" not in kwargs, "The verbose parameter has been removed"
+        assert len(templates) > 0
+
         experiments = ExperimentList()
-        for db in importer.datablocks:
-            experiments.extend(
-                ExperimentListFactory.from_datablock_and_crystal(db, None)
-            )
+        find_format = dxtbx.datablock.FormatChecker()
+
+        # For each template do an import
+        for template in templates:
+            template = os.path.normpath(template)
+            filenames = sorted(locate_files_matching_template_string(template))
+            if len(filenames):
+                logger.debug(
+                    "The following files matched the template string:\n%s",
+                    "\n".join(f" {p}" for p in filenames),
+                )
+
+            # Check if we've matched any filenames
+            if len(filenames) == 0:
+                raise ValueError(f"Template '{template}' does not match any files")
+
+            # Get the format from the first image
+            format_class = find_format.find_format(filenames[0])
+
+            # Verify this makes sense
+            if format_class is None:
+                raise ValueError(f"Image file {filenames[0]} format is unknown")
+            elif format_class.is_abstract():
+                raise ValueError(
+                    f"Image file {filenames[0]} appears to be a '{type(format_class).__name__}', but this is an abstract Format"
+                )
+            else:
+                index = slice(*template_string_number_index(template))
+                image_range = kwargs.get("image_range")
+                if image_range:
+                    first, last = image_range
+                else:
+                    first = int(filenames[0][index])
+                    last = int(filenames[-1][index])
+
+                # Check all images in range are present - if allowed
+                if not kwargs.get("allow_incomplete_sequences", False):
+                    all_numbers = {int(f[index]) for f in filenames}
+                    missing = set(range(first, last + 1)) - all_numbers
+                    if missing:
+                        raise ValueError(
+                            "Missing image{} {} from imageset ({}-{})".format(
+                                "s" if len(missing) > 1 else "",
+                                ", ".join(str(x) for x in sorted(missing)),
+                                first,
+                                last,
+                            )
+                        )
+
+                # Read the image
+                fmt = format_class(filenames[0], **(kwargs.get("format_kwargs", {})))
+
+                # Update the image range
+                image_range = (first, last)
+                scan = fmt.get_scan()
+                scan.set_image_range(image_range)
+
+                # Create the sequence and experiment
+                imageset = dxtbx.imageset.ImageSetFactory.make_sequence(
+                    template,
+                    list(range(first, last + 1)),
+                    format_class,
+                    fmt.get_beam(),
+                    fmt.get_detector(),
+                    fmt.get_goniometer(),
+                    scan,
+                    format_kwargs=kwargs.get("format_kwargs"),
+                )
+                experiments.extend(
+                    ExperimentListFactory.from_imageset_and_crystal(
+                        imageset,
+                        crystal=None,
+                        load_models=True,
+                    )
+                )
         return experiments
 
 
