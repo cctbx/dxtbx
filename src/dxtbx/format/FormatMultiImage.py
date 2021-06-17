@@ -288,23 +288,48 @@ class FormatMultiImage(Format):
             format_instance,
             format_kwargs,
         ):
-
             num_images = get_num_images(single_file_indices, format_instance)
             tof_in_seconds = format_instance.get_tof_in_seconds()
             reader = get_reader(cls, filenames, num_images, **format_kwargs)
             vendor = format_instance.get_vendortype()
 
-            iset = TOFImageSet(
-                ImageSetData(
-                    reader=reader,
-                    masker=None,
-                    vendor=vendor,
-                    params=format_kwargs,
-                    format=cls,
-                ),
-                tof_in_seconds=tof_in_seconds,
-                indices=single_file_indices,
-            )
+            if "tof_indices" in format_kwargs:
+                if single_file_indices is not None:
+                    iset = TOFImageSet(
+                        ImageSetData(
+                            reader=reader,
+                            masker=None,
+                            vendor=vendor,
+                            params=format_kwargs,
+                            format=cls,
+                        ),
+                        tof_in_seconds=tof_in_seconds,
+                        tof_indices=format_kwargs["tof_indices"],
+                        indices=single_file_indices,
+                    )
+                else:
+                    iset = TOFImageSet(
+                        ImageSetData(
+                            reader=reader,
+                            masker=None,
+                            vendor=vendor,
+                            params=format_kwargs,
+                            format=cls,
+                        ),
+                        tof_in_seconds=tof_in_seconds,
+                        tof_indices=format_kwargs["tof_indices"],
+                    )
+            else:
+                iset = TOFImageSet(
+                    ImageSetData(
+                        reader=reader,
+                        masker=None,
+                        vendor=vendor,
+                        params=format_kwargs,
+                        format=cls,
+                    ),
+                    tof_in_seconds=tof_in_seconds,
+                )
 
             if single_file_indices is None:
                 single_file_indices = range(format_instance.get_num_images())
