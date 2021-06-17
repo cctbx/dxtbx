@@ -1,3 +1,13 @@
+DIALS 3.5.1 (2021-06-14)
+========================
+
+Bugfixes
+--------
+
+- Extend duration of bad module mask for Diamond I03 EIGER 2XE 16M detector indefinitely. This will be updated in a future release. (`#370 <https://github.com/cctbx/dxtbx/issues/370>`_)
+- Handle scan data which wraps through 0° instead of >=360° (`#379 <https://github.com/cctbx/dxtbx/issues/379>`_)
+
+
 DIALS 3.5.0 (2021-05-27)
 ========================
 

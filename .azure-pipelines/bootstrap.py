@@ -671,12 +671,6 @@ def update_sources(options):
             "dials/cbflib",
         )
     }
-    repositories["cctbx_project"] = {
-        "base-repository": "cctbx/cctbx_project",
-        "effective-repository": "dials/cctbx",
-        "branch-remote": "master",
-        "branch-local": "stable",
-    }
     repositories["dxtbx"] = {
         "base-repository": "cctbx/dxtbx",
         "branch-local": "main",
