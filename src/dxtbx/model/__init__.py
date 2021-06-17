@@ -11,7 +11,7 @@ from libtbx.containers import OrderedSet
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet
+from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet, TOFImageSet
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.model.detector import DetectorFactory
@@ -647,6 +647,13 @@ class _:
                 }
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
+            elif isinstance(imset, TOFImageSet):
+                r = collections.OrderedDict(
+                    [("__id__", "TOFImageSet"), ("images", imset.paths())]
+                )
+                if imset.reader().is_single_file_reader():
+                    r["single_file_indices"] = list(imset.indices())
+                r["tof_in_seconds"] = list(imset.tof_in_seconds())
             else:
                 raise TypeError(
                     "expected ImageSet or ImageSequence, got %s" % type(imset)

@@ -10,6 +10,7 @@ from dxtbx_imageset_ext import (
     ImageGrid,
     ImageSequence,
     ImageSet,
+    ImageSetBase,
     ImageSetData,
     TOFImageSet,
 )
@@ -81,6 +82,7 @@ class MemReader:
         return ""
 
 
+<<<<<<< HEAD:src/dxtbx/imageset.py
 @boost_adaptbx.boost.python.inject_into(ImageSet)
 class _:
     """
