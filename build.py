@@ -90,7 +90,9 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
             ]
         )
     )
-    console_scripts.extend([x for x in all_dispatchers if x not in console_scripts])
+    console_scripts.extend(x for x in all_dispatchers if x not in console_scripts)
+    libtbx_dispatchers = entry_points.setdefault("libtbx.dispatcher.script", [])
+    libtbx_dispatchers.extend("{name}={name}".format(name=x.split("=")[0]) for x in console_scripts)
 
     dxtbx_format = entry_points.setdefault("dxtbx.format", [])
     format_classes = sorted(enumerate_format_classes(package_path / "format"))
