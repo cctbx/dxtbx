@@ -33,6 +33,6 @@ def _install_dxtbx_setup():
 
 # Retain until after DIALS 3.6 is release to unregister the previous dispatcher handlers
 if not pkg_resources or any(x.key == "libtbx.dxtbx" for x in pkg_resources.working_set):
-    libtbx.pkg_utils.define_entry_points()
+    libtbx.pkg_utils.define_entry_points({})
 
 _install_dxtbx_setup()
