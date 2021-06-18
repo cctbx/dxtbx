@@ -5,5 +5,4 @@
         "procrunner>=1.0.2",
         "pytest>=4.5,<5.0",
     ],
-    "extra_command_line_locations": ["src/dxtbx"],
 }

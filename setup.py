@@ -36,6 +36,7 @@ setup_kwargs = {
     },
     "entry_points": {
         "libtbx.precommit": ["dxtbx=dxtbx"],
+        "libtbx.dispatcher.script": ["pytest=pytest"],
     },
 }
 
