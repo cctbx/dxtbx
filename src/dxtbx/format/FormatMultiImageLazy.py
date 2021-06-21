@@ -1,5 +1,6 @@
 from dxtbx.format.Format import abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.imageset import ImageSetType
 
 
 @abstract
@@ -18,13 +19,9 @@ class FormatMultiImageLazy(FormatMultiImage):
         detector=None,
         goniometer=None,
         scan=None,
-        as_sequence=False,
-        as_imageset=False,
+        imageset_type=ImageSetType.ImageSetLazy,
         single_file_indices=None,
         format_kwargs=None,
-        template=None,
-        check_format=True,
-        lazy=True,
     ):
 
         return super().get_imageset(
@@ -33,11 +30,7 @@ class FormatMultiImageLazy(FormatMultiImage):
             detector=detector,
             goniometer=goniometer,
             scan=scan,
-            as_sequence=as_sequence,
-            as_imageset=as_imageset,
+            imageset_type=imageset_type,
             single_file_indices=single_file_indices,
             format_kwargs=format_kwargs,
-            template=template,
-            check_format=check_format,
-            lazy=lazy,
         )

@@ -12,7 +12,6 @@ from dxtbx.imageset import (
     TOFImageSet,
 )
 from dxtbx.model import MultiAxisGoniometer
-from dxtbx_model_ext import TOFBeam
 
 
 def _add_static_mask_to_iset(format_instance: Format, iset: ImageSet) -> None:
@@ -125,8 +124,8 @@ class FormatMultiImage(Format):
         goniometer=None,
         scan=None,
         imageset_type=None,
-        single_file_indices=None,
         format_kwargs=None,
+        **kwargs,
     ):
         """
         Factory method to create an imageset
@@ -354,35 +353,6 @@ class FormatMultiImage(Format):
             _add_static_mask_to_iset(format_instance, iset)
             return iset
 
-        def identify_imageset_type(scan, goniometer, beam, format_instance):
-            def is_tof_imageset(scan, beam, format_instance):
-                if beam is None and format_instance is not None:
-                    beam = format_instance.get_beam()
-                if isinstance(beam, TOFBeam):
-                    if scan is not None:
-                        raise NotImplementedError(
-                            "ToF rotational scans not implemented"
-                        )
-                    else:
-                        return True
-                return False
-
-            def is_imagesequence(scan, goniometer, format_instance):
-                if scan is not None and goniometer is not None:
-                    return True
-                if format_instance is not None:
-                    scan = format_instance.get_scan()
-                    goniometer = format_instance.get_goniometer()
-                    if scan is not None and goniometer is not None:
-                        return True
-                return False
-
-            if is_tof_imageset(scan, beam, format_instance):
-                return ImageSetType.TOFImageSet
-            elif is_imagesequence(scan, goniometer, format_instance):
-                return ImageSetType.ImageSequence
-            return ImageSetType.ImageSet
-
         def process_filenames(filenames):
 
             # Ensure filenames is list of length 1
@@ -401,6 +371,12 @@ class FormatMultiImage(Format):
             if format_kwargs is None:
                 format_kwargs = {}
             return format_kwargs
+
+        def get_single_file_indices(**kwargs):
+            if "single_file_indices" in kwargs:
+                return kwargs["single_file_indices"]
+            else:
+                return None
 
         def sanity_check_params(cls, single_file_indices):
             if cls.get_num_images == FormatMultiImage.get_num_images:
@@ -429,6 +405,7 @@ class FormatMultiImage(Format):
             return False
 
         # Process input
+        single_file_indices = get_single_file_indices(**kwargs)
         sanity_check_params(cls, single_file_indices)
         filenames = process_filenames(filenames)
         format_kwargs = process_format_kwargs(format_kwargs)
@@ -449,7 +426,7 @@ class FormatMultiImage(Format):
 
         # Attempt to identify imageset type from models if type is not given
         if imageset_type is None:
-            imageset_type = identify_imageset_type(
+            imageset_type = Format.identify_imageset_type(
                 scan, goniometer, beam, format_instance
             )
 

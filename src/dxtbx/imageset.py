@@ -514,9 +514,8 @@ class ImageSetFactory:
         return format_class.get_imageset(
             filenames,
             single_file_indices=single_file_indices,
-            as_imageset=True,
+            imageset_type=ImageSetType.ImageSet,
             format_kwargs=format_kwargs,
-            check_format=check_format,
         )
 
     @staticmethod
@@ -565,9 +564,7 @@ class ImageSetFactory:
             goniometer=goniometer,
             scan=scan,
             format_kwargs=format_kwargs,
-            template=template,
-            as_sequence=True,
-            check_format=check_format,
+            imageset_type=ImageSetType.ImageSequence,
             single_file_indices=list(range(*array_range)),
         )
 

@@ -294,132 +294,98 @@ class Format:
             masker = None
         return masker
 
+    @staticmethod
+    def identify_imageset_type(scan, goniometer, beam, format_instance):
+
+        from dxtbx.imageset import ImageSetType
+        from dxtbx.model.beam import TOFBeam
+
+        def is_tof_imageset(scan, beam, format_instance):
+            if beam is None and format_instance is not None:
+                beam = format_instance.get_beam()
+            if isinstance(beam, TOFBeam):
+                if scan is not None:
+                    raise NotImplementedError("ToF rotational scans not implemented")
+                else:
+                    return True
+            return False
+
+        def is_imagesequence(scan, goniometer, format_instance):
+            if scan is not None and goniometer is not None:
+                return True
+            if format_instance is not None:
+                scan = format_instance.get_scan()
+                goniometer = format_instance.get_goniometer()
+                if scan is not None and goniometer is not None:
+                    return True
+            return False
+
+        if is_tof_imageset(scan, beam, format_instance):
+            return ImageSetType.TOFImageSet
+        elif is_imagesequence(scan, goniometer, format_instance):
+            return ImageSetType.ImageSequence
+        return ImageSetType.ImageSet
+
+    @staticmethod
+    def format_instance_required(beam, detector, imageset_type):
+
+        from dxtbx.imageset import ImageSetType
+
+        if beam is None or detector is None:
+            return True
+        if imageset_type == ImageSetType.TOFImageSet:
+            return True
+        return False
+
     @classmethod
     def get_imageset(
-        Class,
-        input_filenames,
+        cls,
+        filenames,
         beam=None,
         detector=None,
         goniometer=None,
         scan=None,
-        as_imageset=False,
-        as_sequence=False,
-        single_file_indices=None,
+        imageset_type=None,
         format_kwargs=None,
-        template=None,
-        check_format=True,
+        **kwargs,
     ):
         """
         Factory method to create an imageset
 
         """
         # Import here to avoid cyclic imports
-        from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData
+        from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetType
 
-        # Turn entries that are filenames into absolute paths
-        filenames = [
-            os.fspath(os.path.abspath(x)) if not get_url_scheme(x) else x
-            for x in input_filenames
-        ]
+        def process_filenames(filenames):
+            return [
+                os.path.abspath(x) if not get_url_scheme(x) else x for x in filenames
+            ]
 
-        # Make it a dict
-        if format_kwargs is None:
-            format_kwargs = {}
+        def process_format_kwargs(format_kwargs):
+            if format_kwargs is None:
+                format_kwargs = {}
+            return format_kwargs
 
-        # Get some information from the format class
-        reader = Class.get_reader()(filenames, **format_kwargs)
-
-        # Get the format instance
-        if check_format is True:
-            Class._current_filename_ = None
-            Class._current_instance_ = None
-            format_instance = Class.get_instance(filenames[0], **format_kwargs)
-        else:
-            format_instance = None
-
-        # Read the vendor type
-        if check_format is True:
-            vendor = format_instance.get_vendortype()
-        else:
-            vendor = ""
-
-        # Get the format kwargs
-        params = format_kwargs
-
-        # Make sure only 1 or none is set
-        assert [as_imageset, as_sequence].count(True) < 2
-        if as_imageset:
-            is_sequence = False
-        elif as_sequence:
-            is_sequence = True
-        else:
-            if scan is None and format_instance is None:
-                raise RuntimeError(
-                    """
-          One of the following needs to be set
-            - as_imageset=True
-            - as_sequence=True
-            - scan
-            - check_format=True
-      """
-                )
-            if scan is None:
-                test_scan = format_instance.get_scan()
-            else:
-                test_scan = scan
-            if test_scan is not None and test_scan.get_oscillation()[1] != 0:
-                is_sequence = True
-            else:
-                is_sequence = False
-
-        # Create an imageset or sequence
-        if not is_sequence:
-
-            # Create the imageset
-            iset = ImageSet(
-                ImageSetData(
-                    reader=reader,
-                    masker=None,
-                    vendor=vendor,
-                    params=params,
-                    format=Class,
-                )
-            )
-
-            # If any are None then read from format
-            if [beam, detector, goniometer, scan].count(None) != 0:
-
-                # Get list of models
-                beam = []
-                detector = []
-                goniometer = []
-                scan = []
-                for f in filenames:
-                    format_instance = Class(f, **format_kwargs)
-                    beam.append(format_instance.get_beam())
-                    detector.append(format_instance.get_detector())
-                    goniometer.append(format_instance.get_goniometer())
-                    scan.append(format_instance.get_scan())
-
-            # Set the list of models
-            for i in range(len(filenames)):
-                iset.set_beam(beam[i], i)
-                iset.set_detector(detector[i], i)
-                iset.set_goniometer(goniometer[i], i)
-                iset.set_scan(scan[i], i)
-
-        else:
-
+        def create_imagesequence(
+            cls,
+            filenames,
+            beam,
+            detector,
+            goniometer,
+            scan,
+            format_instance,
+            format_kwargs,
+            **kwargs,
+        ):
             # Get the template
-            if template is None:
+            if "template" not in kwargs or kwargs["template"] is None:
                 template = template_regex(filenames[0])[0]
             else:
-                template = str(template)
+                template = str(kwargs["template"])
 
             # Check scan makes sense
             if scan:
-                if check_format is True:
-                    assert scan.get_num_images() == len(filenames)
+                assert scan.get_num_images() == len(filenames)
 
             # If any are None then read from format
             if beam is None and format_instance is not None:
@@ -432,7 +398,7 @@ class Format:
                 scan = format_instance.get_scan()
                 if scan is not None:
                     for f in filenames[1:]:
-                        format_instance = Class(f, **format_kwargs)
+                        format_instance = cls(f, **format_kwargs)
                         scan += format_instance.get_scan()
 
             assert beam is not None, "Can't create Sequence without beam"
@@ -452,8 +418,8 @@ class Format:
                     reader=reader,
                     masker=masker,
                     vendor=vendor,
-                    params=params,
-                    format=Class,
+                    params=format_kwargs,
+                    format=cls,
                     template=template,
                 ),
                 beam=beam,
@@ -461,6 +427,100 @@ class Format:
                 goniometer=goniometer,
                 scan=scan,
             )
+
+            return iset
+
+        def create_imageset(
+            cls,
+            filenames,
+            beam,
+            detector,
+            goniometer,
+            scan,
+            format_instance,
+            vendor,
+            format_kwargs,
+        ):
+            # Create the imageset
+            iset = ImageSet(
+                ImageSetData(
+                    reader=reader,
+                    masker=None,
+                    vendor=vendor,
+                    params=format_kwargs,
+                    format=cls,
+                )
+            )
+
+            # If any are None then read from format
+            if [beam, detector, goniometer, scan].count(None) != 0:
+
+                # Get list of models
+                beam = []
+                detector = []
+                goniometer = []
+                scan = []
+                for f in filenames:
+                    format_instance = cls(f, **format_kwargs)
+                    beam.append(format_instance.get_beam())
+                    detector.append(format_instance.get_detector())
+                    goniometer.append(format_instance.get_goniometer())
+                    scan.append(format_instance.get_scan())
+
+            # Set the list of models
+            for i in range(len(filenames)):
+                iset.set_beam(beam[i], i)
+                iset.set_detector(detector[i], i)
+                iset.set_goniometer(goniometer[i], i)
+                iset.set_scan(scan[i], i)
+
+        # Process input
+        filenames = process_filenames(filenames)
+        format_kwargs = process_format_kwargs(format_kwargs)
+
+        # Get some information from the format class
+        reader = cls.get_reader()(filenames, **format_kwargs)
+        if Format.format_instance_required(beam, detector, imageset_type):
+            cls._current_filename_ = None
+            cls._current_instance_ = None
+            format_instance = cls.get_instance(filenames[0], **format_kwargs)
+            vendor = format_instance.get_vendortype()
+        else:
+            format_instance = None
+            vendor = ""
+
+        # Attempt to identify imageset type from models if type is not given
+        if imageset_type is None:
+            imageset_type = Format.identify_imageset_type(
+                scan, goniometer, beam, format_instance
+            )
+
+        if imageset_type == ImageSetType.ImageSet:
+            iset = create_imageset(
+                cls,
+                filenames,
+                beam,
+                detector,
+                goniometer,
+                scan,
+                format_instance,
+                vendor,
+                format_kwargs,
+            )
+        elif imageset_type == ImageSetType.ImageSequence:
+            iset = create_imagesequence(
+                cls,
+                filenames,
+                beam,
+                detector,
+                goniometer,
+                scan,
+                format_instance,
+                format_kwargs,
+                **kwargs,
+            )
+        else:
+            raise NotImplementedError(f"Imageset_type {imageset_type} not implemented")
 
         if format_instance is not None:
             static_mask = format_instance.get_static_mask()
