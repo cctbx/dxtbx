@@ -531,7 +531,6 @@ class ExperimentListFactory:
         load_models=True,
     ):
         """Create a list of data blocks from a list of directory or file names."""
-        experiments = ExperimentList()
 
         # Process each file given by this path list
         to_process = _openingpathiterator(filenames)
@@ -579,6 +578,8 @@ class ExperimentListFactory:
         # - Every set of images forming a scan goes into its own ImageSequence
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
+
+        experiments = ExperimentList()
 
         # Treat each format as a separate datablock
         for format_class, records in format_groups.items():
@@ -670,11 +671,13 @@ class ExperimentListFactory:
     @staticmethod
     def from_stills_and_crystal(imageset, crystal, load_models=True):
         """Create an experiment list from stills and crystal."""
+
         experiments = ExperimentList()
+        experiment = Experiment
         if load_models:
             for i in range(len(imageset)):
                 experiments.append(
-                    Experiment(
+                    experiment(
                         imageset=imageset[i : i + 1],
                         beam=imageset.get_beam(i),
                         detector=imageset.get_detector(i),

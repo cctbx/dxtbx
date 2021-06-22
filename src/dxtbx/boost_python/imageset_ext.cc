@@ -53,12 +53,11 @@ namespace dxtbx { namespace boost_python {
   /**
    * A constructor for the imageset data class
    */
-  template<typename Beam>
-  boost::shared_ptr<ImageSetData<Beam> > make_imageset_data1(boost::python::object reader,
+  boost::shared_ptr<ImageSetData<MonochromaticBeam> > make_monochromatic_imageset_data1(boost::python::object reader,
                                                       boost::python::object masker) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData<Beam> > self(
-      new ImageSetData<Beam>(reader, make_masker_pointer<Beam>(masker)));
+    boost::shared_ptr<ImageSetData<MonochromaticBeam> > self(
+      new ImageSetData<MonochromaticBeam>(reader, make_masker_pointer<MonochromaticBeam>(masker)));
 
     // Return the imageset data
     return self;
@@ -67,16 +66,51 @@ namespace dxtbx { namespace boost_python {
   /**
    * A constructor for the imageset data class
    */
-  template<typename Beam>
-  boost::shared_ptr<ImageSetData<Beam> > make_imageset_data2(boost::python::object reader,
+  boost::shared_ptr<ImageSetData<MonochromaticBeam> > make_monochromatic_imageset_data2(boost::python::object reader,
                                                       boost::python::object masker,
                                                       std::string filename_template,
                                                       std::string vendor,
                                                       boost::python::dict params,
                                                       boost::python::object format) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData<Beam> > self(
-      new ImageSetData<Beam>(reader, make_masker_pointer<Beam>(masker)));
+    boost::shared_ptr<ImageSetData<MonochromaticBeam> > self(
+      new ImageSetData<MonochromaticBeam>(reader, make_masker_pointer<MonochromaticBeam>(masker)));
+
+    // Set some stuff
+    self->set_template(filename_template);
+    self->set_vendor(vendor);
+    self->set_params(detail::pickle_dumps(params));
+    self->set_format(detail::pickle_dumps(format));
+
+    // Return the imageset data
+    return self;
+  }
+
+  /**
+   * A constructor for the imageset data class
+   */
+  boost::shared_ptr<ImageSetData<TOFBeam> > make_tof_imageset_data1(boost::python::object reader,
+                                                      boost::python::object masker) {
+    // Create the pointer
+    boost::shared_ptr<ImageSetData<TOFBeam> > self(
+      new ImageSetData<TOFBeam>(reader, make_masker_pointer<TOFBeam>(masker)));
+
+    // Return the imageset data
+    return self;
+  }
+
+  /**
+   * A constructor for the imageset data class
+   */
+  boost::shared_ptr<ImageSetData<TOFBeam> > make_tof_imageset_data2(boost::python::object reader,
+                                                      boost::python::object masker,
+                                                      std::string filename_template,
+                                                      std::string vendor,
+                                                      boost::python::dict params,
+                                                      boost::python::object format) {
+    // Create the pointer
+    boost::shared_ptr<ImageSetData<TOFBeam> > self(
+      new ImageSetData<TOFBeam>(reader, make_masker_pointer<TOFBeam>(masker)));
 
     // Set some stuff
     self->set_template(filename_template);
@@ -623,13 +657,57 @@ namespace dxtbx { namespace boost_python {
       .add_property("dy",
                     make_function(&ExternalLookup::dy, return_internal_reference<>()));
 
-    class_<ImageSetData<MonochromaticBeam>, boost::shared_ptr<ImageSetData<MonochromaticBeam> > >("ImageSetData", no_init)
+    class_<ImageSetData<TOFBeam>, boost::shared_ptr<ImageSetData<TOFBeam> > >("TOFImageSetData", no_init)
       .def("__init__",
-           make_constructor(&make_imageset_data1<MonochromaticBeam>,
+           make_constructor(&make_tof_imageset_data1,
                             default_call_policies(),
                             (arg("reader"), arg("masker"))))
       .def("__init__",
-           make_constructor(&make_imageset_data2<MonochromaticBeam>,
+           make_constructor(&make_tof_imageset_data2,
+                            default_call_policies(),
+                            (arg("reader"),
+                             arg("masker"),
+                             arg("template") = "",
+                             arg("vendor") = "",
+                             arg("params") = boost::python::object(),
+                             arg("format") = boost::python::object())))
+      .def("reader", &ImageSetData<TOFBeam>::reader)
+      .def("masker", &ImageSetData<TOFBeam>::masker)
+      .def("get_data", &ImageSetData<TOFBeam>::get_data)
+      .def("has_single_file_reader", &ImageSetData<TOFBeam>::has_single_file_reader)
+      .def("get_path", &ImageSetData<TOFBeam>::get_path)
+      .def("get_master_path", &ImageSetData<TOFBeam>::get_master_path)
+      .def("get_image_identifier", &ImageSetData<TOFBeam>::get_image_identifier)
+      .def("mark_for_rejection", &ImageSetData<TOFBeam>::mark_for_rejection)
+      .def("is_marked_for_rejection", &ImageSetData<TOFBeam>::is_marked_for_rejection)
+      .def("get_beam", &ImageSetData<TOFBeam>::get_beam)
+      .def("get_detector", &ImageSetData<TOFBeam>::get_detector)
+      .def("get_goniometer", &ImageSetData<TOFBeam>::get_goniometer)
+      .def("get_scan", &ImageSetData<TOFBeam>::get_scan)
+      .def("set_beam", &ImageSetData<TOFBeam>::set_beam)
+      .def("set_detector", &ImageSetData<TOFBeam>::set_detector)
+      .def("set_goniometer", &ImageSetData<TOFBeam>::set_goniometer)
+      .def("set_scan", &ImageSetData<TOFBeam>::set_scan)
+      .def("get_template", &ImageSetData<TOFBeam>::get_template)
+      .def("set_template", &ImageSetData<TOFBeam>::set_template)
+      .def("get_vendor", &ImageSetData<TOFBeam>::get_vendor)
+      .def("set_vendor", &ImageSetData<TOFBeam>::set_vendor)
+      .def("get_params", &ImageSetData_get_params<TOFBeam>)
+      .def("set_params", &ImageSetData_set_params<TOFBeam>)
+      .def("get_format_class", &ImageSetData_get_format<TOFBeam>)
+      .def("set_format_class", &ImageSetData_set_format<TOFBeam>)
+      .add_property(
+        "external_lookup",
+        make_function(&ImageSetData<TOFBeam>::external_lookup, return_internal_reference<>()))
+      .def_pickle(ImageSetDataPickleSuite<TOFBeam>());
+
+    class_<ImageSetData<MonochromaticBeam>, boost::shared_ptr<ImageSetData<MonochromaticBeam> > >("ImageSetData", no_init)
+      .def("__init__",
+           make_constructor(&make_monochromatic_imageset_data1,
+                            default_call_policies(),
+                            (arg("reader"), arg("masker"))))
+      .def("__init__",
+           make_constructor(&make_monochromatic_imageset_data2,
                             default_call_policies(),
                             (arg("reader"),
                              arg("masker"),
@@ -667,49 +745,7 @@ namespace dxtbx { namespace boost_python {
         make_function(&ImageSetData<MonochromaticBeam>::external_lookup, return_internal_reference<>()))
       .def_pickle(ImageSetDataPickleSuite<MonochromaticBeam>());
 
-    class_<ImageSetData<TOFBeam>, boost::shared_ptr<ImageSetData<TOFBeam> > >("ImageSetData", no_init)
-      .def("__init__",
-           make_constructor(&make_imageset_data1<TOFBeam>,
-                            default_call_policies(),
-                            (arg("reader"), arg("masker"))))
-      .def("__init__",
-           make_constructor(&make_imageset_data2<TOFBeam>,
-                            default_call_policies(),
-                            (arg("reader"),
-                             arg("masker"),
-                             arg("template") = "",
-                             arg("vendor") = "",
-                             arg("params") = boost::python::object(),
-                             arg("format") = boost::python::object())))
-      .def("reader", &ImageSetData<TOFBeam>::reader)
-      .def("masker", &ImageSetData<TOFBeam>::masker)
-      .def("get_data", &ImageSetData<TOFBeam>::get_data)
-      .def("has_single_file_reader", &ImageSetData<TOFBeam>::has_single_file_reader)
-      .def("get_path", &ImageSetData<TOFBeam>::get_path)
-      .def("get_master_path", &ImageSetData<TOFBeam>::get_master_path)
-      .def("get_image_identifier", &ImageSetData<TOFBeam>::get_image_identifier)
-      .def("mark_for_rejection", &ImageSetData<TOFBeam>::mark_for_rejection)
-      .def("is_marked_for_rejection", &ImageSetData<TOFBeam>::is_marked_for_rejection)
-      .def("get_beam", &ImageSetData<TOFBeam>::get_beam)
-      .def("get_detector", &ImageSetData<TOFBeam>::get_detector)
-      .def("get_goniometer", &ImageSetData<TOFBeam>::get_goniometer)
-      .def("get_scan", &ImageSetData<TOFBeam>::get_scan)
-      .def("set_beam", &ImageSetData<TOFBeam>::set_beam)
-      .def("set_detector", &ImageSetData<TOFBeam>::set_detector)
-      .def("set_goniometer", &ImageSetData<TOFBeam>::set_goniometer)
-      .def("set_scan", &ImageSetData<TOFBeam>::set_scan)
-      .def("get_template", &ImageSetData<TOFBeam>::get_template)
-      .def("set_template", &ImageSetData<TOFBeam>::set_template)
-      .def("get_vendor", &ImageSetData<TOFBeam>::get_vendor)
-      .def("set_vendor", &ImageSetData<TOFBeam>::set_vendor)
-      .def("get_params", &ImageSetData_get_params<TOFBeam>)
-      .def("set_params", &ImageSetData_set_params<TOFBeam>)
-      .def("get_format_class", &ImageSetData_get_format<TOFBeam>)
-      .def("set_format_class", &ImageSetData_set_format<TOFBeam>)
-      .add_property(
-        "external_lookup",
-        make_function(&ImageSetData<TOFBeam>::external_lookup, return_internal_reference<>()))
-      .def_pickle(ImageSetDataPickleSuite<TOFBeam>());
+
 
 
     class_<ImageSetBase<MonochromaticBeam>>("ImageSetBase", no_init)
