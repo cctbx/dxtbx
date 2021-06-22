@@ -317,6 +317,9 @@ class Format:
         from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData
 
         # Get filename absolute paths, for entries that are filenames
+        input_filenames = [
+            x.__fspath__() if hasattr(x, "__fspath__") else x for x in input_filenames
+        ]
         filenames = [
             os.path.abspath(x) if not get_url_scheme(x) else x for x in input_filenames
         ]
