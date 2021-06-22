@@ -231,12 +231,6 @@ namespace dxtbx { namespace model { namespace boost_python {
     return scan;
   }
 
-  static Scan *make_scan_w_tof(vec2<int> image_range, 
-          const scitbx::af::shared<double> &total_tof){
-  
-    return new Scan(image_range, total_tof);
-  }
-
   static vec2<double> get_oscillation_range(const Scan &scan, bool deg) {
     vec2<double> range = scan.get_oscillation_range();
     return deg ? rad_as_deg(range) : range;
@@ -392,11 +386,6 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("oscillation"),
                              arg("batch_offset") = 0,
                              arg("deg") = true)))
-      .def("__init__",
-           make_constructor(&make_scan_w_tof,
-                            default_call_policies(),
-                            (arg("image_range"),
-                             arg("total_tof"))))
       .def("__init__",
            make_constructor(&make_scan_w_epoch,
                             default_call_policies(),

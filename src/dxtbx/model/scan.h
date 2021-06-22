@@ -67,34 +67,6 @@ namespace dxtbx { namespace model {
       }
     }
 
-    Scan(vec2<int> image_range, 
-        const scitbx::af::shared<double> &total_tof)
-            : image_range_(image_range),
-              num_images_(1 + image_range[1] - image_range[0]),
-              total_tof_(total_tof),
-              is_tof_(true),
-              oscillation_(0.0, 0.0),
-              batch_offset_(0),
-              is_still_(false){
-                                                        
-              DXTBX_ASSERT(num_images_ >= 0); 
-              scitbx::af::shared<double> epochs;
-              scitbx::af::shared<double> exposure_times;
-
-              int num_images = 1 + image_range[1] - image_range[0];
-              epochs.reserve(num_images);
-              exposure_times.reserve(num_images);
-              for (int j=0; j<num_images;j++){
-                epochs.push_back((float)j);
-                exposure_times.push_back(1.);
-              }
-              epochs_ = epochs;
-              exposure_times_ = exposure_times;
-
-
-              selected_tof_ = get_tof_range(image_range, total_tof);
-        }
-
     /**
      * Initialise the class
      * @param image_range The range of images covered by the scan
@@ -550,22 +522,6 @@ namespace dxtbx { namespace model {
     bool is_still_;
     scitbx::af::shared<double> exposure_times_;
     scitbx::af::shared<double> epochs_;
-    bool is_tof_;
-    scitbx::af::shared<double> total_tof_;
-    scitbx::af::shared<double> selected_tof_;
-    scitbx::af::shared<double> get_tof_range(vec2<int> image_range,
-            const scitbx::af::shared<double> &total_tof){
-
-        int num_images = 1 + image_range_[1] - image_range_[0];
-        DXTBX_ASSERT(total_tof.size() >= num_images);
-                                                        
-        auto start = total_tof.begin() + image_range[0];
-        auto end = total_tof.begin() + image_range[1];
-
-        scitbx::af::shared<double> selected_tof(start, end);
-        return selected_tof;
-                                                                                
-    }   
   };
 
   /** Print Scan information */
