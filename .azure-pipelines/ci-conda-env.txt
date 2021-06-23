@@ -15,7 +15,7 @@ conda-forge::hdf5<1.11
 conda-forge::jpeg
 conda-forge::matplotlib-base
 conda-forge::mrcfile
-conda-forge::numpy>=1.16
+conda-forge::numpy<1.21
 conda-forge::pillow>=5.4.1
 conda-forge::pip
 conda-forge::procrunner>=2.2.0
