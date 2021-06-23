@@ -316,12 +316,10 @@ class Format:
         # Import here to avoid cyclic imports
         from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData
 
-        # Get filename absolute paths, for entries that are filenames
-        input_filenames = [
-            x.__fspath__() if hasattr(x, "__fspath__") else x for x in input_filenames
-        ]
+        # Turn entries that are filenames into absolute paths
         filenames = [
-            os.path.abspath(x) if not get_url_scheme(x) else x for x in input_filenames
+            os.fspath(os.path.abspath(x)) if not get_url_scheme(x) else x
+            for x in input_filenames
         ]
 
         # Make it a dict
