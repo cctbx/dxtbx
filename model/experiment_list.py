@@ -1118,8 +1118,7 @@ def _openingpathiterator(pathnames: Iterable[str]):
     while paths:
         # Get the next path from the queue
         (do_recurse, pathname) = paths.popleft()
-        if pathname and hasattr(pathname, "__fspath__"):
-            pathname = pathname.__fspath__()
+        pathname = os.fspath(pathname)
         try:
             # Attempt to open this 'path'
             Format.open_file(pathname)
