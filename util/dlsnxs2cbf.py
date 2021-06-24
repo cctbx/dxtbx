@@ -74,10 +74,8 @@ def compute_cbf_header(f, nn=0):
     timestamp = f["/entry/start_time"][()].decode()[:19]
     omega = f["/entry/sample/transformations/omega"][()]
     omega_increment = f["/entry/sample/transformations/omega_increment_set"][()]
-    chi_key = "/entry/sample/transformations/chi"
-    chi = f[chi_key][()] if chi_key in f else None
-    phi_key = "/entry/sample/transformations/phi"
-    phi = f[phi_key][()] if phi_key in f else None
+    chi = "/entry/sample/transformations/chi"
+    phi = "/entry/sample/transformations/phi"
 
     if "/entry/instrument/detector/beam_centre_x" in f:
         Bx = instrument["detector/beam_centre_x"][()]
@@ -119,13 +117,13 @@ _array_data.header_contents
     result.append("# Polarization 0.990")
     result.append("# Alpha 0.0000 deg.")
     result.append("# Kappa 0.0000 deg.")
-    if phi:
-        result.append(f"# Phi {phi:.4f} deg.")
+    if phi in f:
+        result.append(f"# Phi {f[phi][()]:.4f} deg.")
         result.append("# Phi_increment 0.0000 deg.")
     result.append("# Omega %.4f deg." % omega[nn])
     result.append("# Omega_increment %.4f deg." % omega_increment[nn])
-    if chi:
-        result.append(f"# Chi {chi:.4f} deg.")
+    if chi in f:
+        result.append(f"# Chi {f[chi][()]:.4f} deg.")
         result.append("# Chi_increment 0.0000 deg.")
     result.append("# Oscillation_axis X.CW")
     result.append("# N_oscillations 1")
