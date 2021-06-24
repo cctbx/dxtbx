@@ -118,12 +118,12 @@ _array_data.header_contents
     result.append("# Alpha 0.0000 deg.")
     result.append("# Kappa 0.0000 deg.")
     if phi_key in f:
-        result.append(f"# Phi {f[phi_key][()]:.4f} deg.")
+        result.append(f"# Phi {np.squeeze(f[phi_key][()]):.4f} deg.")
         result.append("# Phi_increment 0.0000 deg.")
     result.append("# Omega %.4f deg." % omega[nn])
     result.append("# Omega_increment %.4f deg." % omega_increment[nn])
     if chi_key in f:
-        result.append(f"# Chi {f[chi_key][()]:.4f} deg.")
+        result.append(f"# Chi {np.squeeze(f[chi_key][()]):.4f} deg.")
         result.append("# Chi_increment 0.0000 deg.")
     result.append("# Oscillation_axis X.CW")
     result.append("# N_oscillations 1")
