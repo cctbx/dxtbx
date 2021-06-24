@@ -576,7 +576,7 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
         for image in images:
             try:
                 (directory / image.basename).unlink()
-            except FileNotFoundError:
+            except (FileNotFoundError, PermissionError) as e:
                 pass
 
 
