@@ -1,5 +1,7 @@
 import ast
 import os
+from pathlib import Path
+from typing import Union
 
 import h5py
 
@@ -23,9 +25,16 @@ def get_bit_depth_from_meta(meta_file_name):
     return config_data["bit_depth_image"]
 
 
-def find_meta_filename(master_like):
-    meta_filename = None
-    f = h5py.File(master_like, "r")
+def find_meta_filename(master_like: Union[str, Path]) -> Union[str, Path]:
+    """
+    Find the path to the '..._meta.h5' file in the same directory as the master file.
+
+    Args:
+        master_like:  File path of the master HDF5 file.
+
+    Returns:
+        File path of the HDF5 metadata '..._meta.h5' file.
+    """
 
     def _local_visit(name):
         obj = f[name]
@@ -39,7 +48,8 @@ def find_meta_filename(master_like):
                     return kfile
 
     master_dir = os.path.split(master_like)[0]
-    meta_filename = f.visit(_local_visit)
+    with h5py.File(master_like) as f:
+        meta_filename = f.visit(_local_visit)
 
     return os.path.join(master_dir, meta_filename)
 
