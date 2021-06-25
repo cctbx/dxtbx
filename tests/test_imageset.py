@@ -546,7 +546,7 @@ def test_imagesetfactory(centroid_files, dials_data):
 
 def test_make_sequence_with_percent_character(dials_data, tmp_path):
     images = [
-        dials_data("centroid_test_data").join(f"centroid_{i:04}.cbf")
+        dials_data("centroid_test_data", pathlib=True) / f"centroid_{i:04}.cbf"
         for i in range(1, 10)
     ]
     directory = tmp_path / "test%"
@@ -554,7 +554,7 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
     try:
         for image in images:
             try:
-                (directory / image.basename).symlink_to(image)
+                (directory / image.name).symlink_to(image)
             except OSError:
                 shutil.copy(image, directory)
 
@@ -563,7 +563,7 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
         assert len(sequence) == 9
 
         sequences = ImageSetFactory.new(
-            [str(directory / image.basename) for image in images]
+            [str(directory / image.name) for image in images]
         )
         assert len(sequences) == 1
         assert len(sequences[0]) == 9
@@ -573,10 +573,17 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
         assert len(sequences[0]) == 9
 
     finally:  # clean up potentially copied files after running test
+        try:
+            # Force the dxtbx filehandler cache to close any open handles
+            sequences[0].get_format_class().get_cache_controller().check(
+                None, lambda: None
+            )
+        except Exception:
+            pass
         for image in images:
             try:
-                (directory / image.basename).unlink()
-            except FileNotFoundError:
+                (directory / image.name).unlink()
+            except (FileNotFoundError, PermissionError):
                 pass
 
 
