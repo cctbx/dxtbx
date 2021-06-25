@@ -74,5 +74,7 @@ def pytest_collection_modifyitems(config, items):
 def run_in_tmpdir(tmpdir):
     """Shortcut to create a temporary directory and then run the test inside
     this directory."""
+    cwd = os.getcwd()
     tmpdir.chdir()
-    return tmpdir
+    yield tmpdir
+    os.chdir(cwd)

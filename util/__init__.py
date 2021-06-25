@@ -80,7 +80,7 @@ def show_mask_info(expt_list):
             )
 
 
-def get_url_scheme(url):
+def get_url_scheme(url) -> str:
     """Extract the URL scheme from the string url, respecting Windows file paths"""
 
-    return urlparse(url).scheme if "://" in url else ""
+    return urlparse(str(url)).scheme if "://" in str(url) else ""
