@@ -178,6 +178,26 @@ class _:
         return [self.get_path(i) for i in range(len(self))]
 
 
+@boost_adaptbx.boost.python.inject_into(TOFImageSet)
+class _(object):
+    """
+    A class to inject additional methods into the tof imageset class
+    """
+
+    def get_tof_range(self):
+        kwargs = self.params()
+        if self.data().has_single_file_reader():
+            format_instance = self.get_format_class().get_instance(
+                self.data().get_master_path(), **kwargs
+            )
+        else:
+            format_instance = self.get_format_class().get_instance(
+                self.get_path(0), **kwargs
+            )
+
+        return format_instance.get_tof_range()
+
+
 class ImageSetLazy(ImageSet, ImageSetBase):
     """
     Lazy ImageSet class that doesn't necessitate setting the models ahead of time.
@@ -493,6 +513,7 @@ class ImageSetFactory:
         check_format=True,
         single_file_indices=None,
         format_kwargs=None,
+        imageset_type=None,
     ):
         """Create an image set"""
         # Import here as Format and Imageset have cyclic dependencies
@@ -516,7 +537,7 @@ class ImageSetFactory:
         return format_class.get_imageset(
             filenames,
             single_file_indices=single_file_indices,
-            imageset_type=ImageSetType.ImageSet,
+            imageset_type=imageset_type,
             format_kwargs=format_kwargs,
         )
 

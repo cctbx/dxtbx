@@ -226,6 +226,33 @@ public:
   }
 
   /**
+   * Read some image data
+   * @param index The image index
+   * @returns The image data
+   */
+  ImageBuffer get_data(std::size_t index, std::size_t slice_index) {
+    // Create the return buffer
+    ImageBuffer buffer;
+
+    // Get the image data object
+    boost::python::object data = reader_.attr("read_slice")(index, slice_index);
+
+    // Get the class name
+    std::string name =
+      boost::python::extract<std::string>(data.attr("__class__").attr("__name__"))();
+
+    // Extract the image buffer
+    if (name == "tuple") {
+      buffer = get_image_buffer_from_tuple(
+        boost::python::extract<boost::python::tuple>(data)());
+    } else {
+      buffer = get_image_buffer_from_object(data);
+    }
+    return buffer;
+  }
+
+
+  /**
    * @returns Is the reader a single file reader
    */
   bool has_single_file_reader() const {
@@ -491,7 +518,6 @@ protected:
 
     // Extract the data
     flex_type a = boost::python::extract<flex_type>(obj)();
-    // TODO get nd from a to assign to c_grid
 
     // Return the image tile
     return ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2> >(
@@ -532,8 +558,17 @@ public:
   public:
     T image;
     int index;
+    int slice_index;
 
-    DataCache() : index(-1) {}
+    DataCache() : index(-1), slice_index(-1) {}
+
+    bool image_in_cache(std::size_t idx){
+      return index == idx; 
+    }
+
+    bool image_in_cache(std::size_t idx, std::size_t slice_idx){
+      return index == idx && slice_index == slice_idx;
+    }
   };
 
   /**
@@ -632,6 +667,24 @@ public:
     }
     ImageBuffer image = data_.get_data(indices_[index]);
     data_cache_.index = index;
+    data_cache_.image = image;
+    return image;
+  }
+
+  /**
+   * Get the raw image data
+   * @param index The image index
+   * @param slice_index The slice index of the image
+   * @returns The raw image data
+   */
+  ImageBuffer get_raw_data(std::size_t index, std::size_t slice_index) {
+    DXTBX_ASSERT(index < indices_.size());
+    if (data_cache_.image_in_cache(index, slice_index)) {
+      return data_cache_.image;
+    }
+    ImageBuffer image = data_.get_data(indices_[index], slice_index);
+    data_cache_.index = index;
+    data_cache_.slice_index = slice_index;
     data_cache_.image = image;
     return image;
   }
@@ -1093,11 +1146,25 @@ protected:
 
   Image<double> get_raw_data_as_double(std::size_t index) {
     DXTBX_ASSERT(index < indices_.size());
-    if (double_raw_data_cache_.index == index) {
+    if (double_raw_data_cache_.image_in_cache(index)) {
       return double_raw_data_cache_.image;
     }
     Image<double> image = get_raw_data(index).as_double();
     double_raw_data_cache_.index = index;
+    double_raw_data_cache_.image = image;
+  }
+
+  Image<double> get_raw_data_as_double(std::size_t index, std::size_t slice_index) {
+
+    DXTBX_ASSERT(index < indices_.size());
+
+    if(double_raw_data_cache_.image_in_cache(index, slice_index)){
+      return double_raw_data_cache_.image;
+    }
+
+    Image<double> image = get_raw_data(index, slice_index).as_double();
+    double_raw_data_cache_.index = index;
+    double_raw_data_cache_.slice_index = slice_index;
     double_raw_data_cache_.image = image;
   }
 };
@@ -1204,9 +1271,9 @@ protected:
 
 /**
  * A class to represent images with a ToF dimension
-              scitbx::af::shared<scitbx::af::shared<double> > &tof_in_seconds,
  */
 class TOFImageSet : public ImageSetBase<TOFBeam>{
+
 public:
   TOFImageSet(const ImageSetData<TOFBeam> &data,
               const scitbx::af::shared<double> &tof_in_seconds)
@@ -1241,15 +1308,15 @@ public:
   }
 
 
-  virtual Image<double> get_corrected_data(std::size_t index) {
+  virtual Image<double> get_corrected_data(std::size_t image_index, std::size_t slice_index) {
     typedef scitbx::af::versa<double, scitbx::af::c_grid<2> > array_type;
     typedef scitbx::af::const_ref<double, scitbx::af::c_grid<2> > const_ref_type;
 
     // Get the multi-tile data, gain and pedestal
-    DXTBX_ASSERT(index < indices_.size());
-    Image<double> data = get_raw_data_as_double(index);
-    Image<double> gain = get_gain(index);
-    Image<double> dark = get_pedestal(index);
+    DXTBX_ASSERT(image_index < indices_.size());
+    Image<double> data = get_raw_data_as_double(image_index, slice_index);
+    Image<double> gain = get_gain(image_index);
+    Image<double> dark = get_pedestal(image_index);
     DXTBX_ASSERT(gain.n_tiles() == 0 || data.n_tiles() == gain.n_tiles());
     DXTBX_ASSERT(dark.n_tiles() == 0 || data.n_tiles() == dark.n_tiles());
 

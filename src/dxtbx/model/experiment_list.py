@@ -195,7 +195,10 @@ class ExperimentListDict:
         return filename or "", None
 
     def _imageset_from_imageset_data(self, imageset_data, models):
-        """Make an imageset from imageset_data - help with refactor decode."""
+        """ Make an imageset from imageset_data - help with refactor decode. """
+
+        from dxtbx.imageset import ImageSetType
+
         assert imageset_data is not None
         if "params" in imageset_data:
             format_kwargs = imageset_data["params"]
@@ -215,7 +218,17 @@ class ExperimentListDict:
         dy_filename, dy = self._load_pickle_path(imageset_data, "dy")
 
         if imageset_data["__id__"] == "ImageSet":
-            imageset = self._make_stills(imageset_data, format_kwargs=format_kwargs)
+            imageset = self._make_stills(
+                imageset_data,
+                format_kwargs=format_kwargs,
+                imageset_type=ImageSetType.ImageSet,
+            )
+        elif imageset_data["__id__"] == "TOFImageSet":
+            imageset = self._make_stills(
+                imageset_data,
+                format_kwargs=format_kwargs,
+                imageset_type=ImageSetType.TOFImageSet,
+            )
         elif imageset_data["__id__"] == "ImageGrid":
             imageset = self._make_grid(imageset_data, format_kwargs=format_kwargs)
         elif (
@@ -390,7 +403,7 @@ class ExperimentListDict:
         """Can't make a mem imageset from dict."""
         return None
 
-    def _make_stills(self, imageset, format_kwargs=None):
+    def _make_stills(self, imageset, format_kwargs=None, imageset_type=None):
         """Make a still imageset."""
         filenames = [
             resolve_path(p, directory=self._directory) if not get_url_scheme(p) else p
@@ -406,6 +419,7 @@ class ExperimentListDict:
             check_format=self._check_format,
             single_file_indices=indices,
             format_kwargs=format_kwargs,
+            imageset_type=imageset_type,
         )
 
     def _make_grid(self, imageset, format_kwargs=None):

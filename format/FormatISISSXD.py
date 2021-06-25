@@ -28,7 +28,6 @@ class FormatISISSXD(FormatNXTOFRAW):
             raise IncorrectFormatError(self, image_file)
         self.nxs_file = self.open_file(image_file)
         self.detector = None
-        self.raw_data = None
 
     def open_file(self, image_file):
         return h5py.File(image_file, "r")
@@ -59,7 +58,7 @@ class FormatISISSXD(FormatNXTOFRAW):
 
         return get_name(image_file) == "SXD"
 
-    def load_raw_data(self, as_numpy_arrays=False):
+    def load_raw_data(self, as_numpy_arrays=False, index=0):
         def get_detector_idx_array(detector_number, image_size, idx_offset):
             total_pixels = image_size[0] * image_size[1]
             min_range = (total_pixels * (detector_number - 1)) + (
@@ -68,20 +67,21 @@ class FormatISISSXD(FormatNXTOFRAW):
             max_range = min_range + total_pixels
             return np.arange(min_range, max_range).reshape(image_size).T
 
-        raw_counts = self.nxs_file["raw_data_1"]["detector_1"]["counts"][0, :, :]
+        dataset = "raw_data_" + str(index + 1)
+        raw_counts = self.nxs_file[dataset]["detector_1"]["counts"][0, :, :]
         num_panels = self._get_num_panels()
         image_size = self._get_panel_size_in_px()
 
         # Index offset in SXD data
         # See p24 of https://www.isis.stfc.ac.uk/Pages/sxd-user-guide6683.pdf
         idx_offset = 4
-
-        num_images = self.get_num_images()
         raw_data = []
 
         for n in range(1, num_panels + 1):
             idx_array = get_detector_idx_array(n, image_size, idx_offset)
-            panel_array = np.zeros((idx_array.shape[0], idx_array.shape[1], num_images))
+            panel_array = np.zeros(
+                (idx_array.shape[0], idx_array.shape[1], len(self.get_tof_in_seconds()))
+            )
             for c_i, i in enumerate(idx_array):
                 for c_j, j in enumerate(i):
                     panel_array[c_i, c_j, :] = raw_counts[j, :]
@@ -94,17 +94,18 @@ class FormatISISSXD(FormatNXTOFRAW):
 
         return tuple(raw_data)
 
-    def get_raw_data(self, index):
-        if self.raw_data is None:
-            self.raw_data = self.load_raw_data()
+    def get_raw_data(self, index, tof_index=None):
 
-        raw_data_idx = []
-        for i in self.raw_data:
-            arr = i[:, :, index : index + 1]
-            arr.reshape(flex.grid(i.all()[0], i.all()[1]))
-            raw_data_idx.append(arr)
-
-        return tuple(raw_data_idx)
+        raw_data = self.load_raw_data(index)
+        if tof_index is None:
+            return raw_data
+        else:
+            raw_data_idx = []
+            for i in raw_data:
+                arr = i[:, :, tof_index]
+                arr.reshape(flex.grid(i.all()[0], i.all()[1]))
+                raw_data_idx.append(arr)
+            return tuple(raw_data_idx)
 
     def _get_detector(self):
 
@@ -154,6 +155,9 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def get_tof_in_seconds(self):
         return self._get_time_channels_in_seconds()
+
+    def get_tof_range(self):
+        return (0, len(self.get_tof_in_seconds))
 
     def get_wavelength_channels_in_ang(self):
         time_channels = self._get_time_channels_in_seconds()
@@ -321,6 +325,9 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def get_tof_wavelength_in_ang(self, L, tof):
         return ((Planck * tof) / (m_n * L)) * 10 ** 10
+
+    def get_max_slice_index(self):
+        return len(self.get_tof_in_seconds()) - 1
 
     def get_reflection_table_from_use_file(self, use_file, specific_panel=None):
 

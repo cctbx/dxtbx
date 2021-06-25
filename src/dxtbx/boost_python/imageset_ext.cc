@@ -673,7 +673,7 @@ namespace dxtbx { namespace boost_python {
                              arg("format") = boost::python::object())))
       .def("reader", &ImageSetData<TOFBeam>::reader)
       .def("masker", &ImageSetData<TOFBeam>::masker)
-      .def("get_data", &ImageSetData<TOFBeam>::get_data)
+      .def("get_data", static_cast<ImageBuffer (ImageSetData<TOFBeam>::*)(std::size_t, std::size_t)>(&ImageSetData<TOFBeam>::get_data))
       .def("has_single_file_reader", &ImageSetData<TOFBeam>::has_single_file_reader)
       .def("get_path", &ImageSetData<TOFBeam>::get_path)
       .def("get_master_path", &ImageSetData<TOFBeam>::get_master_path)
@@ -701,6 +701,7 @@ namespace dxtbx { namespace boost_python {
         make_function(&ImageSetData<TOFBeam>::external_lookup, return_internal_reference<>()))
       .def_pickle(ImageSetDataPickleSuite<TOFBeam>());
 
+    //.def("get_data", &ImageSetData<MonochromaticBeam>::get_data, arg("index"))
     class_<ImageSetData<MonochromaticBeam>, boost::shared_ptr<ImageSetData<MonochromaticBeam> > >("ImageSetData", no_init)
       .def("__init__",
            make_constructor(&make_monochromatic_imageset_data1,
@@ -717,7 +718,7 @@ namespace dxtbx { namespace boost_python {
                              arg("format") = boost::python::object())))
       .def("reader", &ImageSetData<MonochromaticBeam>::reader)
       .def("masker", &ImageSetData<MonochromaticBeam>::masker)
-      .def("get_data", &ImageSetData<MonochromaticBeam>::get_data)
+      .def("get_data", static_cast<ImageBuffer (ImageSetData<MonochromaticBeam>::*)(std::size_t)>(&ImageSetData<MonochromaticBeam>::get_data))
       .def("has_single_file_reader", &ImageSetData<MonochromaticBeam>::has_single_file_reader)
       .def("get_path", &ImageSetData<MonochromaticBeam>::get_path)
       .def("get_master_path", &ImageSetData<MonochromaticBeam>::get_master_path)

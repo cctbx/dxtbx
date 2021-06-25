@@ -50,6 +50,14 @@ class Reader:
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
         return format_instance.get_raw_data(index)
 
+    def read_slice(self, index, slice_index):
+        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
+        assert (
+            slice_index > 0 and slice_index < format_instance.get_max_slice_index(),
+            "Slice index out of range",
+        )
+        return format_instance.get_raw_data(index, slice_index)
+
     def paths(self):
         return [self._filename]
 
@@ -336,15 +344,15 @@ class FormatMultiImage(Format):
             if single_file_indices is None:
                 single_file_indices = range(format_instance.get_num_images())
 
-                # If any are None then read from format
-                num_images = format_instance.get_num_images()
-                beam = [None] * num_images
-                detector = [None] * num_images
-                goniometer = [None] * num_images
-                scan = [None] * num_images
-                for i in single_file_indices:
-                    beam[i] = format_instance.get_beam(i)
-                    detector[i] = format_instance.get_detector(i)
+            # If any are None then read from format
+            num_images = format_instance.get_num_images()
+            beam = [None] * num_images
+            detector = [None] * num_images
+            goniometer = [None] * num_images
+            scan = [None] * num_images
+            for i in single_file_indices:
+                beam[i] = format_instance.get_beam(i)
+                detector[i] = format_instance.get_detector(i)
 
             # Set the list of models
             for i, index in enumerate(single_file_indices):
