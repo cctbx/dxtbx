@@ -376,7 +376,7 @@ def run(argv=None):
     avg_distance = sum_distance / nmemb
     avg_wavelength = sum_wavelength / nmemb
 
-    expt = experiments[0]
+    expt = experiments[1]
     expt.load_models()
     detector = expt.detector
     h = detector.hierarchy()

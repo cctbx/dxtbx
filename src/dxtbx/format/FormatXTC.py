@@ -13,10 +13,13 @@ from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
 
+from libtbx.mpi4py import MPI
+
 try:
     import psana
 
     from xfel.cxi.cspad_ana import cspad_tbx
+    from xfel.command_line.xtc_process import EventOffsetSerializer
 except ImportError:
     psana = None
     cspad_tbx = None
@@ -78,6 +81,12 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         FormatMultiImageLazy.__init__(self, **kwargs)
         FormatStill.__init__(self, image_file, **kwargs)
         Format.__init__(self, image_file, **kwargs)
+
+        self.MPI = MPI
+        self.comm = self.MPI.COMM_WORLD
+        self.rank = self.comm.Get_rank()
+        self.size = self.comm.Get_size()
+
         self.current_index = None
         self.current_event = None
         self._psana_runs = {}  # empty container, to prevent breaking other formats
@@ -89,11 +98,20 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             self.params = FormatXTC.params_from_phil(
                 master_phil=locator_scope, user_phil=image_file, strict=True
             )
-        assert self.params.mode == "idx", "idx mode should be used for analysis"
+        if self.rank == 0:
+            self.params.mode = 'smd'
+            self._ds = FormatXTC._get_datasource(image_file, self.params)
+            self.populate_events()
+        else:
+            self.offsets = None
+        self.params.mode = 'rax'
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
+
+        self.offsets = self.comm.bcast(self.offsets, root=0)
+        #self.run_mapping, self.offsets = self.comm.bcast((self.run_mapping, self.offsets), root=0)
         self.populate_events()
-        self.n_images = len(self.times)
+        self.n_images = len(self.offsets)
 
         self._cached_psana_detectors = {}
         self._beam_index = None
@@ -116,10 +134,6 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         if params is None:
             return False
 
-        try:
-            FormatXTC._get_datasource(image_file, params)
-        except Exception:
-            return False
         return True
 
     @staticmethod
@@ -154,22 +168,22 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         """Read the timestamps from the XTC stream.  Assumes the psana idx mode of reading data.
         Handles multiple LCLS runs by concatenating the timestamps from multiple runs together
         in a single list and creating a mapping."""
-        if hasattr(self, "times") and len(self.times) > 0:
+        if hasattr(self, "offsets") and len(self.offsets) > 0:
             return
 
-        if not self._psana_runs:
-            self._psana_runs = self._get_psana_runs(self._ds)
+        assert not self._psana_runs
 
-        self.times = []
+        self.offsets = []
         self.run_mapping = {}
-        for run in self._psana_runs.values():
-            times = run.times()
+        for run in self._ds.runs():
+            self._psana_runs[run.run()] = run
+            offsets = [EventOffsetSerializer(evt.get(psana.EventOffset)) for evt in run.events()]
             self.run_mapping[run.run()] = (
-                len(self.times),
-                len(self.times) + len(times),
+                len(self.offsets),
+                len(self.offsets) + len(offsets),
                 run,
             )
-            self.times.extend(times)
+            self.offsets.extend(offsets)
 
     def get_run_from_index(self, index=None):
         """Look up the run number given an index"""
@@ -188,7 +202,8 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             return self.current_event
         else:
             self.current_index = index
-            self.current_event = self.get_run_from_index(index).event(self.times[index])
+            offset = self.offsets[index]
+            self.current_event = self._ds.jump(offset.filenames, offset.offsets, offset.lastBeginCalibCycleDgram)
             return self.current_event
 
     @staticmethod
@@ -289,7 +304,8 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             if (
                 evttime.tm_year == 2020 and evttime.tm_mon >= 7
             ) or evttime.tm_year > 2020:
-                self._beam_cache.set_polarization_normal((1, 0, 0))
+                if self._beam_cache is not None:
+                    self._beam_cache.set_polarization_normal((1, 0, 0))
 
         return self._beam_cache
 
