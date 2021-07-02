@@ -13,8 +13,6 @@ from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
 
-from libtbx.mpi4py import MPI
-
 try:
     import psana
 
@@ -75,6 +73,7 @@ class XtcReader(Reader):
 @abstract
 class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
+        from libtbx.mpi4py import MPI
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
