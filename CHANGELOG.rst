@@ -1,3 +1,13 @@
+DIALS 3.5.2 (2021-06-28)
+========================
+
+Bugfixes
+--------
+
+- End the I03 "bad mask" duration, since it is now masked at the file level. (`#385 <https://github.com/cctbx/dxtbx/issues/385>`_)
+- ``dxtbx.dlsnxs2cbf``: Handle missing chi/phi axis entries. (`#387 <https://github.com/cctbx/dxtbx/issues/387>`_)
+
+
 DIALS 3.5.1 (2021-06-14)
 ========================
 

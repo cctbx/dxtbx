@@ -126,6 +126,7 @@ def group_files_by_imageset(filenames):
     # filename itself.
     template = []
     for f in filenames:
+        f = os.fspath(f)
         t = template_regex(f)
         if t[0] is None:
             template.append((f, None))
