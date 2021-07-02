@@ -2,7 +2,7 @@ conda-forge::boost
 conda-forge::boost-cpp<1.75
 conda-forge::bzip2
 conda-forge::c-compiler
-conda-forge::cctbx-base==2021.5
+conda-forge::cctbx-base==2021.6
 conda-forge::conda
 conda-forge::cxx-compiler
 conda-forge::dials-data
