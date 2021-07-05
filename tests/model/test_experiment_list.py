@@ -579,9 +579,7 @@ def test_experimentlist_to_datablock_centroid_test_data(dials_data):
     assert len(datablocks[0].extract_imagesets()[0]) == len(expts[0].imageset)
 
 
-def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmpdir):
-    tmpdir.chdir()
-
+def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmp_path):
     # Get all the filenames
     filename1 = os.path.join(
         dials_regression, "experiment_test_data", "experiment_1.json"
@@ -593,21 +591,21 @@ def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmpdi
         elist1 = ExperimentListFactory.from_json_file(filename1)
 
     # Dump as JSON file and reload
-    filename = "temp1.json"
+    filename = tmp_path / "temp1.json"
     elist1.as_json(filename)
     elist2 = ExperimentListFactory.from_json_file(filename)
     check(elist1, elist2)
 
     # Dump as split JSON file and reload
-    filename = "temp2.json"
+    filename = tmp_path / "temp2.json"
     elist1.as_json(filename, split=True)
     elist2 = ExperimentListFactory.from_json_file(filename)
     check(elist1, elist2)
 
 
-def test_experimentlist_dumper_dump_scan_varying(monkeypatch, dials_regression, tmpdir):
-    tmpdir.chdir()
-
+def test_experimentlist_dumper_dump_scan_varying(
+    monkeypatch, dials_regression, tmp_path
+):
     # Get all the filenames
     filename1 = os.path.join(
         dials_regression, "experiment_test_data", "experiment_1.json"
@@ -638,16 +636,14 @@ def test_experimentlist_dumper_dump_scan_varying(monkeypatch, dials_regression, 
     )
 
     # Dump as JSON file and reload
-    filename = "temp.json"
+    filename = tmp_path / "temp.json"
     elist1.as_json(filename)
     elist2 = ExperimentListFactory.from_json_file(filename)
     check(elist1, elist2)
 
 
-def test_experimentlist_dumper_dump_empty_sequence(tmpdir):
-    tmpdir.chdir()
-
-    filenames = ["filename_%01d.cbf" % (i + 1) for i in range(0, 2)]
+def test_experimentlist_dumper_dump_empty_sequence(tmp_path):
+    filenames = [tmp_path / f"filename_{i}.cbf" for i in range(1, 3)]
 
     imageset = Format.get_imageset(
         filenames,
@@ -662,15 +658,13 @@ def test_experimentlist_dumper_dump_empty_sequence(tmpdir):
 
     experiments = ExperimentListFactory.from_imageset_and_crystal(imageset, crystal)
 
-    filename = "temp.json"
+    filename = tmp_path / "temp.json"
     experiments.as_json(filename)
     experiments2 = ExperimentListFactory.from_json_file(filename, check_format=False)
     check(experiments, experiments2)
 
 
-def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmpdir):
-    tmpdir.chdir()
-
+def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmp_path):
     filename = os.path.join(
         dials_regression, "centroid_test_data", "experiments_with_lookup.json"
     )
@@ -688,7 +682,7 @@ def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmpdir):
     assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
     assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
 
-    filename = "temp.json"
+    filename = tmp_path / "temp.json"
     experiments.as_json(filename)
 
     experiments = ExperimentListFactory.from_json_file(filename, check_format=True)
@@ -1216,3 +1210,11 @@ def test_from_null_sequence():
     assert imagesets[0].get_detector() == sequence.get_detector()
     assert imagesets[0].get_goniometer() == sequence.get_goniometer()
     assert imagesets[0].get_scan() == sequence.get_scan()
+
+
+def test_from_templates(dials_data):
+    template = dials_data("insulin", pathlib=True) / "insulin_1_###.img"
+    expts = ExperimentList.from_templates([template])
+    assert len(expts) == 1
+    assert expts[0].imageset.get_template() == str(template)
+    assert len(expts[0].imageset) == 45

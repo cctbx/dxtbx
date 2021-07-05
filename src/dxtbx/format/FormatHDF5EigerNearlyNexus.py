@@ -249,7 +249,7 @@ class EigerNXmxFixer:
         if "omega" in group:
             try:
                 group["omega"][()]
-            except AttributeError:
+            except (AttributeError, TypeError):
                 del group["omega"]
 
         if "omega" not in group:

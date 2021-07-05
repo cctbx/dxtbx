@@ -1,9 +1,8 @@
 import math
-import os
+from pathlib import Path
 
 import pytest
 
-import libtbx.load_env
 from libtbx import easy_pickle
 from libtbx.phil import parse
 from libtbx.test_utils import Exception_expected, approx_equal
@@ -80,10 +79,8 @@ def test_goniometer():
     with pytest.raises(AssertionError):
         _compare_tuples(kappa.get_fixed_rotation(), fixed)
 
-    dxtbx_dir = libtbx.env.dist_path("dxtbx")
-
-    image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
-    assert GoniometerFactory.imgCIF(image)
+    image = Path(__file__).parent / "phi_scan_001.cbf"
+    assert GoniometerFactory.imgCIF(str(image))
 
     kappa = GoniometerFactory.kappa(50.0, -10.0, 30.0, 0.0, "-y", "phi")
 
@@ -91,8 +88,8 @@ def test_goniometer():
     kappa2 = easy_pickle.loads(s)
     assert kappa == kappa2
 
-    image = os.path.join(dxtbx_dir, "tests", "omega_scan.cbf")
-    assert GoniometerFactory.imgCIF(image)
+    image = Path(__file__).parent / "omega_scan.cbf"
+    assert GoniometerFactory.imgCIF(str(image))
 
     kappa = GoniometerFactory.kappa(50.0, -10.0, 30.0, 20.0, "-y", "omega")
 
