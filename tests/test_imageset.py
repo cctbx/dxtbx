@@ -10,12 +10,13 @@ from scitbx.array_family import flex
 import dxtbx.format.FormatHDF5SaclaMPCCD
 import dxtbx.format.image
 import dxtbx.format.Registry
-import dxtbx.tests.imagelist
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import Beam, Detector, Panel
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
+
+from . import imagelist
 
 
 @pytest.mark.parametrize(
@@ -45,15 +46,15 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
 
 @pytest.mark.parametrize(
     "image",
-    dxtbx.tests.imagelist.smv_images
-    + dxtbx.tests.imagelist.tiff_images
-    + dxtbx.tests.imagelist.cbf_multitile_images
-    + dxtbx.tests.imagelist.cbf_images,
+    imagelist.smv_images
+    + imagelist.tiff_images
+    + imagelist.cbf_multitile_images
+    + imagelist.cbf_images,
     ids=(
-        dxtbx.tests.imagelist.smv_image_ids
-        + dxtbx.tests.imagelist.tiff_image_ids
-        + dxtbx.tests.imagelist.cbf_multitile_image_ids
-        + dxtbx.tests.imagelist.cbf_image_ids
+        imagelist.smv_image_ids
+        + imagelist.tiff_image_ids
+        + imagelist.cbf_multitile_image_ids
+        + imagelist.cbf_image_ids
     ),
 )
 def test_format(dials_regression, image):

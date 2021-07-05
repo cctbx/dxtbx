@@ -60,7 +60,7 @@ steps:
     mkdir build
     cd build
     libtbx.configure dxtbx cbflib_adaptbx
-    make
+    make reconf
   displayName: Build dxtbx
   workingDirectory: $(Pipeline.Workspace)
 
