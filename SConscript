@@ -182,4 +182,13 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         LIBS=env_etc.libs_python + env_etc.libm + env_etc.dxtbx_libs + env["LIBS"],
     )
 
+    env.SharedLibrary(
+        target="#/lib/dxtbx_flumpy",
+        source=[
+            "src/dxtbx/boost_python/flumpy.cc",
+        ],
+        LIBS=env_etc.libs_python + env_etc.libm + env_etc.dxtbx_libs + env["LIBS"],
+        CPPFLAGS=["-fvisibility=hidden"],
+    )
+
     env.SConscript("src/dxtbx/masking/SConscript", exports={"env": env})

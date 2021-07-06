@@ -1,0 +1,1 @@
+Add **experimental** ``dxtbx.flumpy.to_numpy``, ``.from_numpy``, ``.vec_from_numpy`` and ``.mat3_from_numpy`` for zero-copy conversions between numpy and `scitbx.array_family.flex`` arrays. There is also a lower-level class ``Scuffer`` that allows exposing of flex arrays via generic python buffer interfaces for e.g. Cython interoperability.
