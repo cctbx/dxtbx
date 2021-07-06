@@ -43,12 +43,26 @@ namespace dxtbx { namespace model { namespace boost_python {
     return ss.str();
   }
 
+  std::string tof_sequence_to_string(const TOFSequence &tof_sequence){
+    std::stringstream ss;
+    ss << tof_sequence;
+    return ss.str();
+  }
+
   struct ScanPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const Scan &obj) {
       return boost::python::make_tuple(obj.get_image_range(),
                                        rad_as_deg(obj.get_oscillation()),
                                        obj.get_exposure_times(),
                                        obj.get_epochs(),
+                                       obj.get_batch_offset());
+    }
+  };
+
+  struct TOFSequencePickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(const TOFSequence &obj) {
+      return boost::python::make_tuple(obj.get_image_range(),
+                                       obj.get_tof_in_seconds(),
                                        obj.get_batch_offset());
     }
   };
@@ -78,6 +92,26 @@ namespace dxtbx { namespace model { namespace boost_python {
     boost::python::dict valid_image_ranges =
       MaptoPythonDict(obj.get_valid_image_ranges_map());
     result["valid_image_ranges"] = valid_image_ranges;
+    return result;
+  }
+
+  template <>
+  boost::python::dict to_dict<TOFSequence>(const TOFSequence &obj) {
+    boost::python::dict result;
+    result["image_range"] = obj.get_image_range();
+    result["batch_offset"] = obj.get_batch_offset();
+    result["tof_in_seconds"] = obj.get_tof_in_seconds();
+    boost::python::dict valid_image_ranges =
+      MaptoPythonDict(obj.get_valid_image_ranges_map());
+    result["valid_image_ranges"] = valid_image_ranges;
+    return result;
+  }
+
+  inline scitbx::af::shared<double> get_tof_in_seconds(boost::python::list obj){
+    scitbx::af::shared<double> result(scitbx::af::reserve(len(obj)));
+    for (std::size_t i = 0; i < len(obj); ++i){
+      result.push_back(boost::python::extract<double>(obj[i]));
+    }
     return result;
   }
 
@@ -164,6 +198,34 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
     return scan;
   }
+  
+  template <>
+  TOFSequence *from_dict<TOFSequence>(boost::python::dict obj) {
+    vec2<int> ir = boost::python::extract<vec2<int> >(obj["image_range"]);
+    int bo = boost::python::extract<int>(obj["batch_offset"]);
+    DXTBX_ASSERT(ir[1] >= ir[0]);
+    std::size_t num = ir[1] - ir[0] + 1;
+    TOFSequence *tof_sequence =
+      new TOFSequence(ir,
+               get_tof_in_seconds(boost::python::extract<boost::python::list>(obj.get("tof_in_seconds", 
+               boost::python::list()))),
+               bo);
+    boost::python::dict rangemap =
+      boost::python::extract<boost::python::dict>(obj["valid_image_ranges"]);
+    boost::python::list keys = rangemap.keys();
+    boost::python::list values = rangemap.values();
+    for (int i = 0; i < len(keys); ++i) {
+      boost::python::extract<std::string> extracted_key(keys[i]);
+      scitbx::af::shared<vec2<int> > result;
+      int n_tuples = boost::python::len(values[i]);
+      for (int n = 0; n < n_tuples; ++n) {
+        result.push_back(boost::python::extract<vec2<int> >(values[i][n]));
+      }
+      std::string key = extracted_key;
+      tof_sequence->set_valid_image_ranges_array(key, result);
+    }
+    return tof_sequence;
+  }
 
   static Scan scan_deepcopy(const Scan &scan, boost::python::object dict) {
     return Scan(scan);
@@ -172,8 +234,16 @@ namespace dxtbx { namespace model { namespace boost_python {
   static Scan scan_copy(const Scan &scan) {
     return Scan(scan);
   }
+  
+  static TOFSequence tof_sequence_deepcopy(const TOFSequence &tof_sequence, boost::python::object dict) {
+    return TOFSequence(tof_sequence);
+  }
 
-  static void set_valid_image_ranges(Scan &scan,
+  static TOFSequence tof_sequence_copy(const TOFSequence &tof_sequence) {
+    return TOFSequence(tof_sequence);
+  }
+
+  static void set_valid_image_ranges(Sequence &sequence,
                                      std::string i,
                                      boost::python::list obj) {
     int n = boost::python::len(obj);
@@ -181,11 +251,11 @@ namespace dxtbx { namespace model { namespace boost_python {
     for (int k = 0; k < n; ++k) {
       ranges.push_back(boost_python::extract<vec2<int> >(obj[k]));
     }
-    scan.set_valid_image_ranges_array(i, ranges);
+    sequence.set_valid_image_ranges_array(i, ranges);
   }
 
-  static boost::python::list get_valid_image_ranges(Scan &scan, std::string i) {
-    scitbx::af::shared<vec2<int> > ranges = scan.get_valid_image_ranges_key(i);
+  static boost::python::list get_valid_image_ranges(Sequence &sequence, std::string i) {
+    scitbx::af::shared<vec2<int> > ranges = sequence.get_valid_image_ranges_key(i);
     boost::python::list result;
     if (ranges.size() != 0) {
       for (int k = 0; k < ranges.size(); ++k) {
@@ -193,6 +263,12 @@ namespace dxtbx { namespace model { namespace boost_python {
       }
     }
     return result;
+  }
+
+  static TOFSequence *make_tof_sequence(vec2<int> image_range, 
+                                        const scitbx::af::shared<double> &tof_in_seconds,
+                                        int batch_offset){
+    return new TOFSequence(image_range, tof_in_seconds, batch_offset);
   }
 
   static Scan *make_scan(vec2<int> image_range,
@@ -374,7 +450,47 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_scan() {
     // Export Sequence
-    class_<Sequence>("Sequence");
+    class_<Sequence>("Sequence")
+      .def(init<const Sequence &>())
+      .def("get_image_range", &Sequence::get_image_range)
+      .def("set_image_range", &Sequence::set_image_range)
+      .def("get_batch_offset", &Sequence::get_batch_offset)
+      .def("set_batch_offset", &Sequence::set_batch_offset)
+      .def("get_batch_for_image_index", &Sequence::get_batch_for_image_index)
+      .def("get_batch_for_array_index", &Sequence::get_batch_for_array_index)
+      .def("get_batch_range", &Sequence::get_batch_range)
+      .def("get_array_range", &Sequence::get_array_range)
+      .def("get_num_images", &Sequence::get_num_images)
+      .def("is_image_index_valid", &Sequence::is_image_index_valid, (arg("index")))
+      .def("is_array_index_valid", &Sequence::is_array_index_valid, (arg("index")))
+      .def("is_batch_valid", &Sequence::is_batch_valid, (arg("batch")))
+      .def(self < self)
+      .def(self <= self)
+      .def(self > self)
+      .def(self >= self)
+      .def("get_valid_image_ranges", get_valid_image_ranges)
+      .def("set_valid_image_ranges", set_valid_image_ranges);
+
+
+    class_<TOFSequence>("TOFSequence")
+      .def(init<const TOFSequence &>())
+      .def("__init__",
+            make_constructor(&make_tof_sequence,
+                             default_call_policies(),
+                             (arg("image_range"),
+                             arg("tof_in_seconds"),
+                             arg("batch_offset") = 0)))
+            .def("get_tof_in_seconds", &TOFSequence::get_tof_in_seconds)
+            .def("set_tof_in_seconds", &TOFSequence::set_tof_in_seconds)
+            .def("__deepcopy__", &tof_sequence_deepcopy)
+            .def("__copy__", &tof_sequence_copy);
+            .def("to_dict", &to_dict<TOFSequence>)
+            .def("from_dict", &from_dict<TOFSequence>, return_value_policy<manage_new_object>())
+            .staticmethod("from_dict")
+            .def(self == self)
+            .def(self != self)
+            .def_pickle(TOFSequencePickleSuite());
+
 
     // Export Scan : Sequence
     class_<Scan, boost::shared_ptr<Scan>, bases<Sequence> >("Scan")
@@ -395,16 +511,6 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("epochs"),
                              arg("batch_offset") = 0,
                              arg("deg") = true)))
-      .def("get_image_range", &Scan::get_image_range)
-      .def("get_valid_image_ranges", get_valid_image_ranges)
-      .def("set_valid_image_ranges", set_valid_image_ranges)
-      .def("set_image_range", &Scan::set_image_range)
-      .def("get_batch_offset", &Scan::get_batch_offset)
-      .def("set_batch_offset", &Scan::set_batch_offset)
-      .def("get_batch_for_image_index", &Scan::get_batch_for_image_index)
-      .def("get_batch_for_array_index", &Scan::get_batch_for_array_index)
-      .def("get_batch_range", &Scan::get_batch_range)
-      .def("get_array_range", &Scan::get_array_range)
       .def("get_oscillation", &get_oscillation, (arg("deg") = true))
       .def("set_oscillation", &set_oscillation, (arg("deg") = true))
       .def("is_still", &Scan::is_still)
@@ -412,7 +518,6 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_exposure_times", &Scan::set_exposure_times)
       .def("get_epochs", &Scan::get_epochs)
       .def("set_epochs", &Scan::set_epochs)
-      .def("get_num_images", &Scan::get_num_images)
       .def("get_image_oscillation",
            &get_image_oscillation,
            (arg("index"), arg("deg") = true))
@@ -422,9 +527,6 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("__deepcopy__", &scan_deepcopy)
       .def("__copy__", &scan_copy)
       .def("is_angle_valid", &is_angle_valid_array, (arg("angle"), arg("deg") = true))
-      .def("is_image_index_valid", &Scan::is_image_index_valid, (arg("index")))
-      .def("is_array_index_valid", &Scan::is_array_index_valid, (arg("index")))
-      .def("is_batch_valid", &Scan::is_batch_valid, (arg("batch")))
       .def("get_angle_from_image_index",
            &get_angle_from_image_index,
            (arg("index"), arg("deg") = true))
@@ -451,12 +553,6 @@ namespace dxtbx { namespace model { namespace boost_python {
            (arg("angle"), arg("deg") = true))
       .def("__getitem__", &getitem_single)
       .def("__getitem__", &getitem_slice)
-      .def(self == self)
-      .def(self != self)
-      .def(self < self)
-      .def(self <= self)
-      .def(self > self)
-      .def(self >= self)
       .def(self += self)
       .def(self + self)
       .def("append", &Scan::append, (arg("rhs"), arg("scan_tolerance") = 0.03))
