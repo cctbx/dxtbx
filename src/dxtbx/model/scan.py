@@ -6,7 +6,7 @@ import libtbx.phil
 from scitbx.array_family import flex
 
 from dxtbx.model.scan_helpers import scan_helper_image_files
-from dxtbx_model_ext import Scan
+from dxtbx_model_ext import Scan, TOFSequence
 
 scan_phil_scope = libtbx.phil.parse(
     """
@@ -106,18 +106,30 @@ class ScanFactory:
         Returns:
             The scan model
         """
+
+        def is_tof_sequence(sequence_dict):
+            return "tof_in_seconds" in sequence_dict
+
+        def is_scan(sequence_dict):
+            return "exposure_time" in sequence_dict
+
         if d is None and t is None:
             return None
         joint = t.copy() if t else {}
         joint.update(d)
 
-        if not isinstance(joint["exposure_time"], list):
-            joint["exposure_time"] = [joint["exposure_time"]]
-        joint.setdefault("batch_offset", 0)  # backwards compatibility 20180205
-        joint.setdefault("valid_image_ranges", {})  # backwards compatibility 20181113
+        if is_tof_sequence(joint):
+            return TOFSequence.from_dict(joint)
 
-        # Create the model from the joint dictionary
-        return Scan.from_dict(joint)
+        elif is_scan(joint):
+            if not isinstance(joint["exposure_time"], list):
+                joint["exposure_time"] = [joint["exposure_time"]]
+                joint.setdefault("batch_offset", 0)  # backwards compatibility 20180205
+                joint.setdefault(
+                    "valid_image_ranges", {}
+                )  # backwards compatibility 20181113
+            return Scan.from_dict(joint)
+        raise NotImplementedError("Cannot understand sequence type")
 
     @staticmethod
     def make_scan(
@@ -146,6 +158,14 @@ class ScanFactory:
             flex.double(list(map(float, epoch_list))),
             batch_offset,
             deg,
+        )
+
+    @staticmethod
+    def make_tof_sequence(image_range, tof_in_seconds, batch_offset=0):
+        return TOFSequence(
+            tuple(map(int, image_range)),
+            flex.double(list(map(float, tof_in_seconds))),
+            batch_offset,
         )
 
     @staticmethod
