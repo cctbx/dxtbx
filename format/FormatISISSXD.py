@@ -12,6 +12,7 @@ from dxtbx import IncorrectFormatError
 from dxtbx.format.FormatNXTOFRAW import FormatNXTOFRAW
 from dxtbx.model import Detector
 from dxtbx.model.beam import BeamFactory
+from dxtbx.model.scan import ScanFactory
 
 
 class FormatISISSXD(FormatNXTOFRAW):
@@ -269,7 +270,7 @@ class FormatISISSXD(FormatNXTOFRAW):
         return 0.0
 
     def get_num_images(self):
-        return len(self.nxs_file)
+        return len(self.get_tof_in_seconds())
 
     def get_beam(self, idx=None):
         sample_to_source_dir = self._get_sample_to_source_direction()
@@ -283,7 +284,11 @@ class FormatISISSXD(FormatNXTOFRAW):
         return self._get_detector()
 
     def get_scan(self, idx=None):
-        return None
+        image_range = (1, self.get_num_images())
+        tof_in_seconds = self.get_tof_in_seconds()
+        return ScanFactory.make_tof_sequence(
+            image_range=image_range, tof_in_seconds=tof_in_seconds
+        )
 
     def get_goniometer(self, idx=None):
         return None
