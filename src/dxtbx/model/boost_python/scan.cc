@@ -373,11 +373,11 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   void export_scan() {
-    // Export ScanBase
-    class_<ScanBase>("ScanBase");
+    // Export Sequence
+    class_<Sequence>("Sequence");
 
-    // Export Scan : ScanBase
-    class_<Scan, boost::shared_ptr<Scan>, bases<ScanBase> >("Scan")
+    // Export Scan : Sequence
+    class_<Scan, boost::shared_ptr<Scan>, bases<Sequence> >("Scan")
       .def(init<const Scan &>())
       .def("__init__",
            make_constructor(&make_scan,

@@ -96,13 +96,14 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def get_raw_data(self, index, tof_index=None):
 
+        print(f"PYTHON TEST format.get_raw_data {index} {tof_index}")
         raw_data = self.load_raw_data(index)
         if tof_index is None:
             return raw_data
         else:
             raw_data_idx = []
             for i in raw_data:
-                arr = i[:, :, tof_index]
+                arr = i[:, :, tof_index : tof_index + 1]
                 arr.reshape(flex.grid(i.all()[0], i.all()[1]))
                 raw_data_idx.append(arr)
             return tuple(raw_data_idx)
@@ -157,7 +158,7 @@ class FormatISISSXD(FormatNXTOFRAW):
         return self._get_time_channels_in_seconds()
 
     def get_tof_range(self):
-        return (0, len(self.get_tof_in_seconds))
+        return (0, len(self.get_tof_in_seconds()))
 
     def get_wavelength_channels_in_ang(self):
         time_channels = self._get_time_channels_in_seconds()

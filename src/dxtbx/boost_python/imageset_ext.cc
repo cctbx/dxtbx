@@ -532,6 +532,25 @@ namespace dxtbx { namespace boost_python {
     return image_as_tuple<double>(self.get_corrected_data(index));
   }
 
+  boost::python::tuple TOFImageSet_get_raw_data(TOFImageSet &self, std::size_t image_index, std::size_t tof_index) {
+    boost::python::tuple result;
+    ImageBuffer buffer = self.get_raw_data(image_index, tof_index);
+    if (buffer.is_int()) {
+      result = image_as_tuple<int>(buffer.as_int());
+    } else if (buffer.is_double()) {
+      result = image_as_tuple<double>(buffer.as_double());
+    } else if (buffer.is_float()) {
+      result = image_as_tuple<float>(buffer.as_float());
+    } else {
+      throw DXTBX_ERROR("Problem reading raw data");
+    }
+    return result;
+  }
+
+  boost::python::tuple TOFImageSet_get_corrected_data(TOFImageSet &self, std::size_t image_index, std::size_t tof_index) {
+    return image_as_tuple<double>(self.get_corrected_data(image_index, tof_index));
+  }
+
   template<typename Beam>
   boost::python::tuple ImageSetBase_get_gain(ImageSetBase<Beam> &self, std::size_t index) {
     return image_as_tuple<double>(self.get_gain(index));
@@ -831,7 +850,8 @@ namespace dxtbx { namespace boost_python {
                             (arg("data"), arg("tof_in_seconds") = boost::python::object(),
                             arg("tof_indices") = boost::python::object(),
                             arg("indices") = boost::python::object())))
-      .def("get_corrected_data", &TOFImageSet::get_corrected_data)
+      .def("get_corrected_data", &TOFImageSet_get_corrected_data)
+      .def("get_raw_data", &TOFImageSet_get_raw_data)
       .def("partial_set", &TOFImageSet::partial_set)
       .def("tof_in_seconds", &TOFImageSet::tof_in_seconds)
       .def_pickle(TOFImageSetPickleSuite());

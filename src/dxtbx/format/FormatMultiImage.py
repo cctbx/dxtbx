@@ -1,6 +1,8 @@
 import functools
 import os
 
+from scitbx.array_family import flex
+
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import (
@@ -244,17 +246,17 @@ class FormatMultiImage(Format):
             if single_file_indices is None:
                 single_file_indices = range(format_instance.get_num_images())
 
-                # If any are None then read from format
-                num_images = format_instance.get_num_images()
-                beam = [None] * num_images
-                detector = [None] * num_images
-                goniometer = [None] * num_images
-                scan = [None] * num_images
-                for i in single_file_indices:
-                    beam[i] = format_instance.get_beam(i)
-                    detector[i] = format_instance.get_detector(i)
-                    goniometer[i] = format_instance.get_goniometer(i)
-                    scan[i] = format_instance.get_scan(i)
+            # If any are None then read from format
+            num_images = format_instance.get_num_images()
+            beam = [None] * num_images
+            detector = [None] * num_images
+            goniometer = [None] * num_images
+            scan = [None] * num_images
+            for i in single_file_indices:
+                beam[i] = format_instance.get_beam(i)
+                detector[i] = format_instance.get_detector(i)
+                goniometer[i] = format_instance.get_goniometer(i)
+                scan[i] = format_instance.get_scan(i)
 
             # Set the list of models
             for i, index in enumerate(single_file_indices):
@@ -300,35 +302,27 @@ class FormatMultiImage(Format):
         ):
             num_images = get_num_images(single_file_indices, format_instance)
             tof_in_seconds = format_instance.get_tof_in_seconds()
+            if "tof_indices" in format_kwargs:
+                tof_indices = format_kwargs["tof_indices"]
+            else:
+                tof_indices = range(len(tof_in_seconds))
+            tof_indices = flex.size_t(tof_indices)
             reader = get_reader(cls, filenames, num_images, **format_kwargs)
             vendor = format_instance.get_vendortype()
 
-            if "tof_indices" in format_kwargs:
-                if single_file_indices is not None:
-                    iset = TOFImageSet(
-                        TOFImageSetData(
-                            reader=reader,
-                            masker=None,
-                            vendor=vendor,
-                            params=format_kwargs,
-                            format=cls,
-                        ),
-                        tof_in_seconds=tof_in_seconds,
-                        tof_indices=format_kwargs["tof_indices"],
-                        indices=single_file_indices,
-                    )
-                else:
-                    iset = TOFImageSet(
-                        TOFImageSetData(
-                            reader=reader,
-                            masker=None,
-                            vendor=vendor,
-                            params=format_kwargs,
-                            format=cls,
-                        ),
-                        tof_in_seconds=tof_in_seconds,
-                        tof_indices=format_kwargs["tof_indices"],
-                    )
+            if single_file_indices is not None:
+                iset = TOFImageSet(
+                    TOFImageSetData(
+                        reader=reader,
+                        masker=None,
+                        vendor=vendor,
+                        params=format_kwargs,
+                        format=cls,
+                    ),
+                    tof_in_seconds=tof_in_seconds,
+                    tof_indices=tof_indices,
+                    indices=single_file_indices,
+                )
             else:
                 iset = TOFImageSet(
                     TOFImageSetData(
@@ -339,6 +333,7 @@ class FormatMultiImage(Format):
                         format=cls,
                     ),
                     tof_in_seconds=tof_in_seconds,
+                    tof_indices=tof_indices,
                 )
 
             if single_file_indices is None:
@@ -385,7 +380,10 @@ class FormatMultiImage(Format):
 
         def get_single_file_indices(**kwargs):
             if "single_file_indices" in kwargs:
-                return kwargs["single_file_indices"]
+                single_file_indices = kwargs["single_file_indices"]
+                if single_file_indices is not None:
+                    single_file_indices = flex.size_t(single_file_indices)
+                return single_file_indices
             else:
                 return None
 

@@ -84,7 +84,6 @@ class MemReader:
         return ""
 
 
-<<<<<<< HEAD:src/dxtbx/imageset.py
 @boost_adaptbx.boost.python.inject_into(ImageSet)
 class _:
     """
@@ -196,6 +195,56 @@ class _(object):
             )
 
         return format_instance.get_tof_range()
+
+    def __getitem__(self, item):
+        """Get an item from the image set stream.
+
+        If the item is an index, read and return the image at the given index.
+        Otherwise, if the item is a slice, then create a new ImageSet object
+        with the given number of array indices from the slice.
+
+        Params:
+            item The index or slice
+
+        Returns:
+            An image or new ImageSet object
+        """
+
+        if isinstance(item, int) or isinstance(item, slice):
+            item = (item, slice(None, None, None))
+
+        assert isinstance(item, tuple), "TOFImageSet expects two indices"
+        assert len(item) == 2, "TOFImageSet expects two indices"
+
+        image_idx = item[0]
+        tof_idx = item[1]
+
+        assert isinstance(image_idx, slice) or isinstance(
+            image_idx, int
+        ), "Cannot understand indexing"
+        assert isinstance(tof_idx, slice) or isinstance(
+            tof_idx, int
+        ), "Cannot understand indexing"
+
+        if isinstance(image_idx, int) and isinstance(tof_idx, int):
+            return self.get_corrected_data(image_idx, tof_idx)
+        else:
+            tof_range = self.get_tof_range()
+
+            if isinstance(image_idx, slice):
+                image_start = image_idx.start or 0
+                image_stop = image_idx.stop or len(self)
+            elif isinstance(image_idx, int):
+                image_start = image_idx
+                image_stop = image_idx + 1
+            if isinstance(tof_idx, slice):
+                tof_start = tof_idx.start or tof_range[0]
+                tof_stop = tof_idx.stop or tof_range[1]
+            elif isinstance(tof_idx, int):
+                tof_start = tof_idx
+                tof_stop = tof_idx + 1
+
+            return self.partial_set(image_start, image_stop, tof_start, tof_stop)
 
 
 class ImageSetLazy(ImageSet, ImageSetBase):
