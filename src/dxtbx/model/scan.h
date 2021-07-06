@@ -165,7 +165,56 @@ namespace dxtbx { namespace model {
 
   };
 
+  /** A class to represent a ToF sequence of images */
+  class TOFSequence : public Sequence{
+  public:
 
+    TOFSequence():
+        : Sequence((0,0), 0),
+          tof_range((0,0)),
+          tof_in_seconds(0){}
+
+    /**
+     * @param image_range The range of images covered by the sequence
+     * @param tof_range The range of ToF images covered by the sequence
+     * @param tof_in_seconds The ToF values of each image
+     * @param batch_offset An offset to add to the image number (for tracking
+     *                      unique batch numbers for multi-crystal datasets)
+     * 
+     */
+    TOFSequence(vec2<int> image_range, 
+                vec2<int> tof_range, 
+                scitbx::af::shared<double> &tof_in_seconds,
+                int batch_offset=0)
+                : Sequence(image_range, batch_offset),
+                tof_range_(tof_range),
+                tof_in_seconds_(tof_in_seconds){
+                }
+
+    virtual ~TOFSequence() {}
+
+    vec2<int> get_tof_range(){
+      return tof_range_;
+    }
+
+    scitbx::af::shared<double> get_tof_in_seconds(){
+      return tof_in_seconds_;
+    }
+
+    void set_tof_range(vec2<int> tof_range){
+      tof_range_ = tof_range;
+    }
+
+    void set_tof_in_seconds(){
+      tof_in_seconds_ = tof_in_seconds;
+    }
+
+  private:
+    vec2<int> tof_range;
+    scitbx::af::shared<double> tof_in_seconds;
+    
+
+  };
 
   /** A class to represent a scan */
   class Scan : public Sequence {
