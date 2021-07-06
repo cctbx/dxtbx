@@ -171,47 +171,55 @@ namespace dxtbx { namespace model {
 
     TOFSequence():
         : Sequence((0,0), 0),
-          tof_range((0,0)),
           tof_in_seconds(0){}
 
     /**
      * @param image_range The range of images covered by the sequence
-     * @param tof_range The range of ToF images covered by the sequence
      * @param tof_in_seconds The ToF values of each image
      * @param batch_offset An offset to add to the image number (for tracking
      *                      unique batch numbers for multi-crystal datasets)
      * 
      */
     TOFSequence(vec2<int> image_range, 
-                vec2<int> tof_range, 
                 scitbx::af::shared<double> &tof_in_seconds,
                 int batch_offset=0)
                 : Sequence(image_range, batch_offset),
-                tof_range_(tof_range),
                 tof_in_seconds_(tof_in_seconds){
                 }
 
     virtual ~TOFSequence() {}
 
-    vec2<int> get_tof_range(){
-      return tof_range_;
-    }
-
     scitbx::af::shared<double> get_tof_in_seconds(){
       return tof_in_seconds_;
     }
 
-    void set_tof_range(vec2<int> tof_range){
-      tof_range_ = tof_range;
+    double get_image_tof(int index) const {
+      DXTBX_ASSERT(image_range_[0] <= index && index <= image_range_[1]);
+      return tof_in_seconds_[index - image_range_[0]];
     }
 
     void set_tof_in_seconds(){
       tof_in_seconds_ = tof_in_seconds;
     }
 
+    /** Check the sequences are the same */
+    bool operator==(const TOFSequence &rhs) const {
+      double eps = 1e-7;
+      return get_image_range() == rhs.get_image_range() 
+             && get_batch_offset() == rhs.get_batch_offset()
+             && tof_in_seconds_.const_ref().all_approx_equal(
+               rhs.get_tof_in_seconds().const_ref(), eps);
+    }
+
+    /** Check the scans are not the same */
+    bool operator!=(const TOFSequence &sequence) const {
+      return !(*this == sequence);
+    }
+    
+  friend std::ostream &operator<<(std::ostream &os, const TOFSequence &s);
+
   private:
-    vec2<int> tof_range;
-    scitbx::af::shared<double> tof_in_seconds;
+    scitbx::af::shared<double> tof_in_seconds_;
     
 
   };
@@ -582,7 +590,6 @@ namespace dxtbx { namespace model {
     friend std::ostream &operator<<(std::ostream &os, const Scan &s);
 
   private:
-    ExpImgRangeMap valid_image_ranges_; /** initialised as an empty map **/
     vec2<double> oscillation_;
     bool is_still_;
     scitbx::af::shared<double> exposure_times_;
@@ -601,6 +608,16 @@ namespace dxtbx { namespace model {
     os << "    oscillation:   " << oscillation.const_ref() << "\n";
     if (s.num_images_ > 0) {
       os << "    exposure time: " << s.exposure_times_.const_ref()[0] << "\n";
+    }
+    return os;
+  }
+
+  /** Print TOFSequence information */
+  inline std::ostream &operator<<(std::ostream &os, const Sequence &s) {
+    os << "ToF Sequence:\n";
+    os << "    number of images:   " << s.get_num_images() << "\n";
+    os << "    image range:   " << s.get_image_range().const_ref() << "\n";
+    os << "    ToF range:   " << s.get_tof_range().const_ref() << "\n";
     }
     return os;
   }
