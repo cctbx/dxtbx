@@ -427,7 +427,7 @@ py::object from_numpy(py::object array) {
 }
 
 /// More structured arrays need to be explicitly requested
-template <template <typename> typename VecType>
+template <template <class> class VecType>
 py::object vec_from_numpy(py::array np_array) {
   static_assert(VecType<int>::fixed_size == 2 || VecType<int>::fixed_size == 3,
                 "Only vec2/vec3 supported");
