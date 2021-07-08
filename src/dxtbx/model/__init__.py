@@ -11,7 +11,7 @@ from libtbx.containers import OrderedSet
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet, TOFImageSet
+from dxtbx.imageset import ImageGrid, ImageSet, RotImageSequence, TOFImageSequence
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.model.detector import DetectorFactory
@@ -45,6 +45,7 @@ from dxtbx_model_ext import (
     Sequence,
     SimplePxMmStrategy,
     Spectrum,
+    TOFBeam,
     TOFSequence,
     VirtualPanel,
     VirtualPanelFrame,
@@ -57,6 +58,7 @@ from dxtbx_model_ext import (
 
 __all__ = (
     "MonochromaticBeam",
+    "TOFBeam",
     "BeamBase",
     "BeamFactory",
     "Crystal",
@@ -72,8 +74,8 @@ __all__ = (
     "GoniometerFactory",
     "ImageGrid",
     "ImageSet",
-    "TOFImageSet",
-    "ImageSequence",
+    "TOFImageSequence",
+    "RotImageSequence",
     "KappaDirection",
     "KappaGoniometer",
     "KappaScanAxis",
@@ -626,11 +628,11 @@ class _:
         # Serialize all the imagesets
         result["imageset"] = []
         for imset in index_lookup["imageset"]:
-            if isinstance(imset, ImageSequence):
+            if isinstance(imset, RotImageSequence):
                 # FIXME_HACK
                 template = get_template(imset)
                 r = {
-                    "__id__": "ImageSequence",
+                    "__id__": "RotImageSequence",
                     "template": template,
                 }
                 if imset.reader().is_single_file_reader():
@@ -650,16 +652,16 @@ class _:
                 }
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
-            elif isinstance(imset, TOFImageSet):
+            elif isinstance(imset, TOFImageSequence):
                 r = collections.OrderedDict(
-                    [("__id__", "TOFImageSet"), ("images", imset.paths())]
+                    [("__id__", "TOFImageSequence"), ("images", imset.paths())]
                 )
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
                 r["tof_in_seconds"] = list(imset.tof_in_seconds())
             else:
                 raise TypeError(
-                    "expected ImageSet or ImageSequence, got %s" % type(imset)
+                    "expected ImageSet or RotImageSequence, got %s" % type(imset)
                 )
             r["mask"] = abspath_or_none(imset.external_lookup.mask.filename)
             r["gain"] = abspath_or_none(imset.external_lookup.gain.filename)

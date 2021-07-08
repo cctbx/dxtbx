@@ -483,12 +483,14 @@ namespace dxtbx { namespace model { namespace boost_python {
             .def("get_tof_in_seconds", &TOFSequence::get_tof_in_seconds)
             .def("set_tof_in_seconds", &TOFSequence::set_tof_in_seconds)
             .def("__deepcopy__", &tof_sequence_deepcopy)
-            .def("__copy__", &tof_sequence_copy);
+            .def("__copy__", &tof_sequence_copy)
             .def("to_dict", &to_dict<TOFSequence>)
             .def("from_dict", &from_dict<TOFSequence>, return_value_policy<manage_new_object>())
             .staticmethod("from_dict")
             .def(self == self)
             .def(self != self)
+            .def(self += self)
+            .def(self + self)
             .def_pickle(TOFSequencePickleSuite());
 
 

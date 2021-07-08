@@ -169,9 +169,9 @@ namespace dxtbx { namespace model {
   class TOFSequence : public Sequence{
   public:
 
-    TOFSequence():
+    TOFSequence()
         : Sequence((0,0), 0),
-          tof_in_seconds(0){}
+          tof_in_seconds_(num_images_, 0){}
 
     /**
      * @param image_range The range of images covered by the sequence
@@ -181,7 +181,7 @@ namespace dxtbx { namespace model {
      * 
      */
     TOFSequence(vec2<int> image_range, 
-                scitbx::af::shared<double> &tof_in_seconds,
+                const scitbx::af::shared<double> &tof_in_seconds,
                 int batch_offset=0)
                 : Sequence(image_range, batch_offset),
                 tof_in_seconds_(tof_in_seconds){
@@ -189,7 +189,7 @@ namespace dxtbx { namespace model {
 
     virtual ~TOFSequence() {}
 
-    scitbx::af::shared<double> get_tof_in_seconds(){
+    scitbx::af::shared<double> get_tof_in_seconds() const {
       return tof_in_seconds_;
     }
 
@@ -198,8 +198,15 @@ namespace dxtbx { namespace model {
       return tof_in_seconds_[index - image_range_[0]];
     }
 
-    void set_tof_in_seconds(){
+    void set_tof_in_seconds(scitbx::af::shared<double> tof_in_seconds){
       tof_in_seconds_ = tof_in_seconds;
+    }
+
+    void append(const TOFSequence &rhs) {
+      DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
+      DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
+      image_range_[1] = rhs.image_range_[1];
+      num_images_ = 1 + image_range_[1] - image_range_[0];
     }
 
     /** Check the sequences are the same */
@@ -208,13 +215,49 @@ namespace dxtbx { namespace model {
       return get_image_range() == rhs.get_image_range() 
              && get_batch_offset() == rhs.get_batch_offset()
              && tof_in_seconds_.const_ref().all_approx_equal(
-               rhs.get_tof_in_seconds().const_ref(), eps);
+               rhs.tof_in_seconds_.const_ref(), eps);
     }
 
     /** Check the scans are not the same */
     bool operator!=(const TOFSequence &sequence) const {
       return !(*this == sequence);
     }
+
+    TOFSequence operator[](int index) const {
+      // Check index
+      DXTBX_ASSERT((index >= 0) && (index < get_num_images()));
+      int image_index = get_image_range()[0] + index;
+
+      // Create the new epoch array
+      scitbx::af::shared<double> new_tof_in_seconds(1);
+      new_tof_in_seconds[0] = get_image_tof(image_index);
+
+      // Return scan
+      return TOFSequence(vec2<int>(image_index, image_index),
+                  new_tof_in_seconds,
+                  get_batch_offset());
+    }
+
+    /**
+     * Append the rhs sequence onto the current sequence
+     */
+    TOFSequence &operator+=(const TOFSequence &rhs) {
+      // Set the epsilon to 1% of oscillation range
+      append(rhs);
+      return *this;
+    }
+
+    /**
+     * Return a new sequence which consists of the contents of this sequence and
+     * the contents of the other sequence, provided that they are consistent.
+     * If they are not consistent then an AssertionError will result.
+     */
+    TOFSequence operator+(const TOFSequence &rhs) const {
+      TOFSequence lhs(*this);
+      lhs += rhs;
+      return lhs;
+    }
+
     
   friend std::ostream &operator<<(std::ostream &os, const TOFSequence &s);
 
@@ -299,7 +342,6 @@ namespace dxtbx { namespace model {
     /** Copy */
     Scan(const Scan &rhs)
         : Sequence(rhs.image_range_, rhs.batch_offset_),
-          valid_image_ranges_(rhs.valid_image_ranges_),
           oscillation_(rhs.oscillation_),
           is_still_(rhs.is_still_),
           exposure_times_(scitbx::af::reserve(rhs.exposure_times_.size())),
@@ -613,12 +655,11 @@ namespace dxtbx { namespace model {
   }
 
   /** Print TOFSequence information */
-  inline std::ostream &operator<<(std::ostream &os, const Sequence &s) {
+  inline std::ostream &operator<<(std::ostream &os, const TOFSequence &s) {
     os << "ToF Sequence:\n";
     os << "    number of images:   " << s.get_num_images() << "\n";
     os << "    image range:   " << s.get_image_range().const_ref() << "\n";
-    os << "    ToF range:   " << s.get_tof_range().const_ref() << "\n";
-    }
+    os << "    ToF range:   " << s.tof_in_seconds_.const_ref() << "\n";
     return os;
   }
 

@@ -11,7 +11,12 @@ import dxtbx.format.FormatHDF5SaclaMPCCD
 import dxtbx.format.image
 import dxtbx.format.Registry
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
-from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
+from dxtbx.imageset import (
+    ExternalLookup,
+    ImageSetData,
+    ImageSetFactory,
+    RotImageSequence,
+)
 from dxtbx.model import Detector, MonochromaticBeam, Panel
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -520,14 +525,14 @@ def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
 def test_imagesetfactory(centroid_files, dials_data):
     sequence = ImageSetFactory.new(centroid_files)
 
-    assert isinstance(sequence[0], ImageSequence)
+    assert isinstance(sequence[0], RotImageSequence)
 
     template = dials_data("centroid_test_data").join("centroid_####.cbf").strpath
     image_range = (3, 6)
 
     sequence = ImageSetFactory.from_template(template, image_range)
 
-    assert isinstance(sequence[0], ImageSequence)
+    assert isinstance(sequence[0], RotImageSequence)
     assert len(sequence[0]) == 4
     assert sequence[0].paths()[0].endswith("3.cbf")
     assert sequence[0].paths()[-1].endswith("6.cbf")

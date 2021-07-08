@@ -954,7 +954,7 @@ def test_experimentlist_imagesequence_decode(mocker):
     # Convert experiment list to dict and manually insert a shared imageset
     d = experiments.to_dict()
     d["imageset"].append(
-        {"__id__": "ImageSequence", "template": "Puck3_10_1_####.cbf.gz"}
+        {"__id__": "RotImageSequence", "template": "Puck3_10_1_####.cbf.gz"}
     )
     for e in d["experiment"]:
         e["imageset"] = 0

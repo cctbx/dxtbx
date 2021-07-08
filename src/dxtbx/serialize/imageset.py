@@ -2,7 +2,7 @@ import os
 import pickle
 
 from dxtbx.format.image import ImageBool, ImageDouble
-from dxtbx.imageset import ImageSequence, ImageSet, ImageSetFactory
+from dxtbx.imageset import ImageSet, ImageSetFactory, RotImageSequence
 from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
 from dxtbx.serialize.filename import resolve_path
 
@@ -79,7 +79,7 @@ def imageset_to_dict(imageset):
 
     """
     # If this is an imageset then return a list of filenames
-    if isinstance(imageset, ImageSequence):
+    if isinstance(imageset, RotImageSequence):
         return imagesequence_to_dict(imageset)
     elif isinstance(imageset, ImageSet):
         return basic_imageset_to_dict(imageset)

@@ -41,23 +41,23 @@ namespace dxtbx { namespace boost_python {
     }
   }  // namespace detail
 
-  template<typename Beam>
-  typename ImageSetData<Beam>::masker_ptr make_masker_pointer(boost::python::object masker) {
+  template<typename Beam, typename Sequence>
+  typename ImageSetData<Beam, Sequence>::masker_ptr make_masker_pointer(boost::python::object masker) {
     if (masker == boost::python::object()) {
-      return typename ImageSetData<Beam>::masker_ptr();
+      return typename ImageSetData<Beam, Sequence>::masker_ptr();
     }
-    return boost::python::extract<typename ImageSetData<Beam>::masker_ptr>(masker)();
+    return boost::python::extract<typename ImageSetData<Beam, Sequence>::masker_ptr>(masker)();
   }
   
 
   /**
    * A constructor for the imageset data class
    */
-  boost::shared_ptr<ImageSetData<MonochromaticBeam> > make_monochromatic_imageset_data1(boost::python::object reader,
+  boost::shared_ptr<ImageSetData<MonochromaticBeam, Scan> > make_monochromatic_imageset_data1(boost::python::object reader,
                                                       boost::python::object masker) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData<MonochromaticBeam> > self(
-      new ImageSetData<MonochromaticBeam>(reader, make_masker_pointer<MonochromaticBeam>(masker)));
+    boost::shared_ptr<ImageSetData<MonochromaticBeam, Scan> > self(
+      new ImageSetData<MonochromaticBeam, Scan>(reader, make_masker_pointer<MonochromaticBeam, Scan>(masker)));
 
     // Return the imageset data
     return self;
@@ -66,15 +66,15 @@ namespace dxtbx { namespace boost_python {
   /**
    * A constructor for the imageset data class
    */
-  boost::shared_ptr<ImageSetData<MonochromaticBeam> > make_monochromatic_imageset_data2(boost::python::object reader,
+  boost::shared_ptr<ImageSetData<MonochromaticBeam, Scan> > make_monochromatic_imageset_data2(boost::python::object reader,
                                                       boost::python::object masker,
                                                       std::string filename_template,
                                                       std::string vendor,
                                                       boost::python::dict params,
                                                       boost::python::object format) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData<MonochromaticBeam> > self(
-      new ImageSetData<MonochromaticBeam>(reader, make_masker_pointer<MonochromaticBeam>(masker)));
+    boost::shared_ptr<ImageSetData<MonochromaticBeam, Scan> > self(
+      new ImageSetData<MonochromaticBeam, Scan>(reader, make_masker_pointer<MonochromaticBeam, Scan>(masker)));
 
     // Set some stuff
     self->set_template(filename_template);
@@ -89,11 +89,11 @@ namespace dxtbx { namespace boost_python {
   /**
    * A constructor for the imageset data class
    */
-  boost::shared_ptr<ImageSetData<TOFBeam> > make_tof_imageset_data1(boost::python::object reader,
+  boost::shared_ptr<ImageSetData<TOFBeam, TOFSequence> > make_tof_imageset_data1(boost::python::object reader,
                                                       boost::python::object masker) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData<TOFBeam> > self(
-      new ImageSetData<TOFBeam>(reader, make_masker_pointer<TOFBeam>(masker)));
+    boost::shared_ptr<ImageSetData<TOFBeam, TOFSequence> > self(
+      new ImageSetData<TOFBeam, TOFSequence>(reader, make_masker_pointer<TOFBeam, TOFSequence>(masker)));
 
     // Return the imageset data
     return self;
@@ -102,15 +102,15 @@ namespace dxtbx { namespace boost_python {
   /**
    * A constructor for the imageset data class
    */
-  boost::shared_ptr<ImageSetData<TOFBeam> > make_tof_imageset_data2(boost::python::object reader,
+  boost::shared_ptr<ImageSetData<TOFBeam, TOFSequence> > make_tof_imageset_data2(boost::python::object reader,
                                                       boost::python::object masker,
                                                       std::string filename_template,
                                                       std::string vendor,
                                                       boost::python::dict params,
                                                       boost::python::object format) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData<TOFBeam> > self(
-      new ImageSetData<TOFBeam>(reader, make_masker_pointer<TOFBeam>(masker)));
+    boost::shared_ptr<ImageSetData<TOFBeam, TOFSequence> > self(
+      new ImageSetData<TOFBeam, TOFSequence>(reader, make_masker_pointer<TOFBeam, TOFSequence>(masker)));
 
     // Set some stuff
     self->set_template(filename_template);
@@ -125,24 +125,24 @@ namespace dxtbx { namespace boost_python {
   /**
    * Get the parameters
    */
-  template<typename Beam>
-  boost::python::object ImageSetData_get_params(ImageSetData<Beam> &self) {
+  template<typename Beam, typename Sequence>
+  boost::python::object ImageSetData_get_params(ImageSetData<Beam, Sequence> &self) {
     return detail::pickle_loads(self.get_params());
   }
 
   /**
    * Set the parameters
    */
-  template<typename Beam>
-  void ImageSetData_set_params(ImageSetData<Beam> &self, boost::python::dict params) {
+  template<typename Beam, typename Sequence>
+  void ImageSetData_set_params(ImageSetData<Beam, Sequence> &self, boost::python::dict params) {
     self.set_params(detail::pickle_dumps(params));
   }
 
   /**
    * Get the format class
    */
-  template<typename Beam>
-  boost::python::object ImageSetData_get_format(ImageSetData<Beam> &self) {
+  template<typename Beam, typename Sequence>
+  boost::python::object ImageSetData_get_format(ImageSetData<Beam, Sequence> &self) {
     return detail::pickle_loads(self.get_format());
   }
 
@@ -150,34 +150,32 @@ namespace dxtbx { namespace boost_python {
    * Set the format class
    */
 
-  template<typename Beam>
-  void ImageSetData_set_format(ImageSetData<Beam> &self, boost::python::dict format) {
+  template<typename Beam, typename Sequence>
+  void ImageSetData_set_format(ImageSetData<Beam, Sequence> &self, boost::python::dict format) {
     self.set_format(detail::pickle_dumps(format));
   }
 
   /**
    * A constructor for the imageset class
    */
-  typename boost::shared_ptr<ImageSet> make_imageset(const ImageSetData<MonochromaticBeam> &data,
+  typename boost::shared_ptr<ImageSet<MonochromaticBeam, Scan> > make_imageset(const ImageSetData<MonochromaticBeam, Scan> &data,
                                             boost::python::object indices) {
     if (indices == boost::python::object()) {
-      return typename boost::shared_ptr<ImageSet>(new ImageSet(data));
+      return typename boost::shared_ptr<ImageSet<MonochromaticBeam, Scan> >(new ImageSet<MonochromaticBeam, Scan>(data));
     }
 
-    return typename boost::shared_ptr<ImageSet>(new ImageSet(
+    return typename boost::shared_ptr<ImageSet<MonochromaticBeam, Scan> >(new ImageSet<MonochromaticBeam, Scan>(
       data, boost::python::extract<scitbx::af::const_ref<std::size_t> >(indices)()));
   }
 
   /**
-   * A constructor for the TOF imageset class
-   */
-  typename boost::shared_ptr<TOFImageSet> make_tof_imageset(const ImageSetData<TOFBeam> &data,
-                                            boost::python::object tof_in_seconds,
-                                            boost::python::object tof_indices,
+   * A constructor for the TOF imagesequence class
+   *
+  typename boost::shared_ptr<TOFImageSequence> make_tof_imagesequence(const ImageSetData<TOFBeam, TOFSequence> &data,
                                             boost::python::object indices) {
 
     if (tof_indices != boost::python::object() && indices != boost::python::object()) {
-      return typename boost::shared_ptr<TOFImageSet>(new TOFImageSet(data,
+      return typename boost::shared_ptr<TOFImageSequence>(new TOFImageSequence(data,
         boost::python::extract<scitbx::af::shared<double> >(tof_in_seconds)(),
         boost::python::extract<scitbx::af::const_ref<std::size_t> >(tof_indices)(),
           boost::python::extract<scitbx::af::const_ref<std::size_t> >(indices)()));
@@ -191,37 +189,38 @@ namespace dxtbx { namespace boost_python {
     return typename boost::shared_ptr<TOFImageSet>(new TOFImageSet(data,
       boost::python::extract<scitbx::af::shared<double> >(tof_in_seconds)()));
   }
+  */
 
   /**
    * Implement pickling for ImageSetData class
    */
-  template<class Beam>
+  template<class Beam, class Sequence>
   struct ImageSetDataPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(ImageSetData<Beam> obj) {
+    static boost::python::tuple getinitargs(ImageSetData<Beam, Sequence> obj) {
       return boost::python::make_tuple(obj.reader(), obj.masker());
     }
 
-    static boost::shared_ptr<Beam> get_beam(const ImageSetData<Beam> &self,
+    static boost::shared_ptr<Beam> get_beam(const ImageSetData<Beam, Sequence> &self,
                                                 std::size_t i) {
       return self.get_beam(i);
     }
 
-    static boost::shared_ptr<Detector> get_detector(const ImageSetData<Beam> &self,
+    static boost::shared_ptr<Detector> get_detector(const ImageSetData<Beam, Sequence> &self,
                                                     std::size_t i) {
       return self.get_detector(i);
     }
 
-    static boost::shared_ptr<Goniometer> get_goniometer(const ImageSetData<Beam> &self,
+    static boost::shared_ptr<Goniometer> get_goniometer(const ImageSetData<Beam, Sequence> &self,
                                                         std::size_t i) {
       return self.get_goniometer(i);
     }
 
-    static boost::shared_ptr<Scan> get_scan(const ImageSetData<Beam> &self, std::size_t i) {
-      return self.get_scan(i);
+    static boost::shared_ptr<Sequence> get_sequence(const ImageSetData<Beam, Sequence> &self, std::size_t i) {
+      return self.get_sequence(i);
     }
 
     template <typename Model, typename Func>
-    static boost::python::tuple get_model_list(ImageSetData<Beam> obj, Func get) {
+    static boost::python::tuple get_model_list(ImageSetData<Beam, Sequence> obj, Func get) {
       // Create a list of models and a list of indices
       std::vector<boost::shared_ptr<Model> > model_list;
       std::vector<std::size_t> index_list;
@@ -252,7 +251,7 @@ namespace dxtbx { namespace boost_python {
       return boost::python::make_tuple(models, indices);
     }
 
-    static boost::python::tuple get_model_tuple(ImageSetData<Beam> obj) {
+    static boost::python::tuple get_model_tuple(ImageSetData<Beam, Sequence> obj) {
       return boost::python::make_tuple(
         ImageSetDataPickleSuite::get_model_list<Beam>(
           obj, &ImageSetDataPickleSuite::get_beam),
@@ -260,11 +259,11 @@ namespace dxtbx { namespace boost_python {
           obj, &ImageSetDataPickleSuite::get_detector),
         ImageSetDataPickleSuite::get_model_list<Goniometer>(
           obj, &ImageSetDataPickleSuite::get_goniometer),
-        ImageSetDataPickleSuite::get_model_list<Scan>(
-          obj, &ImageSetDataPickleSuite::get_scan));
+        ImageSetDataPickleSuite::get_model_list<Sequence>(
+          obj, &ImageSetDataPickleSuite::get_sequence));
     }
 
-    static boost::python::tuple get_lookup_tuple(ImageSetData<Beam> obj) {
+    static boost::python::tuple get_lookup_tuple(ImageSetData<Beam, Sequence> obj) {
       return boost::python::make_tuple(
         boost::python::make_tuple(obj.external_lookup().mask().get_filename(),
                                   obj.external_lookup().mask().get_data()),
@@ -278,7 +277,7 @@ namespace dxtbx { namespace boost_python {
                                   obj.external_lookup().dy().get_data()));
     }
 
-    static boost::python::tuple getstate(ImageSetData<Beam> obj) {
+    static boost::python::tuple getstate(ImageSetData<Beam, Sequence> obj) {
       return boost::python::make_tuple(ImageSetDataPickleSuite::get_model_tuple(obj),
                                        ImageSetDataPickleSuite::get_lookup_tuple(obj),
                                        obj.get_template(),
@@ -288,7 +287,7 @@ namespace dxtbx { namespace boost_python {
     }
 
     template <typename Model, typename Func>
-    static void set_model_list(ImageSetData<Beam> &obj, boost::python::tuple data, Func set) {
+    static void set_model_list(ImageSetData<Beam, Sequence> &obj, boost::python::tuple data, Func set) {
       // Extract to python lists
       boost::python::list models =
         boost::python::extract<boost::python::list>(data[0])();
@@ -314,28 +313,28 @@ namespace dxtbx { namespace boost_python {
       }
     }
 
-    static void set_model_tuple(ImageSetData<Beam> &obj, boost::python::tuple models) {
+    static void set_model_tuple(ImageSetData<Beam, Sequence> &obj, boost::python::tuple models) {
       DXTBX_ASSERT(boost::python::len(models) == 4);
-      ImageSetDataPickleSuite<Beam>::set_model_list<Beam>(
+      ImageSetDataPickleSuite<Beam, Sequence>::set_model_list<Beam>(
         obj,
         boost::python::extract<boost::python::tuple>(models[0])(),
-        &ImageSetData<Beam>::set_beam);
-      ImageSetDataPickleSuite<Beam>::set_model_list<Detector>(
+        &ImageSetData<Beam, Sequence>::set_beam);
+      ImageSetDataPickleSuite<Beam, Sequence>::set_model_list<Detector>(
         obj,
         boost::python::extract<boost::python::tuple>(models[1]),
-        &ImageSetData<Beam>::set_detector);
-      ImageSetDataPickleSuite<Beam>::set_model_list<Goniometer>(
+        &ImageSetData<Beam, Sequence>::set_detector);
+      ImageSetDataPickleSuite<Beam, Sequence>::set_model_list<Goniometer>(
         obj,
         boost::python::extract<boost::python::tuple>(models[2]),
-        &ImageSetData<Beam>::set_goniometer);
-      ImageSetDataPickleSuite<Beam>::set_model_list<Scan>(
+        &ImageSetData<Beam, Sequence>::set_goniometer);
+      ImageSetDataPickleSuite<Beam, Sequence>::set_model_list<Sequence>(
         obj,
         boost::python::extract<boost::python::tuple>(models[3]),
-        &ImageSetData<Beam>::set_scan);
+        &ImageSetData<Beam, Sequence>::set_sequence);
     }
 
     template <typename Data, typename Func>
-    static void set_lookup_item(ImageSetData<Beam> &obj,
+    static void set_lookup_item(ImageSetData<Beam, Sequence> &obj,
                                 boost::python::tuple lookup,
                                 Func item) {
       DXTBX_ASSERT(boost::python::len(lookup) == 2);
@@ -349,39 +348,39 @@ namespace dxtbx { namespace boost_python {
       ((&obj.external_lookup())->*item)().set_data(data);
     }
 
-    static void set_lookup_tuple(ImageSetData<Beam> &obj, boost::python::tuple lookup) {
+    static void set_lookup_tuple(ImageSetData<Beam, Sequence> &obj, boost::python::tuple lookup) {
       DXTBX_ASSERT(boost::python::len(lookup) == 5);
-      ImageSetDataPickleSuite<Beam>::set_lookup_item<Image<bool> >(
+      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<bool> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[0])(),
         &ExternalLookup::mask);
-      ImageSetDataPickleSuite<Beam>::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<double> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[1])(),
         &ExternalLookup::gain);
-      ImageSetDataPickleSuite<Beam>::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<double> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[2])(),
         &ExternalLookup::pedestal);
-      ImageSetDataPickleSuite<Beam>::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<double> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[3])(),
         &ExternalLookup::dx);
-      ImageSetDataPickleSuite<Beam>::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<double> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[4])(),
         &ExternalLookup::dy);
     }
 
-    static void setstate(ImageSetData<Beam> &obj, boost::python::tuple state) {
+    static void setstate(ImageSetData<Beam, Sequence> &obj, boost::python::tuple state) {
       DXTBX_ASSERT(boost::python::len(state) == 6);
 
       // Set the models
-      ImageSetDataPickleSuite<Beam>::set_model_tuple(
+      ImageSetDataPickleSuite<Beam, Sequence>::set_model_tuple(
         obj, boost::python::extract<boost::python::tuple>(state[0])());
 
       // Set the lookup
-      ImageSetDataPickleSuite<Beam>::set_lookup_tuple(
+      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_tuple(
         obj, boost::python::extract<boost::python::tuple>(state[1])());
 
       // Set the properties
@@ -395,20 +394,10 @@ namespace dxtbx { namespace boost_python {
   /**
    * Implement pickling for ImageSet class
    */
+  template<class Beam, class Sequence>
   struct ImageSetPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(ImageSet obj) {
+    static boost::python::tuple getinitargs(ImageSet<Beam, Sequence> obj) {
       return boost::python::make_tuple(obj.data(), obj.indices());
-    }
-  };
-
-  /**
-   * Implement pickling for TOFImageSet class
-   */
-  
-  struct TOFImageSetPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(TOFImageSet obj) {
-      return boost::python::make_tuple(obj.data(), obj.tof_in_seconds(),
-                                       obj.tof_indices(), obj.indices());
     }
   };
 
@@ -424,14 +413,43 @@ namespace dxtbx { namespace boost_python {
   /**
    * Implement pickling for ImageSequence class
    */
+  template<class Beam, class Sequence>
   struct ImageSequencePickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(ImageSequence obj) {
+    static boost::python::tuple getinitargs(ImageSequence<Beam, Sequence> obj) {
       return boost::python::make_tuple(obj.data(),
                                        obj.indices(),
                                        obj.get_beam(),
                                        obj.get_detector(),
                                        obj.get_goniometer(),
-                                       obj.get_scan());
+                                       obj.get_sequence());
+    }
+  };
+
+  /**
+   * Implement pickling for TOFImageSequence class
+   */
+  struct TOFImageSequencePickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(TOFImageSequence obj) {
+      return boost::python::make_tuple(obj.data(),
+                                       obj.indices(),
+                                       obj.get_beam(),
+                                       obj.get_detector(),
+                                       obj.get_goniometer(),
+                                       obj.get_sequence());
+    }
+  };
+
+  /**
+   * Implement pickling for RotImageSequence class
+   */
+  struct RotImageSequencePickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(RotImageSequence obj) {
+      return boost::python::make_tuple(obj.data(),
+                                       obj.indices(),
+                                       obj.get_beam(),
+                                       obj.get_detector(),
+                                       obj.get_goniometer(),
+                                       obj.get_sequence());
     }
   };
 
@@ -511,8 +529,8 @@ namespace dxtbx { namespace boost_python {
     return boost::python::tuple(result);
   }
 
-  template<typename Beam>
-  boost::python::tuple ImageSetBase_get_raw_data(ImageSetBase<Beam> &self, std::size_t index) {
+  template<typename Beam, typename Sequence>
+  boost::python::tuple ImageSet_get_raw_data(ImageSet<Beam, Sequence> &self, std::size_t index) {
     boost::python::tuple result;
     ImageBuffer buffer = self.get_raw_data(index);
     if (buffer.is_int()) {
@@ -527,42 +545,23 @@ namespace dxtbx { namespace boost_python {
     return result;
   }
 
-  template<typename Beam>
-  boost::python::tuple ImageSetBase_get_corrected_data(ImageSetBase<Beam> &self, std::size_t index) {
+  template<typename Beam, typename Sequence>
+  boost::python::tuple ImageSet_get_corrected_data(ImageSet<Beam, Sequence> &self, std::size_t index) {
     return image_as_tuple<double>(self.get_corrected_data(index));
   }
 
-  boost::python::tuple TOFImageSet_get_raw_data(TOFImageSet &self, std::size_t image_index, std::size_t tof_index) {
-    boost::python::tuple result;
-    ImageBuffer buffer = self.get_raw_data(image_index, tof_index);
-    if (buffer.is_int()) {
-      result = image_as_tuple<int>(buffer.as_int());
-    } else if (buffer.is_double()) {
-      result = image_as_tuple<double>(buffer.as_double());
-    } else if (buffer.is_float()) {
-      result = image_as_tuple<float>(buffer.as_float());
-    } else {
-      throw DXTBX_ERROR("Problem reading raw data");
-    }
-    return result;
-  }
-
-  boost::python::tuple TOFImageSet_get_corrected_data(TOFImageSet &self, std::size_t image_index, std::size_t tof_index) {
-    return image_as_tuple<double>(self.get_corrected_data(image_index, tof_index));
-  }
-
-  template<typename Beam>
-  boost::python::tuple ImageSetBase_get_gain(ImageSetBase<Beam> &self, std::size_t index) {
+  template<typename Beam, typename Sequence>
+  boost::python::tuple ImageSet_get_gain(ImageSet<Beam, Sequence> &self, std::size_t index) {
     return image_as_tuple<double>(self.get_gain(index));
   }
 
-  template<typename Beam>
-  boost::python::tuple ImageSetBase_get_pedestal(ImageSetBase<Beam> &self, std::size_t index) {
+  template<typename Beam, typename Sequence>
+  boost::python::tuple ImageSet_get_pedestal(ImageSet<Beam, Sequence> &self, std::size_t index) {
     return image_as_tuple<double>(self.get_pedestal(index));
   }
 
-  template<typename Beam>
-  boost::python::tuple ImageSetBase_get_mask(ImageSetBase<Beam> &self, std::size_t index) {
+  template<typename Beam, typename Sequence>
+  boost::python::tuple ImageSet_get_mask(ImageSet<Beam, Sequence> &self, std::size_t index) {
     return image_as_tuple<bool>(self.get_mask(index));
   }
 
@@ -585,8 +584,8 @@ namespace dxtbx { namespace boost_python {
    * If we have offset arrays set in the imageset then update the pixel to
    * millimeter strategy to use them
    */
-  template<typename Beam>
-  void ImageSetBase_update_detector_px_mm_data(ImageSetBase<Beam> &self) {
+  template<typename Beam, typename Sequence>
+  void ImageSet_update_detector_px_mm_data(ImageSet<Beam, Sequence> &self) {
     Image<double> dx = self.external_lookup().dx().get_data();
     Image<double> dy = self.external_lookup().dy().get_data();
     DXTBX_ASSERT(dx.empty() == dy.empty());
@@ -594,7 +593,7 @@ namespace dxtbx { namespace boost_python {
       return;
     }
     for (std::size_t i = 0; i < self.size(); ++i) {
-      typename ImageSetBase<Beam>::detector_ptr detector = self.get_detector_for_image(i);
+      typename ImageSet<Beam, Sequence>::detector_ptr detector = self.get_detector_for_image(i);
       DXTBX_ASSERT(dx.n_tiles() == detector->size());
       DXTBX_ASSERT(dy.n_tiles() == detector->size());
       for (std::size_t i = 0; i < detector->size(); ++i) {
@@ -624,8 +623,9 @@ namespace dxtbx { namespace boost_python {
    * If we have offset arrays set in the imageset then update the pixel to
    * millimeter strategy to use them
    */
-  void ImageSequence_update_detector_px_mm_data(ImageSequence &self) {
-    ImageSequence::detector_ptr detector = self.get_detector();
+  template<typename Beam, typename Sequence>
+  void ImageSequence_update_detector_px_mm_data(ImageSequence<Beam, Sequence> &self) {
+    typename ImageSequence<Beam, Sequence>::detector_ptr detector = self.get_detector();
     Image<double> dx = self.external_lookup().dx().get_data();
     Image<double> dy = self.external_lookup().dy().get_data();
     DXTBX_ASSERT(dx.empty() == dy.empty());
@@ -676,7 +676,7 @@ namespace dxtbx { namespace boost_python {
       .add_property("dy",
                     make_function(&ExternalLookup::dy, return_internal_reference<>()));
 
-    class_<ImageSetData<TOFBeam>, boost::shared_ptr<ImageSetData<TOFBeam> > >("TOFImageSetData", no_init)
+    class_<ImageSetData<TOFBeam, TOFSequence>, boost::shared_ptr<ImageSetData<TOFBeam, TOFSequence> > >("TOFImageSetData", no_init)
       .def("__init__",
            make_constructor(&make_tof_imageset_data1,
                             default_call_policies(),
@@ -690,38 +690,37 @@ namespace dxtbx { namespace boost_python {
                              arg("vendor") = "",
                              arg("params") = boost::python::object(),
                              arg("format") = boost::python::object())))
-      .def("reader", &ImageSetData<TOFBeam>::reader)
-      .def("masker", &ImageSetData<TOFBeam>::masker)
-      .def("get_data", static_cast<ImageBuffer (ImageSetData<TOFBeam>::*)(std::size_t, std::size_t)>(&ImageSetData<TOFBeam>::get_data))
-      .def("has_single_file_reader", &ImageSetData<TOFBeam>::has_single_file_reader)
-      .def("get_path", &ImageSetData<TOFBeam>::get_path)
-      .def("get_master_path", &ImageSetData<TOFBeam>::get_master_path)
-      .def("get_image_identifier", &ImageSetData<TOFBeam>::get_image_identifier)
-      .def("mark_for_rejection", &ImageSetData<TOFBeam>::mark_for_rejection)
-      .def("is_marked_for_rejection", &ImageSetData<TOFBeam>::is_marked_for_rejection)
-      .def("get_beam", &ImageSetData<TOFBeam>::get_beam)
-      .def("get_detector", &ImageSetData<TOFBeam>::get_detector)
-      .def("get_goniometer", &ImageSetData<TOFBeam>::get_goniometer)
-      .def("get_scan", &ImageSetData<TOFBeam>::get_scan)
-      .def("set_beam", &ImageSetData<TOFBeam>::set_beam)
-      .def("set_detector", &ImageSetData<TOFBeam>::set_detector)
-      .def("set_goniometer", &ImageSetData<TOFBeam>::set_goniometer)
-      .def("set_scan", &ImageSetData<TOFBeam>::set_scan)
-      .def("get_template", &ImageSetData<TOFBeam>::get_template)
-      .def("set_template", &ImageSetData<TOFBeam>::set_template)
-      .def("get_vendor", &ImageSetData<TOFBeam>::get_vendor)
-      .def("set_vendor", &ImageSetData<TOFBeam>::set_vendor)
-      .def("get_params", &ImageSetData_get_params<TOFBeam>)
-      .def("set_params", &ImageSetData_set_params<TOFBeam>)
-      .def("get_format_class", &ImageSetData_get_format<TOFBeam>)
-      .def("set_format_class", &ImageSetData_set_format<TOFBeam>)
+      .def("reader", &ImageSetData<TOFBeam, TOFSequence>::reader)
+      .def("masker", &ImageSetData<TOFBeam, TOFSequence>::masker)
+      .def("get_data", static_cast<ImageBuffer (ImageSetData<TOFBeam, TOFSequence>::*)(std::size_t)>(&ImageSetData<TOFBeam, TOFSequence>::get_data))
+      .def("has_single_file_reader", &ImageSetData<TOFBeam, TOFSequence>::has_single_file_reader)
+      .def("get_path", &ImageSetData<TOFBeam, TOFSequence>::get_path)
+      .def("get_master_path", &ImageSetData<TOFBeam, TOFSequence>::get_master_path)
+      .def("get_image_identifier", &ImageSetData<TOFBeam, TOFSequence>::get_image_identifier)
+      .def("mark_for_rejection", &ImageSetData<TOFBeam, TOFSequence>::mark_for_rejection)
+      .def("is_marked_for_rejection", &ImageSetData<TOFBeam, TOFSequence>::is_marked_for_rejection)
+      .def("get_beam", &ImageSetData<TOFBeam, TOFSequence>::get_beam)
+      .def("get_detector", &ImageSetData<TOFBeam, TOFSequence>::get_detector)
+      .def("get_goniometer", &ImageSetData<TOFBeam, TOFSequence>::get_goniometer)
+      .def("get_sequence", &ImageSetData<TOFBeam, TOFSequence>::get_sequence)
+      .def("set_beam", &ImageSetData<TOFBeam, TOFSequence>::set_beam)
+      .def("set_detector", &ImageSetData<TOFBeam, TOFSequence>::set_detector)
+      .def("set_goniometer", &ImageSetData<TOFBeam, TOFSequence>::set_goniometer)
+      .def("set_sequence", &ImageSetData<TOFBeam, TOFSequence>::set_sequence)
+      .def("get_template", &ImageSetData<TOFBeam, TOFSequence>::get_template)
+      .def("set_template", &ImageSetData<TOFBeam, TOFSequence>::set_template)
+      .def("get_vendor", &ImageSetData<TOFBeam, TOFSequence>::get_vendor)
+      .def("set_vendor", &ImageSetData<TOFBeam, TOFSequence>::set_vendor)
+      .def("get_params", &ImageSetData_get_params<TOFBeam, TOFSequence>)
+      .def("set_params", &ImageSetData_set_params<TOFBeam, TOFSequence>)
+      .def("get_format_class", &ImageSetData_get_format<TOFBeam, TOFSequence>)
+      .def("set_format_class", &ImageSetData_set_format<TOFBeam, TOFSequence>)
       .add_property(
         "external_lookup",
-        make_function(&ImageSetData<TOFBeam>::external_lookup, return_internal_reference<>()))
-      .def_pickle(ImageSetDataPickleSuite<TOFBeam>());
+        make_function(&ImageSetData<TOFBeam, TOFSequence>::external_lookup, return_internal_reference<>()))
+      .def_pickle(ImageSetDataPickleSuite<TOFBeam, TOFSequence>());
 
-    //.def("get_data", &ImageSetData<MonochromaticBeam>::get_data, arg("index"))
-    class_<ImageSetData<MonochromaticBeam>, boost::shared_ptr<ImageSetData<MonochromaticBeam> > >("ImageSetData", no_init)
+    class_<ImageSetData<MonochromaticBeam, Scan>, boost::shared_ptr<ImageSetData<MonochromaticBeam, Scan> > >("ImageSetData", no_init)
       .def("__init__",
            make_constructor(&make_monochromatic_imageset_data1,
                             default_call_policies(),
@@ -735,177 +734,159 @@ namespace dxtbx { namespace boost_python {
                              arg("vendor") = "",
                              arg("params") = boost::python::object(),
                              arg("format") = boost::python::object())))
-      .def("reader", &ImageSetData<MonochromaticBeam>::reader)
-      .def("masker", &ImageSetData<MonochromaticBeam>::masker)
-      .def("get_data", static_cast<ImageBuffer (ImageSetData<MonochromaticBeam>::*)(std::size_t)>(&ImageSetData<MonochromaticBeam>::get_data))
-      .def("has_single_file_reader", &ImageSetData<MonochromaticBeam>::has_single_file_reader)
-      .def("get_path", &ImageSetData<MonochromaticBeam>::get_path)
-      .def("get_master_path", &ImageSetData<MonochromaticBeam>::get_master_path)
-      .def("get_image_identifier", &ImageSetData<MonochromaticBeam>::get_image_identifier)
-      .def("mark_for_rejection", &ImageSetData<MonochromaticBeam>::mark_for_rejection)
-      .def("is_marked_for_rejection", &ImageSetData<MonochromaticBeam>::is_marked_for_rejection)
-      .def("get_beam", &ImageSetData<MonochromaticBeam>::get_beam)
-      .def("get_detector", &ImageSetData<MonochromaticBeam>::get_detector)
-      .def("get_goniometer", &ImageSetData<MonochromaticBeam>::get_goniometer)
-      .def("get_scan", &ImageSetData<MonochromaticBeam>::get_scan)
-      .def("set_beam", &ImageSetData<MonochromaticBeam>::set_beam)
-      .def("set_detector", &ImageSetData<MonochromaticBeam>::set_detector)
-      .def("set_goniometer", &ImageSetData<MonochromaticBeam>::set_goniometer)
-      .def("set_scan", &ImageSetData<MonochromaticBeam>::set_scan)
-      .def("get_template", &ImageSetData<MonochromaticBeam>::get_template)
-      .def("set_template", &ImageSetData<MonochromaticBeam>::set_template)
-      .def("get_vendor", &ImageSetData<MonochromaticBeam>::get_vendor)
-      .def("set_vendor", &ImageSetData<MonochromaticBeam>::set_vendor)
-      .def("get_params", &ImageSetData_get_params<MonochromaticBeam>)
-      .def("set_params", &ImageSetData_set_params<MonochromaticBeam>)
-      .def("get_format_class", &ImageSetData_get_format<MonochromaticBeam>)
-      .def("set_format_class", &ImageSetData_set_format<MonochromaticBeam>)
+      .def("reader", &ImageSetData<MonochromaticBeam, Scan>::reader)
+      .def("masker", &ImageSetData<MonochromaticBeam, Scan>::masker)
+      .def("get_data", static_cast<ImageBuffer (ImageSetData<MonochromaticBeam, Scan>::*)(std::size_t)>(&ImageSetData<MonochromaticBeam, Scan>::get_data))
+      .def("has_single_file_reader", &ImageSetData<MonochromaticBeam, Scan>::has_single_file_reader)
+      .def("get_path", &ImageSetData<MonochromaticBeam, Scan>::get_path)
+      .def("get_master_path", &ImageSetData<MonochromaticBeam, Scan>::get_master_path)
+      .def("get_image_identifier", &ImageSetData<MonochromaticBeam, Scan>::get_image_identifier)
+      .def("mark_for_rejection", &ImageSetData<MonochromaticBeam, Scan>::mark_for_rejection)
+      .def("is_marked_for_rejection", &ImageSetData<MonochromaticBeam, Scan>::is_marked_for_rejection)
+      .def("get_beam", &ImageSetData<MonochromaticBeam, Scan>::get_beam)
+      .def("get_detector", &ImageSetData<MonochromaticBeam, Scan>::get_detector)
+      .def("get_goniometer", &ImageSetData<MonochromaticBeam, Scan>::get_goniometer)
+      .def("get_scan", &ImageSetData<MonochromaticBeam, Scan>::get_sequence)
+      .def("set_beam", &ImageSetData<MonochromaticBeam, Scan>::set_beam)
+      .def("set_detector", &ImageSetData<MonochromaticBeam, Scan>::set_detector)
+      .def("set_goniometer", &ImageSetData<MonochromaticBeam, Scan>::set_goniometer)
+      .def("set_scan", &ImageSetData<MonochromaticBeam, Scan>::set_sequence)
+      .def("get_template", &ImageSetData<MonochromaticBeam, Scan>::get_template)
+      .def("set_template", &ImageSetData<MonochromaticBeam, Scan>::set_template)
+      .def("get_vendor", &ImageSetData<MonochromaticBeam, Scan>::get_vendor)
+      .def("set_vendor", &ImageSetData<MonochromaticBeam, Scan>::set_vendor)
+      .def("get_params", &ImageSetData_get_params<MonochromaticBeam, Scan>)
+      .def("set_params", &ImageSetData_set_params<MonochromaticBeam, Scan>)
+      .def("get_format_class", &ImageSetData_get_format<MonochromaticBeam, Scan>)
+      .def("set_format_class", &ImageSetData_set_format<MonochromaticBeam, Scan>)
       .add_property(
         "external_lookup",
-        make_function(&ImageSetData<MonochromaticBeam>::external_lookup, return_internal_reference<>()))
-      .def_pickle(ImageSetDataPickleSuite<MonochromaticBeam>());
+        make_function(&ImageSetData<MonochromaticBeam, Scan>::external_lookup, return_internal_reference<>()))
+      .def_pickle(ImageSetDataPickleSuite<MonochromaticBeam, Scan>());
 
-
-
-
-    class_<ImageSetBase<MonochromaticBeam>>("ImageSetBase", no_init)
-      .def("data", &ImageSetBase<MonochromaticBeam>::data)
-      .def("indices", &ImageSetBase<MonochromaticBeam>::indices)
-      .def("size", &ImageSetBase<MonochromaticBeam>::size)
-      .def("__len__", &ImageSetBase<MonochromaticBeam>::size)
-      .def("has_dynamic_mask", &ImageSetBase<MonochromaticBeam>::has_dynamic_mask)
-      .def("get_raw_data", &ImageSetBase_get_raw_data<MonochromaticBeam>)
-      .def("get_corrected_data", &ImageSetBase_get_corrected_data<MonochromaticBeam>)
-      .def("get_gain", &ImageSetBase_get_gain<MonochromaticBeam>)
-      .def("get_pedestal", &ImageSetBase_get_pedestal<MonochromaticBeam>)
-      .def("get_mask", &ImageSetBase_get_mask<MonochromaticBeam>)
-      .def("get_beam", &ImageSetBase<MonochromaticBeam>::get_beam_for_image, (arg("index") = 0))
-      .def("get_detector", &ImageSetBase<MonochromaticBeam>::get_detector_for_image, (arg("index") = 0))
-      .def("get_goniometer", &ImageSetBase<MonochromaticBeam>::get_goniometer_for_image, (arg("index") = 0))
-      .def("get_scan", &ImageSetBase<MonochromaticBeam>::get_scan_for_image, (arg("index") = 0))
-      .def("set_beam", &ImageSetBase<MonochromaticBeam>::set_beam_for_image, (arg("index") = 0))
-      .def("set_detector", &ImageSetBase<MonochromaticBeam>::set_detector_for_image, (arg("index") = 0))
-      .def("set_goniometer", &ImageSetBase<MonochromaticBeam>::set_goniometer_for_image, (arg("index") = 0))
-      .def("set_scan", &ImageSetBase<MonochromaticBeam>::set_scan_for_image, (arg("index") = 0))
-      .def("get_path", &ImageSetBase<MonochromaticBeam>::get_path)
-      .def("get_image_identifier", &ImageSetBase<MonochromaticBeam>::get_image_identifier)
-      .def("mark_for_rejection", &ImageSetBase<MonochromaticBeam>::mark_for_rejection)
-      .def("is_marked_for_rejection", &ImageSetBase<MonochromaticBeam>::is_marked_for_rejection)
-      .def("as_imageset", &ImageSetBase<MonochromaticBeam>::as_imageset)
-      .def("complete_set", &ImageSetBase<MonochromaticBeam>::complete_set)
-      .def("partial_set", &ImageSetBase<MonochromaticBeam>::partial_set)
-      .def("clear_cache", &ImageSetBase<MonochromaticBeam>::clear_cache)
-      .def("__eq__", &ImageSetBase<MonochromaticBeam>::operator==)
-      .def("__ne__", &ImageSetBase<MonochromaticBeam>::operator!=)
-      .def("update_detector_px_mm_data", &ImageSetBase_update_detector_px_mm_data<MonochromaticBeam>)
+    class_<ImageSet<MonochromaticBeam, Scan> >("ImageSet", no_init)
+      .def("data", &ImageSet<MonochromaticBeam, Scan>::data)
+      .def("indices", &ImageSet<MonochromaticBeam, Scan>::indices)
+      .def("size", &ImageSet<MonochromaticBeam, Scan>::size)
+      .def("__len__", &ImageSet<MonochromaticBeam, Scan>::size)
+      .def("has_dynamic_mask", &ImageSet<MonochromaticBeam, Scan>::has_dynamic_mask)
+      .def("get_raw_data", &ImageSet_get_raw_data<MonochromaticBeam, Scan>)
+      .def("get_corrected_data", &ImageSet_get_corrected_data<MonochromaticBeam, Scan>)
+      .def("get_gain", &ImageSet_get_gain<MonochromaticBeam, Scan>)
+      .def("get_pedestal", &ImageSet_get_pedestal<MonochromaticBeam, Scan>)
+      .def("get_mask", &ImageSet_get_mask<MonochromaticBeam, Scan>)
+      .def("get_beam", &ImageSet<MonochromaticBeam, Scan>::get_beam_for_image, (arg("index") = 0))
+      .def("get_detector", &ImageSet<MonochromaticBeam, Scan>::get_detector_for_image, (arg("index") = 0))
+      .def("get_goniometer", &ImageSet<MonochromaticBeam, Scan>::get_goniometer_for_image, (arg("index") = 0))
+      .def("get_scan", &ImageSet<MonochromaticBeam, Scan>::get_sequence_for_image, (arg("index") = 0))
+      .def("set_beam", &ImageSet<MonochromaticBeam, Scan>::set_beam_for_image, (arg("index") = 0))
+      .def("set_detector", &ImageSet<MonochromaticBeam, Scan>::set_detector_for_image, (arg("index") = 0))
+      .def("set_goniometer", &ImageSet<MonochromaticBeam, Scan>::set_goniometer_for_image, (arg("index") = 0))
+      .def("set_scan", &ImageSet<MonochromaticBeam, Scan>::set_sequence_for_image, (arg("index") = 0))
+      .def("get_path", &ImageSet<MonochromaticBeam, Scan>::get_path)
+      .def("get_image_identifier", &ImageSet<MonochromaticBeam, Scan>::get_image_identifier)
+      .def("mark_for_rejection", &ImageSet<MonochromaticBeam, Scan>::mark_for_rejection)
+      .def("is_marked_for_rejection", &ImageSet<MonochromaticBeam, Scan>::is_marked_for_rejection)
+      .def("as_imageset", &ImageSet<MonochromaticBeam, Scan>::as_imageset)
+      .def("complete_set", &ImageSet<MonochromaticBeam, Scan>::complete_set)
+      .def("partial_set", &ImageSet<MonochromaticBeam, Scan>::partial_set)
+      .def("clear_cache", &ImageSet<MonochromaticBeam, Scan>::clear_cache)
+      .def("__eq__", &ImageSet<MonochromaticBeam, Scan>::operator==)
+      .def("__ne__", &ImageSet<MonochromaticBeam, Scan>::operator!=)
+      .def("update_detector_px_mm_data", &ImageSet_update_detector_px_mm_data<MonochromaticBeam, Scan>)
       .add_property(
         "external_lookup",
-        make_function(&ImageSetBase<MonochromaticBeam>::external_lookup, return_internal_reference<>()));
+        make_function(&ImageSet<MonochromaticBeam, Scan>::external_lookup, return_internal_reference<>()));
 
-    class_<ImageSetBase<TOFBeam>>("ImageSetBase", no_init)
-      .def("data", &ImageSetBase<TOFBeam>::data)
-      .def("indices", &ImageSetBase<TOFBeam>::indices)
-      .def("size", &ImageSetBase<TOFBeam>::size)
-      .def("__len__", &ImageSetBase<TOFBeam>::size)
-      .def("has_dynamic_mask", &ImageSetBase<TOFBeam>::has_dynamic_mask)
-      .def("get_raw_data", &ImageSetBase_get_raw_data<TOFBeam>)
-      .def("get_corrected_data", &ImageSetBase_get_corrected_data<TOFBeam>)
-      .def("get_gain", &ImageSetBase_get_gain<TOFBeam>)
-      .def("get_pedestal", &ImageSetBase_get_pedestal<TOFBeam>)
-      .def("get_mask", &ImageSetBase_get_mask<TOFBeam>)
-      .def("get_beam", &ImageSetBase<TOFBeam>::get_beam_for_image, (arg("index") = 0))
-      .def("get_detector", &ImageSetBase<TOFBeam>::get_detector_for_image, (arg("index") = 0))
-      .def("get_goniometer", &ImageSetBase<TOFBeam>::get_goniometer_for_image, (arg("index") = 0))
-      .def("get_scan", &ImageSetBase<TOFBeam>::get_scan_for_image, (arg("index") = 0))
-      .def("set_beam", &ImageSetBase<TOFBeam>::set_beam_for_image, (arg("index") = 0))
-      .def("set_detector", &ImageSetBase<TOFBeam>::set_detector_for_image, (arg("index") = 0))
-      .def("set_goniometer", &ImageSetBase<TOFBeam>::set_goniometer_for_image, (arg("index") = 0))
-      .def("set_scan", &ImageSetBase<TOFBeam>::set_scan_for_image, (arg("index") = 0))
-      .def("get_path", &ImageSetBase<TOFBeam>::get_path)
-      .def("get_image_identifier", &ImageSetBase<TOFBeam>::get_image_identifier)
-      .def("mark_for_rejection", &ImageSetBase<TOFBeam>::mark_for_rejection)
-      .def("is_marked_for_rejection", &ImageSetBase<TOFBeam>::is_marked_for_rejection)
-      .def("as_imageset", &ImageSetBase<TOFBeam>::as_imageset)
-      .def("complete_set", &ImageSetBase<TOFBeam>::complete_set)
-      .def("partial_set", &ImageSetBase<TOFBeam>::partial_set)
-      .def("clear_cache", &ImageSetBase<TOFBeam>::clear_cache)
-      .def("__eq__", &ImageSetBase<TOFBeam>::operator==)
-      .def("__ne__", &ImageSetBase<TOFBeam>::operator!=)
-      .def("update_detector_px_mm_data", &ImageSetBase_update_detector_px_mm_data<TOFBeam>)
-      .add_property(
-        "external_lookup",
-        make_function(&ImageSetBase<TOFBeam>::external_lookup, return_internal_reference<>()));
-
-    class_<ImageSet, bases<ImageSetBase<MonochromaticBeam> > >("ImageSet", no_init)
-      .def("__init__",
-           make_constructor(&make_imageset,
-                            default_call_policies(),
-                            (arg("data"), arg("indices") = boost::python::object())))
-      .def_pickle(ImageSetPickleSuite());
-
-    class_<TOFImageSet, bases<ImageSetBase<TOFBeam> > >("TOFImageSet", no_init)
-      .def("__init__",
-           make_constructor(&make_tof_imageset,
-                            default_call_policies(),
-                            (arg("data"), arg("tof_in_seconds") = boost::python::object(),
-                            arg("tof_indices") = boost::python::object(),
-                            arg("indices") = boost::python::object())))
-      .def("get_corrected_data", &TOFImageSet_get_corrected_data)
-      .def("get_raw_data", &TOFImageSet_get_raw_data)
-      .def("partial_set", &TOFImageSet::partial_set)
-      .def("tof_in_seconds", &TOFImageSet::tof_in_seconds)
-      .def_pickle(TOFImageSetPickleSuite());
-    
-
-
-    class_<ImageGrid, bases<ImageSetBase<MonochromaticBeam> > >("ImageGrid", no_init)
-      .def(init<const ImageSetData<MonochromaticBeam> &, int2>((arg("data"), arg("grid_size"))))
-      .def(init<const ImageSetData<MonochromaticBeam> &, const scitbx::af::const_ref<std::size_t> &, int2>(
+    class_<ImageGrid, bases<ImageSet<MonochromaticBeam, Scan> > >("ImageGrid", no_init)
+      .def(init<const ImageSetData<MonochromaticBeam, Scan> &, int2>((arg("data"), arg("grid_size"))))
+      .def(init<const ImageSetData<MonochromaticBeam, Scan> &, const scitbx::af::const_ref<std::size_t> &, int2>(
         (arg("data"), arg("indices"), arg("grid_size"))))
       .def("get_grid_size", &ImageGrid::get_grid_size)
       .def("from_imageset", &ImageGrid::from_imageset)
       .staticmethod("from_imageset")
       .def_pickle(ImageGridPickleSuite());
 
-    class_<ImageSequence, bases<ImageSetBase<MonochromaticBeam> > >("ImageSequence", no_init)
-      .def(init<const ImageSetData<MonochromaticBeam> &,
-                const ImageSequence::beam_ptr &,
-                const ImageSequence::detector_ptr &,
-                const ImageSequence::goniometer_ptr &,
-                const ImageSequence::scan_ptr &>(
+    class_<RotImageSequence, bases<ImageSequence<MonochromaticBeam, Scan> > >("RotImageSequence", no_init)
+      .def(init<const ImageSetData<MonochromaticBeam, Scan> &,
+                const ImageSequence<MonochromaticBeam, Scan>::beam_ptr &,
+                const ImageSequence<MonochromaticBeam, Scan>::detector_ptr &,
+                const ImageSequence<MonochromaticBeam, Scan>::goniometer_ptr &,
+                const ImageSequence<MonochromaticBeam, Scan>::sequence_ptr &>(
         (arg("data"), arg("beam"), arg("detector"), arg("goniometer"), arg("scan"))))
-      .def(init<const ImageSetData<MonochromaticBeam> &,
+      .def(init<const ImageSetData<MonochromaticBeam, Scan> &,
                 const scitbx::af::const_ref<std::size_t> &,
-                const ImageSequence::beam_ptr &,
-                const ImageSequence::detector_ptr &,
-                const ImageSequence::goniometer_ptr &,
-                const ImageSequence::scan_ptr &>((arg("data"),
+                const ImageSequence<MonochromaticBeam, Scan>::beam_ptr &,
+                const ImageSequence<MonochromaticBeam, Scan>::detector_ptr &,
+                const ImageSequence<MonochromaticBeam, Scan>::goniometer_ptr &,
+                const ImageSequence<MonochromaticBeam, Scan>::sequence_ptr &>((arg("data"),
                                                   arg("indices"),
                                                   arg("beam"),
                                                   arg("detector"),
                                                   arg("goniometer"),
                                                   arg("scan"))))
-      .def("get_beam", &ImageSequence::get_beam_for_image)
-      .def("get_detector", &ImageSequence::get_detector_for_image)
-      .def("get_goniometer", &ImageSequence::get_goniometer_for_image)
-      .def("get_scan", &ImageSequence::get_scan_for_image)
-      .def("set_beam", &ImageSequence::set_beam_for_image)
-      .def("set_detector", &ImageSequence::set_detector_for_image)
-      .def("set_goniometer", &ImageSequence::set_goniometer_for_image)
-      .def("set_scan", &ImageSequence::set_scan_for_image)
-      .def("get_beam", &ImageSequence::get_beam)
-      .def("get_detector", &ImageSequence::get_detector)
-      .def("get_goniometer", &ImageSequence::get_goniometer)
-      .def("get_scan", &ImageSequence::get_scan)
-      .def("set_beam", &ImageSequence::set_beam)
-      .def("set_detector", &ImageSequence::set_detector)
-      .def("set_goniometer", &ImageSequence::set_goniometer)
-      .def("set_scan", &ImageSequence::set_scan)
-      .def("get_array_range", &ImageSequence::get_array_range)
-      .def("complete_set", &ImageSequence::complete_sequence)
-      .def("partial_set", &ImageSequence::partial_sequence)
-      .def("update_detector_px_mm_data", &ImageSequence_update_detector_px_mm_data)
-      .def_pickle(ImageSequencePickleSuite());
+      .def("get_beam", &ImageSequence<MonochromaticBeam, Scan>::get_beam_for_image)
+      .def("get_detector", &ImageSequence<MonochromaticBeam, Scan>::get_detector_for_image)
+      .def("get_goniometer", &ImageSequence<MonochromaticBeam, Scan>::get_goniometer_for_image)
+      .def("get_scan", &ImageSequence<MonochromaticBeam, Scan>::get_sequence_for_image)
+      .def("set_beam", &ImageSequence<MonochromaticBeam, Scan>::set_beam_for_image)
+      .def("set_detector", &ImageSequence<MonochromaticBeam, Scan>::set_detector_for_image)
+      .def("set_goniometer", &ImageSequence<MonochromaticBeam, Scan>::set_goniometer_for_image)
+      .def("set_scan", &ImageSequence<MonochromaticBeam, Scan>::set_sequence_for_image)
+      .def("get_beam", &ImageSequence<MonochromaticBeam, Scan>::get_beam)
+      .def("get_detector", &ImageSequence<MonochromaticBeam, Scan>::get_detector)
+      .def("get_goniometer", &ImageSequence<MonochromaticBeam, Scan>::get_goniometer)
+      .def("get_scan", &ImageSequence<MonochromaticBeam, Scan>::get_sequence)
+      .def("set_beam", &ImageSequence<MonochromaticBeam, Scan>::set_beam)
+      .def("set_detector", &ImageSequence<MonochromaticBeam, Scan>::set_detector)
+      .def("set_goniometer", &ImageSequence<MonochromaticBeam, Scan>::set_goniometer)
+      .def("set_scan", &ImageSequence<MonochromaticBeam, Scan>::set_sequence)
+      .def("get_array_range", &ImageSequence<MonochromaticBeam, Scan>::get_array_range)
+      .def("complete_set", &ImageSequence<MonochromaticBeam, Scan>::complete_sequence)
+      .def("partial_set", &ImageSequence<MonochromaticBeam, Scan>::partial_sequence)
+      .def("update_detector_px_mm_data", &ImageSequence_update_detector_px_mm_data<MonochromaticBeam, Scan>)
+      .def_pickle(RotImageSequencePickleSuite());
+
+    class_<TOFImageSequence, bases<ImageSequence<TOFBeam, TOFSequence> > >("TOFImageSequence", no_init)
+      .def(init<const ImageSetData<TOFBeam, TOFSequence> &,
+                const ImageSequence<TOFBeam, TOFSequence>::beam_ptr &,
+                const ImageSequence<TOFBeam, TOFSequence>::detector_ptr &,
+                const ImageSequence<TOFBeam, TOFSequence>::goniometer_ptr &,
+                const ImageSequence<TOFBeam, TOFSequence>::sequence_ptr &>(
+        (arg("data"), arg("beam"), arg("detector"), arg("goniometer"), arg("scan"))))
+      .def(init<const ImageSetData<TOFBeam, TOFSequence> &,
+                const scitbx::af::const_ref<std::size_t> &,
+                const ImageSequence<TOFBeam, TOFSequence>::beam_ptr &,
+                const ImageSequence<TOFBeam, TOFSequence>::detector_ptr &,
+                const ImageSequence<TOFBeam, TOFSequence>::goniometer_ptr &,
+                const ImageSequence<TOFBeam, TOFSequence>::sequence_ptr &>((arg("data"),
+                                                  arg("indices"),
+                                                  arg("beam"),
+                                                  arg("detector"),
+                                                  arg("goniometer"),
+                                                  arg("scan"))))
+      .def("get_beam", &ImageSequence<TOFBeam, TOFSequence>::get_beam_for_image)
+      .def("get_detector", &ImageSequence<TOFBeam, TOFSequence>::get_detector_for_image)
+      .def("get_goniometer", &ImageSequence<TOFBeam, TOFSequence>::get_goniometer_for_image)
+      .def("get_sequence", &ImageSequence<TOFBeam, TOFSequence>::get_sequence_for_image)
+      .def("set_beam", &ImageSequence<TOFBeam, TOFSequence>::set_beam_for_image)
+      .def("set_detector", &ImageSequence<TOFBeam, TOFSequence>::set_detector_for_image)
+      .def("set_goniometer", &ImageSequence<TOFBeam, TOFSequence>::set_goniometer_for_image)
+      .def("set_sequence", &ImageSequence<TOFBeam, TOFSequence>::set_sequence_for_image)
+      .def("get_beam", &ImageSequence<TOFBeam, TOFSequence>::get_beam)
+      .def("get_detector", &ImageSequence<TOFBeam, TOFSequence>::get_detector)
+      .def("get_goniometer", &ImageSequence<TOFBeam, TOFSequence>::get_goniometer)
+      .def("get_sequence", &ImageSequence<TOFBeam, TOFSequence>::get_sequence)
+      .def("set_beam", &ImageSequence<TOFBeam, TOFSequence>::set_beam)
+      .def("set_detector", &ImageSequence<TOFBeam, TOFSequence>::set_detector)
+      .def("set_goniometer", &ImageSequence<TOFBeam, TOFSequence>::set_goniometer)
+      .def("set_sequence", &ImageSequence<TOFBeam, TOFSequence>::set_sequence)
+      .def("get_array_range", &ImageSequence<TOFBeam, TOFSequence>::get_array_range)
+      .def("complete_set", &ImageSequence<TOFBeam, TOFSequence>::complete_sequence)
+      .def("partial_set", &ImageSequence<TOFBeam, TOFSequence>::partial_sequence)
+      .def("update_detector_px_mm_data", &ImageSequence_update_detector_px_mm_data<TOFBeam, TOFSequence>)
+      .def_pickle(TOFImageSequencePickleSuite());
+
   }
 
   BOOST_PYTHON_MODULE(dxtbx_imageset_ext) {
