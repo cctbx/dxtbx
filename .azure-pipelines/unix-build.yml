@@ -27,6 +27,7 @@ steps:
   workingDirectory: $(Pipeline.Workspace)
 
 # Download additional source repositories required by cctbx-base (but not dxtbx)
+# cf. https://github.com/conda-forge/cctbx-base-feedstock/issues/12
 - bash: |
     set -eux
     git clone https://github.com/dials/annlib.git modules/annlib
@@ -36,7 +37,7 @@ steps:
 
 # Create a new conda environment using the bootstrap script
 # Extract the dials-data version so we can correctly cache regression data.
-- script: |
+- bash: |
     set -eux
     python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --clean --python $(PYTHON_VERSION)
 
@@ -46,8 +47,7 @@ steps:
 
     dials.data info -v
     echo "##vso[task.setvariable variable=DIALS_DATA_VERSION_FULL]$(dials.data info -v | grep version.full)"
-    echo "##vso[task.setvariable variable=DIALS_DATA_VERSION]$(dials.data info -v | grep version.major)"
-    #                                                                this is a bug in dials-data ^^^^^
+    echo "##vso[task.setvariable variable=DIALS_DATA_VERSION]$(dials.data info -v | grep version.major_minor)"
     mkdir -p data
   displayName: Create python $(PYTHON_VERSION) environment
   workingDirectory: $(Pipeline.Workspace)
