@@ -1,1 +1,1 @@
-Compliation fix for Centos 7
+Fix ``flumpy`` compilation issue on GCC 4.8 (For Centos 7)
