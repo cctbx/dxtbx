@@ -16,7 +16,6 @@ lookup_flex_type_to_numpy = {
     "int8": "b",
     "int16": "h",
     "int": "i",
-    "long": "q",
     "int32": "i",
     "int64": "q",
     "float": "f",
@@ -28,6 +27,13 @@ lookup_flex_type_to_numpy = {
     "vec2_double": "d",
     "tiny_size_t_2": "Q",
 }
+
+# On POSIX platforms, long and q are the same and numpy tends to give q's
+# On Windows, defer to numpy long binding directly
+if np.dtype("l").itemsize == np.dtype("q").itemsize:
+    lookup_flex_type_to_numpy["long"] = "q"
+else:
+    lookup_flex_type_to_numpy["long"] = "l"
 
 
 def test_basics():
