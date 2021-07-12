@@ -20,7 +20,7 @@ from dxtbx.model import MultiAxisGoniometer
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
-from dxtbx.model.scan import ScanFactory
+from dxtbx.model.sequence import SequenceFactory
 from dxtbx.sequence_filenames import template_regex
 from dxtbx.util import get_url_scheme
 
@@ -155,12 +155,12 @@ class Format:
         self._goniometer_instance = None
         self._detector_instance = None
         self._beam_instance = None
-        self._scan_instance = None
+        self._sequence_instance = None
 
         self._goniometer_factory = GoniometerFactory
         self._detector_factory = DetectorFactory
         self._beam_factory = BeamFactory
-        self._scan_factory = ScanFactory
+        self._sequence_factory = SequenceFactory
 
         self.setup()
 
@@ -184,8 +184,8 @@ class Format:
             beam_instance = self._beam()
             self._beam_instance = beam_instance
 
-            scan_instance = self._scan()
-            self._scan_instance = scan_instance
+            sequence_instance = self._sequence()
+            self._sequence_instance = sequence_instance
         finally:
             self._end()
 
@@ -211,11 +211,11 @@ class Format:
 
         return self._beam_instance
 
-    def get_scan(self):
-        """Get the standard scan instance which was derived from the image
+    def get_sequence(self):
+        """Get the standard sequence instance which was derived from the image
         headers."""
 
-        return self._scan_instance
+        return self._sequence_instance
 
     def get_raw_data(self):
         """Get the pixel intensities (i.e. read the image and return as a
@@ -295,34 +295,39 @@ class Format:
         return masker
 
     @staticmethod
-    def identify_imageset_type(scan, goniometer, beam, format_instance):
+    def identify_imageset_type(sequence, goniometer, beam, format_instance):
 
         from dxtbx.imageset import ImageSetType
         from dxtbx.model.beam import TOFBeam
+        from dxtbx.model.sequence import Scan, TOFSequence
 
-        def is_tof_imageset(scan, beam, format_instance):
+        def is_tof_imagesequence(sequence, beam, format_instance):
             if beam is None and format_instance is not None:
                 beam = format_instance.get_beam()
             if isinstance(beam, TOFBeam):
-                if scan is not None:
-                    raise NotImplementedError("ToF rotational scans not implemented")
+                if not isinstance(sequence, TOFSequence):
+                    raise NotImplementedError(
+                        "ToFBeam only implemented to work with TOFSequence"
+                    )
                 else:
                     return True
             return False
 
-        def is_imagesequence(scan, goniometer, format_instance):
-            if scan is not None and goniometer is not None:
-                return True
-            if format_instance is not None:
-                scan = format_instance.get_scan()
-                goniometer = format_instance.get_goniometer()
-                if scan is not None and goniometer is not None:
+        def is_rot_imagesequence(sequence, goniometer, format_instance):
+            if sequence is not None and goniometer is not None:
+                if isinstance(sequence, Scan):
                     return True
+            if format_instance is not None:
+                sequence = format_instance.get_sequence()
+                goniometer = format_instance.get_goniometer()
+                if sequence is not None and goniometer is not None:
+                    if isinstance(sequence, Scan):
+                        return True
             return False
 
-        if is_tof_imageset(scan, beam, format_instance):
-            return ImageSetType.TOFImageSet
-        elif is_imagesequence(scan, goniometer, format_instance):
+        if is_tof_imagesequence(sequence, beam, format_instance):
+            return ImageSetType.TOFImageSequence
+        elif is_rot_imagesequence(sequence, goniometer, format_instance):
             return ImageSetType.RotImageSequence
         return ImageSetType.ImageSet
 
@@ -333,7 +338,7 @@ class Format:
 
         if beam is None or detector is None:
             return True
-        if imageset_type == ImageSetType.TOFImageSet:
+        if imageset_type == ImageSetType.TOFImageSequence:
             return True
         return False
 
@@ -344,7 +349,7 @@ class Format:
         beam=None,
         detector=None,
         goniometer=None,
-        scan=None,
+        sequence=None,
         imageset_type=None,
         format_kwargs=None,
         **kwargs,
@@ -359,6 +364,7 @@ class Format:
             ImageSetData,
             ImageSetType,
             RotImageSequence,
+            TOFImageSequence,
         )
 
         def process_filenames(filenames):
@@ -377,9 +383,10 @@ class Format:
             beam,
             detector,
             goniometer,
-            scan,
+            sequence,
             format_instance,
             format_kwargs,
+            imageset_type,
             **kwargs,
         ):
             # Get the template
@@ -388,9 +395,9 @@ class Format:
             else:
                 template = str(kwargs["template"])
 
-            # Check scan makes sense
-            if scan:
-                assert scan.get_num_images() == len(filenames)
+            # Check sequence makes sense
+            if sequence:
+                assert sequence.get_num_images() == len(filenames)
 
             # If any are None then read from format
             if beam is None and format_instance is not None:
@@ -399,17 +406,19 @@ class Format:
                 detector = format_instance.get_detector()
             if goniometer is None and format_instance is not None:
                 goniometer = format_instance.get_goniometer()
-            if scan is None and format_instance is not None:
-                scan = format_instance.get_scan()
-                if scan is not None:
+            if sequence is None and format_instance is not None:
+                sequence = format_instance.get_sequence()
+                if sequence is not None:
                     for f in filenames[1:]:
                         format_instance = cls(f, **format_kwargs)
-                        scan += format_instance.get_scan()
+                        sequence += format_instance.get_sequence()
 
-            assert beam is not None, "Can't create Sequence without beam"
-            assert detector is not None, "Can't create Sequence without detector"
-            assert goniometer is not None, "Can't create Sequence without goniometer"
-            assert scan is not None, "Can't create Sequence without scan"
+            assert beam is not None, "Can't create ImageSequence without beam"
+            assert detector is not None, "Can't create ImageSequence without detector"
+            assert (
+                goniometer is not None
+            ), "Can't create ImageSequence without goniometer"
+            assert sequence is not None, "Can't create ImageSequence without sequence"
 
             # Create the masker
             if format_instance is not None:
@@ -418,20 +427,42 @@ class Format:
                 masker = None
 
             # Create the sequence
-            iset = RotImageSequence(
-                ImageSetData(
-                    reader=reader,
-                    masker=masker,
-                    vendor=vendor,
-                    params=format_kwargs,
-                    format=cls,
-                    template=template,
-                ),
-                beam=beam,
-                detector=detector,
+            imageset_type = Format.identify_imageset_type(
+                sequence=sequence,
                 goniometer=goniometer,
-                scan=scan,
+                beam=beam,
+                format_instance=format_instance,
             )
+
+            iset_data = ImageSetData(
+                reader=reader,
+                masker=masker,
+                vendor=vendor,
+                params=format_kwargs,
+                format=cls,
+                template=template,
+            )
+            if isinstance(imageset_type, ImageSetType.RotImageSequence):
+                iset = RotImageSequence(
+                    iset_data,
+                    beam=beam,
+                    detector=detector,
+                    goniometer=goniometer,
+                    sequence=sequence,
+                )
+            elif isinstance(imageset_type, ImageSetType.TOFImageSequence):
+                iset = TOFImageSequence(
+                    iset_data,
+                    beam=beam,
+                    detector=detector,
+                    goniometer=goniometer,
+                    sequence=sequence,
+                )
+            else:
+                raise (
+                    NotImplementedError,
+                    "Unknown ImageSequence type %s" % imageset_type,
+                )
 
             return iset
 
@@ -441,7 +472,7 @@ class Format:
             beam,
             detector,
             goniometer,
-            scan,
+            sequence,
             format_instance,
             vendor,
             format_kwargs,
@@ -458,26 +489,26 @@ class Format:
             )
 
             # If any are None then read from format
-            if [beam, detector, goniometer, scan].count(None) != 0:
+            if [beam, detector, goniometer, sequence].count(None) != 0:
 
                 # Get list of models
                 beam = []
                 detector = []
                 goniometer = []
-                scan = []
+                sequence = []
                 for f in filenames:
                     format_instance = cls(f, **format_kwargs)
                     beam.append(format_instance.get_beam())
                     detector.append(format_instance.get_detector())
                     goniometer.append(format_instance.get_goniometer())
-                    scan.append(format_instance.get_scan())
+                    sequence.append(format_instance.get_sequence())
 
             # Set the list of models
             for i in range(len(filenames)):
                 iset.set_beam(beam[i], i)
                 iset.set_detector(detector[i], i)
                 iset.set_goniometer(goniometer[i], i)
-                iset.set_scan(scan[i], i)
+                iset.set_sequence(sequence[i], i)
 
         # Process input
         filenames = process_filenames(filenames)
@@ -497,7 +528,7 @@ class Format:
         # Attempt to identify imageset type from models if type is not given
         if imageset_type is None:
             imageset_type = Format.identify_imageset_type(
-                scan, goniometer, beam, format_instance
+                sequence, goniometer, beam, format_instance
             )
 
         if imageset_type == ImageSetType.ImageSet:
@@ -507,21 +538,25 @@ class Format:
                 beam,
                 detector,
                 goniometer,
-                scan,
+                sequence,
                 format_instance,
                 vendor,
                 format_kwargs,
             )
-        elif imageset_type == ImageSetType.RotImageSequence:
+        elif imageset_type in [
+            ImageSetType.RotImageSequence,
+            ImageSetType.TOFImageSequence,
+        ]:
             iset = create_imagesequence(
                 cls,
                 filenames,
                 beam,
                 detector,
                 goniometer,
-                scan,
+                sequence,
                 format_instance,
                 format_kwargs,
+                imageset_type=imageset_type,
                 **kwargs,
             )
         else:
@@ -576,9 +611,9 @@ class Format:
         long as the result is a beam."""
         return None
 
-    def _scan(self):
+    def _sequence(self):
         """Overload this method to read the image file however you like so
-        long as the result is a scan."""
+        long as the result is a sequence."""
         return None
 
     def get_static_mask(self):
