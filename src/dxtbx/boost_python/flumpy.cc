@@ -390,8 +390,13 @@ py::object from_numpy(py::object array) {
     if (sizeof(long) == sizeof(long long)) {
       dtype = 'l';
     } else {
+      // flex doesn't bind long long on windows, but does bind 64-bit
+      // integers separately, which we can use for that. Other platforms
+      // don't have this bound as a separate type.
+#ifndef _MSC_VER
       throw std::invalid_argument(
         "Numpy array is type 'q' but long long is unbound by flex");
+#endif
     }
   }
 
@@ -412,7 +417,7 @@ py::object from_numpy(py::object array) {
   } else if (dtype == 'l') {
     return numpy_to_array_family<af::versa<long, af::flex_grid<>>>(np_array);
   } else if (dtype == 'q') {
-    return numpy_to_array_family<af::versa<long long, af::flex_grid<>>>(np_array);
+    return numpy_to_array_family<af::versa<int64_t, af::flex_grid<>>>(np_array);
   } else if (dtype == 'f') {
     return numpy_to_array_family<af::versa<float, af::flex_grid<>>>(np_array);
   } else if (dtype == 'd') {
