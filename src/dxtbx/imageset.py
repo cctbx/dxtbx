@@ -451,6 +451,7 @@ class ImageSetFactory:
         detector=None,
         goniometer=None,
         scan=None,
+        sequence_type=ImageSetType.RotImageSequence,
     ):
         """Create a new sequence from a template.
 
@@ -492,13 +493,13 @@ class ImageSetFactory:
         # Create the sequence object
         sequence = format_class.get_imageset(
             filenames,
-            template=template,
-            as_sequence=True,
             beam=beam,
             detector=detector,
             goniometer=goniometer,
             scan=scan,
+            imageset_type=sequence_type,
             check_format=check_format,
+            template=template,
         )
 
         return [sequence]
