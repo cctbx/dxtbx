@@ -217,8 +217,8 @@ class ImageSetLazy(ImageSet):
     def get_goniometer(self, index=None):
         return self._get_item_from_parent_or_format("goniometer", index)
 
-    def get_scan(self, index=None):
-        return self._get_item_from_parent_or_format("scan", index)
+    def get_sequence(self, index=None):
+        return self._get_item_from_parent_or_format("sequence", index)
 
     def _load_models(self, index):
         if index is None:
@@ -227,7 +227,7 @@ class ImageSetLazy(ImageSet):
         self.get_detector(index)
         self.get_beam(index)
         self.get_goniometer(index)
-        self.get_scan(index)
+        self.get_sequence(index)
 
     def __getitem__(self, item):
         if isinstance(item, slice):
@@ -261,7 +261,7 @@ class _:
 
         """
         if isinstance(item, slice):
-            offset = self.get_scan().get_batch_offset()
+            offset = self.get_sequence().get_batch_offset()
             if item.step is not None:
                 raise IndexError("Sequences must be sequential")
 
@@ -450,7 +450,7 @@ class ImageSetFactory:
         beam=None,
         detector=None,
         goniometer=None,
-        scan=None,
+        sequence=None,
         sequence_type=ImageSetType.RotImageSequence,
     ):
         """Create a new sequence from a template.
@@ -496,7 +496,7 @@ class ImageSetFactory:
             beam=beam,
             detector=detector,
             goniometer=goniometer,
-            scan=scan,
+            sequence=sequence,
             imageset_type=sequence_type,
             check_format=check_format,
             template=template,
@@ -547,7 +547,7 @@ class ImageSetFactory:
         beam=None,
         detector=None,
         goniometer=None,
-        scan=None,
+        sequence=None,
         check_format=True,
         format_kwargs=None,
     ):
@@ -562,9 +562,9 @@ class ImageSetFactory:
 
         # Set the image range
         array_range = (min(indices) - 1, max(indices))
-        if scan is not None:
-            assert array_range == scan.get_array_range()
-            scan.set_batch_offset(array_range[0])
+        if sequence is not None:
+            assert array_range == sequence.get_array_range()
+            sequence.set_batch_offset(array_range[0])
 
         # Get the format object and reader
         if format_class is None:
@@ -583,7 +583,7 @@ class ImageSetFactory:
             beam=beam,
             detector=detector,
             goniometer=goniometer,
-            scan=scan,
+            sequence=sequence,
             format_kwargs=format_kwargs,
             imageset_type=ImageSetType.RotImageSequence,
             single_file_indices=list(range(*array_range)),
