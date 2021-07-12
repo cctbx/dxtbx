@@ -9,10 +9,9 @@ from dxtbx_imageset_ext import (
     ExternalLookupItemDouble,
     ImageGrid,
     ImageSet,
-    ImageSetBase,
     ImageSetData,
     RotImageSequence,
-    TOFImageSet,
+    TOFImageSequence,
     TOFImageSetData,
 )
 
@@ -26,7 +25,7 @@ __all__ = (
     "ExternalLookupItemDouble",
     "ImageGrid",
     "ImageSet",
-    "TOFImageSet",
+    "TOFImageSequence",
     "ImageSetData",
     "TOFImageSetData",
     "ImageSetFactory",
@@ -40,7 +39,7 @@ class ImageSetType(Enum):
     ImageSet = 1
     ImageSetLazy = 2
     RotImageSequence = 3
-    TOFImageSet = 4
+    TOFImageSequence = 4
 
 
 def _expand_template(template: str, indices: Iterable[int]) -> List[str]:
@@ -177,77 +176,7 @@ class _:
         return [self.get_path(i) for i in range(len(self))]
 
 
-@boost_adaptbx.boost.python.inject_into(TOFImageSet)
-class _(object):
-    """
-    A class to inject additional methods into the tof imageset class
-    """
-
-    def get_tof_range(self):
-        kwargs = self.params()
-        if self.data().has_single_file_reader():
-            format_instance = self.get_format_class().get_instance(
-                self.data().get_master_path(), **kwargs
-            )
-        else:
-            format_instance = self.get_format_class().get_instance(
-                self.get_path(0), **kwargs
-            )
-
-        return format_instance.get_tof_range()
-
-    def __getitem__(self, item):
-        """Get an item from the image set stream.
-
-        If the item is an index, read and return the image at the given index.
-        Otherwise, if the item is a slice, then create a new ImageSet object
-        with the given number of array indices from the slice.
-
-        Params:
-            item The index or slice
-
-        Returns:
-            An image or new ImageSet object
-        """
-
-        if isinstance(item, int) or isinstance(item, slice):
-            item = (item, slice(None, None, None))
-
-        assert isinstance(item, tuple), "TOFImageSet expects two indices"
-        assert len(item) == 2, "TOFImageSet expects two indices"
-
-        image_idx = item[0]
-        tof_idx = item[1]
-
-        assert isinstance(image_idx, slice) or isinstance(
-            image_idx, int
-        ), "Cannot understand indexing"
-        assert isinstance(tof_idx, slice) or isinstance(
-            tof_idx, int
-        ), "Cannot understand indexing"
-
-        if isinstance(image_idx, int) and isinstance(tof_idx, int):
-            return self.get_corrected_data(image_idx, tof_idx)
-        else:
-            tof_range = self.get_tof_range()
-
-            if isinstance(image_idx, slice):
-                image_start = image_idx.start or 0
-                image_stop = image_idx.stop or len(self)
-            elif isinstance(image_idx, int):
-                image_start = image_idx
-                image_stop = image_idx + 1
-            if isinstance(tof_idx, slice):
-                tof_start = tof_idx.start or tof_range[0]
-                tof_stop = tof_idx.stop or tof_range[1]
-            elif isinstance(tof_idx, int):
-                tof_start = tof_idx
-                tof_stop = tof_idx + 1
-
-            return self.partial_set(image_start, image_stop, tof_start, tof_stop)
-
-
-class ImageSetLazy(ImageSet, ImageSetBase):
+class ImageSetLazy(ImageSet):
     """
     Lazy ImageSet class that doesn't necessitate setting the models ahead of time.
     Only when a particular model (like detector or beam) for an image is requested,
@@ -363,6 +292,54 @@ class _:
         return self.data().get_template()
 
 
+@boost_adaptbx.boost.python.inject_into(TOFImageSequence)
+class _(object):
+    def __getitem__(self, item):
+        """Get an item from the sequence stream.
+
+        If the item is an index, read and return the image at the given index.
+        Otherwise, if the item is a slice, then create a new Sequence object
+        with the given number of array indices from the slice.
+
+        Params:
+            item The index or slice
+
+        Returns:
+            An image or new Sequence object
+
+        """
+        if isinstance(item, slice):
+            offset = self.get_sequence().get_batch_offset()
+            if item.step is not None:
+                raise IndexError("Sequences must be sequential")
+
+            # nasty workaround for https://github.com/dials/dials/issues/1153
+            # slices with -1 in them are meaningful :-/ so grab the original
+            # constructor arguments of the slice object.
+            # item.start and item.stop may have been compromised at this point.
+            if offset < 0:
+                start, stop, step = item.__reduce__()[1]
+                if start is None:
+                    start = 0
+                else:
+                    start -= offset
+                if stop is None:
+                    stop = len(self)
+                else:
+                    stop -= offset
+                return self.partial_set(start, stop)
+            else:
+                start = item.start or 0
+                stop = item.stop or (len(self) + offset)
+                return self.partial_set(start - offset, stop - offset)
+        else:
+            return self.get_corrected_data(item)
+
+    def get_template(self):
+        """Return the template"""
+        return self.data().get_template()
+
+
 def _analyse_files(filenames):
     """Group images by filename into image sets.
 
@@ -416,11 +393,11 @@ def _analyse_files(filenames):
 
 # FIXME Lots of duplication in this class, need to tidy up
 class ImageSetFactory:
-    """Factory to create imagesets and sequences."""
+    """Factory to create imagesets and imagesequences."""
 
     @staticmethod
-    def new(filenames, check_headers=False, ignore_unknown=False):
-        """Create an imageset or sequence
+    def new(filenames):
+        """Create an imageset from a filename
 
         Params:
             filenames A list of filenames
@@ -440,24 +417,29 @@ class ImageSetFactory:
             raise RuntimeError("unknown argument passed to ImageSetFactory")
 
         # Analyse the filenames and group the images into imagesets.
-        filelist_per_imageset = _analyse_files(filenames)
+        filelist_per_imageset = group_files_by_imageset(filenames)
 
         # For each file list denoting an image set, create the imageset
         # and return as a list of imagesets. N.B sequences and image sets are
         # returned in the same list.
-        imagesetlist = []
+        imagesets = []
         for filelist in filelist_per_imageset:
-            try:
-                if filelist[2] is True:
-                    iset = ImageSetFactory._create_sequence(filelist, check_headers)
-                else:
-                    iset = ImageSetFactory._create_imageset(filelist, check_headers)
-                imagesetlist.append(iset)
-            except Exception:
-                if not ignore_unknown:
-                    raise
 
-        return imagesetlist
+            template, indices = filelist
+
+            # Get the template format
+            if "#" in template:
+                filenames = sorted(_expand_template(template, indices))
+            else:
+                filenames = [template]
+
+            # Get the format object
+            format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
+
+            # Create and add the imageset
+            imagesets.append(format_class.get_imageset(filenames))
+
+        return imagesets
 
     @staticmethod
     def from_template(
@@ -520,40 +502,6 @@ class ImageSetFactory:
         )
 
         return [sequence]
-
-    @staticmethod
-    def _create_imageset(filelist, check_headers):
-        """Create an image set"""
-        # Extract info from filelist
-        template, indices, is_sequence = filelist
-
-        # Get the template format
-        if "#" in template:
-            filenames = sorted(_expand_template(template, indices))
-        else:
-            filenames = [template]
-
-        # Get the format object
-        format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
-
-        # Create and return the imageset
-        return format_class.get_imageset(filenames, as_imageset=True)
-
-    @staticmethod
-    def _create_sequence(filelist, check_headers):
-        """Create a sequence"""
-        template, indices, is_sequence = filelist
-
-        # Expand the template if necessary
-        if "#" in template:
-            filenames = sorted(_expand_template(template, indices))
-        else:
-            filenames = [template]
-
-        # Get the format object
-        format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
-
-        return format_class.get_imageset(filenames, template=template, as_sequence=True)
 
     @staticmethod
     def make_imageset(

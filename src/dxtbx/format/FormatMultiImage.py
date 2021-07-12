@@ -6,11 +6,11 @@ from scitbx.array_family import flex
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import (
-    ImageSequence,
     ImageSet,
     ImageSetData,
     ImageSetLazy,
     ImageSetType,
+    RotImageSequence,
     TOFImageSet,
     TOFImageSetData,
 )
@@ -201,7 +201,7 @@ class FormatMultiImage(Format):
             )
 
             # Create the sequence
-            iset = ImageSequence(
+            iset = RotImageSequence(
                 isetdata,
                 beam=beam,
                 detector=detector,
@@ -449,7 +449,7 @@ class FormatMultiImage(Format):
                 format_instance,
                 format_kwargs,
             )
-        elif imageset_type == ImageSetType.ImageSequence:
+        elif imageset_type == ImageSetType.RotImageSequence:
             return create_imagesequence(
                 cls,
                 filenames,
