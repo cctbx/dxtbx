@@ -11,7 +11,7 @@ from dxtbx.imageset import (
     ImageSetLazy,
     ImageSetType,
     RotImageSequence,
-    TOFImageSet,
+    TOFImageSequence,
     TOFImageSetData,
 )
 from dxtbx.model import MultiAxisGoniometer
@@ -99,8 +99,8 @@ class FormatMultiImage(Format):
     def get_spectrum(self, index=None):
         raise NotImplementedError
 
-    def get_scan(self, index=None):
-        return self._scan_instance
+    def get_sequence(self, index=None):
+        return self._sequence_instance
 
     def get_raw_data(self, index=None):
         raise NotImplementedError
@@ -133,7 +133,7 @@ class FormatMultiImage(Format):
         beam=None,
         detector=None,
         goniometer=None,
-        scan=None,
+        sequence=None,
         imageset_type=None,
         format_kwargs=None,
         **kwargs,
@@ -148,10 +148,11 @@ class FormatMultiImage(Format):
             beam,
             detector,
             goniometer,
-            scan,
+            sequence,
             single_file_indices,
             format_instance,
             format_kwargs,
+            imageset_type,
         ):
 
             # Check indices are sequential
@@ -166,9 +167,9 @@ class FormatMultiImage(Format):
 
             reader = get_reader(cls, filenames, num_images, **format_kwargs)
 
-            # Check the scan makes sense - we must want to use <= total images
-            if scan is not None:
-                assert scan.get_num_images() <= num_images
+            # Check the sequence makes sense - we must want to use <= total images
+            if sequence is not None:
+                assert sequence.get_num_images() <= num_images
 
             if format_instance is None:
                 vendor = ""
@@ -182,8 +183,8 @@ class FormatMultiImage(Format):
                 detector = format_instance.get_detector()
             if goniometer is None:
                 goniometer = format_instance.get_goniometer()
-            if scan is None:
-                scan = format_instance.get_scan()
+            if sequence is None:
+                sequence = format_instance.get_sequence()
 
             # Create the masker
             if format_instance is not None:
@@ -191,24 +192,44 @@ class FormatMultiImage(Format):
             else:
                 masker = None
 
-            isetdata = ImageSetData(
-                reader=reader,
-                masker=masker,
-                vendor=vendor,
-                params=format_kwargs,
-                format=cls,
-                template=filenames[0],
-            )
+            if imageset_type == ImageSetType.RotImageSequence:
+                isetdata = ImageSetData(
+                    reader=reader,
+                    masker=masker,
+                    vendor=vendor,
+                    params=format_kwargs,
+                    format=cls,
+                    template=filenames[0],
+                )
 
-            # Create the sequence
-            iset = RotImageSequence(
-                isetdata,
-                beam=beam,
-                detector=detector,
-                goniometer=goniometer,
-                scan=scan,
-                indices=single_file_indices,
-            )
+                # Create the sequence
+                iset = RotImageSequence(
+                    isetdata,
+                    beam=beam,
+                    detector=detector,
+                    goniometer=goniometer,
+                    sequence=sequence,
+                    indices=single_file_indices,
+                )
+            elif imageset_type == ImageSetType.TOFImageSequence:
+                isetdata = TOFImageSetData(
+                    reader=reader,
+                    masker=masker,
+                    vendor=vendor,
+                    params=format_kwargs,
+                    format=cls,
+                    template=filenames[0],
+                )
+
+                # Create the sequence
+                iset = TOFImageSequence(
+                    isetdata,
+                    beam=beam,
+                    detector=detector,
+                    goniometer=goniometer,
+                    sequence=sequence,
+                    indices=single_file_indices,
+                )
 
             _add_static_mask_to_iset(format_instance, iset)
 
@@ -251,19 +272,19 @@ class FormatMultiImage(Format):
             beam = [None] * num_images
             detector = [None] * num_images
             goniometer = [None] * num_images
-            scan = [None] * num_images
+            sequence = [None] * num_images
             for i in single_file_indices:
                 beam[i] = format_instance.get_beam(i)
                 detector[i] = format_instance.get_detector(i)
                 goniometer[i] = format_instance.get_goniometer(i)
-                scan[i] = format_instance.get_scan(i)
+                sequence[i] = format_instance.get_sequence(i)
 
             # Set the list of models
             for i, index in enumerate(single_file_indices):
                 iset.set_beam(beam[index], i)
                 iset.set_detector(detector[index], i)
                 iset.set_goniometer(goniometer[index], i)
-                iset.set_scan(scan[index], i)
+                iset.set_sequence(sequence[index], i)
 
             _add_static_mask_to_iset(format_instance, iset)
 
@@ -288,74 +309,6 @@ class FormatMultiImage(Format):
                 isd,
                 indices=single_file_indices,
             )
-            _add_static_mask_to_iset(format_instance, iset)
-            return iset
-
-        def create_tof_imageset(
-            cls,
-            filenames,
-            beam,
-            detector,
-            single_file_indices,
-            format_instance,
-            format_kwargs,
-        ):
-            num_images = get_num_images(single_file_indices, format_instance)
-            tof_in_seconds = format_instance.get_tof_in_seconds()
-            if "tof_indices" in format_kwargs:
-                tof_indices = format_kwargs["tof_indices"]
-            else:
-                tof_indices = range(len(tof_in_seconds))
-            tof_indices = flex.size_t(tof_indices)
-            reader = get_reader(cls, filenames, num_images, **format_kwargs)
-            vendor = format_instance.get_vendortype()
-
-            if single_file_indices is not None:
-                iset = TOFImageSet(
-                    TOFImageSetData(
-                        reader=reader,
-                        masker=None,
-                        vendor=vendor,
-                        params=format_kwargs,
-                        format=cls,
-                    ),
-                    tof_in_seconds=tof_in_seconds,
-                    tof_indices=tof_indices,
-                    indices=single_file_indices,
-                )
-            else:
-                iset = TOFImageSet(
-                    TOFImageSetData(
-                        reader=reader,
-                        masker=None,
-                        vendor=vendor,
-                        params=format_kwargs,
-                        format=cls,
-                    ),
-                    tof_in_seconds=tof_in_seconds,
-                    tof_indices=tof_indices,
-                )
-
-            if single_file_indices is None:
-                single_file_indices = range(format_instance.get_num_images())
-
-            # If any are None then read from format
-            num_images = format_instance.get_num_images()
-            beam = [None] * num_images
-            detector = [None] * num_images
-            goniometer = [None] * num_images
-            scan = [None] * num_images
-            for i in single_file_indices:
-                beam[i] = format_instance.get_beam(i)
-                detector[i] = format_instance.get_detector(i)
-
-            # Set the list of models
-            for i, index in enumerate(single_file_indices):
-                iset.set_beam(beam[index], i)
-                iset.set_detector(detector[index], i)
-                iset.set_goniometer(goniometer[index], i)
-                iset.set_scan(scan[index], i)
-
             _add_static_mask_to_iset(format_instance, iset)
             return iset
 
@@ -436,7 +389,7 @@ class FormatMultiImage(Format):
         # Attempt to identify imageset type from models if type is not given
         if imageset_type is None:
             imageset_type = Format.identify_imageset_type(
-                scan, goniometer, beam, format_instance
+                sequence, goniometer, beam, format_instance
             )
 
         if imageset_type == ImageSetType.ImageSet:
@@ -449,27 +402,21 @@ class FormatMultiImage(Format):
                 format_instance,
                 format_kwargs,
             )
-        elif imageset_type == ImageSetType.RotImageSequence:
+        elif imageset_type in [
+            ImageSetType.RotImageSequence,
+            ImageSetType.TOFImageSequence,
+        ]:
             return create_imagesequence(
                 cls,
                 filenames,
                 beam,
                 detector,
                 goniometer,
-                scan,
+                sequence,
                 single_file_indices,
                 format_instance,
                 format_kwargs,
-            )
-        elif imageset_type == ImageSetType.TOFImageSet:
-            return create_tof_imageset(
-                cls,
-                filenames,
-                beam,
-                detector,
-                single_file_indices,
-                format_instance,
-                format_kwargs,
+                imageset_type=imageset_type,
             )
         else:
             raise NotImplementedError(f"Imageset_type {imageset_type} not implemented")

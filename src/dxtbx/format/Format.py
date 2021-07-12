@@ -365,6 +365,7 @@ class Format:
             ImageSetType,
             RotImageSequence,
             TOFImageSequence,
+            TOFImageSetData,
         )
 
         def process_filenames(filenames):
@@ -434,15 +435,15 @@ class Format:
                 format_instance=format_instance,
             )
 
-            iset_data = ImageSetData(
-                reader=reader,
-                masker=masker,
-                vendor=vendor,
-                params=format_kwargs,
-                format=cls,
-                template=template,
-            )
             if isinstance(imageset_type, ImageSetType.RotImageSequence):
+                iset_data = ImageSetData(
+                    reader=reader,
+                    masker=masker,
+                    vendor=vendor,
+                    params=format_kwargs,
+                    format=cls,
+                    template=template,
+                )
                 iset = RotImageSequence(
                     iset_data,
                     beam=beam,
@@ -451,6 +452,14 @@ class Format:
                     sequence=sequence,
                 )
             elif isinstance(imageset_type, ImageSetType.TOFImageSequence):
+                iset_data = TOFImageSetData(
+                    reader=reader,
+                    masker=masker,
+                    vendor=vendor,
+                    params=format_kwargs,
+                    format=cls,
+                    template=template,
+                )
                 iset = TOFImageSequence(
                     iset_data,
                     beam=beam,
