@@ -44,7 +44,7 @@ class FormatBrukerFixedChi(FormatBruker):
         angles = [float(a) for a in self.header_dict["ANGLES"]]
 
         beam = matrix.col((0, 0, 1))
-        phi = matrix.col((1, 0, 0)).rotate(-beam, angles[3], deg=True)
+        phi = matrix.col((1, 0, 0)).rotate_around_origin(-beam, angles[3], deg=True)
 
         if self.header_dict["AXIS"][0] == "2":
             # OMEGA scan
@@ -58,7 +58,7 @@ class FormatBrukerFixedChi(FormatBruker):
             # PHI scan
             assert self.header_dict["AXIS"][0] == "3"
             omega = matrix.col((1, 0, 0))
-            axis = phi.rotate(omega, angles[1], deg=True)
+            axis = phi.rotate_around_origin(omega, angles[1], deg=True)
             return self._goniometer_factory.known_axis(axis.elems)
 
     def _detector(self):
@@ -78,8 +78,8 @@ class FormatBrukerFixedChi(FormatBruker):
             - fast * pixel_mm * beam_pixel[1]
             - slow * pixel_mm * beam_pixel[0]
         )
-        origin = origin.rotate(-fast, two_theta, deg=True)
-        slow = slow.rotate(-fast, two_theta, deg=True)
+        origin = origin.rotate_around_origin(-fast, two_theta, deg=True)
+        slow = slow.rotate_around_origin(-fast, two_theta, deg=True)
         pixel_size = pixel_mm, pixel_mm
         image_size = (
             int(self.header_dict["NROWS"][0]),

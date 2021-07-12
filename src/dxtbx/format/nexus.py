@@ -240,7 +240,7 @@ def construct_vector(nx_file, item, vector=None):
                     deg = True
                 else:
                     raise RuntimeError("Invalid units: %s" % units)
-                self.vector.rotate(axis=vector, angle=value, deg=deg)
+                self.vector.rotate_around_origin(axis=vector, angle=value, deg=deg)
             else:
                 raise RuntimeError("Unknown transformation_type: %s" % ttype)
 

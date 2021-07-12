@@ -150,7 +150,9 @@ class FormatMRC(Format):
 
         direction = matrix.col((0.0, -1.0, 0.0))
         rot_by_deg = self._header_dictionary.get("tilt_axis", 0.0)
-        direction.rotate(axis=matrix.col((0.0, 0.0, 1.0)), angle=rot_by_deg, deg=True)
+        direction.rotate_around_origin(
+            axis=matrix.col((0.0, 0.0, 1.0)), angle=rot_by_deg, deg=True
+        )
 
         return self._goniometer_factory.known_axis(direction)
 
