@@ -1,0 +1,1 @@
+Update calls to avoid using deprecated ``rotate`` name from ``scitbx.matrix``.
