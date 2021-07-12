@@ -550,6 +550,7 @@ class ImageSetFactory:
         sequence=None,
         check_format=True,
         format_kwargs=None,
+        imageset_type=ImageSetType.RotImageSequence,
     ):
         """Create a sequence"""
         indices = sorted(indices)
@@ -585,16 +586,18 @@ class ImageSetFactory:
             goniometer=goniometer,
             sequence=sequence,
             format_kwargs=format_kwargs,
-            imageset_type=ImageSetType.RotImageSequence,
+            imageset_type=imageset_type,
             single_file_indices=list(range(*array_range)),
         )
 
     @staticmethod
     def imageset_from_anyset(imageset):
         """Create a new ImageSet object from an imageset object. Converts RotImageSequence to ImageSet."""
+        known_types = [ImageSet, RotImageSequence, TOFImageSequence, ImageSetLazy]
+        assert type(imageset) in known_types, "Unrecognized imageset type: %s" % str(
+            type(imageset)
+        )
         if isinstance(imageset, ImageSetLazy):
             return ImageSetLazy(imageset.data(), imageset.indices())
-        elif isinstance(imageset, RotImageSequence) or isinstance(imageset, ImageSet):
-            return ImageSet(imageset.data(), imageset.indices())
         else:
-            raise ValueError("Unrecognized imageset type: %s" % str(type(imageset)))
+            return ImageSet(imageset.data(), imageset.indices())
