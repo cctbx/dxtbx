@@ -23,7 +23,7 @@
 #include <dxtbx/model/beam.h>
 #include <dxtbx/model/detector.h>
 #include <dxtbx/model/goniometer.h>
-#include <dxtbx/model/sequence.h>
+#include <dxtbx/model/sequence_scan.h>
 #include <dxtbx/format/image.h>
 #include <dxtbx/error.h>
 #include <dxtbx/masking/goniometer_shadow_masking.h>
@@ -155,13 +155,13 @@ protected:
 /**
  * A class to hold data about the imageset
  */
-template<typename Beam, typename Sequence>
+template<typename BeamT, typename SequenceT>
 class ImageSetData {
 public:
-  typedef typename boost::shared_ptr<Beam> beam_ptr;
+  typedef typename boost::shared_ptr<BeamT> beam_ptr;
   typedef boost::shared_ptr<Detector> detector_ptr;
   typedef boost::shared_ptr<Goniometer> goniometer_ptr;
-  typedef boost::shared_ptr<Sequence> sequence_ptr;
+  typedef boost::shared_ptr<SequenceT> sequence_ptr;
   typedef boost::shared_ptr<GoniometerShadowMasker> masker_ptr;
 
   ImageSetData() {}
@@ -517,13 +517,13 @@ protected:
 /**
  * A class to represent an imageset
  */
-template<class Beam, class Sequence>
+template<class BeamT, class SequenceT>
 class ImageSet {
 public:
-  typedef typename ImageSetData<Beam, Sequence>::beam_ptr beam_ptr;
-  typedef typename ImageSetData<Beam, Sequence>::detector_ptr detector_ptr;
-  typedef typename ImageSetData<Beam, Sequence>::goniometer_ptr goniometer_ptr;
-  typedef typename ImageSetData<Beam, Sequence>::sequence_ptr sequence_ptr;
+  typedef typename ImageSetData<BeamT, SequenceT>::beam_ptr beam_ptr;
+  typedef typename ImageSetData<BeamT, SequenceT>::detector_ptr detector_ptr;
+  typedef typename ImageSetData<BeamT, SequenceT>::goniometer_ptr goniometer_ptr;
+  typedef typename ImageSetData<BeamT, SequenceT>::sequence_ptr sequence_ptr;
 
   /**
    * Cache an image
@@ -560,7 +560,7 @@ public:
    * Construct the imageset
    * @param data The imageset data
    */
-  ImageSet(const ImageSetData<Beam, Sequence> &data) : data_(data), indices_(data.size()) {
+  ImageSet(const ImageSetData<BeamT, SequenceT> &data) : data_(data), indices_(data.size()) {
     // Check number of images
     if (data.size() == 0) {
       throw DXTBX_ERROR("No images specified in ImageSetData");
@@ -577,7 +577,7 @@ public:
    * @param data The imageset data
    * @param indices The image indices
    */
-  ImageSet(const ImageSetData<Beam, Sequence> &data, const scitbx::af::const_ref<std::size_t> &indices)
+  ImageSet(const ImageSetData<BeamT, SequenceT> &data, const scitbx::af::const_ref<std::size_t> &indices)
       : data_(data), indices_(indices.begin(), indices.end()) {
     // Check number of images
     if (data.size() == 0) {
@@ -601,7 +601,7 @@ public:
   /**
    * @returns the imageset data
    */
-  ImageSetData<Beam, Sequence> data() const {
+  ImageSetData<BeamT, SequenceT> data() const {
     return data_;
   }
 
@@ -1092,7 +1092,7 @@ public:
   }
 
 protected:
-  ImageSetData<Beam, Sequence> data_;
+  ImageSetData<BeamT, SequenceT> data_;
   scitbx::af::shared<std::size_t> indices_;
   DataCache<ImageBuffer> data_cache_;
   DataCache<Image<double> > double_raw_data_cache_;
@@ -1200,13 +1200,13 @@ protected:
 /**
  * A class to represent a sequence of data
  */
-template<class Beam, class Sequence>
-class ImageSequence : public ImageSet<Beam, Sequence> {
+template<class BeamT, class SequenceT>
+class ImageSequence : public ImageSet<BeamT, SequenceT> {
 public:
-  typedef typename ImageSet<Beam, Sequence>::beam_ptr beam_ptr;
-  typedef typename ImageSet<Beam, Sequence>::detector_ptr detector_ptr;
-  typedef typename ImageSet<Beam, Sequence>::goniometer_ptr goniometer_ptr;
-  typedef typename ImageSet<Beam, Sequence>::sequence_ptr sequence_ptr;
+  typedef typename ImageSet<BeamT, SequenceT>::beam_ptr beam_ptr;
+  typedef typename ImageSet<BeamT, SequenceT>::detector_ptr detector_ptr;
+  typedef typename ImageSet<BeamT, SequenceT>::goniometer_ptr goniometer_ptr;
+  typedef typename ImageSet<BeamT, SequenceT>::sequence_ptr sequence_ptr;
   /**
    * Construct the sequence
    * @param data The imageset data
@@ -1215,12 +1215,12 @@ public:
    * @param goniometer The gonioeter model
    * @param sequence The sequence model
    */
-  ImageSequence(const ImageSetData<Beam, Sequence> &data,
+  ImageSequence(const ImageSetData<BeamT, SequenceT> &data,
                 const beam_ptr &beam,
                 const detector_ptr &detector,
                 const goniometer_ptr &goniometer,
                 const sequence_ptr &sequence)
-      : ImageSet<Beam ,Sequence>(data),
+      : ImageSet<BeamT , SequenceT>(data),
         beam_(beam),
         detector_(detector),
         goniometer_(goniometer),
@@ -1234,11 +1234,11 @@ public:
     }
 
     // Set the models for each image
-    for (std::size_t i = 0; i < ImageSet<Beam, Sequence>::size(); ++i) {
-      ImageSet<Beam, Sequence>::set_beam_for_image(beam_, i);
-      ImageSet<Beam, Sequence>::set_detector_for_image(detector_, i);
-      ImageSet<Beam, Sequence>::set_goniometer_for_image(goniometer_, i);
-      ImageSet<Beam, Sequence>::set_sequence_for_image(sequence_ptr(new Sequence((*sequence)[i])), i);
+    for (std::size_t i = 0; i < ImageSet<BeamT, SequenceT>::size(); ++i) {
+      ImageSet<BeamT, SequenceT>::set_beam_for_image(beam_, i);
+      ImageSet<BeamT, SequenceT>::set_detector_for_image(detector_, i);
+      ImageSet<BeamT, SequenceT>::set_goniometer_for_image(goniometer_, i);
+      ImageSet<BeamT, SequenceT>::set_sequence_for_image(sequence_ptr(new SequenceT((*sequence)[i])), i);
     }
   }
 
@@ -1251,13 +1251,13 @@ public:
    * @param goniometer The gonioeter model
    * @param sequence The sequence model
    */
-  ImageSequence(const ImageSetData<Beam, Sequence> &data,
+  ImageSequence(const ImageSetData<BeamT, SequenceT> &data,
                 const scitbx::af::const_ref<std::size_t> &indices,
                 const beam_ptr &beam,
                 const detector_ptr &detector,
                 const goniometer_ptr &goniometer,
                 const sequence_ptr &sequence)
-      : ImageSet<Beam, Sequence>(data, indices),
+      : ImageSet<BeamT, SequenceT>(data, indices),
         beam_(beam),
         detector_(detector),
         goniometer_(goniometer),
@@ -1276,11 +1276,11 @@ public:
     }
 
     // Set the models for each image
-    for (std::size_t i = 0; i < ImageSet<Beam, Sequence>::size(); ++i) {
-      ImageSet<Beam, Sequence>::set_beam_for_image(beam_, i);
-      ImageSet<Beam, Sequence>::set_detector_for_image(detector_, i);
-      ImageSet<Beam, Sequence>::set_goniometer_for_image(goniometer_, i);
-      ImageSet<Beam, Sequence>::set_sequence_for_image(sequence_ptr(new Sequence((*sequence)[i])), i);
+    for (std::size_t i = 0; i < ImageSet<BeamT, SequenceT>::size(); ++i) {
+      ImageSet<BeamT, SequenceT>::set_beam_for_image(beam_, i);
+      ImageSet<BeamT, SequenceT>::set_detector_for_image(detector_, i);
+      ImageSet<BeamT, SequenceT>::set_goniometer_for_image(goniometer_, i);
+      ImageSet<BeamT, SequenceT>::set_sequence_for_image(sequence_ptr(new SequenceT((*sequence)[i])), i);
     }
   }
 
@@ -1332,8 +1332,8 @@ public:
    */
   void set_beam(const beam_ptr &beam) {
     beam_ = beam;
-    for (std::size_t i = 0; i < ImageSet<Beam,Sequence>::size(); ++i) {
-      ImageSet<Beam, Sequence>::set_beam_for_image(beam_, i);
+    for (std::size_t i = 0; i < ImageSet<BeamT, SequenceT>::size(); ++i) {
+      ImageSet<BeamT, SequenceT>::set_beam_for_image(beam_, i);
     }
   }
 
@@ -1343,8 +1343,8 @@ public:
    */
   void set_detector(const detector_ptr &detector) {
     detector_ = detector;
-    for (std::size_t i = 0; i < ImageSet<Beam,Sequence>::size(); ++i) {
-      ImageSet<Beam, Sequence>::set_detector_for_image(detector_, i);
+    for (std::size_t i = 0; i < ImageSet<BeamT, SequenceT>::size(); ++i) {
+      ImageSet<BeamT, SequenceT>::set_detector_for_image(detector_, i);
     }
   }
 
@@ -1354,8 +1354,8 @@ public:
    */
   void set_goniometer(const goniometer_ptr &goniometer) {
     goniometer_ = goniometer;
-    for (std::size_t i = 0; i < ImageSet<Beam, Sequence>::size(); ++i) {
-      ImageSet<Beam, Sequence>::set_goniometer_for_image(goniometer_, i);
+    for (std::size_t i = 0; i < ImageSet<BeamT, SequenceT>::size(); ++i) {
+      ImageSet<BeamT, SequenceT>::set_goniometer_for_image(goniometer_, i);
     }
   }
 
@@ -1365,7 +1365,7 @@ public:
    */
   void set_sequence(const sequence_ptr &sequence) {
     DXTBX_ASSERT(sequence.get() != NULL);
-    if (sequence->get_num_images() != ImageSet<Beam, Sequence>::size()) {
+    if (sequence->get_num_images() != ImageSet<BeamT, SequenceT>::size()) {
       DXTBX_ASSERT(sequence_ != NULL);
       int i0 = sequence->get_array_range()[0];
       int i1 = sequence->get_array_range()[1];
@@ -1375,16 +1375,16 @@ public:
       std::size_t n = i1 - i0;
       int k0 = i0 - j0;
       DXTBX_ASSERT(k0 >= 0);
-      std::size_t index0 = ImageSet<Beam, Sequence>::indices_[0];
-      ImageSet<Beam, Sequence>::indices_.resize(n);
+      std::size_t index0 = ImageSet<BeamT, SequenceT>::indices_[0];
+      ImageSet<BeamT, SequenceT>::indices_.resize(n);
       for (std::size_t i = 0; i < n; ++i) {
-        ImageSet<Beam, Sequence>::indices_[i] = index0 + i;
+        ImageSet<BeamT, SequenceT>::indices_[i] = index0 + i;
       }
     }
-    DXTBX_ASSERT((sequence->get_num_images() == ImageSet<Beam, Sequence>::size()));
+    DXTBX_ASSERT((sequence->get_num_images() == ImageSet<BeamT, SequenceT>::size()));
     sequence_ = sequence;
-    for (std::size_t i = 0; i < ImageSet<Beam, Sequence>::size(); ++i) {
-      ImageSet<Beam, Sequence>::set_sequence_for_image(sequence_ptr(new Sequence((*sequence)[i])), i);
+    for (std::size_t i = 0; i < ImageSet<BeamT, SequenceT>::size(); ++i) {
+      ImageSet<BeamT, SequenceT>::set_sequence_for_image(sequence_ptr(new SequenceT((*sequence)[i])), i);
     }
   }
 
@@ -1420,9 +1420,9 @@ public:
    * Convert the sequence to an imageset
    * @returns An imageset
    */
-  ImageSet<Beam, Sequence> as_imageset() const {
-    ImageSet<Beam, Sequence> result(ImageSet<Beam, Sequence>::data_, 
-                                    ImageSet<Beam, Sequence>::indices_.const_ref());
+  ImageSet<BeamT, SequenceT> as_imageset() const {
+    ImageSet<BeamT, SequenceT> result(ImageSet<BeamT, SequenceT>::data_, 
+                                    ImageSet<BeamT, SequenceT>::indices_.const_ref());
     return result;
   }
 
@@ -1430,9 +1430,9 @@ public:
    * Get the complete seta
    * @returns The complete sequence
    */
-  ImageSet<Beam, Sequence> complete_set() const {
+  ImageSet<BeamT, SequenceT> complete_set() const {
     throw DXTBX_ERROR("Cannot get complete set from image sequence");
-    return ImageSet<Beam, Sequence>();
+    return ImageSet<BeamT, SequenceT>();
   }
 
   /**
@@ -1441,25 +1441,25 @@ public:
    * @param last The last index
    * @returns The partial sequence
    */
-  ImageSet<Beam, Sequence> partial_set(std::size_t first, std::size_t last) const {
+  ImageSet<BeamT, SequenceT> partial_set(std::size_t first, std::size_t last) const {
     throw DXTBX_ERROR("Cannot get partial set from image sequence");
-    return ImageSet<Beam, Sequence>();
+    return ImageSet<BeamT, SequenceT>();
   }
 
   /**
    * Get the complete seta
    * @returns The complete sequence
    */
-  ImageSequence<Beam, Sequence> complete_sequence() const {
+  ImageSequence<BeamT, SequenceT> complete_sequence() const {
     // Compute sequence
-    Sequence sequence = detail::safe_dereference(ImageSet<Beam, Sequence>::data_.get_sequence(0));
-    for (std::size_t i = 1; i < ImageSet<Beam, Sequence>::data_.size(); ++i) {
-      sequence += detail::safe_dereference(ImageSet<Beam, Sequence>::data_.get_sequence(i));
+    SequenceT sequence = detail::safe_dereference(ImageSet<BeamT, SequenceT>::data_.get_sequence(0));
+    for (std::size_t i = 1; i < ImageSet<BeamT, SequenceT>::data_.size(); ++i) {
+      sequence += detail::safe_dereference(ImageSet<BeamT, SequenceT>::data_.get_sequence(i));
     }
    
     // Construct a sequence
-    ImageSequence<Beam, Sequence> result(
-      ImageSet<Beam, Sequence>::data_, get_beam(), get_detector(), get_goniometer(), sequence_ptr(new Sequence(sequence)));
+    ImageSequence<BeamT, SequenceT> result(
+      ImageSet<BeamT, SequenceT>::data_, get_beam(), get_detector(), get_goniometer(), sequence_ptr(new SequenceT(sequence)));
 
     // Return the sequence
     return result;
@@ -1471,26 +1471,26 @@ public:
    * @param last The last index
    * @returns The partial sequence
    */
-  ImageSequence<Beam, Sequence> partial_sequence(std::size_t first, std::size_t last) const {
+  ImageSequence<BeamT, SequenceT> partial_sequence(std::size_t first, std::size_t last) const {
     // Check slice indices
     DXTBX_ASSERT(last > first);
 
     // Construct a partial sequence
-    Sequence sequence = detail::safe_dereference(ImageSet<Beam, Sequence>::get_sequence_for_image(first));
+    SequenceT sequence = detail::safe_dereference(ImageSet<BeamT, SequenceT>::get_sequence_for_image(first));
     for (std::size_t i = first + 1; i < last; ++i) {
-      sequence += detail::safe_dereference(ImageSet<Beam, Sequence>::get_sequence_for_image(i));
+      sequence += detail::safe_dereference(ImageSet<BeamT, SequenceT>::get_sequence_for_image(i));
     }
 
     // Construct the partial indices
-    scitbx::af::const_ref<std::size_t> indices(&ImageSet<Beam, Sequence>::indices_[first], last - first);
+    scitbx::af::const_ref<std::size_t> indices(&ImageSet<BeamT, SequenceT>::indices_[first], last - first);
 
     // Construct the partial sequence
-    ImageSequence<Beam, Sequence> result(ImageSet<Beam, Sequence>::data_,
+    ImageSequence<BeamT, SequenceT> result(ImageSet<BeamT, SequenceT>::data_,
                          indices,
                          get_beam(),
                          get_detector(),
                          get_goniometer(),
-                         sequence_ptr(new Sequence(sequence)));
+                         sequence_ptr(new SequenceT(sequence)));
 
     // Return the sequence
     return result;
