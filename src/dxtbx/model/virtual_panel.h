@@ -314,7 +314,7 @@ namespace dxtbx { namespace model {
       // Update the D matrix
       try {
         D_ = d_.inverse();
-      } catch (scitbx::error) {
+      } catch (scitbx::error const&) {
         D_ = boost::none;
       }
 
@@ -323,7 +323,7 @@ namespace dxtbx { namespace model {
       distance_ = get_origin() * get_normal();
       try {
         normal_origin_ = get_bidirectional_ray_intersection(get_normal());
-      } catch (dxtbx::error) {
+      } catch (dxtbx::error const&) {
         normal_origin_ = vec2<double>(0, 0);
       }
     }
