@@ -299,6 +299,12 @@ namespace dxtbx { namespace model {
       return mm;
     }
 
+    vec2<double> to_millimeter(const PanelData &panel,
+                               vec2<double> xy,
+                               double attenuation_length) const {
+      return to_millimeter(panel, xy);
+    }
+
     /**
      * Convert a millimeter coordinate to a pixel coordinate
      * @param panel The panel structure
@@ -411,6 +417,13 @@ namespace dxtbx { namespace model {
       vec2<double> mm = ParallaxCorrectedPxMmStrategy::to_millimeter(panel, xy);
 
       return mm;
+    }
+
+    vec2<double> to_millimeter(const PanelData &panel,
+                               vec2<double> xy,
+                               double attenuation_length) const {
+      throw DXTBX_ERROR("to millimeter with attenutation length not yet implemented");
+      return to_millimeter(panel, xy); // dummy value
     }
 
     /**
