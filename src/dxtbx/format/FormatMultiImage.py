@@ -362,7 +362,7 @@ class FormatMultiImage(Format):
                 return True
             if single_file_indices is None:
                 return True
-            if imageset_type == ImageSetType.TOFImageSet:
+            if imageset_type == ImageSetType.TOFImageSequence:
                 return True
             return False
 

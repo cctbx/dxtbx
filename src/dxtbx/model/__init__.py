@@ -17,7 +17,7 @@ from dxtbx.model.crystal import CrystalFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.profile import ProfileModelFactory
-from dxtbx.model.scan import SequenceFactory
+from dxtbx.model.sequence import SequenceFactory
 from dxtbx.util import format_float_with_standard_uncertainty
 from dxtbx_model_ext import (
     BeamBase,

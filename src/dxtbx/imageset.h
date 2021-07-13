@@ -23,7 +23,7 @@
 #include <dxtbx/model/beam.h>
 #include <dxtbx/model/detector.h>
 #include <dxtbx/model/goniometer.h>
-#include <dxtbx/model/sequence_scan.h>
+#include <dxtbx/model/sequence.h>
 #include <dxtbx/format/image.h>
 #include <dxtbx/error.h>
 #include <dxtbx/masking/goniometer_shadow_masking.h>
