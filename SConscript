@@ -170,7 +170,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
             "src/dxtbx/model/boost_python/multi_axis_goniometer.cc",
             "src/dxtbx/model/boost_python/panel.cc",
             "src/dxtbx/model/boost_python/detector.cc",
-            "src/dxtbx/model/boost_python/scan.cc",
+            "src/dxtbx/model/boost_python/sequence.cc",
             "src/dxtbx/model/boost_python/scan_helpers.cc",
             "src/dxtbx/model/boost_python/crystal.cc",
             "src/dxtbx/model/boost_python/parallax_correction.cc",

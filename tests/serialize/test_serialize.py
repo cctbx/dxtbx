@@ -9,7 +9,7 @@ from dxtbx.model import (
     GoniometerFactory,
     MonochromaticBeam,
     Scan,
-    ScanFactory,
+    SequenceFactory,
 )
 
 
@@ -120,7 +120,7 @@ def test_scan():
         0,
     )
     d = s1.to_dict()
-    s2 = ScanFactory.from_dict(d)
+    s2 = SequenceFactory.from_dict(d)
     assert d["image_range"] == (1, 3)
     assert d["oscillation"] == (1.0, 0.2)
     assert d["exposure_time"] == [0.1, 0.1, 0.1]
@@ -130,7 +130,7 @@ def test_scan():
 
     # Test with a template and partial dictionary
     d2 = {"exposure_time": [0.2, 0.2, 0.2]}
-    s3 = ScanFactory.from_dict(d2, d)
+    s3 = SequenceFactory.from_dict(d2, d)
     assert s3.get_image_range() == (1, 3)
     assert s3.get_oscillation() == (1.0, 0.2)
     assert list(s3.get_exposure_times()) == [0.2, 0.2, 0.2]
@@ -139,11 +139,11 @@ def test_scan():
 
     # Test with a partial epoch
     d3 = {"image_range": (1, 10), "epochs": [0.1, 0.2]}
-    s4 = ScanFactory.from_dict(d3, d)
+    s4 = SequenceFactory.from_dict(d3, d)
     assert s4.get_epochs()[2] == pytest.approx(0.3)
     assert s4.get_epochs()[9] == pytest.approx(1.0)
 
     d4 = {"batch_offset": 100}
-    s5 = ScanFactory.from_dict(d4, d)
+    s5 = SequenceFactory.from_dict(d4, d)
     assert s5.get_batch_offset() == 100
     assert s5.get_batch_range() == (101, 103)

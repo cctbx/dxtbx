@@ -27,7 +27,7 @@ def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
         imageset.get_detector(),
         imageset.get_beam(),
         imageset.get_goniometer(),
-        imageset.get_scan(),
+        imageset.get_sequence(),
         imageset.get_raw_data(0)[0],
         "image_0001.cbf",
     )
@@ -46,8 +46,8 @@ def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
         imageset.get_detector(), imageset2.get_detector()
     )
     assert GoniometerComparison()(imageset.get_goniometer(), imageset2.get_goniometer())
-    s1 = imageset.get_scan()
-    s2 = imageset.get_scan()
+    s1 = imageset.get_sequence()
+    s2 = imageset.get_sequence()
     assert s1.get_exposure_times() == s2.get_exposure_times()
     assert s1.get_oscillation() == s2.get_oscillation()
     assert s1.get_image_range() == s2.get_image_range()

@@ -63,7 +63,7 @@ def test_MPCCD_Phase3_21528(dials_data):
     assert panel.get_distance() == pytest.approx(99.5)
 
     assert imageset.get_goniometer() is None
-    assert imageset.get_scan() is None
+    assert imageset.get_sequence() is None
 
     assert beam.get_wavelength() == pytest.approx(1.2452863763694901)
     assert beam.get_sample_to_source_direction() == (0, 0, 1)

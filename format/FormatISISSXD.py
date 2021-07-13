@@ -12,7 +12,7 @@ from dxtbx import IncorrectFormatError
 from dxtbx.format.FormatNXTOFRAW import FormatNXTOFRAW
 from dxtbx.model import Detector
 from dxtbx.model.beam import BeamFactory
-from dxtbx.model.scan import ScanFactory
+from dxtbx.model.scan import SequenceFactory
 
 
 class FormatISISSXD(FormatNXTOFRAW):
@@ -286,7 +286,7 @@ class FormatISISSXD(FormatNXTOFRAW):
     def get_scan(self, idx=None):
         image_range = (1, self.get_num_images())
         tof_in_seconds = self.get_tof_in_seconds()
-        return ScanFactory.make_tof_sequence(
+        return SequenceFactory.make_tof_sequence(
             image_range=image_range, tof_in_seconds=tof_in_seconds
         )
 

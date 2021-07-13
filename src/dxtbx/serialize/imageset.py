@@ -3,7 +3,7 @@ import pickle
 
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.imageset import ImageSet, ImageSetFactory, RotImageSequence
-from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFactory
+from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, SequenceFactory
 from dxtbx.serialize.filename import resolve_path
 
 
@@ -137,7 +137,7 @@ def imagesequence_from_dict(d, check_format=True, directory=None):
     beam = BeamFactory.monochromatic_from_dict(d.get("beam"))
     goniometer = GoniometerFactory.from_dict(d.get("goniometer"))
     detector = DetectorFactory.from_dict(d.get("detector"))
-    scan = ScanFactory.from_dict(d.get("scan"))
+    scan = SequenceFactory.from_dict(d.get("scan"))
 
     # Construct the sequence
     try:

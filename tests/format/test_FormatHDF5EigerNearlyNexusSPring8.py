@@ -21,7 +21,7 @@ def test_spring8_ccp4_2018_zenodo_1443110_data03(dials_data):
 
     detector = imageset.get_detector()
     gonio = imageset.get_goniometer()
-    scan = imageset.get_scan()
+    scan = imageset.get_sequence()
     beam = imageset.get_beam()
 
     panel = detector[0]

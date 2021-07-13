@@ -39,7 +39,7 @@ scan_phil_scope = libtbx.phil.parse(
 )
 
 
-class ScanFactory:
+class SequenceFactory:
     """A factory for scan instances, to help with constructing the classes
     in a set of common circumstances."""
 
@@ -174,14 +174,7 @@ class ScanFactory:
         index = scan_helper_image_files.image_to_index(os.path.split(filename)[-1])
         if epoch is None:
             epoch = 0.0
-
-        # if the oscillation width is negative at this stage it is almost
-        # certainly an artefact of the omega end being 0 when the omega start
-        # angle was ~ 360 so it would be ~ -360 - see dxtbx#378
-        if osc_width < -180:
-            osc_width += 360
-
-        return ScanFactory.make_scan(
+        return SequenceFactory.make_scan(
             (index, index), exposure_times, (osc_start, osc_width), {index: epoch}
         )
 
@@ -192,7 +185,7 @@ class ScanFactory:
         cbf_handle = pycbf.cbf_handle_struct()
         cbf_handle.read_file(cif_file, pycbf.MSG_DIGEST)
 
-        return ScanFactory.imgCIF_H(cif_file, cbf_handle)
+        return SequenceFactory.imgCIF_H(cif_file, cbf_handle)
 
     @staticmethod
     def imgCIF_H(cif_file, cbf_handle):
@@ -207,7 +200,7 @@ class ScanFactory:
             angles = tuple(gonio.get_rotation_range())
         except Exception as e:
             if str(e).strip() == "CBFlib Error(s): CBF_NOTFOUND":
-                # probably a still shot -> no scan object
+                # probaby a still shot -> no scan object
                 return None
             raise
 
@@ -220,13 +213,13 @@ class ScanFactory:
 
         gonio.__swig_destroy__(gonio)
 
-        return ScanFactory.make_scan(
+        return SequenceFactory.make_scan(
             (index, index), exposure, angles, {index: timestamp}
         )
 
     @staticmethod
     def add(scans):
-        """Sum a list of scans wrapping the slightly clumsy idiomatic method:
+        """Sum a list of scans wrapping the sligtly clumsy idiomatic method:
         sum(scans[1:], scans[0])."""
         return sum(scans[1:], scans[0])
 

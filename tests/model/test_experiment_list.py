@@ -22,7 +22,7 @@ from dxtbx.model import (
     Goniometer,
     MonochromaticBeam,
     Scan,
-    ScanFactory,
+    SequenceFactory,
 )
 from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactory
 
@@ -941,7 +941,7 @@ def test_experimentlist_imagesequence_decode(mocker):
             Experiment(
                 beam=beam,
                 detector=detector,
-                scan=ScanFactory.make_scan(
+                scan=SequenceFactory.make_scan(
                     image_range=(i + 1, i + 1),
                     exposure_times=[1],
                     oscillation=(0, 0),

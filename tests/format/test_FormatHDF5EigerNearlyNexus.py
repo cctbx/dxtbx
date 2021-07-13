@@ -48,7 +48,7 @@ def test_semi_synthetic_dectris_eiger_nearly_nexus(dials_data, tmpdir):
 
     detector = imageset.get_detector()
     gonio = imageset.get_goniometer()
-    scan = imageset.get_scan()
+    scan = imageset.get_sequence()
     beam = imageset.get_beam()
 
     panel = detector[0]
@@ -91,7 +91,7 @@ def test_soleil_Proxima2A_zenodo_1443110_data03():
 
     detector = imageset.get_detector()
     gonio = imageset.get_goniometer()
-    scan = imageset.get_scan()
+    scan = imageset.get_sequence()
     beam = imageset.get_beam()
 
     panel = detector[0]

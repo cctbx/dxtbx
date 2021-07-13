@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from dxtbx.model.scan import ScanFactory
+from dxtbx.model.scan import SequenceFactory
 from dxtbx.model.scan_helpers import scan_helper_image_files
 
 
@@ -50,12 +50,12 @@ def test_helper_image_files(image_test_dir):
 
 
 def test_xScanFactory(image_test_dir):
-    """Test out the ScanFactory."""
+    """Test out the SequenceFactory."""
 
     template = "image_###.dat"
 
     xscans = [
-        ScanFactory.single_file(
+        SequenceFactory.single_file(
             scan_helper_image_files.template_directory_index_to_image(
                 template, image_test_dir, j + 1
             ),
@@ -76,8 +76,8 @@ def test_xScanFactory(image_test_dir):
 
     sum(xscans[1:], xscans[0])
 
-    a = ScanFactory.add(xscans[:10])
-    b = ScanFactory.add(xscans[10:])
+    a = SequenceFactory.add(xscans[:10])
+    b = SequenceFactory.add(xscans[10:])
 
     a + b
 
@@ -85,7 +85,7 @@ def test_xScanFactory(image_test_dir):
         template, image_test_dir, 1
     )
 
-    assert len(ScanFactory.search(filename)) == 20
+    assert len(SequenceFactory.search(filename)) == 20
 
     (a + b)[1:5]
     (a + b)[:10]

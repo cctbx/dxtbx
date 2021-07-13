@@ -478,7 +478,7 @@ def datablocks_from_dict(obj, check_format=True, directory=None):
         except Exception:
             gonio = None
         try:
-            scan = dxtbx.model.ScanFactory.from_dict(slist[obj["scan"]])
+            scan = dxtbx.model.SequenceFactory.from_dict(slist[obj["scan"]])
         except Exception:
             scan = None
         return beam, detector, gonio, scan

@@ -1,5 +1,5 @@
 /*
- * scan.cc
+ * sequence.cc
  *
  *  Copyright (C) 2013 Diamond Light Source
  *
@@ -15,7 +15,7 @@
 #include <string>
 #include <sstream>
 #include <scitbx/constants.h>
-#include <dxtbx/model/scan.h>
+#include <dxtbx/model/sequence.h>
 #include <boost/operators.hpp>
 #include <dxtbx/model/boost_python/to_from_dict.h>
 

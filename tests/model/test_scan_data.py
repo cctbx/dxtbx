@@ -5,7 +5,7 @@ import pytest
 from libtbx.phil import parse
 
 from dxtbx.model import Scan
-from dxtbx.model.scan import ScanFactory, scan_phil_scope
+from dxtbx.model.scan import SequenceFactory, scan_phil_scope
 
 
 @pytest.fixture
@@ -138,7 +138,7 @@ def test_from_phil():
         )
     ).extract()
 
-    s1 = ScanFactory.from_phil(params)
+    s1 = SequenceFactory.from_phil(params)
 
     assert s1.get_num_images() == 10
     assert s1.get_image_range() == (1, 10)
@@ -162,7 +162,7 @@ def test_from_phil():
         )
     ).extract()
 
-    s2 = ScanFactory.from_phil(params, s1)
+    s2 = SequenceFactory.from_phil(params, s1)
     assert s2.get_num_images() == 20
     assert s2.get_image_range() == (1, 20)
     assert s2.get_oscillation() == (20, 0.01)

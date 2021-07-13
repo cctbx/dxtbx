@@ -1,5 +1,5 @@
 /*
- * scan.h
+ * sequence.h
  *
  *  Copyright (C) 2013 Diamond Light Source
  *
