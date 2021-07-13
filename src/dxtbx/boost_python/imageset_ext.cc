@@ -8,6 +8,7 @@
 #include <vector>
 #include <dxtbx/imageset.h>
 #include <dxtbx/model/beam.h>
+#include <dxtbx/model/sequence.h>
 #include <dxtbx/model/pixel_to_millimeter.h>
 #include <dxtbx/error.h>
 
@@ -41,12 +42,12 @@ namespace dxtbx { namespace boost_python {
     }
   }  // namespace detail
 
-  template<typename Beam, typename Sequence>
-  typename ImageSetData<Beam, Sequence>::masker_ptr make_masker_pointer(boost::python::object masker) {
+  template<typename BeamT, typename SequenceT>
+  typename ImageSetData<BeamT, SequenceT>::masker_ptr make_masker_pointer(boost::python::object masker) {
     if (masker == boost::python::object()) {
-      return typename ImageSetData<Beam, Sequence>::masker_ptr();
+      return typename ImageSetData<BeamT, SequenceT>::masker_ptr();
     }
-    return boost::python::extract<typename ImageSetData<Beam, Sequence>::masker_ptr>(masker)();
+    return boost::python::extract<typename ImageSetData<BeamT, SequenceT>::masker_ptr>(masker)();
   }
   
 
@@ -125,24 +126,24 @@ namespace dxtbx { namespace boost_python {
   /**
    * Get the parameters
    */
-  template<typename Beam, typename Sequence>
-  boost::python::object ImageSetData_get_params(ImageSetData<Beam, Sequence> &self) {
+  template<typename BeamT, typename SequenceT>
+  boost::python::object ImageSetData_get_params(ImageSetData<BeamT, SequenceT> &self) {
     return detail::pickle_loads(self.get_params());
   }
 
   /**
    * Set the parameters
    */
-  template<typename Beam, typename Sequence>
-  void ImageSetData_set_params(ImageSetData<Beam, Sequence> &self, boost::python::dict params) {
+  template<typename BeamT, typename SequenceT>
+  void ImageSetData_set_params(ImageSetData<BeamT, SequenceT> &self, boost::python::dict params) {
     self.set_params(detail::pickle_dumps(params));
   }
 
   /**
    * Get the format class
    */
-  template<typename Beam, typename Sequence>
-  boost::python::object ImageSetData_get_format(ImageSetData<Beam, Sequence> &self) {
+  template<typename BeamT, typename SequenceT>
+  boost::python::object ImageSetData_get_format(ImageSetData<BeamT, SequenceT> &self) {
     return detail::pickle_loads(self.get_format());
   }
 
@@ -150,8 +151,8 @@ namespace dxtbx { namespace boost_python {
    * Set the format class
    */
 
-  template<typename Beam, typename Sequence>
-  void ImageSetData_set_format(ImageSetData<Beam, Sequence> &self, boost::python::dict format) {
+  template<typename BeamT, typename SequenceT>
+  void ImageSetData_set_format(ImageSetData<BeamT, SequenceT> &self, boost::python::dict format) {
     self.set_format(detail::pickle_dumps(format));
   }
 
@@ -194,33 +195,33 @@ namespace dxtbx { namespace boost_python {
   /**
    * Implement pickling for ImageSetData class
    */
-  template<class Beam, class Sequence>
+  template<class BeamT, class SequenceT>
   struct ImageSetDataPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(ImageSetData<Beam, Sequence> obj) {
+    static boost::python::tuple getinitargs(ImageSetData<BeamT, SequenceT> obj) {
       return boost::python::make_tuple(obj.reader(), obj.masker());
     }
 
-    static boost::shared_ptr<Beam> get_beam(const ImageSetData<Beam, Sequence> &self,
+    static boost::shared_ptr<BeamT> get_beam(const ImageSetData<BeamT, SequenceT> &self,
                                                 std::size_t i) {
       return self.get_beam(i);
     }
 
-    static boost::shared_ptr<Detector> get_detector(const ImageSetData<Beam, Sequence> &self,
+    static boost::shared_ptr<Detector> get_detector(const ImageSetData<BeamT, SequenceT> &self,
                                                     std::size_t i) {
       return self.get_detector(i);
     }
 
-    static boost::shared_ptr<Goniometer> get_goniometer(const ImageSetData<Beam, Sequence> &self,
+    static boost::shared_ptr<Goniometer> get_goniometer(const ImageSetData<BeamT, SequenceT> &self,
                                                         std::size_t i) {
       return self.get_goniometer(i);
     }
 
-    static boost::shared_ptr<Sequence> get_sequence(const ImageSetData<Beam, Sequence> &self, std::size_t i) {
+    static boost::shared_ptr<SequenceT> get_sequence(const ImageSetData<BeamT, SequenceT> &self, std::size_t i) {
       return self.get_sequence(i);
     }
 
     template <typename Model, typename Func>
-    static boost::python::tuple get_model_list(ImageSetData<Beam, Sequence> obj, Func get) {
+    static boost::python::tuple get_model_list(ImageSetData<BeamT, SequenceT> obj, Func get) {
       // Create a list of models and a list of indices
       std::vector<boost::shared_ptr<Model> > model_list;
       std::vector<std::size_t> index_list;
@@ -251,19 +252,19 @@ namespace dxtbx { namespace boost_python {
       return boost::python::make_tuple(models, indices);
     }
 
-    static boost::python::tuple get_model_tuple(ImageSetData<Beam, Sequence> obj) {
+    static boost::python::tuple get_model_tuple(ImageSetData<BeamT, SequenceT> obj) {
       return boost::python::make_tuple(
-        ImageSetDataPickleSuite::get_model_list<Beam>(
+        ImageSetDataPickleSuite::get_model_list<BeamT>(
           obj, &ImageSetDataPickleSuite::get_beam),
         ImageSetDataPickleSuite::get_model_list<Detector>(
           obj, &ImageSetDataPickleSuite::get_detector),
         ImageSetDataPickleSuite::get_model_list<Goniometer>(
           obj, &ImageSetDataPickleSuite::get_goniometer),
-        ImageSetDataPickleSuite::get_model_list<Sequence>(
+        ImageSetDataPickleSuite::get_model_list<SequenceT>(
           obj, &ImageSetDataPickleSuite::get_sequence));
     }
 
-    static boost::python::tuple get_lookup_tuple(ImageSetData<Beam, Sequence> obj) {
+    static boost::python::tuple get_lookup_tuple(ImageSetData<BeamT, SequenceT> obj) {
       return boost::python::make_tuple(
         boost::python::make_tuple(obj.external_lookup().mask().get_filename(),
                                   obj.external_lookup().mask().get_data()),
@@ -277,7 +278,7 @@ namespace dxtbx { namespace boost_python {
                                   obj.external_lookup().dy().get_data()));
     }
 
-    static boost::python::tuple getstate(ImageSetData<Beam, Sequence> obj) {
+    static boost::python::tuple getstate(ImageSetData<BeamT, SequenceT> obj) {
       return boost::python::make_tuple(ImageSetDataPickleSuite::get_model_tuple(obj),
                                        ImageSetDataPickleSuite::get_lookup_tuple(obj),
                                        obj.get_template(),
@@ -287,7 +288,7 @@ namespace dxtbx { namespace boost_python {
     }
 
     template <typename Model, typename Func>
-    static void set_model_list(ImageSetData<Beam, Sequence> &obj, boost::python::tuple data, Func set) {
+    static void set_model_list(ImageSetData<BeamT, SequenceT> &obj, boost::python::tuple data, Func set) {
       // Extract to python lists
       boost::python::list models =
         boost::python::extract<boost::python::list>(data[0])();
@@ -313,28 +314,28 @@ namespace dxtbx { namespace boost_python {
       }
     }
 
-    static void set_model_tuple(ImageSetData<Beam, Sequence> &obj, boost::python::tuple models) {
+    static void set_model_tuple(ImageSetData<BeamT, SequenceT> &obj, boost::python::tuple models) {
       DXTBX_ASSERT(boost::python::len(models) == 4);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_model_list<Beam>(
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_model_list<BeamT>(
         obj,
         boost::python::extract<boost::python::tuple>(models[0])(),
-        &ImageSetData<Beam, Sequence>::set_beam);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_model_list<Detector>(
+        &ImageSetData<BeamT, SequenceT>::set_beam);
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_model_list<Detector>(
         obj,
         boost::python::extract<boost::python::tuple>(models[1]),
-        &ImageSetData<Beam, Sequence>::set_detector);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_model_list<Goniometer>(
+        &ImageSetData<BeamT, SequenceT>::set_detector);
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_model_list<Goniometer>(
         obj,
         boost::python::extract<boost::python::tuple>(models[2]),
-        &ImageSetData<Beam, Sequence>::set_goniometer);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_model_list<Sequence>(
+        &ImageSetData<BeamT, SequenceT>::set_goniometer);
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_model_list<SequenceT>(
         obj,
         boost::python::extract<boost::python::tuple>(models[3]),
-        &ImageSetData<Beam, Sequence>::set_sequence);
+        &ImageSetData<BeamT, SequenceT>::set_sequence);
     }
 
     template <typename Data, typename Func>
-    static void set_lookup_item(ImageSetData<Beam, Sequence> &obj,
+    static void set_lookup_item(ImageSetData<BeamT, SequenceT> &obj,
                                 boost::python::tuple lookup,
                                 Func item) {
       DXTBX_ASSERT(boost::python::len(lookup) == 2);
@@ -348,39 +349,39 @@ namespace dxtbx { namespace boost_python {
       ((&obj.external_lookup())->*item)().set_data(data);
     }
 
-    static void set_lookup_tuple(ImageSetData<Beam, Sequence> &obj, boost::python::tuple lookup) {
+    static void set_lookup_tuple(ImageSetData<BeamT, SequenceT> &obj, boost::python::tuple lookup) {
       DXTBX_ASSERT(boost::python::len(lookup) == 5);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<bool> >(
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_lookup_item<Image<bool> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[0])(),
         &ExternalLookup::mask);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_lookup_item<Image<double> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[1])(),
         &ExternalLookup::gain);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_lookup_item<Image<double> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[2])(),
         &ExternalLookup::pedestal);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_lookup_item<Image<double> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[3])(),
         &ExternalLookup::dx);
-      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_lookup_item<Image<double> >(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[4])(),
         &ExternalLookup::dy);
     }
 
-    static void setstate(ImageSetData<Beam, Sequence> &obj, boost::python::tuple state) {
+    static void setstate(ImageSetData<BeamT, SequenceT> &obj, boost::python::tuple state) {
       DXTBX_ASSERT(boost::python::len(state) == 6);
 
       // Set the models
-      ImageSetDataPickleSuite<Beam, Sequence>::set_model_tuple(
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_model_tuple(
         obj, boost::python::extract<boost::python::tuple>(state[0])());
 
       // Set the lookup
-      ImageSetDataPickleSuite<Beam, Sequence>::set_lookup_tuple(
+      ImageSetDataPickleSuite<BeamT, SequenceT>::set_lookup_tuple(
         obj, boost::python::extract<boost::python::tuple>(state[1])());
 
       // Set the properties
@@ -394,9 +395,9 @@ namespace dxtbx { namespace boost_python {
   /**
    * Implement pickling for ImageSet class
    */
-  template<class Beam, class Sequence>
+  template<class BeamT, class SequenceT>
   struct ImageSetPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(ImageSet<Beam, Sequence> obj) {
+    static boost::python::tuple getinitargs(ImageSet<BeamT, SequenceT> obj) {
       return boost::python::make_tuple(obj.data(), obj.indices());
     }
   };
@@ -413,9 +414,9 @@ namespace dxtbx { namespace boost_python {
   /**
    * Implement pickling for ImageSequence class
    */
-  template<class Beam, class Sequence>
+  template<class BeamT, class SequenceT>
   struct ImageSequencePickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(ImageSequence<Beam, Sequence> obj) {
+    static boost::python::tuple getinitargs(ImageSequence<BeamT, SequenceT> obj) {
       return boost::python::make_tuple(obj.data(),
                                        obj.indices(),
                                        obj.get_beam(),
@@ -529,8 +530,8 @@ namespace dxtbx { namespace boost_python {
     return boost::python::tuple(result);
   }
 
-  template<typename Beam, typename Sequence>
-  boost::python::tuple ImageSet_get_raw_data(ImageSet<Beam, Sequence> &self, std::size_t index) {
+  template<typename BeamT, typename SequenceT>
+  boost::python::tuple ImageSet_get_raw_data(ImageSet<BeamT, SequenceT> &self, std::size_t index) {
     boost::python::tuple result;
     ImageBuffer buffer = self.get_raw_data(index);
     if (buffer.is_int()) {
@@ -545,23 +546,23 @@ namespace dxtbx { namespace boost_python {
     return result;
   }
 
-  template<typename Beam, typename Sequence>
-  boost::python::tuple ImageSet_get_corrected_data(ImageSet<Beam, Sequence> &self, std::size_t index) {
+  template<typename BeamT, typename SequenceT>
+  boost::python::tuple ImageSet_get_corrected_data(ImageSet<BeamT, SequenceT> &self, std::size_t index) {
     return image_as_tuple<double>(self.get_corrected_data(index));
   }
 
-  template<typename Beam, typename Sequence>
-  boost::python::tuple ImageSet_get_gain(ImageSet<Beam, Sequence> &self, std::size_t index) {
+  template<typename BeamT, typename SequenceT>
+  boost::python::tuple ImageSet_get_gain(ImageSet<BeamT, SequenceT> &self, std::size_t index) {
     return image_as_tuple<double>(self.get_gain(index));
   }
 
-  template<typename Beam, typename Sequence>
-  boost::python::tuple ImageSet_get_pedestal(ImageSet<Beam, Sequence> &self, std::size_t index) {
+  template<typename BeamT, typename SequenceT>
+  boost::python::tuple ImageSet_get_pedestal(ImageSet<BeamT, SequenceT> &self, std::size_t index) {
     return image_as_tuple<double>(self.get_pedestal(index));
   }
 
-  template<typename Beam, typename Sequence>
-  boost::python::tuple ImageSet_get_mask(ImageSet<Beam, Sequence> &self, std::size_t index) {
+  template<typename BeamT, typename SequenceT>
+  boost::python::tuple ImageSet_get_mask(ImageSet<BeamT, SequenceT> &self, std::size_t index) {
     return image_as_tuple<bool>(self.get_mask(index));
   }
 
@@ -584,8 +585,8 @@ namespace dxtbx { namespace boost_python {
    * If we have offset arrays set in the imageset then update the pixel to
    * millimeter strategy to use them
    */
-  template<typename Beam, typename Sequence>
-  void ImageSet_update_detector_px_mm_data(ImageSet<Beam, Sequence> &self) {
+  template<typename BeamT, typename SequenceT>
+  void ImageSet_update_detector_px_mm_data(ImageSet<BeamT, SequenceT> &self) {
     Image<double> dx = self.external_lookup().dx().get_data();
     Image<double> dy = self.external_lookup().dy().get_data();
     DXTBX_ASSERT(dx.empty() == dy.empty());
@@ -593,7 +594,7 @@ namespace dxtbx { namespace boost_python {
       return;
     }
     for (std::size_t i = 0; i < self.size(); ++i) {
-      typename ImageSet<Beam, Sequence>::detector_ptr detector = self.get_detector_for_image(i);
+      typename ImageSet<BeamT, SequenceT>::detector_ptr detector = self.get_detector_for_image(i);
       DXTBX_ASSERT(dx.n_tiles() == detector->size());
       DXTBX_ASSERT(dy.n_tiles() == detector->size());
       for (std::size_t i = 0; i < detector->size(); ++i) {
@@ -623,9 +624,9 @@ namespace dxtbx { namespace boost_python {
    * If we have offset arrays set in the imageset then update the pixel to
    * millimeter strategy to use them
    */
-  template<typename Beam, typename Sequence>
-  void ImageSequence_update_detector_px_mm_data(ImageSequence<Beam, Sequence> &self) {
-    typename ImageSequence<Beam, Sequence>::detector_ptr detector = self.get_detector();
+  template<typename BeamT, typename SequenceT>
+  void ImageSequence_update_detector_px_mm_data(ImageSequence<BeamT, SequenceT> &self) {
+    typename ImageSequence<BeamT, SequenceT>::detector_ptr detector = self.get_detector();
     Image<double> dx = self.external_lookup().dx().get_data();
     Image<double> dy = self.external_lookup().dy().get_data();
     DXTBX_ASSERT(dx.empty() == dy.empty());
