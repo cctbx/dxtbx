@@ -65,7 +65,7 @@ namespace dxtbx { namespace model {
         : beam_(beam),
           detector_(detector),
           goniometer_(goniometer),
-          sequenc_(sequence),
+          sequence_(sequence),
           crystal_(crystal),
           profile_(profile),
           imageset_(imageset),
@@ -96,7 +96,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if the goniometer model is the same.
      */
-    bool contains(const boost::python::object &sequence) const {
+    bool contains_sequence(const boost::python::object &sequence) const {
       return sequence_ == sequence;
     }
 
@@ -123,7 +123,7 @@ namespace dxtbx { namespace model {
       } else if (get_goniometer.check()) {
         return contains(get_goniometer());
       } else if (get_sequence.check()) {
-        return contains(get_sequence());
+        return contains_sequence(get_sequence());
       } else if (get_crystal.check()) {
         return contains(get_crystal());
       }
@@ -154,9 +154,10 @@ namespace dxtbx { namespace model {
     bool is_still() const {
       if (!goniometer_){return true;} 
       if (!sequence_){return true;} 
-      std::string sequence_type = boost::python::extract<std::string>(sequence.attr("__class__").attr("__name__"));
+      std::string sequence_type = boost::python::extract<std::string>(sequence_.attr("__class__").attr("__name__"));
       if (sequence_type == "Scan"){
-        return sequence_->get_oscillation()[1] == 0.0;
+        Scan scan = boost::python::extract<Scan>(sequence_);
+        return scan.get_oscillation()[1] == 0.0;
       }
       return false;
     }

@@ -206,7 +206,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if an experiment contains the beam model
      */
-    bool contains(const boost::python::object &beam) const {
+    bool contains_beam(const boost::python::object &beam) const {
       for (std::size_t i = 0; i < size(); ++i) {
         if (data_[i].contains(beam)) {
           return true;
@@ -242,7 +242,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if an experiment contains the sequence model
      */
-    bool contains(const boost::python::object &sequence) const {
+    bool contains_sequence(const boost::python::object &sequence) const {
       for (std::size_t i = 0; i < size(); ++i) {
         if (data_[i].contains(sequence)) {
           return true;
@@ -311,7 +311,7 @@ namespace dxtbx { namespace model {
     /**
      * Replace all sequence models
      */
-    void replace(boost::python::object a, boost::python::object b) {
+    void replace_sequence(boost::python::object a, boost::python::object b) {
       for (std::size_t i = 0; i < size(); ++i) {
         if (data_[i].get_sequence() == a) {
           data_[i].set_sequence(b);
@@ -421,7 +421,7 @@ namespace dxtbx { namespace model {
     /**
      * Get indices which have this model
      */
-    scitbx::af::shared<std::size_t> indices(const boost::python::object &obj) const {
+    scitbx::af::shared<std::size_t> indices_sequence(const boost::python::object &obj) const {
       scitbx::af::shared<std::size_t> result;
       for (std::size_t i = 0; i < size(); ++i) {
         if (data_[i].get_sequence() == obj) {
