@@ -336,7 +336,7 @@ class TestImageSet:
         imageset.set_beam(beam)
         imageset.set_detector(detector)
 
-        # Ensure this doens't interfere with reading
+        # Ensure this doesn't interfere with reading
         for i in imageset:
             pass
 
@@ -443,7 +443,7 @@ class TestImageSequence:
         sequence.set_goniometer(gonio)
         sequence.set_detector(detector)
 
-        # Ensure this doens't interfere with reading
+        # Ensure this doesn't interfere with reading
         for i in sequence:
             pass
 

@@ -45,7 +45,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
     def _get_change_of_basis(self, axis_id):
         """Get the 4x4 homogenous coordinate matrix for a given axis.  Assumes
-        the cbf handle has been intialized
+        the cbf handle has been initialized
         @param axis_id axis name of basis to get"""
         cbf = self._get_cbf_handle()
         axis_type = cbf.get_axis_type(axis_id)
@@ -111,7 +111,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
     def _get_cumulative_change_of_basis(self, axis_id):
         """Get the 4x4 homogenous coordinate matrix for a given axis, combining it with the change of
         basis matrices of parent axes with the same equipment component as the given axis. Assumes
-        the cbf handle has been intialized
+        the cbf handle has been initialized
         @param axis_id axis name of basis to get
         @return (parent, change of basis matrix), where parent is None if the parent in the cbf file
         is ".".  Parent is the axis that the top level axis in this chain of dependent axis depends on
@@ -184,7 +184,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
         d = Detector()
 
-        # find the panel elment names. Either array ids or section ids
+        # find the panel element names. Either array ids or section ids
         cbf.find_category(b"array_structure_list")
         try:
             cbf.find_column(b"array_section_id")

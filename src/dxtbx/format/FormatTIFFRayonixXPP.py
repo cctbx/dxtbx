@@ -1,7 +1,7 @@
 """
-Sub class of FormatTIFFRayonix specialized for the XPP Rayonix dectector at LCLS
+Sub class of FormatTIFFRayonix specialized for the XPP Rayonix detector at LCLS
 
-Images from the XPP Rayonix detector have several unitialized values, such as
+Images from the XPP Rayonix detector have several uninitialized values, such as
 distance, wavelength, etc.  Set these values to zero so the images can be at
 least viewed.
 """
