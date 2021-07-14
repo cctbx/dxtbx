@@ -27,7 +27,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       return boost::python::make_tuple(obj.get_beam(),
                                        obj.get_detector(),
                                        obj.get_goniometer(),
-                                       obj.get_scan(),
+                                       obj.get_sequence(),
                                        obj.get_crystal(),
                                        obj.get_profile(),
                                        obj.get_imageset(),
@@ -46,7 +46,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       const boost::shared_ptr<Detector> &) const;
     typedef bool (Experiment::*goniometer_type)(
       const boost::shared_ptr<Goniometer> &) const;
-    typedef bool (Experiment::*scan_type)(const boost::shared_ptr<Scan> &) const;
+    typedef bool (Experiment::*sequence_type)(const boost::python::object &) const;
     typedef bool (Experiment::*crystal_type)(
       const boost::shared_ptr<CrystalBase> &) const;
     typedef bool (Experiment::*object_type)(boost::python::object) const;
@@ -63,7 +63,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       return &Experiment::contains;
     }
 
-    static scan_type scan() {
+    static sequence_type sequence() {
       return &Experiment::contains;
     }
 
@@ -81,7 +81,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def(init<boost::python::object,
                 boost::shared_ptr<Detector>,
                 boost::shared_ptr<Goniometer>,
-                boost::shared_ptr<Scan>,
+                boost::python::object,
                 boost::shared_ptr<CrystalBase>,
                 boost::python::object,
                 boost::python::object,
@@ -89,7 +89,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 std::string>((arg("beam") = boost::python::object(),
                               arg("detector") = boost::shared_ptr<Detector>(),
                               arg("goniometer") = boost::shared_ptr<Goniometer>(),
-                              arg("scan") = boost::shared_ptr<Scan>(),
+                              arg("sequence") = boost::python::object(),
                               arg("crystal") = boost::shared_ptr<CrystalBase>(),
                               arg("profile") = boost::python::object(),
                               arg("imageset") = boost::python::object(),
@@ -99,7 +99,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .add_property("detector", &Experiment::get_detector, &Experiment::set_detector)
       .add_property(
         "goniometer", &Experiment::get_goniometer, &Experiment::set_goniometer)
-      .add_property("scan", &Experiment::get_scan, &Experiment::set_scan)
+      .add_property("sequence", &Experiment::get_sequence, &Experiment::set_sequence)
       .add_property("crystal", &Experiment::get_crystal, &Experiment::set_crystal)
       .add_property("profile", &Experiment::get_profile, &Experiment::set_profile)
       .add_property("imageset", &Experiment::get_imageset, &Experiment::set_imageset)
@@ -110,7 +110,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("__contains__", experiment_contains_pointers::beam())
       .def("__contains__", experiment_contains_pointers::detector())
       .def("__contains__", experiment_contains_pointers::goniometer())
-      .def("__contains__", experiment_contains_pointers::scan())
+      .def("__contains__", experiment_contains_pointers::sequence())
       .def("__contains__", experiment_contains_pointers::crystal())
       .def("__contains__", experiment_contains_pointers::object())
       .def("__eq__", &Experiment::operator==)
