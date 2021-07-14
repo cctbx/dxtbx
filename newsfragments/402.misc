@@ -1,0 +1,1 @@
+Fix a compiler warning about partially overridden virtual inheritance
