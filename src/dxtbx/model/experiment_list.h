@@ -240,11 +240,11 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Check if an experiment contains the scan model
+     * Check if an experiment contains the sequence model
      */
-    bool contains(const boost::shared_ptr<Scan> &scan) const {
+    bool contains(const boost::python::object &sequence) const {
       for (std::size_t i = 0; i < size(); ++i) {
-        if (data_[i].contains(scan)) {
+        if (data_[i].contains(sequence)) {
           return true;
         }
       }
@@ -309,12 +309,12 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Replace all scan models
+     * Replace all sequence models
      */
-    void replace(boost::shared_ptr<Scan> a, boost::shared_ptr<Scan> b) {
+    void replace(boost::python::object a, boost::python::object b) {
       for (std::size_t i = 0; i < size(); ++i) {
-        if (data_[i].get_scan() == a) {
-          data_[i].set_scan(b);
+        if (data_[i].get_sequence() == a) {
+          data_[i].set_sequence(b);
         }
       }
     }
@@ -340,8 +340,8 @@ namespace dxtbx { namespace model {
       boost::python::extract<boost::shared_ptr<Detector> > get_detector_b(b);
       boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer_a(a);
       boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer_b(b);
-      boost::python::extract<boost::shared_ptr<Scan> > get_scan_a(a);
-      boost::python::extract<boost::shared_ptr<Scan> > get_scan_b(b);
+      boost::python::extract<boost::python::object > get_sequence_a(a);
+      boost::python::extract<boost::python::object > get_sequence_b(b);
       boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal_a(a);
       boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal_b(b);
       if (get_beam_a.check()) {
@@ -353,9 +353,9 @@ namespace dxtbx { namespace model {
       } else if (get_goniometer_a.check()) {
         DXTBX_ASSERT(get_goniometer_b.check());
         replace(get_goniometer_a(), get_goniometer_b());
-      } else if (get_scan_a.check()) {
-        DXTBX_ASSERT(get_scan_b.check());
-        replace(get_scan_a(), get_scan_b());
+      } else if (get_sequence_a.check()) {
+        DXTBX_ASSERT(get_sequence_b.check());
+        replace(get_sequence_a(), get_sequence_b());
       } else if (get_crystal_a.check()) {
         DXTBX_ASSERT(get_crystal_b.check());
         replace(get_crystal_a(), get_crystal_b());
@@ -363,7 +363,7 @@ namespace dxtbx { namespace model {
         DXTBX_ASSERT(!get_beam_b.check());
         DXTBX_ASSERT(!get_detector_b.check());
         DXTBX_ASSERT(!get_goniometer_b.check());
-        DXTBX_ASSERT(!get_scan_b.check());
+        DXTBX_ASSERT(!get_sequence_b.check());
         DXTBX_ASSERT(!get_crystal_b.check());
         for (std::size_t i = 0; i < size(); ++i) {
           if (data_[i].get_profile() == a) {
@@ -421,10 +421,10 @@ namespace dxtbx { namespace model {
     /**
      * Get indices which have this model
      */
-    scitbx::af::shared<std::size_t> indices(const boost::shared_ptr<Scan> &obj) const {
+    scitbx::af::shared<std::size_t> indices(const boost::python::object &obj) const {
       scitbx::af::shared<std::size_t> result;
       for (std::size_t i = 0; i < size(); ++i) {
-        if (data_[i].get_scan() == obj) {
+        if (data_[i].get_sequence() == obj) {
           result.push_back(i);
         }
       }
@@ -452,7 +452,7 @@ namespace dxtbx { namespace model {
       boost::python::extract<boost::python::object > get_beam(obj);
       boost::python::extract<boost::shared_ptr<Detector> > get_detector(obj);
       boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer(obj);
-      boost::python::extract<boost::shared_ptr<Scan> > get_scan(obj);
+      boost::python::extract<boost::python::object > get_sequence(obj);
       boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal(obj);
       if (get_beam.check()) {
         return indices_beam(get_beam());
@@ -460,8 +460,8 @@ namespace dxtbx { namespace model {
         return indices(get_detector());
       } else if (get_goniometer.check()) {
         return indices(get_goniometer());
-      } else if (get_scan.check()) {
-        return indices(get_scan());
+      } else if (get_sequence.check()) {
+        return indices(get_sequence());
       } else if (get_crystal.check()) {
         return indices(get_crystal());
       }
@@ -481,7 +481,7 @@ namespace dxtbx { namespace model {
     scitbx::af::shared<std::size_t> where(boost::python::object beam,
                                           boost::shared_ptr<Detector> detector,
                                           boost::shared_ptr<Goniometer> goniometer,
-                                          boost::shared_ptr<Scan> scan,
+                                          boost::python::object sequence,
                                           boost::shared_ptr<CrystalBase> crystal,
                                           boost::python::object profile,
                                           boost::python::object imageset,
@@ -497,7 +497,7 @@ namespace dxtbx { namespace model {
         if (goniometer && data_[i].get_goniometer() != goniometer) {
           continue;
         }
-        if (scan && data_[i].get_scan() != scan) {
+        if (sequence && data_[i].get_sequence() != sequence) {
           continue;
         }
         if (crystal && data_[i].get_crystal() != crystal) {
