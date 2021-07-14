@@ -701,7 +701,7 @@ def get_change_of_basis(transformation):
             )
         )
     else:
-        raise ValueError("Unrecognized tranformation type: %s" % axis_type)
+        raise ValueError("Unrecognized transformation type: %s" % axis_type)
 
     return cob
 
@@ -738,7 +738,7 @@ def get_cumulative_change_of_basis(transformation):
     combining it with the change of basis matrices of parent transformations
     with the same equipment component as the given transformation.
     Returns (parent, change of basis matrix), where parent is None if the
-    transformation's depends_on is ".".  Parent is the tranformation that the
+    transformation's depends_on is ".".  Parent is the transformation that the
     top level transformation in this chain of transformations depends on.
     """
 
@@ -888,7 +888,7 @@ class DetectorFactoryFromGroup:
                     name = str(os.path.basename(transform.name))
                     if (
                         pg is None
-                    ):  # The first transform will be the root of the hiearchy
+                    ):  # The first transform will be the root of the hierarchy
                         if root is None:
                             root = self.model.hierarchy()
                             set_frame(root, transform)

@@ -49,7 +49,7 @@ class FormatSMVADSCSN926(FormatSMVADSCSN):
         else:
             two_theta = 0
 
-        # now correct for some idiosyncracies...
+        # now correct for some idiosyncrasies...
         # two-theta included in beam centre - so remove this
         beam_y += distance * math.tan(two_theta * math.pi / 180.0)
 

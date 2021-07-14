@@ -15,7 +15,7 @@ from dxtbx.model.detector import Detector
 
 
 class cbf_wrapper(pycbf.cbf_handle_struct):
-    """Wrapper class that provids convience functions for working with cbflib"""
+    """Wrapper class that provides convenience functions for working with cbflib"""
 
     def add_category(self, name, columns):
         """Create a new category and populate it with column names"""

@@ -195,7 +195,7 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
             return False
 
     def __init__(self, data, **kwargs):
-        """@param data In memory image dictionary, alredy initialized"""
+        """@param data In memory image dictionary, already initialized"""
         super().__init__(data, **kwargs)
         self._image_file = copy.deepcopy(data)
 

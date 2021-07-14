@@ -356,7 +356,7 @@ py::object numpy_to_array_family(py::array np_array, int ignore_dims = 0) {
 
 py::object from_numpy(py::object array) {
   // Firstly, check if we are wrapping a flex object already
-  // now, let's check that this isn't aready a flex object
+  // now, let's check that this isn't already a flex object
   try {
     get_buffer(array);
     // This isn't a numpy array - it's already a known flex object!
