@@ -20,7 +20,13 @@ from dxtbx.datablock import (
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
-from dxtbx.imageset import ImageGrid, ImageSet, ImageSetFactory, RotImageSequence
+from dxtbx.imageset import (
+    ImageGrid,
+    ImageSet,
+    ImageSetFactory,
+    RotImageSequence,
+    TOFImageSequence,
+)
 from dxtbx.model import (
     BeamFactory,
     CrystalFactory,
@@ -631,7 +637,7 @@ class ExperimentListFactory:
     @staticmethod
     def from_imageset_and_crystal(imageset, crystal, load_models=True):
         """Load an experiment list from an imageset and crystal."""
-        if isinstance(imageset, RotImageSequence):
+        if type(imageset) in [RotImageSequence, TOFImageSequence]:
             return ExperimentListFactory.from_sequence_and_crystal(
                 imageset, crystal, load_models
             )
@@ -644,14 +650,17 @@ class ExperimentListFactory:
     def from_sequence_and_crystal(imageset, crystal, load_models=True):
         """Create an experiment list from sequence and crystal."""
 
-        assert isinstance(imageset, RotImageSequence)
+        assert type(imageset) in [RotImageSequence, TOFImageSequence]
 
         experiments = ExperimentList()
 
         if load_models:
             # if imagesequence is still images, make one experiment for each
             # all referencing into the same image set
-            if imageset.get_sequence().is_still():
+            if (
+                isinstance(imageset, RotImageSequence)
+                and imageset.get_sequence().is_still()
+            ):
                 start, end = imageset.get_sequence().get_array_range()
                 for j in range(start, end):
                     subset = imageset[j : j + 1]
@@ -661,7 +670,7 @@ class ExperimentListFactory:
                             beam=imageset.get_beam(),
                             detector=imageset.get_detector(),
                             goniometer=imageset.get_goniometer(),
-                            scan=subset.get_scan(),
+                            scan=subset.get_sequence(),
                             crystal=crystal,
                         )
                     )
@@ -672,7 +681,7 @@ class ExperimentListFactory:
                         beam=imageset.get_beam(),
                         detector=imageset.get_detector(),
                         goniometer=imageset.get_goniometer(),
-                        scan=imageset.get_sequence(),
+                        sequence=imageset.get_sequence(),
                         crystal=crystal,
                     )
                 )

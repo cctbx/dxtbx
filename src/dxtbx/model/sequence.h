@@ -228,7 +228,6 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT((index >= 0) && (index < get_num_images()));
       int image_index = get_image_range()[0] + index;
 
-      // Create the new epoch array
       scitbx::af::shared<double> new_tof_in_seconds(1);
       new_tof_in_seconds[0] = get_image_tof(image_index);
 
