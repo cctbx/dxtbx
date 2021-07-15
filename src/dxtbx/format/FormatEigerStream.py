@@ -12,7 +12,7 @@ from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
-from dxtbx.model.scan import SequenceFactory
+from dxtbx.model.sequence import SequenceFactory
 
 try:
     import lz4

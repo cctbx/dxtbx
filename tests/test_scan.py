@@ -2,8 +2,8 @@ import os
 
 import pytest
 
-from dxtbx.model.scan import SequenceFactory
 from dxtbx.model.scan_helpers import scan_helper_image_files
+from dxtbx.model.sequence import SequenceFactory
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ import pytest
 from libtbx.phil import parse
 
 from dxtbx.model import Scan
-from dxtbx.model.scan import SequenceFactory, scan_phil_scope
+from dxtbx.model.sequence import SequenceFactory, scan_phil_scope
 
 
 @pytest.fixture
