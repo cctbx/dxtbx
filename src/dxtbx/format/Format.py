@@ -304,6 +304,8 @@ class Format:
         def is_tof_imagesequence(sequence, beam, format_instance):
             if beam is None and format_instance is not None:
                 beam = format_instance.get_beam()
+            if sequence is None and format_instance is not None:
+                sequence = format_instance.get_sequence()
             if isinstance(beam, TOFBeam):
                 if not isinstance(sequence, TOFSequence):
                     raise NotImplementedError(
