@@ -776,6 +776,40 @@ namespace dxtbx { namespace boost_python {
         "external_lookup",
         make_function(&ImageSet<MonochromaticBeam, Scan>::external_lookup, return_internal_reference<>()));
 
+    class_<ImageSet<TOFBeam, TOFSequence> >("TOFImageSet", no_init)
+      .def("data", &ImageSet<TOFBeam, TOFSequence>::data)
+      .def("indices", &ImageSet<TOFBeam, TOFSequence>::indices)
+      .def("size", &ImageSet<TOFBeam, TOFSequence>::size)
+      .def("__len__", &ImageSet<TOFBeam, TOFSequence>::size)
+      .def("has_dynamic_mask", &ImageSet<TOFBeam, TOFSequence>::has_dynamic_mask)
+      .def("get_raw_data", &ImageSet_get_raw_data<TOFBeam, TOFSequence>)
+      .def("get_corrected_data", &ImageSet_get_corrected_data<TOFBeam, TOFSequence>)
+      .def("get_gain", &ImageSet_get_gain<TOFBeam, TOFSequence>)
+      .def("get_pedestal", &ImageSet_get_pedestal<TOFBeam, TOFSequence>)
+      .def("get_mask", &ImageSet_get_mask<TOFBeam, TOFSequence>)
+      .def("get_beam", &ImageSet<TOFBeam, TOFSequence>::get_beam_for_image, (arg("index") = 0))
+      .def("get_detector", &ImageSet<TOFBeam, TOFSequence>::get_detector_for_image, (arg("index") = 0))
+      .def("get_goniometer", &ImageSet<TOFBeam, TOFSequence>::get_goniometer_for_image, (arg("index") = 0))
+      .def("get_sequence", &ImageSet<TOFBeam, TOFSequence>::get_sequence_for_image, (arg("index") = 0))
+      .def("set_beam", &ImageSet<TOFBeam, TOFSequence>::set_beam_for_image, (arg("index") = 0))
+      .def("set_detector", &ImageSet<TOFBeam, TOFSequence>::set_detector_for_image, (arg("index") = 0))
+      .def("set_goniometer", &ImageSet<TOFBeam, TOFSequence>::set_goniometer_for_image, (arg("index") = 0))
+      .def("set_sequence", &ImageSet<TOFBeam, TOFSequence>::set_sequence_for_image, (arg("index") = 0))
+      .def("get_path", &ImageSet<TOFBeam, TOFSequence>::get_path)
+      .def("get_image_identifier", &ImageSet<TOFBeam, TOFSequence>::get_image_identifier)
+      .def("mark_for_rejection", &ImageSet<TOFBeam, TOFSequence>::mark_for_rejection)
+      .def("is_marked_for_rejection", &ImageSet<TOFBeam, TOFSequence>::is_marked_for_rejection)
+      .def("as_imageset", &ImageSet<TOFBeam, TOFSequence>::as_imageset)
+      .def("complete_set", &ImageSet<TOFBeam, TOFSequence>::complete_set)
+      .def("partial_set", &ImageSet<TOFBeam, TOFSequence>::partial_set)
+      .def("clear_cache", &ImageSet<TOFBeam, TOFSequence>::clear_cache)
+      .def("__eq__", &ImageSet<TOFBeam, TOFSequence>::operator==)
+      .def("__ne__", &ImageSet<TOFBeam, TOFSequence>::operator!=)
+      .def("update_detector_px_mm_data", &ImageSet_update_detector_px_mm_data<TOFBeam, TOFSequence>)
+      .add_property(
+        "external_lookup",
+        make_function(&ImageSet<TOFBeam, TOFSequence>::external_lookup, return_internal_reference<>()));
+
     class_<ImageGrid, bases<ImageSet<MonochromaticBeam, Scan> > >("ImageGrid", no_init)
       .def(init<const ImageSetData<MonochromaticBeam, Scan> &, int2>((arg("data"), arg("grid_size"))))
       .def(init<const ImageSetData<MonochromaticBeam, Scan> &, const scitbx::af::const_ref<std::size_t> &, int2>(
@@ -785,7 +819,7 @@ namespace dxtbx { namespace boost_python {
       .staticmethod("from_imageset")
       .def_pickle(ImageGridPickleSuite());
 
-    class_<ImageSequence<MonochromaticBeam, Scan> >("RotImageSequenceBase", no_init)
+    class_<ImageSequence<MonochromaticBeam, Scan>, bases<ImageSet<MonochromaticBeam, Scan> > >("RotImageSequenceBase", no_init)
       .def(init<const ImageSetData<MonochromaticBeam, Scan> &,
                 const ImageSequence<MonochromaticBeam, Scan>::beam_ptr &,
                 const ImageSequence<MonochromaticBeam, Scan>::detector_ptr &,
@@ -845,7 +879,7 @@ namespace dxtbx { namespace boost_python {
                                                   arg("sequence"))))
       .def_pickle(RotImageSequencePickleSuite());
 
-    class_<ImageSequence<TOFBeam, TOFSequence> >("TOFImageSequenceBase", no_init)
+    class_<ImageSequence<TOFBeam, TOFSequence>, bases<ImageSet<TOFBeam, TOFSequence> > >("TOFImageSequenceBase", no_init)
       .def(init<const ImageSetData<TOFBeam, TOFSequence> &,
                 const ImageSequence<TOFBeam, TOFSequence>::beam_ptr &,
                 const ImageSequence<TOFBeam, TOFSequence>::detector_ptr &,
@@ -908,14 +942,7 @@ namespace dxtbx { namespace boost_python {
   }
 
   BOOST_PYTHON_MODULE(dxtbx_imageset_ext) {
-    try{
       export_imageset();
-    } catch(...){
-      PyErr_Print();
-      PyErr_SetString(PyExc_SystemError, __FILE__);
-      boost::python::handle_exception();
-      throw;
-    }
   }
 
 }}  // namespace dxtbx::boost_python
