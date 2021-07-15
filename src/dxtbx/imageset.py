@@ -339,6 +339,70 @@ class _(object):
         """Return the template"""
         return self.data().get_template()
 
+    def __iter__(self):
+        """Iterate over the array indices and read each image in turn."""
+        for i in range(len(self)):
+            yield self[i]
+
+    def get_vendortype(self, index):
+        """Get the vendor information."""
+        return self.data().get_vendor()
+
+    def get_format_class(self):
+        """Get format class name"""
+        return self.data().get_format_class()
+
+    def get_spectrum(self, index):
+        """Get the spectrum if available"""
+        kwargs = self.params()
+        if self.data().has_single_file_reader():
+            format_instance = self.get_format_class().get_instance(
+                self.data().get_master_path(), **kwargs
+            )
+        else:
+            format_instance = self.get_format_class().get_instance(
+                self.get_path(index), **kwargs
+            )
+        return format_instance.get_spectrum(self.indices()[index])
+
+    def params(self):
+        """Get the parameters"""
+        return self.data().get_params()
+
+    def get_detectorbase(self, index):
+        """
+        A function to be injected into the imageset to get the detectorbase instance
+        """
+        kwargs = self.params()
+        if self.data().has_single_file_reader():
+            format_instance = self.get_format_class().get_instance(
+                self.data().get_master_path(), **kwargs
+            )
+            return format_instance.get_detectorbase(self.indices()[index])
+        else:
+            format_instance = self.get_format_class().get_instance(
+                self.get_path(index), **kwargs
+            )
+            return format_instance.get_detectorbase()
+
+    def reader(self):
+        """
+        Return the reader
+        """
+        return self.data().reader()
+
+    def masker(self):
+        """
+        Return the masker
+        """
+        return self.data().masker()
+
+    def paths(self):
+        """
+        Return the list of paths
+        """
+        return [self.get_path(i) for i in range(len(self))]
+
 
 def _analyse_files(filenames):
     """Group images by filename into image sets.
