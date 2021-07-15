@@ -100,7 +100,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     boost::python::dict result;
     result["image_range"] = obj.get_image_range();
     result["batch_offset"] = obj.get_batch_offset();
-    result["tof_in_seconds"] = obj.get_tof_in_seconds();
+    result["tof_in_seconds"] = boost::python::list(obj.get_tof_in_seconds());
     boost::python::dict valid_image_ranges =
       MaptoPythonDict(obj.get_valid_image_ranges_map());
     result["valid_image_ranges"] = valid_image_ranges;
@@ -394,11 +394,11 @@ namespace dxtbx { namespace model { namespace boost_python {
     return scan.get_array_indices_with_angle(deg ? deg_as_rad(angle) : angle);
   }
 
-  static Scan getitem_single(const Scan &scan, int index) {
+  static Scan scan_getitem_single(const Scan &scan, int index) {
     return scan[index];
   }
 
-  static Scan getitem_slice(const Scan &scan, const slice index) {
+  static Scan scan_getitem_slice(const Scan &scan, const slice index) {
     // Ensure no step
     DXTBX_ASSERT(index.step() == object());
 
@@ -443,6 +443,48 @@ namespace dxtbx { namespace model { namespace boost_python {
                 new_epochs,
                 scan.get_batch_offset());
   }
+  
+  static TOFSequence tof_sequence_getitem_single(const TOFSequence &tof_sequence, int index) {
+    return tof_sequence[index];
+  }
+
+  static TOFSequence tof_sequence_getitem_slice(const TOFSequence &tof_sequence, const slice index) {
+    // Ensure no step
+    DXTBX_ASSERT(index.step() == object());
+
+    // Get start index
+    int start = 0, stop = 0;
+    if (index.start() == object()) {
+      start = 0;
+    } else {
+      start = extract<int>(index.start());
+    }
+
+    // Get stop index
+    if (index.stop() == object()) {
+      stop = tof_sequence.get_num_images();
+    } else {
+      stop = extract<int>(index.stop());
+    }
+
+    // Check ranges
+    DXTBX_ASSERT(start >= 0);
+    DXTBX_ASSERT(stop <= tof_sequence.get_num_images());
+    DXTBX_ASSERT(start < stop);
+
+    int first_image_index = tof_sequence.get_image_range()[0] + start;
+    int last_image_index = tof_sequence.get_image_range()[0] + stop - 1;
+
+    scitbx::af::shared<double> new_tof_in_seconds(stop - start);
+    for (std::size_t i = 0; i < new_tof_in_seconds.size(); ++i) {
+      new_tof_in_seconds[i] = tof_sequence.get_image_tof(first_image_index + i);
+    }
+
+    return TOFSequence(vec2<int>(first_image_index, last_image_index),
+      new_tof_in_seconds,
+      tof_sequence.get_batch_offset());
+
+  }
 
   void scan_swap(Scan &lhs, Scan &rhs) {
     std::swap(lhs, rhs);
@@ -472,7 +514,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_valid_image_ranges", set_valid_image_ranges);
 
 
-    class_<TOFSequence>("TOFSequence")
+    class_<TOFSequence, bases<Sequence> >("TOFSequence")
       .def(init<const TOFSequence &>())
       .def("__init__",
             make_constructor(&make_tof_sequence,
@@ -491,6 +533,8 @@ namespace dxtbx { namespace model { namespace boost_python {
             .def(self != self)
             .def(self += self)
             .def(self + self)
+            .def("__getitem__", &tof_sequence_getitem_single)
+            .def("__getitem__", &tof_sequence_getitem_slice)
             .def_pickle(TOFSequencePickleSuite());
 
 
@@ -553,10 +597,10 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_array_indices_with_angle",
            &get_array_indices_with_angle,
            (arg("angle"), arg("deg") = true))
-      .def("__getitem__", &getitem_single)
-      .def("__getitem__", &getitem_slice)
       .def(self += self)
       .def(self + self)
+      .def("__getitem__", &scan_getitem_single)
+      .def("__getitem__", &scan_getitem_slice)
       .def("append", &Scan::append, (arg("rhs"), arg("scan_tolerance") = 0.03))
       .def("__len__", &Scan::get_num_images)
       .def("__str__", &scan_to_string)

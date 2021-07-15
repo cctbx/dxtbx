@@ -62,7 +62,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     typedef bool (ExperimentList::*object_type)(boost::python::object) const;
 
     static beam_type beam() {
-      return &ExperimentList::contains;
+      return &ExperimentList::contains_beam;
     }
 
     static detector_type detector() {
@@ -74,7 +74,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
 
     static sequence_type sequence() {
-      return &ExperimentList::contains;
+      return &ExperimentList::contains_sequence;
     }
 
     static crystal_type crystal() {
@@ -98,7 +98,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     typedef void (ExperimentList::*goniometer_type)(boost::shared_ptr<Goniometer>,
                                                     boost::shared_ptr<Goniometer>);
     typedef void (ExperimentList::*sequence_type)(boost::python::object,
-                                              boost::python::object;
+                                              boost::python::object);
     typedef void (ExperimentList::*crystal_type)(boost::shared_ptr<CrystalBase>,
                                                  boost::shared_ptr<CrystalBase>);
     typedef void (ExperimentList::*object_type)(boost::python::object,
@@ -117,7 +117,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
 
     static sequence_type sequence() {
-      return &ExperimentList::replace;
+      return &ExperimentList::replace_sequence;
     }
 
     static crystal_type crystal() {
@@ -160,7 +160,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
 
     static sequence_type sequence() {
-      return &ExperimentList::indices;
+      return &ExperimentList::indices_sequence;
     }
 
     static crystal_type crystal() {

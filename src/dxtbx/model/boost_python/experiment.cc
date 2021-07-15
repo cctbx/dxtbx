@@ -64,7 +64,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
 
     static sequence_type sequence() {
-      return &Experiment::contains;
+      return &Experiment::contains_sequence;
     }
 
     static crystal_type crystal() {
