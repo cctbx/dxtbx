@@ -539,9 +539,9 @@ class _:
         """Get a list of the unique goniometers (includes None)."""
         return list(OrderedSet(e.goniometer for e in self))
 
-    def scans(self):
+    def sequences(self):
         """Get a list of the unique scans (includes None)."""
-        return list(OrderedSet(e.scan for e in self))
+        return list(OrderedSet(e.sequence for e in self))
 
     def crystals(self):
         """Get a list of the unique crystals (includes None)."""
@@ -584,7 +584,7 @@ class _:
             ("beam", self.beams, lambda x: x.beam),
             ("detector", self.detectors, lambda x: x.detector),
             ("goniometer", self.goniometers, lambda x: x.goniometer),
-            ("scan", self.scans, lambda x: x.scan),
+            ("sequence", self.sequences, lambda x: x.sequence),
             ("crystal", self.crystals, lambda x: x.crystal),
             ("profile", self.profiles, lambda x: x.profile),
             ("scaling_model", self.scaling_models, lambda x: x.scaling_model),
@@ -658,7 +658,6 @@ class _:
                 )
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
-                r["tof_in_seconds"] = list(imset.tof_in_seconds())
             else:
                 raise TypeError(
                     "expected ImageSet or RotImageSequence, got %s" % type(imset)
