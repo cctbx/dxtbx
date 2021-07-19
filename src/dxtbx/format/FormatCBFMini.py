@@ -212,7 +212,7 @@ class FormatCBFMini(FormatCBF):
 
         return beam
 
-    def _scan(self):
+    def _sequence(self):
         exposure_time = float(self._cif_header_dictionary["Exposure_period"].split()[0])
         osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
         osc_range = float(self._cif_header_dictionary["Angle_increment"].split()[0])

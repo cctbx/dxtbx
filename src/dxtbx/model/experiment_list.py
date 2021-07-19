@@ -1048,7 +1048,7 @@ class ImageMetadataRecord:
         except Exception:
             pass
         try:
-            record.scan = fmt.get_scan()
+            record.scan = fmt.get_sequence()
         except Exception:
             pass
 
@@ -1349,7 +1349,7 @@ def _create_imagesequence(record, format_class, format_kwargs=None):
         beam=record.beam,
         detector=record.detector,
         goniometer=record.goniometer,
-        scan=record.scan,
+        sequence=record.scan,
         format_kwargs=format_kwargs,
         # check_format=False,
     )

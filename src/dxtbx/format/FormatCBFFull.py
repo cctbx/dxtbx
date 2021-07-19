@@ -84,7 +84,7 @@ class FormatCBFFull(FormatCBF):
 
         return self._beam_factory.imgCIF_H(self._get_cbf_handle())
 
-    def _scan(self):
+    def _sequence(self):
         """Return a working scan instance."""
 
         return self._sequence_factory.imgCIF_H(self._image_file, self._get_cbf_handle())

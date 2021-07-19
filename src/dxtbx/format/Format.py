@@ -437,7 +437,7 @@ class Format:
                 format_instance=format_instance,
             )
 
-            if isinstance(imageset_type, ImageSetType.RotImageSequence):
+            if imageset_type == ImageSetType.RotImageSequence:
                 iset_data = ImageSetData(
                     reader=reader,
                     masker=masker,
@@ -453,7 +453,7 @@ class Format:
                     goniometer=goniometer,
                     sequence=sequence,
                 )
-            elif isinstance(imageset_type, ImageSetType.TOFImageSequence):
+            elif imageset_type == ImageSetType.TOFImageSequence:
                 iset_data = TOFImageSetData(
                     reader=reader,
                     masker=masker,
