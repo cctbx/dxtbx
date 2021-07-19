@@ -339,7 +339,7 @@ def project_2d(detector):
         clusters = sklearn.cluster.DBSCAN(eps=0.1, min_samples=2).fit_predict(axes)
         nclusters = max(clusters) + 1
 
-        # Revert to single panel mode if clustering is unsucessful
+        # Revert to single panel mode if clustering is unsuccessful
         if nclusters < 2:
             clustered_axes = False
 

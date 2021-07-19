@@ -213,5 +213,5 @@ def template_image_range(template):
     first = int(filenames[0][index])
     last = int(filenames[-1][index])
 
-    # Reutrn the image range
+    # Return the image range
     return (first, last)

@@ -187,7 +187,7 @@ class ScanFactory:
             angles = tuple(gonio.get_rotation_range())
         except Exception as e:
             if str(e).strip() == "CBFlib Error(s): CBF_NOTFOUND":
-                # probaby a still shot -> no scan object
+                # probably a still shot -> no scan object
                 return None
             raise
 
@@ -206,7 +206,7 @@ class ScanFactory:
 
     @staticmethod
     def add(scans):
-        """Sum a list of scans wrapping the sligtly clumsy idiomatic method:
+        """Sum a list of scans wrapping the slightly clumsy idiomatic method:
         sum(scans[1:], scans[0])."""
         return sum(scans[1:], scans[0])
 

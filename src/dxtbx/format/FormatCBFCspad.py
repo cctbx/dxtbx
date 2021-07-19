@@ -58,7 +58,7 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
         return d
 
     def sync_detector_to_cbf(self, detector=None):
-        """If the dectector object has been changed, due to refinment or manual repositioning
+        """If the detector object has been changed, due to refinement or manual repositioning
         in a gui, call this function to synchronize these changes to the underlying CBF handle"""
 
         def recursive_sync(cbf, group, cbf_detectors=None, root=False):
@@ -222,7 +222,7 @@ class FormatCBFFullStillInMemory(FormatCBFFullStill):
         return False
 
     def __init__(self, cbf_handle, **kwargs):
-        """@param cbf_handle In memory cbf_handle, alredy initialized"""
+        """@param cbf_handle In memory cbf_handle, already initialized"""
         self._goniometer_instance = None
         self._scan_instance = None
         self._detector_instance = None

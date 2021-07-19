@@ -48,7 +48,7 @@ namespace dxtbx { namespace model {
    *    xy' = xy + xy * l / sqrt(h^2 + xy^2)
    *
    * Solving this equation for xy in terms of xy' gives an extremely complicated
-   * solution. My maths wan't good enough to get a simpler solution. Might have
+   * solution. My maths wasn't good enough to get a simpler solution. Might have
    * another look if the approximation becomes an issue but with reasonable
    * geometry, the approximation is correction to more than 3 decimal places.
    *

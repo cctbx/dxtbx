@@ -138,7 +138,7 @@ def imagesequence_from_dict(d, check_format=True, directory=None):
     else:
         image_range = scan_dict.get("image_range")
 
-    # Set the models with the exisiting models as templates
+    # Set the models with the existing models as templates
     beam = BeamFactory.from_dict(d.get("beam"))
     goniometer = GoniometerFactory.from_dict(d.get("goniometer"))
     detector = DetectorFactory.from_dict(d.get("detector"))

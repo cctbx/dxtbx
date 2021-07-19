@@ -82,7 +82,7 @@ Features
   function now accepts the output array size, and returns the number of
   items read. (`#313 <https://github.com/cctbx/dxtbx/issues/313>`_)
 - Include test for equality of ``PxMmStrategy`` in ``Panel`` equality operator. (`#319 <https://github.com/cctbx/dxtbx/issues/319>`_)
-- Format suport for Eiger 16M XE at Diamond - recognise legacy and updated beamline names. (`#323 <https://github.com/cctbx/dxtbx/issues/323>`_)
+- Format support for Eiger 16M XE at Diamond - recognise legacy and updated beamline names. (`#323 <https://github.com/cctbx/dxtbx/issues/323>`_)
 - The function ``ExperimentList.from_templates`` has been added for construction convenience (`#333 <https://github.com/cctbx/dxtbx/issues/333>`_)
 
 

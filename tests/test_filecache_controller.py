@@ -15,7 +15,7 @@ def test_invalid_cache(monkeypatch):
     # Create the cache
     cache = fcc.simple_controller()
 
-    # Set up an intial, working cache
+    # Set up an initial, working cache
     good_file_opener = Mock()
     cache.check("working", lambda: good_file_opener)
     # This should have used the lazy_file_cache to set up

@@ -102,7 +102,7 @@ class multi_image_worker(image_worker):
         self.experiments = experiments
 
     def read(self, n):
-        """Read image at postion n"""
+        """Read image at position n"""
         if self.command_line.options.verbose:
             print("Processing %s: %d" % (self.path, n))
 
@@ -135,7 +135,7 @@ class single_image_worker(image_worker):
         format_class = dxtbx.format.Registry.get_format_class_for_file(path)
         assert not issubclass(
             format_class, FormatMultiImage
-        ), "Average container files seperately"
+        ), "Average container files separately"
         img_instance = format_class(path)
 
         beam = img_instance.get_beam()

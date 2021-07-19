@@ -333,7 +333,7 @@ class FormatCBFMini(FormatCBF):
             osc = scan.get_oscillation()[1]
 
         # automatically account for read-out time?
-        # exposure_time = exposure_period-0.00203  # this is apropriate for Pilatus3 S
+        # exposure_time = exposure_period-0.00203  # this is appropriate for Pilatus3 S
         exposure_time = exposure_period  # simulation is a perfect detector
 
         tau = 0  # assume simulation is a perfect detector with no pile-up error

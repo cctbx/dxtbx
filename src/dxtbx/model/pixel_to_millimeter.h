@@ -27,7 +27,7 @@ namespace dxtbx { namespace model {
    */
   class PxMmStrategy {
   public:
-    /** Virtual desctructor */
+    /** Virtual destructor */
     virtual ~PxMmStrategy() {}
 
     /** @returns the name */
@@ -80,7 +80,7 @@ namespace dxtbx { namespace model {
    */
   class SimplePxMmStrategy : public PxMmStrategy {
   public:
-    /** Virtual desctructor */
+    /** Virtual destructor */
     virtual ~SimplePxMmStrategy() {}
 
     /** @returns the name */
@@ -133,7 +133,7 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT(t0 > 0);
     }
 
-    /** Virtual desctructor */
+    /** Virtual destructor */
     virtual ~ParallaxCorrectedPxMmStrategy() {}
 
     /** @returns the name */
@@ -250,7 +250,7 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT(dx_.accessor().all_eq(dy_.accessor()));
     }
 
-    /** Virtual desctructor */
+    /** Virtual destructor */
     virtual ~OffsetPxMmStrategy() {}
 
     /** @returns the name */
@@ -370,7 +370,7 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT(dx_.accessor().all_eq(dy_.accessor()));
     }
 
-    /** Virtual desctructor */
+    /** Virtual destructor */
     virtual ~OffsetParallaxCorrectedPxMmStrategy() {}
 
     /** @returns the name */
