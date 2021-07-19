@@ -201,7 +201,7 @@ class ExperimentListDict:
         return filename or "", None
 
     def _imageset_from_imageset_data(self, imageset_data, models):
-        """ Make an imageset from imageset_data - help with refactor decode. """
+        """Make an imageset from imageset_data - help with refactor decode."""
 
         from dxtbx.imageset import ImageSetType
 
@@ -300,13 +300,13 @@ class ExperimentListDict:
                 imageset.set_beam(beam)
                 imageset.set_detector(detector)
                 imageset.set_goniometer(goniometer)
-                imageset.set_scan(scan)
+                imageset.set_sequence(scan)
             elif isinstance(imageset, (ImageSet, ImageGrid)):
                 for i in range(len(imageset)):
                     imageset.set_beam(beam, i)
                     imageset.set_detector(detector, i)
                     imageset.set_goniometer(goniometer, i)
-                    imageset.set_scan(scan, i)
+                    imageset.set_sequence(scan, i)
 
             imageset.update_detector_px_mm_data()
 
@@ -705,7 +705,7 @@ class ExperimentListFactory:
                         beam=imageset.get_beam(i),
                         detector=imageset.get_detector(i),
                         goniometer=imageset.get_goniometer(i),
-                        scan=imageset.get_sequence(i),
+                        sequence=imageset.get_sequence(i),
                         crystal=crystal,
                     )
                 )
@@ -1322,7 +1322,7 @@ def _create_imageset(records, format_class, format_kwargs=None):
         imageset.set_beam(r.beam, i)
         imageset.set_detector(r.detector, i)
         imageset.set_goniometer(r.goniometer, i)
-        imageset.set_scan(r.scan, i)
+        imageset.set_sequence(r.scan, i)
     return imageset
 
 

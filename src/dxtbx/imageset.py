@@ -17,6 +17,7 @@ from dxtbx_imageset_ext import (
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
+from enum import Enum
 from typing import Iterable, List
 
 __all__ = (

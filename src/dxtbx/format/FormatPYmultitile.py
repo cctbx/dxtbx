@@ -153,7 +153,7 @@ class FormatPYmultitile(FormatPY):
         str_sec = self._metrology_params.timestamp[17:]
         epoch = timegm(strptime(str_min, "%Y-%m-%dT%H:%M%Z")) + float(str_sec)
 
-        return self._scan_factory.make_scan(
+        return self._sequence_factory.make_scan(
             image_range=(1, 1),
             exposure_times=[1e-15 * self._metrology_params.pulse_length],
             oscillation=(0, 0),

@@ -127,7 +127,7 @@ class FormatXDS(Format):
         oscillation = (self._starting_angle, self._oscillation_range)
 
         # Create the scan object
-        return self._scan_factory.make_scan(
+        return self._sequence_factory.make_scan(
             image_range,
             0.0,
             oscillation,

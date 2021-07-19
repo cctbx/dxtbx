@@ -121,7 +121,7 @@ class FormatHDF5Lambda(FormatHDF5):
         oscillation = (0, 1)
         epochs = [0] * nframes
 
-        return self._scan_factory.make_scan(
+        return self._sequence_factory.make_scan(
             image_range, exposure_times, oscillation, epochs, deg=True
         )
 

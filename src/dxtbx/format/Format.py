@@ -521,6 +521,8 @@ class Format:
                 iset.set_goniometer(goniometer[i], i)
                 iset.set_sequence(sequence[i], i)
 
+            return iset
+
         # Process input
         filenames = process_filenames(filenames)
         format_kwargs = process_format_kwargs(format_kwargs)

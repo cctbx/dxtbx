@@ -109,7 +109,7 @@ class FormatBrukerFixedChi(FormatBruker):
             start *= -1
             incr *= -1
 
-        return self._scan_factory.single_file(
+        return self._sequence_factory.single_file(
             filename=self._image_file,
             exposure_times=1,
             osc_start=start,

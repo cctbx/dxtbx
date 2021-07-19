@@ -324,6 +324,6 @@ class FormatMRCstack(FormatMultiImage, FormatMRC):
         image_range = (1, nframes)
         epochs = [0] * nframes
 
-        return self._scan_factory.make_scan(
+        return self._sequence_factory.make_scan(
             image_range, exposure, oscillation, epochs, deg=True
         )

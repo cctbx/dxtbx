@@ -93,7 +93,7 @@ class FormatSMVRigaku(FormatSMV):
         osc_range = rotation[2]
         exposure_time = rotation[3]
 
-        return self._scan_factory.single_file(
+        return self._sequence_factory.single_file(
             self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 

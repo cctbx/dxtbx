@@ -145,7 +145,7 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         timestamp = get_adsc_timestamp(self._cif_header_dictionary["timestamp"])
 
-        return self._scan_factory.single_file(
+        return self._sequence_factory.single_file(
             self._image_file, exposure_time, osc_start, osc_range, timestamp
         )
 

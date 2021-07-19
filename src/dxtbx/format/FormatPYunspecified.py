@@ -135,12 +135,12 @@ class FormatPYunspecified(FormatPY):
             osc_range = self.detectorbase.deltaphi
             timestamp = self._timesec
 
-            return self._scan_factory.single_file(
+            return self._sequence_factory.single_file(
                 self._image_file, exposure_time, osc_start, osc_range, timestamp
             )
 
         else:
-            return self._scan_factory.make_scan(
+            return self._sequence_factory.make_scan(
                 image_range=(1, 1),
                 # femtosecond X-ray pulse, set this to a dummy argument
                 exposure_times=[1.0],

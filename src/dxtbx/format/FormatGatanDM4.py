@@ -366,7 +366,7 @@ class FormatGatanDM4(Format):
         oscillation = (0, 0.5)
         epochs = [0] * self._num_images
 
-        return self._scan_factory.make_scan(
+        return self._sequence_factory.make_scan(
             image_range, exposure_times, oscillation, epochs, deg=True
         )
 

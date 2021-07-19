@@ -40,7 +40,7 @@ class FormatSMVADSCNoDateStamp(FormatSMVADSC):
         osc_start = float(self._header_dictionary["OSC_START"])
         osc_range = float(self._header_dictionary["OSC_RANGE"])
 
-        return self._scan_factory.single_file(
+        return self._sequence_factory.single_file(
             self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 

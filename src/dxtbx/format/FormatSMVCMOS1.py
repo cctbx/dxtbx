@@ -168,7 +168,7 @@ class FormatSMVCMOS1(FormatSMV):
         osc_start = rotation[0]
         osc_range = rotation[2]
 
-        return self._scan_factory.single_file(
+        return self._sequence_factory.single_file(
             self._image_file, exposure_time, osc_start, osc_range, epoch
         )
 

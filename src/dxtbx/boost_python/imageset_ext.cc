@@ -743,6 +743,10 @@ namespace dxtbx { namespace boost_python {
       .def_pickle(ImageSetDataPickleSuite<MonochromaticBeam, Scan>());
 
     class_<ImageSet<MonochromaticBeam, Scan> >("ImageSet", no_init)
+      .def("__init__",
+           make_constructor(&make_imageset,
+                            default_call_policies(),
+                            (arg("data"), arg("indices") = boost::python::object())))
       .def("data", &ImageSet<MonochromaticBeam, Scan>::data)
       .def("indices", &ImageSet<MonochromaticBeam, Scan>::indices)
       .def("size", &ImageSet<MonochromaticBeam, Scan>::size)

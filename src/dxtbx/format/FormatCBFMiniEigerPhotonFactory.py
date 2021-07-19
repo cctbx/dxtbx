@@ -110,7 +110,7 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
         osc_range = 0.1
         timestamp = 1  # XXX
 
-        return self._scan_factory.single_file(
+        return self._sequence_factory.single_file(
             self._image_file, exposure_time, osc_start, osc_range, timestamp
         )
 

@@ -64,7 +64,7 @@ class FormatDIP2030b(Format):
     def _scan(self):
         """Return the scan information for this image."""
 
-        return self._scan_factory.single_file(
+        return self._sequence_factory.single_file(
             filename=self._image_file,
             exposure_times=self.detectorbase.parameters["TIME"],
             osc_start=self.detectorbase.osc_start,
