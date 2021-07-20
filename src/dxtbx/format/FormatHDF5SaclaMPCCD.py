@@ -13,6 +13,7 @@ from scitbx.array_family import flex
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
+from dxtbx.format.nexus import h5str
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 from dxtbx.model.detector import Detector
 
@@ -43,7 +44,7 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
     def understand(image_file):
         with h5py.File(image_file, "r") as h5_handle:
             if "metadata/detector" in h5_handle:
-                if "Rayonix" in h5_handle["metadata/detector"][()]:
+                if "Rayonix" in h5str(h5_handle["metadata/detector"][()]):
                     return False
 
             for elem in h5_handle:

@@ -9,6 +9,7 @@ from scitbx.array_family import flex
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatStill import FormatStill
+from dxtbx.format.nexus import h5str
 
 
 class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
@@ -22,7 +23,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
         with h5py.File(image_file, "r") as h5_handle:
             if "metadata/detector" not in h5_handle:
                 return False
-            if h5_handle["metadata/detector"][()] != "Rayonix MX300HS":
+            if h5str(h5_handle["metadata/detector"][()]) != "Rayonix MX300HS":
                 return False
             if any(elem.startswith("tag-") for elem in h5_handle):
                 return True
