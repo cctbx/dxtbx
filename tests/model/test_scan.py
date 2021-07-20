@@ -10,7 +10,7 @@ def test_scan_wrap_around_zero():
     starts = [r % 360 for r in range(350, 370)]
     ends = [(r + 1) % 360 for r in range(350, 370)]
     scans = [
-        dxtbx.model.scan.ScanFactory.single_file(f, [0.1], s, e - s, 0)
+        dxtbx.model.sequence.SequenceFactory.single_file(f, [0.1], s, e - s, 0)
         for f, s, e in zip(filenames, starts, ends)
     ]
     s0 = scans[0]

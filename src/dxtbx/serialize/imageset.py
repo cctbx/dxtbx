@@ -147,7 +147,7 @@ def imagesequence_from_dict(d, check_format=True, directory=None):
             beam=beam,
             detector=detector,
             goniometer=goniometer,
-            scan=scan,
+            sequence=scan,
             check_format=check_format,
         )[0]
     except Exception:
@@ -158,7 +158,7 @@ def imagesequence_from_dict(d, check_format=True, directory=None):
             beam=beam,
             detector=detector,
             goniometer=goniometer,
-            scan=scan,
+            sequence=scan,
             check_format=check_format,
         )
 

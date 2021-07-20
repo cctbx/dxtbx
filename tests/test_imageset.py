@@ -685,6 +685,6 @@ def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
 def test_scan_imageset_slice_consistency(dials_data):
     files = dials_data("centroid_test_data").listdir("*.cbf", sort=True)[1:]
     expt = ExperimentListFactory.from_filenames(f.strpath for f in files)[0]
-    assert expt.scan[0:8] == expt.scan
+    assert expt.sequence[0:8] == expt.sequence
     # The following doesn't work, and expects expt.imageset[1:9]
     assert expt.imageset[0:8] == expt.imageset

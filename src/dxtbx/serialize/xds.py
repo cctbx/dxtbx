@@ -77,7 +77,7 @@ def to_imageset(input_filename, extra_filename=None):
         beam=beam,
         detector=detector,
         goniometer=goniometer,
-        scan=scan,
+        sequence=scan,
     )[0]
 
     return imageset

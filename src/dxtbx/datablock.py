@@ -566,7 +566,7 @@ def datablocks_from_dict(obj, check_format=True, directory=None):
                     beam=beam,
                     detector=detector,
                     goniometer=gonio,
-                    scan=scan,
+                    sequence=scan,
                     check_format=check_format,
                     format_kwargs=format_kwargs,
                 )
