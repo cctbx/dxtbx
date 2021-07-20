@@ -176,6 +176,10 @@ class _:
         """
         return [self.get_path(i) for i in range(len(self))]
 
+    @staticmethod
+    def is_sequence(imageset):
+        return type(imageset) in [RotImageSequence, TOFImageSequence]
+
 
 class ImageSetLazy(ImageSet):
     """
