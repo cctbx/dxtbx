@@ -29,6 +29,7 @@ class FormatISISSXD(FormatNXTOFRAW):
             raise IncorrectFormatError(self, image_file)
         self.nxs_file = self.open_file(image_file)
         self.detector = None
+        self.raw_data = None
 
     def open_file(self, image_file):
         return h5py.File(image_file, "r")
@@ -59,7 +60,7 @@ class FormatISISSXD(FormatNXTOFRAW):
 
         return get_name(image_file) == "SXD"
 
-    def load_raw_data(self, as_numpy_arrays=False, index=0):
+    def load_raw_data(self, as_numpy_arrays=False):
         def get_detector_idx_array(detector_number, image_size, idx_offset):
             total_pixels = image_size[0] * image_size[1]
             min_range = (total_pixels * (detector_number - 1)) + (
@@ -68,7 +69,7 @@ class FormatISISSXD(FormatNXTOFRAW):
             max_range = min_range + total_pixels
             return np.arange(min_range, max_range).reshape(image_size).T
 
-        dataset = "raw_data_" + str(index + 1)
+        dataset = "raw_data_1"
         raw_counts = self.nxs_file[dataset]["detector_1"]["counts"][0, :, :]
         num_panels = self._get_num_panels()
         image_size = self._get_panel_size_in_px()
@@ -95,19 +96,17 @@ class FormatISISSXD(FormatNXTOFRAW):
 
         return tuple(raw_data)
 
-    def get_raw_data(self, index, tof_index=None):
+    def get_raw_data(self, index):
 
-        print(f"PYTHON TEST format.get_raw_data {index} {tof_index}")
-        raw_data = self.load_raw_data(index)
-        if tof_index is None:
-            return raw_data
-        else:
-            raw_data_idx = []
-            for i in raw_data:
-                arr = i[:, :, tof_index : tof_index + 1]
-                arr.reshape(flex.grid(i.all()[0], i.all()[1]))
-                raw_data_idx.append(arr)
-            return tuple(raw_data_idx)
+        if self.raw_data is None:
+            self.raw_data = self.load_raw_data()
+
+        raw_data_idx = []
+        for i in self.raw_data:
+            arr = i[:, :, index : index + 1]
+            arr.reshape(flex.grid(i.all()[0], i.all()[1]))
+            raw_data_idx.append(arr)
+        return tuple(raw_data_idx)
 
     def _get_detector(self):
 
