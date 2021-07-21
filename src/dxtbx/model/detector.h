@@ -654,7 +654,7 @@ namespace dxtbx { namespace model {
         if (size() == 1) {
           return (*this)[0].get_max_resolution_ellipse(s0);
         }
-      } catch (dxtbx::error const&) {
+      } catch (dxtbx::error const &) {
         // do nothing
       }
 
@@ -750,7 +750,7 @@ namespace dxtbx { namespace model {
             found_panel = (int)i;
             break;
           }
-        } catch (dxtbx::error const&) {
+        } catch (dxtbx::error const &) {
           // pass
         }
       }
