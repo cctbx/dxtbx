@@ -235,9 +235,9 @@ def test_do_not_understand_i24(tmp_path):
     with h5py.File(nxs, mode="w") as fh:
         entry = fh.create_group("entry")
         instrument = entry.create_group("instrument")
-        instrument.attrs["short_name"] = np.string_(f"DLS I24")
+        instrument.attrs["short_name"] = np.string_("DLS I24")
         name = instrument.create_dataset(
-            "name", data=np.string_(f"DIAMOND BEAMLINE I24")
+            "name", data=np.string_("DIAMOND BEAMLINE I24")
         )
-        name.attrs["short_name"] = np.string_(f"DLS I24")
+        name.attrs["short_name"] = np.string_("DLS I24")
     assert not FormatNexusEigerDLS16M.understand(nxs)
