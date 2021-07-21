@@ -539,6 +539,18 @@ namespace dxtbx { namespace model {
       return true;
     }
 
+    /**
+     * Returns true if any experiments represent ToF experiments
+     */
+    bool contains_tof_experiments() const{
+      for(std::size_t i = 0; i < size(); ++i){
+        if (data_[i].is_tof_experiment()){
+          return true;
+        }
+      }
+      return false;
+    }
+
   protected:
     shared_type data_;
   };

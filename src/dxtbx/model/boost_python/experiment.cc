@@ -121,6 +121,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("is_sequence",
            &Experiment::is_sequence,
            "Check if this experiment represents swept rotation image(s)")
+      .def("is_tof_experiment",
+           &Experiment::is_tof_experiment,
+           "Check if this experiment represents a ToF experiment")
       .def_pickle(ExperimentPickleSuite());
   }
 

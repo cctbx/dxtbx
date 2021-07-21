@@ -169,6 +169,23 @@ namespace dxtbx { namespace model {
       return !is_still();
     }
 
+    bool is_tof_experiment() const{
+      if (!sequence_){return false;}
+      std::string sequence_type = boost::python::extract<std::string>(sequence_.attr("__class__").attr("__name__"));
+      if (sequence_type != "TOFSequence"){
+        return false;
+      }
+      std::string beam_type = boost::python::extract<std::string>(beam_.attr("__class__").attr("__name__"));
+      if (beam_type != "TOFBeam"){
+        return false;
+      }
+      std::string imageset_type = boost::python::extract<std::string>(imageset_.attr("__class__").attr("__name__"));
+      if(imageset_type != "TOFImageSequence"){
+        return false;
+      }
+      return true;
+    }
+
     /**
      * Set the beam model
      */
