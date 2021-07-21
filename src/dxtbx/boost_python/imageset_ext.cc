@@ -881,6 +881,7 @@ namespace dxtbx { namespace boost_python {
                                                   arg("detector"),
                                                   arg("goniometer"),
                                                   arg("sequence"))))
+      .def("partial_set", &RotImageSequence::partial_sequence)
       .def_pickle(RotImageSequencePickleSuite());
 
     class_<ImageSequence<TOFBeam, TOFSequence>, bases<ImageSet<TOFBeam, TOFSequence> > >("TOFImageSequenceBase", no_init)
@@ -941,6 +942,7 @@ namespace dxtbx { namespace boost_python {
                                                   arg("detector"),
                                                   arg("goniometer"),
                                                   arg("sequence"))))
+      .def("partial_set", &TOFImageSequence::partial_sequence)
       .def_pickle(TOFImageSequencePickleSuite());
 
   }

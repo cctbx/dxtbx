@@ -1546,6 +1546,37 @@ public:
     return sequence_->get_tof_in_seconds();
   }
 
+  /**
+  * Get a partial sequence
+  * @param first The first index
+  * @param last The last index
+  * @returns The partial sequence
+  */
+  TOFImageSequence partial_sequence(std::size_t first, std::size_t last) const {
+    // Check slice indices
+    DXTBX_ASSERT(last > first);
+
+    // Construct a partial sequence
+    TOFSequence sequence = detail::safe_dereference(ImageSet<TOFBeam, TOFSequence>::get_sequence_for_image(first));
+    for (std::size_t i = first + 1; i < last; ++i) {
+      sequence += detail::safe_dereference(ImageSet<TOFBeam, TOFSequence>::get_sequence_for_image(i));
+    }
+
+    // Construct the partial indices
+    scitbx::af::const_ref<std::size_t> indices(&ImageSet<TOFBeam, TOFSequence>::indices_[first], last - first);
+
+    // Construct the partial sequence
+    TOFImageSequence result(ImageSet<TOFBeam, TOFSequence>::data_,
+                         indices,
+                         get_beam(),
+                         get_detector(),
+                         get_goniometer(),
+                         sequence_ptr(new TOFSequence(sequence)));
+
+    // Return the sequence
+    return result;
+  }
+
 };
 
 class RotImageSequence : public ImageSequence<MonochromaticBeam, Scan>{
@@ -1606,6 +1637,37 @@ public:
 
     // Return the dynamic mask
     return get_trusted_range_mask(get_static_mask(dyn_mask), index);
+  }
+
+  /**
+  * Get a partial set
+  * @param first The first index
+  * @param last The last index
+  * @returns The partial sequence
+  */
+  RotImageSequence partial_sequence(std::size_t first, std::size_t last) const {
+    // Check slice indices
+    DXTBX_ASSERT(last > first);
+
+    // Construct a partial sequence
+    Scan sequence = detail::safe_dereference(ImageSet<MonochromaticBeam, Scan>::get_sequence_for_image(first));
+    for (std::size_t i = first + 1; i < last; ++i) {
+      sequence += detail::safe_dereference(ImageSet<MonochromaticBeam, Scan>::get_sequence_for_image(i));
+    }
+
+    // Construct the partial indices
+    scitbx::af::const_ref<std::size_t> indices(&ImageSet<MonochromaticBeam, Scan>::indices_[first], last - first);
+
+    // Construct the partial sequence
+    RotImageSequence result(ImageSet<MonochromaticBeam, Scan>::data_,
+                         indices,
+                         get_beam(),
+                         get_detector(),
+                         get_goniometer(),
+                         sequence_ptr(new Scan(sequence)));
+
+    // Return the sequence
+    return result;
   }
   
 
