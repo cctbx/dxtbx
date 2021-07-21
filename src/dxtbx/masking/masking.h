@@ -199,7 +199,7 @@ namespace dxtbx { namespace masking {
           vec2<double> px(i + 0.5, j + 0.5);
           try {
             resolution_(j, i) = panel.get_resolution_at_pixel(s0, px);
-          } catch (dxtbx::error const&) {
+          } catch (dxtbx::error const &) {
             // Known failure: resolution at beam center is undefined
             resolution_(j, i) = 0.0;
           }
