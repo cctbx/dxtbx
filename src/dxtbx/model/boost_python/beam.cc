@@ -260,6 +260,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("sample_to_moderator_distance"))))
       .def("get_sample_to_moderator_distance", &TOFBeam::get_sample_to_moderator_distance)
       .def("set_sample_to_moderator_distance", &TOFBeam::set_sample_to_moderator_distance)
+      .def("get_unit_s0", &TOFBeam::get_unit_s0)
+      .def("set_unit_s0", &TOFBeam::set_unit_s0)
       .def("to_dict", &to_dict<TOFBeam>)
       .def("from_dict", &from_dict<TOFBeam>, return_value_policy<manage_new_object>());
 

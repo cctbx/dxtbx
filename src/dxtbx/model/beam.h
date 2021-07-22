@@ -35,6 +35,8 @@ namespace dxtbx { namespace model {
     virtual void set_sample_to_source_direction(vec3<double> direction) = 0;
     //  Rotate the beam about an axis
     virtual void rotate_around_origin(vec3<double> axis, double angle) = 0;
+    virtual vec3<double> get_unit_s0() const = 0;
+    virtual void set_unit_s0(vec3<double> unit_s0) = 0; 
   };
 
   class TOFBeam : public BeamBase{
@@ -76,6 +78,17 @@ namespace dxtbx { namespace model {
 
     void rotate_around_origin(vec3<double> axis, double angle) override {
       direction_ = direction_.rotate_around_origin(axis, angle);
+    }
+
+    /** Get the wave vector from source to sample with unit length */
+    vec3<double> get_unit_s0() const {
+      return -direction_;
+    }
+
+    /** Set the direction using the unit_s0 vector */
+    void set_unit_s0(vec3<double> unit_s0) {
+      DXTBX_ASSERT(unit_s0.length() > 0);
+      direction_ = -(unit_s0.normalize());
     }
 
   private:
