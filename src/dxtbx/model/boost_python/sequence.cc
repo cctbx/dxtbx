@@ -84,6 +84,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<Scan>(const Scan &obj) {
     boost::python::dict result;
+    result["__id__"] = "Scan";
     result["image_range"] = obj.get_image_range();
     result["batch_offset"] = obj.get_batch_offset();
     result["oscillation"] = rad_as_deg(obj.get_oscillation());
@@ -98,6 +99,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<TOFSequence>(const TOFSequence &obj) {
     boost::python::dict result;
+    result["__id__"] = "TOFSequence";
     result["image_range"] = obj.get_image_range();
     result["batch_offset"] = obj.get_batch_offset();
     result["tof_in_seconds"] = boost::python::list(obj.get_tof_in_seconds());
