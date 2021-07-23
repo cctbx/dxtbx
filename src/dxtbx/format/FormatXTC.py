@@ -115,7 +115,6 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
         self.offsets = self.comm.bcast(self.offsets, root=0)
         #self.run_mapping, self.offsets = self.comm.bcast((self.run_mapping, self.offsets), root=0)
-        self.populate_events()
         self.n_images = len(self.offsets)
 
         self._cached_psana_detectors = {}
@@ -192,7 +191,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
     def filter_event(self, event):
         if self.params.filter.pulse_energy_min is None and self.params.filter.pulse_energy_max is None:
-            return
+            return True
         fee_det = psana.Detector('FEEGasDetEnergy')
         fee_gas = fee_det.get(event)
         if fee_gas is None:
