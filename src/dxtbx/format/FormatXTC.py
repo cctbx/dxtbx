@@ -60,6 +60,12 @@ locator_str = """
   spectrum_eV_offset = None
     .type = float
     .help = See spectrum_eV_per_pixel
+  filter {
+    pulse_energy_min = None
+      .type = float
+    pulse_energy_max = None
+      .type = float
+  }
 """
 locator_scope = parse(locator_str)
 
@@ -176,13 +182,26 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         self.run_mapping = {}
         for run in self._ds.runs():
             self._psana_runs[run.run()] = run
-            offsets = [EventOffsetSerializer(evt.get(psana.EventOffset)) for evt in run.events()]
+            offsets = [EventOffsetSerializer(evt.get(psana.EventOffset)) for evt in run.events() if self.filter_event(evt)]
             self.run_mapping[run.run()] = (
                 len(self.offsets),
                 len(self.offsets) + len(offsets),
                 run,
             )
             self.offsets.extend(offsets)
+
+    def filter_event(self, event):
+        if self.params.filter.pulse_energy_min is None and self.params.filter.pulse_energy_max is None:
+            return
+        fee_det = psana.Detector('FEEGasDetEnergy')
+        fee_gas = fee_det.get(event)
+        if fee_gas is None:
+            return False
+        else:
+            pulse_energy = 0.5*(fee_gas.f_21_ENRC() + fee_gas.f_22_ENRC())
+        if self.params.filter.pulse_energy_min is not None and pulse_energy < self.params.filter.pulse_energy_min: return False
+        if self.params.filter.pulse_energy_max is not None and pulse_energy > self.params.filter.pulse_energy_max: return False
+        return True
 
     def get_run_from_index(self, index=None):
         """Look up the run number given an index"""
