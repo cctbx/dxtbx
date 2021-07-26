@@ -124,10 +124,10 @@ class SequenceFactory:
         elif is_scan(joint):
             if not isinstance(joint["exposure_time"], list):
                 joint["exposure_time"] = [joint["exposure_time"]]
-                joint.setdefault("batch_offset", 0)  # backwards compatibility 20180205
-                joint.setdefault(
-                    "valid_image_ranges", {}
-                )  # backwards compatibility 20181113
+            joint.setdefault("batch_offset", 0)  # backwards compatibility 20180205
+            joint.setdefault(
+                "valid_image_ranges", {}
+            )  # backwards compatibility 20181113
             return Scan.from_dict(joint)
         raise NotImplementedError("Cannot understand sequence type")
 
