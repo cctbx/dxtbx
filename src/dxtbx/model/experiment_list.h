@@ -334,36 +334,32 @@ namespace dxtbx { namespace model {
      * Replace all other models
      */
     void replace(boost::python::object a, boost::python::object b) {
-      boost::python::extract<boost::python::object > get_beam_a(a);
-      boost::python::extract<boost::python::object > get_beam_b(b);
       boost::python::extract<boost::shared_ptr<Detector> > get_detector_a(a);
       boost::python::extract<boost::shared_ptr<Detector> > get_detector_b(b);
       boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer_a(a);
       boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer_b(b);
-      boost::python::extract<boost::python::object > get_sequence_a(a);
-      boost::python::extract<boost::python::object > get_sequence_b(b);
       boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal_a(a);
       boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal_b(b);
-      if (get_beam_a.check()) {
-        DXTBX_ASSERT(get_beam_b.check());
-        replace_beam(get_beam_a(), get_beam_b());
+      if (is_beam(a)) {
+        DXTBX_ASSERT(is_beam(b));
+        replace_beam(a, b);
       } else if (get_detector_a.check()) {
         DXTBX_ASSERT(get_detector_b.check());
         replace(get_detector_a(), get_detector_b());
       } else if (get_goniometer_a.check()) {
         DXTBX_ASSERT(get_goniometer_b.check());
         replace(get_goniometer_a(), get_goniometer_b());
-      } else if (get_sequence_a.check()) {
-        DXTBX_ASSERT(get_sequence_b.check());
-        replace(get_sequence_a(), get_sequence_b());
+      } else if (is_sequence(a)) {
+        DXTBX_ASSERT(is_sequence(b));
+        replace(a, b);
       } else if (get_crystal_a.check()) {
         DXTBX_ASSERT(get_crystal_b.check());
         replace(get_crystal_a(), get_crystal_b());
       } else {
-        DXTBX_ASSERT(!get_beam_b.check());
+        DXTBX_ASSERT(!is_beam(b));
         DXTBX_ASSERT(!get_detector_b.check());
         DXTBX_ASSERT(!get_goniometer_b.check());
-        DXTBX_ASSERT(!get_sequence_b.check());
+        DXTBX_ASSERT(!is_sequence(b));
         DXTBX_ASSERT(!get_crystal_b.check());
         for (std::size_t i = 0; i < size(); ++i) {
           if (data_[i].get_profile() == a) {
@@ -445,25 +441,39 @@ namespace dxtbx { namespace model {
       return result;
     }
 
+    bool is_sequence(boost::python::object obj) const{
+      std::string obj_type = boost::python::extract<std::string>(obj.attr("__class__").attr("__name__"));
+      if (obj_type == "Scan" || obj_type == "TOFSequence" || obj_type == "Sequence"){
+        return true;
+      }
+      return false;
+    }
+
+    bool is_beam(boost::python::object obj) const{
+      std::string obj_type = boost::python::extract<std::string>(obj.attr("__class__").attr("__name__"));
+      if (obj_type == "MonochromaticBeam" || obj_type == "TOFBeam"){
+        return true;
+      }
+      return false;
+    }
+
     /**
      * Get indices which have this model
      */
     scitbx::af::shared<std::size_t> indices(boost::python::object obj) const {
-      boost::python::extract<boost::python::object > get_beam(obj);
       boost::python::extract<boost::shared_ptr<Detector> > get_detector(obj);
       boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer(obj);
-      boost::python::extract<boost::python::object > get_sequence(obj);
       boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal(obj);
-      if (get_beam.check()) {
-        return indices_beam(get_beam());
+      if (get_crystal.check()) {
+        return indices(get_crystal());
       } else if (get_detector.check()) {
         return indices(get_detector());
       } else if (get_goniometer.check()) {
         return indices(get_goniometer());
-      } else if (get_sequence.check()) {
-        return indices(get_sequence());
-      } else if (get_crystal.check()) {
-        return indices(get_crystal());
+      } else if (is_sequence(obj)) {
+        return indices_sequence(obj);
+      } else if (is_beam(obj)) {
+        return indices_beam(obj);
       }
       scitbx::af::shared<std::size_t> result;
       for (std::size_t i = 0; i < size(); ++i) {
