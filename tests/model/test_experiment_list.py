@@ -102,7 +102,7 @@ def test_experiment_contains():
 
     # Create an experiment
     e = Experiment(
-        beam=b1, detector=d1, goniometer=g1, scan=s1, crystal=c1, imageset=None
+        beam=b1, detector=d1, goniometer=g1, sequence=s1, crystal=c1, imageset=None
     )
 
     # Check experiment contains model
@@ -144,13 +144,13 @@ def test_experiment_equality():
 
     # Create a few experiments
     e1 = Experiment(
-        beam=b1, detector=d1, goniometer=g1, scan=s1, crystal=c1, imageset=None
+        beam=b1, detector=d1, goniometer=g1, sequence=s1, crystal=c1, imageset=None
     )
     e2 = Experiment(
-        beam=b1, detector=d1, goniometer=g1, scan=s1, crystal=c1, imageset=None
+        beam=b1, detector=d1, goniometer=g1, sequence=s1, crystal=c1, imageset=None
     )
     e3 = Experiment(
-        beam=b2, detector=d2, goniometer=g2, scan=s2, crystal=c2, imageset=None
+        beam=b2, detector=d2, goniometer=g2, sequence=s2, crystal=c2, imageset=None
     )
 
     # Check e1 equals e2 and neither equals e3
@@ -165,11 +165,11 @@ def test_experiment_consistent(dials_data):
     sequence = ImageSetFactory.new(sorted(f.strpath for f in sequence_filenames))[0]
 
     # Create experiment with sequence and good scan
-    e = Experiment(imageset=sequence, scan=sequence.get_scan())
+    e = Experiment(imageset=sequence, sequence=sequence.get_sequence())
     assert e.is_consistent()
 
     # Create experiment with sequence and defective scan
-    scan = sequence.get_scan()
+    scan = sequence.get_sequence()
     scan.set_image_range((1, 1))
     e = Experiment(imageset=sequence, sequence=scan)
     # assert not e.is_consistent()) # FIXME
@@ -269,7 +269,7 @@ def test_experimentlist_models(experiment_list):
     b = experiment_list.beams()
     d = experiment_list.detectors()
     g = experiment_list.goniometers()
-    s = experiment_list.scans()
+    s = experiment_list.sequences()
 
     # Check we have the expected number
     assert len(b) == 3
@@ -290,9 +290,9 @@ def test_experimentlist_models(experiment_list):
     assert g[0] == experiment_list[0].goniometer
     assert g[1] == experiment_list[1].goniometer
 
-    assert s[2] == experiment_list[2].scan
-    assert s[1] == experiment_list[1].scan
-    assert s[2] == experiment_list[2].scan
+    assert s[2] == experiment_list[2].sequence
+    assert s[1] == experiment_list[1].sequence
+    assert s[2] == experiment_list[2].sequence
 
 
 def test_experimentlist_to_dict(experiment_list):
@@ -307,7 +307,7 @@ def test_experimentlist_to_dict(experiment_list):
     assert len(obj["beam"]) == 3
     assert len(obj["detector"]) == 3
     assert len(obj["goniometer"]) == 3
-    assert len(obj["scan"]) == 3
+    assert len(obj["sequence"]) == 3
 
     # The expected models
     b = [0, 1, 2, 1, 0]
@@ -321,7 +321,7 @@ def test_experimentlist_to_dict(experiment_list):
         assert eobj["beam"] == b[i]
         assert eobj["detector"] == d[i]
         assert eobj["goniometer"] == g[i]
-        assert eobj["scan"] == s[i]
+        assert eobj["sequence"] == s[i]
 
 
 def test_experimentlist_where(experiment_list):
@@ -333,10 +333,10 @@ def test_experimentlist_where(experiment_list):
         assert goniometer is not None
         for i in experiment_list.where(goniometer=goniometer):
             assert experiment_list[i].goniometer is goniometer
-    for scan in experiment_list.scans():
-        assert scan is not None
-        for i in experiment_list.where(sequence=scan):
-            assert experiment_list[i].scan is scan
+    for sequence in experiment_list.sequence():
+        assert sequence is not None
+        for i in experiment_list.where(sequence=sequence):
+            assert experiment_list[i].sequence is sequence
     for detector in experiment_list.detectors():
         assert detector is not None
         for i in experiment_list.where(detector=detector):
@@ -382,7 +382,7 @@ def experiment_list():
                 beam=b[i],
                 detector=d[i],
                 goniometer=g[i],
-                scan=s[i],
+                sequence=s[i],
                 identifier=ident[i],
             )
         )
@@ -422,14 +422,14 @@ def test_experimentlist_factory_from_json(monkeypatch, dials_regression):
         assert e1.beam
         assert e1.detector
         assert e1.goniometer
-        assert e1.scan
+        assert e1.sequence
         assert e1.crystal
         for ee in e[1:]:
             assert e1.imageset == ee.imageset
             assert e1.beam == ee.beam
             assert e1.detector == ee.detector
             assert e1.goniometer == ee.goniometer
-            assert e1.scan == ee.scan
+            assert e1.sequence == ee.sequence
             assert e1.crystal == ee.crystal
 
 
@@ -457,7 +457,7 @@ def test_experimentlist_factory_from_pickle(monkeypatch, dials_regression):
         assert e1.beam and e1.beam == e2.beam
         assert e1.detector and e1.detector == e2.detector
         assert e1.goniometer and e1.goniometer == e2.goniometer
-        assert e1.scan and e1.scan == e2.scan
+        assert e1.sequence and e1.sequence == e2.sequence
         assert e1.crystal and e1.crystal == e2.crystal
 
 
@@ -923,7 +923,7 @@ def test_experimentlist_imagesequence_stills(dials_data):
     assert len(experiments2.goniometers()) == 1
     assert len(experiments2.detectors()) == 1
     assert len(experiments2.beams()) == 1
-    assert len(experiments2.scans()) == 3
+    assert len(experiments2.sequences()) == 3
     for expt in experiments2:
         assert expt.imageset is experiments2.imagesets()[0]
 
@@ -941,7 +941,7 @@ def test_experimentlist_imagesequence_decode(mocker):
             Experiment(
                 beam=beam,
                 detector=detector,
-                scan=SequenceFactory.make_scan(
+                sequence=SequenceFactory.make_scan(
                     image_range=(i + 1, i + 1),
                     exposure_times=[1],
                     oscillation=(0, 0),
@@ -977,7 +977,7 @@ def test_experimentlist_imagesequence_decode(mocker):
     assert len(experiments2.goniometers()) == 1
     assert len(experiments2.detectors()) == 1
     assert len(experiments2.beams()) == 1
-    assert len(experiments2.scans()) == 3
+    assert len(experiments2.sequences()) == 3
     for expt in experiments2:
         assert expt.imageset is experiments2.imagesets()[0]
 
@@ -1064,7 +1064,7 @@ def test_extract_metadata_record():
     assert record.beam is fmt.get_beam()
     assert record.detector is fmt.get_detector()
     assert record.goniometer is fmt.get_goniometer()
-    assert record.scan is None
+    assert record.sequence is None
     assert record.index is None
 
 
@@ -1219,7 +1219,7 @@ def test_from_null_sequence():
     assert imagesets[0].get_beam() == sequence.get_beam()
     assert imagesets[0].get_detector() == sequence.get_detector()
     assert imagesets[0].get_goniometer() == sequence.get_goniometer()
-    assert imagesets[0].get_scan() == sequence.get_scan()
+    assert imagesets[0].get_sequence() == sequence.get_sequence()
 
 
 def test_from_templates(dials_data):

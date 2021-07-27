@@ -516,7 +516,7 @@ class _:
         self.beam = self.imageset.get_beam(index)
         self.detector = self.imageset.get_detector(index)
         self.goniometer = self.imageset.get_goniometer(index)
-        self.scan = self.imageset.get_sequence(index)
+        self.sequence = self.imageset.get_sequence(index)
 
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
