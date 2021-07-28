@@ -52,14 +52,6 @@ class Reader:
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
         return format_instance.get_raw_data(index)
 
-    def read_slice(self, index, slice_index):
-        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
-        assert (
-            slice_index > 0 and slice_index < format_instance.get_max_slice_index(),
-            "Slice index out of range",
-        )
-        return format_instance.get_raw_data(index, slice_index)
-
     def paths(self):
         return [self._filename]
 
