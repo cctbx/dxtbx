@@ -262,6 +262,7 @@ class ExperimentListDict:
         elif (
             imageset_data["__id__"] == "RotImageSequence"
             or imageset_data["__id__"] == "ImageSweep"
+            or imageset_data["__id__"] == "ImageSequence"
         ):
             imageset = self._make_sequence(
                 imageset_data,
