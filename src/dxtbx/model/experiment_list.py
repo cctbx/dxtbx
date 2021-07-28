@@ -96,7 +96,7 @@ class ExperimentListDict:
                 "Expected dictionary, not {}".format(type(obj))
             )
 
-        self._obj = copy.deepcopy(obj)
+        self._obj = self._update_legacy_fields(copy.deepcopy(obj))
         self._check_format = check_format
         self._directory = directory
 
@@ -124,6 +124,24 @@ class ExperimentListDict:
                 ("scaling_model", self._scaling_model_from_dict),
             )
         }
+
+    def _update_legacy_fields(self, obj):
+
+        if "scan" in obj:
+            obj["sequence"] = obj["scan"]
+            del obj["scan"]
+            for i in obj["sequence"]:
+                i["__id__"] = "Scan"
+
+            for i in obj["experiment"]:
+                i["sequence"] = i["scan"]
+                del i["scan"]
+
+        for i in obj["beam"]:
+            if "__id__" not in i and "wavelength" in i:
+                i["__id__"] = "MonochromaticBeam"
+
+        return obj
 
     def _extract_models(self, name, from_dict):
         """
@@ -257,7 +275,7 @@ class ExperimentListDict:
         elif imageset_data["__id__"] == "MemImageSet":
             imageset = self._make_mem_imageset(imageset_data)
         else:
-            raise RuntimeError("Unknown imageset type")
+            raise RuntimeError("Unknown imageset type %s" % imageset_data["__id__"])
 
         if imageset is not None:
             # Set the external lookup
