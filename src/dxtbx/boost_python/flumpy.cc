@@ -523,4 +523,7 @@ PYBIND11_MODULE(dxtbx_flumpy, m) {
         &vecs_from_numpy,
         "Convert a numpy object to a flex.vec2 or .vec3, depending on input array");
   m.def("mat3_from_numpy", &mat3_from_numpy, "Convert a numpy object to a flex.mat3");
+
+  // Make sure that we have imported flex - cannot do boost::python conversions otherwise
+  pybind11::module::import("scitbx.array_family.flex");
 }
