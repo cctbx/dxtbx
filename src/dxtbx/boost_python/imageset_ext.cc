@@ -778,7 +778,8 @@ namespace dxtbx { namespace boost_python {
       .def("update_detector_px_mm_data", &ImageSet_update_detector_px_mm_data<MonochromaticBeam, Scan>)
       .add_property(
         "external_lookup",
-        make_function(&ImageSet<MonochromaticBeam, Scan>::external_lookup, return_internal_reference<>()));
+        make_function(&ImageSet<MonochromaticBeam, Scan>::external_lookup, return_internal_reference<>()))
+      .def_pickle(ImageSetPickleSuite<MonochromaticBeam, Scan>());
 
     class_<ImageSet<TOFBeam, TOFSequence> >("TOFImageSet", no_init)
       .def("data", &ImageSet<TOFBeam, TOFSequence>::data)
