@@ -17,7 +17,7 @@ import libtbx
 import dxtbx.filecache_controller
 from dxtbx.format.image import ImageBool
 from dxtbx.model import MultiAxisGoniometer
-from dxtbx.model.beam import BeamFactory
+from dxtbx.model.beam import MonochromaticBeamFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.sequence import SequenceFactory
@@ -159,7 +159,7 @@ class Format:
 
         self._goniometer_factory = GoniometerFactory
         self._detector_factory = DetectorFactory
-        self._beam_factory = BeamFactory
+        self._beam_factory = MonochromaticBeamFactory
         self._sequence_factory = SequenceFactory
 
         self.setup()

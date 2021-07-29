@@ -4,7 +4,7 @@ from libtbx.phil import parse
 from scitbx import matrix
 
 from dxtbx.model import MonochromaticBeam
-from dxtbx.model.beam import BeamFactory, beam_phil_scope
+from dxtbx.model.beam import MonochromaticBeamFactory, beam_phil_scope
 
 
 def test_setting_direction_and_wavelength():
@@ -81,10 +81,10 @@ def test_from_phil():
     ).extract()
 
     # Create the beam
-    assert BeamFactory.from_phil(params1)
-    assert BeamFactory.from_phil(params2, reference)
+    assert MonochromaticBeamFactory.from_phil(params1)
+    assert MonochromaticBeamFactory.from_phil(params2, reference)
     with pytest.raises(RuntimeError):
-        BeamFactory.from_phil(params2)
+        MonochromaticBeamFactory.from_phil(params2)
 
     params3 = beam_phil_scope.fetch(
         parse(
@@ -96,7 +96,7 @@ def test_from_phil():
   """
         )
     ).extract()
-    b3 = BeamFactory.from_phil(params3, reference)
+    b3 = MonochromaticBeamFactory.from_phil(params3, reference)
     assert b3.get_polarization_fraction() == 0.5
     assert b3.get_polarization_normal() == (1.0, 0.0, 0.0)
 
@@ -173,4 +173,4 @@ def test_beam_object_comparison():
 
 def test_beam_self_serialization():
     beam = MonochromaticBeam()
-    assert beam == BeamFactory.from_dict(beam.to_dict())
+    assert beam == MonochromaticBeamFactory.from_dict(beam.to_dict())

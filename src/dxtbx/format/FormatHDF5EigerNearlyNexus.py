@@ -11,12 +11,12 @@ from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
 from dxtbx.format.nexus import (
-    BeamFactory,
     DataFactory,
     DataFactoryCache,
     DetectorFactory,
     GoniometerFactory,
     MaskFactory,
+    MonochromaticBeamFactory,
     NXdata,
     NXmxReader,
     generate_scan_model,
@@ -351,7 +351,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self._raw_data = DataFactory(data, cached_information=fixer.data_factory_cache)
 
         # Construct the models
-        self._beam_factory = BeamFactory(beam)
+        self._beam_factory = MonochromaticBeamFactory(beam)
         self._beam_factory.load_model(0)
         self._detector_model = DetectorFactory(
             detector, self._beam_factory.model, shape=self._raw_data.shape()

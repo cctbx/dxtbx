@@ -9,7 +9,7 @@ from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger
-from dxtbx.model.beam import BeamFactory
+from dxtbx.model.beam import MonochromaticBeamFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.sequence import SequenceFactory
@@ -109,7 +109,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         Create the beam model
         """
         configuration = self.header["configuration"]
-        return BeamFactory.simple_monochromatic(configuration["wavelength"])
+        return MonochromaticBeamFactory.make_simple_beam(configuration["wavelength"])
 
     def _goniometer(self):
         """
