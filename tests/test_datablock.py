@@ -97,7 +97,7 @@ def test_json2(multiple_block_filenames):
                 assert im1.get_beam() == im2.get_beam()
                 assert im1.get_detector() == im2.get_detector()
                 assert im1.get_goniometer() == im2.get_goniometer()
-                assert im1.get_scan() == im2.get_scan()
+                assert im1.get_sequence() == im2.get_sequence()
             else:
                 assert not isinstance(im2, RotImageSequence)
                 for i in range(len(im1)):

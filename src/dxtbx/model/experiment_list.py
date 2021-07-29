@@ -926,7 +926,7 @@ class ExperimentListFactory:
 
                 # Update the image range
                 image_range = (first, last)
-                scan = fmt.get_scan()
+                scan = fmt.get_sequence()
                 scan.set_image_range(image_range)
 
                 # Create the sequence and experiment

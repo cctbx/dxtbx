@@ -56,15 +56,17 @@ def imagesequence_to_dict(sequence):
     """
 
     return {
-        "__id__": "imageset",
-        "template": filename_to_absolute(sequence.get_template()),
-        "mask": filename_or_none(sequence.external_lookup.mask.filename),
-        "gain": filename_or_none(sequence.external_lookup.gain.filename),
-        "pedestal": filename_or_none(sequence.external_lookup.pedestal.filename),
-        "beam": sequence.get_beam().to_dict(),
-        "detector": sequence.get_detector().to_dict(),
-        "goniometer": sequence.get_goniometer().to_dict(),
-        "scan": sequence.get_scan().to_dict(),
+        [
+            ("__id__", "imageset"),
+            ("template", filename_to_absolute(sequence.get_template())),
+            ("mask", filename_or_none(sequence.external_lookup.mask.filename)),
+            ("gain", filename_or_none(sequence.external_lookup.gain.filename)),
+            ("pedestal", filename_or_none(sequence.external_lookup.pedestal.filename)),
+            ("beam", sequence.get_beam().to_dict()),
+            ("detector", sequence.get_detector().to_dict()),
+            ("goniometer", sequence.get_goniometer().to_dict()),
+            ("scan", sequence.get_sequence().to_dict()),
+        ]
     }
 
 

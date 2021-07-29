@@ -10,7 +10,7 @@ def saturation(image_file):
     raw_data = i.get_raw_data()
     if not isinstance(raw_data, tuple):
         raw_data = (raw_data,)
-    if i.get_scan() is None:
+    if i.get_sequence() is None:
         return (
             0,
             max(
@@ -20,7 +20,7 @@ def saturation(image_file):
         )
     else:
         return (
-            i.get_scan().get_image_range()[0],
+            i.get_sequence().get_image_range()[0],
             max(
                 max(raw_data[pid]) / detector.get_trusted_range()[1]
                 for pid, detector in enumerate(d)

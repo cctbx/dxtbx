@@ -194,7 +194,7 @@ class DataBlock:
                                 ("beam", b.index(iset.get_beam())),
                                 ("detector", d.index(iset.get_detector())),
                                 ("goniometer", g.index(iset.get_goniometer())),
-                                ("scan", s.index(iset.get_scan())),
+                                ("sequence", s.index(iset.get_sequence())),
                                 ("images", list(iset.indices())),
                                 ("params", iset.params()),
                             ]
@@ -231,7 +231,7 @@ class DataBlock:
                                 ("beam", b.index(iset.get_beam())),
                                 ("detector", d.index(iset.get_detector())),
                                 ("goniometer", g.index(iset.get_goniometer())),
-                                ("scan", s.index(iset.get_scan())),
+                                ("sequence", s.index(iset.get_sequence())),
                                 ("params", iset.params()),
                             ]
                         )
@@ -269,7 +269,7 @@ class DataBlock:
                     except Exception:
                         pass
                     try:
-                        image_dict["scan"] = s.index(iset.get_scan(i))
+                        image_dict["sequence"] = s.index(iset.get_sequence(i))
                     except Exception:
                         pass
                     image_list.append(image_dict)
@@ -282,7 +282,7 @@ class DataBlock:
         result["beam"] = [bb.to_dict() for bb in b]
         result["detector"] = [dd.to_dict() for dd in d]
         result["goniometer"] = [gg.to_dict() for gg in g]
-        result["scan"] = [ss.to_dict() for ss in s]
+        result["sequence"] = [ss.to_dict() for ss in s]
 
         return result
 
@@ -407,7 +407,7 @@ class DataBlockTemplateImporter:
         b = fmt.get_beam()
         d = fmt.get_detector()
         g = fmt.get_goniometer()
-        s = fmt.get_scan()
+        s = fmt.get_sequence()
 
         # Update the image range
         s.set_image_range((first, last))

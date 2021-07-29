@@ -40,7 +40,7 @@ class to_xds:
         self._goniometer = sequence.get_goniometer()
         self._detector = sequence.get_detector()
         self._beam = sequence.get_beam()
-        self._scan = sequence.get_scan()
+        self._scan = sequence.get_sequence()
 
     def get_detector(self):
         return self._detector

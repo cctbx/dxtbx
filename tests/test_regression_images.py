@@ -159,7 +159,7 @@ def test_read_image(test_image, dials_regression):
     # Test metadata reading
     instance.get_goniometer()
     instance.get_beam()
-    instance.get_scan()
+    instance.get_sequence()
     detector = instance.get_detector()
     # From old test_dxtbx; get the image size
     if detector is not None:
@@ -304,7 +304,7 @@ def test_compressed_images(
     # Test metadata reading
     assert instance.get_goniometer()
     assert instance.get_beam()
-    assert instance.get_scan()
+    assert instance.get_sequence()
     assert instance.get_detector()
     # Test data reading
     assert instance.get_raw_data()

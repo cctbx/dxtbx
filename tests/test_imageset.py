@@ -192,7 +192,7 @@ def test_imagesetdata(centroid_files):
     beam = FormatClass(centroid_files[0]).get_beam()
     detector = FormatClass(centroid_files[0]).get_detector()
     goniometer = FormatClass(centroid_files[0]).get_goniometer()
-    scan = FormatClass(centroid_files[0]).get_scan()
+    scan = FormatClass(centroid_files[0]).get_sequence()
 
     handle.set_beam(beam, 0)
     handle.set_detector(detector, 0)
@@ -202,7 +202,7 @@ def test_imagesetdata(centroid_files):
     beam2 = handle.get_beam(0)
     detector2 = handle.get_detector(0)
     goniometer2 = handle.get_goniometer(0)
-    scan2 = handle.get_scan(0)
+    scan2 = handle.get_sequence(0)
 
     assert beam2 == beam
     assert detector2 == detector
@@ -415,19 +415,19 @@ class TestImageSequence:
             sequence.get_detector()
             sequence.get_beam()
             sequence.get_goniometer()
-            sequence.get_scan()
+            sequence.get_sequence()
         else:
             sequence.get_detector(index)
             sequence.get_beam(index)
             sequence.get_goniometer(index)
-            sequence.get_scan(index)
+            sequence.get_sequence(index)
 
         # Ensure state at zero
         sequence[0]
-        scan1 = sequence.get_scan()
+        scan1 = sequence.get_sequence()
         # Put sequence to end
         sequence[len(sequence) - 1]
-        scan2 = sequence.get_scan()
+        scan2 = sequence.get_sequence()
         assert scan1 == scan2
 
     @staticmethod
@@ -507,7 +507,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
         assert iset.get_beam(i)
         assert iset.get_detector(i)
         assert iset.get_goniometer(i) is None
-        assert iset.get_scan(i) is None
+        assert iset.get_sequence(i) is None
 
     iset = format_class.get_imageset([filename], single_file_indices=[1], lazy=lazy)
     assert len(iset) == 1
@@ -518,7 +518,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
         assert iset.get_beam(i)
         assert iset.get_detector(i)
         assert iset.get_goniometer(i) is None
-        assert iset.get_scan(i) is None
+        assert iset.get_sequence(i) is None
     iset.reader().nullify_format_instance()
 
 
@@ -607,7 +607,7 @@ def test_pickle_imageset(centroid_files):
     assert sequence.get_array_range() == sequence2.get_array_range()
     assert sequence.get_beam() == sequence2.get_beam()
     assert sequence.get_goniometer() == sequence2.get_goniometer()
-    assert sequence.get_scan() == sequence2.get_scan()
+    assert sequence.get_sequence() == sequence2.get_sequence()
     assert sequence.paths() == sequence2.paths()
     assert sequence == sequence2
 

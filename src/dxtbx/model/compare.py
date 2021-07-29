@@ -42,7 +42,7 @@ def sequence_diff(sequence1, sequence2, tolerance=None) -> str:
         b_diff(sequence1.get_beam(), sequence2.get_beam()),
         d_diff(sequence1.get_detector(), sequence2.get_detector()),
         g_diff(sequence1.get_goniometer(), sequence2.get_goniometer()),
-        s_diff(sequence1.get_scan(), sequence2.get_scan()),
+        s_diff(sequence1.get_sequence(), sequence2.get_sequence()),
     )
 
     return "\n".join(block for block in output if block)

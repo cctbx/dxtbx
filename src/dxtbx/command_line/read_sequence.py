@@ -16,7 +16,7 @@ def read_sequence(images: List[str]):
 
     for sequence in sequences:
         print(sequence.get_detector())
-        print(sequence.get_scan())
+        print(sequence.get_sequence())
 
         indices = sequence.indices()
 

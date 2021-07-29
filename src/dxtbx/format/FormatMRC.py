@@ -293,11 +293,11 @@ class FormatMRCstack(FormatMultiImage, FormatMRC):
     def get_beam(self, index=None):
         return Format.get_beam(self)
 
-    def get_scan(self, index=None):
+    def get_sequence(self, index=None):
         if index is None:
-            return Format.get_scan(self)
+            return Format.get_sequence(self)
         else:
-            scan = Format.get_scan(self)
+            scan = Format.get_sequence(self)
             return scan[index]
 
     def get_image_file(self, index=None):

@@ -21,7 +21,7 @@ def print_header(filenames):
         beam = i.get_beam()
         goniometer = i.get_goniometer()
         detector = i.get_detector()
-        scan = i.get_scan()
+        scan = i.get_sequence()
         if beam is None:
             print("No beam model found")
         else:

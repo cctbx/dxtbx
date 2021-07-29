@@ -190,7 +190,7 @@ def run(args=None):
                 is_multi_image = True
             detector = img.get_detector()
             beam = img.get_beam()
-            scan = img.get_scan()
+            scan = img.get_sequence()
 
         if detector is None:
             if command_line.options.distance is None:

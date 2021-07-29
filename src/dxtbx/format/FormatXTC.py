@@ -297,7 +297,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
     def get_goniometer(self, index=None):
         return None
 
-    def get_scan(self, index=None):
+    def get_sequence(self, index=None):
         return None
 
 

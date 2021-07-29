@@ -36,8 +36,8 @@ def test_still(dials_regression):
     data_dir = os.path.join(dials_regression, "image_examples", "DLS_I04")
 
     imgset = ImageSetFactory.new(os.path.join(data_dir, "grid_full_cbf_0005.cbf"))[0]
-    if imgset.get_scan(0):
-        scan = imgset.get_scan(0)
+    if imgset.get_sequence(0):
+        scan = imgset.get_sequence(0)
         assert approx_equal(scan.get_image_oscillation(0), (30.0, 0.0), eps=1e-5)
     beam = imgset.get_beam(0)
     beam.get_s0()

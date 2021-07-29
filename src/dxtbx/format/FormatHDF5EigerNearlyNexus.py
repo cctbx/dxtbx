@@ -363,7 +363,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
             panel.set_trusted_range((-1, trusted[1]))
 
         self._goniometer_model = GoniometerFactory(sample).model
-        self._scan_model = generate_scan_model(sample, detector)
+        self._sequence_model = generate_scan_model(sample, detector)
 
         # update model for masking Eiger detectors
         for f0, f1, s0, s1 in determine_eiger_mask(self._detector_model):
@@ -382,8 +382,8 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         self._beam_model, _ = self._beam_factory.read_models(index)
         return self._beam_model
 
-    def _scan(self):
-        return self._scan_model
+    def _sequence(self):
+        return self._sequence_model
 
     def get_goniometer(self, index=None):
         return self._goniometer()
@@ -394,10 +394,10 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
     def get_beam(self, index=None):
         return self._beam(index)
 
-    def get_scan(self, index=None):
+    def get_sequence(self, index=None):
         if index is None:
-            return self._scan()
-        return self._scan()[index]
+            return self._sequence()
+        return self._sequence()[index]
 
     def get_raw_data(self, index):
         return self._raw_data[index]
@@ -406,7 +406,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
         return MaskFactory(self.instrument.detectors, index).mask
 
     def get_num_images(self):
-        scan = self._scan()
+        scan = self._sequence()
         if isinstance(scan, list):
             return sum(s.get_num_images() for s in scan)
         return scan.get_num_images()

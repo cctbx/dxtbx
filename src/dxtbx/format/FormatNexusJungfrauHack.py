@@ -221,8 +221,8 @@ class FormatNexusJungfrauHack(FormatNexus):
     def _detector(self):
         return self._detector_model
 
-    def _scan(self):
-        return self._scan_model
+    def _sequence(self):
+        return self._sequence_model
 
     def get_goniometer(self, index=None):
         return self._goniometer()
@@ -233,10 +233,10 @@ class FormatNexusJungfrauHack(FormatNexus):
     def get_beam(self, index=None):
         return self._beam(index)
 
-    def get_scan(self, index=None):
+    def get_sequence(self, index=None):
         if index is None:
-            return self._scan()
-        scan = self._scan()
+            return self._sequence()
+        scan = self._sequence()
         if scan is not None:
             return scan[index]
         return scan
@@ -248,8 +248,8 @@ class FormatNexusJungfrauHack(FormatNexus):
         return MaskFactory(self.instrument.detectors, index).mask
 
     def get_num_images(self):
-        if self._scan() is not None:
-            return self._scan().get_num_images()
+        if self._sequence() is not None:
+            return self._sequence().get_num_images()
         return len(self._raw_data)
 
     def get_image_file(self, index=None):
