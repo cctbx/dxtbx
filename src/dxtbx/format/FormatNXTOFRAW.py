@@ -33,7 +33,7 @@ class FormatNXTOFRAW(FormatHDF5):
     @staticmethod
     def field_in_file(field, nxs_file):
         def field_in_file_recursive(field, nxs_obj):
-            if field in nxs_obj.name.split("/"):
+            if nxs_obj is not None and field in nxs_obj.name.split("/"):
                 return True
             else:
                 if isinstance(nxs_obj, h5py.Group):
