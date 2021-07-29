@@ -173,4 +173,4 @@ def test_beam_object_comparison():
 
 def test_beam_self_serialization():
     beam = MonochromaticBeam()
-    assert beam == BeamFactory.monochromatic_from_dict(beam.to_dict())
+    assert beam == BeamFactory.from_dict(beam.to_dict())

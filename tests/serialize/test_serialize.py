@@ -16,7 +16,7 @@ from dxtbx.model import (
 def test_beam():
     b1 = MonochromaticBeam((1, 0, 0), 2, 0.1, 0.1)
     d = b1.to_dict()
-    b2 = BeamFactory.monochromatic_from_dict(d)
+    b2 = BeamFactory.from_dict(d)
     assert d["direction"] == (1, 0, 0)
     assert d["wavelength"] == 2
     assert d["divergence"] == pytest.approx(0.1)
@@ -26,7 +26,7 @@ def test_beam():
 
     # Test with a template and partial dictionary
     d2 = {"direction": (0, 1, 0), "divergence": 0.2}
-    b3 = BeamFactory.monochromatic_from_dict(d2, d)
+    b3 = BeamFactory.from_dict(d2, d)
     assert b3.get_sample_to_source_direction() == (0, 1, 0)
     assert b3.get_wavelength() == 2
     assert b3.get_divergence() == pytest.approx(0.2)
@@ -40,7 +40,7 @@ def test_beam_with_scan_points():
     s0_static = matrix.col(b1.get_s0())
     b1.set_s0_at_scan_points([s0_static] * 5)
     d = b1.to_dict()
-    b2 = BeamFactory.monochromatic_from_dict(d)
+    b2 = BeamFactory.from_dict(d)
 
     for s0comp in d["s0_at_scan_points"]:
         assert matrix.col(s0comp) == s0_static
