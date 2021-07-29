@@ -153,10 +153,7 @@ class FormatMultiImage(Format):
                     i + 1 == j
                     for i, j in zip(single_file_indices[:-1], single_file_indices[1:])
                 )
-                num_images = len(single_file_indices)
-            else:
-                num_images = format_instance.get_num_images()
-
+            num_images = get_num_images(single_file_indices, format_instance)
             reader = get_reader(cls, filenames, num_images, **format_kwargs)
 
             # Check the sequence makes sense - we must want to use <= total images
