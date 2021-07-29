@@ -697,7 +697,7 @@ class ExperimentListFactory:
                             beam=imageset.get_beam(),
                             detector=imageset.get_detector(),
                             goniometer=imageset.get_goniometer(),
-                            scan=subset.get_sequence(),
+                            sequence=subset.get_sequence(),
                             crystal=crystal,
                         )
                     )
