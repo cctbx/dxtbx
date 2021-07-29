@@ -1,10 +1,12 @@
 import math
+from abc import ABC
+from typing import Dict
 
 import pycbf
 
 import libtbx.phil
 
-from dxtbx_model_ext import MonochromaticBeam, TOFBeam
+from dxtbx_model_ext import Beam, MonochromaticBeam, TOFBeam
 
 beam_phil_scope = libtbx.phil.parse(
     """
@@ -41,54 +43,64 @@ beam_phil_scope = libtbx.phil.parse(
 )
 
 
-class BeamFactory:
+class BeamFactory(ABC):
     """A factory class for beam objects, which encapsulate standard beam
     models. In cases where a full cbf description is available this
     will be used, otherwise simplified descriptions can be applied."""
 
     @staticmethod
-    def from_phil(params, reference=None):
+    def from_phil(params, reference: Beam = None) -> Beam:
+        """Convert the phil parameters into a beam model
+
+        :param params: phil params
+        :type params: [type]
+        :param reference: beam model, defaults to None
+        :type reference: Beam, optional
+        :return: beam model
+        :rtype: Beam
         """
-        Convert the phil parameters into a beam model
+        raise NotImplementedError
 
+    @staticmethod
+    def from_dict(dict: Dict, template: Dict) -> Beam:
+        """Convert the dictionary to a beam model
+
+        :param dict: beam parameters
+        :type dict: Dictionary
+        :param template: Starting parameters that can be overriden by dict
+        :type template: Dictionary
+        :return: beam model
+        :rtype: Beam
         """
+        raise NotImplementedError
 
-        def check_for_required_basic_params(params):
-            if params.beam.direction is None:
-                raise RuntimeError("Cannot create beam: direction not set")
+    @staticmethod
+    def make_beam(**kwargs) -> Beam:
+        """Convert params into a beam model. Any missing params default to None.
 
-        def check_for_required_tof_params(params):
-            if params.beam.sample_to_moderator_distance is None:
+        :return: beam model
+        :rtype: Beam
+        """
+        raise NotImplementedError
+
+
+class MonochromaticBeamFactory(BeamFactory):
+    @staticmethod
+    def from_phil(params, reference: Beam = None) -> Beam:
+        def check_for_required_params(params, reference):
+            if params.beam.direction is None and reference is None:
+                raise RuntimeError("Cannot create MonochromaticBeam: direction not set")
+            if params.beam.wavelength is None and reference is None:
                 raise RuntimeError(
-                    "Cannot create ToF beam: sample_to_moderator_distance not set"
+                    "Cannot create MonochromaticBeam: wavelength not set"
                 )
 
-        def check_for_required_monochromatic_params(params):
-            if params.beam.wavelength is None:
-                raise RuntimeError(
-                    "Cannot create monochromatic beam: wavelength not set"
-                )
+            check_for_required_params(params=params, reference=reference)
 
-        def tof_from_phil(params, beam):
-
-            check_for_required_basic_params(params)
-            check_for_required_tof_params(params)
-
-            if beam is None:
-                beam = TOFBeam()
-
-            beam.set_sample_to_source_direction(params.beam.direction)
-            beam.set_sample_to_moderator_distance(params.sample_to_moderator_distance)
-
-            return beam
-
-        def monochromatic_from_phil(params, beam):
-
-            check_for_required_basic_params(params)
-            check_for_required_monochromatic_params(params)
-
-            if beam is None:
+            if reference is None:
                 beam = MonochromaticBeam()
+            else:
+                beam = reference
 
             beam.set_wavelength(params.beam.wavelength)
             if params.beam.polarization_normal is not None:
@@ -97,66 +109,37 @@ class BeamFactory:
                 beam.set_polarization_fraction(params.beam.polarization_fraction)
             return beam
 
-        try:
-            return monochromatic_from_phil(params, reference)
-        except RuntimeError:
-            return tof_from_phil(params, reference)
-
     @staticmethod
-    def from_dict(d, t=None):
-        """Convert the dictionary to a beam model
-
-        Params:
-            d The dictionary of parameters
-            t The template dictionary to use
-
-        Returns:
-            The beam model
-        """
-
-        def check_for_required_keys(d, required_keys, beam_type):
+    def from_dict(dict: Dict, template: Dict) -> Beam:
+        def check_for_required_keys(dict, required_keys):
             for i in required_keys:
-                if i not in d:
+                if i not in dict:
                     raise RuntimeError(
-                        f"Cannot create {beam_type}: {i} not in dictionary"
+                        f"Cannot create MonochromaticBeam: {i} not in dictionary"
                     )
 
-        basic_required_keys = ["direction"]
-        monochromatic_required_keys = ["wavelength"]
-        tof_required_keys = ["sample_to_moderator_distance"]
+        required_keys = ["direction", "wavelength"]
+        check_for_required_keys(required_keys=required_keys)
 
-        if d is None and t is None:
+        if dict is None and template is None:
             return None
 
-        joint = t.copy() if t else {}
-        joint.update(d)
+        # Use the template as the initial dictionary,
+        # and update/replace fields with dict
+        beam_dict = template.copy() if template else {}
+        beam_dict.update(dict)
 
-        check_for_required_keys(joint, basic_required_keys, "beam")
-        try:
-            check_for_required_keys(
-                joint, monochromatic_required_keys, "monochromatic beam"
-            )
-            return MonochromaticBeam.from_dict(joint)
-        except RuntimeError:
-            check_for_required_keys(joint, tof_required_keys, "ToF beam")
-            return TOFBeam.from_dict(joint)
+        return MonochromaticBeam.from_dict(beam_dict)
 
     @staticmethod
-    def make_tof_beam(sample_to_source_direction, sample_to_moderator_distance):
-        return TOFBeam(
-            tuple(map(float, sample_to_source_direction)),
-            float(sample_to_moderator_distance),
-        )
+    def make_beam(**kwargs) -> Beam:
 
-    @staticmethod
-    def make_monochromatic_beam(
-        sample_to_source=None,
-        wavelength=None,
-        s0=None,
-        unit_s0=None,
-        divergence=None,
-        sigma_divergence=None,
-    ):
+        sample_to_source = kwargs.get("sample_to_source")
+        wavelength = kwargs.get("wavelength")
+        s0 = kwargs.get("s0")
+        unit_s0 = kwargs.get("unit_s0")
+        divergence = kwargs.get("divergence")
+        sigma_divergence = kwargs.get("sigma_divergence")
 
         if divergence is None or sigma_divergence is None:
             divergence = 0.0
@@ -197,10 +180,6 @@ class BeamFactory:
     ):
         assert polarization
         assert 0.0 <= polarization_fraction <= 1.0
-
-        if divergence is None or sigma_divergence is None:
-            divergence = 0.0
-            sigma_divergence = 0.0
 
         if flux is None:
             flux = 0
@@ -244,7 +223,7 @@ class BeamFactory:
             )
 
     @staticmethod
-    def simple_monochromatic(wavelength):
+    def make_simple_beam(wavelength):
         """Construct a beam object on the principle that the beam is aligned
         with the +z axis, as is quite normal. Also assume the beam has
         polarization fraction 0.999 and is polarized in the x-z plane, unless
@@ -264,7 +243,7 @@ class BeamFactory:
             )
 
     @staticmethod
-    def simple_directional_monochromatic(sample_to_source, wavelength):
+    def make_simple_directional_beam(sample_to_source, wavelength):
         """Construct a beam with direction and wavelength."""
 
         if wavelength > 0.05:
@@ -280,13 +259,13 @@ class BeamFactory:
             )
 
     @staticmethod
-    def complex_monochromatic(
+    def make_complex_beam(
         sample_to_source, polarization_fraction, polarization_plane_normal, wavelength
     ):
         """Full access to the constructor for cases where we do know everything
         that we need..."""
 
-        return BeamFactory.make_polarized_beam(
+        return MonochromaticBeamFactory.make_polarized_beam(
             sample_to_source=sample_to_source,
             wavelength=wavelength,
             polarization=polarization_plane_normal,
@@ -303,7 +282,7 @@ class BeamFactory:
         cbf_handle = pycbf.cbf_handle_struct()
         cbf_handle.read_widefile(cif_file.encode(), pycbf.MSG_DIGEST)
 
-        result = BeamFactory.imgCIF_H(cbf_handle)
+        result = MonochromaticBeamFactory.imgCIF_H(cbf_handle)
 
         return result
 
@@ -355,9 +334,71 @@ class BeamFactory:
             0.0,
         )
 
-        return BeamFactory.make_polarized_beam(
+        return MonochromaticBeamFactory.make_polarized_beam(
             sample_to_source=direction,
             wavelength=wavelength,
             polarization=polar_plane_normal,
             polarization_fraction=polar_fraction,
+        )
+
+
+class TOFBeamFactory(BeamFactory):
+    @staticmethod
+    def from_phil(params, reference: Beam = None) -> Beam:
+        def check_for_required_params(params, reference):
+            if params.beam.direction is None and reference is None:
+                raise RuntimeError("Cannot create TOFBeam: direction not set")
+            if params.beam.sample_to_moderator_distance is None and reference is None:
+                raise RuntimeError(
+                    "Cannot create ToF beam: sample_to_moderator_distance not set"
+                )
+
+            check_for_required_params(params=params, reference=reference)
+            if reference is None:
+                beam = TOFBeam()
+            else:
+                beam = reference
+
+            beam.set_sample_to_source_direction(params.beam.direction)
+            beam.set_sample_to_moderator_distance(params.sample_to_moderator_distance)
+
+            return beam
+
+    @staticmethod
+    def from_dict(dict: Dict, template: Dict) -> Beam:
+        def check_for_required_keys(dict, required_keys):
+            for i in required_keys:
+                if i not in dict:
+                    raise RuntimeError(f"Cannot create TOFBeam: {i} not in dictionary")
+
+        required_keys = ["direction, sample_to_moderator_distance"]
+        check_for_required_keys(dict=dict, required_keys=required_keys)
+        if dict is None and template is None:
+            return None
+
+        # Use the template as the initial dictionary,
+        # and update/replace fields with dict
+        beam_dict = template.copy() if template else {}
+        beam_dict.update(dict)
+
+        return TOFBeam.from_dict(beam_dict)
+
+    @staticmethod
+    def make_beam(**kwargs) -> Beam:
+
+        sample_to_source_direction = kwargs.get("sample_to_source_direction")
+        if not sample_to_source_direction:
+            raise RuntimeError(
+                "Cannot create TOFBeam: sample_to_source_direction not set"
+            )
+
+        sample_to_moderator_distance = kwargs.get("sample_to_moderator_distance")
+        if not sample_to_moderator_distance:
+            raise RuntimeError(
+                "Cannot create TOFBeam: sample_to_moderator_distance not set"
+            )
+
+        return TOFBeam(
+            tuple(map(float, sample_to_source_direction)),
+            float(sample_to_moderator_distance),
         )
