@@ -98,9 +98,9 @@ class BeamFactory:
             return beam
 
         try:
-            return monochromatic_from_phil(reference, params)
+            return monochromatic_from_phil(params, reference)
         except RuntimeError:
-            return tof_from_phil(reference, params)
+            return tof_from_phil(params, reference)
 
     @staticmethod
     def from_dict(d, t=None):
