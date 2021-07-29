@@ -32,7 +32,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   T* from_dict(boost::python::dict obj);
 
   template <>
-  boost::python::dict to_dict<BeamBase>(const BeamBase& obj);
+  boost::python::dict to_dict<Beam>(const Beam& obj);
 
   template <>
   boost::python::dict to_dict<Goniometer>(const Goniometer& obj);
@@ -53,7 +53,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   boost::python::dict to_dict<CrystalBase>(const CrystalBase& obj);
 
   template <>
-  BeamBase* from_dict<BeamBase>(boost::python::dict obj);
+  Beam* from_dict<Beam>(boost::python::dict obj);
 
   template <>
   Goniometer* from_dict<Goniometer>(boost::python::dict obj);

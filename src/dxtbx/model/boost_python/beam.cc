@@ -147,7 +147,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     beam.set_sigma_divergence(deg ? deg_as_rad(sigma_divergence) : sigma_divergence);
   }
 
-  static void rotate_around_origin(BeamBase &beam,
+  static void rotate_around_origin(Beam &beam,
                                    vec3<double> axis,
                                    double angle,
                                    bool deg) {
@@ -241,16 +241,16 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_beam() {
 
-    // BeamBase
-    class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
-      .def("get_sample_to_source_direction", &BeamBase::get_sample_to_source_direction)
-      .def("set_sample_to_source_direction", &BeamBase::set_sample_to_source_direction)
+    // Beam
+    class_<Beam, boost::noncopyable>("Beam", no_init)
+      .def("get_sample_to_source_direction", &Beam::get_sample_to_source_direction)
+      .def("set_sample_to_source_direction", &Beam::set_sample_to_source_direction)
       .def("rotate_around_origin",
            &rotate_around_origin,
            (arg("axis"), arg("angle"), arg("deg") = true));
  
-    // TOFBeam : BeamBase
-    class_<TOFBeam, boost::shared_ptr<TOFBeam>, bases<BeamBase> >("TOFBeam")
+    // TOFBeam : Beam
+    class_<TOFBeam, boost::shared_ptr<TOFBeam>, bases<Beam> >("TOFBeam")
       .def(init<const TOFBeam &>())
       .def(init<vec3<double>, double>((arg("direction"), arg("sample_to_moderator_distance"))))
       .def("__init__",
@@ -265,8 +265,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("to_dict", &to_dict<TOFBeam>)
       .def("from_dict", &from_dict<TOFBeam>, return_value_policy<manage_new_object>());
 
-    // MonochromaticBeam : BeamBase
-    class_<MonochromaticBeam, boost::shared_ptr<MonochromaticBeam>, bases<BeamBase> >("MonochromaticBeam")
+    // MonochromaticBeam : Beam
+    class_<MonochromaticBeam, boost::shared_ptr<MonochromaticBeam>, bases<Beam> >("MonochromaticBeam")
       .def(init<const MonochromaticBeam &>())
       .def(init<vec3<double>, double>((arg("direction"), arg("wavelength"))))
       .def(init<vec3<double> >((arg("s0"))))

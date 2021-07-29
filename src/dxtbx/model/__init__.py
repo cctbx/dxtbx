@@ -20,7 +20,7 @@ from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.sequence import SequenceFactory
 from dxtbx.util import format_float_with_standard_uncertainty
 from dxtbx_model_ext import (
-    BeamBase,
+    Beam,
     Crystal,
     CrystalBase,
     Detector,
@@ -59,7 +59,7 @@ from dxtbx_model_ext import (
 __all__ = (
     "MonochromaticBeam",
     "TOFBeam",
-    "BeamBase",
+    "Beam",
     "BeamFactory",
     "Crystal",
     "CrystalBase",

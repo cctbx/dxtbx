@@ -35,7 +35,7 @@ using format::Image;
 using format::ImageBuffer;
 using format::ImageTile;
 using masking::GoniometerShadowMasker;
-using model::BeamBase;
+using model::Beam;
 using model::MonochromaticBeam;
 using model::TOFBeam;
 using model::Detector;
