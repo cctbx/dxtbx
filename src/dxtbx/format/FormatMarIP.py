@@ -73,7 +73,7 @@ class FormatMarIP(Format):
     def _beam(self):
         """Return a simple model for the beam."""
 
-        return self._beam_factory.simple_monochromatic(
+        return self._beam_factory.make_simple_beam(
             self.detectorbase.parameters["WAVELENGTH"]
         )
 

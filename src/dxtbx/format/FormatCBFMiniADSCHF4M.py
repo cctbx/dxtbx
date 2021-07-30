@@ -119,7 +119,7 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
         wavelength = float(self._cif_header_dictionary["Wavelength"].split()[0])
 
-        beam = self._beam_factory.simple_monochromatic(wavelength)
+        beam = self._beam_factory.make_simple_beam(wavelength)
 
         try:
             flux = float(self._cif_header_dictionary["Flux"].split()[0])

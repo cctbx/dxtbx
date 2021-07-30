@@ -30,7 +30,7 @@ from . import imagelist
 )
 def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
     def dummy_beam():
-        return MonochromaticBeamFactory.simple_monochromatic(1.0)
+        return MonochromaticBeamFactory.make_simple_beam(1.0)
 
     with mock.patch.object(
         dxtbx.format.FormatHDF5SaclaMPCCD.FormatHDF5SaclaMPCCD,

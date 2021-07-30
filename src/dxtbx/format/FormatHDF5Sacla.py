@@ -83,7 +83,7 @@ class FormatHDF5Sacla(FormatHDF5, FormatStill):
         sacla_config = run_info["sacla_config"]
         eV = sacla_config["photon_energy_in_eV"].value
 
-        return self._beam_factory.simple_monochromatic(factor_ev_angstrom / eV)
+        return self._beam_factory.make_simple_beam(factor_ev_angstrom / eV)
 
     def get_num_images(self):
         return len(self._images)

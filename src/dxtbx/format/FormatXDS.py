@@ -110,7 +110,7 @@ class FormatXDS(Format):
 
     def _beam(self):
         """Return a working beam instance."""
-        return self._beam_factory.make_monochromatic_beam(
+        return self._beam_factory.make_beam(
             sample_to_source=self._beam_vector,
             wavelength=self._wavelength,
             divergence=self._divergence,

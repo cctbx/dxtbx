@@ -150,7 +150,7 @@ class FormatTIFFBruker(FormatTIFF):
             struct.unpack(self._i, self._tiff_header_bytes[1932:1936])[0] * 1.0e-5
         )
 
-        return self._beam_factory.simple_monochromatic(wavelength)
+        return self._beam_factory.make_simple_beam(wavelength)
 
     def _scan(self):
         """Return the scan information for this image."""

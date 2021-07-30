@@ -283,7 +283,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             else:
                 if self.params.wavelength_offset is not None:
                     wavelength += self.params.wavelength_offset
-                self._beam_cache = self._beam_factory.simple_monochromatic(wavelength)
+                self._beam_cache = self._beam_factory.make_simple_beam(wavelength)
             s, nsec = evt.get(psana.EventId).time()
             evttime = time.gmtime(s)
             if (

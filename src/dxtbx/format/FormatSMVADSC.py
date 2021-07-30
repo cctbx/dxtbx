@@ -189,7 +189,7 @@ class FormatSMVADSC(FormatSMV):
 
         wavelength = float(self._header_dictionary["WAVELENGTH"])
 
-        return self._beam_factory.simple_monochromatic(wavelength)
+        return self._beam_factory.make_simple_beam(wavelength)
 
     def _scan(self):
         """Return the scan information for this image."""
