@@ -1,4 +1,6 @@
 import math
+from abc import ABC
+from enum import Enum
 from typing import Dict
 
 import pycbf
@@ -7,12 +9,22 @@ import libtbx.phil
 
 from dxtbx_model_ext import Beam, MonochromaticBeam, TOFBeam
 
+
+class BeamType(Enum):
+    MonochromaticBeam = 1
+    TOFBeam = 2
+
+
 beam_phil_scope = libtbx.phil.parse(
     """
   beam
     .expert_level = 1
     .short_caption = "Beam overrides"
   {
+    type = Monochromatic
+        .type = string
+        .help = "Override the beam type"
+        .short_caption = "beam type"
 
     wavelength = None
       .type = float
@@ -42,7 +54,7 @@ beam_phil_scope = libtbx.phil.parse(
 )
 
 
-class BeamFactory:
+class BeamFactoryBase(ABC):
     """A factory class for beam objects, which encapsulate standard beam
     models. In cases where a full cbf description is available this
     will be used, otherwise simplified descriptions can be applied."""
@@ -82,17 +94,79 @@ class BeamFactory:
         """
         raise NotImplementedError
 
+
+class BeamFactory(BeamFactoryBase):
+
+    """Class to select the correct factory to use based on the input.
+    (i.e the class actually used in the code, unless a method unique to a
+    derived class is required.)
+    """
+
     @staticmethod
-    def detect_factory_from_dict(dict: Dict):
-        if "wavelength" in dict:
-            return MonochromaticBeamFactory
-        elif "sample_to_moderator_distance" in dict:
-            return TOFBeamFactory
+    def from_phil(params, reference: Beam = None) -> Beam:
+        """Convert the phil parameters into a beam model
+
+        :param params: phil params
+        :type params: [type]
+        :param reference: beam model, defaults to None
+        :type reference: Beam, optional
+        :return: beam model
+        :rtype: Beam
+        """
+
+        if params.beam.type == "Monochromatic":
+            return MonochromaticBeamFactory.from_phil(
+                params=params, reference=reference
+            )
+        elif params.beam.type == "TOFBeam":
+            return TOFBeamFactory.from_phil(params=params, reference=reference)
         else:
-            raise RuntimeError("Cannot detect Beam type from dict")
+            raise NotImplementedError("Unknown beam type {params.beam.type}")
+
+    @staticmethod
+    def from_dict(dict: Dict, template: Dict) -> Beam:
+        """Convert the dictionary to a beam model
+
+        :param dict: Beam parameters
+        :type dict: Dictionary
+        :param template: Starting parameters that can be overriden by dict
+        :type template: Dictionary
+        :return: beam model
+        :rtype: Beam
+        """
+
+        assert (
+            dict["__id__"] == template["__id__"]
+        ), "Beam and template dictionaries are not the same type."
+
+        if dict["__id__"] == "MonochromaticBeam":
+            return MonochromaticBeamFactory.from_dict(dict=dict, template=template)
+        elif dict["__id__"] == "TOFBeam":
+            return TOFBeamFactory.from_dict(dict=dict, template=template)
+        else:
+            raise NotImplementedError(f"Unknown beam type {dict['__id__']}")
+
+    @staticmethod
+    def make_beam(beam_type: BeamType, **kwargs) -> Beam:
+        """Convert params into a beam model. Any missing params default to None.
+
+        :param beam_type: Which beam type to make
+        :type beam_type: BeamType
+        :return: beam model
+        :rtype: Beam
+        """
+
+        beam_type = kwargs.get("beam_type")
+
+        if beam_type == BeamType.MonochromaticBeam:
+            return MonochromaticBeamFactory.make_beam(kwargs=kwargs)
+        elif beam_type == BeamType.TOFBeam:
+            return TOFBeamFactory.make_beam(kwargs=kwargs)
+        else:
+            raise NotImplementedError(f"Unknown beam type {beam_type}")
 
 
-class MonochromaticBeamFactory(BeamFactory):
+class MonochromaticBeamFactory(BeamFactoryBase):
     @staticmethod
     def from_phil(params, reference: Beam = None) -> Beam:
         def check_for_required_params(params, reference):
@@ -239,7 +313,7 @@ class MonochromaticBeamFactory(BeamFactory):
         electron diffraction and return an unpolarized beam model."""
 
         if wavelength > 0.05:
-            return BeamFactory.make_monochromatic_beam(
+            return MonochromaticBeamFactory.make_beam(
                 sample_to_source=(0.0, 0.0, 1.0), wavelength=wavelength
             )
         else:
@@ -255,11 +329,11 @@ class MonochromaticBeamFactory(BeamFactory):
         """Construct a beam with direction and wavelength."""
 
         if wavelength > 0.05:
-            return BeamFactory.make_monochromatic_beam(
+            return MonochromaticBeamFactory.make_beam(
                 sample_to_source=sample_to_source, wavelength=wavelength
             )
         else:
-            return BeamFactory.make_polarized_beam(
+            return MonochromaticBeamFactory.make_polarized_beam(
                 sample_to_source=sample_to_source,
                 wavelength=wavelength,
                 polarization=(0, 1, 0),
@@ -350,7 +424,7 @@ class MonochromaticBeamFactory(BeamFactory):
         )
 
 
-class TOFBeamFactory(BeamFactory):
+class TOFBeamFactory(BeamFactoryBase):
     @staticmethod
     def from_phil(params, reference: Beam = None) -> Beam:
         def check_for_required_params(params, reference):
