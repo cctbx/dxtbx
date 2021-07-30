@@ -21,10 +21,10 @@ beam_phil_scope = libtbx.phil.parse(
     .expert_level = 1
     .short_caption = "Beam overrides"
   {
-    type = Monochromatic
-        .type = string
-        .help = "Override the beam type"
-        .short_caption = "beam type"
+    type = "Monochromatic"
+      .type = str
+      .help = "Override the beam type"
+      .short_caption = "beam type"
 
     wavelength = None
       .type = float
@@ -124,7 +124,7 @@ class BeamFactory(BeamFactoryBase):
             raise NotImplementedError("Unknown beam type {params.beam.type}")
 
     @staticmethod
-    def from_dict(dict: Dict, template: Dict) -> Beam:
+    def from_dict(dict: Dict, template: Dict = None) -> Beam:
         """Convert the dictionary to a beam model
 
         :param dict: Beam parameters
@@ -135,16 +135,21 @@ class BeamFactory(BeamFactoryBase):
         :rtype: Beam
         """
 
-        assert (
-            dict["__id__"] == template["__id__"]
-        ), "Beam and template dictionaries are not the same type."
+        if "__id__" in dict:
+            if template:
+                assert (
+                    dict["__id__"] == template["__id__"]
+                ), "Beam and template dictionaries are not the same type."
 
-        if dict["__id__"] == "MonochromaticBeam":
-            return MonochromaticBeamFactory.from_dict(dict=dict, template=template)
-        elif dict["__id__"] == "TOFBeam":
-            return TOFBeamFactory.from_dict(dict=dict, template=template)
+            if "__id__" not in dict or dict["__id__"] == "MonochromaticBeam":
+                return MonochromaticBeamFactory.from_dict(dict=dict, template=template)
+            elif dict["__id__"] == "TOFBeam":
+                return TOFBeamFactory.from_dict(dict=dict, template=template)
+            else:
+                raise NotImplementedError(f"Unknown beam type {dict['__id__']}")
         else:
-            raise NotImplementedError(f"Unknown beam type {dict['__id__']}")
+            # Legacy beams without __id__ will all be monochromatic
+            return MonochromaticBeamFactory.from_dict(dict=dict, template=template)
 
     @staticmethod
     def make_beam(beam_type: BeamType, **kwargs) -> Beam:
@@ -192,7 +197,7 @@ class MonochromaticBeamFactory(BeamFactoryBase):
             return beam
 
     @staticmethod
-    def from_dict(dict: Dict, template: Dict) -> Beam:
+    def from_dict(dict: Dict, template: Dict = None) -> Beam:
         def check_for_required_keys(dict, required_keys):
             for i in required_keys:
                 if i not in dict:
@@ -201,7 +206,7 @@ class MonochromaticBeamFactory(BeamFactoryBase):
                     )
 
         required_keys = ["direction", "wavelength"]
-        check_for_required_keys(required_keys=required_keys)
+        check_for_required_keys(dict=dict, required_keys=required_keys)
 
         if dict is None and template is None:
             return None
@@ -447,7 +452,7 @@ class TOFBeamFactory(BeamFactoryBase):
             return beam
 
     @staticmethod
-    def from_dict(dict: Dict, template: Dict) -> Beam:
+    def from_dict(dict: Dict, template: Dict = None) -> Beam:
         def check_for_required_keys(dict, required_keys):
             for i in required_keys:
                 if i not in dict:
