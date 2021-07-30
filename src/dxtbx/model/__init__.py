@@ -12,7 +12,7 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.imageset import ImageGrid, ImageSet, RotImageSequence, TOFImageSequence
-from dxtbx.model.beam import MonochromaticBeamFactory, TOFBeamFactory
+from dxtbx.model.beam import BeamFactory, MonochromaticBeamFactory, TOFBeamFactory
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
@@ -60,6 +60,7 @@ __all__ = (
     "MonochromaticBeam",
     "TOFBeam",
     "Beam",
+    "BeamFactory",
     "MonochromaticBeamFactory",
     "TOFBeamFactory",
     "Crystal",
