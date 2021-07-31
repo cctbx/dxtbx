@@ -189,7 +189,8 @@ class MonochromaticBeamFactory(BeamFactoryBase):
         else:
             beam = reference
 
-        beam.set_wavelength(params.beam.wavelength)
+        if params.beam.wavelength is not None:
+            beam.set_wavelength(params.beam.wavelength)
         if params.beam.polarization_normal is not None:
             beam.set_polarization_normal(params.beam.polarization_normal)
         if params.beam.polarization_fraction is not None:
