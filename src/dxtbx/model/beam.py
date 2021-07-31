@@ -182,19 +182,19 @@ class MonochromaticBeamFactory(BeamFactoryBase):
                     "Cannot create MonochromaticBeam: wavelength not set"
                 )
 
-            check_for_required_params(params=params, reference=reference)
+        check_for_required_params(params=params, reference=reference)
 
-            if reference is None:
-                beam = MonochromaticBeam()
-            else:
-                beam = reference
+        if reference is None:
+            beam = MonochromaticBeam()
+        else:
+            beam = reference
 
-            beam.set_wavelength(params.beam.wavelength)
-            if params.beam.polarization_normal is not None:
-                beam.set_polarization_normal(params.beam.polarization_normal)
-            if params.beam.polarization_fraction is not None:
-                beam.set_polarization_fraction(params.beam.polarization_fraction)
-            return beam
+        beam.set_wavelength(params.beam.wavelength)
+        if params.beam.polarization_normal is not None:
+            beam.set_polarization_normal(params.beam.polarization_normal)
+        if params.beam.polarization_fraction is not None:
+            beam.set_polarization_fraction(params.beam.polarization_fraction)
+        return beam
 
     @staticmethod
     def from_dict(dict: Dict, template: Dict = None) -> Beam:
@@ -268,6 +268,10 @@ class MonochromaticBeamFactory(BeamFactoryBase):
         assert polarization
         assert 0.0 <= polarization_fraction <= 1.0
 
+        if divergence is None or sigma_divergence is None:
+            divergence = 0.0
+            sigma_divergence = 0.0
+
         if flux is None:
             flux = 0
         if transmission is None:
@@ -322,7 +326,7 @@ class MonochromaticBeamFactory(BeamFactoryBase):
                 sample_to_source=(0.0, 0.0, 1.0), wavelength=wavelength
             )
         else:
-            return BeamFactory.make_polarized_beam(
+            return MonochromaticBeamFactory.make_polarized_beam(
                 sample_to_source=(0.0, 0.0, 1.0),
                 wavelength=wavelength,
                 polarization=(0, 1, 0),
@@ -440,16 +444,16 @@ class TOFBeamFactory(BeamFactoryBase):
                     "Cannot create ToF beam: sample_to_moderator_distance not set"
                 )
 
-            check_for_required_params(params=params, reference=reference)
-            if reference is None:
-                beam = TOFBeam()
-            else:
-                beam = reference
+        check_for_required_params(params=params, reference=reference)
+        if reference is None:
+            beam = TOFBeam()
+        else:
+            beam = reference
 
-            beam.set_sample_to_source_direction(params.beam.direction)
-            beam.set_sample_to_moderator_distance(params.sample_to_moderator_distance)
+        beam.set_sample_to_source_direction(params.beam.direction)
+        beam.set_sample_to_moderator_distance(params.sample_to_moderator_distance)
 
-            return beam
+        return beam
 
     @staticmethod
     def from_dict(dict: Dict, template: Dict = None) -> Beam:
