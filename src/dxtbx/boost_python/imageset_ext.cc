@@ -824,7 +824,7 @@ namespace dxtbx { namespace boost_python {
       .staticmethod("from_imageset")
       .def_pickle(ImageGridPickleSuite());
 
-    class_<ImageSequence<MonochromaticBeam, Scan>, bases<ImageSet<MonochromaticBeam, Scan> > >("RotImageSequence", no_init)
+    class_<ImageSequence<MonochromaticBeam, Scan>, bases<ImageSet<MonochromaticBeam, Scan> > >("RotImageSequenceBase", no_init)
       .def(init<const ImageSetData<MonochromaticBeam, Scan> &,
                 const ImageSequence<MonochromaticBeam, Scan>::beam_ptr &,
                 const ImageSequence<MonochromaticBeam, Scan>::detector_ptr &,
