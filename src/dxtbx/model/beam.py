@@ -189,6 +189,8 @@ class MonochromaticBeamFactory(BeamFactoryBase):
         else:
             beam = reference
 
+        if params.beam.direction is not None:
+            beam.set_sample_to_source_direction(params.beam.direction)
         if params.beam.wavelength is not None:
             beam.set_wavelength(params.beam.wavelength)
         if params.beam.polarization_normal is not None:
@@ -451,8 +453,10 @@ class TOFBeamFactory(BeamFactoryBase):
         else:
             beam = reference
 
-        beam.set_sample_to_source_direction(params.beam.direction)
-        beam.set_sample_to_moderator_distance(params.sample_to_moderator_distance)
+        if params.beam.direction is not None:
+            beam.set_sample_to_source_direction(params.beam.direction)
+        if params.sample_to_moderator_distance is not None:
+            beam.set_sample_to_moderator_distance(params.sample_to_moderator_distance)
 
         return beam
 
