@@ -117,7 +117,7 @@ class FormatXDS(Format):
             sigma_divergence=self._sigma_divergence,
         )
 
-    def _scan(self):
+    def _sequence(self):
         """Return a working scan instance."""
         # Set the scan parameters
         if self._data_range is not None:
