@@ -467,7 +467,7 @@ class TOFBeamFactory(BeamFactoryBase):
                 if i not in dict:
                     raise RuntimeError(f"Cannot create TOFBeam: {i} not in dictionary")
 
-        required_keys = ["direction, sample_to_moderator_distance"]
+        required_keys = ["direction", "sample_to_moderator_distance"]
         check_for_required_keys(dict=dict, required_keys=required_keys)
         if dict is None and template is None:
             return None
