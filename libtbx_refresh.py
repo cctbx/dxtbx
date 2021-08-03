@@ -1,3 +1,4 @@
+import os
 import site
 import subprocess
 import sys
@@ -92,21 +93,14 @@ def _install_dxtbx_setup_readonly_fallback():
 if not pkg_resources or any(x.key == "libtbx.dxtbx" for x in pkg_resources.working_set):
     libtbx.pkg_utils.define_entry_points({})
 
-try:
+# Try to detect case where base python environment is read-only
+# e.g. on an LCLS session on a custom cctbx installation where the
+# source is editable but the conda_base is read-only
+#
+# Pip uses this check to fallback to --user - we don't want that so check now
+if os.name == "posix" and not os.access(path, os.W_OK):
+    print("Python site directory not writable - falling back to tbx install")
+    _install_dxtbx_setup_readonly_fallback()
+else:
+    # Either writable or on Windows
     _install_dxtbx_setup()
-except subprocess.CalledProcessError:
-    # Try to detect case where base python environment is read-only
-    # e.g. on an LCLS session on a custom cctbx installation where the
-    # source is editable but the conda_base is read-only
-    test_file = Path(site.getsitepackages()) / ".dxtbx.write_test"
-    print(f"Error installing dxtbx - checking {test_file.parent} for writability")
-    try:
-        test_file.touch()
-        # Make a best-effort attempt to remove this file
-        try:
-            test_file.unlink()
-        except Exception:
-            pass
-    except PermissionError:
-        print("Appears to be permission error - using dxtbx libtbx fallback")
-        _install_dxtbx_setup_readonly_fallback()
