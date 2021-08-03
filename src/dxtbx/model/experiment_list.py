@@ -139,9 +139,10 @@ class ExperimentListDict:
                     i["sequence"] = i["scan"]
                     del i["scan"]
 
-        for i in obj["beam"]:
-            if "__id__" not in i and "wavelength" in i:
-                i["__id__"] = "MonochromaticBeam"
+        if "beam" in obj:
+            for i in obj["beam"]:
+                if "__id__" not in i and "wavelength" in i:
+                    i["__id__"] = "MonochromaticBeam"
 
         return obj
 
