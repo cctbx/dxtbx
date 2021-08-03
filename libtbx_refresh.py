@@ -50,7 +50,7 @@ def _install_dxtbx_setup_readonly_fallback():
 
     This is a less complete installation - base python console_scripts
     entrypoints will not be installed, but the basic package metadata
-    and other entrypoints should be enumerable.
+    and other entrypoints will be enumerable through dispatcher black magic
     """
     dxtbx_root_path = Path(libtbx.env.dist_path("dxtbx"))
     # Install this into a build/dxtbx subfolder
