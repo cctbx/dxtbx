@@ -98,7 +98,8 @@ if not pkg_resources or any(x.key == "libtbx.dxtbx" for x in pkg_resources.worki
 # source is editable but the conda_base is read-only
 #
 # Pip uses this check to fallback to --user - we don't want that so check now
-if os.name == "posix" and not os.access(path, os.W_OK):
+site_packages = Path(site.getsitepackages())
+if os.name == "posix" and not os.access(site_packages, os.W_OK):
     print("Python site directory not writable - falling back to tbx install")
     _install_dxtbx_setup_readonly_fallback()
 else:
