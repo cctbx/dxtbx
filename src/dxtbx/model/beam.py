@@ -152,7 +152,7 @@ class BeamFactory(BeamFactoryBase):
             return MonochromaticBeamFactory.from_dict(dict=dict, template=template)
 
     @staticmethod
-    def make_beam(beam_type: BeamType, **kwargs) -> Beam:
+    def make_beam(beam_type: BeamType = BeamType.MonochromaticBeam, **kwargs) -> Beam:
         """Convert params into a beam model. Any missing params default to None.
 
         :param beam_type: Which beam type to make
