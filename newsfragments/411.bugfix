@@ -1,2 +1,2 @@
-Fix shadow masking check for "fixability"
+Fix potential problem where mask geometry was unfixable
 
