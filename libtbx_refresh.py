@@ -26,7 +26,16 @@ def _install_dxtbx_setup():
 
     # Call pip
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", "--no-deps", "-e", dxtbx_root_path],
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--no-build-isolation",
+            "--no-deps",
+            "-e",
+            dxtbx_root_path,
+        ],
         check=True,
     )
 
