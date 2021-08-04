@@ -492,6 +492,10 @@ namespace dxtbx { namespace model { namespace boost_python {
     std::swap(lhs, rhs);
   }
 
+  void tof_sequence_swap(TOFSequence &lhs, TOFSequence &rhs) {
+    std::swap(lhs, rhs);
+  }
+
   void export_scan() {
     // Export Sequence
     class_<Sequence>("Sequence")
@@ -516,7 +520,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_valid_image_ranges", set_valid_image_ranges);
 
 
-    class_<TOFSequence, bases<Sequence> >("TOFSequence")
+    class_<TOFSequence, boost::shared_ptr<TOFSequence>, bases<Sequence> >("TOFSequence")
       .def(init<const TOFSequence &>())
       .def("__init__",
             make_constructor(&make_tof_sequence,
@@ -537,6 +541,7 @@ namespace dxtbx { namespace model { namespace boost_python {
             .def(self + self)
             .def("__getitem__", &tof_sequence_getitem_single)
             .def("__getitem__", &tof_sequence_getitem_slice)
+            .def("swap", &tof_sequence_swap)
             .def_pickle(TOFSequencePickleSuite());
 
 
