@@ -66,6 +66,32 @@ namespace dxtbx { namespace model { namespace boost_python {
       return true;
     }
   };
+  
+  struct TOFBeamPickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(const TOFBeam &obj) {
+      return boost::python::make_tuple(obj.get_sample_to_source_direction(),
+                                       obj.get_sample_to_moderator_distance());
+    }
+    static boost::python::tuple getstate(boost::python::object obj) {
+      const TOFBeam &beam = boost::python::extract<const TOFBeam &>(obj)();
+      return boost::python::make_tuple(obj.attr("__dict__"));
+    }
+
+    static void setstate(boost::python::object obj, boost::python::tuple state) {
+      TOFBeam &beam = boost::python::extract<TOFBeam &>(obj)();
+      //DXTBX_ASSERT(boost::python::len(state) == 2);
+
+      // restore the object's __dict__
+      boost::python::dict d =
+        boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
+      d.update(state[0]);
+    }
+
+    static bool getstate_manages_dict() {
+      return true;
+    }
+
+  };
 
   static MonochromaticBeam *make_monochromatic_beam(vec3<double> sample_to_source,
                          double wavelength,
@@ -263,7 +289,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_unit_s0", &TOFBeam::get_unit_s0)
       .def("set_unit_s0", &TOFBeam::set_unit_s0)
       .def("to_dict", &to_dict<TOFBeam>)
-      .def("from_dict", &from_dict<TOFBeam>, return_value_policy<manage_new_object>());
+      .def("from_dict", &from_dict<TOFBeam>, return_value_policy<manage_new_object>())
+      .def_pickle(TOFBeamPickleSuite());
 
     // MonochromaticBeam : Beam
     class_<MonochromaticBeam, boost::shared_ptr<MonochromaticBeam>, bases<Beam> >("MonochromaticBeam")
