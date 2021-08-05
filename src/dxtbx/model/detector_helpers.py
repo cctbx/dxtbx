@@ -408,7 +408,7 @@ def get_detector_projection_2d_axes(
     # Choose whichever axis is closest to lab X for the plane's X
     labX = matrix.col((1, 0, 0))
     nearX = [ax.accute_angle(labX) for ax in axes]
-    X = [ax for _, ax in sorted(zip(nearX, axes))][0]
+    X = [ax for _, ax in sorted(zip(nearX, axes), key=itemgetter(0))][0]
     if X.dot(labX) < 0:
         X *= -1
 
