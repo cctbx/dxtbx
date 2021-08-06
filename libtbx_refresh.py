@@ -1,3 +1,4 @@
+import inspect
 import os
 import random
 import site
@@ -5,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import libtbx.load_env
+import libtbx
 import libtbx.pkg_utils
 
 try:
@@ -53,6 +54,7 @@ def _install_dxtbx_setup_readonly_fallback():
     and other entrypoints will be enumerable through dispatcher black magic
     """
     dxtbx_root_path = Path(libtbx.env.dist_path("dxtbx"))
+
     # Install this into a build/dxtbx subfolder
     build_path = Path(abs(libtbx.env.build_path))
     dxtbx_build_path = build_path / "dxtbx"
@@ -72,9 +74,14 @@ def _install_dxtbx_setup_readonly_fallback():
         check=True,
     )
 
-    # Update the libtbx environment to point to the source location
-    libtbx.env.pythonpath.insert(0, str(dxtbx_root_path / "src"))
-    libtbx.env.pickle()
+    # Get the actual environment being configured (NOT libtbx.env)
+    env = _get_real_env_hack_hack_hack()
+
+    # Update the libtbx environment pythonpaths to point to the source
+    # location which now has an .egg-info folder
+    env.pythonpath.insert(
+        0, libtbx.env.as_relocatable_path(str(dxtbx_root_path / "src"))
+    )
 
 
 def _test_writable_dir(path: Path) -> bool:
@@ -99,7 +106,33 @@ def _test_writable_dir(path: Path) -> bool:
             return True
 
 
-site_packages = Path(site.getsitepackages()[0])
+def _get_real_env_hack_hack_hack():
+    """
+    Get the real, currently-being-configured libtbx.env environment.
+
+    This is not libtbx.env, because although libtbx.env_config.environment.cold_start
+    does:
+        self.pickle()
+        libtbx.env = self
+    the first time there is an "import libtbx.load_env" this environment
+    gets replaced by unpickling the freshly-written libtbx_env file onto
+    libtbx.env, thereby making the environment accessed via libtbx.env
+    *not* the actual one that is currently being constructed.
+
+    So, the only way to get this environment being configured in order
+    to - like - configure it, is to walk the stack trace and extract the
+    self object from environment.refresh directly.
+    """
+    for frame in inspect.stack():
+        if (
+            frame.filename.endswith("env_config.py")
+            and frame.function == "refresh"
+            and "self" in frame.frame.f_locals
+        ):
+            return frame.frame.f_locals["self"]
+
+    raise RuntimeError("Could not determine real libtbx.env_config.environment object")
+
 
 # Detect case where base python environment is read-only
 # e.g. on an LCLS session on a custom cctbx installation where the
@@ -107,7 +140,7 @@ site_packages = Path(site.getsitepackages()[0])
 #
 # We need to check before trying to install as pip does os.access-based
 # checks then installs with --user if it fails. We don't want that.
-if _test_writable_dir(site_packages):
+if _test_writable_dir(Path(site.getsitepackages()[0])):
     _install_dxtbx_setup()
 else:
     print("Python site directory not writable - falling back to tbx install")
