@@ -43,6 +43,9 @@ def _install_dxtbx_setup():
         ],
         check=True,
     )
+    # Ensure that the working set is updated with this new package
+    if pkg_resources:
+        pkg_resources.find("dxtbx")
 
 
 def _install_dxtbx_setup_readonly_fallback():
@@ -54,6 +57,7 @@ def _install_dxtbx_setup_readonly_fallback():
     and other entrypoints will be enumerable through dispatcher black magic
     """
     dxtbx_root_path = Path(libtbx.env.dist_path("dxtbx"))
+    dxtbx_import_path = dxtbx_root_path / "src"
 
     # Install this into a build/dxtbx subfolder
     build_path = Path(abs(libtbx.env.build_path))
@@ -78,10 +82,16 @@ def _install_dxtbx_setup_readonly_fallback():
     env = _get_real_env_hack_hack_hack()
 
     # Update the libtbx environment pythonpaths to point to the source
-    # location which now has an .egg-info folder
-    env.pythonpath.insert(
-        0, libtbx.env.as_relocatable_path(str(dxtbx_root_path / "src"))
-    )
+    # location which now has an .egg-info folder; this will mean that
+    # the PYTHONPATH is written into the libtbx dispatchers
+    env.pythonpath.insert(0, libtbx.env.as_relocatable_path(str(dxtbx_import_path)))
+
+    # Update the sys.path so that we can find the .egg-info in this process
+    # if we do a full reconstruction of the working set
+    sys.path.insert(0, dxtbx_import_path)
+    # ...and add to the existing pkg_resources working_set
+    if pkg_resources:
+        pkg_resources.working_set.add_entry(dxtbx_import_path)
 
 
 def _test_writable_dir(path: Path) -> bool:
