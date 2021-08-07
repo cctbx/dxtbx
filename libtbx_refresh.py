@@ -43,9 +43,6 @@ def _install_dxtbx_setup():
         ],
         check=True,
     )
-    # Ensure that the working set is updated with this new package
-    if pkg_resources:
-        pkg_resources.find("dxtbx")
 
 
 def _install_dxtbx_setup_readonly_fallback():
