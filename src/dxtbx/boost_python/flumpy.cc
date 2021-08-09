@@ -392,45 +392,38 @@ py::object from_numpy(py::object array) {
   }
 
   // Check that we recognise this type
-  std::string known_types = "BHIQbhilqdDf?";
-  auto dtype = np_array.attr("dtype").attr("char").cast<char>();
+  std::string known_types = "BHIQLbhilqdDf?";
+  auto dtype_obj = np_array.attr("dtype");
+  auto dtype = dtype_obj.attr("char").cast<char>();
   if (known_types.find(dtype) == std::string::npos) {
     throw std::invalid_argument(std::string("Unrecognised numpy array dtype '") + dtype
                                 + "'");
   }
-  // Flex doesn't bind long long directly - so check that it's safe to use long
-  if (dtype == 'q') {
-    if (sizeof(long) == sizeof(long long)) {
-      dtype = 'l';
-    } else {
-      // flex doesn't bind long long on windows, but does bind 64-bit
-      // integers separately, which we can use for that. Other platforms
-      // don't have this bound as a separate type.
-#ifndef _MSC_VER
-      throw std::invalid_argument(
-        "Numpy array is type 'q' but long long is unbound by flex");
-#endif
-    }
-  }
 
-  if (dtype == 'B') {
-    return numpy_to_array_family<af::versa<uint8_t, af::flex_grid<>>>(np_array);
-  } else if (dtype == 'H') {
-    return numpy_to_array_family<af::versa<uint16_t, af::flex_grid<>>>(np_array);
-  } else if (dtype == 'I') {
-    return numpy_to_array_family<af::versa<uint32_t, af::flex_grid<>>>(np_array);
-  } else if (dtype == 'Q') {
-    return numpy_to_array_family<af::versa<size_t, af::flex_grid<>>>(np_array);
-  } else if (dtype == 'b') {
-    return numpy_to_array_family<af::versa<int8_t, af::flex_grid<>>>(np_array);
-  } else if (dtype == 'h') {
-    return numpy_to_array_family<af::versa<int16_t, af::flex_grid<>>>(np_array);
+  // Need to resolve mappings - some of flex is bound as specific integer
+  // sizing, some is bound directly to the sized type. We need to resolve
+  // the differences when we've been given a numpy dtype that doesn't
+  // have an exact corresponding flex implementation.
+  //
+  // Flex binds only integer types:
+  //    bool, uint8, uint16, uint32, size_t, int, long, int8, int16, [int64 - win]
+  // so the direct conversions are:
+  //    ? -> flex.bool
+  //    i -> flex.int
+  //    l -> flex.long
+  //    f -> flex.float
+  //    d -> flex.double
+  //    D -> flex.complex
+  // everything else needs to be mapped via size/signededness; although size_t
+  // is mapped directly, it doesn't have a fixed numpy format character.
+
+  // Firstly, try to map the direct equivalents
+  if (dtype == '?') {
+    return numpy_to_array_family<af::versa<bool, af::flex_grid<>>>(np_array);
   } else if (dtype == 'i') {
     return numpy_to_array_family<af::versa<int, af::flex_grid<>>>(np_array);
   } else if (dtype == 'l') {
     return numpy_to_array_family<af::versa<long, af::flex_grid<>>>(np_array);
-  } else if (dtype == 'q') {
-    return numpy_to_array_family<af::versa<int64_t, af::flex_grid<>>>(np_array);
   } else if (dtype == 'f') {
     return numpy_to_array_family<af::versa<float, af::flex_grid<>>>(np_array);
   } else if (dtype == 'd') {
@@ -438,10 +431,50 @@ py::object from_numpy(py::object array) {
   } else if (dtype == 'D') {
     return numpy_to_array_family<af::versa<std::complex<double>, af::flex_grid<>>>(
       np_array);
-  } else if (dtype == '?') {
-    return numpy_to_array_family<af::versa<bool, af::flex_grid<>>>(np_array);
   }
-  throw std::runtime_error(std::string("Unhandled array type '") + dtype + "'");
+
+  // Extract information about the dtype so we can match it up
+  auto numpy = py::module_::import("numpy");
+  auto is_integer =
+    numpy.attr("issubdtype")(dtype_obj, numpy.attr("integer")).cast<bool>();
+  // We _think_ that we've covered this, but double check
+  if (!is_integer) {
+    throw std::runtime_error(std::string("Unknown/unhandled non-integer data type: ")
+                             + dtype);
+  }
+
+  auto is_signed =
+    numpy.attr("issubdtype")(dtype_obj, numpy.attr("signedinteger")).cast<bool>();
+  auto itemsize = dtype_obj.attr("itemsize").cast<int>();
+
+  // Now, work out which data type to use based on metadata about the type
+  if (is_signed) {
+    if (itemsize == sizeof(int)) {
+      return numpy_to_array_family<af::versa<int, af::flex_grid<>>>(np_array);
+    } else if (itemsize == sizeof(long)) {
+      return numpy_to_array_family<af::versa<long, af::flex_grid<>>>(np_array);
+    } else if (itemsize == sizeof(int8_t)) {
+      return numpy_to_array_family<af::versa<int8_t, af::flex_grid<>>>(np_array);
+    } else if (itemsize == sizeof(int16_t)) {
+      return numpy_to_array_family<af::versa<int16_t, af::flex_grid<>>>(np_array);
+    } else if (itemsize == sizeof(int64_t)) {
+      // Only hit this in case where long != uint64, and so this should be bound
+      return numpy_to_array_family<af::versa<int64_t, af::flex_grid<>>>(np_array);
+    }
+  } else {
+    // Unsigned -
+    if (itemsize == sizeof(size_t)) {
+      return numpy_to_array_family<af::versa<size_t, af::flex_grid<>>>(np_array);
+    } else if (itemsize == sizeof(uint8_t)) {
+      return numpy_to_array_family<af::versa<uint8_t, af::flex_grid<>>>(np_array);
+    } else if (itemsize == sizeof(uint16_t)) {
+      return numpy_to_array_family<af::versa<uint16_t, af::flex_grid<>>>(np_array);
+    } else if (itemsize == sizeof(uint32_t)) {
+      return numpy_to_array_family<af::versa<uint32_t, af::flex_grid<>>>(np_array);
+    }
+  }
+  throw std::runtime_error(std::string("Unhandled integer array type '") + dtype
+                           + "' - unrecognised size " + std::to_string(itemsize));
 }
 
 /// More structured arrays need to be explicitly requested
