@@ -369,6 +369,13 @@ py::object from_numpy(py::object array) {
       "Cannot currently convert from non-numpy array format to flex");
   }
   auto np_array = py::array(array);
+
+  // Check that this array is contiguous
+  if (!np_array.attr("flags")["C_CONTIGUOUS"].cast<bool>()) {
+    throw std::invalid_argument(
+      "numpy array is non-contiguous - flex arrays must be contiguous");
+  }
+
   // Now, see if this is a numpy object we created to wrap a flex
   if (np_array.base()) {
     if (py::isinstance<Scuffer>(np_array.base().attr("obj"))) {
@@ -441,6 +448,13 @@ py::object vec_from_numpy(py::array np_array) {
     throw std::invalid_argument("Input array last dimension is not size "
                                 + std::to_string(VecType<int>::fixed_size));
   }
+
+  // Check that this array is contiguous
+  if (!np_array.attr("flags")["C_CONTIGUOUS"].cast<bool>()) {
+    throw std::invalid_argument(
+      "numpy array is non-contiguous - flex arrays must be contiguous");
+  }
+
   auto dtype = np_array.attr("dtype").attr("char").cast<char>();
 
   std::string accepted_types = VecType<int>::fixed_size == 2 ? "dQ" : "di";
@@ -473,6 +487,11 @@ py::object vec_from_numpy(py::array np_array) {
 /// Decide which sized vector we want to convert to, and hand off to the
 /// specialization
 py::object vecs_from_numpy(py::array np_array) {
+  // Check that this array is contiguous
+  if (!np_array.attr("flags")["C_CONTIGUOUS"].cast<bool>()) {
+    throw std::invalid_argument(
+      "numpy array is non-contiguous - flex arrays must be contiguous");
+  }
   if (np_array.shape(np_array.ndim() - 1) == 3) {
     return vec_from_numpy<scitbx::vec3>(np_array);
   } else if (np_array.shape(np_array.ndim() - 1) == 2) {
@@ -483,6 +502,12 @@ py::object vecs_from_numpy(py::array np_array) {
 }
 
 py::object mat3_from_numpy(py::array np_array) {
+  // Check that this array is contiguous
+  if (!np_array.attr("flags")["C_CONTIGUOUS"].cast<bool>()) {
+    throw std::invalid_argument(
+      "numpy array is non-contiguous - flex arrays must be contiguous");
+  }
+
   auto nd = np_array.ndim();
   // Check our last dimension(s) are either x9 or x3x3
   bool last_is_9 = np_array.shape(nd - 1) == 9;

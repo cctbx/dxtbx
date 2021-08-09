@@ -306,3 +306,16 @@ def test_numpy_loop_nesting():
     fo = flumpy.from_numpy(no)
     no_2 = flumpy.to_numpy(fo)
     assert no_2 is no
+
+
+def test_noncontiguous():
+    npo = np.zeros((10, 4, 3))
+    flumpy.from_numpy(npo)
+    with pytest.raises(ValueError):
+        flumpy.from_numpy(npo[:, 1:])
+
+    with pytest.raises(ValueError):
+        flumpy.vec_from_numpy(npo[:, 1:])
+
+    with pytest.raises(ValueError):
+        flumpy.mat3_from_numpy(npo[:, 1:])
