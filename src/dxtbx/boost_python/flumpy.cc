@@ -48,6 +48,13 @@ using grid = af::versa<T, af::flex_grid<>>;
 // void wrap_flex_std_string(); - differently sized per element
 // void wrap_flex_sym_mat3_double(); - nonlinear memory layout
 
+const std::invalid_argument ERR_NON_CONTIGUOUS{
+  "numpy array is non-c-contiguous - flex arrays must be c-contiguous"};
+
+bool is_array_c_contiguous(py::array array) {
+  return array.attr("flags")["C_CONTIGUOUS"].cast<bool>();
+}
+
 template <typename T>
 py::buffer_info get_buffer_specific(grid<T> flex) {
   // Build the strides for each dimension by iterating over the sub-dimensions
@@ -371,9 +378,8 @@ py::object from_numpy(py::object array) {
   auto np_array = py::array(array);
 
   // Check that this array is contiguous
-  if (!np_array.attr("flags")["C_CONTIGUOUS"].cast<bool>()) {
-    throw std::invalid_argument(
-      "numpy array is non-contiguous - flex arrays must be contiguous");
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
   }
 
   // Now, see if this is a numpy object we created to wrap a flex
@@ -449,12 +455,6 @@ py::object vec_from_numpy(py::array np_array) {
                                 + std::to_string(VecType<int>::fixed_size));
   }
 
-  // Check that this array is contiguous
-  if (!np_array.attr("flags")["C_CONTIGUOUS"].cast<bool>()) {
-    throw std::invalid_argument(
-      "numpy array is non-contiguous - flex arrays must be contiguous");
-  }
-
   auto dtype = np_array.attr("dtype").attr("char").cast<char>();
 
   std::string accepted_types = VecType<int>::fixed_size == 2 ? "dQ" : "di";
@@ -488,10 +488,10 @@ py::object vec_from_numpy(py::array np_array) {
 /// specialization
 py::object vecs_from_numpy(py::array np_array) {
   // Check that this array is contiguous
-  if (!np_array.attr("flags")["C_CONTIGUOUS"].cast<bool>()) {
-    throw std::invalid_argument(
-      "numpy array is non-contiguous - flex arrays must be contiguous");
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
   }
+
   if (np_array.shape(np_array.ndim() - 1) == 3) {
     return vec_from_numpy<scitbx::vec3>(np_array);
   } else if (np_array.shape(np_array.ndim() - 1) == 2) {
@@ -503,9 +503,8 @@ py::object vecs_from_numpy(py::array np_array) {
 
 py::object mat3_from_numpy(py::array np_array) {
   // Check that this array is contiguous
-  if (!np_array.attr("flags")["C_CONTIGUOUS"].cast<bool>()) {
-    throw std::invalid_argument(
-      "numpy array is non-contiguous - flex arrays must be contiguous");
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
   }
 
   auto nd = np_array.ndim();
