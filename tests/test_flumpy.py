@@ -122,6 +122,11 @@ def test_reverse_numeric_2d(flex_numeric):
     fo[0, 1] = 2
     assert npo[0, 1] == 2
 
+    # Test zero-dimensional arrays
+    npo_zero = np.zeros((0, 3))
+    assert list(flumpy.from_numpy(npo_zero).all()) == [0, 3]
+    assert flumpy.from_numpy(npo_zero).size() == 0
+
 
 def test_numeric_4d(flex_numeric):
     #  Check that we can think fourth-dimnesionally
