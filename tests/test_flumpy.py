@@ -311,6 +311,7 @@ def test_numpy_loop_nesting():
 def test_noncontiguous():
     npo = np.zeros((10, 4, 3))
     flumpy.from_numpy(npo)
+
     with pytest.raises(ValueError):
         flumpy.from_numpy(npo[:, 1:])
 
@@ -319,3 +320,15 @@ def test_noncontiguous():
 
     with pytest.raises(ValueError):
         flumpy.mat3_from_numpy(npo[:, 1:])
+
+    # Test fortran order
+    npo_f = np.zeros((10, 4, 3), order="F")
+
+    with pytest.raises(ValueError):
+        flumpy.from_numpy(npo_f)
+
+    with pytest.raises(ValueError):
+        flumpy.vec_from_numpy(npo_f)
+
+    with pytest.raises(ValueError):
+        flumpy.mat3_from_numpy(npo_f)
