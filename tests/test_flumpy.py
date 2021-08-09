@@ -306,3 +306,14 @@ def test_numpy_loop_nesting():
     fo = flumpy.from_numpy(no)
     no_2 = flumpy.to_numpy(fo)
     assert no_2 is no
+
+
+def test_nonowning():
+    f_a = flex.double([0, 1, 2, 3, 4])
+    n_b = flumpy.to_numpy(f_a)
+    f_c = flumpy.from_numpy(n_b[1:])
+    assert f_c[0] == 1
+    f_c[1] = 9
+    assert f_a[2] == 9
+    assert n_b[2] == 9
+    assert f_c[1] == 9
