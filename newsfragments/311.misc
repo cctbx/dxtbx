@@ -1,0 +1,1 @@
+dxtbx.dlsnxs2cbf:  Ensure that input NeXus files are properly closed after use and speed up this tool by removing some redundant code.
