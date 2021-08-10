@@ -337,3 +337,14 @@ def test_noncontiguous():
 
     with pytest.raises(ValueError):
         flumpy.mat3_from_numpy(npo_f)
+
+
+def test_nonowning():
+    f_a = flex.double([0, 1, 2, 3, 4])
+    n_b = flumpy.to_numpy(f_a)
+    f_c = flumpy.from_numpy(n_b[1:])
+    assert f_c[0] == 1
+    f_c[1] = 9
+    assert f_a[2] == 9
+    assert n_b[2] == 9
+    assert f_c[1] == 9
