@@ -377,6 +377,11 @@ py::object from_numpy(py::object array) {
   }
   auto np_array = py::array(array);
 
+  // Check that this array is contiguous
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
+  }
+
   // If this was directly converted from a flex array, give back the original
   // object; In any other case we want to wrap, because of slicing/metadata
   if (np_array.base()) {
@@ -387,11 +392,6 @@ py::object from_numpy(py::object array) {
         return scuffer.base();
       }
     }
-  }
-
-  // Check that this array is contiguous
-  if (!is_array_c_contiguous(np_array)) {
-    throw ERR_NON_CONTIGUOUS;
   }
 
   // Check that we recognise this type
