@@ -1,10 +1,14 @@
+import shutil
+
 import h5py
 import numpy as np
 import procrunner
+import pytest
 
 from dxtbx.command_line.dlsnxs2cbf import parser
 from dxtbx.format.FormatCBFMiniEigerDLS16MSN160 import FormatCBFMiniEigerDLS16MSN160
 from dxtbx.model.experiment_list import ExperimentListFactory
+from dxtbx.util.dlsnxs2cbf import make_cbf
 
 
 def test_dlsnxs2cbf(dials_data, tmp_path):
@@ -36,6 +40,22 @@ def test_dlsnxs2cbf(dials_data, tmp_path):
                 fh["/entry/data/data_000001"][i][sel],
                 imgset.get_raw_data(0)[0].as_numpy_array()[sel],
             )
+
+
+@pytest.mark.parametrize("remove_axis", ["phi", "chi"], ids=["no phi", "no chi"])
+def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
+    """Check that a master file without φ or χ axes processes OK."""
+    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
+    master = "Therm_6_1_master.h5"
+    links = (path.name for path in screen.glob("*") if path.name != master)
+    for name in links:
+        (tmp_path / name).symlink_to(screen / name)
+    shutil.copy(screen / master, tmp_path / master)
+
+    with h5py.File(tmp_path / master, "r+") as f:
+        del f[f"entry/sample/transformations/{remove_axis}"]
+
+    make_cbf(tmp_path / master, template=str(tmp_path / "image_%04d.cbf"))
 
 
 def test_dlsnxs2cbf_help():

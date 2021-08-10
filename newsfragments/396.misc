@@ -1,0 +1,1 @@
+Add Windows build job to Azure CI that runs up to the 'base' installation stage.

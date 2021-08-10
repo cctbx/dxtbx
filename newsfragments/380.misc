@@ -1,0 +1,1 @@
+Reduce dependence on dist_path for tests, and libtbx.env for dispatchers

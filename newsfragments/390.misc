@@ -1,0 +1,1 @@
+Routine update of Azure build scripts to visually separate commit and PR builds, provide a summary step to allow gating of pull requests, and reduce the number of nightly builds.

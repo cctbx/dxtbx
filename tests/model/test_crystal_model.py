@@ -16,7 +16,8 @@ from dxtbx.model import (
     MosaicCrystalKabsch2010,
     MosaicCrystalSauter2014,
 )
-from dxtbx.tests.model.crystal_model_old import crystal_model_old
+
+from .crystal_model_old import crystal_model_old
 
 
 def random_rotation():

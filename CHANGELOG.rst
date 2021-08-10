@@ -1,3 +1,70 @@
+DIALS 3.5.4 (2021-07-27)
+========================
+
+Bugfixes
+--------
+
+- Allow reading of new SACLA hdf5 data (`#408 <https://github.com/cctbx/dxtbx/issues/408>`_)
+
+
+DIALS 3.5.2 (2021-06-28)
+========================
+
+Bugfixes
+--------
+
+- End the I03 "bad mask" duration, since it is now masked at the file level. (`#385 <https://github.com/cctbx/dxtbx/issues/385>`_)
+- ``dxtbx.dlsnxs2cbf``: Handle missing chi/phi axis entries. (`#387 <https://github.com/cctbx/dxtbx/issues/387>`_)
+
+
+DIALS 3.5.1 (2021-06-14)
+========================
+
+Bugfixes
+--------
+
+- Extend duration of bad module mask for Diamond I03 EIGER 2XE 16M detector indefinitely. This will be updated in a future release. (`#370 <https://github.com/cctbx/dxtbx/issues/370>`_)
+- Handle scan data which wraps through 0° instead of >=360° (`#379 <https://github.com/cctbx/dxtbx/issues/379>`_)
+
+
+DIALS 3.5.0 (2021-05-27)
+========================
+
+Features
+--------
+
+- Add ``FormatMRC.py`` for electron diffraction images and image stacks recorded on Thermo Fisher microscopes (`#335 <https://github.com/cctbx/dxtbx/issues/335>`_)
+- Improved support for Gatan DM4 format images and stacks (`#338 <https://github.com/cctbx/dxtbx/issues/338>`_)
+- Improved support for TIA (Emispec) .ser files (`#345 <https://github.com/cctbx/dxtbx/issues/345>`_)
+- Improved support for ``.emi`` sidecar files in ``FormatSER`` (`#354 <https://github.com/cctbx/dxtbx/issues/354>`_)
+- Add support for Python 3.9. (`#365 <https://github.com/cctbx/dxtbx/issues/365>`_)
+
+
+Bugfixes
+--------
+
+- Bug fixes for extended header reading in ``FormatMRC.py`` (`#343 <https://github.com/cctbx/dxtbx/issues/343>`_)
+- ``dxtbx.dlsnxs2cbf``: Fixed on Windows using ``hdf5plugin`` (`#344 <https://github.com/cctbx/dxtbx/issues/344>`_)
+- Mask temporarily bad modules on the Diamond I03 EIGER 2XE 16M detector (`#348 <https://github.com/cctbx/dxtbx/issues/348>`_)
+- Fix rare error during CBF compression (`#352 <https://github.com/cctbx/dxtbx/issues/352>`_)
+- Extend duration of bad module mask for Diamond I03 EIGER 2XE 16M detector (`#355 <https://github.com/cctbx/dxtbx/issues/355>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Remove legacy HDF5 plugin handling. Please update your conda environment if you still have issues. (`#340 <https://github.com/cctbx/dxtbx/issues/340>`_)
+- Remove classes and functions deprecated in the previous release: ``dxtbx.datablock.*Diff``, ``dxtbx.model.experiment_list.SequenceDiff``, ``dxtbx.serialize.load.imageset_from_string``. (`#347 <https://github.com/cctbx/dxtbx/issues/347>`_)
+- Removed unused support for reading experiments from pickle files (`#361 <https://github.com/cctbx/dxtbx/issues/361>`_)
+- Remove the ability to save experiments in pickle format (`#363 <https://github.com/cctbx/dxtbx/issues/363>`_)
+
+
+Misc
+----
+
+- `#334 <https://github.com/cctbx/dxtbx/issues/334>`_, `#337 <https://github.com/cctbx/dxtbx/issues/337>`_, `#342 <https://github.com/cctbx/dxtbx/issues/342>`_, `#346 <https://github.com/cctbx/dxtbx/issues/346>`_, `#350 <https://github.com/cctbx/dxtbx/issues/350>`_, `#351 <https://github.com/cctbx/dxtbx/issues/351>`_, `#353 <https://github.com/cctbx/dxtbx/issues/353>`_, `#357 <https://github.com/cctbx/dxtbx/issues/357>`_, `#360 <https://github.com/cctbx/dxtbx/issues/360>`_, `#364 <https://github.com/cctbx/dxtbx/issues/364>`_
+
+
 DIALS 3.4.1 (2021-03-31)
 ========================
 
@@ -24,7 +91,7 @@ Features
   function now accepts the output array size, and returns the number of
   items read. (`#313 <https://github.com/cctbx/dxtbx/issues/313>`_)
 - Include test for equality of ``PxMmStrategy`` in ``Panel`` equality operator. (`#319 <https://github.com/cctbx/dxtbx/issues/319>`_)
-- Format suport for Eiger 16M XE at Diamond - recognise legacy and updated beamline names. (`#323 <https://github.com/cctbx/dxtbx/issues/323>`_)
+- Format support for Eiger 16M XE at Diamond - recognise legacy and updated beamline names. (`#323 <https://github.com/cctbx/dxtbx/issues/323>`_)
 - The function ``ExperimentList.from_templates`` has been added for construction convenience (`#333 <https://github.com/cctbx/dxtbx/issues/333>`_)
 
 
