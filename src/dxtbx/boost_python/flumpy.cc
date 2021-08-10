@@ -392,7 +392,7 @@ py::object from_numpy(py::object array) {
   }
 
   // Check that we recognise this type
-  std::string known_types = "BHIQLbhilqdDf?";
+  std::string known_types = "BHILQbhilqdDf?";
   auto dtype_obj = np_array.attr("dtype");
   auto dtype = dtype_obj.attr("char").cast<char>();
   if (known_types.find(dtype) == std::string::npos) {
