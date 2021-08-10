@@ -48,6 +48,13 @@ using grid = af::versa<T, af::flex_grid<>>;
 // void wrap_flex_std_string(); - differently sized per element
 // void wrap_flex_sym_mat3_double(); - nonlinear memory layout
 
+const std::invalid_argument ERR_NON_CONTIGUOUS{
+  "numpy array is non-c-contiguous - flex arrays must be c-contiguous"};
+
+bool is_array_c_contiguous(py::array array) {
+  return array.attr("flags")["C_CONTIGUOUS"].cast<bool>();
+}
+
 template <typename T>
 py::buffer_info get_buffer_specific(grid<T> flex) {
   // Build the strides for each dimension by iterating over the sub-dimensions
@@ -382,6 +389,11 @@ py::object from_numpy(py::object array) {
     }
   }
 
+  // Check that this array is contiguous
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
+  }
+
   // Check that we recognise this type
   std::string known_types = "BHIQbhilqdDf?";
   auto dtype = np_array.attr("dtype").attr("char").cast<char>();
@@ -445,6 +457,7 @@ py::object vec_from_numpy(py::array np_array) {
     throw std::invalid_argument("Input array last dimension is not size "
                                 + std::to_string(VecType<int>::fixed_size));
   }
+
   auto dtype = np_array.attr("dtype").attr("char").cast<char>();
 
   std::string accepted_types = VecType<int>::fixed_size == 2 ? "dQ" : "di";
@@ -477,6 +490,11 @@ py::object vec_from_numpy(py::array np_array) {
 /// Decide which sized vector we want to convert to, and hand off to the
 /// specialization
 py::object vecs_from_numpy(py::array np_array) {
+  // Check that this array is contiguous
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
+  }
+
   if (np_array.shape(np_array.ndim() - 1) == 3) {
     return vec_from_numpy<scitbx::vec3>(np_array);
   } else if (np_array.shape(np_array.ndim() - 1) == 2) {
@@ -487,6 +505,11 @@ py::object vecs_from_numpy(py::array np_array) {
 }
 
 py::object mat3_from_numpy(py::array np_array) {
+  // Check that this array is contiguous
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
+  }
+
   auto nd = np_array.ndim();
   // Check our last dimension(s) are either x9 or x3x3
   bool last_is_9 = np_array.shape(nd - 1) == 9;
