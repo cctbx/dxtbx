@@ -377,8 +377,8 @@ py::object from_numpy(py::object array) {
   }
   auto np_array = py::array(array);
 
-  // If this was directly converted from a flex array, give back the original object
-  // in any other case we want to wrap, because of slicing/metadata
+  // If this was directly converted from a flex array, give back the original
+  // object; In any other case we want to wrap, because of slicing/metadata
   if (np_array.base()) {
     if (py::isinstance<py::memoryview>(np_array.base())) {
       if (py::isinstance<Scuffer>(np_array.base().attr("obj"))) {
