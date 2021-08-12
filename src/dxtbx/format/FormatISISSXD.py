@@ -154,6 +154,10 @@ class FormatISISSXD(FormatNXTOFRAW):
         bins = self._get_time_channel_bins()
         return [(bins[i] + bins[i + 1]) * 0.5 * 10 ** -6 for i in range(len(bins) - 1)]
 
+    def _get_time_channels_in_usec(self):
+        bins = self._get_time_channel_bins()
+        return [(bins[i] + bins[i + 1]) * 0.5 for i in range(len(bins) - 1)]
+
     def get_tof_in_seconds(self):
         return self._get_time_channels_in_seconds()
 
@@ -333,6 +337,13 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def get_max_slice_index(self):
         return len(self.get_tof_in_seconds()) - 1
+
+    def get_pixel_spectra(self, panel_idx, x, y):
+        if self.raw_data is None:
+            self.raw_data = self.load_raw_data(as_numpy_arrays=True)
+
+        time_channels = self._get_time_channels_in_usec()
+        return time_channels, self.raw_data[panel_idx][x, y, :]
 
     def get_reflection_table_from_use_file(self, use_file, specific_panel=None):
 
