@@ -846,7 +846,10 @@ class ExperimentListFactory:
                     f"Image file {filenames[0]} appears to be a '{type(format_class).__name__}', but this is an abstract Format"
                 )
             else:
-                index = slice(*template_string_number_index(template))
+                if "#" in template:
+                    index = slice(*template_string_number_index(template))
+                else:  # there is just one file
+                    index = 0
                 image_range = kwargs.get("image_range")
                 if image_range:
                     first, last = image_range
