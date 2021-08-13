@@ -125,6 +125,7 @@ class FormatISISSXD(FormatNXTOFRAW):
         slow_axes = self._get_panel_slow_axes()
         panel_origins = self._get_panel_origins()
         gain = self._get_panel_gain()
+        panel_projections = self._get_panel_projections_2d()
         detector = Detector()
         root = detector.hierarchy()
 
@@ -137,6 +138,10 @@ class FormatISISSXD(FormatNXTOFRAW):
             panel.set_pixel_size(pixel_size)
             panel.set_local_frame(fast_axes[i], slow_axes[i], panel_origins[i])
             panel.set_gain(gain)
+            r, t = panel_projections[i + 1]
+            r = tuple(map(int, r))
+            t = tuple(map(int, t))
+            panel.set_projection_2d(r, t)
 
         return detector
 
@@ -344,6 +349,32 @@ class FormatISISSXD(FormatNXTOFRAW):
 
         time_channels = self._get_time_channels_in_usec()
         return time_channels, self.raw_data[panel_idx][x, y, :]
+
+    def _get_panel_projections_2d(self) -> dict:
+
+        """
+        Returns a projection of the
+        detector flattened around the bottom panel (11), with
+        all panels facing upright.
+
+        """
+
+        p_w, p_h = self._get_panel_size_in_px()
+        panel_pos = {
+            11: ((1, 0, 0, 1), (0, 0)),
+            10: ((1, 0, 0, 1), (-p_h, 0)),
+            8: ((1, 0, 0, 1), (p_h, 0)),
+            7: ((1, 0, 0, 1), (0, -p_w)),
+            9: ((1, 0, 0, 1), (0, p_w)),
+            2: ((1, 0, 0, 1), (0, 2 * -p_w)),
+            5: ((1, 0, 0, 1), (0, 2 * p_w)),
+            3: ((1, 0, 0, 1), (p_h, 2 * -p_w)),
+            4: ((1, 0, 0, 1), (p_h, 2 * p_w)),
+            1: ((1, 0, 0, 1), (-p_h, 2 * -p_w)),
+            6: ((1, 0, 0, 1), (-p_h, 2 * p_w)),
+        }
+
+        return panel_pos
 
     def get_reflection_table_from_use_file(self, use_file, specific_panel=None):
 
