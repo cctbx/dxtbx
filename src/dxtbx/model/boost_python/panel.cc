@@ -76,6 +76,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     panel.rotate_around_origin(axis, angle_rad);
   }
 
+
   template <>
   boost::python::dict to_dict<VirtualPanel>(const VirtualPanel &obj) {
     boost::python::dict result;

@@ -42,7 +42,6 @@ namespace dxtbx { namespace model {
     int2 translation;
   };
 
-
   /**
    * A panel class.
    */
