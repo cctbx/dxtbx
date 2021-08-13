@@ -400,103 +400,6 @@ Crystal:
     mosaic_model2.set_domain_size_ang(1000)
     assert mosaic_model != mosaic_model2  # lgtm
 
-    # Test function change_basis. This should pass all the tests in the parent
-    # class Crystal and should also preserve the mosaicity and domain size.
-    sgi_ref = sgtbx.space_group_info(number=230)
-    model_ref = MosaicCrystalSauter2014(
-        real_space_a=(44, 0, 0),
-        real_space_b=(0, 44, 0),
-        real_space_c=(0, 0, 44),
-        space_group=sgi_ref.group(),
-    )
-    model_ref.set_half_mosaicity_deg(0.1)
-    model_ref.set_domain_size_ang(1000)
-    assert approx_equal(model_ref.get_U(), (1, 0, 0, 0, 1, 0, 0, 0, 1))
-    assert approx_equal(model_ref.get_B(), (1 / 44, 0, 0, 0, 1 / 44, 0, 0, 0, 1 / 44))
-    assert approx_equal(model_ref.get_A(), model_ref.get_B())
-    assert approx_equal(
-        model_ref.get_unit_cell().parameters(), (44, 44, 44, 90, 90, 90)
-    )
-    a_ref, b_ref, c_ref = map(matrix.col, model_ref.get_real_space_vectors())
-    cb_op_to_primitive = sgi_ref.change_of_basis_op_to_primitive_setting()
-    model_primitive = model_ref.change_basis(cb_op_to_primitive)
-    cb_op_to_reference = (
-        model_primitive.get_space_group()
-        .info()
-        .change_of_basis_op_to_reference_setting()
-    )
-    a_prim, b_prim, c_prim = map(matrix.col, model_primitive.get_real_space_vectors())
-    assert (
-        cb_op_to_primitive.as_abc()
-        == "-1/2*a+1/2*b+1/2*c,1/2*a-1/2*b+1/2*c,1/2*a+1/2*b-1/2*c"
-    )
-    assert approx_equal(a_prim, -1 / 2 * a_ref + 1 / 2 * b_ref + 1 / 2 * c_ref)
-    assert approx_equal(b_prim, 1 / 2 * a_ref - 1 / 2 * b_ref + 1 / 2 * c_ref)
-    assert approx_equal(c_prim, 1 / 2 * a_ref + 1 / 2 * b_ref - 1 / 2 * c_ref)
-    assert cb_op_to_reference.as_abc() == "b+c,a+c,a+b"
-    assert approx_equal(a_ref, b_prim + c_prim)
-    assert approx_equal(b_ref, a_prim + c_prim)
-    assert approx_equal(c_ref, a_prim + b_prim)
-    assert approx_equal(
-        model_primitive.get_U(),
-        [
-            -0.5773502691896258,
-            0.40824829046386285,
-            0.7071067811865476,
-            0.5773502691896257,
-            -0.4082482904638631,
-            0.7071067811865476,
-            0.5773502691896257,
-            0.8164965809277259,
-            0.0,
-        ],
-    )
-    assert approx_equal(
-        model_primitive.get_B(),
-        [
-            0.0262431940540739,
-            0.0,
-            0.0,
-            0.00927837023781507,
-            0.02783511071344521,
-            0.0,
-            0.01607060866333063,
-            0.01607060866333063,
-            0.03214121732666125,
-        ],
-    )
-    assert approx_equal(
-        model_primitive.get_A(),
-        (0, 1 / 44, 1 / 44, 1 / 44, 0, 1 / 44, 1 / 44, 1 / 44, 0),
-    )
-    assert approx_equal(
-        model_primitive.get_unit_cell().parameters(),
-        [
-            38.1051177665153,
-            38.1051177665153,
-            38.1051177665153,
-            109.47122063449069,
-            109.47122063449069,
-            109.47122063449069,
-        ],
-    )
-    assert model_ref != model_primitive
-    model_ref_recycled = model_primitive.change_basis(cb_op_to_reference)
-    assert approx_equal(model_ref.get_U(), model_ref_recycled.get_U())
-    assert approx_equal(model_ref.get_B(), model_ref_recycled.get_B())
-    assert approx_equal(model_ref.get_A(), model_ref_recycled.get_A())
-    assert approx_equal(
-        model_ref.get_unit_cell().parameters(),
-        model_ref_recycled.get_unit_cell().parameters(),
-    )
-    assert model_ref == model_ref_recycled
-    assert approx_equal(
-        model_ref.get_half_mosaicity_deg(), model_primitive.get_half_mosaicity_deg()
-    )
-    assert approx_equal(
-        model_ref.get_domain_size_ang(), model_primitive.get_domain_size_ang()
-    )
-
 
 def test_similarity():
     model_1 = MosaicCrystalKabsch2010(
@@ -534,7 +437,6 @@ def test_similarity():
     # unit_cell.is_similar_to is tested elsewhere
 
 
-@pytest.mark.xfail(reason="https://github.com/cctbx/dxtbx/issues/5")
 def test_change_basis_mosaic_crystal():
     mosaic_model = MosaicCrystalSauter2014(
         real_space_a=(10, 0, 0),
