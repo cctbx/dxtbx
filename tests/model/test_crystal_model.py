@@ -491,12 +491,10 @@ Crystal:
     )
     assert model_ref == model_ref_recycled
     assert approx_equal(
-        model_ref.get_half_mosaicity_deg(),
-        model_primitive.get_half_mosaicity_deg()
+        model_ref.get_half_mosaicity_deg(), model_primitive.get_half_mosaicity_deg()
     )
     assert approx_equal(
-        model_ref.get_domain_size_ang(),
-        model_primitive.get_domain_size_ang()
+        model_ref.get_domain_size_ang(), model_primitive.get_domain_size_ang()
     )
 
 
