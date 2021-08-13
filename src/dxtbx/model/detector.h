@@ -112,6 +112,7 @@ namespace dxtbx { namespace model {
 
   }  // namespace detail
 
+
   /**
    * A class representing a multi-panel hierarchical detector.
    *
@@ -130,6 +131,8 @@ namespace dxtbx { namespace model {
      */
     class Node : public Panel {
     public:
+
+
       typedef Node *pointer;
       typedef const Node *const_pointer;
       typedef boost::ptr_vector<Node>::iterator iterator;
@@ -441,12 +444,14 @@ namespace dxtbx { namespace model {
         return false;
       }
 
+
     protected:
       Detector *detector_;
       pointer parent_;
       boost::ptr_vector<Node> children_;
       bool is_panel_;
     };
+
 
     typedef std::pair<int, vec2<double> > coord_type;
     typedef Node::pointer node_pointer;
@@ -767,6 +772,16 @@ namespace dxtbx { namespace model {
     bool has_projection_2d(){
       for (std::size_t i = 0; i < size(); ++i){
         if (!(*this)[i].get_projection_2d()){
+          return false;
+        }
+      }
+      return true;
+    }
+
+
+    bool has_projection_2d(){
+      for (std::size_t i = 0; i < size(); ++i){
+        if (!(*this)[i].has_projection_2d()){
           return false;
         }
       }
