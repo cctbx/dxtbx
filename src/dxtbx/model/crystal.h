@@ -1319,25 +1319,13 @@ namespace dxtbx { namespace model {
 
     boost::shared_ptr<CrystalBase> change_basis(
       cctbx::sgtbx::change_of_basis_op change_of_basis_op) const {
-      // cctbx change of basis matrices and those Giacovazzo are related by
-      // inverse and transpose, i.e. Giacovazzo's "M" is related to the cctbx
-      // cb_op as follows:
-      //   M = cb_op.c_inv().r().transpose()
-      //   M_inverse = cb_op_to_minimum.c().r().transpose()
-
-      // (Giacovazzo calls the direct matrix "A",
-      //  we call the reciprocal matrix "A")
-      // Therefore, from equation 2.19 in Giacovazzo:
-      //   A' = M A
-
-      // and:
-      //   (A')^-1 = (M A)^-1
-      //   (A')^-1 = A^-1 M^-1
+      // See comment in Crystal::change_basis
+      // Override the inherited method so that here we call the correct copy
+      // constructor and set the mosaic parameters.
 
       mat3<double> direct_matrix = get_A().inverse();
       mat3<double> M = change_of_basis_op.c_inv().r().transpose().as_double();
 
-      // equation 2.19 of Giacovazzo
       mat3<double> new_direct_matrix = M * direct_matrix;
       vec3<double> real_space_a(
         new_direct_matrix[0], new_direct_matrix[1], new_direct_matrix[2]);
@@ -1345,8 +1333,6 @@ namespace dxtbx { namespace model {
         new_direct_matrix[3], new_direct_matrix[4], new_direct_matrix[5]);
       vec3<double> real_space_c(
         new_direct_matrix[6], new_direct_matrix[7], new_direct_matrix[8]);
-      // FIXME use a copy constructor. As written, this doesn't copy mosaicity or
-      // parameters from derived classes
       boost::shared_ptr<MosaicCrystalSauter2014> other = boost::shared_ptr<MosaicCrystalSauter2014>(
         new MosaicCrystalSauter2014(real_space_a,
                     real_space_b,
