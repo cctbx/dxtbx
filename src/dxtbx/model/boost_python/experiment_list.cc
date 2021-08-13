@@ -264,6 +264,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("is_consistent", &ExperimentList::is_consistent)
       .def("__len__", &ExperimentList::size)
       .def("contains_tof_experiments", &ExperimentList::contains_tof_experiments)
+      .def("is_single_tof_experiment", &ExperimentList::is_single_tof_experiment)
       .def_pickle(ExperimentListPickleSuite());
    
   }

@@ -561,6 +561,16 @@ namespace dxtbx { namespace model {
       return false;
     }
 
+    /**
+     *  Returns true if experiments are a single ToF experiment
+     */
+    bool is_single_tof_experiment() const{
+      if (size() != 1){
+        return false;
+      }
+      return data_[0].is_tof_experiment();
+    }
+
   protected:
     shared_type data_;
   };
