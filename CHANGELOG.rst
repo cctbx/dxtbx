@@ -1,3 +1,12 @@
+DIALS 3.5.4 (2021-07-27)
+========================
+
+Bugfixes
+--------
+
+- Allow reading of new SACLA hdf5 data (`#408 <https://github.com/cctbx/dxtbx/issues/408>`_)
+
+
 DIALS 3.5.2 (2021-06-28)
 ========================
 

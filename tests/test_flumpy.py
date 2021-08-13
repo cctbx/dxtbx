@@ -122,6 +122,11 @@ def test_reverse_numeric_2d(flex_numeric):
     fo[0, 1] = 2
     assert npo[0, 1] == 2
 
+    # Test zero-dimensional arrays
+    npo_zero = np.zeros((0, 3))
+    assert list(flumpy.from_numpy(npo_zero).all()) == [0, 3]
+    assert flumpy.from_numpy(npo_zero).size() == 0
+
 
 def test_numeric_4d(flex_numeric):
     #  Check that we can think fourth-dimnesionally
@@ -306,3 +311,40 @@ def test_numpy_loop_nesting():
     fo = flumpy.from_numpy(no)
     no_2 = flumpy.to_numpy(fo)
     assert no_2 is no
+
+
+def test_noncontiguous():
+    npo = np.zeros((10, 4, 3))
+    flumpy.from_numpy(npo)
+
+    with pytest.raises(ValueError):
+        flumpy.from_numpy(npo[:, 1:])
+
+    with pytest.raises(ValueError):
+        flumpy.vec_from_numpy(npo[:, 1:])
+
+    with pytest.raises(ValueError):
+        flumpy.mat3_from_numpy(npo[:, 1:])
+
+    # Test fortran order
+    npo_f = np.zeros((10, 4, 3), order="F")
+
+    with pytest.raises(ValueError):
+        flumpy.from_numpy(npo_f)
+
+    with pytest.raises(ValueError):
+        flumpy.vec_from_numpy(npo_f)
+
+    with pytest.raises(ValueError):
+        flumpy.mat3_from_numpy(npo_f)
+
+
+def test_nonowning():
+    f_a = flex.double([0, 1, 2, 3, 4])
+    n_b = flumpy.to_numpy(f_a)
+    f_c = flumpy.from_numpy(n_b[1:])
+    assert f_c[0] == 1
+    f_c[1] = 9
+    assert f_a[2] == 9
+    assert n_b[2] == 9
+    assert f_c[1] == 9

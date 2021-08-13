@@ -1,0 +1,1 @@
+``dxtbx.flumpy``: Don't fail to convert if scitbx hasn't been imported yet
