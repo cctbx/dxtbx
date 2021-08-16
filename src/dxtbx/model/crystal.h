@@ -148,6 +148,7 @@ namespace dxtbx { namespace model {
   public:
     virtual ~CrystalBase() {}
 
+    virtual CrystalBase* clone() const = 0;
     // Set the unit cell parameters
     virtual void set_unit_cell(const vec3<double> &real_space_a,
                                const vec3<double> &real_space_b,
@@ -289,6 +290,11 @@ namespace dxtbx { namespace model {
           cell_volume_sd_(other.cell_volume_sd_),
           recalculated_cell_volume_sd_(other.recalculated_cell_volume_sd_) {
       std::copy(other.cov_B_.begin(), other.cov_B_.end(), cov_B_.begin());
+    }
+
+    virtual Crystal* clone() const override
+    {
+        return new Crystal(*this);
     }
 
     /**
@@ -1133,6 +1139,11 @@ namespace dxtbx { namespace model {
      */
     MosaicCrystalKabsch2010(const Crystal &other) : Crystal(other), mosaicity_(0) {}
 
+    virtual MosaicCrystalKabsch2010* clone() const override
+    {
+        return new MosaicCrystalKabsch2010(*this);
+    }
+
     /**
      * Initialise the crystal
      *
@@ -1269,6 +1280,11 @@ namespace dxtbx { namespace model {
      */
     MosaicCrystalSauter2014(const Crystal &other)
         : Crystal(other), half_mosaicity_deg_(0), domain_size_ang_(0) {}
+
+    virtual MosaicCrystalSauter2014* clone() const override
+    {
+        return new MosaicCrystalSauter2014(*this);
+    }
 
     /**
      * Initialise the crystal
