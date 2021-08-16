@@ -313,3 +313,54 @@ def test_project_2d():
         assert f1 == pytest.approx(f2)
     for s1, s2 in zip(s, new_s):
         assert s1 == pytest.approx(s2)
+
+
+def test_has_projection_2d():
+
+    # Default values given to a panel when a projection_2d is not set
+    empty_rotation = (0, 0, 0, 0)
+    empty_translation = (0, 0)
+
+    # Valid rotation value
+    rotation = (1, 0, 0, 1)
+
+    ## Test single panel detector
+    detector = create_detector(offset=0)
+
+    # Test detector with no projections set explicity has no 2d projection
+    assert detector.has_projection_2d() is False
+
+    # Test detector with all panels set to empty values has no 2d projection
+    for i in detector:
+        i.set_projection_2d(empty_rotation, empty_translation)
+    assert detector.has_projection_2d() is False
+
+    # Test detector with all panels having 2d projections gives a detector
+    # with a 2d projection
+    image_size = detector[0].get_image_size()
+    for i in detector:
+        i.set_projection_2d(rotation, (image_size[0], 0))
+
+    assert detector.has_projection_2d() is True
+
+    ## Test multipanel detector
+    detector = create_multipanel_detector(offset=0)
+
+    # Test detector with no projections set explicity has no 2d projection
+    assert detector.has_projection_2d() is False
+
+    # Test detector with all panels set to empty values has no 2d projection
+    for i in detector:
+        i.set_projection_2d(empty_rotation, empty_translation)
+    assert detector.has_projection_2d() is False
+
+    image_size = detector[0].get_image_size()
+    for i in detector:
+        # Test detector with only some panels with 2d projections gives a
+        # detector without a 2d projection
+        assert detector.has_projection_2d() is False
+        i.set_projection_2d(rotation, (image_size[0], 0))
+
+    # Test detector with all panels having 2d projections gives a detector
+    # with a 2d projection
+    assert detector.has_projection_2d() is True
