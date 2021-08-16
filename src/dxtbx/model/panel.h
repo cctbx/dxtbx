@@ -49,7 +49,8 @@ namespace dxtbx { namespace model {
   class Panel : public PanelData {
   public:
     /** Construct the panel with the simple px->mm strategy */
-    Panel() : gain_(1.0), pedestal_(0.0), convert_coord_(new SimplePxMmStrategy()) {}
+    Panel() : gain_(1.0), pedestal_(0.0), convert_coord_(new SimplePxMmStrategy()), 
+    projection_2d(Projection2D{int4(0, 0, 0, 0), int2(0, 0)}) {}
 
     /** Construct with data but no px/mm strategy */
     Panel(std::string type,
@@ -430,7 +431,7 @@ namespace dxtbx { namespace model {
       return projection_2d;
     }
 
-    bool has_projection_2d(){
+    bool has_projection_2d() const{
       int4 default_rotation = int4(0, 0, 0, 0);
       int2 default_translation = int2(0, 0);
 

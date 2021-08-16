@@ -154,7 +154,9 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["gain"] = obj.get_gain();
     result["pedestal"] = obj.get_pedestal();
     result["px_mm_strategy"] = to_dict(obj.get_px_mm_strategy());
-    result["projection_2d"] = projection_2d_to_tuple(obj);
+    if (obj.has_projection_2d()){
+      result["projection_2d"] = projection_2d_to_tuple(obj);
+    }
     return result;
   }
 
