@@ -1,1 +1,0 @@
-Fix 64-bit integer binding for ``dxtbx.flumpy`` on Windows
