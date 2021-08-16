@@ -611,26 +611,15 @@ namespace dxtbx { namespace model {
       //   (A')^-1 = (M A)^-1
       //   (A')^-1 = A^-1 M^-1
 
-      mat3<double> direct_matrix = get_A().inverse();
-      mat3<double> M = change_of_basis_op.c_inv().r().transpose().as_double();
+      /*mat3<double> M = change_of_basis_op.c_inv().r().transpose().as_double();*/
+      /*mat3<double> M_inv = M.inverse();*/
+      mat3<double> M_inv = change_of_basis_op.c().r().transpose().as_double();
 
-      // equation 2.19 of Giacovazzo
-      mat3<double> new_direct_matrix = M * direct_matrix;
-      vec3<double> real_space_a(
-        new_direct_matrix[0], new_direct_matrix[1], new_direct_matrix[2]);
-      vec3<double> real_space_b(
-        new_direct_matrix[3], new_direct_matrix[4], new_direct_matrix[5]);
-      vec3<double> real_space_c(
-        new_direct_matrix[6], new_direct_matrix[7], new_direct_matrix[8]);
-      // FIXME use a copy constructor. As written, this doesn't copy mosaicity or
-      // parameters from derived classes
-      boost::shared_ptr<Crystal> other = boost::shared_ptr<Crystal>(
-        new Crystal(real_space_a,
-                    real_space_b,
-                    real_space_c,
-                    get_space_group().change_basis(change_of_basis_op)));
+      boost::shared_ptr<CrystalBase> other = boost::shared_ptr<CrystalBase>(
+        this->clone());
+      other->set_space_group(space_group_.change_basis(change_of_basis_op));
+      other->set_A(get_A() * M_inv);
       if (get_num_scan_points() > 0) {
-        mat3<double> M_inv = M.inverse();
         scitbx::af::shared<mat3<double> > new_A_at_scan_points;
         for (std::size_t i = 0; i < get_num_scan_points(); ++i) {
           new_A_at_scan_points.push_back(get_A_at_scan_point(i) * M_inv);
@@ -1333,43 +1322,6 @@ namespace dxtbx { namespace model {
           half_mosaicity_deg_(half_mosaicity_deg),
           domain_size_ang_(domain_size_ang) {}
 
-    boost::shared_ptr<CrystalBase> change_basis(
-      cctbx::sgtbx::change_of_basis_op change_of_basis_op) const {
-      // See comment in Crystal::change_basis
-      // Override the inherited method so that here we call the correct copy
-      // constructor and set the mosaic parameters.
-
-      mat3<double> direct_matrix = get_A().inverse();
-      mat3<double> M = change_of_basis_op.c_inv().r().transpose().as_double();
-
-      mat3<double> new_direct_matrix = M * direct_matrix;
-      vec3<double> real_space_a(
-        new_direct_matrix[0], new_direct_matrix[1], new_direct_matrix[2]);
-      vec3<double> real_space_b(
-        new_direct_matrix[3], new_direct_matrix[4], new_direct_matrix[5]);
-      vec3<double> real_space_c(
-        new_direct_matrix[6], new_direct_matrix[7], new_direct_matrix[8]);
-      boost::shared_ptr<MosaicCrystalSauter2014> other = boost::shared_ptr<MosaicCrystalSauter2014>(
-        new MosaicCrystalSauter2014(real_space_a,
-                    real_space_b,
-                    real_space_c,
-                    get_space_group().change_basis(change_of_basis_op)));
-      if (get_num_scan_points() > 0) {
-        mat3<double> M_inv = M.inverse();
-        scitbx::af::shared<mat3<double> > new_A_at_scan_points;
-        for (std::size_t i = 0; i < get_num_scan_points(); ++i) {
-          new_A_at_scan_points.push_back(get_A_at_scan_point(i) * M_inv);
-        }
-        other->set_A_at_scan_points(new_A_at_scan_points.const_ref());
-      }
-      if (recalculated_unit_cell_) {
-        other->set_recalculated_unit_cell(
-          recalculated_unit_cell_->change_basis(change_of_basis_op));
-      }
-      other->half_mosaicity_deg_ = half_mosaicity_deg_;
-      other->domain_size_ang_ = domain_size_ang_;
-      return other;
-    }
     /**
      * Check if the models are equal
      */
