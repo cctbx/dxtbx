@@ -315,6 +315,32 @@ def test_project_2d():
         assert s1 == pytest.approx(s2)
 
 
+def test_panel_has_projection_2d():
+
+    # Default values given to a panel in panel.h
+    # when a projection_2d is not set
+    empty_rotation = (0, 0, 0, 0)
+    empty_translation = (0, 0)
+
+    detector = create_detector(offset=0)
+    panel = detector[0]
+
+    # Valid projection values
+    valid_rotation = (1, 0, 0, 1)
+    valid_translation = detector[0].get_image_size()
+
+    # Test panel with no projections set explicitly has no 2d projection
+    assert panel.has_projection_2d() is False
+
+    # Test panel with empty 2d projection has no 2d projection
+    panel.set_projection_2d(empty_rotation, empty_translation)
+    assert panel.has_projection_2d() is False
+
+    # Test panel with non-empty 2d projection has 2d projection
+    panel.set_projection_2d(valid_rotation, valid_translation)
+    assert panel.has_projection_2d() is True
+
+
 def test_has_projection_2d():
 
     # Default values given to a panel when a projection_2d is not set
