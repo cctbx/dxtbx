@@ -129,6 +129,11 @@ namespace dxtbx { namespace model { namespace boost_python {
     return result;
   }
 
+  boost::python::tuple projection_2d_to_tuple(const Panel &obj){
+    Projection2D projection = obj.get_projection_2d();
+    return boost::python::make_tuple(projection.rotation, projection.translation);
+  }
+
   template <>
   boost::python::dict to_dict<Panel>(const Panel &obj) {
     boost::python::dict result;
@@ -149,6 +154,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["gain"] = obj.get_gain();
     result["pedestal"] = obj.get_pedestal();
     result["px_mm_strategy"] = to_dict(obj.get_px_mm_strategy());
+    result["projection_2d"] = projection_2d_to_tuple(obj);
     return result;
   }
 
@@ -203,6 +209,11 @@ namespace dxtbx { namespace model { namespace boost_python {
     if (obj.has_key("trusted_range")) {
       result->set_trusted_range(
         boost::python::extract<tiny<double, 2> >(obj["trusted_range"]));
+    }
+    if (obj.has_key("projection_2d")) {
+      int4 rotation = boost::python::extract<int4>(obj["projection_2d"][0]);
+      int2 translation = boost::python::extract<int2>(obj["projection_2d"][1]);
+      result->set_projection_2d(rotation, translation);
     }
     return result;
   }
@@ -527,6 +538,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_trusted_range_mask", &Panel::get_trusted_range_mask<int>)
       .def("get_trusted_range_mask", &Panel::get_trusted_range_mask<double>)
       .def("get_untrusted_rectangle_mask", &Panel::get_untrusted_rectangle_mask)
+      .def("get_projection_2d", projection_2d_to_tuple)
+      .def("set_projection_2d", &Panel::set_projection_2d)
+      .def("has_projection_2d", &Panel::has_projection_2d)
       .def("to_dict", &to_dict<Panel>)
       .def("from_dict", &from_dict<Panel>, return_value_policy<manage_new_object>())
       .def("from_dict",

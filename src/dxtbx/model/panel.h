@@ -31,6 +31,14 @@ namespace dxtbx { namespace model {
   using boost::shared_ptr;
   using scitbx::af::double4;
   using scitbx::af::tiny;
+  using scitbx::af::int4;
+  using scitbx::af::int2;
+
+  struct Projection2D{
+    int4 rotation;
+    int2 translation;
+  };
+
 
   /**
    * A panel class.
@@ -67,7 +75,8 @@ namespace dxtbx { namespace model {
           gain_(1.0),
           pedestal_(0.0),
           convert_coord_(new SimplePxMmStrategy()),
-          identifier_(identifier) {}
+          identifier_(identifier),
+          projection_2d(Projection2D{int4(0, 0, 0, 0), int2(0, 0)}) {}
 
     /** Construct with data with px/mm strategy */
     Panel(std::string type,
@@ -97,7 +106,8 @@ namespace dxtbx { namespace model {
           gain_(1.0),
           pedestal_(0.0),
           convert_coord_(convert_coord),
-          identifier_(identifier) {}
+          identifier_(identifier),
+          projection_2d(Projection2D{int4(0, 0, 0, 0), int2(0, 0)}) {}
 
     virtual ~Panel() {}
 
@@ -408,11 +418,39 @@ namespace dxtbx { namespace model {
       return !(*this == other);
     }
 
+    void set_projection_2d(int4 rotation, int2 translation){
+      projection_2d.rotation = rotation;
+      projection_2d.translation = translation;
+    }
+
+    Projection2D get_projection_2d() const{
+      return projection_2d;
+    }
+
+    bool has_projection_2d(){
+      int4 default_rotation = int4(0, 0, 0, 0);
+      int2 default_translation = int2(0, 0);
+
+      for (std::size_t i = 0; i < 4; ++i){
+        if (projection_2d.rotation[i] != default_rotation[i]){
+          return true;
+        }
+      }
+
+      for (std::size_t i = 0; i < 2; ++i){
+        if (projection_2d.translation[i] != default_translation[i]){
+          return true;
+        }
+      }
+      return false;
+    }
+
   protected:
     double gain_;
     double pedestal_;
     shared_ptr<PxMmStrategy> convert_coord_;
     std::string identifier_;
+    Projection2D projection_2d;
   };
 
   /** Print panel information */

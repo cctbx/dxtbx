@@ -366,6 +366,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("rotate_around_origin",
            &rotate_around_origin,
            (arg("axis"), arg("angle"), arg("deg") = true))
+      .def("has_projection_2d", &Detector::has_projection_2d)
       .def("__str__", &detector_to_string)
       .def("__deepcopy__", &detector_deepcopy)
       .def("__copy__", &detector_deepcopy)
