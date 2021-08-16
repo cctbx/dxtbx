@@ -611,8 +611,6 @@ namespace dxtbx { namespace model {
       //   (A')^-1 = (M A)^-1
       //   (A')^-1 = A^-1 M^-1
 
-      /*mat3<double> M = change_of_basis_op.c_inv().r().transpose().as_double();*/
-      /*mat3<double> M_inv = M.inverse();*/
       mat3<double> M_inv = change_of_basis_op.c().r().transpose().as_double();
 
       boost::shared_ptr<CrystalBase> other = boost::shared_ptr<CrystalBase>(
