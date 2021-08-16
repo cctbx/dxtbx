@@ -52,6 +52,10 @@ class Reader:
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
         return format_instance.get_raw_data(index)
 
+    def get_pixel_spectra(self, panel_idx, x, y):
+        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
+        return format_instance.get_pixel_spectra(panel_idx, x, y)
+
     def paths(self):
         return [self._filename]
 
