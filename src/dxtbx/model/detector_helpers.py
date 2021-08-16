@@ -163,13 +163,13 @@ class detector_helper_sensors:
         ]
 
 
-def set_slow_fast_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
+def set_fast_slow_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
     """detector and beam are dxtbx objects,
-    beam_centre is a tuple of (slow, fast) mm coordinates.
+    beam_centre is a tuple of (fast, slow) mm coordinates.
     supports 2-theta offset detectors, assumes correct centre provided
     for 2-theta=0
     """
-    beam_s, beam_f = beam_centre
+    beam_f, beam_s = beam_centre
 
     # Ensure panel_id is set
     us0 = matrix.col(beam.get_unit_s0())
@@ -272,11 +272,12 @@ def set_slow_fast_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
 
 def set_mosflm_beam_centre(detector, beam, mosflm_beam_centre):
     """detector and beam are dxtbx objects,
-    mosflm_beam_centre is a tuple of mm coordinates.
+    mosflm_beam_centre is a tuple of mm coordinates in order (slow, fast).
     supports 2-theta offset detectors, assumes correct centre provided
     for 2-theta=0
     """
-    return set_slow_fast_beam_centre_mm(detector, beam, mosflm_beam_centre)
+    slow_fast_beam_centre = mosflm_beam_centre[1], mosflm_beam_centre[0]
+    return set_fast_slow_beam_centre_mm(detector, beam, slow_fast_beam_centre)
 
 
 def set_detector_distance(detector, distance):

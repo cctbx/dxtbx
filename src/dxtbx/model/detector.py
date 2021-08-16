@@ -11,8 +11,8 @@ from dxtbx.model.detector_helpers import (
     find_gain_value,
     find_undefined_value,
     set_detector_distance,
+    set_fast_slow_beam_centre_mm,
     set_mosflm_beam_centre,
-    set_slow_fast_beam_centre_mm,
 )
 from dxtbx_model_ext import (
     Detector,
@@ -180,12 +180,19 @@ detector_phil_scope = libtbx.phil.parse(
       .help = "The detector distance (used when mosflm_beam_centre is set)"
       .short_caption = "Detector distance"
 
+    fast_slow_beam_centre = None
+      .type = ints(size_min=2, size_max=3)
+      .help = "Override the beam centre from the image headers."
+              "The first two values are the fast and slow pixel coordinate."
+              "If the third is supplied it specifies a panel number."
+      .short_caption = "Beam centre coordinates (px fast, px slow, [panel id])"
+
     slow_fast_beam_centre = None
       .type = ints(size_min=2, size_max=3)
-      .help = "Override the beam centre from the image headers, following "
-              "the slow/fast pixel convention used by dials.image_viewer."
-              "The first two values are the slow and fast pixel coordinate."
-              "If the third is supplied it specifies a panel number."
+      .help = "Alternative to fast_slow_beam_centre in which the coordinates"
+              "are given in order (px slow, px fast, [panel id]). If"
+              "fast_slow_beam_centre is set it will take priority over any"
+              "values set here."
       .short_caption = "Beam centre coordinates (px slow, px fast, [panel id])"
   }
 """
@@ -438,21 +445,32 @@ class DetectorFactory:
             assert beam is not None
             set_mosflm_beam_centre(detector, beam, params.detector.mosflm_beam_centre)
 
-        # If the slow fast beam centre is set then update
-        if params.detector.slow_fast_beam_centre is not None:
+        fast_slow_beam_centre = None
+        if params.detector.slow_fast_beam_centre:
+            fast_slow_beam_centre = list(params.detector.slow_fast_beam_centre)
+            fast_slow_beam_centre[0], fast_slow_beam_centre[1] = (
+                fast_slow_beam_centre[1],
+                fast_slow_beam_centre[0],
+            )
+
+        if params.detector.fast_slow_beam_centre:
+            fast_slow_beam_centre = params.detector.fast_slow_beam_centre
+
+        # If the fast slow beam centre is set then update
+        if fast_slow_beam_centre is not None:
             panel_id = 0
-            if len(params.detector.slow_fast_beam_centre) > 2:
-                panel_id = params.detector.slow_fast_beam_centre[2]
+            if len(fast_slow_beam_centre) > 2:
+                panel_id = fast_slow_beam_centre[2]
             if panel_id >= len(detector):
                 raise IndexError(f"Detector does not have panel index {panel_id}")
             px_size_f, px_size_s = detector[0].get_pixel_size()
-            slow_fast_beam_centre_mm = (
-                params.detector.slow_fast_beam_centre[0] * px_size_s,
-                params.detector.slow_fast_beam_centre[1] * px_size_f,
+            fast_slow_beam_centre_mm = (
+                fast_slow_beam_centre[0] * px_size_f,
+                fast_slow_beam_centre[1] * px_size_s,
             )
             assert beam is not None
-            set_slow_fast_beam_centre_mm(
-                detector, beam, slow_fast_beam_centre_mm, panel_id=panel_id
+            set_fast_slow_beam_centre_mm(
+                detector, beam, fast_slow_beam_centre_mm, panel_id=panel_id
             )
 
         return detector
