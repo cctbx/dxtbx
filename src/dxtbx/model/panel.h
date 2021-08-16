@@ -34,6 +34,9 @@ namespace dxtbx { namespace model {
   using scitbx::af::int4;
   using scitbx::af::int2;
 
+ /**
+   * Struct to hold information to project a given panel onto a 2D image 
+   */
   struct Projection2D{
     int4 rotation;
     int2 translation;
