@@ -5,7 +5,24 @@ import logging
 import operator
 from collections import namedtuple
 from collections.abc import Mapping
-from functools import cached_property, reduce
+
+try:
+    from functools import cached_property
+except ImportError:
+    # Python 3.7 compatibility
+    # Defined cached_property decorator as a noop
+    import functools
+
+    def cached_property(func):
+        @property
+        @functools.wraps(func)
+        def wrapper_decorator(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper_decorator
+
+
+from functools import reduce
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import h5py
