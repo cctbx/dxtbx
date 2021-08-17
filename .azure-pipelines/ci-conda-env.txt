@@ -17,6 +17,7 @@ conda-forge::matplotlib-base
 conda-forge::mrcfile
 conda-forge::numpy<1.21
 conda-forge::pillow>=5.4.1
+conda-forge::pint
 conda-forge::pip
 conda-forge::procrunner>=2.2.0
 conda-forge::psutil
