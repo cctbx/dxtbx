@@ -183,9 +183,8 @@ def template_string_to_glob_expr(template):
 
 
 def template_string_number_index(template):
-    """Get the number idex of the template."""
-    pfx = template.split("#")[0]
-    return len(pfx), len(pfx) + template.count("#")
+    """Get the index slice ends for `##...#` in the template."""
+    return template.find("#"), template.rfind("#") + 1
 
 
 def locate_files_matching_template_string(template):
@@ -208,8 +207,11 @@ def template_image_range(template):
     index = slice(*template_string_number_index(template))
 
     # Get the first and last indices
-    first = int(filenames[0][index])
-    last = int(filenames[-1][index])
+    if "#" in template:
+        first = int(filenames[0][index])
+        last = int(filenames[-1][index])
+    else:  # template is one file
+        first, last = 0, 0
 
     # Return the image range
     return (first, last)
