@@ -179,12 +179,7 @@ def replace_template_format_with_hash(match):
 
 def template_string_to_glob_expr(template):
     """Convert the template to a glob expression."""
-    if "#" in template:
-        pfx = template.split("#")[0]
-        sfx = template.split("#")[-1]
-        return "%s%s%s" % (pfx, "[0-9]" * template.count("#"), sfx)
-    else:
-        return "%s" % (template)
+    return template.replace("#", "[0-9]")
 
 
 def template_string_number_index(template):
