@@ -846,29 +846,32 @@ class ExperimentListFactory:
                     f"Image file {filenames[0]} appears to be a '{type(format_class).__name__}', but this is an abstract Format"
                 )
             else:
-                if "#" in template:
-                    index = slice(*template_string_number_index(template))
-                else:  # there is just one file
-                    index = 0
+                index = slice(*template_string_number_index(template))
+
                 image_range = kwargs.get("image_range")
                 if image_range:
                     first, last = image_range
                 else:
-                    first = int(filenames[0][index])
-                    last = int(filenames[-1][index])
+                    first, last = template_image_range(template)
 
-                # Check all images in range are present - if allowed
                 if not kwargs.get("allow_incomplete_sequences", False):
-                    all_numbers = {int(f[index]) for f in filenames}
-                    missing = set(range(first, last + 1)) - all_numbers
-                    if missing:
-                        raise ValueError(
-                            "Missing image{} {} from imageset ({}-{})".format(
-                                "s" if len(missing) > 1 else "",
-                                ", ".join(str(x) for x in sorted(missing)),
-                                first,
-                                last,
+                    if "#" in template:
+                        # Check all images in range are present - if allowed
+                        all_numbers = {int(f[index]) for f in filenames}
+                        missing = set(range(first, last + 1)) - all_numbers
+                        if missing:
+                            raise ValueError(
+                                "Missing image{} {} from imageset ({}-{})".format(
+                                    "s" if len(missing) > 1 else "",
+                                    ", ".join(str(x) for x in sorted(missing)),
+                                    first,
+                                    last,
+                                )
                             )
+                    else:
+                        print(
+                            "Using only one template file: %s. \n "
+                            "`allow_incomplete_sequence` has no effect" % template
                         )
 
                 # Read the image
