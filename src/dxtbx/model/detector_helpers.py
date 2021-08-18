@@ -11,6 +11,8 @@ try:
 except ImportError:
     sklearn = None
 
+from xfel.cftbx.detector.metrology import get_projection_matrix
+
 
 def read_xds_xparm(xds_xparm_file):
     """Parse the XDS XPARM file, which contains a description of the detector
@@ -294,7 +296,7 @@ def set_detector_distance(detector, distance):
     detector[0].set_frame(fast_axis, slow_axis, origin)
 
 
-def project_2d(detector):
+def get_detector_projection_2d_axes(detector):
     """
     Project panel origin, fast and slow onto the best-fitting 2D plane.
     """
@@ -401,3 +403,81 @@ def project_2d(detector):
         slow_2d.append((slow.dot(X), slow.dot(Y)))
 
     return origin_2d, fast_2d, slow_2d
+
+
+def get_panel_projection_2d_from_axes(panel, image_data, fast_axis, slow_axis, origin):
+
+    pixel_size = (
+        panel.get_pixel_size()[0] * 1e-3,
+        panel.get_pixel_size()[1] * 1e-3,
+    )
+
+    center = (
+        origin
+        + (image_data.focus()[0] - 1) / 2 * pixel_size[1] * slow_axis
+        + (image_data.focus()[1] - 1) / 2 * pixel_size[0] * fast_axis
+    )
+    normal = slow_axis.cross(fast_axis).normalize()
+
+    # Determine rotational and translational components of the
+    # homogeneous transformation that maps the readout indices to the
+    # three-dimensional laboratory frame.
+    Rf = matrix.sqr(
+        (
+            fast_axis(0, 0),
+            fast_axis(1, 0),
+            fast_axis(2, 0),
+            -slow_axis(0, 0),
+            -slow_axis(1, 0),
+            -slow_axis(2, 0),
+            normal(0, 0),
+            normal(1, 0),
+            normal(2, 0),
+        )
+    )
+    tf = -Rf * center
+    Tf = matrix.sqr(
+        (
+            Rf(0, 0),
+            Rf(0, 1),
+            Rf(0, 2),
+            tf(0, 0),
+            Rf(1, 0),
+            Rf(1, 1),
+            Rf(1, 2),
+            tf(1, 0),
+            Rf(2, 0),
+            Rf(2, 1),
+            Rf(2, 2),
+            tf(2, 0),
+            0,
+            0,
+            0,
+            1,
+        )
+    )
+
+    # E maps picture coordinates onto metric Cartesian coordinates,
+    # i.e. [row, column, 1 ] -> [x, y, z, 1].  Both frames share the
+    # same origin, but the first coordinate of the screen coordinate
+    # system increases downwards, while the second increases towards
+    # the right.  XXX Is this orthographic projection the only one
+    # that makes any sense?
+    E = matrix.rec(
+        elems=[0, +pixel_size[1], 0, -pixel_size[0], 0, 0, 0, 0, 0, 0, 0, 1],
+        n=[4, 3],
+    )
+
+    # P: [x, y, z, 1] -> [row, column, 1].  Note that data.focus()
+    # needs to be flipped to give (horizontal, vertical) size,
+    # i.e. (width, height).
+    Pf = get_projection_matrix(
+        pixel_size, (image_data.focus()[1], image_data.focus()[0])
+    )[0]
+
+    # Last row of T is always [0, 0, 0, 1].
+    T = Pf * Tf * E
+    R = matrix.sqr((T(0, 0), T(0, 1), T(1, 0), T(1, 1)))
+    t = matrix.col((T(0, 2), T(1, 2)))
+
+    return R, t
