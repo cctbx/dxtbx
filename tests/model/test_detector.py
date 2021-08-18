@@ -10,7 +10,11 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.model import Beam, Detector, Panel, ParallaxCorrectedPxMmStrategy
-from dxtbx.model.detector_helpers import project_2d, set_mosflm_beam_centre
+from dxtbx.model.detector_helpers import (
+    get_detector_projection_2d_axes,
+    get_panel_projection_2d_from_axes,
+    set_mosflm_beam_centre,
+)
 
 
 def create_detector(offset):
@@ -280,7 +284,7 @@ def test_panel_equality():
     assert panel == panel2
 
 
-def test_project_2d():
+def test_get_detector_projection_2d_axes():
     # The function project_2d should give the same results even if the
     # detector is rotated in the laboratory frame
 
@@ -288,7 +292,7 @@ def test_project_2d():
     detector = create_multipanel_detector(offset=0)
 
     # Get 2D origin, fast and slow vectors for the detector
-    o, f, s = project_2d(detector)
+    o, f, s = get_detector_projection_2d_axes(detector)
 
     # Now rotate the detector by 30 degrees around an arbitrary axis
     h = detector.hierarchy()
@@ -305,7 +309,7 @@ def test_project_2d():
         panel.set_frame(rot * fast, rot * slow, rot * origin)
 
     # Get 2D origin, fast and slow vectors for the rotated detector
-    new_o, new_f, new_s = project_2d(detector)
+    new_o, new_f, new_s = get_detector_projection_2d_axes(detector)
 
     for o1, o2 in zip(o, new_o):
         assert o1 == pytest.approx(o2)
@@ -313,6 +317,53 @@ def test_project_2d():
         assert f1 == pytest.approx(f2)
     for s1, s2 in zip(s, new_s):
         assert s1 == pytest.approx(s2)
+
+
+def test_get_panel_projection_2d_from_axes(dials_data):
+
+    from os.path import join
+
+    from dxtbx.model.experiment_list import ExperimentListFactory
+
+    # Get test data
+    pytest.importorskip("h5py")
+    filename = join(
+        dials_data("image_examples"),
+        "SACLA-MPCCD-run266702-0-subset.h5",
+    )
+    experiment = ExperimentListFactory.from_filenames([filename])[0]
+    detector = experiment.detector
+
+    # Get 2d axes
+    origins, fast_axes, slow_axes = get_detector_projection_2d_axes(detector)
+
+    # Get panel 0 data
+    panel = detector[0]
+    image_data = experiment.imageset.get_raw_data(0)[0]
+    fast_axis = matrix.col(fast_axes[0] + (0,))
+    slow_axis = matrix.col(slow_axes[0] + (0,))
+    origin = matrix.col(origins[0] + (0,)) * 1e-3
+
+    # Get 2d projection
+    rotation, translation = get_panel_projection_2d_from_axes(
+        panel, image_data, fast_axis, slow_axis, origin
+    )
+
+    expected_rotation = (
+        -0.0013271608580780825,
+        -0.9999991193216408,
+        0.9999991193216408,
+        -0.0013271608580780825,
+    )
+    expected_translation = (-36.3082159438444, 1033.1228618253663)
+
+    assert len(rotation) == len(expected_rotation)
+    for i, expected_val in enumerate(expected_rotation):
+        assert expected_val == pytest.approx(rotation[i])
+
+    assert len(translation) == len(expected_translation)
+    for i, expected_val in enumerate(expected_translation):
+        assert expected_val == pytest.approx(translation[i])
 
 
 def test_panel_has_projection_2d():
