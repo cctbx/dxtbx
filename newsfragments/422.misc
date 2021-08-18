@@ -1,1 +1,2 @@
 2D projection getters/setters added to Panel.
+Panel 2D projection using axes moved from DIALS to detector_helpers.py and made consistent with panel.get_2d_projection.
