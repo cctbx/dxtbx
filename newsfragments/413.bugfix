@@ -1,1 +1,0 @@
-Handle installing dxtbx as a "real" package when the ``conda_base/`` is read-only
