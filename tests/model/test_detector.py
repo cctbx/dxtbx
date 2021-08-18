@@ -285,7 +285,7 @@ def test_panel_equality():
 
 
 def test_get_detector_projection_2d_axes():
-    # The function project_2d should give the same results even if the
+    # The function get_detector_projection_2d_axes should give the same results even if the
     # detector is rotated in the laboratory frame
 
     # Use a multipanel detector
