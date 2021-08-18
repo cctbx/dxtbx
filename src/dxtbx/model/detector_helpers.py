@@ -297,8 +297,14 @@ def set_detector_distance(detector, distance):
 
 
 def get_detector_projection_2d_axes(detector):
-    """
-    Project panel origin, fast and slow onto the best-fitting 2D plane.
+
+    """Project panel origins, fast and slow axes onto the best-fitting 2D plane.
+
+    :param detector: detector used to generate axes
+    :type detector: Detector
+
+    :return: 2D origin, fast, and slow vectors for each panel
+    :rtype: list(tuple(float, float)), list(tuple(float, float)), list(tuple(float, float))
     """
 
     # Extract panel vertices
@@ -405,7 +411,27 @@ def get_detector_projection_2d_axes(detector):
     return origin_2d, fast_2d, slow_2d
 
 
-def get_panel_projection_2d_from_axes(panel, image_data, fast_axis, slow_axis, origin):
+def get_panel_projection_2d_from_axes(
+    panel, image_data, fast_axis_2d, slow_axis_2d, origin_2d
+):
+
+    """Gets translation and rotation required to project image_data from panel,
+    based on axes given.
+
+    :param panel: panel where image_data is from
+    :type panel: Panel
+    :param image_data: image from panel as a flex array
+    :type image_data: scitbx flex array
+    :param fast_axis_2d: 2D fast axis of panel
+    :type fast_axis_2d: scitbx matrix col
+    :param slow_axis_2d: 2D slow axis of panel
+    :type slow_axis_2d: scitbx matrix col
+    :param origin_2d: 2D origin of panel
+    :type origin_2d: scitbx matrix col
+
+    :return: rotation, translation
+    :rtype: tuple(float, float, float, float), tuple(float, float)
+    """
 
     pixel_size = (
         panel.get_pixel_size()[0] * 1e-3,
@@ -413,23 +439,23 @@ def get_panel_projection_2d_from_axes(panel, image_data, fast_axis, slow_axis, o
     )
 
     center = (
-        origin
-        + (image_data.focus()[0] - 1) / 2 * pixel_size[1] * slow_axis
-        + (image_data.focus()[1] - 1) / 2 * pixel_size[0] * fast_axis
+        origin_2d
+        + (image_data.focus()[0] - 1) / 2 * pixel_size[1] * slow_axis_2d
+        + (image_data.focus()[1] - 1) / 2 * pixel_size[0] * fast_axis_2d
     )
-    normal = slow_axis.cross(fast_axis).normalize()
+    normal = slow_axis_2d.cross(fast_axis_2d).normalize()
 
     # Determine rotational and translational components of the
     # homogeneous transformation that maps the readout indices to the
     # three-dimensional laboratory frame.
     Rf = matrix.sqr(
         (
-            fast_axis(0, 0),
-            fast_axis(1, 0),
-            fast_axis(2, 0),
-            -slow_axis(0, 0),
-            -slow_axis(1, 0),
-            -slow_axis(2, 0),
+            fast_axis_2d(0, 0),
+            fast_axis_2d(1, 0),
+            fast_axis_2d(2, 0),
+            -slow_axis_2d(0, 0),
+            -slow_axis_2d(1, 0),
+            -slow_axis_2d(2, 0),
             normal(0, 0),
             normal(1, 0),
             normal(2, 0),
@@ -480,4 +506,4 @@ def get_panel_projection_2d_from_axes(panel, image_data, fast_axis, slow_axis, o
     R = matrix.sqr((T(0, 0), T(0, 1), T(1, 0), T(1, 1)))
     t = matrix.col((T(0, 2), T(1, 2)))
 
-    return R, t
+    return tuple(R), tuple(t)
