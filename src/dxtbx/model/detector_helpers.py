@@ -17,6 +17,9 @@ try:
 except ImportError:
     sklearn = None
 
+Float2 = Tuple[float, float]
+Float4 = Tuple[float, float, float, float]
+
 
 def read_xds_xparm(xds_xparm_file):
     """Parse the XDS XPARM file, which contains a description of the detector
@@ -300,12 +303,9 @@ def set_detector_distance(detector, distance):
     detector[0].set_frame(fast_axis, slow_axis, origin)
 
 
-Coord2D = Tuple[float, float]
-
-
 def get_detector_projection_2d_axes(
     detector: Detector,
-) -> Tuple[Coord2D, Coord2D, Coord2D]:
+) -> Tuple[Float2, Float2, Float2]:
 
     """
     Project panel origins, fast and slow axes onto the best-fitting 2D plane.
@@ -413,10 +413,6 @@ def get_detector_projection_2d_axes(
         slow_2d.append((slow.dot(X), slow.dot(Y)))
 
     return origin_2d, fast_2d, slow_2d
-
-
-Float2 = Tuple[float, float]
-Float4 = Tuple[float, float, float, float]
 
 
 def get_panel_projection_2d_from_axes(
