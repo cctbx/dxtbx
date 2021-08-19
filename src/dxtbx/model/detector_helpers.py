@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import itertools
 import math
 from operator import itemgetter
+from typing import TYPE_CHECKING, Tuple
 
 import numpy as np
 
 from scitbx import matrix
+
+if TYPE_CHECKING:
+    from dxtbx.model import Detector, Panel
 
 try:
     import sklearn.cluster
@@ -294,15 +300,10 @@ def set_detector_distance(detector, distance):
     detector[0].set_frame(fast_axis, slow_axis, origin)
 
 
-def get_detector_projection_2d_axes(detector):
+def get_detector_projection_2d_axes(detector: Detector) -> Tuple[Tuple, Tuple, Tuple]:
 
-    """Project panel origins, fast and slow axes onto the best-fitting 2D plane.
-
-    :param detector: detector used to generate axes
-    :type detector: Detector
-
-    :return: 2D origin, fast, and slow vectors for each panel
-    :rtype: list(tuple(float, float)), list(tuple(float, float)), list(tuple(float, float))
+    """
+    Project panel origins, fast and slow axes onto the best-fitting 2D plane.
     """
 
     # Extract panel vertices
@@ -410,25 +411,16 @@ def get_detector_projection_2d_axes(detector):
 
 
 def get_panel_projection_2d_from_axes(
-    panel, image_data, fast_axis_2d, slow_axis_2d, origin_2d
-):
+    panel: Panel,
+    image_data: matrix,
+    fast_axis_2d: matrix.col,
+    slow_axis_2d: matrix.col,
+    origin_2d: matrix.col,
+) -> Tuple[Tuple, Tuple]:
 
-    """Gets translation and rotation required to project image_data from panel,
+    """
+    Gets translation and rotation required to project image_data from panel,
     based on axes given.
-
-    :param panel: panel where image_data is from
-    :type panel: Panel
-    :param image_data: image from panel as a flex array
-    :type image_data: scitbx flex array
-    :param fast_axis_2d: 2D fast axis of panel
-    :type fast_axis_2d: scitbx matrix col
-    :param slow_axis_2d: 2D slow axis of panel
-    :type slow_axis_2d: scitbx matrix col
-    :param origin_2d: 2D origin of panel
-    :type origin_2d: scitbx matrix col
-
-    :return: rotation, translation
-    :rtype: tuple(float, float, float, float), tuple(float, float)
     """
 
     pixel_size = (
