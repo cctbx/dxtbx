@@ -11,8 +11,6 @@ try:
 except ImportError:
     sklearn = None
 
-from xfel.cftbx.detector.metrology import get_projection_matrix
-
 
 def read_xds_xparm(xds_xparm_file):
     """Parse the XDS XPARM file, which contains a description of the detector
@@ -497,9 +495,24 @@ def get_panel_projection_2d_from_axes(
     # P: [x, y, z, 1] -> [row, column, 1].  Note that data.focus()
     # needs to be flipped to give (horizontal, vertical) size,
     # i.e. (width, height).
-    Pf = get_projection_matrix(
-        pixel_size, (image_data.focus()[1], image_data.focus()[0])
-    )[0]
+    dim_readout = (image_data.focus()[1], image_data.focus()[0])
+    Pf = matrix.rec(
+        elems=(
+            0,
+            -1 / pixel_size[1],
+            0,
+            (dim_readout[1] - 1) / 2,
+            +1 / pixel_size[0],
+            0,
+            0,
+            (dim_readout[0] - 1) / 2,
+            0,
+            0,
+            0,
+            1,
+        ),
+        n=(3, 4),
+    )
 
     # Last row of T is always [0, 0, 0, 1].
     T = Pf * Tf * E
