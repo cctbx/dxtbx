@@ -15,6 +15,7 @@ from dxtbx.model.detector_helpers import (
     get_panel_projection_2d_from_axes,
     set_mosflm_beam_centre,
 )
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def create_detector(offset):
@@ -321,15 +322,10 @@ def test_get_detector_projection_2d_axes():
 
 def test_get_panel_projection_2d_from_axes(dials_data):
 
-    from os.path import join
-
-    from dxtbx.model.experiment_list import ExperimentListFactory
-
     # Get test data
     pytest.importorskip("h5py")
-    filename = join(
-        dials_data("image_examples"),
-        "SACLA-MPCCD-run266702-0-subset.h5",
+    filename = (
+        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
     )
     experiment = ExperimentListFactory.from_filenames([filename])[0]
     detector = experiment.detector
@@ -366,12 +362,7 @@ def test_get_panel_projection_2d_from_axes(dials_data):
         assert expected_val == pytest.approx(translation[i])
 
 
-def test_panel_has_projection_2d():
-
-    # Default values given to a panel in panel.h
-    # when a projection_2d is not set
-    empty_rotation = (0, 0, 0, 0)
-    empty_translation = (0, 0)
+def test_panel_get_projection_2d():
 
     detector = create_detector(offset=0)
     panel = detector[0]
@@ -381,22 +372,19 @@ def test_panel_has_projection_2d():
     valid_translation = detector[0].get_image_size()
 
     # Test panel with no projections set explicitly has no 2d projection
-    assert panel.has_projection_2d() is False
-
-    # Test panel with empty 2d projection has no 2d projection
-    panel.set_projection_2d(empty_rotation, empty_translation)
-    assert panel.has_projection_2d() is False
+    assert panel.get_projection_2d() is None
 
     # Test panel with non-empty 2d projection has 2d projection
     panel.set_projection_2d(valid_rotation, valid_translation)
-    assert panel.has_projection_2d() is True
+    assert panel.get_projection_2d() is not None
+
+    # Test values are set correctly
+    rotation, translation = panel.get_projection_2d()
+    assert rotation == valid_rotation
+    assert translation == valid_translation
 
 
-def test_has_projection_2d():
-
-    # Default values given to a panel when a projection_2d is not set
-    empty_rotation = (0, 0, 0, 0)
-    empty_translation = (0, 0)
+def test_detector_has_projection_2d():
 
     # Valid rotation value
     rotation = (1, 0, 0, 1)
@@ -405,12 +393,7 @@ def test_has_projection_2d():
     detector = create_detector(offset=0)
 
     # Test detector with no projections set explicity has no 2d projection
-    assert detector.has_projection_2d() is False
-
-    # Test detector with all panels set to empty values has no 2d projection
-    for i in detector:
-        i.set_projection_2d(empty_rotation, empty_translation)
-    assert detector.has_projection_2d() is False
+    assert not detector.has_projection_2d()
 
     # Test detector with all panels having 2d projections gives a detector
     # with a 2d projection
@@ -418,26 +401,21 @@ def test_has_projection_2d():
     for i in detector:
         i.set_projection_2d(rotation, (image_size[0], 0))
 
-    assert detector.has_projection_2d() is True
+    assert detector.has_projection_2d()
 
     ## Test multipanel detector
     detector = create_multipanel_detector(offset=0)
 
     # Test detector with no projections set explicity has no 2d projection
-    assert detector.has_projection_2d() is False
-
-    # Test detector with all panels set to empty values has no 2d projection
-    for i in detector:
-        i.set_projection_2d(empty_rotation, empty_translation)
-    assert detector.has_projection_2d() is False
+    assert not detector.has_projection_2d()
 
     image_size = detector[0].get_image_size()
     for i in detector:
         # Test detector with only some panels with 2d projections gives a
         # detector without a 2d projection
-        assert detector.has_projection_2d() is False
+        assert not detector.has_projection_2d()
         i.set_projection_2d(rotation, (image_size[0], 0))
 
     # Test detector with all panels having 2d projections gives a detector
     # with a 2d projection
-    assert detector.has_projection_2d() is True
+    assert detector.has_projection_2d()
