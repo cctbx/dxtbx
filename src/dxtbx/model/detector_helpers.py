@@ -300,7 +300,12 @@ def set_detector_distance(detector, distance):
     detector[0].set_frame(fast_axis, slow_axis, origin)
 
 
-def get_detector_projection_2d_axes(detector: Detector) -> Tuple[Tuple, Tuple, Tuple]:
+Coord2D = Tuple[float, float]
+
+
+def get_detector_projection_2d_axes(
+    detector: Detector,
+) -> Tuple[Coord2D, Coord2D, Coord2D]:
 
     """
     Project panel origins, fast and slow axes onto the best-fitting 2D plane.
@@ -410,13 +415,17 @@ def get_detector_projection_2d_axes(detector: Detector) -> Tuple[Tuple, Tuple, T
     return origin_2d, fast_2d, slow_2d
 
 
+Float2 = Tuple[float, float]
+Float4 = Tuple[float, float, float, float]
+
+
 def get_panel_projection_2d_from_axes(
     panel: Panel,
     image_data: matrix,
     fast_axis_2d: matrix.col,
     slow_axis_2d: matrix.col,
     origin_2d: matrix.col,
-) -> Tuple[Tuple, Tuple]:
+) -> Tuple[Float2, Float4]:
 
     """
     Gets translation and rotation required to project image_data from panel,
