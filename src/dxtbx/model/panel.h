@@ -50,7 +50,7 @@ namespace dxtbx { namespace model {
   public:
     /** Construct the panel with the simple px->mm strategy */
     Panel() : gain_(1.0), pedestal_(0.0), convert_coord_(new SimplePxMmStrategy()), 
-    projection_2d(Projection2D{int4(0, 0, 0, 0), int2(0, 0)}) {}
+    projection_2d_(boost::none) {}
 
     /** Construct with data but no px/mm strategy */
     Panel(std::string type,
@@ -80,7 +80,7 @@ namespace dxtbx { namespace model {
           pedestal_(0.0),
           convert_coord_(new SimplePxMmStrategy()),
           identifier_(identifier),
-          projection_2d(Projection2D{int4(0, 0, 0, 0), int2(0, 0)}) {}
+          projection_2d_(boost::none) {}
 
     /** Construct with data with px/mm strategy */
     Panel(std::string type,
@@ -111,7 +111,7 @@ namespace dxtbx { namespace model {
           pedestal_(0.0),
           convert_coord_(convert_coord),
           identifier_(identifier),
-          projection_2d(Projection2D{int4(0, 0, 0, 0), int2(0, 0)}) {}
+          projection_2d_(boost::none) {}
 
     virtual ~Panel() {}
 
@@ -422,31 +422,12 @@ namespace dxtbx { namespace model {
       return !(*this == other);
     }
 
-    void set_projection_2d(int4 rotation, int2 translation){
-      projection_2d.rotation = rotation;
-      projection_2d.translation = translation;
+    void set_projection_2d(const Projection2D &projection_2d){
+      projection_2d_ = projection_2d;
     }
 
-    Projection2D get_projection_2d() const{
-      return projection_2d;
-    }
-
-    bool has_projection_2d() const{
-      int4 default_rotation = int4(0, 0, 0, 0);
-      int2 default_translation = int2(0, 0);
-
-      for (std::size_t i = 0; i < 4; ++i){
-        if (projection_2d.rotation[i] != default_rotation[i]){
-          return true;
-        }
-      }
-
-      for (std::size_t i = 0; i < 2; ++i){
-        if (projection_2d.translation[i] != default_translation[i]){
-          return true;
-        }
-      }
-      return false;
+    boost::optional<Projection2D> get_projection_2d() const{
+      return projection_2d_;
     }
 
   protected:
@@ -454,7 +435,7 @@ namespace dxtbx { namespace model {
     double pedestal_;
     shared_ptr<PxMmStrategy> convert_coord_;
     std::string identifier_;
-    Projection2D projection_2d;
+    boost::optional<Projection2D> projection_2d_;
   };
 
   /** Print panel information */

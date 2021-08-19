@@ -129,9 +129,20 @@ namespace dxtbx { namespace model { namespace boost_python {
     return result;
   }
 
+  void set_projection_2d(Panel &obj, int4 rotation, int2 translation){
+    const Projection2D projection_2d = Projection2D{rotation, translation};
+    obj.set_projection_2d(projection_2d);
+  }
+
   boost::python::tuple projection_2d_to_tuple(const Panel &obj){
-    Projection2D projection = obj.get_projection_2d();
-    return boost::python::make_tuple(projection.rotation, projection.translation);
+    boost::optional<Projection2D> panel_projection = obj.get_projection_2d();
+    if (panel_projection){
+      Projection2D projection = static_cast<Projection2D>(*panel_projection);
+      return boost::python::make_tuple(projection.rotation, projection.translation);
+    }
+    else{
+      return boost::python::make_tuple();
+    }
   }
 
   template <>
@@ -154,7 +165,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["gain"] = obj.get_gain();
     result["pedestal"] = obj.get_pedestal();
     result["px_mm_strategy"] = to_dict(obj.get_px_mm_strategy());
-    if (obj.has_projection_2d()){
+    if (obj.get_projection_2d()){
       result["projection_2d"] = projection_2d_to_tuple(obj);
     }
     return result;
@@ -215,7 +226,8 @@ namespace dxtbx { namespace model { namespace boost_python {
     if (obj.has_key("projection_2d")) {
       int4 rotation = boost::python::extract<int4>(obj["projection_2d"][0]);
       int2 translation = boost::python::extract<int2>(obj["projection_2d"][1]);
-      result->set_projection_2d(rotation, translation);
+      const Projection2D projection_2d = Projection2D{rotation, translation};
+      result->set_projection_2d(projection_2d);
     }
     return result;
   }
@@ -541,8 +553,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_trusted_range_mask", &Panel::get_trusted_range_mask<double>)
       .def("get_untrusted_rectangle_mask", &Panel::get_untrusted_rectangle_mask)
       .def("get_projection_2d", projection_2d_to_tuple)
-      .def("set_projection_2d", &Panel::set_projection_2d)
-      .def("has_projection_2d", &Panel::has_projection_2d)
+      .def("set_projection_2d", set_projection_2d)
       .def("to_dict", &to_dict<Panel>)
       .def("from_dict", &from_dict<Panel>, return_value_policy<manage_new_object>())
       .def("from_dict",
