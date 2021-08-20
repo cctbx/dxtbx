@@ -37,7 +37,7 @@ def get_dxtbx_goniometer(nxsample: nxmx.NXsample) -> Optional[dxtbx.model.Goniom
     if not nxsample.depends_on:
         return None
     dependency_chain = nxmx.get_dependency_chain(nxsample.depends_on)
-    logging.debug("Sample dependency chain: %s", dependency_chain)
+    logger.debug("Sample dependency chain: %s", dependency_chain)
     axes = nxmx.get_rotation_axes(dependency_chain)
     if len(axes.axes) == 1:
         return dxtbx.model.GoniometerFactory.make_goniometer(
@@ -76,7 +76,7 @@ def get_dxtbx_scan(
     if not nxsample.depends_on:
         return None
     dependency_chain = nxmx.get_dependency_chain(nxsample.depends_on)
-    logging.debug("Sample dependency chain: %s", dependency_chain)
+    logger.debug("Sample dependency chain: %s", dependency_chain)
     scan_axis = None
     for t in dependency_chain:
         # Find the first varying rotation axis
