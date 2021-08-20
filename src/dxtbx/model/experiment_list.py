@@ -537,7 +537,7 @@ class ExperimentListFactory:
         to_process = _openingpathiterator(filenames)
         find_format = dxtbx.datablock.FormatChecker()
 
-        format_groups = collections.OrderedDict()
+        format_groups = collections.defaultdict(list)
         if format_kwargs is None:
             format_kwargs = {}
         for filename in to_process:
@@ -562,7 +562,7 @@ class ExperimentListFactory:
                 imageset = format_class.get_imageset(
                     os.path.abspath(filename), format_kwargs=format_kwargs
                 )
-                format_groups.setdefault(format_class, []).append(imageset)
+                format_groups[format_class].append(imageset)
                 logger.debug("Loaded file: %s", filename)
             else:
                 format_object = format_class(filename, **format_kwargs)
@@ -570,7 +570,7 @@ class ExperimentListFactory:
                 assert meta.filename == filename
 
                 # Add this entry to our table of formats
-                format_groups.setdefault(format_class, []).append(meta)
+                format_groups[format_class].append(meta)
                 logger.debug("Loaded metadata of file: %s", filename)
 
         # Now, build experiments from these files. Duplicating the logic of
