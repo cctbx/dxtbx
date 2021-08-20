@@ -1,4 +1,3 @@
-import collections
 import os
 import pickle
 
@@ -34,17 +33,15 @@ def basic_imageset_to_dict(imageset):
 
     """
 
-    return collections.OrderedDict(
-        [
-            ("__id__", "imageset"),
-            ("filenames", filename_to_absolute(imageset.paths())),
-            ("mask", filename_or_none(imageset.external_lookup.mask.filename)),
-            ("gain", filename_or_none(imageset.external_lookup.gain.filename)),
-            ("pedestal", filename_or_none(imageset.external_lookup.pedestal.filename)),
-            ("beam", imageset.get_beam(0).to_dict()),
-            ("detector", imageset.get_detector(0).to_dict()),
-        ]
-    )
+    return {
+        "__id__": "imageset",
+        "filenames": filename_to_absolute(imageset.paths()),
+        "mask": filename_or_none(imageset.external_lookup.mask.filename),
+        "gain": filename_or_none(imageset.external_lookup.gain.filename),
+        "pedestal": filename_or_none(imageset.external_lookup.pedestal.filename),
+        "beam": imageset.get_beam(0).to_dict(),
+        "detector": imageset.get_detector(0).to_dict(),
+    }
 
 
 def imagesequence_to_dict(sequence):
@@ -58,19 +55,17 @@ def imagesequence_to_dict(sequence):
 
     """
 
-    return collections.OrderedDict(
-        [
-            ("__id__", "imageset"),
-            ("template", filename_to_absolute(sequence.get_template())),
-            ("mask", filename_or_none(sequence.external_lookup.mask.filename)),
-            ("gain", filename_or_none(sequence.external_lookup.gain.filename)),
-            ("pedestal", filename_or_none(sequence.external_lookup.pedestal.filename)),
-            ("beam", sequence.get_beam().to_dict()),
-            ("detector", sequence.get_detector().to_dict()),
-            ("goniometer", sequence.get_goniometer().to_dict()),
-            ("scan", sequence.get_scan().to_dict()),
-        ]
-    )
+    return {
+        "__id__": "imageset",
+        "template": filename_to_absolute(sequence.get_template()),
+        "mask": filename_or_none(sequence.external_lookup.mask.filename),
+        "gain": filename_or_none(sequence.external_lookup.gain.filename),
+        "pedestal": filename_or_none(sequence.external_lookup.pedestal.filename),
+        "beam": sequence.get_beam().to_dict(),
+        "detector": sequence.get_detector().to_dict(),
+        "goniometer": sequence.get_goniometer().to_dict(),
+        "scan": sequence.get_scan().to_dict(),
+    }
 
 
 def imageset_to_dict(imageset):
