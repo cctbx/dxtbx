@@ -372,11 +372,11 @@ def test_panel_get_projection_2d():
     valid_translation = detector[0].get_image_size()
 
     # Test panel with no projections set explicitly has no 2d projection
-    assert panel.get_projection_2d() is None
+    assert not panel.get_projection_2d()
 
     # Test panel with non-empty 2d projection has 2d projection
     panel.set_projection_2d(valid_rotation, valid_translation)
-    assert panel.get_projection_2d() is not None
+    assert panel.get_projection_2d()
 
     # Test values are set correctly
     rotation, translation = panel.get_projection_2d()
