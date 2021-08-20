@@ -1,1 +1,0 @@
-The previously deprecated ``ExperimentListTemplateImporter`` has been removed. Please use ``ExperimentList.from_templates`` instead.

@@ -289,7 +289,8 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             if (
                 evttime.tm_year == 2020 and evttime.tm_mon >= 7
             ) or evttime.tm_year > 2020:
-                self._beam_cache.set_polarization_normal((1, 0, 0))
+                if self._beam_cache is not None:
+                    self._beam_cache.set_polarization_normal((1, 0, 0))
 
         return self._beam_cache
 

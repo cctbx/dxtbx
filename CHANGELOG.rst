@@ -1,3 +1,52 @@
+DIALS 3.6.0 (2021-08-16)
+========================
+
+Features
+--------
+
+- Add **experimental** ``dxtbx.flumpy.to_numpy``, ``.from_numpy``, ``.vec_from_numpy`` and
+  ``.mat3_from_numpy`` for zero-copy conversions between numpy and `scitbx.array_family.flex``
+  arrays. There is also a lower-level class ``Scuffer`` that allows exposing of flex arrays via
+  generic python buffer interfaces for e.g. Cython interoperability. (`#377 <https://github.com/cctbx/dxtbx/issues/377>`_)
+- ``ExperimentListFactory.from_filenames(...)``, ``Format.get_imageset(...)``, and
+  ``ImageSetFactory.new(...)`` now accept objects implementing the Python file system path protocol
+  (PEP-519). (`#386 <https://github.com/cctbx/dxtbx/issues/386>`_)
+
+
+Bugfixes
+--------
+
+- Fix support of older FormatSMVADSCSN442 images (`#369 <https://github.com/cctbx/dxtbx/issues/369>`_)
+- More detailed error messages are now printed after internal ``H5Dread`` calls fail (`#374 <https://github.com/cctbx/dxtbx/issues/374>`_)
+- Fix error reading BioMAX data with H5py 3.3 (`#389 <https://github.com/cctbx/dxtbx/issues/389>`_)
+- Fix potential problem where mask geometry was unfixable (`#411 <https://github.com/cctbx/dxtbx/issues/411>`_)
+- Handle installing dxtbx as a "real" package when the ``conda_base/`` is read-only (`#413 <https://github.com/cctbx/dxtbx/issues/413>`_)
+- Check for empty beams in XTC streams (`#419 <https://github.com/cctbx/dxtbx/issues/419>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- The previously deprecated ``ExperimentListTemplateImporter`` has been removed. Please use
+  ``ExperimentList.from_templates`` instead. (`#333 <https://github.com/cctbx/dxtbx/issues/333>`_)
+
+
+Misc
+----
+
+- Move dxtbx to ``src/`` layout, and install as a package (`#382 <https://github.com/cctbx/dxtbx/pull/382>`_)
+- `#311 <https://github.com/cctbx/dxtbx/issues/311>`_, `#373 <https://github.com/cctbx/dxtbx/issues/373>`_, `#375 <https://github.com/cctbx/dxtbx/issues/375>`_, `#380 <https://github.com/cctbx/dxtbx/issues/380>`_, `#381 <https://github.com/cctbx/dxtbx/issues/381>`_, `#384 <https://github.com/cctbx/dxtbx/issues/384>`_, `#386 <https://github.com/cctbx/dxtbx/issues/386>`_, `#388 <https://github.com/cctbx/dxtbx/issues/388>`_, `#390 <https://github.com/cctbx/dxtbx/issues/390>`_, `#391 <https://github.com/cctbx/dxtbx/issues/391>`_, `#396 <https://github.com/cctbx/dxtbx/issues/396>`_, `#400 <https://github.com/cctbx/dxtbx/issues/400>`_, `#401 <https://github.com/cctbx/dxtbx/issues/401>`_, `#402 <https://github.com/cctbx/dxtbx/issues/402>`_, `#403 <https://github.com/cctbx/dxtbx/issues/403>`_, `#404 <https://github.com/cctbx/dxtbx/issues/404>`_
+
+
+DIALS 3.5.4 (2021-07-27)
+========================
+
+Bugfixes
+--------
+
+- Allow reading of new SACLA hdf5 data (`#408 <https://github.com/cctbx/dxtbx/issues/408>`_)
+
+
 DIALS 3.5.2 (2021-06-28)
 ========================
 
