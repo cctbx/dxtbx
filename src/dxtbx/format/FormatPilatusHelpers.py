@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 
-@dataclass
+@dataclass(frozen=True)
 class _Detector:
     module_size_fast: int
     module_size_slow: int
