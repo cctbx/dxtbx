@@ -13,14 +13,8 @@ def encode_output_as_utf8() -> None:
         return
 
     if sys.stdout.encoding.lower() != "utf-8":
-        try:
-            sys.stdout.reconfigure(encoding="utf-8")
-            sys.stderr.reconfigure(encoding="utf-8")
-        except AttributeError:  # Python 3.1-3.6 compatibility
-            import codecs
-
-            sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
-            sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     encode_output_as_utf8.done = True
 
 

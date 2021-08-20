@@ -113,12 +113,7 @@ class DataBlock:
         """Return a list of unique beams, detectors, ... in order.
         Optionally filter out None values (unless they came in via
         an ImageSequence)."""
-
-        # Use the keys of an ordered dictionary to guaranteeing uniqueness
-        # while keeping the order. Could rewrite to use OrderedSet or wait
-        # for Python 3.7 and use a regular dictionary
-        # (3.7+: all dictionaries are guaranteed to be ordered)
-        items = collections.OrderedDict()
+        items = {}
         for imageset in self._imagesets:
             getter_function = getattr(imageset, "get_" + item_name)
             if isinstance(imageset, dxtbx.imageset.ImageSequence):
@@ -157,16 +152,17 @@ class DataBlock:
         s = list(self.unique_scans())
 
         # Create the data block dictionary
-        result = collections.OrderedDict()
-        result["__id__"] = "DataBlock"
-        result["imageset"] = []
+        result = {
+            "__id__": "DataBlock",
+            "imageset": [],
+        }
 
         # Loop through all the imagesets
         for iset in self._imagesets:
             if isinstance(iset, dxtbx.imageset.ImageSequence):
                 if iset.reader().is_single_file_reader():
                     result["imageset"].append(
-                        collections.OrderedDict(
+                        dict(
                             [
                                 ("__id__", "ImageSequence"),
                                 (
@@ -206,7 +202,7 @@ class DataBlock:
                     )
                 else:
                     result["imageset"].append(
-                        collections.OrderedDict(
+                        dict(
                             [
                                 ("__id__", "ImageSequence"),
                                 ("template", os.path.abspath(iset.get_template())),
@@ -241,7 +237,7 @@ class DataBlock:
                         )
                     )
             else:
-                imageset = collections.OrderedDict()
+                imageset = {}
                 if isinstance(iset, dxtbx.imageset.ImageGrid):
                     imageset["__id__"] = "ImageGrid"
                     imageset["grid_size"] = iset.get_grid_size()
@@ -249,16 +245,15 @@ class DataBlock:
                     imageset["__id__"] = "ImageSet"
                 image_list = []
                 for i in range(len(iset)):
-                    image_dict = collections.OrderedDict()
-                    image_dict["filename"] = os.path.abspath(iset.get_path(i))
-                    image_dict["gain"] = abspath_or_none(
-                        iset.external_lookup.gain.filename
-                    )
-                    image_dict["pedestal"] = abspath_or_none(
-                        iset.external_lookup.pedestal.filename
-                    )
-                    image_dict["dx"] = abspath_or_none(iset.external_lookup.dx.filename)
-                    image_dict["dy"] = abspath_or_none(iset.external_lookup.dy.filename)
+                    image_dict = {
+                        "filename": os.path.abspath(iset.get_path(i)),
+                        "gain": abspath_or_none(iset.external_lookup.gain.filename),
+                        "pedestal": abspath_or_none(
+                            iset.external_lookup.pedestal.filename
+                        ),
+                        "dx": abspath_or_none(iset.external_lookup.dx.filename),
+                        "dy": abspath_or_none(iset.external_lookup.dy.filename),
+                    }
                     if iset.reader().is_single_file_reader():
                         image_dict["image"] = iset.indices()[i]
                     try:
@@ -759,11 +754,9 @@ class DataBlockFactory:
 
         # Datablocks can only contain imageset with a shared format class, therefore
         # group the experiments by format class
-        format_groups = collections.OrderedDict()
+        format_groups = collections.defaultdict(ExperimentList)
         for expt in expts:
-            format_class = expt.imageset.get_format_class()
-            format_groups.setdefault(format_class, ExperimentList())
-            format_groups[format_class].append(expt)
+            format_groups[expt.imageset.get_format_class()].append(expt)
 
         # Generate a datablock for each format group
         for format_group, format_expts in format_groups.items():
