@@ -1,4 +1,3 @@
-import collections
 import copy
 import json
 import os
@@ -257,15 +256,13 @@ class _:
             identified_isoform = None
 
         # Collect the information as a python dictionary
-        xl_dict = collections.OrderedDict(
-            [
-                ("__id__", "crystal"),
-                ("real_space_a", real_space_a),
-                ("real_space_b", real_space_b),
-                ("real_space_c", real_space_c),
-                ("space_group_hall_symbol", hall),
-            ]
-        )
+        xl_dict = {
+            "__id__": "crystal",
+            "real_space_a": real_space_a,
+            "real_space_b": real_space_b,
+            "real_space_c": real_space_c,
+            "space_group_hall_symbol": hall,
+        }
 
         if identified_isoform is not None:
             xl_dict["identified_isoform"] = identified_isoform
@@ -590,25 +587,24 @@ class _:
         ]
         # Generate index lookup tables for each output member collection instance
         index_lookup = {
-            name: collections.OrderedDict(
-                [
-                    (model, i)
-                    for i, model in enumerate(x for x in models() if x is not None)
-                ]
-            )
+            name: {
+                model: i for i, model in enumerate(x for x in models() if x is not None)
+            }
             for name, models, _ in lookup_members
         }
 
         # Create the output dictionary
-        result = collections.OrderedDict()
-        result["__id__"] = "ExperimentList"
-        result["experiment"] = []
+        result = {
+            "__id__": "ExperimentList",
+            "experiment": [],
+        }
 
         # Add the experiments to the dictionary
         for e in self:
-            obj = collections.OrderedDict()
-            obj["__id__"] = "Experiment"
-            obj["identifier"] = e.identifier
+            obj = {
+                "__id__": "Experiment",
+                "identifier": e.identifier,
+            }
 
             # For each member model, look up the index
             for name, _, attr in lookup_members:
@@ -630,28 +626,25 @@ class _:
             if isinstance(imset, ImageSequence):
                 # FIXME_HACK
                 template = get_template(imset)
-                r = collections.OrderedDict(
-                    [("__id__", "ImageSequence"), ("template", template)]
-                )
-                # elif isinstance(imset, MemImageSet):
-                #   r = collections.OrderedDict([
-                #     ('__id__', 'MemImageSet')])
+                r = {
+                    "__id__": "ImageSequence",
+                    "template": template,
+                }
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
             elif isinstance(imset, ImageSet):
-                r = collections.OrderedDict(
-                    [("__id__", "ImageSet"), ("images", imset.paths())]
-                )
+                r = {
+                    "__id__": "ImageSet",
+                    "images": imset.paths(),
+                }
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
             elif isinstance(imset, ImageGrid):
-                r = collections.OrderedDict(
-                    [
-                        ("__id__", "ImageGrid"),
-                        ("images", imset.paths()),
-                        ("grid_size", imset.get_grid_size()),
-                    ]
-                )
+                r = {
+                    "__id__": "ImageGrid",
+                    "images": imset.paths(),
+                    "grid_size": imset.get_grid_size(),
+                }
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
             else:
@@ -700,9 +693,10 @@ class _:
             if imageset["__id__"] in ("ImageSet", "ImageGrid"):
                 image_list = []
                 for file_index, filename in enumerate(imageset["images"]):
-                    image_dict = collections.OrderedDict()
-                    image_dict["filename"] = filename
-                    image_dict["image"] = file_index
+                    image_dict = {
+                        "filename": filename,
+                        "image": file_index,
+                    }
                     image_list.append(image_dict)
                 imageset["images"] = image_list
 
@@ -767,9 +761,10 @@ class _:
             ]
 
             # Get the list of experiments
-            edict = collections.OrderedDict(
-                [("__id__", "ExperimentList"), ("experiment", dictionary["experiment"])]
-            )
+            edict = {
+                "__id__": "ExperimentList",
+                "experiment": dictionary["experiment"],
+            }
 
             # Set paths rather than indices
             for e in edict["experiment"]:
