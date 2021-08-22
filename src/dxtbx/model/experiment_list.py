@@ -870,7 +870,7 @@ class ExperimentListFactory:
                             )
                     else:
                         print(
-                            "Using only one template file: %s. \n "
+                            "Warning: Using only one template file: %s. \n "
                             "`allow_incomplete_sequence` has no effect" % template
                         )
 
