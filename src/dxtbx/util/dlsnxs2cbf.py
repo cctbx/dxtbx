@@ -30,18 +30,6 @@ def get_mask(nfast, nslow):
     return mask
 
 
-def depends_on(f):
-    def finder(thing, path):
-        if hasattr(thing, "keys"):
-            for k in thing:
-                try:
-                    finder(thing[k], path=f"{path}/{k}")
-                except (OSError, TypeError, ValueError, KeyError):
-                    pass
-
-    finder(f, path="")
-
-
 def get_distance_in_mm(f):
     try:
         D = f["/entry/instrument/detector_distance"]
@@ -133,31 +121,29 @@ _array_data.header_contents
 
 
 def make_cbf(in_name, template):
-    f = h5py.File(in_name, "r")
-    depends_on(f)
+    with h5py.File(in_name, "r") as f:
+        mask = None
 
-    mask = None
+        start_tag = binascii.unhexlify("0c1a04d5")
 
-    start_tag = binascii.unhexlify("0c1a04d5")
+        for j in range(len(f["/entry/sample/transformations/omega"][()])):
+            block = 1 + (j // 1000)
+            i = j % 1000
+            header = compute_cbf_header(f, j)
+            depth, height, width = f["/entry/data/data_%06d" % block].shape
 
-    for j in range(len(f["/entry/sample/transformations/omega"][()])):
-        block = 1 + (j // 1000)
-        i = j % 1000
-        header = compute_cbf_header(f, j)
-        depth, height, width = f["/entry/data/data_%06d" % block].shape
+            data = flex.int(np.int32(f["/entry/data/data_%06d" % block][i]))
+            good = data.as_1d() < 65535
+            data.as_1d().set_selected(~good, -2)
 
-        data = flex.int(np.int32(f["/entry/data/data_%06d" % block][i]))
-        good = data.as_1d() < 65535
-        data.as_1d().set_selected(~good, -2)
+            # set the tile join regions to -1 - MOSFLM cares about this apparently
+            if mask is None:
+                mask = get_mask(width, height)
+            data.as_1d().set_selected(mask.as_1d(), -1)
 
-        # set the tile join regions to -1 - MOSFLM cares about this apparently
-        if mask is None:
-            mask = get_mask(width, height)
-        data.as_1d().set_selected(mask.as_1d(), -1)
+            compressed = compress(data)
 
-        compressed = compress(data)
-
-        mime = """
+            mime = """
 
 _array_data.data
 ;
@@ -175,23 +161,23 @@ X-Binary-Size-Second-Dimension: %d
 X-Binary-Size-Padding: 4095
 
 """ % (
-            len(compressed),
-            data.size(),
-            data.focus()[1],
-            data.focus()[0],
-        )
+                len(compressed),
+                data.size(),
+                data.focus()[1],
+                data.focus()[0],
+            )
 
-        padding = (
-            bytearray(4095)
-            + b"""--CIF-BINARY-FORMAT-SECTION----
+            padding = (
+                bytearray(4095)
+                + b"""--CIF-BINARY-FORMAT-SECTION----
 ;"""
-        )
+            )
 
-        with open(template % (j + 1), "wb") as fout:
-            print(template % (j + 1))
-            fout.write(("".join(header) + mime).replace("\n", "\r\n").encode("latin-1"))
-            fout.write(start_tag)
-            fout.write(compressed)
-            fout.write(padding)
-
-    f.close()
+            with open(template % (j + 1), "wb") as fout:
+                print(template % (j + 1))
+                fout.write(
+                    ("".join(header) + mime).replace("\n", "\r\n").encode("latin-1")
+                )
+                fout.write(start_tag)
+                fout.write(compressed)
+                fout.write(padding)
