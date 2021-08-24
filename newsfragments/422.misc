@@ -1,2 +1,1 @@
-2D projection getters/setters added to Panel.
-Panel 2D projection using axes moved from DIALS to detector_helpers.py and made consistent with panel.get_2d_projection.
+2D projections are now associated with a ``Panel`` and configured through format classes. This means that format classes can now control how their panels are projected for display. The helper functions ``get_detector_projection_2d_axes`` and ``get_panel_projection_2d_from_axes`` have been added to ``dxtbx.model.detector_helpers`` to retrieve these projections.
