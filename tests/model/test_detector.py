@@ -352,8 +352,8 @@ def test_get_panel_projection_2d_from_axes(dials_data):
     expected_translation = (1634.5, 1555.0)
 
     assert len(rotation) == len(expected_rotation)
-    for i, expected_val in enumerate(expected_rotation):
-        assert expected_val == pytest.approx(rotation[i])
+    for rot, expected in zip(rotation, expected_rotation):
+        assert rot == pytest.approx(expected)
 
     assert len(translation) == len(expected_translation)
     for i, expected_val in enumerate(expected_translation):
