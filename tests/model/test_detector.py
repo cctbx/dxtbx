@@ -324,9 +324,7 @@ def test_get_panel_projection_2d_from_axes(dials_data):
 
     # Get test data
     pytest.importorskip("h5py")
-    filename = (
-        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
-    )
+    filename = dials_data("image_examples", pathlib=True) / "dectris_eiger_master.h5"
     experiment = ExperimentListFactory.from_filenames([filename])[0]
     detector = experiment.detector
 
@@ -346,12 +344,12 @@ def test_get_panel_projection_2d_from_axes(dials_data):
     )
 
     expected_rotation = (
-        -0.0013271608580780825,
-        -0.9999991193216408,
-        0.9999991193216408,
-        -0.0013271608580780825,
+        1.0,
+        0.0,
+        0.0,
+        1.0,
     )
-    expected_translation = (-36.3082159438444, 1033.1228618253663)
+    expected_translation = (1634.5, 1555.0)
 
     assert len(rotation) == len(expected_rotation)
     for i, expected_val in enumerate(expected_rotation):
