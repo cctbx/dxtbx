@@ -31,6 +31,17 @@ namespace dxtbx { namespace model {
   using boost::shared_ptr;
   using scitbx::af::double4;
   using scitbx::af::tiny;
+  using scitbx::af::int4;
+  using scitbx::af::int2;
+
+ /**
+   * Struct to hold information to project a given panel onto a 2D image 
+   */
+  struct Projection2D{
+    int4 rotation;
+    int2 translation;
+  };
+
 
   /**
    * A panel class.
@@ -38,7 +49,8 @@ namespace dxtbx { namespace model {
   class Panel : public PanelData {
   public:
     /** Construct the panel with the simple px->mm strategy */
-    Panel() : gain_(1.0), pedestal_(0.0), convert_coord_(new SimplePxMmStrategy()) {}
+    Panel() : gain_(1.0), pedestal_(0.0), convert_coord_(new SimplePxMmStrategy()), 
+    projection_2d_(boost::none) {}
 
     /** Construct with data but no px/mm strategy */
     Panel(std::string type,
@@ -67,7 +79,8 @@ namespace dxtbx { namespace model {
           gain_(1.0),
           pedestal_(0.0),
           convert_coord_(new SimplePxMmStrategy()),
-          identifier_(identifier) {}
+          identifier_(identifier),
+          projection_2d_(boost::none) {}
 
     /** Construct with data with px/mm strategy */
     Panel(std::string type,
@@ -97,7 +110,8 @@ namespace dxtbx { namespace model {
           gain_(1.0),
           pedestal_(0.0),
           convert_coord_(convert_coord),
-          identifier_(identifier) {}
+          identifier_(identifier),
+          projection_2d_(boost::none) {}
 
     virtual ~Panel() {}
 
@@ -408,11 +422,20 @@ namespace dxtbx { namespace model {
       return !(*this == other);
     }
 
+    void set_projection_2d(const Projection2D &projection_2d){
+      projection_2d_ = projection_2d;
+    }
+
+    boost::optional<Projection2D> get_projection_2d() const{
+      return projection_2d_;
+    }
+
   protected:
     double gain_;
     double pedestal_;
     shared_ptr<PxMmStrategy> convert_coord_;
     std::string identifier_;
+    boost::optional<Projection2D> projection_2d_;
   };
 
   /** Print panel information */
