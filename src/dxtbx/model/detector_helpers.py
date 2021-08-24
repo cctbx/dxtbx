@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import math
+import warnings
 from operator import itemgetter
 from typing import TYPE_CHECKING, Tuple
 
@@ -301,6 +302,20 @@ def set_detector_distance(detector, distance):
     fast_axis = detector[0].get_fast_axis()
     slow_axis = detector[0].get_slow_axis()
     detector[0].set_frame(fast_axis, slow_axis, origin)
+
+
+def project_2d(detector: Detector) -> Tuple[Float2, Float2, Float2]:
+    """
+    Project panel origins, fast and slow axes onto the best-fitting 2D plane.
+    """
+
+    warnings.warn(
+        "project_2d is deprecated; use get_detector_projection_2d_axes instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    return get_detector_projection_2d_axes(detector)
 
 
 def get_detector_projection_2d_axes(
