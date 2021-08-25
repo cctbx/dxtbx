@@ -656,9 +656,7 @@ class _:
                     r["single_file_indices"] = list(imset.indices())
             elif isinstance(imset, TOFImageSequence):
                 template = get_template(imset)
-                r = collections.OrderedDict(
-                    [("__id__", "TOFImageSequence"), ("template", template)]
-                )
+                r = {"__id__": "TOFImageSequence", "template": template}
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
             else:
