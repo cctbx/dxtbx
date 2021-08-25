@@ -10,9 +10,11 @@ goniometers etc. from the headers and hence a format specific factory.
 import bz2
 import functools
 import os
+from pathlib import Path
 from typing import ClassVar, List
 
 import libtbx
+from libtbx.utils import Sorry
 
 import dxtbx.filecache_controller
 from dxtbx.format.image import ImageBool
@@ -655,6 +657,9 @@ class Format:
     def open_file(cls, filename, mode="rb"):
         """Open file for reading, decompressing silently if necessary,
         caching transparently if possible."""
+
+        if not Path(filename).is_file():
+            raise Sorry(f"File {filename} not found")
 
         if filename.endswith(".bz2"):
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
