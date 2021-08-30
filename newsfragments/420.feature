@@ -1,1 +1,1 @@
-Ensure that ``Crystal.change_basis()`` returns a new object of the same type
+New function ``Crystal.clone()``, to get a new Crystal object of the same type.
