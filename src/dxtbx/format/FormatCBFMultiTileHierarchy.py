@@ -3,8 +3,6 @@ Reads a multi-tile CBF image, discovering it's detector geometery
 automatically, and builds a hierarchy if present
 """
 
-
-import collections
 import struct
 import sys
 
@@ -335,7 +333,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             assert len(types) == cbf.count_rows()
 
             # read the data
-            data = collections.OrderedDict()
+            data = {}
             cbf.find_category(b"array_data")
             for i in range(cbf.count_rows()):
                 cbf.find_column(b"array_id")
@@ -365,7 +363,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
             # extract the data for each panel
             if cbf.has_sections():
-                section_shapes = collections.OrderedDict()
+                section_shapes = {}
                 for i in range(cbf.count_rows()):
                     cbf.find_column(b"id")
                     section_name = cbf.get_value()

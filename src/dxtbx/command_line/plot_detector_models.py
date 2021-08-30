@@ -15,7 +15,7 @@ from scitbx.matrix import col
 
 import dxtbx.util
 from dxtbx.datablock import DataBlockFactory
-from dxtbx.model.detector_helpers import project_2d
+from dxtbx.model.detector_helpers import get_detector_projection_2d_axes
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 usage = """Plot dxtbx detector models. Provide multiple json files if desired
@@ -117,7 +117,7 @@ def plot_group(
 
 def plot_image_plane_projection(detector, color, ax, panel_numbers=True):
 
-    origin_2d, fast_2d, slow_2d = project_2d(detector)
+    origin_2d, fast_2d, slow_2d = get_detector_projection_2d_axes(detector)
 
     for panel, origin, fast, slow in zip(detector, origin_2d, fast_2d, slow_2d):
         # plot the panel boundaries

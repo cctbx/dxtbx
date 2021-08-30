@@ -14,8 +14,8 @@ import zipfile
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-if sys.hexversion < 0x3060000:
-    exit("Python 3.6+ required")
+if sys.hexversion < 0x3070000:
+    exit("Python 3.7+ required")
 
 # Clean environment for subprocesses
 clean_env = {
@@ -845,7 +845,7 @@ def run():
         "--python",
         help="Install this minor version of Python (default: %(default)s)",
         default="3.8",
-        choices=("3.6", "3.7", "3.8", "3.9"),
+        choices=("3.7", "3.8", "3.9"),
     )
     parser.add_argument(
         "--branch",
