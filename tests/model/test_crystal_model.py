@@ -437,7 +437,6 @@ def test_similarity():
     # unit_cell.is_similar_to is tested elsewhere
 
 
-@pytest.mark.xfail(reason="https://github.com/cctbx/dxtbx/issues/5")
 def test_change_basis_mosaic_crystal():
     mosaic_model = MosaicCrystalSauter2014(
         real_space_a=(10, 0, 0),

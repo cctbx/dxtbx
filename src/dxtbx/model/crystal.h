@@ -148,6 +148,7 @@ namespace dxtbx { namespace model {
   public:
     virtual ~CrystalBase() {}
 
+    virtual CrystalBase* clone() const = 0;
     // Set the unit cell parameters
     virtual void set_unit_cell(const vec3<double> &real_space_a,
                                const vec3<double> &real_space_b,
@@ -291,6 +292,11 @@ namespace dxtbx { namespace model {
       std::copy(other.cov_B_.begin(), other.cov_B_.end(), cov_B_.begin());
     }
 
+    virtual Crystal* clone() const override
+    {
+        return new Crystal(*this);
+    }
+
     /**
      * Initialise the crystal
      *
@@ -395,7 +401,7 @@ namespace dxtbx { namespace model {
      */
     void set_unit_cell(const vec3<double> &real_space_a,
                        const vec3<double> &real_space_b,
-                       const vec3<double> &real_space_c) {
+                       const vec3<double> &real_space_c) override {
       unit_cell_ =
         cctbx::uctbx::unit_cell(double6(real_space_a.length(),
                                         real_space_b.length(),
@@ -411,7 +417,7 @@ namespace dxtbx { namespace model {
      *
      * @param unit_cell The updated unit cell
      */
-    void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
+    void set_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) override {
       unit_cell_ = unit_cell;
       update_B();
     }
@@ -419,7 +425,7 @@ namespace dxtbx { namespace model {
     /**
      * Update the B matrix
      */
-    void update_B() {
+    void update_B() override {
       B_ = unit_cell_.fractionalization_matrix().transpose();
     }
 
@@ -428,7 +434,7 @@ namespace dxtbx { namespace model {
      *
      * @param U The input matrix
      */
-    void set_U(const mat3<double> &U) {
+    void set_U(const mat3<double> &U) override {
       DXTBX_ASSERT(detail::is_r3_rotation_matrix(U));
       U_ = U;
       reset_scan_points();
@@ -439,7 +445,7 @@ namespace dxtbx { namespace model {
      *
      * @param B The input matrix
      */
-    void set_B(const mat3<double> &B) {
+    void set_B(const mat3<double> &B) override {
       // also set the unit cell
       cctbx::crystal_orientation co(B, true);
       unit_cell_ = co.unit_cell();
@@ -457,7 +463,7 @@ namespace dxtbx { namespace model {
      *
      * @param A The input matrix
      */
-    void set_A(const mat3<double> &A) {
+    void set_A(const mat3<double> &A) override {
       cctbx::uctbx::unit_cell uc(A.transpose().inverse());
       mat3<double> B = uc.fractionalization_matrix().transpose();
       mat3<double> U = A * B.inverse();
@@ -468,35 +474,35 @@ namespace dxtbx { namespace model {
     /**
      * @returns the U matrix
      */
-    mat3<double> get_U() const {
+    mat3<double> get_U() const override {
       return U_;
     }
 
     /**
      * @returns the B matrix
      */
-    mat3<double> get_B() const {
+    mat3<double> get_B() const override {
       return B_;
     }
 
     /**
      * @returns the A matrix
      */
-    mat3<double> get_A() const {
+    mat3<double> get_A() const override {
       return U_ * B_;
     }
 
     /**
      * @returns the unit_cell
      */
-    cctbx::uctbx::unit_cell get_unit_cell() const {
+    cctbx::uctbx::unit_cell get_unit_cell() const override {
       return unit_cell_;
     }
 
     /**
      * @returns the real space vectors
      */
-    scitbx::af::shared<vec3<double> > get_real_space_vectors() const {
+    scitbx::af::shared<vec3<double> > get_real_space_vectors() const override {
       mat3<double> A_inv = get_A().inverse();
       scitbx::af::shared<vec3<double> > real_space_vectors;
       real_space_vectors.push_back(vec3<double>(A_inv[0], A_inv[1], A_inv[2]));
@@ -508,42 +514,42 @@ namespace dxtbx { namespace model {
     /**
      * Set the space group
      */
-    void set_space_group(cctbx::sgtbx::space_group space_group) {
+    void set_space_group(cctbx::sgtbx::space_group space_group) override {
       space_group_ = space_group;
     }
 
     /**
      * Get the space group
      */
-    cctbx::sgtbx::space_group get_space_group() const {
+    cctbx::sgtbx::space_group get_space_group() const override {
       return space_group_;
     }
 
     /**
      * @returns the number of scan points
      */
-    std::size_t get_num_scan_points() const {
+    std::size_t get_num_scan_points() const override {
       return A_at_scan_points_.size();
     }
 
     /**
      * Set the A matrix at scan points
      */
-    void set_A_at_scan_points(const scitbx::af::const_ref<mat3<double> > &A) {
+    void set_A_at_scan_points(const scitbx::af::const_ref<mat3<double> > &A) override {
       A_at_scan_points_ = scitbx::af::shared<mat3<double> >(A.begin(), A.end());
     }
 
     /**
      * Get the A matrix at scan points
      */
-    scitbx::af::shared<mat3<double> > get_A_at_scan_points() const {
+    scitbx::af::shared<mat3<double> > get_A_at_scan_points() const override {
       return A_at_scan_points_;
     }
 
     /**
      * Get the A matrix at the scan point
      */
-    mat3<double> get_A_at_scan_point(std::size_t index) const {
+    mat3<double> get_A_at_scan_point(std::size_t index) const override {
       DXTBX_ASSERT(index < A_at_scan_points_.size());
       return A_at_scan_points_[index];
     }
@@ -551,7 +557,7 @@ namespace dxtbx { namespace model {
     /**
      * Get the U matrix at the scan point
      */
-    mat3<double> get_U_at_scan_point(std::size_t index) const {
+    mat3<double> get_U_at_scan_point(std::size_t index) const override {
       mat3<double> A = get_A_at_scan_point(index);
       mat3<double> B = get_B_at_scan_point(index);
       return A * B.inverse();
@@ -560,14 +566,14 @@ namespace dxtbx { namespace model {
     /**
      * Get the B matrix at the scan point
      */
-    mat3<double> get_B_at_scan_point(std::size_t index) const {
+    mat3<double> get_B_at_scan_point(std::size_t index) const override {
       return get_unit_cell_at_scan_point(index).fractionalization_matrix().transpose();
     }
 
     /**
      * Get the unit cell at the scan point
      */
-    cctbx::uctbx::unit_cell get_unit_cell_at_scan_point(std::size_t index) const {
+    cctbx::uctbx::unit_cell get_unit_cell_at_scan_point(std::size_t index) const override {
       mat3<double> A = get_A_at_scan_point(index);
       return cctbx::uctbx::unit_cell(A.transpose().inverse());
     }
@@ -575,7 +581,7 @@ namespace dxtbx { namespace model {
     /**
      * Reset the scan points
      */
-    void reset_scan_points() {
+    void reset_scan_points() override {
       A_at_scan_points_.clear();
       cov_B_at_scan_points_ = scitbx::af::versa<double, scitbx::af::c_grid<3> >();
     }
@@ -587,8 +593,9 @@ namespace dxtbx { namespace model {
      * @param change_of_basis_op The change of basis operator.
      * @returns The crystal model transformed to the new basis.
      */
+    virtual
     boost::shared_ptr<CrystalBase> change_basis(
-      cctbx::sgtbx::change_of_basis_op change_of_basis_op) const {
+      cctbx::sgtbx::change_of_basis_op change_of_basis_op) const override {
       // cctbx change of basis matrices and those Giacovazzo are related by
       // inverse and transpose, i.e. Giacovazzo's "M" is related to the cctbx
       // cb_op as follows:
@@ -604,26 +611,13 @@ namespace dxtbx { namespace model {
       //   (A')^-1 = (M A)^-1
       //   (A')^-1 = A^-1 M^-1
 
-      mat3<double> direct_matrix = get_A().inverse();
-      mat3<double> M = change_of_basis_op.c_inv().r().transpose().as_double();
+      mat3<double> M_inv = change_of_basis_op.c().r().transpose().as_double();
 
-      // equation 2.19 of Giacovazzo
-      mat3<double> new_direct_matrix = M * direct_matrix;
-      vec3<double> real_space_a(
-        new_direct_matrix[0], new_direct_matrix[1], new_direct_matrix[2]);
-      vec3<double> real_space_b(
-        new_direct_matrix[3], new_direct_matrix[4], new_direct_matrix[5]);
-      vec3<double> real_space_c(
-        new_direct_matrix[6], new_direct_matrix[7], new_direct_matrix[8]);
-      // FIXME use a copy constructor. As written, this doesn't copy mosaicity or
-      // parameters from derived classes
-      boost::shared_ptr<Crystal> other = boost::shared_ptr<Crystal>(
-        new Crystal(real_space_a,
-                    real_space_b,
-                    real_space_c,
-                    get_space_group().change_basis(change_of_basis_op)));
+      boost::shared_ptr<CrystalBase> other = boost::shared_ptr<CrystalBase>(
+        this->clone());
+      other->set_space_group(space_group_.change_basis(change_of_basis_op));
+      other->set_A(get_A() * M_inv);
       if (get_num_scan_points() > 0) {
-        mat3<double> M_inv = M.inverse();
         scitbx::af::shared<mat3<double> > new_A_at_scan_points;
         for (std::size_t i = 0; i < get_num_scan_points(); ++i) {
           new_A_at_scan_points.push_back(get_A_at_scan_point(i) * M_inv);
@@ -640,7 +634,7 @@ namespace dxtbx { namespace model {
     /**
      * Update crystal with parameters from another model
      */
-    void update(const CrystalBase &other) {
+    void update(const CrystalBase &other) override {
       (*this) = *dynamic_cast<const Crystal *>(&other);
     }
 
@@ -651,7 +645,7 @@ namespace dxtbx { namespace model {
      * @param angle The angle to rotate around
      * @param deg Degrees or radians
      */
-    void rotate_around_origin(vec3<double> axis, double angle, bool deg = false) {
+    void rotate_around_origin(vec3<double> axis, double angle, bool deg = false) override {
       // Create the rotation matrix
       mat3<double> R =
         scitbx::math::r3_rotation::axis_and_angle_as_matrix(axis, angle, deg);
@@ -671,7 +665,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if the models are equal
      */
-    bool operator==(const CrystalBase &other) const {
+    bool operator==(const CrystalBase &other) const override {
       double d_U = 0.0;
       double d_B = 0.0;
       double eps = 1e-7;
@@ -704,7 +698,7 @@ namespace dxtbx { namespace model {
     bool is_similar_to(const CrystalBase &other,
                        double angle_tolerance = 0.01,
                        double uc_rel_length_tolerance = 0.01,
-                       double uc_abs_angle_tolerance = 1.0) const {
+                       double uc_abs_angle_tolerance = 1.0) const override {
       // space group test
       if (get_space_group() != other.get_space_group()) {
         return false;
@@ -777,7 +771,7 @@ namespace dxtbx { namespace model {
     }
 
     /** Check if models are not equal */
-    bool operator!=(const CrystalBase &rhs) const {
+    bool operator!=(const CrystalBase &rhs) const override {
       return !(*this == rhs);
     }
 
@@ -786,7 +780,7 @@ namespace dxtbx { namespace model {
      * otherwise None. The order of elements of this matrix are determined by
      * 'flattening' B to form a 1D vector using row major ordering.
      */
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > get_B_covariance() const {
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > get_B_covariance() const override {
       return cov_B_;
     }
 
@@ -794,7 +788,7 @@ namespace dxtbx { namespace model {
      * Set the covariance matrix
      */
     void set_B_covariance(
-      const scitbx::af::const_ref<double, scitbx::af::c_grid<2> > &cov) {
+      const scitbx::af::const_ref<double, scitbx::af::c_grid<2> > &cov) override {
       if (cov.accessor()[0] == 0 && cov.accessor()[1] == 0) {
         cov_B_ = scitbx::af::versa<double, scitbx::af::c_grid<2> >(cov.accessor());
       } else {
@@ -811,7 +805,7 @@ namespace dxtbx { namespace model {
      * known.
      */
     void set_B_covariance_at_scan_points(
-      const scitbx::af::const_ref<double, scitbx::af::c_grid<3> > &cov) {
+      const scitbx::af::const_ref<double, scitbx::af::c_grid<3> > &cov) override {
       if (cov.accessor()[0] == 0) {
         return;
       }
@@ -824,7 +818,7 @@ namespace dxtbx { namespace model {
     }
 
     scitbx::af::versa<double, scitbx::af::c_grid<2> > get_B_covariance_at_scan_point(
-      std::size_t index) const {
+      std::size_t index) const override {
       DXTBX_ASSERT(index < cov_B_at_scan_points_.accessor()[0]);
 
       // Get a const ref to just the data for the scan point
@@ -838,14 +832,14 @@ namespace dxtbx { namespace model {
     }
 
     scitbx::af::versa<double, scitbx::af::c_grid<3> > get_B_covariance_at_scan_points()
-      const {
+      const override {
       return cov_B_at_scan_points_;
     }
 
     /**
      * Get the cell parameter standard deviation
      */
-    scitbx::af::small<double, 6> get_cell_parameter_sd() {
+    scitbx::af::small<double, 6> get_cell_parameter_sd() override {
       if (cov_B_.size() == 0) {
         return scitbx::af::small<double, 6>();
       } else if (cell_sd_.size() != 6) {
@@ -855,7 +849,7 @@ namespace dxtbx { namespace model {
     }
 
     scitbx::af::small<double, 6> get_cell_parameter_sd_at_scan_point(
-      std::size_t index) {
+      std::size_t index) override {
       mat3<double> B = get_B_at_scan_point(index);
       scitbx::af::versa<double, scitbx::af::c_grid<2> > cov_B =
         get_B_covariance_at_scan_point(index);
@@ -868,28 +862,28 @@ namespace dxtbx { namespace model {
     /**
      * Get the cell parameter standard deviation
      */
-    scitbx::af::small<double, 6> get_cell_parameter_sd_no_calc() const {
+    scitbx::af::small<double, 6> get_cell_parameter_sd_no_calc() const override {
       return cell_sd_;
     }
 
     /**
      * Get the cell volume standard deviation
      */
-    double get_cell_volume_sd_no_calc() const {
+    double get_cell_volume_sd_no_calc() const override {
       return cell_volume_sd_;
     }
 
     /**
      * Get the cell volume standard deviation
      */
-    double get_recalculated_cell_volume_sd() const {
+    double get_recalculated_cell_volume_sd() const override {
       return recalculated_cell_volume_sd_;
     }
 
     /**
      * Get the cell volume standard deviation
      */
-    double get_cell_volume_sd() {
+    double get_cell_volume_sd() override {
       if (cov_B_.size() == 0) {
         return -1;
       } else if (cell_volume_sd_ <= 0) {
@@ -898,7 +892,7 @@ namespace dxtbx { namespace model {
       return cell_volume_sd_;
     }
 
-    void calc_cell_parameter_sd() {
+    void calc_cell_parameter_sd() override {
       calc_cell_parameter_sd(B_, cov_B_, cell_sd_, cell_volume_sd_);
     }
 
@@ -1069,7 +1063,7 @@ namespace dxtbx { namespace model {
     /**
      * Reset unit cell errors
      */
-    void reset_unit_cell_errors() {
+    void reset_unit_cell_errors() override {
       cov_B_ = scitbx::af::versa<double, scitbx::af::c_grid<2> >();
       cov_B_at_scan_points_ = scitbx::af::versa<double, scitbx::af::c_grid<3> >();
       cell_sd_ = scitbx::af::small<double, 6>();
@@ -1078,26 +1072,26 @@ namespace dxtbx { namespace model {
       recalculated_cell_volume_sd_ = 0;
     }
 
-    void set_recalculated_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) {
+    void set_recalculated_unit_cell(const cctbx::uctbx::unit_cell &unit_cell) override {
       recalculated_unit_cell_ = unit_cell;
       recalculated_cell_sd_ = scitbx::af::small<double, 6>();
       recalculated_cell_volume_sd_ = 0;
     }
 
-    boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell() const {
+    boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell() const override {
       return recalculated_unit_cell_;
     }
 
     void set_recalculated_cell_parameter_sd(
-      const scitbx::af::small<double, 6> &unit_cell_sd) {
+      const scitbx::af::small<double, 6> &unit_cell_sd) override {
       recalculated_cell_sd_ = unit_cell_sd;
     }
 
-    void set_recalculated_cell_volume_sd(double recalculated_cell_volume_sd) {
+    void set_recalculated_cell_volume_sd(double recalculated_cell_volume_sd) override {
       recalculated_cell_volume_sd_ = recalculated_cell_volume_sd;
     }
 
-    scitbx::af::small<double, 6> get_recalculated_cell_parameter_sd() const {
+    scitbx::af::small<double, 6> get_recalculated_cell_parameter_sd() const override {
       return recalculated_cell_sd_;
     }
 
@@ -1131,6 +1125,11 @@ namespace dxtbx { namespace model {
      * Copy crystal model from Crystal class
      */
     MosaicCrystalKabsch2010(const Crystal &other) : Crystal(other), mosaicity_(0) {}
+
+    virtual MosaicCrystalKabsch2010* clone() const override
+    {
+        return new MosaicCrystalKabsch2010(*this);
+    }
 
     /**
      * Initialise the crystal
@@ -1179,7 +1178,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if the models are equal
      */
-    bool operator==(const CrystalBase &other) const {
+    bool operator==(const CrystalBase &other) const override {
       double eps = 1e-7;
       const MosaicCrystalKabsch2010 *mosaic_other =
         dynamic_cast<const MosaicCrystalKabsch2010 *>(&other);
@@ -1221,7 +1220,7 @@ namespace dxtbx { namespace model {
     bool is_similar_to(const CrystalBase &other,
                        double angle_tolerance = 0.01,
                        double uc_rel_length_tolerance = 0.01,
-                       double uc_abs_angle_tolerance = 1.0) const /* override */ {
+                       double uc_abs_angle_tolerance = 1.0) const override {
       // Call with a default mosaicity tolerance
       return is_similar_to(
         other, angle_tolerance, uc_rel_length_tolerance, uc_abs_angle_tolerance, 0.8);
@@ -1268,6 +1267,11 @@ namespace dxtbx { namespace model {
      */
     MosaicCrystalSauter2014(const Crystal &other)
         : Crystal(other), half_mosaicity_deg_(0), domain_size_ang_(0) {}
+
+    virtual MosaicCrystalSauter2014* clone() const override
+    {
+        return new MosaicCrystalSauter2014(*this);
+    }
 
     /**
      * Initialise the crystal
@@ -1319,7 +1323,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if the models are equal
      */
-    bool operator==(const CrystalBase &other) const {
+    bool operator==(const CrystalBase &other) const override {
       double eps = 1e-7;
       const MosaicCrystalSauter2014 *mosaic_other =
         dynamic_cast<const MosaicCrystalSauter2014 *>(&other);
@@ -1372,7 +1376,7 @@ namespace dxtbx { namespace model {
     bool is_similar_to(const CrystalBase &other,
                        double angle_tolerance = 0.01,
                        double uc_rel_length_tolerance = 0.01,
-                       double uc_abs_angle_tolerance = 1.0) const /* override */ {
+                       double uc_abs_angle_tolerance = 1.0) const override {
       // Call with a default half-mosaicity tolerance
       // Use the function-default domain_size_tolerance
       return is_similar_to(
