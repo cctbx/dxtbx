@@ -22,9 +22,6 @@ except ModuleNotFoundError:
     pkg_resources = None
 
 
-libtbx.pkg_utils.require("pint")
-
-
 def _install_dxtbx_setup():
     """Install xia2 as a regular/editable python package"""
 
