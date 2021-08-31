@@ -763,10 +763,10 @@ namespace dxtbx { namespace model {
         (*this)[i].rotate_around_origin(axis, angle);
       }
     }
-  
-    bool has_projection_2d(){
-      for (std::size_t i = 0; i < size(); ++i){
-        if (!(*this)[i].get_projection_2d()){
+
+    bool has_projection_2d() {
+      for (std::size_t i = 0; i < size(); ++i) {
+        if (!(*this)[i].get_projection_2d()) {
           return false;
         }
       }

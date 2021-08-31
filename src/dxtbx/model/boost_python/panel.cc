@@ -129,18 +129,17 @@ namespace dxtbx { namespace model { namespace boost_python {
     return result;
   }
 
-  void set_projection_2d(Panel &obj, int4 rotation, int2 translation){
+  void set_projection_2d(Panel &obj, int4 rotation, int2 translation) {
     const Projection2D projection_2d = Projection2D{rotation, translation};
     obj.set_projection_2d(projection_2d);
   }
 
-  boost::python::tuple projection_2d_to_tuple(const Panel &obj){
+  boost::python::tuple projection_2d_to_tuple(const Panel &obj) {
     boost::optional<Projection2D> panel_projection = obj.get_projection_2d();
-    if (panel_projection){
+    if (panel_projection) {
       Projection2D projection = static_cast<Projection2D>(*panel_projection);
       return boost::python::make_tuple(projection.rotation, projection.translation);
-    }
-    else{
+    } else {
       return boost::python::make_tuple();
     }
   }
@@ -165,7 +164,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["gain"] = obj.get_gain();
     result["pedestal"] = obj.get_pedestal();
     result["px_mm_strategy"] = to_dict(obj.get_px_mm_strategy());
-    if (obj.get_projection_2d()){
+    if (obj.get_projection_2d()) {
       result["projection_2d"] = projection_2d_to_tuple(obj);
     }
     return result;

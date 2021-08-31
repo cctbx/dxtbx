@@ -148,7 +148,7 @@ namespace dxtbx { namespace model {
   public:
     virtual ~CrystalBase() {}
 
-    virtual CrystalBase* clone() const = 0;
+    virtual CrystalBase *clone() const = 0;
     // Set the unit cell parameters
     virtual void set_unit_cell(const vec3<double> &real_space_a,
                                const vec3<double> &real_space_b,
@@ -292,9 +292,8 @@ namespace dxtbx { namespace model {
       std::copy(other.cov_B_.begin(), other.cov_B_.end(), cov_B_.begin());
     }
 
-    virtual Crystal* clone() const override
-    {
-        return new Crystal(*this);
+    virtual Crystal *clone() const override {
+      return new Crystal(*this);
     }
 
     /**
@@ -573,7 +572,8 @@ namespace dxtbx { namespace model {
     /**
      * Get the unit cell at the scan point
      */
-    cctbx::uctbx::unit_cell get_unit_cell_at_scan_point(std::size_t index) const override {
+    cctbx::uctbx::unit_cell get_unit_cell_at_scan_point(
+      std::size_t index) const override {
       mat3<double> A = get_A_at_scan_point(index);
       return cctbx::uctbx::unit_cell(A.transpose().inverse());
     }
@@ -593,8 +593,7 @@ namespace dxtbx { namespace model {
      * @param change_of_basis_op The change of basis operator.
      * @returns The crystal model transformed to the new basis.
      */
-    virtual
-    boost::shared_ptr<CrystalBase> change_basis(
+    virtual boost::shared_ptr<CrystalBase> change_basis(
       cctbx::sgtbx::change_of_basis_op change_of_basis_op) const override {
       // cctbx change of basis matrices and those Giacovazzo are related by
       // inverse and transpose, i.e. Giacovazzo's "M" is related to the cctbx
@@ -613,8 +612,8 @@ namespace dxtbx { namespace model {
 
       mat3<double> M_inv = change_of_basis_op.c().r().transpose().as_double();
 
-      boost::shared_ptr<CrystalBase> other = boost::shared_ptr<CrystalBase>(
-        this->clone());
+      boost::shared_ptr<CrystalBase> other =
+        boost::shared_ptr<CrystalBase>(this->clone());
       other->set_space_group(space_group_.change_basis(change_of_basis_op));
       other->set_A(get_A() * M_inv);
       if (get_num_scan_points() > 0) {
@@ -645,7 +644,9 @@ namespace dxtbx { namespace model {
      * @param angle The angle to rotate around
      * @param deg Degrees or radians
      */
-    void rotate_around_origin(vec3<double> axis, double angle, bool deg = false) override {
+    void rotate_around_origin(vec3<double> axis,
+                              double angle,
+                              bool deg = false) override {
       // Create the rotation matrix
       mat3<double> R =
         scitbx::math::r3_rotation::axis_and_angle_as_matrix(axis, angle, deg);
@@ -780,7 +781,8 @@ namespace dxtbx { namespace model {
      * otherwise None. The order of elements of this matrix are determined by
      * 'flattening' B to form a 1D vector using row major ordering.
      */
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > get_B_covariance() const override {
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > get_B_covariance()
+      const override {
       return cov_B_;
     }
 
@@ -1078,7 +1080,8 @@ namespace dxtbx { namespace model {
       recalculated_cell_volume_sd_ = 0;
     }
 
-    boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell() const override {
+    boost::optional<cctbx::uctbx::unit_cell> get_recalculated_unit_cell()
+      const override {
       return recalculated_unit_cell_;
     }
 
@@ -1126,9 +1129,8 @@ namespace dxtbx { namespace model {
      */
     MosaicCrystalKabsch2010(const Crystal &other) : Crystal(other), mosaicity_(0) {}
 
-    virtual MosaicCrystalKabsch2010* clone() const override
-    {
-        return new MosaicCrystalKabsch2010(*this);
+    virtual MosaicCrystalKabsch2010 *clone() const override {
+      return new MosaicCrystalKabsch2010(*this);
     }
 
     /**
@@ -1268,9 +1270,8 @@ namespace dxtbx { namespace model {
     MosaicCrystalSauter2014(const Crystal &other)
         : Crystal(other), half_mosaicity_deg_(0), domain_size_ang_(0) {}
 
-    virtual MosaicCrystalSauter2014* clone() const override
-    {
-        return new MosaicCrystalSauter2014(*this);
+    virtual MosaicCrystalSauter2014 *clone() const override {
+      return new MosaicCrystalSauter2014(*this);
     }
 
     /**
