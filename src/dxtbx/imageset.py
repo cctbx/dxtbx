@@ -409,7 +409,7 @@ class _(object):
         return [self.get_path(i) for i in range(len(self))]
 
     def get_pixel_spectra(self, panel_idx, x, y):
-        return self.reader.get_pixel_spectra(panel_idx, x, y)
+        return self.reader().get_pixel_spectra(panel_idx, x, y)
 
 
 def _analyse_files(filenames):
