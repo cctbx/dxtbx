@@ -345,10 +345,10 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def get_pixel_spectra(self, panel_idx, x, y):
         if self.raw_data is None:
-            self.raw_data = self.load_raw_data(as_numpy_arrays=True)
+            self.raw_data = self.load_raw_data()
 
         time_channels = self._get_time_channels_in_usec()
-        return time_channels, self.raw_data[panel_idx][x, y, :]
+        return time_channels, list(self.raw_data[panel_idx][x : x + 1, y : y + 1, :])
 
     def _get_panel_projections_2d(self) -> dict:
 
