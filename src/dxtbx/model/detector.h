@@ -764,6 +764,15 @@ namespace dxtbx { namespace model {
       }
     }
 
+    bool has_projection_2d() {
+      for (std::size_t i = 0; i < size(); ++i) {
+        if (!(*this)[i].get_projection_2d()) {
+          return false;
+        }
+      }
+      return true;
+    }
+
   protected:
     friend std::ostream &operator<<(std::ostream &os, const Detector &d);
 

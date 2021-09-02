@@ -130,6 +130,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                 p.set_mu(mu)
                 p.set_px_mm_strategy(px_mm)
                 p.set_raw_image_offset((xmin, ymin))
+                p.set_projection_2d((1, 0, 0, 1), (-j * (195 + 17), 0))
                 self.coords[p.get_name()] = (xmin, ymin, xmax, ymax)
 
             else:
@@ -153,6 +154,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
                     p.set_mu(mu)
                     p.set_px_mm_strategy(px_mm)
                     p.set_raw_image_offset((xmin, ymin))
+                    p.set_projection_2d((1, 0, 0, 1), (-j * (195 + 17), -i * (487 + 7)))
                     self.coords[p.get_name()] = (xmin, ymin, xmax, ymax)
 
         detector = self._mask_bad_modules(detector)
