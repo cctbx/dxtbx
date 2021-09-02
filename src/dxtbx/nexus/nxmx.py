@@ -208,15 +208,6 @@ class NXentry(H5Mapping):
 class NXdata(H5Mapping):
     """NXdata describes the plottable data and related dimension scales."""
 
-    def __getitem__(self, key):
-        return self._handle[key]
-
-    def __iter__(self):
-        return iter(self._handle)
-
-    def __len__(self):
-        return len(self._handle)
-
     @cached_property
     def signal(self) -> Optional[str]:
         """Declares which dataset is the default.
