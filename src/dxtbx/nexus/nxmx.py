@@ -103,7 +103,7 @@ def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
 
 
 class H5Mapping(Mapping):
-    def __init__(self, handle):
+    def __init__(self, handle: Union[h5py.File, h5py.Group, h5py.Dataset]):
         self._handle = handle
 
     def __getitem__(self, key):
@@ -112,7 +112,7 @@ class H5Mapping(Mapping):
     def __iter__(self):
         return iter(self._handle)
 
-    def __len__(self):
+    def __len__(self) -> int:
         try:
             return len(self._handle)
         except TypeError:
@@ -120,7 +120,7 @@ class H5Mapping(Mapping):
             return self._handle.size
 
     @cached_property
-    def path(self):
+    def path(self) -> Optional[str]:
         return h5str(self._handle.name)
 
 
