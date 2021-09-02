@@ -113,7 +113,8 @@ class H5Mapping(Mapping):
         return iter(self._handle)
 
     def __len__(self):
-        return len(self._handle)
+        shape = self._handle.shape
+        return shape[0] if shape else self._handle.size
 
     @cached_property
     def path(self):
