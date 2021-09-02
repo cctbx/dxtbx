@@ -569,7 +569,7 @@ class NXinstrument(H5Mapping):
         return [NXdetector(detector) for detector in self._detectors]
 
     @cached_property
-    def beams(self) -> List(NXbeam):
+    def beams(self) -> List[NXbeam]:
         """Properties of the neutron or X-ray beam at a given location."""
         return [NXbeam(beam) for beam in self._beams]
 
