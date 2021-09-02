@@ -103,7 +103,7 @@ def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
 
 
 class H5Mapping(Mapping):
-    def __init__(self, handle: Union[h5py.File, h5py.Group, h5py.Dataset]):
+    def __init__(self, handle: Union[h5py.File, h5py.Group]):
         self._handle = handle
 
     def __getitem__(self, key):
@@ -113,11 +113,7 @@ class H5Mapping(Mapping):
         return iter(self._handle)
 
     def __len__(self) -> int:
-        try:
-            return len(self._handle)
-        except TypeError:
-            # Handle scalar data sets gracefully.
-            return self._handle.size
+        return len(self._handle)
 
     @cached_property
     def path(self) -> Optional[str]:
@@ -310,7 +306,7 @@ class NXtransformations(H5Mapping):
         return self._axes
 
 
-class NXtransformationsAxis(H5Mapping):
+class NXtransformationsAxis:
     """Axis-based translation and rotation to describe a given transformation.
 
     For a chain of three transformations, where T1 depends on T2  and that in turn
@@ -343,7 +339,14 @@ class NXtransformationsAxis(H5Mapping):
     """
 
     def __init__(self, handle):
-        super().__init__(handle)
+        self._handle = handle
+
+    def __len__(self) -> int:
+        return self._handle.size
+
+    @cached_property
+    def path(self) -> Optional[str]:
+        return h5str(self._handle.name)
 
     @cached_property
     def units(self) -> str:
