@@ -395,7 +395,7 @@ class NXtransformationsAxis:
         return self._handle.attrs.get("vector")
 
     @cached_property
-    def offset(self) -> Optional[pint.quantity]:
+    def offset(self) -> Optional[pint.Quantity]:
         """A fixed offset applied before the transformation (three vector components).
 
         This is not intended to be a substitute for a fixed translation axis but, for
