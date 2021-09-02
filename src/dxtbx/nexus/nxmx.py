@@ -113,8 +113,11 @@ class H5Mapping(Mapping):
         return iter(self._handle)
 
     def __len__(self):
-        shape = self._handle.shape
-        return shape[0] if shape else self._handle.size
+        try:
+            return len(self._handle)
+        except TypeError:
+            # Handle scalar data sets gracefully.
+            return self._handle.size
 
     @cached_property
     def path(self):
