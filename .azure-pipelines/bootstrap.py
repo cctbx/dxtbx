@@ -796,9 +796,9 @@ def make_build():
         nproc = len(os.sched_getaffinity(0))
     except AttributeError:
         nproc = multiprocessing.cpu_count()
-    run_indirect_command(os.path.join("bin", "libtbx.scons"), args=["-j", str(nproc)])
+    run_indirect_command("libtbx.scons", args=["-j", str(nproc)])
     # run build again to make sure everything is built
-    run_indirect_command(os.path.join("bin", "libtbx.scons"), args=["-j", str(nproc)])
+    run_indirect_command("libtbx.scons", args=["-j", str(nproc)])
 
 
 def repository_at_tag(string):
