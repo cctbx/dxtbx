@@ -106,10 +106,10 @@ class H5Mapping(Mapping):
     def __init__(self, handle: Union[h5py.File, h5py.Group]):
         self._handle = handle
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Union[h5py.Group, h5py.Dataset]:
         return self._handle[key]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._handle)
 
     def __len__(self) -> int:
