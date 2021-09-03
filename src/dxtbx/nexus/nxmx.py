@@ -103,20 +103,20 @@ def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
 
 
 class H5Mapping(Mapping):
-    def __init__(self, handle):
+    def __init__(self, handle: Union[h5py.File, h5py.Group]):
         self._handle = handle
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Union[h5py.Group, h5py.Dataset]:
         return self._handle[key]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._handle)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._handle)
 
     @cached_property
-    def path(self):
+    def path(self) -> Optional[str]:
         return h5str(self._handle.name)
 
 
@@ -207,15 +207,6 @@ class NXentry(H5Mapping):
 
 class NXdata(H5Mapping):
     """NXdata describes the plottable data and related dimension scales."""
-
-    def __getitem__(self, key):
-        return self._handle[key]
-
-    def __iter__(self):
-        return iter(self._handle)
-
-    def __len__(self):
-        return len(self._handle)
 
     @cached_property
     def signal(self) -> Optional[str]:
@@ -315,7 +306,7 @@ class NXtransformations(H5Mapping):
         return self._axes
 
 
-class NXtransformationsAxis(H5Mapping):
+class NXtransformationsAxis:
     """Axis-based translation and rotation to describe a given transformation.
 
     For a chain of three transformations, where T1 depends on T2  and that in turn
@@ -348,7 +339,14 @@ class NXtransformationsAxis(H5Mapping):
     """
 
     def __init__(self, handle):
-        super().__init__(handle)
+        self._handle = handle
+
+    def __len__(self) -> int:
+        return self._handle.size
+
+    @cached_property
+    def path(self) -> Optional[str]:
+        return h5str(self._handle.name)
 
     @cached_property
     def units(self) -> str:
@@ -397,7 +395,7 @@ class NXtransformationsAxis(H5Mapping):
         return self._handle.attrs.get("vector")
 
     @cached_property
-    def offset(self) -> Optional[pint.quantity]:
+    def offset(self) -> Optional[pint.Quantity]:
         """A fixed offset applied before the transformation (three vector components).
 
         This is not intended to be a substitute for a fixed translation axis but, for
@@ -577,7 +575,7 @@ class NXinstrument(H5Mapping):
         return [NXdetector(detector) for detector in self._detectors]
 
     @cached_property
-    def beams(self) -> List(NXbeam):
+    def beams(self) -> List[NXbeam]:
         """Properties of the neutron or X-ray beam at a given location."""
         return [NXbeam(beam) for beam in self._beams]
 

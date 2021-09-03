@@ -116,7 +116,7 @@ def nxmx_example():
         phi.attrs["units"] = b"deg"
         phi.attrs["vector"] = np.array([-1.0, 0, 0])
 
-        chi = transformations.create_dataset("chi", data=np.array([0.0]))
+        chi = transformations.create_dataset("chi", data=0.0)  # scalar dataset
         chi.attrs["depends_on"] = b"/entry/sample/transformations/omega"
         chi.attrs["transformation_type"] = b"rotation"
         chi.attrs["units"] = b"deg"
