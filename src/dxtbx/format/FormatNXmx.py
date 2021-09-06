@@ -12,7 +12,8 @@ class FormatNXmx(FormatNexus):
     def understand(image_file):
         with h5py.File(image_file, "r") as handle:
             name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
-        if "I19-2" in name:
+        # Temporarily restrict this to I19-2 while developing
+        if name and "I19-2" in name:
             return True
         return False
 
