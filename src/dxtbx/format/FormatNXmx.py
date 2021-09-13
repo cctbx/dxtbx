@@ -36,6 +36,7 @@ class FormatNXmx(FormatNexus):
             self._detector_model = dxtbx.nexus.get_dxtbx_detector(nxdetector, nxbeam)
             self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
             self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
+            self._bit_depth_readout = nxdetector.bit_depth_readout
 
             if self._scan_model:
                 self._num_images = len(self._scan_model)
@@ -63,4 +64,16 @@ class FormatNXmx(FormatNexus):
         nxmx = dxtbx.nexus.nxmx.NXmx(self._cached_file_handle)
         nxdata = nxmx.entries[0].data[0]
         nxdetector = nxmx.entries[0].instruments[0].detectors[0]
-        return dxtbx.nexus.get_raw_data(nxdata, nxdetector, index)
+        raw_data = dxtbx.nexus.get_raw_data(nxdata, nxdetector, index)
+        if self._bit_depth_readout:
+            # if 32 bit then it is a signed int, I think if 8, 16 then it is
+            # unsigned with the highest two values assigned as masking values
+            if self._bit_depth_readout == 32:
+                top = 2 ** 31
+            else:
+                top = 2 ** self._bit_depth_readout
+            for data in raw_data:
+                d1d = data.as_1d()
+                d1d.set_selected(d1d == top - 1, -1)
+                d1d.set_selected(d1d == top - 2, -2)
+        return raw_data
