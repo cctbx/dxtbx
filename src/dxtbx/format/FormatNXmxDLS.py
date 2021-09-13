@@ -4,8 +4,6 @@ from typing import Union
 
 import h5py
 
-from dials.array_family import flex
-
 import dxtbx.nexus
 from dxtbx.format.FormatNXmx import FormatNXmx
 
@@ -78,31 +76,8 @@ class FormatNXmxDLS(FormatNXmx):
         except Exception:
             self._bit_depth_image = 16
 
-    def _start(self):
-        super()._start()
-        # Due to a bug the dimensions (but not the values) of the pixel_mask array
-        # are reversed. See https://jira.diamond.ac.uk/browse/MXGDA-3675.
-        if self._static_mask:
-            for m in self._static_mask:
-                m.reshape(flex.grid(reversed(m.all())))
-        # /entry/instrument/detector/module/data_size is also reversed:
-        # https://jira.diamond.ac.uk/browse/MXGDA-3676
-        for panel in self._detector_model:
-            panel.set_image_size(tuple(reversed(panel.get_image_size())))
-
     def get_raw_data(self, index):
-        if self._cached_file_handle is None:
-            self._cached_file_handle = h5py.File(self._image_file, "r")
-
-        # /entry/instrument/detector/module/data_size is reversed:
-        # https://jira.diamond.ac.uk/browse/MXGDA-3676
-        nxmx = dxtbx.nexus.nxmx.NXmx(self._cached_file_handle)
-        nxdata = nxmx.entries[0].data[0]
-        nxdetector = nxmx.entries[0].instruments[0].detectors[0]
-        for module in nxdetector.modules:
-            module.data_size = module.data_size[::-1]
-        data = dxtbx.nexus.get_raw_data(nxdata, nxdetector, index)[0]
-
+        data = super().get_raw_data(index)[0]
         if self._bit_depth_image:
             # if 32 bit then it is a signed int, I think if 8, 16 then it is
             # unsigned with the highest two values assigned as masking values
