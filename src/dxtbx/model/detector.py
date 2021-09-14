@@ -446,6 +446,14 @@ class DetectorFactory:
             set_mosflm_beam_centre(detector, beam, params.detector.mosflm_beam_centre)
 
         fast_slow_beam_centre = None
+        if (
+            params.detector.fast_slow_beam_centre
+            and params.detector.slow_fast_beam_centre
+        ):
+            raise RuntimeError(
+                "Can only set one of fast_slow_beam_centre or slow_fast_beam_centre"
+            )
+
         if params.detector.slow_fast_beam_centre:
             fast_slow_beam_centre = list(params.detector.slow_fast_beam_centre)
             fast_slow_beam_centre[0], fast_slow_beam_centre[1] = (
