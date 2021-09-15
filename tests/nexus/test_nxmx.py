@@ -1,3 +1,6 @@
+import datetime
+
+import dateutil
 import h5py
 import numpy as np
 import pytest
@@ -27,6 +30,15 @@ def test_nxmx(nxmx_example):
     nxentry = entries[0]
     assert nxentry.definition == "NXmx"
     assert nxentry.path == "/entry"
+    assert nxentry.start_time == datetime.datetime(
+        2021, 9, 10, 6, 54, 37, tzinfo=dateutil.tz.tzutc()
+    )
+    assert nxentry.end_time == datetime.datetime(
+        2021, 9, 10, 6, 55, 9, tzinfo=dateutil.tz.tzutc()
+    )
+    assert nxentry.end_time_estimated == datetime.datetime(
+        2021, 9, 10, 6, 55, 9, tzinfo=dateutil.tz.tzutc()
+    )
 
     samples = nxentry.samples
     assert len(samples) == 1
