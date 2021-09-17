@@ -48,6 +48,7 @@ class FormatNexusEigerDLS(FormatNexusEiger):
     @staticmethod
     def understand(image_file):
         # Get the file handle
+        return False
         with h5py.File(image_file, "r") as handle:
             name = FormatNexusEigerDLS.get_instrument_name(handle)
             if name is None:

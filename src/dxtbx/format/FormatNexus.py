@@ -1,4 +1,5 @@
 import sys
+from typing import Optional
 
 import h5py
 
@@ -131,7 +132,7 @@ class FormatNexus(FormatHDF5):
         raise NotImplementedError
 
     @staticmethod
-    def get_instrument_name(handle):
+    def get_instrument_name(handle) -> Optional[str]:
         if "short_name" in handle["/entry/instrument"].attrs:
             name = handle["/entry/instrument"].attrs["short_name"]
         elif "/entry/instrument/name" in handle:
@@ -141,7 +142,7 @@ class FormatNexus(FormatHDF5):
                 name = handle["/entry/instrument/name"][()]
         else:
             name = None
-        return name
+        return nexus.h5str(name)
 
 
 class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):

@@ -7,6 +7,7 @@ from cctbx import eltbx
 from scitbx.array_family import flex
 
 import dxtbx.model
+from dxtbx import flumpy
 from dxtbx.format.nexus import dataset_as_flex
 
 from . import nxmx
@@ -242,7 +243,9 @@ def get_dxtbx_detector(
             if nxdetector.saturation_value is not None
             else 0x7FFFFFFF
         )
-        trusted_range = (underload, overload)
+        # Not entirely clear whether the dxtbx trusted_range is inclusive or exclusive
+        # https://github.com/cctbx/dxtbx/issues/182
+        trusted_range = (underload - 1, overload)
 
         material = KNOWN_SENSOR_MATERIALS.get(nxdetector.sensor_material)
         if not material:
@@ -297,10 +300,15 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool]:
     result is intended to be compatible with the get_static_mask() method of dxtbx
     format classes.
     """
-    pixel_mask = nxdetector.get("pixel_mask")
-    if pixel_mask and pixel_mask.ndim == 2:
+    try:
+        pixel_mask = nxdetector.pixel_mask
+    except KeyError:
+        return None
+    if pixel_mask is not None and pixel_mask.ndim == 2:
         all_slices = get_detector_module_slices(nxdetector)
-        return tuple(dataset_as_flex(pixel_mask, slices) == 0 for slices in all_slices)
+        return tuple(
+            flumpy.from_numpy(pixel_mask[slices]) == 0 for slices in all_slices
+        )
 
 
 def get_raw_data(
@@ -313,7 +321,11 @@ def get_raw_data(
     get_raw_data() method of dxtbx format classes.
     """
     if nxdata.signal:
-        data = nxdata[nxdata.signal]
+        try:
+            data = nxdata[nxdata.signal]
+        except KeyError:
+            logger.warning(f"Key {nxdata.signal} specified by NXdata.signal missing")
+            data = list(nxdata.values())[0]
     else:
         data = list(nxdata.values())[0]
     all_data = []

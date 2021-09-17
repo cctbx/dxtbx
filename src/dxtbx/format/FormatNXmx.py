@@ -11,11 +11,17 @@ class FormatNXmx(FormatNexus):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file, "r") as handle:
-            name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
-        # Temporarily restrict this to I19-2 while developing
-        if name and "I19-2" in name:
-            return True
-        return False
+            return (
+                len(
+                    [
+                        entry
+                        for entry in dxtbx.nexus.nxmx.find_class(handle, "NXentry")
+                        if "definition" in entry
+                        and dxtbx.nexus.nxmx.h5str(entry["definition"][()]) == "NXmx"
+                    ]
+                )
+                > 0
+            )
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
@@ -25,9 +31,10 @@ class FormatNXmx(FormatNexus):
         self._static_mask = None
 
         with h5py.File(self._image_file, "r") as fh:
-            nxmx = dxtbx.nexus.nxmx.NXmx(fh)
-            nxsample = nxmx.entries[0].samples[0]
-            nxinstrument = nxmx.entries[0].instruments[0]
+            nxmx = self._get_nxmx(fh)
+            nxentry = nxmx.entries[0]
+            nxsample = nxentry.samples[0]
+            nxinstrument = nxentry.instruments[0]
             nxdetector = nxinstrument.detectors[0]
             nxbeam = nxinstrument.beams[0]
 
@@ -37,6 +44,7 @@ class FormatNXmx(FormatNexus):
             self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
             self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
             self._bit_depth_readout = nxdetector.bit_depth_readout
+            self._start_time = nxentry.start_time
 
             if self._scan_model:
                 self._num_images = len(self._scan_model)
@@ -47,6 +55,9 @@ class FormatNXmx(FormatNexus):
                 else:
                     data = list(nxdata.values())[0]
                 self._num_images, *_ = data.shape
+
+    def _get_nxmx(self, fh: h5py.File):
+        return dxtbx.nexus.nxmx.NXmx(fh)
 
     def _beam(self, index=None):
         return self._beam_model
@@ -61,7 +72,7 @@ class FormatNXmx(FormatNexus):
         if self._cached_file_handle is None:
             self._cached_file_handle = h5py.File(self._image_file, "r")
 
-        nxmx = dxtbx.nexus.nxmx.NXmx(self._cached_file_handle)
+        nxmx = self._get_nxmx(self._cached_file_handle)
         nxdata = nxmx.entries[0].data[0]
         nxdetector = nxmx.entries[0].instruments[0].detectors[0]
         raw_data = dxtbx.nexus.get_raw_data(nxdata, nxdetector, index)

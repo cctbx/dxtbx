@@ -174,7 +174,8 @@ class NXentry(H5Mapping):
         to avoid confusion with local time. Note that the time zone of the beamline
         should be provided in NXentry/NXinstrument/time_zone.
         """
-        return dateutil.parser.isoparse(h5str(self._handle["start_time"][()]))
+        if "start_time" in self._handle:
+            return dateutil.parser.isoparse(h5str(self._handle["start_time"][()]))
 
     @cached_property
     def end_time(self) -> Optional[datetime.datetime]:
@@ -199,7 +200,10 @@ class NXentry(H5Mapping):
         should be provided in NXentry/NXinstrument/time_zone. This field may be filled
         with a value estimated before an observed value is available.
         """
-        return dateutil.parser.isoparse(h5str(self._handle["end_time_estimated"][()]))
+        if "end_time_estimated" in self._handle:
+            return dateutil.parser.isoparse(
+                h5str(self._handle["end_time_estimated"][()])
+            )
 
     @cached_property
     def definition(self) -> str:
@@ -812,7 +816,7 @@ class NXdetector(H5Mapping):
         to the underload_value.
         """
         if "underload_value" in self._handle:
-            return self._handle["underload_value"][()]
+            return int(self._handle["underload_value"][()])
 
     @cached_property
     def saturation_value(self) -> Optional[NXInt]:
@@ -825,7 +829,7 @@ class NXdetector(H5Mapping):
         to the underload_value.
         """
         if "saturation_value" in self._handle:
-            return self._handle["saturation_value"][()]
+            return int(self._handle["saturation_value"][()])
 
     @cached_property
     def modules(self) -> List[NXdetector_module]:
