@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from dxtbx.format.FormatNexusEigerDLS16MI03 import FormatNexusEigerDLS16MI03
+from dxtbx.format.FormatNXmxDLS16MI03 import FormatNXmxDLS16MI03
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 dials = pytest.importorskip("dials")
@@ -29,7 +29,7 @@ pytest.importorskip("h5py")
     reason="Test images not available",
 )
 def test_masked_i03(master_h5, masked_count):
-    assert FormatNexusEigerDLS16MI03.understand(master_h5)
+    assert FormatNXmxDLS16MI03.understand(master_h5)
     expts = ExperimentListFactory.from_filenames([master_h5])
     assert (
         expts[0].detector[0].get_untrusted_rectangle_mask().count(False) == masked_count

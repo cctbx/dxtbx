@@ -8,6 +8,7 @@ from dxtbx.format.FormatNexus import FormatNexus
 class FormatNexusEiger(FormatNexus):
     @staticmethod
     def understand(image_file):
+        return False
         # Get the file handle
         with h5py.File(image_file, "r") as handle:
             try:
