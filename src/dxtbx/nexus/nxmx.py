@@ -784,7 +784,7 @@ class NXdetector(H5Mapping):
     def bit_depth_readout(self) -> Optional[NXInt]:
         """How many bits the electronics record per pixel (recommended)."""
         if "bit_depth_readout" in self._handle:
-            return self._handle["bit_depth_readout"][()]
+            return int(self._handle["bit_depth_readout"][()])
 
     @cached_property
     def sensor_material(self) -> str:

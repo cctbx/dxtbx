@@ -61,6 +61,7 @@ def test_nxmx(nxmx_example):
     assert (
         detector.depends_on.path == "/entry/instrument/detector/transformations/det_z"
     )
+    assert detector.bit_depth_readout == 32
 
     assert len(detector.modules) == 1
     module = detector.modules[0]
