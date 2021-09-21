@@ -26,7 +26,7 @@ except ImportError:
 from functools import reduce
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
-import dateutil
+import dateutil.parser
 import h5py
 import numpy as np
 import pint
