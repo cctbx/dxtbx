@@ -1,3 +1,12 @@
+DIALS 3.6.2 (2021-09-21)
+========================
+
+Bugfixes
+--------
+
+- Fix broken ``dxtbx.install_format`` command. (`#434 <https://github.com/cctbx/dxtbx/issues/434>`_)
+
+
 DIALS 3.6.0 (2021-08-16)
 ========================
 
