@@ -73,7 +73,7 @@ setup(
     if not (home_location / "dxtbx_custom").check():
         (home_location / "dxtbx_custom").mksymlinkto(home_location)
     procrunner.run(
-        ["dxtbx.python", home_location / "setup.py", "develop", "--user"],
+        ["libtbx.python", home_location / "setup.py", "develop", "--user"],
         working_directory=home_location,
         print_stdout=False,
     ).check_returncode()
