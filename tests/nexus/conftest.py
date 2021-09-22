@@ -14,6 +14,9 @@ def nxmx_example():
         entry = f.create_group("/entry")
         entry.attrs["NX_class"] = "NXentry"
         entry["definition"] = "NXmx"
+        entry["start_time"] = "2021-09-10T06:54:37Z"
+        entry["end_time"] = "2021-09-10T06:55:09Z"
+        entry["end_time_estimated"] = "2021-09-10T06:55:09Z"
 
         source = entry.create_group("source")
         source.attrs["NX_class"] = "NXsource"

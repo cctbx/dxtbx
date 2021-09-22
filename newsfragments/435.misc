@@ -1,0 +1,1 @@
+``dxtbx.nexus.nxmx.NXEntry``: ``start_time``, ``end_time`` and ``end_time_estimated`` now return ``datetime.datetime`` objects

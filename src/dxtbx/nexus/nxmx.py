@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import logging
 import operator
 from collections import namedtuple
@@ -25,6 +26,7 @@ except ImportError:
 from functools import reduce
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
+import dateutil.parser
 import h5py
 import numpy as np
 import pint
@@ -165,17 +167,17 @@ class NXentry(H5Mapping):
         return NXsource(self._sources[0])
 
     @cached_property
-    def start_time(self) -> str:
+    def start_time(self) -> datetime.datetime:
         """Starting time of measurement.
 
         ISO 8601 time/date of the first data point collected in UTC, using the Z suffix
         to avoid confusion with local time. Note that the time zone of the beamline
         should be provided in NXentry/NXinstrument/time_zone.
         """
-        return self._handle["start_time"][()]
+        return dateutil.parser.isoparse(h5str(self._handle["start_time"][()]))
 
     @cached_property
-    def end_time(self) -> Optional[str]:
+    def end_time(self) -> Optional[datetime.datetime]:
         """Ending time of measurement.
 
         ISO 8601 time/date of the last data point collected in UTC, using the Z suffix
@@ -186,10 +188,10 @@ class NXentry(H5Mapping):
         omitted.
         """
         if "end_time" in self._handle:
-            return self._handle["end_time"][()]
+            return dateutil.parser.isoparse(h5str(self._handle["end_time"][()]))
 
     @cached_property
-    def end_time_estimated(self) -> str:
+    def end_time_estimated(self) -> datetime.datetime:
         """Estimated ending time of the measurement.
 
         ISO 8601 time/date of the last data point collected in UTC, using the Z suffix
@@ -197,7 +199,7 @@ class NXentry(H5Mapping):
         should be provided in NXentry/NXinstrument/time_zone. This field may be filled
         with a value estimated before an observed value is available.
         """
-        return self._handle["end_time_estimated"][()]
+        return dateutil.parser.isoparse(h5str(self._handle["end_time_estimated"][()]))
 
     @cached_property
     def definition(self) -> str:
