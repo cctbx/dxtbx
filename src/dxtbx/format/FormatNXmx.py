@@ -52,7 +52,6 @@ class FormatNXmx(FormatNexus):
             self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
             self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
             self._bit_depth_readout = nxdetector.bit_depth_readout
-            self._start_time = nxentry.start_time
 
             if self._scan_model:
                 self._num_images = len(self._scan_model)
