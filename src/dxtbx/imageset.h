@@ -581,7 +581,7 @@ public:
       }
     } else {
       // Check indices
-      if (scitbx::af::max(indices) >= data.size()) {
+      if (indices.size() > data.size()) {
         throw DXTBX_ERROR("Indices are not consistent with # of images");
       }
     }
@@ -903,7 +903,7 @@ public:
    */
   virtual beam_ptr get_beam_for_image(std::size_t index = 0) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_beam(indices_[index]);
+    return data_.get_beam(index);
   }
 
   /**
@@ -912,7 +912,7 @@ public:
    */
   virtual detector_ptr get_detector_for_image(std::size_t index = 0) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_detector(indices_[index]);
+    return data_.get_detector(index);
   }
 
   /**
@@ -921,7 +921,7 @@ public:
    */
   virtual goniometer_ptr get_goniometer_for_image(std::size_t index = 0) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_goniometer(indices_[index]);
+    return data_.get_goniometer(index);
   }
 
   /**
@@ -930,7 +930,7 @@ public:
    */
   virtual scan_ptr get_scan_for_image(std::size_t index = 0) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_scan(indices_[index]);
+    return data_.get_scan(index);
   }
 
   /**
@@ -940,7 +940,7 @@ public:
    */
   virtual void set_beam_for_image(const beam_ptr &beam, std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
-    data_.set_beam(beam, indices_[index]);
+    data_.set_beam(beam, index);
   }
 
   /**
@@ -951,7 +951,7 @@ public:
   virtual void set_detector_for_image(const detector_ptr &detector,
                                       std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
-    data_.set_detector(detector, indices_[index]);
+    data_.set_detector(detector, index);
   }
 
   /**
@@ -962,7 +962,7 @@ public:
   virtual void set_goniometer_for_image(const goniometer_ptr &goniometer,
                                         std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
-    data_.set_goniometer(goniometer, indices_[index]);
+    data_.set_goniometer(goniometer, index);
   }
 
   /**
@@ -973,7 +973,7 @@ public:
   virtual void set_scan_for_image(const scan_ptr &scan, std::size_t index = 0) {
     DXTBX_ASSERT(scan == NULL || scan->get_num_images() == 1);
     DXTBX_ASSERT(index < indices_.size());
-    data_.set_scan(scan, indices_[index]);
+    data_.set_scan(scan, index);
   }
 
   /**
@@ -986,7 +986,7 @@ public:
     if (data_.has_single_file_reader()) {
       return data_.get_master_path();
     }
-    return data_.get_path(indices_[index]);
+    return data_.get_path(index);
   }
 
   /**
@@ -996,7 +996,7 @@ public:
    */
   std::string get_image_identifier(std::size_t index) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_image_identifier(indices_[index]);
+    return data_.get_image_identifier(index);
   }
 
   /**
@@ -1006,7 +1006,7 @@ public:
    */
   void mark_for_rejection(std::size_t index, bool reject) {
     DXTBX_ASSERT(index < indices_.size());
-    data_.mark_for_rejection(indices_[index], reject);
+    data_.mark_for_rejection(index, reject);
   }
 
   /**
@@ -1015,7 +1015,7 @@ public:
    */
   bool is_marked_for_rejection(std::size_t index) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.is_marked_for_rejection(indices_[index]);
+    return data_.is_marked_for_rejection(index);
   }
 
   /**

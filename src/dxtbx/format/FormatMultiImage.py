@@ -146,8 +146,8 @@ class FormatMultiImage(Format):
         # If get_num_images hasn't been implemented, we need indices for number of images
         if cls.get_num_images == FormatMultiImage.get_num_images:
             assert single_file_indices is not None
-            assert min(single_file_indices) >= 0
-            num_images = max(single_file_indices) + 1
+            assert len(single_file_indices) > 0
+            num_images = len(single_file_indices)
         else:
             num_images = None
 
