@@ -169,11 +169,12 @@ public:
   ImageSetData(boost::python::object reader, masker_ptr masker)
       : reader_(reader),
         masker_(masker),
-        beams_(boost::python::len(reader)),
-        detectors_(boost::python::len(reader)),
-        goniometers_(boost::python::len(reader)),
-        scans_(boost::python::len(reader)),
-        reject_(boost::python::len(reader)) {}
+        beams_(),
+        detectors_(),
+        goniometers_(),
+        scans_(),
+        reject_(),
+        reader_len_(boost::python::len(reader)){}
 
   /**
    * @returns The reader object
@@ -256,7 +257,7 @@ public:
    * @param reject True/False reject
    */
   void mark_for_rejection(std::size_t index, bool reject) {
-    DXTBX_ASSERT(index < reject_.size());
+    DXTBX_ASSERT(index < reader_len_);
     reject_[index] = reject;
   }
 
@@ -264,24 +265,14 @@ public:
    * @param index The image index
    * @returns If the image is marked for rejection
    */
-  bool is_marked_for_rejection(std::size_t index) const {
-    DXTBX_ASSERT(index < reject_.size());
-    return reject_[index];
-  }
-
-  /**
-   * Get the array of booleans for image rejection
-   */
-  scitbx::af::shared<bool> get_reject_list() const {
-    return reject_;
-  }
-
-  /**
-   * Set the array of booleans for image rejection
-   */
-  void set_reject_list(const scitbx::af::const_ref<bool> &reject) {
-    DXTBX_ASSERT(reject_.size() == reject.size());
-    std::copy(reject.begin(), reject.end(), reject_.begin());
+  bool is_marked_for_rejection(std::size_t index) {
+    DXTBX_ASSERT(index < reader_len_);
+    auto i = reject_.find(index);
+    if(i == reject_.end()) {
+        reject_[index] = false;
+        return false;
+    }
+    return i->second;
   }
 
   /**
@@ -289,9 +280,14 @@ public:
    * @param index The image index
    * @returns The beam model
    */
-  beam_ptr get_beam(std::size_t index) const {
-    DXTBX_ASSERT(index < beams_.size());
-    return beams_[index];
+  beam_ptr get_beam(std::size_t index) {
+    DXTBX_ASSERT(index < reader_len_);
+    auto i = beams_.find(index);
+    if(i == beams_.end()) {
+      beams_[index] = beam_ptr();
+      return beam_ptr();
+    }
+    return i->second;
   }
 
   /**
@@ -300,7 +296,7 @@ public:
    * @param The beam model
    */
   void set_beam(const beam_ptr &beam, std::size_t index) {
-    DXTBX_ASSERT(index < beams_.size());
+    DXTBX_ASSERT(index < reader_len_);
     beams_[index] = beam;
   }
 
@@ -309,9 +305,14 @@ public:
    * @param index The image index
    * @returns The detector model
    */
-  detector_ptr get_detector(std::size_t index) const {
-    DXTBX_ASSERT(index < detectors_.size());
-    return detectors_[index];
+  detector_ptr get_detector(std::size_t index) {
+    DXTBX_ASSERT(index < reader_len_);
+    auto i = detectors_.find(index);
+    if(i == detectors_.end()) {
+      detectors_[index] = detector_ptr();
+      return detector_ptr();
+    }
+    return i->second;
   }
 
   /**
@@ -320,7 +321,7 @@ public:
    * @param The detector model
    */
   void set_detector(const detector_ptr &detector, std::size_t index) {
-    DXTBX_ASSERT(index < detectors_.size());
+    DXTBX_ASSERT(index < reader_len_);
     detectors_[index] = detector;
   }
 
@@ -329,9 +330,14 @@ public:
    * @param index The image index
    * @returns The goniometer model
    */
-  goniometer_ptr get_goniometer(std::size_t index) const {
-    DXTBX_ASSERT(index < goniometers_.size());
-    return goniometers_[index];
+  goniometer_ptr get_goniometer(std::size_t index) {
+    DXTBX_ASSERT(index < reader_len_);
+    auto i = goniometers_.find(index);
+    if(i == goniometers_.end()) {
+      goniometers_[index] = goniometer_ptr();
+      return goniometer_ptr();
+    }
+    return i->second;
   }
 
   /**
@@ -340,7 +346,7 @@ public:
    * @param The goniometer model
    */
   void set_goniometer(const goniometer_ptr &goniometer, std::size_t index) {
-    DXTBX_ASSERT(index < goniometers_.size());
+    DXTBX_ASSERT(index < reader_len_);
     goniometers_[index] = goniometer;
   }
 
@@ -349,9 +355,14 @@ public:
    * @param index The image index
    * @returns The scan model
    */
-  scan_ptr get_scan(std::size_t index) const {
-    DXTBX_ASSERT(index < scans_.size());
-    return scans_[index];
+  scan_ptr get_scan(std::size_t index) {
+    DXTBX_ASSERT(index < reader_len_);
+    auto i = scans_.find(index);
+    if(i == scans_.end()) {
+      scans_[index] = scan_ptr();
+      return scan_ptr();
+    }
+    return i->second;
   }
 
   /**
@@ -360,7 +371,7 @@ public:
    * @param The scan model
    */
   void set_scan(const scan_ptr &scan, std::size_t index) {
-    DXTBX_ASSERT(index < scans_.size());
+    DXTBX_ASSERT(index < reader_len_);
     scans_[index] = scan;
   }
 
@@ -368,7 +379,7 @@ public:
    * @returns the number of images
    */
   std::size_t size() const {
-    return boost::python::len(reader_);
+    return reader_len_;
   }
 
   /**
@@ -496,11 +507,12 @@ protected:
 
   boost::python::object reader_;
   boost::shared_ptr<GoniometerShadowMasker> masker_;
-  scitbx::af::shared<beam_ptr> beams_;
-  scitbx::af::shared<detector_ptr> detectors_;
-  scitbx::af::shared<goniometer_ptr> goniometers_;
-  scitbx::af::shared<scan_ptr> scans_;
-  scitbx::af::shared<bool> reject_;
+  std::map<size_t, beam_ptr> beams_;
+  std::map<size_t, detector_ptr> detectors_;
+  std::map<size_t, goniometer_ptr> goniometers_;
+  std::map<size_t, scan_ptr> scans_;
+  std::map<size_t, bool> reject_;
+  size_t reader_len_;
   ExternalLookup external_lookup_;
 
   std::string template_;
@@ -795,7 +807,7 @@ public:
    * @param index The image index
    * @returns The mask
    */
-  Image<bool> get_empty_mask() const {
+  Image<bool> get_empty_mask() {
     Detector detector = detail::safe_dereference(get_detector_for_image(0));
     Image<bool> mask;
     for (std::size_t i = 0; i < detector.size(); ++i) {
@@ -812,7 +824,7 @@ public:
    * @param mask The mask to write into
    * @returns The mask
    */
-  Image<bool> get_untrusted_rectangle_mask(Image<bool> mask) const {
+  Image<bool> get_untrusted_rectangle_mask(Image<bool> mask) {
     Detector detector = detail::safe_dereference(get_detector_for_image(0));
     DXTBX_ASSERT(mask.n_tiles() == detector.size());
     for (std::size_t i = 0; i < detector.size(); ++i) {
@@ -901,7 +913,7 @@ public:
    * @param index The image index
    * @returns the beam at index
    */
-  virtual beam_ptr get_beam_for_image(std::size_t index = 0) const {
+  virtual beam_ptr get_beam_for_image(std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
     return data_.get_beam(indices_[index]);
   }
@@ -910,7 +922,7 @@ public:
    * @param index The image index
    * @returns the detector at index
    */
-  virtual detector_ptr get_detector_for_image(std::size_t index = 0) const {
+  virtual detector_ptr get_detector_for_image(std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
     return data_.get_detector(indices_[index]);
   }
@@ -919,7 +931,7 @@ public:
    * @param index The image index
    * @returns the goniometer at index
    */
-  virtual goniometer_ptr get_goniometer_for_image(std::size_t index = 0) const {
+  virtual goniometer_ptr get_goniometer_for_image(std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
     return data_.get_goniometer(indices_[index]);
   }
@@ -928,7 +940,7 @@ public:
    * @param index The image index
    * @returns the scan at index
    */
-  virtual scan_ptr get_scan_for_image(std::size_t index = 0) const {
+  virtual scan_ptr get_scan_for_image(std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
     return data_.get_scan(indices_[index]);
   }
@@ -1013,7 +1025,7 @@ public:
    * @param index The image index
    * @returns If the image is marked for rejection
    */
-  bool is_marked_for_rejection(std::size_t index) const {
+  bool is_marked_for_rejection(std::size_t index) {
     DXTBX_ASSERT(index < indices_.size());
     return data_.is_marked_for_rejection(indices_[index]);
   }
@@ -1455,7 +1467,7 @@ public:
    * Get the complete seta
    * @returns The complete sequence
    */
-  ImageSequence complete_sequence() const {
+  ImageSequence complete_sequence() {
     // Compute scan
     Scan scan = detail::safe_dereference(data_.get_scan(0));
     for (std::size_t i = 1; i < data_.size(); ++i) {
@@ -1476,7 +1488,7 @@ public:
    * @param last The last index
    * @returns The partial sequence
    */
-  ImageSequence partial_sequence(std::size_t first, std::size_t last) const {
+  ImageSequence partial_sequence(std::size_t first, std::size_t last) {
     // Check slice indices
     DXTBX_ASSERT(last > first);
 

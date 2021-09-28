@@ -132,22 +132,22 @@ namespace dxtbx { namespace boost_python {
       return boost::python::make_tuple(obj.reader(), obj.masker());
     }
 
-    static boost::shared_ptr<BeamBase> get_beam(const ImageSetData &self,
+    static boost::shared_ptr<BeamBase> get_beam(ImageSetData &self,
                                                 std::size_t i) {
       return self.get_beam(i);
     }
 
-    static boost::shared_ptr<Detector> get_detector(const ImageSetData &self,
+    static boost::shared_ptr<Detector> get_detector(ImageSetData &self,
                                                     std::size_t i) {
       return self.get_detector(i);
     }
 
-    static boost::shared_ptr<Goniometer> get_goniometer(const ImageSetData &self,
+    static boost::shared_ptr<Goniometer> get_goniometer(ImageSetData &self,
                                                         std::size_t i) {
       return self.get_goniometer(i);
     }
 
-    static boost::shared_ptr<Scan> get_scan(const ImageSetData &self, std::size_t i) {
+    static boost::shared_ptr<Scan> get_scan(ImageSetData &self, std::size_t i) {
       return self.get_scan(i);
     }
 
