@@ -155,6 +155,17 @@ namespace dxtbx { namespace boost_python {
       return self.get_sequence(i);
     }
 
+    template<typename Func>
+    static boost::python::tuple get_python_model_list(ImageSetData obj, Func get){
+      boost::python::list models;
+      boost::python::list indices;
+      for (std::size_t i = 0; i < obj.size(); ++i) {
+        models.append(get(obj, i));
+        indices.append(i);                
+      }      
+      return boost::python::make_tuple(models, indices);
+    }
+
     template <typename Model, typename Func>
     static boost::python::tuple get_model_list(ImageSetData obj, Func get) {
       // Create a list of models and a list of indices
@@ -189,13 +200,13 @@ namespace dxtbx { namespace boost_python {
 
     static boost::python::tuple get_model_tuple(ImageSetData obj) {
       return boost::python::make_tuple(
-        ImageSetDataPickleSuite::get_model_list<Beam>(
+        ImageSetDataPickleSuite::get_python_model_list(
           obj, &ImageSetDataPickleSuite::get_beam),
         ImageSetDataPickleSuite::get_model_list<Detector>(
           obj, &ImageSetDataPickleSuite::get_detector),
         ImageSetDataPickleSuite::get_model_list<Goniometer>(
           obj, &ImageSetDataPickleSuite::get_goniometer),
-        ImageSetDataPickleSuite::get_model_list<Sequence>(
+        ImageSetDataPickleSuite::get_python_model_list(
           obj, &ImageSetDataPickleSuite::get_sequence));
     }
 
@@ -248,10 +259,36 @@ namespace dxtbx { namespace boost_python {
         ((&obj)->*set)(model_list[index_list[i]], i);
       }
     }
+    template<typename Func>
+    static void set_python_model_list(ImageSetData &obj, boost::python::tuple data, Func set){
+      // Extract to python lists
+      boost::python::list models =
+      boost::python::extract<boost::python::list>(data[0])();
+      boost::python::list indices =
+      boost::python::extract<boost::python::list>(data[1])();
+
+      // Convert to c++ vectors
+      std::vector<boost::python::object > model_list;
+      std::vector<std::size_t> index_list;
+      for (std::size_t i = 0; i < boost::python::len(models); ++i) {
+        model_list.push_back(models[i]);
+      }
+      for (std::size_t i = 0; i < boost::python::len(indices); ++i) {
+        index_list.push_back(boost::python::extract<std::size_t>(indices[i])());
+      }
+
+      // Set the models
+      DXTBX_ASSERT(index_list.size() == obj.size());
+      for (std::size_t i = 0; i < index_list.size(); ++i) {
+        DXTBX_ASSERT(index_list[i] < model_list.size());
+        ((&obj)->*set)(model_list[index_list[i]], i);
+      }
+
+    }
 
     static void set_model_tuple(ImageSetData &obj, boost::python::tuple models) {
       DXTBX_ASSERT(boost::python::len(models) == 4);
-      ImageSetDataPickleSuite::set_model_list<Beam>(
+      ImageSetDataPickleSuite::set_python_model_list(
         obj,
         boost::python::extract<boost::python::tuple>(models[0])(),
         &ImageSetData::set_beam);
@@ -263,7 +300,7 @@ namespace dxtbx { namespace boost_python {
         obj,
         boost::python::extract<boost::python::tuple>(models[2]),
         &ImageSetData::set_goniometer);
-      ImageSetDataPickleSuite::set_model_list<Sequence>(
+      ImageSetDataPickleSuite::set_python_model_list(
         obj,
         boost::python::extract<boost::python::tuple>(models[3]),
         &ImageSetData::set_sequence);
@@ -669,17 +706,17 @@ namespace dxtbx { namespace boost_python {
 
     class_<ImageSequence, bases<ImageSet> >("ImageSequence", no_init)
       .def(init<const ImageSetData &,
-                const ImageSequence::beam_ptr &,
+                const boost::python::object &,
                 const ImageSequence::detector_ptr &,
                 const ImageSequence::goniometer_ptr &,
-                const ImageSequence::sequence_ptr &>(
+                const boost::python::object &>(
         (arg("data"), arg("beam"), arg("detector"), arg("goniometer"), arg("sequence"))))
       .def(init<const ImageSetData &,
                 const scitbx::af::const_ref<std::size_t> &,
-                const ImageSequence::beam_ptr &,
+                const boost::python::object &,
                 const ImageSequence::detector_ptr &,
                 const ImageSequence::goniometer_ptr &,
-                const ImageSequence::sequence_ptr &>((arg("data"),
+                const boost::python::object &>((arg("data"),
                                                   arg("indices"),
                                                   arg("beam"),
                                                   arg("detector"),

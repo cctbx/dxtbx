@@ -311,7 +311,7 @@ public:
    * @param index The image index
    * @returns The detector model
    */
-  boost::python::object get_detector(std::size_t index) const {
+  detector_ptr get_detector(std::size_t index) const {
     DXTBX_ASSERT(index < detectors_.size());
     return detectors_[index];
   }
@@ -321,7 +321,7 @@ public:
    * @param index The image index
    * @param The detector model
    */
-  void set_detector(const boost::python::object &detector, std::size_t index) {
+  void set_detector(const detector_ptr &detector, std::size_t index) {
     DXTBX_ASSERT(index < detectors_.size());
     detectors_[index] = detector;
   }
@@ -976,7 +976,7 @@ public:
    * @param sequence The sequence model
    */
   virtual void set_sequence_for_image(const boost::python::object &sequence, std::size_t index = 0) {
-    DXTBX_ASSERT(sequence == NULL || sequence->get_num_images() == 1);
+    DXTBX_ASSERT(sequence == NULL || sequence.attr("get_num_images")() == 1);
     DXTBX_ASSERT(index < indices_.size());
     data_.set_sequence(sequence, indices_[index]);
   }
@@ -1217,9 +1217,9 @@ public:
         goniometer_(goniometer),
         sequence_(sequence) {
     // Check the sequence is the same length and number of images
-    DXTBX_ASSERT(sequence.get() != NULL);
+    DXTBX_ASSERT(sequence != boost::python::api::object());
     if (data.size() > 1) {
-      if (data.size() != sequence->get_num_images()) {
+      if (data.size() != sequence.attr("get_num_images")()) {
         throw DXTBX_ERROR("Sequence size is not compatible with number of images");
       }
     }
@@ -1254,7 +1254,7 @@ public:
         goniometer_(goniometer),
         sequence_(sequence) {
     // Check the sequence is the same length as number of indices
-    DXTBX_ASSERT(sequence.get() != NULL);
+    DXTBX_ASSERT(sequence != boost::python::api::object());
 
     // Check indices are sequential
     if (indices.size() > 0) {
@@ -1286,7 +1286,7 @@ public:
    */
   int2 get_array_range() const {
     DXTBX_ASSERT(sequence_ != NULL);
-    return sequence_->get_array_range();
+    return boost::python::extract<int2>(sequence_.attr("get_array_range")())();
   }
 
   /**
@@ -1355,10 +1355,9 @@ public:
    * @param sequence The sequence model
    */
   void set_sequence(const boost::python::object &sequence) {
-    DXTBX_ASSERT(sequence.get() != NULL);
+    DXTBX_ASSERT(sequence != boost::python::api::object());
     if (sequence.attr("get_num_images")() != ImageSet::size()) {
       DXTBX_ASSERT(sequence_ != NULL);
-      boost::python::extract<std::string>(data.attr("__class__").attr("__name__"))();
       int i0 = boost::python::extract<int>(sequence.attr("get_array_range")()[0])();
       int i1 = boost::python::extract<int>(sequence.attr("get_array_range")()[1])();
       int j0 = boost::python::extract<int>(sequence_.attr("get_array_range")()[0])();
@@ -1444,11 +1443,11 @@ public:
    */
   ImageSequence complete_sequence() const {
     // Compute sequence
-    boost::python::object complete_sequence = ImageSet::data_.get_sequence(0));
-    DXTBX_ASSERT(complete_sequence == boost::python::object());
+    boost::python::object complete_sequence = ImageSet::data_.get_sequence(0);
+    DXTBX_ASSERT(complete_sequence != boost::python::api::object());
     for (std::size_t i = 1; i < ImageSet::data_.size(); ++i) {
-      boost::python::object sequence = ImageSet::data_.get_sequence(i));
-      DXTBX_ASSERT(sequence == boost::python::object());
+      boost::python::object sequence = ImageSet::data_.get_sequence(i);
+      DXTBX_ASSERT(sequence != boost::python::api::object());
       complete_sequence += sequence;
     }
    
@@ -1472,10 +1471,10 @@ public:
 
     // Construct a partial sequence
     boost::python::object partial_sequence = ImageSet::get_sequence_for_image(first);
-    DXTBX_ASSERT(partial_sequence == boost::python::object());
+    DXTBX_ASSERT(partial_sequence != boost::python::api::object());
     for (std::size_t i = first + 1; i < last; ++i) {
-      sequence = ImageSet::get_sequence_for_image(i));
-      DXTBX_ASSERT(sequence == boost::python::object());
+      boost::python::object sequence = ImageSet::get_sequence_for_image(i);
+      DXTBX_ASSERT(sequence != boost::python::api::object());
       partial_sequence += sequence;
     }
 
@@ -1483,7 +1482,7 @@ public:
     scitbx::af::const_ref<std::size_t> indices(&ImageSet::indices_[first], last - first);
 
     // Construct the partial sequence
-    ImageSequence<BeamT, SequenceT> result(ImageSet::data_,
+    ImageSequence result(ImageSet::data_,
                          indices,
                          get_beam(),
                          get_detector(),
@@ -1510,8 +1509,8 @@ public:
     if (masker != NULL) {
       DXTBX_ASSERT(sequence_ != NULL);
       DXTBX_ASSERT(detector_ != NULL);
-      double scan_angle = rad_as_deg(
-        sequence_->get_angle_from_image_index(index + sequence_->get_image_range()[0]));
+      double rad_angle = boost::python::extract<double>(sequence_.attr("get_angle_from_image_index")(index + sequence_.attr("get_image_range")()[0]));
+      double scan_angle = rad_as_deg(rad_angle);
       dyn_mask = masker->get_mask(*detector_, scan_angle);
     }
 

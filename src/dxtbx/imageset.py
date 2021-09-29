@@ -8,11 +8,9 @@ from dxtbx_imageset_ext import (
     ExternalLookupItemBool,
     ExternalLookupItemDouble,
     ImageGrid,
+    ImageSequence,
     ImageSet,
     ImageSetData,
-    RotImageSequence,
-    TOFImageSequence,
-    TOFImageSetData,
 )
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
@@ -26,12 +24,10 @@ __all__ = (
     "ExternalLookupItemDouble",
     "ImageGrid",
     "ImageSet",
-    "TOFImageSequence",
+    "ImageSequence",
     "ImageSetData",
-    "TOFImageSetData",
     "ImageSetFactory",
     "ImageSetLazy",
-    "RotImageSequence",
     "MemReader",
 )
 
@@ -39,8 +35,7 @@ __all__ = (
 class ImageSetType(Enum):
     ImageSet = 1
     ImageSetLazy = 2
-    RotImageSequence = 3
-    TOFImageSequence = 4
+    ImageSequence = 3
 
 
 def _expand_template(template: str, indices: Iterable[int]) -> List[str]:
@@ -178,7 +173,7 @@ class _:
 
     @staticmethod
     def is_sequence(imageset):
-        return type(imageset) in [RotImageSequence, TOFImageSequence]
+        return isinstance(imageset, ImageSequence)
 
 
 class ImageSetLazy(ImageSet):
@@ -249,7 +244,7 @@ class ImageSetLazy(ImageSet):
         return super().get_gain(index)
 
 
-@boost_adaptbx.boost.python.inject_into(RotImageSequence)
+@boost_adaptbx.boost.python.inject_into(ImageSequence)
 class _:
     def __getitem__(self, item):
         """Get an item from the sequence stream.
@@ -295,118 +290,6 @@ class _:
     def get_template(self):
         """Return the template"""
         return self.data().get_template()
-
-
-@boost_adaptbx.boost.python.inject_into(TOFImageSequence)
-class _(object):
-    def __getitem__(self, item):
-        """Get an item from the sequence stream.
-
-        If the item is an index, read and return the image at the given index.
-        Otherwise, if the item is a slice, then create a new Sequence object
-        with the given number of array indices from the slice.
-
-        Params:
-            item The index or slice
-
-        Returns:
-            An image or new Sequence object
-
-        """
-        if isinstance(item, slice):
-            offset = self.get_sequence().get_batch_offset()
-            if item.step is not None:
-                raise IndexError("Sequences must be sequential")
-
-            # nasty workaround for https://github.com/dials/dials/issues/1153
-            # slices with -1 in them are meaningful :-/ so grab the original
-            # constructor arguments of the slice object.
-            # item.start and item.stop may have been compromised at this point.
-            if offset < 0:
-                start, stop, step = item.__reduce__()[1]
-                if start is None:
-                    start = 0
-                else:
-                    start -= offset
-                if stop is None:
-                    stop = len(self)
-                else:
-                    stop -= offset
-                return self.partial_set(start, stop)
-            else:
-                start = item.start or 0
-                stop = item.stop or (len(self) + offset)
-                return self.partial_set(start - offset, stop - offset)
-        else:
-            return self.get_corrected_data(item)
-
-    def get_template(self):
-        """Return the template"""
-        return self.data().get_template()
-
-    def __iter__(self):
-        """Iterate over the array indices and read each image in turn."""
-        for i in range(len(self)):
-            yield self[i]
-
-    def get_vendortype(self, index):
-        """Get the vendor information."""
-        return self.data().get_vendor()
-
-    def get_format_class(self):
-        """Get format class name"""
-        return self.data().get_format_class()
-
-    def get_spectrum(self, index):
-        """Get the spectrum if available"""
-        kwargs = self.params()
-        if self.data().has_single_file_reader():
-            format_instance = self.get_format_class().get_instance(
-                self.data().get_master_path(), **kwargs
-            )
-        else:
-            format_instance = self.get_format_class().get_instance(
-                self.get_path(index), **kwargs
-            )
-        return format_instance.get_spectrum(self.indices()[index])
-
-    def params(self):
-        """Get the parameters"""
-        return self.data().get_params()
-
-    def get_detectorbase(self, index):
-        """
-        A function to be injected into the imageset to get the detectorbase instance
-        """
-        kwargs = self.params()
-        if self.data().has_single_file_reader():
-            format_instance = self.get_format_class().get_instance(
-                self.data().get_master_path(), **kwargs
-            )
-            return format_instance.get_detectorbase(self.indices()[index])
-        else:
-            format_instance = self.get_format_class().get_instance(
-                self.get_path(index), **kwargs
-            )
-            return format_instance.get_detectorbase()
-
-    def reader(self):
-        """
-        Return the reader
-        """
-        return self.data().reader()
-
-    def masker(self):
-        """
-        Return the masker
-        """
-        return self.data().masker()
-
-    def paths(self):
-        """
-        Return the list of paths
-        """
-        return [self.get_path(i) for i in range(len(self))]
 
     def get_pixel_spectra(self, panel_idx, x, y):
         return self.reader().get_pixel_spectra(panel_idx, x, y)
@@ -523,7 +406,7 @@ class ImageSetFactory:
         detector=None,
         goniometer=None,
         sequence=None,
-        sequence_type=ImageSetType.RotImageSequence,
+        sequence_type=ImageSetType.ImageSequence,
     ):
         """Create a new sequence from a template.
 
@@ -622,7 +505,7 @@ class ImageSetFactory:
         sequence=None,
         check_format=True,
         format_kwargs=None,
-        imageset_type=ImageSetType.RotImageSequence,
+        imageset_type=ImageSetType.ImageSequence,
     ):
         """Create a sequence"""
         indices = sorted(indices)
@@ -664,8 +547,8 @@ class ImageSetFactory:
 
     @staticmethod
     def imageset_from_anyset(imageset):
-        """Create a new ImageSet object from an imageset object. Converts RotImageSequence to ImageSet."""
-        known_types = [ImageSet, RotImageSequence, TOFImageSequence, ImageSetLazy]
+        """Create a new ImageSet object from an imageset object. Converts ImageSequence to ImageSet."""
+        known_types = [ImageSet, ImageSetLazy, ImageSequence]
         assert type(imageset) in known_types, "Unrecognized imageset type: %s" % str(
             type(imageset)
         )

@@ -22,10 +22,10 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.imageset import (
     ImageGrid,
+    ImageSequence,
     ImageSet,
     ImageSetFactory,
     ImageSetType,
-    RotImageSequence,
 )
 from dxtbx.model import (
     BeamFactory,
@@ -250,7 +250,7 @@ class ExperimentListDict:
                 format_kwargs=format_kwargs,
                 imageset_type=ImageSetType.ImageSet,
             )
-        elif imageset_data["__id__"] == "TOFImageSequence":
+        elif imageset_data["__id__"] == "ImageSequence":
             imageset = self._make_sequence(
                 imageset_data,
                 beam=beam,
@@ -258,12 +258,12 @@ class ExperimentListDict:
                 goniometer=goniometer,
                 sequence=sequence,
                 format_kwargs=format_kwargs,
-                imageset_type=ImageSetType.TOFImageSequence,
+                imageset_type=ImageSetType.ImageSequence,
             )
         elif imageset_data["__id__"] == "ImageGrid":
             imageset = self._make_grid(imageset_data, format_kwargs=format_kwargs)
         elif (
-            imageset_data["__id__"] == "RotImageSequence"
+            imageset_data["__id__"] == "ImageSequence"
             or imageset_data["__id__"] == "ImageSweep"
             or imageset_data["__id__"] == "ImageSequence"
         ):
@@ -274,7 +274,7 @@ class ExperimentListDict:
                 goniometer=goniometer,
                 sequence=sequence,
                 format_kwargs=format_kwargs,
-                imageset_type=ImageSetType.RotImageSequence,
+                imageset_type=ImageSetType.ImageSequence,
             )
         elif imageset_data["__id__"] == "MemImageSet":
             imageset = self._make_mem_imageset(imageset_data)
@@ -470,7 +470,7 @@ class ExperimentListDict:
         goniometer=None,
         sequence=None,
         format_kwargs=None,
-        imageset_type=ImageSetType.RotImageSequence,
+        imageset_type=ImageSetType.ImageSequence,
     ):
 
         """Make an image sequence."""
@@ -625,7 +625,7 @@ class ExperimentListFactory:
         # Now, build experiments from these files. Duplicating the logic of
         # the previous implementation:
         # - FormatMultiImage files each have their own ImageSet
-        # - Every set of images forming a scan goes into its own RotImageSequence
+        # - Every set of images forming a scan goes into its own ImageSequence
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
 
@@ -688,7 +688,7 @@ class ExperimentListFactory:
             # if imagesequence is still images, make one experiment for each
             # all referencing into the same image set
             if (
-                isinstance(imageset, RotImageSequence)
+                isinstance(imageset, ImageSequence)
                 and imageset.get_sequence().is_still()
             ):
                 start, end = imageset.get_sequence().get_array_range()
@@ -1357,9 +1357,9 @@ def _create_imageset(records, format_class, format_kwargs=None):
 
 
 def _create_imagesequence(record, format_class, format_kwargs=None):
-    # type: (ImageMetadataRecord, Type[Format], Dict) -> dxtbx.imageset.RotImageSequence
+    # type: (ImageMetadataRecord, Type[Format], Dict) -> dxtbx.imageset.ImageSequence
     """
-    Create an RotImageSequence object from a single rotation data image.
+    Create an ImageSequence object from a single rotation data image.
 
     Args:
         record: Single-image metadata records to merge into a single imageset

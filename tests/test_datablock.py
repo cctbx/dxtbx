@@ -5,7 +5,7 @@ import pickle
 import pytest
 
 from dxtbx.datablock import DataBlockFactory
-from dxtbx.imageset import RotImageSequence
+from dxtbx.imageset import ImageSequence
 
 
 @pytest.fixture(scope="session")
@@ -92,14 +92,14 @@ def test_json2(multiple_block_filenames):
     for b1, b2 in zip(blocks1, blocks2):
         for im1, im2 in zip(b1.extract_imagesets(), b2.extract_imagesets()):
             assert len(im1) == len(im2)
-            if isinstance(im1, RotImageSequence):
-                assert isinstance(im2, RotImageSequence)
+            if isinstance(im1, ImageSequence):
+                assert isinstance(im2, ImageSequence)
                 assert im1.get_beam() == im2.get_beam()
                 assert im1.get_detector() == im2.get_detector()
                 assert im1.get_goniometer() == im2.get_goniometer()
                 assert im1.get_sequence() == im2.get_sequence()
             else:
-                assert not isinstance(im2, RotImageSequence)
+                assert not isinstance(im2, ImageSequence)
                 for i in range(len(im1)):
                     assert im1.get_beam(i) == im2.get_beam(i)
                     assert im1.get_detector(i) == im2.get_detector(i)
