@@ -176,6 +176,28 @@ public:
         reject_(boost::python::len(reader)) {}
 
   /**
+   * Copy constructor for the imageset data object
+   */
+  /*
+  ImageSetData(boost::python::object reader, masker_ptr masker,
+               scitbx::af::shared<beam_ptr> beams, scitbx::af::shared<detector_ptr> detectors,
+               scitbx::af::shared<goniometer_ptr> goniometers, scitbx::af::shared<scan_ptr> scans,
+               scitbx::af::shared<bool> reject, ExternalLookup external_lookup,
+               std::string templatestr, std::string vendor,
+               std::string params, std::string format)
+      : reader_(reader),
+        masker_(masker),
+        beams_(beams),
+        detectors_(detectors),
+        goniometers_(goniometers),
+        scans_(scans),
+        reject_(reject),
+        external_lookup_(external_lookup),
+        template_(templatestr), vendor_(vendor),
+        params_(params), format_(format) {}
+    */
+
+  /**
    * @returns The reader object
    */
   boost::python::object reader() {
@@ -432,6 +454,33 @@ public:
    */
   void set_format(std::string x) {
     format_ = x;
+  }
+
+  ImageSetData partial_data(boost::python::object reader, std::size_t first, std::size_t last) const {
+    DXTBX_ASSERT(last > first);
+    //return ImageSetData(reader, masker_,
+    //                    scitbx::af::shared<beam_ptr>(&beams_[first], last - first),
+    //                    scitbx::af::shared<detector_ptr>(&detectors_[first], last - first),
+    //                    scitbx::af::shared<goniometer_ptr>(&goniometers_[first], last - first),
+    //                    scitbx::af::shared<scan_ptr>(&scans_[first], last - first),
+    //                    scitbx::af::shared<bool>(&reject_[first], last - first),
+    //                    external_lookup_, template_, vendor_, params_, format_);
+    //
+    ImageSetData partial = ImageSetData(reader, masker_);
+    for (size_t i = 0; i < last-first; i++) {
+      partial.beams_[i] = beams_[i+first];
+      partial.detectors_[i] = detectors_[i+first];
+      partial.goniometers_[i] = goniometers_[i+first];
+      partial.scans_[i] = scans_[i+first];
+      partial.reject_[i] = reject_[i+first];
+    }
+    partial.external_lookup_ = external_lookup_;
+    partial.template_ = template_;
+    partial.vendor_ = vendor_;
+    partial.params_ = params_;
+    partial.format_ = format_;
+
+    return partial;
   }
 
 protected:
@@ -1037,9 +1086,9 @@ public:
    * @param last The last slice index
    * @returns The partial set
    */
-  virtual ImageSet partial_set(std::size_t first, std::size_t last) const {
+  virtual ImageSet partial_set(boost::python::object reader, std::size_t first, std::size_t last) const {
     DXTBX_ASSERT(last > first);
-    return ImageSet(data_,
+    return ImageSet(data_.partial_data(reader, first, last),
                     scitbx::af::const_ref<std::size_t>(&indices_[first], last - first));
   }
 

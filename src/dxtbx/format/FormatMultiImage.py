@@ -50,8 +50,8 @@ class Reader:
     def __len__(self):
         return self._num_images
 
-    def copy(self, filenames, indices=None):
-        return Reader(self.format_class, filenames, indices)
+    def copy(self, filenames, num_images=None):
+        return Reader(self.format_class, filenames, num_images, **self.kwargs)
 
     def identifiers(self):
         return ["%s-%d" % (self._filename, index) for index in range(len(self))]
