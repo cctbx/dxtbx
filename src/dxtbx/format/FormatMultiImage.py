@@ -6,13 +6,11 @@ from scitbx.array_family import flex
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import (
+    ImageSequence,
     ImageSet,
     ImageSetData,
     ImageSetLazy,
     ImageSetType,
-    RotImageSequence,
-    TOFImageSequence,
-    TOFImageSetData,
 )
 from dxtbx.model import MultiAxisGoniometer
 
@@ -185,7 +183,7 @@ class FormatMultiImage(Format):
             else:
                 masker = None
 
-            if imageset_type == ImageSetType.RotImageSequence:
+            if imageset_type == ImageSetType.ImageSequence:
                 isetdata = ImageSetData(
                     reader=reader,
                     masker=masker,
@@ -196,7 +194,7 @@ class FormatMultiImage(Format):
                 )
 
                 # Create the sequence
-                iset = RotImageSequence(
+                iset = ImageSequence(
                     isetdata,
                     beam=beam,
                     detector=detector,
@@ -204,26 +202,6 @@ class FormatMultiImage(Format):
                     sequence=sequence,
                     indices=single_file_indices,
                 )
-            elif imageset_type == ImageSetType.TOFImageSequence:
-                isetdata = TOFImageSetData(
-                    reader=reader,
-                    masker=masker,
-                    vendor=vendor,
-                    params=format_kwargs,
-                    format=cls,
-                    template=filenames[0],
-                )
-
-                # Create the sequence
-                iset = TOFImageSequence(
-                    isetdata,
-                    beam=beam,
-                    detector=detector,
-                    goniometer=goniometer,
-                    sequence=sequence,
-                    indices=single_file_indices,
-                )
-
             _add_static_mask_to_iset(format_instance, iset)
 
             return iset
@@ -355,8 +333,6 @@ class FormatMultiImage(Format):
                 return True
             if single_file_indices is None:
                 return True
-            if imageset_type == ImageSetType.TOFImageSequence:
-                return True
             return False
 
         # Process input
@@ -395,10 +371,7 @@ class FormatMultiImage(Format):
                 format_instance,
                 format_kwargs,
             )
-        elif imageset_type in [
-            ImageSetType.RotImageSequence,
-            ImageSetType.TOFImageSequence,
-        ]:
+        elif imageset_type == ImageSetType.ImageSequence:
             return create_imagesequence(
                 cls,
                 filenames,

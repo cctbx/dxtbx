@@ -11,7 +11,7 @@ from libtbx.containers import OrderedSet
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.imageset import ImageGrid, ImageSet, RotImageSequence, TOFImageSequence
+from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet
 from dxtbx.model.beam import BeamFactory, MonochromaticBeamFactory, TOFBeamFactory
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.model.detector import DetectorFactory
@@ -76,8 +76,7 @@ __all__ = (
     "GoniometerFactory",
     "ImageGrid",
     "ImageSet",
-    "TOFImageSequence",
-    "RotImageSequence",
+    "ImageSequence",
     "KappaDirection",
     "KappaGoniometer",
     "KappaScanAxis",
@@ -630,11 +629,11 @@ class _:
         # Serialize all the imagesets
         result["imageset"] = []
         for imset in index_lookup["imageset"]:
-            if isinstance(imset, RotImageSequence):
+            if isinstance(imset, ImageSequence):
                 # FIXME_HACK
                 template = get_template(imset)
                 r = {
-                    "__id__": "RotImageSequence",
+                    "__id__": "ImageSequence",
                     "template": template,
                 }
                 if imset.reader().is_single_file_reader():
@@ -654,14 +653,9 @@ class _:
                 }
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
-            elif isinstance(imset, TOFImageSequence):
-                template = get_template(imset)
-                r = {"__id__": "TOFImageSequence", "template": template}
-                if imset.reader().is_single_file_reader():
-                    r["single_file_indices"] = list(imset.indices())
             else:
                 raise TypeError(
-                    "expected ImageSet or RotImageSequence, got %s" % type(imset)
+                    "expected ImageSet or ImageSequence, got %s" % type(imset)
                 )
             r["mask"] = abspath_or_none(imset.external_lookup.mask.filename)
             r["gain"] = abspath_or_none(imset.external_lookup.gain.filename)

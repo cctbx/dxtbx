@@ -100,23 +100,23 @@ class DataBlock:
     def iter_sequences(self):
         """Iterate over sequence groups."""
         for iset in self._imagesets:
-            if isinstance(iset, dxtbx.imageset.RotImageSequence):
+            if isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
 
     def iter_stills(self):
         """Iterate over still groups."""
         for iset in self._imagesets:
-            if not isinstance(iset, dxtbx.imageset.RotImageSequence):
+            if not isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
 
     def _find_unique_items(self, item_name, filter_none=False):
         """Return a list of unique beams, detectors, ... in order.
         Optionally filter out None values (unless they came in via
-        an RotImageSequence)."""
+        an ImageSequence)."""
         items = {}
         for imageset in self._imagesets:
             getter_function = getattr(imageset, "get_" + item_name)
-            if isinstance(imageset, dxtbx.imageset.RotImageSequence):
+            if isinstance(imageset, dxtbx.imageset.ImageSequence):
                 items[getter_function()] = None
             else:
                 for i in range(len(imageset)):
@@ -159,12 +159,12 @@ class DataBlock:
 
         # Loop through all the imagesets
         for iset in self._imagesets:
-            if isinstance(iset, dxtbx.imageset.RotImageSequence):
+            if isinstance(iset, dxtbx.imageset.ImageSequence):
                 if iset.reader().is_single_file_reader():
                     result["imageset"].append(
                         dict(
                             [
-                                ("__id__", "RotImageSequence"),
+                                ("__id__", "ImageSequence"),
                                 (
                                     "master",
                                     os.path.abspath(iset.reader().master_path()),
@@ -204,7 +204,7 @@ class DataBlock:
                     result["imageset"].append(
                         dict(
                             [
-                                ("__id__", "RotImageSequence"),
+                                ("__id__", "ImageSequence"),
                                 ("template", os.path.abspath(iset.get_template())),
                                 (
                                     "mask",
@@ -491,7 +491,7 @@ def datablocks_from_dict(obj, check_format=True, directory=None):
             format_kwargs = imageset["params"]
         else:
             format_kwargs = {}
-        if ident == "RotImageSequence" or ident == "ImageSweep":
+        if ident == "ImageSequence" or ident == "ImageSweep":
             beam, detector, gonio, scan = load_models(imageset)
             if "template" in imageset:
                 template = resolve_path(imageset["template"], directory=directory)
@@ -669,7 +669,7 @@ def datablocks_from_dict(obj, check_format=True, directory=None):
                 iset.update_detector_px_mm_data()
             imagesets.append(iset)
         else:
-            raise RuntimeError("expected ImageSet/RotImageSequence, got %s" % ident)
+            raise RuntimeError("expected ImageSet/ImageSequence, got %s" % ident)
 
     return DataBlock(imagesets)
 
