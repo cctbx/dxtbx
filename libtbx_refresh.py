@@ -70,7 +70,7 @@ def _install_dxtbx_setup_readonly_fallback():
             "--no-build-isolation",
             "--no-deps",
             "-e",
-            dxtbx_root_path,
+            str(dxtbx_root_path),
         ],
         check=True,
     )
