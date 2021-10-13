@@ -4,6 +4,7 @@
 import time
 
 from cctbx.eltbx import attenuation_coefficient
+from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
@@ -53,6 +54,15 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
                 continue
             token, value = record.split(":")
             self._cif_header_dictionary[token.strip()] = value.strip()
+
+        _X = tuple(
+            map(float, self._cif_header_dictionary["Rotation_axis_vector"].split())
+        )
+        _Z = tuple(
+            map(float, self._cif_header_dictionary["Incident_beam_vector"].split())
+        )
+
+        self._R = align_reference_frame(_X, (1, 0, 0), _Z, (0, 0, -1))
 
         self._multi_panel = False
 
@@ -137,32 +147,3 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
 
     def get_vendortype(self):
         return "Rigaku"
-
-    @staticmethod
-    def as_file(
-        detector,
-        beam,
-        gonio,
-        scan,
-        data,
-        path,
-        header_convention="PILATUS_1.2",
-        det_type="PILATUS3 6M",
-    ):
-        FormatCBFMini.as_file(
-            detector, beam, gonio, scan, data, path, header_convention, det_type
-        )
-
-    def get_raw_data(self):
-        if not self._multi_panel:
-            return super().get_raw_data()
-
-        if self._raw_data is None:
-            raw_data = self._read_cbf_image()
-            self._raw_data = []
-            d = self.get_detector()
-            for panel in d:
-                xmin, ymin, xmax, ymax = self.coords[panel.get_name()]
-                self._raw_data.append(raw_data[ymin:ymax, xmin:xmax])
-            self._raw_data = tuple(self._raw_data)
-        return self._raw_data
