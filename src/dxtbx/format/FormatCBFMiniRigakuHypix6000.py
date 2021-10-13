@@ -66,6 +66,8 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
         )
 
         self._R = align_reference_frame(_X, (1, 0, 0), _Z, (0, 0, 1))
+        self._X = self._R * _X
+        self._Z = self._R * _Z
 
         self._multi_panel = False
 
@@ -114,16 +116,23 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
         t0 = thickness
         px_mm = ParallaxCorrectedPxMmStrategy(mu, t0)
 
+        # yes, fast and slow are inverted
         fast = self._R * tuple(
-            map(float, self._cif_header_dictionary["Detector_fast_axis_vector"].split())
-        )
-        slow = self._R * tuple(
             map(float, self._cif_header_dictionary["Detector_slow_axis_vector"].split())
         )
+        slow = self._R * tuple(
+            map(float, self._cif_header_dictionary["Detector_fast_axis_vector"].split())
+        )
+
+        # fast and slow have already been rotated but origin needs rotating
         origin = (
             -(beam_x * pixel_x * 1000.0 * fast)
             - (beam_y * pixel_y * 1000.0 * slow)
             - (distance * 1000 * matrix.col((0, 0, 1)))
+        ).rotate_around_origin(
+            self._X,
+            float(self._cif_header_dictionary["Detector_2theta"].split()[0]),
+            deg=True,
         )
 
         detector = self._detector_factory.make_detector(
@@ -178,6 +187,15 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
         names = flex.std_string(("PHI", "KAPPA", "OMEGA"))
 
         return self._goniometer_factory.multi_axis(axes, angles, names, 2)
+
+    def _beam(self):
+        wavelength = float(self._cif_header_dictionary["Wavelength"].split()[0])
+
+        beam = self._beam_factory.make_beam(
+            sample_to_source=self._Z, wavelength=wavelength
+        )
+
+        return beam
 
     def get_vendortype(self):
         return "Rigaku"
