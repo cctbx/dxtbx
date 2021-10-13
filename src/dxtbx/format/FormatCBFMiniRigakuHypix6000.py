@@ -5,6 +5,9 @@ import time
 
 from cctbx.eltbx import attenuation_coefficient
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
+from scitbx import matrix
+
+from dials.array_family import flex
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
@@ -62,7 +65,7 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
             map(float, self._cif_header_dictionary["Incident_beam_vector"].split())
         )
 
-        self._R = align_reference_frame(_X, (1, 0, 0), _Z, (0, 0, -1))
+        self._R = align_reference_frame(_X, (1, 0, 0), _Z, (0, 0, 1))
 
         self._multi_panel = False
 
@@ -111,9 +114,17 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
         t0 = thickness
         px_mm = ParallaxCorrectedPxMmStrategy(mu, t0)
 
-        fast = 1, 0, 0
-        slow = 0, -1, 0
-        origin = -beam_x * pixel_x * 1000.0, beam_y * pixel_y * 1000.0, -distance * 1000
+        fast = self._R * tuple(
+            map(float, self._cif_header_dictionary["Detector_fast_axis_vector"].split())
+        )
+        slow = self._R * tuple(
+            map(float, self._cif_header_dictionary["Detector_slow_axis_vector"].split())
+        )
+        origin = (
+            -(beam_x * pixel_x * 1000.0 * fast)
+            - (beam_y * pixel_y * 1000.0 * slow)
+            - (distance * 1000 * matrix.col((0, 0, 1)))
+        )
 
         detector = self._detector_factory.make_detector(
             sensor,
@@ -144,6 +155,29 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
         return self._scan_factory.single_file(
             self._image_file, exposure_time, osc_start, osc_range, timestamp
         )
+
+    def _goniometer(self):
+        phi = self._R * tuple(
+            map(float, self._cif_header_dictionary["Phi_axis_vector"].split())
+        )
+        kappa = self._R * tuple(
+            map(float, self._cif_header_dictionary["Kappa_axis_vector"].split())
+        )
+        omega = self._R * tuple(
+            map(float, self._cif_header_dictionary["Omega_axis_vector"].split())
+        )
+
+        axes = flex.vec3_double((phi, kappa, omega))
+
+        _phi = float(self._cif_header_dictionary["Phi"].split()[0])
+        _kappa = float(self._cif_header_dictionary["Kappa"].split()[0])
+        _omega = float(self._cif_header_dictionary["Omega"].split()[0])
+
+        angles = flex.double((_phi, _kappa, _omega))
+
+        names = flex.std_string(("PHI", "KAPPA", "OMEGA"))
+
+        return self._goniometer_factory.multi_axis(axes, angles, names, 2)
 
     def get_vendortype(self):
         return "Rigaku"
