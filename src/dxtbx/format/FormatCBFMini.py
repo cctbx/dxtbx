@@ -47,6 +47,7 @@ class FormatCBFMini(FormatCBF):
                 "SSRL",
                 "?",
                 "XDS special",
+                "RIGAKU_1.0",
                 "GENERIC_MINI",  # intended for simulated PAD data, non-Pilatus array size
             ]
             for convention in these:
