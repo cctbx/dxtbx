@@ -101,17 +101,20 @@ class FormatCBFMiniRigakuHypix6000(FormatCBFMini):
         t0 = thickness
         px_mm = ParallaxCorrectedPxMmStrategy(mu, t0)
 
-        detector = self._detector_factory.simple(
+        fast = 1, 0, 0
+        slow = 0, -1, 0
+        origin = -beam_x * pixel_x * 1000.0, beam_y * pixel_y * 1000.0, -distance * 1000
+
+        detector = self._detector_factory.make_detector(
             sensor,
-            distance * 1000.0,
-            (beam_x * pixel_x * 1000.0, beam_y * pixel_y * 1000.0),
-            "+x",
-            "-y",
+            fast,
+            slow,
+            origin,
             (1000 * pixel_x, 1000 * pixel_y),
             (nx, ny),
             (underload, overload),
-            [],
             px_mm=px_mm,
+            mu=mu,
         )
 
         detector[0].set_thickness(thickness)
