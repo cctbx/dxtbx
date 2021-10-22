@@ -53,12 +53,11 @@ def _install_dxtbx_setup_readonly_fallback():
     entrypoints will not be installed, but the basic package metadata
     and other entrypoints will be enumerable through dispatcher black magic
     """
-    dxtbx_root_path = Path(libtbx.env.dist_path("dxtbx"))
-    dxtbx_import_path = dxtbx_root_path / "src"
+    dxtbx_root_path = libtbx.env.dist_path("dxtbx")
+    dxtbx_import_path = os.path.join(dxtbx_root_path, "src")
 
     # Install this into a build/dxtbx subfolder
-    build_path = Path(abs(libtbx.env.build_path))
-    dxtbx_build_path = build_path / "dxtbx"
+    dxtbx_build_path = abs(libtbx.env.build_path / "dxtbx")
     subprocess.run(
         [
             sys.executable,
@@ -81,14 +80,14 @@ def _install_dxtbx_setup_readonly_fallback():
     # Update the libtbx environment pythonpaths to point to the source
     # location which now has an .egg-info folder; this will mean that
     # the PYTHONPATH is written into the libtbx dispatchers
-    rel_path = libtbx.env.as_relocatable_path(str(dxtbx_import_path))
+    rel_path = libtbx.env.as_relocatable_path(dxtbx_import_path)
     if rel_path not in env.pythonpath:
         env.pythonpath.insert(0, rel_path)
 
     # Update the sys.path so that we can find the .egg-info in this process
     # if we do a full reconstruction of the working set
-    if str(dxtbx_import_path) not in sys.path:
-        sys.path.insert(0, str(dxtbx_import_path))
+    if dxtbx_import_path not in sys.path:
+        sys.path.insert(0, dxtbx_import_path)
 
     # ...and add to the existing pkg_resources working_set
     if pkg_resources:
