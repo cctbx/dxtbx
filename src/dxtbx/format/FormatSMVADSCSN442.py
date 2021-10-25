@@ -5,7 +5,8 @@ day which had its own way of recording beam centre.
 """
 
 
-import time
+import dateutil.parser
+from dateutil.tz import gettz
 
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN
 
@@ -32,13 +33,15 @@ class FormatSMVADSCSN442(FormatSMVADSCSN):
         # this detector lived two lives - it moved on May 14, 2007 to ALS 5.0.1
         # where the denzo beam centre was removed
 
+        # Format will be "%a %b %d %H:%M:%S %Y" or "%a %b %d %H:%M:%S %Z %Y"
         date_str = self._header_dictionary["DATE"]
-        format_string = "%a %b %d %H:%M:%S %Y"
-        try:
-            tm = time.strptime(date_str, format_string)
-        except ValueError:
-            format_string = "%a %b %d %H:%M:%S %Z %Y"
-            tm = time.strptime(date_str, format_string)
+
+        # Need to add extra time zones in case of running outside of PDT or PST
+        tzinfos = {
+            "PDT": gettz("PST8PDT"),
+            "PST": gettz("PST8PDT"),
+        }
+        tm = dateutil.parser.parse(date_str, tzinfos=tzinfos).timetuple()
 
         als831 = True
         if tm.tm_year > 2006 or (tm.tm_year == 2006 and tm.tm_yday >= 134):
