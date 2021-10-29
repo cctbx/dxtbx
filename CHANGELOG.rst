@@ -1,3 +1,36 @@
+DIALS 3.7.0 (2021-11-01)
+========================
+
+Features
+--------
+
+- New function ``Crystal.clone()``, to get a new Crystal object of the same type. (`#420 <https://github.com/cctbx/dxtbx/issues/420>`_)
+- New ``fast_slow_beam_centre=`` parameter for detector models allows setting the beam centre using fast, slow [panel] value ordering. (`#421 <https://github.com/cctbx/dxtbx/issues/421>`_)
+- Added ``dlstbx.nexus.nxmx`` module that provides a high-level read-only interface to HDF5 files adhering to the NeXus/NXmx standard, and support for Diamond Light Source's I19-2 EIGER detector. (`#423 <https://github.com/cctbx/dxtbx/issues/423>`_)
+- Allow importing experiment lists from single-file templates. (`#425 <https://github.com/cctbx/dxtbx/issues/425>`_)
+- Support NeXus data from the Tristan event-mode detector on beamline I19 at Diamond Light Source. (`#428 <https://github.com/cctbx/dxtbx/issues/428>`_)
+
+
+Bugfixes
+--------
+
+- Fix installation using Python 3.7 on Windows. (`#441 <https://github.com/cctbx/dxtbx/issues/441>`_)
+- Better support for detector SMV ADSC SN442. (`#445 <https://github.com/cctbx/dxtbx/issues/445>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- The function ``dxtbx.model.detector_helpers.project_2d`` has been renamed ``get_detector_projection_2d_axes``. Usage of the function ``project_2d`` is deprecated and will be removed after DIALS 3.7. (`#422 <https://github.com/cctbx/dxtbx/issues/422>`_)
+- Drop support for Python 3.6. (`#424 <https://github.com/cctbx/dxtbx/issues/424>`_)
+
+
+Misc
+----
+
+- `#394 <https://github.com/cctbx/dxtbx/issues/394>`_, `#422 <https://github.com/cctbx/dxtbx/issues/422>`_, `#430 <https://github.com/cctbx/dxtbx/issues/430>`_, `#431 <https://github.com/cctbx/dxtbx/issues/431>`_, `#432 <https://github.com/cctbx/dxtbx/issues/432>`_, `#435 <https://github.com/cctbx/dxtbx/issues/435>`_, `#436 <https://github.com/cctbx/dxtbx/issues/436>`_
+
+
 DIALS 3.6.2 (2021-09-21)
 ========================
 
