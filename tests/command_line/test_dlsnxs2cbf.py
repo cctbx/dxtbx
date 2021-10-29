@@ -1,3 +1,4 @@
+import os
 import shutil
 import warnings
 
@@ -58,7 +59,7 @@ def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
             " or users with Developer Mode can create symlinks freely."
         )
         for name in links:
-            shutil.copy((screen / name), tmp_path)
+            shutil.copy(os.fspath(screen / name), os.fspath(tmp_path))
     shutil.copy(screen / master, tmp_path / master)
 
     with h5py.File(tmp_path / master, "r+") as f:
