@@ -1,4 +1,6 @@
+import os
 import shutil
+import warnings
 
 import h5py
 import numpy as np
@@ -48,8 +50,16 @@ def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
     screen = dials_data("thaumatin_eiger_screen", pathlib=True)
     master = "Therm_6_1_master.h5"
     links = (path.name for path in screen.glob("*") if path.name != master)
-    for name in links:
-        (tmp_path / name).symlink_to(screen / name)
+    try:
+        for name in links:
+            (tmp_path / name).symlink_to(screen / name)
+    except OSError:
+        warnings.warn(
+            "Copying files where unable to symlink. On Windows, Administrators"
+            " or users with Developer Mode can create symlinks freely."
+        )
+        for name in links:
+            shutil.copy(os.fspath(screen / name), os.fspath(tmp_path))
     shutil.copy(screen / master, tmp_path / master)
 
     with h5py.File(tmp_path / master, "r+") as f:
