@@ -1,7 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
-from builtins import range
-
 from scitbx.array_family import flex
 
 from dxtbx.model import Beam, Detector, Goniometer, Scan

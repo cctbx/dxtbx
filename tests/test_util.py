@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from dxtbx.util import format_float_with_standard_uncertainty as ffwsu
 
 

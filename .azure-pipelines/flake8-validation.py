@@ -1,18 +1,12 @@
 import os
 import subprocess
 
-# Flake8 validation
-known_bad = {
-    "filecache_controller.py": {"E722"},
-}
 failures = 0
 try:
     flake8 = subprocess.run(
         [
             "flake8",
             "--exit-zero",
-            "--max-line-length=88",
-            "--select=E401,E711,E712,E713,E714,E721,E722,E901,F401,F402,F403,F405,F631,F632,F633,F811,F812,F821,F822,F841,F901,W191,W292,W293,W602,W603,W604,W605,W606",
         ],
         capture_output=True,
         check=True,
@@ -34,14 +28,11 @@ for line in flake8.stdout.split("\n"):
     filename, lineno, column, error = line.split(":", maxsplit=3)
     errcode, error = error.strip().split(" ", maxsplit=1)
     filename = os.path.normpath(filename)
-    if errcode in known_bad.get(filename, {}):
-        print("Ignoring warning", line)
-    else:
-        failures += 1
-        print(
-            f"##vso[task.logissue type=error;sourcepath={filename};"
-            f"linenumber={lineno};columnnumber={column};code={errcode};]" + error
-        )
+    failures += 1
+    print(
+        f"##vso[task.logissue type=error;sourcepath={filename};"
+        f"linenumber={lineno};columnnumber={column};code={errcode};]" + error
+    )
 
 if failures:
     print(f"##vso[task.logissue type=warning]Found {failures} flake8 violation(s)")

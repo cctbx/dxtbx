@@ -9,7 +9,7 @@ issue_format = "`#{issue} <https://github.com/cctbx/dxtbx/issues/{issue}>`_"
 
 [tool.isort]
 sections="FUTURE,STDLIB,THIRDPARTY,CCTBX,DIALS,FIRSTPARTY,LOCALFOLDER"
-known_firstparty="dxtbx_*"
+known_firstparty="dxtbx_*,dxtbx"
 known_cctbx="boost,boost_adaptbx,cbflib_adaptbx,cctbx,chiltbx,clipper_adaptbx,cma_es,cootbx,crys3d,cudatbx,fable,fast_linalg,fftw3tbx,gltbx,iota,iotbx,libtbx,mmtbx,omptbx,prime,rstbx,scitbx,simtbx,smtbx,spotfinder,tbxx,ucif,wxtbx,xfel"
 known_dials="dials"
 profile="black"
