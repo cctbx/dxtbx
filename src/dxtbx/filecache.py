@@ -339,7 +339,7 @@ class lazy_file_cache:
                 )
 
 
-class pseudo_file(io.IOBase):
+class pseudo_file:
     """A file-like object that serves as frontend to a dxtbx lazy file cache."""
 
     def __init__(self, lazy_cache_object):
