@@ -2,8 +2,11 @@
 byte offset compression which are _not_ made by dectris."""
 
 import binascii
+import os
 from io import TextIOWrapper
-from typing import IO
+from typing import IO, Union
+
+import scitbx.array_family.flex as flex
 
 from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFFull import FormatCBFFull
@@ -28,7 +31,7 @@ class FormatCBFFullByteOffset(FormatCBFFull):
     """An image reading class for full CBF format images with byte-offset compression"""
 
     @staticmethod
-    def understand(image_file):
+    def understand(image_file: Union[str, bytes, os.PathLike]) -> bool:
         """Check to see if this looks like an CBF format image, i.e. we can
         make sense of it."""
 
@@ -54,7 +57,7 @@ class FormatCBFFullByteOffset(FormatCBFFull):
 
         return False
 
-    def _read_cbf_image(self):
+    def _read_cbf_image(self) -> flex.int:
         start_tag = binascii.unhexlify("0c1a04d5")
 
         with self.open_file(self._image_file, "rb") as fh:
@@ -72,7 +75,7 @@ class FormatCBFFullByteOffset(FormatCBFFull):
 
         return pixel_values
 
-    def get_raw_data(self):
+    def get_raw_data(self) -> flex.int:
         if self._raw_data is None:
             data = self._read_cbf_image()
             self._raw_data = data
