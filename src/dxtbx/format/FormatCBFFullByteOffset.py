@@ -1,16 +1,31 @@
 """Byte offset implementation of fullCBF format, for use with CBF files using
 byte offset compression which are _not_ made by dectris."""
 
-from __future__ import absolute_import, division, print_function
-
 import binascii
+from io import TextIOWrapper
+from typing import IO
 
 from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 
 
+def _read_cif_binary_format_section(file: IO[bytes]) -> bytes:
+    """
+    Read a CIF binary format section
+
+    This is a MIME-variant.
+    """
+    header = ""
+    reader = TextIOWrapper(file, encoding="ascii", errors="surrogateescape")
+    for line in reader:
+        if not line.strip():
+            break
+        header = header + line
+    return header
+
+
 class FormatCBFFullByteOffset(FormatCBFFull):
-    """An image reading class for full CBF format images."""
+    """An image reading class for full CBF format images"""
 
     @staticmethod
     def understand(image_file):
@@ -19,14 +34,22 @@ class FormatCBFFullByteOffset(FormatCBFFull):
 
         header = FormatCBFFull.get_cbf_header(image_file)
 
+        # If this is a pilatus cbf file, then we use a different format
         for record in header.split("\n"):
             if "_array_data.header_convention" in record and "PILATUS" in record:
                 return False
 
-        # this is ugly but I don't know a better way to seek for this text
-        if b'conversions="x-CBF_BYTE_OFFSET"' in FormatCBFFull.open_file(
-            image_file, "rb"
-        ).read(10000):
+        with FormatCBFFull.open_file(image_file, "rb") as file:
+            # If we've gotten a header, this ends at the MIME header
+            file.seek(len(header))
+            mime_divider = b"--CIF-BINARY-FORMAT-SECTION--\r\n"
+            if not file.read(len(mime_divider)) == mime_divider:
+                return False
+
+            binary_header = _read_cif_binary_format_section(file)
+
+        # If we've got this signature in the binary header, we can read
+        if 'conversions="x-CBF_BYTE_OFFSET"' in binary_header:
             return True
 
         return False
