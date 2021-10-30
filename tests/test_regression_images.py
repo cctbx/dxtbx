@@ -31,6 +31,10 @@ except ImportError:
 
 try:
     import cbflib_adaptbx
+
+    # Check this isn't a namespace package
+    if hasattr(cbflib_adaptbx, "__path__") and cbflib_adaptbx.__file__ is None:
+        cbflib_adaptbx = None
 except ModuleNotFoundError:
     # Detectorbase for CBF won't work
     cbflib_adaptbx = None
