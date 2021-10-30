@@ -12,7 +12,7 @@ from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 
 
-def _read_cif_binary_format_section(file: IO[bytes]) -> bytes:
+def _read_cif_binary_format_section(file: IO[bytes]) -> str:
     """
     Read a CIF binary format section
 
