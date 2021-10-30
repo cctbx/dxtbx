@@ -1,11 +1,8 @@
-from __future__ import absolute_import, division, print_function
-
 import copy
+import pickle
 import random
-from builtins import range
 
 import pytest
-import six.moves.cPickle as pickle
 
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.test_utils import approx_equal
@@ -13,7 +10,12 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.model import Beam, Detector, Panel, ParallaxCorrectedPxMmStrategy
-from dxtbx.model.detector_helpers import project_2d, set_mosflm_beam_centre
+from dxtbx.model.detector_helpers import (
+    get_detector_projection_2d_axes,
+    get_panel_projection_2d_from_axes,
+    set_mosflm_beam_centre,
+)
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def create_detector(offset):
@@ -283,15 +285,15 @@ def test_panel_equality():
     assert panel == panel2
 
 
-def test_project_2d():
-    # The function project_2d should give the same results even if the
+def test_get_detector_projection_2d_axes():
+    # The function get_detector_projection_2d_axes should give the same results even if the
     # detector is rotated in the laboratory frame
 
     # Use a multipanel detector
     detector = create_multipanel_detector(offset=0)
 
     # Get 2D origin, fast and slow vectors for the detector
-    o, f, s = project_2d(detector)
+    o, f, s = get_detector_projection_2d_axes(detector)
 
     # Now rotate the detector by 30 degrees around an arbitrary axis
     h = detector.hierarchy()
@@ -308,7 +310,7 @@ def test_project_2d():
         panel.set_frame(rot * fast, rot * slow, rot * origin)
 
     # Get 2D origin, fast and slow vectors for the rotated detector
-    new_o, new_f, new_s = project_2d(detector)
+    new_o, new_f, new_s = get_detector_projection_2d_axes(detector)
 
     for o1, o2 in zip(o, new_o):
         assert o1 == pytest.approx(o2)
@@ -316,3 +318,102 @@ def test_project_2d():
         assert f1 == pytest.approx(f2)
     for s1, s2 in zip(s, new_s):
         assert s1 == pytest.approx(s2)
+
+
+def test_get_panel_projection_2d_from_axes(dials_data):
+
+    # Get test data
+    pytest.importorskip("h5py")
+    filename = dials_data("image_examples", pathlib=True) / "dectris_eiger_master.h5"
+    experiment = ExperimentListFactory.from_filenames([filename])[0]
+    detector = experiment.detector
+
+    # Get 2d axes
+    origins, fast_axes, slow_axes = get_detector_projection_2d_axes(detector)
+
+    # Get panel 0 data
+    panel = detector[0]
+    image_data = experiment.imageset.get_raw_data(0)[0]
+    fast_axis = matrix.col(fast_axes[0] + (0,))
+    slow_axis = matrix.col(slow_axes[0] + (0,))
+    origin = matrix.col(origins[0] + (0,)) * 1e-3
+
+    # Get 2d projection
+    rotation, translation = get_panel_projection_2d_from_axes(
+        panel, image_data, fast_axis, slow_axis, origin
+    )
+
+    expected_rotation = (
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+    )
+    expected_translation = (1634.5, 1555.0)
+
+    assert len(rotation) == len(expected_rotation)
+    for rot, expected in zip(rotation, expected_rotation):
+        assert rot == pytest.approx(expected)
+
+    assert len(translation) == len(expected_translation)
+    for t, expected in zip(translation, expected_translation):
+        assert t == pytest.approx(expected)
+
+
+def test_panel_get_projection_2d():
+
+    detector = create_detector(offset=0)
+    panel = detector[0]
+
+    # Valid projection values
+    valid_rotation = (1, 0, 0, 1)
+    valid_translation = detector[0].get_image_size()
+
+    # Test panel with no projections set explicitly has no 2d projection
+    assert not panel.get_projection_2d()
+
+    # Test panel with non-empty 2d projection has 2d projection
+    panel.set_projection_2d(valid_rotation, valid_translation)
+    assert panel.get_projection_2d()
+
+    # Test values are set correctly
+    rotation, translation = panel.get_projection_2d()
+    assert rotation == valid_rotation
+    assert translation == valid_translation
+
+
+def test_detector_has_projection_2d():
+
+    # Valid rotation value
+    rotation = (1, 0, 0, 1)
+
+    ## Test single panel detector
+    detector = create_detector(offset=0)
+
+    # Test detector with no projections set explicity has no 2d projection
+    assert not detector.has_projection_2d()
+
+    # Test detector with all panels having 2d projections gives a detector
+    # with a 2d projection
+    image_size = detector[0].get_image_size()
+    for i in detector:
+        i.set_projection_2d(rotation, (image_size[0], 0))
+
+    assert detector.has_projection_2d()
+
+    ## Test multipanel detector
+    detector = create_multipanel_detector(offset=0)
+
+    # Test detector with no projections set explicity has no 2d projection
+    assert not detector.has_projection_2d()
+
+    image_size = detector[0].get_image_size()
+    for i in detector:
+        # Test detector with only some panels with 2d projections gives a
+        # detector without a 2d projection
+        assert not detector.has_projection_2d()
+        i.set_projection_2d(rotation, (image_size[0], 0))
+
+    # Test detector with all panels having 2d projections gives a detector
+    # with a 2d projection
+    assert detector.has_projection_2d()

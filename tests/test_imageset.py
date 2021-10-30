@@ -1,21 +1,22 @@
 import os
+import pickle
 import shutil
 from unittest import mock
 
 import pytest
-import six.moves.cPickle as pickle
 
 from scitbx.array_family import flex
 
 import dxtbx.format.FormatHDF5SaclaMPCCD
 import dxtbx.format.image
 import dxtbx.format.Registry
-import dxtbx.tests.imagelist
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
 from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import Beam, Detector, Panel
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
+
+from . import imagelist
 
 
 @pytest.mark.parametrize(
@@ -45,15 +46,15 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
 
 @pytest.mark.parametrize(
     "image",
-    dxtbx.tests.imagelist.smv_images
-    + dxtbx.tests.imagelist.tiff_images
-    + dxtbx.tests.imagelist.cbf_multitile_images
-    + dxtbx.tests.imagelist.cbf_images,
+    imagelist.smv_images
+    + imagelist.tiff_images
+    + imagelist.cbf_multitile_images
+    + imagelist.cbf_images,
     ids=(
-        dxtbx.tests.imagelist.smv_image_ids
-        + dxtbx.tests.imagelist.tiff_image_ids
-        + dxtbx.tests.imagelist.cbf_multitile_image_ids
-        + dxtbx.tests.imagelist.cbf_image_ids
+        imagelist.smv_image_ids
+        + imagelist.tiff_image_ids
+        + imagelist.cbf_multitile_image_ids
+        + imagelist.cbf_image_ids
     ),
 )
 def test_format(dials_regression, image):
@@ -335,7 +336,7 @@ class TestImageSet:
         imageset.set_beam(beam)
         imageset.set_detector(detector)
 
-        # Ensure this doens't interfere with reading
+        # Ensure this doesn't interfere with reading
         for i in imageset:
             pass
 
@@ -442,7 +443,7 @@ class TestImageSequence:
         sequence.set_goniometer(gonio)
         sequence.set_detector(detector)
 
-        # Ensure this doens't interfere with reading
+        # Ensure this doesn't interfere with reading
         for i in sequence:
             pass
 
@@ -546,7 +547,7 @@ def test_imagesetfactory(centroid_files, dials_data):
 
 def test_make_sequence_with_percent_character(dials_data, tmp_path):
     images = [
-        dials_data("centroid_test_data").join(f"centroid_{i:04}.cbf")
+        dials_data("centroid_test_data", pathlib=True) / f"centroid_{i:04}.cbf"
         for i in range(1, 10)
     ]
     directory = tmp_path / "test%"
@@ -554,7 +555,7 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
     try:
         for image in images:
             try:
-                (directory / image.basename).symlink_to(image)
+                (directory / image.name).symlink_to(image)
             except OSError:
                 shutil.copy(image, directory)
 
@@ -563,7 +564,7 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
         assert len(sequence) == 9
 
         sequences = ImageSetFactory.new(
-            [str(directory / image.basename) for image in images]
+            [str(directory / image.name) for image in images]
         )
         assert len(sequences) == 1
         assert len(sequences[0]) == 9
@@ -573,10 +574,17 @@ def test_make_sequence_with_percent_character(dials_data, tmp_path):
         assert len(sequences[0]) == 9
 
     finally:  # clean up potentially copied files after running test
+        try:
+            # Force the dxtbx filehandler cache to close any open handles
+            sequences[0].get_format_class().get_cache_controller().check(
+                None, lambda: None
+            )
+        except Exception:
+            pass
         for image in images:
             try:
-                (directory / image.basename).unlink()
-            except FileNotFoundError:
+                (directory / image.name).unlink()
+            except (FileNotFoundError, PermissionError):
                 pass
 
 

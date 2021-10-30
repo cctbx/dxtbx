@@ -1,3 +1,119 @@
+DIALS 3.6.2 (2021-09-21)
+========================
+
+Bugfixes
+--------
+
+- Fix broken ``dxtbx.install_format`` command. (`#434 <https://github.com/cctbx/dxtbx/issues/434>`_)
+
+
+DIALS 3.6.0 (2021-08-16)
+========================
+
+Features
+--------
+
+- Add **experimental** ``dxtbx.flumpy.to_numpy``, ``.from_numpy``, ``.vec_from_numpy`` and
+  ``.mat3_from_numpy`` for zero-copy conversions between numpy and `scitbx.array_family.flex``
+  arrays. There is also a lower-level class ``Scuffer`` that allows exposing of flex arrays via
+  generic python buffer interfaces for e.g. Cython interoperability. (`#377 <https://github.com/cctbx/dxtbx/issues/377>`_)
+- ``ExperimentListFactory.from_filenames(...)``, ``Format.get_imageset(...)``, and
+  ``ImageSetFactory.new(...)`` now accept objects implementing the Python file system path protocol
+  (PEP-519). (`#386 <https://github.com/cctbx/dxtbx/issues/386>`_)
+
+
+Bugfixes
+--------
+
+- Fix support of older FormatSMVADSCSN442 images (`#369 <https://github.com/cctbx/dxtbx/issues/369>`_)
+- More detailed error messages are now printed after internal ``H5Dread`` calls fail (`#374 <https://github.com/cctbx/dxtbx/issues/374>`_)
+- Fix error reading BioMAX data with H5py 3.3 (`#389 <https://github.com/cctbx/dxtbx/issues/389>`_)
+- Fix potential problem where mask geometry was unfixable (`#411 <https://github.com/cctbx/dxtbx/issues/411>`_)
+- Handle installing dxtbx as a "real" package when the ``conda_base/`` is read-only (`#413 <https://github.com/cctbx/dxtbx/issues/413>`_)
+- Check for empty beams in XTC streams (`#419 <https://github.com/cctbx/dxtbx/issues/419>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- The previously deprecated ``ExperimentListTemplateImporter`` has been removed. Please use
+  ``ExperimentList.from_templates`` instead. (`#333 <https://github.com/cctbx/dxtbx/issues/333>`_)
+
+
+Misc
+----
+
+- Move dxtbx to ``src/`` layout, and install as a package (`#382 <https://github.com/cctbx/dxtbx/pull/382>`_)
+- `#311 <https://github.com/cctbx/dxtbx/issues/311>`_, `#373 <https://github.com/cctbx/dxtbx/issues/373>`_, `#375 <https://github.com/cctbx/dxtbx/issues/375>`_, `#380 <https://github.com/cctbx/dxtbx/issues/380>`_, `#381 <https://github.com/cctbx/dxtbx/issues/381>`_, `#384 <https://github.com/cctbx/dxtbx/issues/384>`_, `#386 <https://github.com/cctbx/dxtbx/issues/386>`_, `#388 <https://github.com/cctbx/dxtbx/issues/388>`_, `#390 <https://github.com/cctbx/dxtbx/issues/390>`_, `#391 <https://github.com/cctbx/dxtbx/issues/391>`_, `#396 <https://github.com/cctbx/dxtbx/issues/396>`_, `#400 <https://github.com/cctbx/dxtbx/issues/400>`_, `#401 <https://github.com/cctbx/dxtbx/issues/401>`_, `#402 <https://github.com/cctbx/dxtbx/issues/402>`_, `#403 <https://github.com/cctbx/dxtbx/issues/403>`_, `#404 <https://github.com/cctbx/dxtbx/issues/404>`_
+
+
+DIALS 3.5.4 (2021-07-27)
+========================
+
+Bugfixes
+--------
+
+- Allow reading of new SACLA hdf5 data (`#408 <https://github.com/cctbx/dxtbx/issues/408>`_)
+
+
+DIALS 3.5.2 (2021-06-28)
+========================
+
+Bugfixes
+--------
+
+- End the I03 "bad mask" duration, since it is now masked at the file level. (`#385 <https://github.com/cctbx/dxtbx/issues/385>`_)
+- ``dxtbx.dlsnxs2cbf``: Handle missing chi/phi axis entries. (`#387 <https://github.com/cctbx/dxtbx/issues/387>`_)
+
+
+DIALS 3.5.1 (2021-06-14)
+========================
+
+Bugfixes
+--------
+
+- Extend duration of bad module mask for Diamond I03 EIGER 2XE 16M detector indefinitely. This will be updated in a future release. (`#370 <https://github.com/cctbx/dxtbx/issues/370>`_)
+- Handle scan data which wraps through 0° instead of >=360° (`#379 <https://github.com/cctbx/dxtbx/issues/379>`_)
+
+
+DIALS 3.5.0 (2021-05-27)
+========================
+
+Features
+--------
+
+- Add ``FormatMRC.py`` for electron diffraction images and image stacks recorded on Thermo Fisher microscopes (`#335 <https://github.com/cctbx/dxtbx/issues/335>`_)
+- Improved support for Gatan DM4 format images and stacks (`#338 <https://github.com/cctbx/dxtbx/issues/338>`_)
+- Improved support for TIA (Emispec) .ser files (`#345 <https://github.com/cctbx/dxtbx/issues/345>`_)
+- Improved support for ``.emi`` sidecar files in ``FormatSER`` (`#354 <https://github.com/cctbx/dxtbx/issues/354>`_)
+- Add support for Python 3.9. (`#365 <https://github.com/cctbx/dxtbx/issues/365>`_)
+
+
+Bugfixes
+--------
+
+- Bug fixes for extended header reading in ``FormatMRC.py`` (`#343 <https://github.com/cctbx/dxtbx/issues/343>`_)
+- ``dxtbx.dlsnxs2cbf``: Fixed on Windows using ``hdf5plugin`` (`#344 <https://github.com/cctbx/dxtbx/issues/344>`_)
+- Mask temporarily bad modules on the Diamond I03 EIGER 2XE 16M detector (`#348 <https://github.com/cctbx/dxtbx/issues/348>`_)
+- Fix rare error during CBF compression (`#352 <https://github.com/cctbx/dxtbx/issues/352>`_)
+- Extend duration of bad module mask for Diamond I03 EIGER 2XE 16M detector (`#355 <https://github.com/cctbx/dxtbx/issues/355>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Remove legacy HDF5 plugin handling. Please update your conda environment if you still have issues. (`#340 <https://github.com/cctbx/dxtbx/issues/340>`_)
+- Remove classes and functions deprecated in the previous release: ``dxtbx.datablock.*Diff``, ``dxtbx.model.experiment_list.SequenceDiff``, ``dxtbx.serialize.load.imageset_from_string``. (`#347 <https://github.com/cctbx/dxtbx/issues/347>`_)
+- Removed unused support for reading experiments from pickle files (`#361 <https://github.com/cctbx/dxtbx/issues/361>`_)
+- Remove the ability to save experiments in pickle format (`#363 <https://github.com/cctbx/dxtbx/issues/363>`_)
+
+
+Misc
+----
+
+- `#334 <https://github.com/cctbx/dxtbx/issues/334>`_, `#337 <https://github.com/cctbx/dxtbx/issues/337>`_, `#342 <https://github.com/cctbx/dxtbx/issues/342>`_, `#346 <https://github.com/cctbx/dxtbx/issues/346>`_, `#350 <https://github.com/cctbx/dxtbx/issues/350>`_, `#351 <https://github.com/cctbx/dxtbx/issues/351>`_, `#353 <https://github.com/cctbx/dxtbx/issues/353>`_, `#357 <https://github.com/cctbx/dxtbx/issues/357>`_, `#360 <https://github.com/cctbx/dxtbx/issues/360>`_, `#364 <https://github.com/cctbx/dxtbx/issues/364>`_
+
+
 DIALS 3.4.1 (2021-03-31)
 ========================
 
@@ -24,7 +140,7 @@ Features
   function now accepts the output array size, and returns the number of
   items read. (`#313 <https://github.com/cctbx/dxtbx/issues/313>`_)
 - Include test for equality of ``PxMmStrategy`` in ``Panel`` equality operator. (`#319 <https://github.com/cctbx/dxtbx/issues/319>`_)
-- Format suport for Eiger 16M XE at Diamond - recognise legacy and updated beamline names. (`#323 <https://github.com/cctbx/dxtbx/issues/323>`_)
+- Format support for Eiger 16M XE at Diamond - recognise legacy and updated beamline names. (`#323 <https://github.com/cctbx/dxtbx/issues/323>`_)
 - The function ``ExperimentList.from_templates`` has been added for construction convenience (`#333 <https://github.com/cctbx/dxtbx/issues/333>`_)
 
 

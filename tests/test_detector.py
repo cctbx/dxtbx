@@ -1,8 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
-import os
-
-import libtbx.load_env
+from pathlib import Path
 
 from dxtbx.model.detector import DetectorFactory
 
@@ -35,10 +31,7 @@ def test_detector():
         [],
     )
 
-    dxtbx_dir = libtbx.env.dist_path("dxtbx")
+    image = Path(__file__).parent / "phi_scan_001.cbf"
 
-    image = os.path.join(dxtbx_dir, "tests", "phi_scan_001.cbf")
-    # xparm = os.path.join(dxtbx_dir, "tests", "example-xparm.xds")
-
-    assert DetectorFactory.imgCIF(image, "CCD")
+    assert DetectorFactory.imgCIF(str(image), "CCD")
     # x = DetectorFactory.XDS(xparm)

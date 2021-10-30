@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import os
-from builtins import range
 
 import pytest
 
@@ -13,7 +10,7 @@ from dxtbx.model.scan_helpers import scan_helper_image_files
 def image_test_dir(tmp_path):
     """Create a sequence of 20 'images' for scan tests to pick up"""
     for i in range(1, 21):
-        image_file = tmp_path / "image_{:03d}.dat".format(i)
+        image_file = tmp_path / f"image_{i:03d}.dat"
         image_file.touch()
     return str(tmp_path)
 

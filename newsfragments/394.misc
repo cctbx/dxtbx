@@ -1,0 +1,1 @@
+Fix a test failure on Windows by copying files instead of symbolic linking.

@@ -1,10 +1,6 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
-from builtins import range
+from io import StringIO
 from math import pi, sqrt
-
-from six.moves import StringIO
 
 from cctbx.crystal_orientation import crystal_orientation
 from cctbx.sgtbx import space_group as SG
@@ -15,7 +11,7 @@ from scitbx.math import angle_derivative_wrt_vectors
 from scitbx.math.lefebvre import matrix_inverse_error_propagation
 
 
-class crystal_model_old(object):
+class crystal_model_old:
     """Simple model for the crystal lattice geometry and symmetry
 
     A crystal is initialised from the elements of its real space axes

@@ -1,1 +1,0 @@
-Remove classes and functions deprecated in the previous release: ``dxtbx.datablock.*Diff``, ``dxtbx.model.experiment_list.SequenceDiff``, ``dxtbx.serialize.load.imageset_from_string``.
