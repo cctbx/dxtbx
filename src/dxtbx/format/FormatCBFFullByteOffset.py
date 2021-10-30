@@ -25,7 +25,7 @@ def _read_cif_binary_format_section(file: IO[bytes]) -> bytes:
 
 
 class FormatCBFFullByteOffset(FormatCBFFull):
-    """An image reading class for full CBF format images"""
+    """An image reading class for full CBF format images with byte-offset compression"""
 
     @staticmethod
     def understand(image_file):
