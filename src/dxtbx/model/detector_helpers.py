@@ -4,14 +4,15 @@ import itertools
 import math
 import warnings
 from operator import itemgetter
-from typing import TYPE_CHECKING, List, Tuple, Union
+from typing import TYPE_CHECKING, List, Tuple, Union, cast
 
 import numpy as np
 
 from scitbx import matrix
-from scitbx.array_family import flex
 
 if TYPE_CHECKING:
+    from scitbx.array_family import flex
+
     from dxtbx.model import Detector, Panel
 
 try:
@@ -450,7 +451,7 @@ def get_panel_projection_2d_from_axes(
     fast_axis_2d: matrix.col,
     slow_axis_2d: matrix.col,
     origin_2d: matrix.col,
-) -> Tuple[Float2, Float4]:
+) -> Tuple[Float4, Float2]:
 
     """
     Gets translation and rotation required to project image_data from panel,
@@ -545,4 +546,4 @@ def get_panel_projection_2d_from_axes(
     R = matrix.sqr((T(0, 0), T(0, 1), T(1, 0), T(1, 1)))
     t = matrix.col((T(0, 2), T(1, 2)))
 
-    return tuple(R), tuple(t)
+    return cast(Float4, tuple(R)), cast(Float2, tuple(t))
