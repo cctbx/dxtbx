@@ -602,8 +602,9 @@ class ExperimentListFactory:
                 compare_goniometer=compare_goniometer,
             )
             records = _merge_scans(records, scan_tolerance=scan_tolerance)
-            imagesets = _convert_to_imagesets(records, format_class, format_kwargs)
-            imagesets = list(imagesets)
+            imagesets = list(
+                _convert_to_imagesets(records, format_class, format_kwargs)
+            )
 
             # Validate this datablock and store it
             assert imagesets, "Datablock got no imagesets?"
@@ -1095,7 +1096,7 @@ def _iterate_with_previous(iterable):
 
 def _groupby_template_is_none(
     records: Iterable[ImageMetadataRecord],
-) -> Generator[List[ImageMetadataRecord]]:
+) -> Generator[List[ImageMetadataRecord], None, None]:
     """Specialization of groupby that groups records by format=None"""
     for _, group in itertools.groupby(
         enumerate(records), key=lambda x: -1 if x[1].template is None else x[0]
@@ -1243,9 +1244,9 @@ def _merge_scans(
 
 def _convert_to_imagesets(
     records: Iterable[ImageMetadataRecord],
-    format_class: Type[dxtbx.format.Format],
+    format_class: Type[Format],
     format_kwargs: Dict = None,
-) -> Generator[dxtbx.imageset.ImageSet]:
+) -> Generator[dxtbx.imageset.ImageSet, None, None]:
     """
     Convert records into imagesets.
 
@@ -1280,7 +1281,7 @@ def _convert_to_imagesets(
 
 def _create_imageset(
     records: Iterable[ImageMetadataRecord],
-    format_class: Type[dxtbx.format.Format],
+    format_class: Type[Format],
     format_kwargs: Dict = None,
 ) -> dxtbx.imageset.ImageSet:
     """
@@ -1298,10 +1299,13 @@ def _create_imageset(
     records = list(records)
     # Nothing here should have been assigned a template parameter
     assert all(x.template is None for x in records)
+    # Everything should have a filename
+    assert all(x.filename for x in records)
     # Extract the filenames from the records
     filenames = [
         x.filename if get_url_scheme(x.filename) else os.path.abspath(x.filename)
         for x in records
+        if x.filename
     ]
     # Create the imageset
     imageset = dxtbx.imageset.ImageSetFactory.make_imageset(
@@ -1331,6 +1335,8 @@ def _create_imagesequence(
     Returns:
         An imageset representing the sequence of data
     """
+    assert record.scan
+    assert record.template
     index_start, index_end = record.scan.get_image_range()
     # Create the sequence
     sequence = dxtbx.imageset.ImageSetFactory.make_sequence(

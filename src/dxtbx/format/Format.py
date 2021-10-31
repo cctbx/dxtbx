@@ -7,10 +7,12 @@ from the X(component)Factories which will allow construction of e.g.
 goniometers etc. from the headers and hence a format specific factory.
 """
 
+from __future__ import annotations
+
 import bz2
 import functools
 import os
-from typing import ClassVar, List
+from typing import ClassVar, List, Optional
 
 import libtbx
 
@@ -98,7 +100,7 @@ class Format:
 
     # Which class is the abstract base. Assigned with the @abstract
     # decorator, and used to check initialization
-    _abstract_base: "ClassVar[Format]" = None
+    _abstract_base: ClassVar[Optional[Format]] = None
 
     @staticmethod
     def understand(image_file):
