@@ -11,7 +11,7 @@ from dxtbx.util import get_url_scheme
 
 try:
     import typing
-    from typing import Callable, Dict, List, Maybe, Tuple, Type
+    from typing import Callable, Dict, List, Optional, Tuple, Type
 
     if typing.TYPE_CHECKING:
         from dxtbx.format.Format import Format
@@ -76,7 +76,7 @@ _format_dag = get_format_class_dag()  # type: Dict[str, List[str]]
 
 
 def get_format_class_for_file(image_file, format_hint=None):
-    # type: (str, str) -> Maybe[Type[Format]]
+    # type: (str, str) -> Optional[Type[Format]]
     """Find the best format handler in the registry for given image file
     :param image_file: A string containing the file path to an image
     :param format_hint: An optional string of a format class name that should
