@@ -12,7 +12,7 @@ from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.detector_helpers import detector_helper_sensors
 
 
-class detector_helpers_types:
+class _detector_helpers_types:
     """A singleton class to help with identifying specific detectors used for
     macromolecular crystallography."""
 
@@ -80,7 +80,7 @@ class detector_helpers_types:
         )
 
 
-detector_helpers_types = detector_helpers_types()
+detector_helpers_types = _detector_helpers_types()
 
 if __name__ == "__main__":
     sensor = sys.argv[1]
