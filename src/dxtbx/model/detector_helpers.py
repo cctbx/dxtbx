@@ -4,11 +4,12 @@ import itertools
 import math
 import warnings
 from operator import itemgetter
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, List, Tuple, Union
 
 import numpy as np
 
 from scitbx import matrix
+from scitbx.array_family import flex
 
 if TYPE_CHECKING:
     from dxtbx.model import Detector, Panel
@@ -313,7 +314,7 @@ def set_detector_distance(detector, distance):
     detector[0].set_frame(fast_axis, slow_axis, origin)
 
 
-def project_2d(detector: Detector) -> Tuple[Float2, Float2, Float2]:
+def project_2d(detector: Detector) -> Tuple[List[Float2], List[Float2], List[Float2]]:
     """
     DEPRECATED: Use get_detector_projection_2d_axes
 
@@ -333,7 +334,7 @@ def project_2d(detector: Detector) -> Tuple[Float2, Float2, Float2]:
 
 def get_detector_projection_2d_axes(
     detector: Detector,
-) -> Tuple[Float2, Float2, Float2]:
+) -> Tuple[List[Float2], List[Float2], List[Float2]]:
 
     """
     Project panel origins, fast and slow axes onto the best-fitting 2D plane.
@@ -426,9 +427,9 @@ def get_detector_projection_2d_axes(
     X = Y.cross(normal).normalize()
 
     # Project centre-shifted origins and fast, slow axes to the plane.
-    origin_2d = []
-    fast_2d = []
-    slow_2d = []
+    origin_2d: List[Float2] = []
+    fast_2d: List[Float2] = []
+    slow_2d: List[Float2] = []
     centre = matrix.col(centre)
     for panel in detector:
         origin = matrix.col(panel.get_origin())
@@ -445,7 +446,7 @@ def get_detector_projection_2d_axes(
 
 def get_panel_projection_2d_from_axes(
     panel: Panel,
-    image_data: matrix,
+    image_data: Union[flex.int, flex.double, flex.float],
     fast_axis_2d: matrix.col,
     slow_axis_2d: matrix.col,
     origin_2d: matrix.col,
