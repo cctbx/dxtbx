@@ -39,13 +39,13 @@ def get_format_class_index() -> Dict[str, Tuple[Callable[[], Type[Format]], List
         class_index = {}
         for e in pkg_resources.iter_entry_points("dxtbx.format"):
             if ":" in e.name:
-                format_name, base_classes = e.name.split(":", 1)
-                base_classes = tuple(base_classes.split(","))
+                format_name, base_classes_str = e.name.split(":", 1)
+                base_classes = tuple(base_classes_str.split(","))
             else:
                 format_name, base_classes = e.name, ()
             class_index[format_name] = (e.load, base_classes)
         setattr(get_format_class_index, "cache", class_index)
-    register = get_format_class_index.cache.copy()
+    register = get_format_class_index.cache.copy()  # type: ignore
     return register
 
 
@@ -58,14 +58,14 @@ def get_format_class_dag() -> Dict[str, List[str]]:
         index = {
             name: class_info[1] for name, class_info in get_format_class_index().items()
         }
-        dag = {}
+        dag: Dict[str, List[str]] = {}
         for name in index:
             for parent in index[name]:
                 dag.setdefault(parent, []).append(name)
         for key in dag:
             dag[key].sort()
         setattr(get_format_class_dag, "cache", dag)
-    dag = get_format_class_dag.cache.copy()
+    dag = get_format_class_dag.cache.copy()  # type: ignore
     return dag
 
 
@@ -121,3 +121,5 @@ def get_format_class_for_file(
         format_class = get_format_class_for(format)
         if scheme in format_class.schemes and format_class.understand(image_file):
             return recurse(format, image_file)
+
+    return None
