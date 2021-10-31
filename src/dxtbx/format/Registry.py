@@ -19,8 +19,7 @@ except ImportError:
     pass
 
 
-def get_format_class_for(format_class_name):
-    # type: (str) -> Type[Format]
+def get_format_class_for(format_class_name: str) -> Type[Format]:
     """Return the named format class
     :param format_class_name: Name of the format class
     :return: The (uninstantiated) class object
@@ -28,8 +27,7 @@ def get_format_class_for(format_class_name):
     return get_format_class_index()[format_class_name][0]()
 
 
-def get_format_class_index():
-    # type: () -> Dict[str, Tuple[Callable[[], Type[Format]], List[str]]]
+def get_format_class_index() -> Dict[str, Tuple[Callable[[], Type[Format]], List[str]]]:
     """Return a dictionary of all known format classes.
     :return: A dictionary containing entries
              {format_class_name: (format_class_factory_function, [base_class_names])}
@@ -51,8 +49,7 @@ def get_format_class_index():
     return register
 
 
-def get_format_class_dag():
-    # type: () -> Dict[str, List[str]]
+def get_format_class_dag() -> Dict[str, List[str]]:
     """Return a directed acyclical graph of the format classes.
     :return: A dictionary with entries
              {format class name: [subformat class names]}
@@ -72,11 +69,12 @@ def get_format_class_dag():
     return dag
 
 
-_format_dag = get_format_class_dag()  # type: Dict[str, List[str]]
+_format_dag: Dict[str, List[str]] = get_format_class_dag()
 
 
-def get_format_class_for_file(image_file, format_hint=None):
-    # type: (str, str) -> Optional[Type[Format]]
+def get_format_class_for_file(
+    image_file: str, format_hint: str = None
+) -> Optional[Type[Format]]:
     """Find the best format handler in the registry for given image file
     :param image_file: A string containing the file path to an image
     :param format_hint: An optional string of a format class name that should
