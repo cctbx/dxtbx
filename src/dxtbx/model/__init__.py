@@ -872,8 +872,7 @@ class _:
             raise RuntimeError(f"expected extension {{{ext_str}}}, got {ext}")
 
     @staticmethod
-    def from_file(filename, check_format=True):
-        # type: (str, bool) -> ExperimentList
+    def from_file(filename: str, check_format: bool = True) -> ExperimentList:
         """
         Load an ExperimentList from a serialized file.
 

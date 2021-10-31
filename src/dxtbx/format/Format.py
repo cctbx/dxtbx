@@ -94,7 +94,7 @@ class Format:
             not ever get called in Format registry searches.
     """
 
-    schemes = [""]  # type: List[str]
+    schemes: List[str] = [""]
 
     # Which class is the abstract base. Assigned with the @abstract
     # decorator, and used to check initialization
