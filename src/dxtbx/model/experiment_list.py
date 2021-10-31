@@ -529,7 +529,7 @@ class ExperimentListFactory:
         scan_tolerance=None,
         format_kwargs=None,
         load_models=True,
-    ):
+    ) -> ExperimentList:
         """Create a list of data blocks from a list of directory or file names."""
         experiments = ExperimentList()
 
