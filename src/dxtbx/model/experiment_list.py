@@ -913,15 +913,14 @@ class ImageMetadataRecord:
 
     def __init__(
         self,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        template=None,
-        filename=None,
-        index=None,
+        beam: dxtbx.model.Beam = None,
+        detector: dxtbx.model.Detector = None,
+        goniometer: dxtbx.model.Goniometer = None,
+        scan: dxtbx.model.Scan = None,
+        template: Optional[str] = None,
+        filename: Optional[str] = None,
+        index: Optional[int] = None,
     ):
-        # type: (dxtbx.model.Beam, dxtbx.model.Detector, dxtbx.model.Goniometer, dxtbx.model.Scan, str, str, int)
         """
         Args:
             beam:       Stores a beam model
@@ -1150,9 +1149,11 @@ def _openingpathiterator(pathnames: Iterable[str]):
 
 
 def _merge_model_metadata(
-    records, compare_beam=None, compare_detector=None, compare_goniometer=None
+    records: Iterable[ImageMetadataRecord],
+    compare_beam: Callable = None,
+    compare_detector: Callable = None,
+    compare_goniometer: Callable = None,
 ):
-    # type: (Iterable[ImageMetadataRecord], Callable, Callable, Callable)
     """
     Merge metadata between consecutive record objects.
 
