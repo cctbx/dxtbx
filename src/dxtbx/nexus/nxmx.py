@@ -202,6 +202,7 @@ class NXentry(H5Mapping):
         """
         if "end_time" in self._handle:
             return dateutil.parser.isoparse(h5str(self._handle["end_time"][()]))
+        return None
 
     @cached_property
     def end_time_estimated(self) -> datetime.datetime:
@@ -418,6 +419,7 @@ class NXtransformationsAxis:
         """
         if "offset" in self._handle.attrs:
             return self._handle.attrs.get("offset") * ureg(self.offset_units)
+        return None
 
     @cached_property
     def offset_units(self) -> Optional[str]:
@@ -438,6 +440,7 @@ class NXtransformationsAxis:
         depends_on = h5str(self._handle.attrs.get("depends_on"))
         if depends_on and depends_on != ".":
             return NXtransformationsAxis(self._handle.parent[depends_on])
+        return None
 
     def __getitem__(self, key) -> pint.Quantity:
         return self._handle[key] * ureg(self.units)
