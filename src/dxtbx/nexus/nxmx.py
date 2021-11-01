@@ -24,7 +24,7 @@ except ImportError:
 
 
 from functools import reduce
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union, overload
 
 import dateutil.parser
 import h5py
@@ -48,8 +48,18 @@ logger = logging.getLogger(__name__)
 
 NXNode = Union[h5py.File, h5py.Group]
 
+# Type overloads for h5str - will only return None for None input
+@overload
+def h5str(h5_value: None) -> None:
+    ...
 
-def h5str(h5_value: Optional[Union[str, np.string_, bytes]]) -> Optional[str]:
+
+@overload
+def h5str(h5_value: Union[str, np.bytes_, bytes]) -> str:
+    ...
+
+
+def h5str(h5_value: Union[None, str, np.bytes_, bytes]) -> Optional[str]:
     """
     Convert a value returned an h5py attribute to str.
 
@@ -57,7 +67,7 @@ def h5str(h5_value: Optional[Union[str, np.string_, bytes]]) -> Optional[str]:
     for attribute values depending on whether the value was written as
     fixed or variable length. This function collapses the two to str.
     """
-    if isinstance(h5_value, (np.string_, bytes)):
+    if isinstance(h5_value, (np.bytes_, bytes)):
         return h5_value.decode("utf-8")
     return h5_value
 
