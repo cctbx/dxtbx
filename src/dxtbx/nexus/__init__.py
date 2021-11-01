@@ -278,7 +278,7 @@ def get_dxtbx_detector(
 
 def get_detector_module_slices(
     nxdetector: nxmx.NXdetector,
-) -> Tuple[Tuple[slice, slice], ...]:
+) -> Tuple[Tuple[slice, ...], ...]:
     """Return the slices pointing to the hyperslab of data for each module.
 
     This will be a tuple of tuples, where each tuple contains the slices corresponding
