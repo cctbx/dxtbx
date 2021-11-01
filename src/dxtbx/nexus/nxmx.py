@@ -24,7 +24,7 @@ except ImportError:
 
 
 from functools import reduce
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
 import dateutil.parser
 import h5py
@@ -1033,7 +1033,7 @@ class NXbeam(H5Mapping):
 
 
 @dataclasses.dataclass(frozen=True)
-class DependencyChain:
+class DependencyChain(Sequence[NXtransformationsAxis]):
     transformations: List[NXtransformationsAxis]
 
     def __iter__(self) -> Iterator[NXtransformationsAxis]:
