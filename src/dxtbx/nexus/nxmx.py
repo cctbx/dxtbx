@@ -881,12 +881,15 @@ class NXdetector_module(H5Mapping):
         return self._handle["data_origin"][()]
 
     @cached_property
-    def data_size(self) -> NXInt:
+    def data_size(self) -> np.ndarray:
         """Two or three values for the size of the module in pixels in each direction.
 
         Dimensionality and order of indices is the same as for data_origin.
         """
-        return self._handle["data_size"][()]
+        size = self._handle["data_size"][()]
+        # Validate that we aren't the int part of NXInt
+        assert not isinstance(size, int)
+        return size
 
     @cached_property
     def data_stride(self) -> Optional[NXInt]:
