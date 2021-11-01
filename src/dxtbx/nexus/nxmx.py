@@ -862,7 +862,7 @@ class NXdetector_module(H5Mapping):
     """
 
     @cached_property
-    def data_origin(self) -> NXInt:
+    def data_origin(self) -> np.ndarray:
         """The offset of this module into the raw data array.
 
         A dimension-2 or dimension-3 field which gives the indices of the origin of the
@@ -878,7 +878,9 @@ class NXdetector_module(H5Mapping):
 
         The order of indices (i, j or i, j, k) is slow to fast.
         """
-        return self._handle["data_origin"][()]
+        origin = self._handle["data_origin"][()]
+        assert not isinstance(origin, int)
+        return origin
 
     @cached_property
     def data_size(self) -> np.ndarray:
