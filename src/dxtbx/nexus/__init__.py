@@ -301,9 +301,9 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool]:
     format classes.
     """
     pixel_mask = nxdetector.get("pixel_mask")
-    if pixel_mask and pixel_mask.ndim == 2:
-        all_slices = get_detector_module_slices(nxdetector)
-        return tuple(dataset_as_flex(pixel_mask, slices) == 0 for slices in all_slices)
+    assert pixel_mask and pixel_mask.ndim == 2
+    all_slices = get_detector_module_slices(nxdetector)
+    return tuple(dataset_as_flex(pixel_mask, slices) == 0 for slices in all_slices)
 
 
 def get_raw_data(
