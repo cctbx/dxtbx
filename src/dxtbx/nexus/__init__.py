@@ -293,7 +293,7 @@ def get_detector_module_slices(
     )
 
 
-def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool]:
+def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool, ...]:
     """Return the static mask for an NXdetector.
 
     This will be a tuple of flex.bool, of length equal to the number of modules. The
@@ -308,7 +308,7 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool]:
 
 def get_raw_data(
     nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int
-) -> Tuple[Union[flex.float, flex.double, flex.int]]:
+) -> Tuple[Union[flex.float, flex.double, flex.int], ...]:
     """Return the raw data for an NXdetector.
 
     This will be a tuple of flex.float, flex.double or flex.int arrays, of length equal
