@@ -1077,7 +1077,7 @@ def get_dependency_chain(
 
 
 def get_cumulative_transformation(
-    dependency_chain: DependencyChain,
+    dependency_chain: Union[DependencyChain, Sequence[NXtransformationsAxis]],
 ) -> np.ndarray:
     """Compute the cumulative transformation for a given dependency chain"""
     return reduce(operator.__matmul__, reversed([t.matrix for t in dependency_chain]))
