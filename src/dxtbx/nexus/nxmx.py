@@ -14,7 +14,7 @@ except ImportError:
     # Defined cached_property decorator as a noop
     import functools
 
-    def cached_property(func):
+    def cached_property(func):  # type: ignore
         @property
         @functools.wraps(func)
         def wrapper_decorator(*args, **kwargs):
@@ -57,7 +57,7 @@ def h5str(h5_value: Optional[Union[str, np.string_, bytes]]) -> Optional[str]:
     for attribute values depending on whether the value was written as
     fixed or variable length. This function collapses the two to str.
     """
-    if hasattr(h5_value, "decode"):
+    if isinstance(h5_value, (np.string_, bytes)):
         return h5_value.decode("utf-8")
     return h5_value
 
@@ -76,8 +76,11 @@ def find_classes(
     Returns:
         A list of matching nodes for each of the specified NX_class types.
     """
-    results = {nx_class: [] for nx_class in nx_classes}
+    results: Dict[Optional[str], List[h5py.Group]] = {
+        nx_class: [] for nx_class in nx_classes
+    }
 
+    v: h5py.Group
     for v in filter(None, node.values()):
         class_name = h5str(v.attrs.get("NX_class"))
         if class_name in nx_classes:
