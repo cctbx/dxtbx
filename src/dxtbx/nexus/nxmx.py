@@ -418,7 +418,7 @@ class NXtransformationsAxis:
         example, as the mechanical offset from mounting the axis to its dependency.
         """
         if "offset" in self._handle.attrs:
-            return self._handle.attrs.get("offset") * ureg(self.offset_units)
+            return self._handle.attrs.get("offset") * ureg(self.offset_units or "")
         return None
 
     @cached_property
