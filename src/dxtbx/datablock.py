@@ -30,7 +30,7 @@ class DataBlock:
 
         warnings.warn(
             "Datablocks are deprecated; please use ExperimentLists instead",
-            DeprecationWarning,
+            UserWarning,
             stacklevel=2,
         )
 
