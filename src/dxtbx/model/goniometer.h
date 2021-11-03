@@ -36,31 +36,45 @@ namespace dxtbx { namespace model {
    * A class to represent the rotation axis for a standard rotation
    * geometry diffraction data set.
    *
-   * The rotation axis assumed to have its origin at the origin of the
+   * The rotation axis is assumed to have its origin at the origin of the
    * laboratory coordinate system. The rotation axis vector is normalized
-   * when set using either the constructor or the rotation axis 'setter'
+   * when set using either the constructor or the rotation axis 'setter'.
    *
-   * The fixed rotation matrix, F, represents the additional fixed rotation of
-   * the sample attached to the rotating axis - for example the effects of
-   * kappa and phi for an omega scan on a kappa goniometer. A second rotation
-   * matrix, S, may be applied which is used to align the rotation axis,
-   * for example the omega & kappa axes for a phi scan. These rotation matrices
-   * should be applied as:
+   * In the conventional crystallographic formalism, the goniostat rotation
+   * operator R represents the rotation of the sample mount and relates the
+   * sample reference frame to the lab frame.  R is calculated from the
+   * recorded angular positions of each axis, combined with prior knowledge
+   * of the orientation in the lab frame of each axis when the goniometer is
+   * at its zero datum.
    *
-   *  A = [S][R][F][U][B]
+   * In the DXTBX goniometer model, we define a finer-grained decomposition
+   * of R to represent the different axes of a general goniometer, which may
+   * have one single axis or multiple axes.  This model is intended to
+   * describe a typical rotation experiment in which only one axis of the
+   * goniometer is allowed to rotate during the scan, any other axes being
+   * static throughout the measurement.  R is expressed as three components:
    *
-   * in a standard orientation matrix.
+   *  R = S ∘ R' ∘ F
    *
-   * In the document detailing the conventions used:
-   *    rotation_axis -> m2
-   *    fixed_rotation_matrix -> *unspecified*
+   * Here, R' denotes the scan axis rotation operator, S denotes a static
+   * 'setting rotation' operator (not to be confused with the setting
+   * operator, A = U ∘ B), and F denotes another static 'fixed rotation'
+   * operator.  S represents the combined rotation of any 'parent' axes on
+   * which the scan axis is mounted, and F represents the combined rotation
+   * of any 'child' axes mounted on the scan axis.
+   *
+   * For more details, see
+   *  https://dials.github.io/documentation/conventions.html
+   *
+   * In the various methods of this class, 'rotation_axis' refers to the
+   * axis of R', 'setting_rotation' refers to S, and 'fixed_rotation' to F.
    */
   class Goniometer : public GoniometerBase {
   public:
     /**
      * Initialise the goniometer. The fixed rotation matrix is set to the
      * identity matrix and the rotation axis is set to the x axis
-     * @param rotation_axis The goniometer rotation axis
+     * @param rotation_axis The goniometer rotation (R') axis
      */
     Goniometer()
         : rotation_axis_(1.0, 0.0, 0.0),
@@ -70,7 +84,7 @@ namespace dxtbx { namespace model {
     /**
      * Initialise the goniometer. The fixed rotation matrix is set to the
      * identity matrix.
-     * @param rotation_axis The goniometer rotation axis
+     * @param rotation_axis The goniometer rotation (R') axis
      */
     Goniometer(vec3<double> rotation_axis)
         : fixed_rotation_(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
@@ -81,8 +95,8 @@ namespace dxtbx { namespace model {
 
     /**
      * Initialise the goniometer.
-     * @param rotation_axis The goniometer rotation axis
-     * @param fixed_rotation The additional fixed rotation of the sample
+     * @param rotation_axis The goniometer rotation (R') axis
+     * @param fixed_rotation The additional fixed (F) rotation of the sample
      */
     Goniometer(vec3<double> rotation_axis, mat3<double> fixed_rotation)
         : fixed_rotation_(fixed_rotation),
@@ -93,9 +107,9 @@ namespace dxtbx { namespace model {
 
     /**
      * Initialise the goniometer.
-     * @param rotation_axis The goniometer rotation axis at datum
-     * @param fixed_rotation The additional fixed rotation of the sample
-     * @param setting_rotation The additional setting rotation of the axis
+     * @param rotation_axis The goniometer rotation (R') axis at datum
+     * @param fixed_rotation The additional fixed rotation (F) of the sample
+     * @param setting_rotation The additional setting rotation (S) of the axis
      */
     Goniometer(vec3<double> rotation_axis,
                mat3<double> fixed_rotation,
@@ -108,22 +122,25 @@ namespace dxtbx { namespace model {
     /** Virtual destructor */
     virtual ~Goniometer() {}
 
-    /** Get the rotation axis */
+    /** Get the orientation of the axis of the R' rotation, in the lab frame */
     vec3<double> get_rotation_axis() const {
       return setting_rotation_ * rotation_axis_;
     }
 
-    /** Get the rotation axis at datum */
+    /**
+     * Get the orientation of the axis of the R' rotation, in the lab frame,
+     * at the goniometer zero datum
+     */
     vec3<double> get_rotation_axis_datum() const {
       return rotation_axis_;
     }
 
-    /** Get the fixed rotation matrix */
+    /** Get the fixed rotation matrix, F */
     mat3<double> get_fixed_rotation() const {
       return fixed_rotation_;
     }
 
-    /** Get the setting matrix */
+    /** Get the setting rotation matrix, S */
     mat3<double> get_setting_rotation() const {
       return setting_rotation_;
     }
@@ -144,24 +161,24 @@ namespace dxtbx { namespace model {
       return setting_rotation_at_scan_points_[index];
     }
 
-    /** Set the rotation axis */
+    /** Set the orientation of the axis of the R' rotation */
     void set_rotation_axis(vec3<double> rotation_axis) {
       DXTBX_ASSERT(rotation_axis.length() > 0);
       rotation_axis_ = setting_rotation_.inverse() * rotation_axis.normalize();
     }
 
-    /** Set the rotation axis */
+    /** Set the R' rotation axis */
     void set_rotation_axis_datum(vec3<double> rotation_axis) {
       DXTBX_ASSERT(rotation_axis.length() > 0);
       rotation_axis_ = rotation_axis.normalize();
     }
 
-    /** Set the fixed rotation matrix */
+    /** Set the fixed rotation matrix, F */
     void set_fixed_rotation(mat3<double> fixed_rotation) {
       fixed_rotation_ = fixed_rotation;
     }
 
-    /** Set the setting rotation matrix */
+    /** Set the setting rotation matrix, S */
     void set_setting_rotation(mat3<double> setting_rotation) {
       setting_rotation_ = setting_rotation;
     }
