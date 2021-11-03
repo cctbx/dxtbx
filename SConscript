@@ -142,7 +142,6 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     env.SharedLibrary(
         target="#lib/dxtbx_ext",
         source=[
-            "src/dxtbx/boost_python/to_ewald_sphere_helpers.cc",
             "src/dxtbx/boost_python/ext.cpp",
             "src/dxtbx/boost_python/compression.cc",
         ],

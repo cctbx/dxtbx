@@ -164,7 +164,3 @@ if _test_writable_dir(Path(site.getsitepackages()[0])):
 else:
     print("Python site directory not writable - falling back to tbx install")
     _install_dxtbx_setup_readonly_fallback()
-
-# Retain until after DIALS 3.6 is released to unregister the previous dispatcher handlers
-if not pkg_resources or any(x.key == "libtbx.dxtbx" for x in pkg_resources.working_set):
-    libtbx.pkg_utils.define_entry_points({})

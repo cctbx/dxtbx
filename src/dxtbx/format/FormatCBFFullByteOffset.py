@@ -6,7 +6,7 @@ import os
 from io import TextIOWrapper
 from typing import IO, Union
 
-import scitbx.array_family.flex as flex
+from scitbx.array_family import flex
 
 from dxtbx.ext import uncompress
 from dxtbx.format.FormatCBFFull import FormatCBFFull
