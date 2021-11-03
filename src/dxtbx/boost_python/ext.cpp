@@ -208,11 +208,8 @@ namespace dxtbx { namespace boost_python {
     def("compress", &compress);
   }
 
-  void export_to_ewald_sphere_helpers();
-
   BOOST_PYTHON_MODULE(dxtbx_ext) {
     init_module();
-    export_to_ewald_sphere_helpers();
   }
 
 }}  // namespace dxtbx::boost_python

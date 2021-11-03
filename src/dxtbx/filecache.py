@@ -374,13 +374,24 @@ class pseudo_file:
     def flush(self):
         self._check_not_closed()
 
-    def next(self):
+    def __next__(self):
         data = self.readline()
         if data == b"":
             raise StopIteration()
         return data
 
-    __next__ = next
+    def readable(self):
+        return not self._closed
+
+    def writable(self):
+        return False
+
+    def seekable(self):
+        return self.readable()
+
+    @property
+    def closed(self):
+        return self._closed
 
     def read(self, size=-1):
         self._check_not_closed()

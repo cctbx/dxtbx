@@ -315,24 +315,6 @@ def set_detector_distance(detector, distance):
     detector[0].set_frame(fast_axis, slow_axis, origin)
 
 
-def project_2d(detector: Detector) -> Tuple[List[Float2], List[Float2], List[Float2]]:
-    """
-    DEPRECATED: Use get_detector_projection_2d_axes
-
-    Remove after DIALS 3.7 (2021-11)
-
-    Project panel origins, fast and slow axes onto the best-fitting 2D plane.
-    """
-
-    warnings.warn(
-        "project_2d is deprecated; use get_detector_projection_2d_axes instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    return get_detector_projection_2d_axes(detector)
-
-
 def get_detector_projection_2d_axes(
     detector: Detector,
 ) -> Tuple[List[Float2], List[Float2], List[Float2]]:
