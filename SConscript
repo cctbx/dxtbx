@@ -81,7 +81,7 @@ if build_cbf_bindings:
     env_etc.dxtbx_libs.append("cbf")
 
 # for the hdf5.h file - look at where Python is coming from unless is OS X
-# framework build... messy but appears to work on Linux and OS X
+# framework build... messy but appears to work on Linux and gOS X
 include_root = os.path.split(env_etc.python_include)[0]
 if "Python.framework" in include_root:
     include_root = os.path.join(include_root.split("Python.framework")[0], "include")
@@ -170,7 +170,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         "src/dxtbx/format/boost_python/image_ext.cc",
     ]
     if build_cbf_bindings:
-        dxtbx_format_image_ext_sources.append("format/boost_python/cbf_read_buffer.cpp")
+        dxtbx_format_image_ext_sources.append("src/dxtbx/format/boost_python/cbf_read_buffer.cpp")
     image = env.SharedLibrary(
         target="#/lib/dxtbx_format_image_ext",
         source=dxtbx_format_image_ext_sources,
