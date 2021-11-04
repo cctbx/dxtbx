@@ -81,7 +81,7 @@ if build_cbf_bindings:
     env_etc.dxtbx_libs.append("cbf")
 
 # for the hdf5.h file - look at where Python is coming from unless is OS X
-# framework build... messy but appears to work on Linux and gOS X
+# framework build... messy but appears to work on Linux and OS X
 include_root = os.path.split(env_etc.python_include)[0]
 if "Python.framework" in include_root:
     include_root = os.path.join(include_root.split("Python.framework")[0], "include")
