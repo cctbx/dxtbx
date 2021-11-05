@@ -1035,7 +1035,7 @@ public:
     if (data_.has_single_file_reader()) {
       return data_.get_master_path();
     }
-    return data_.get_path(index);
+    return data_.get_path(indices_[index]);
   }
 
   /**
