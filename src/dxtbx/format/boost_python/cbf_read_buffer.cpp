@@ -6,8 +6,12 @@
 #include <boost/python.hpp>
 #include <boost/move/unique_ptr.hpp>
 
-#include <cbf.h>
-
+//#include <cbf.h>
+extern "C" {
+    typedef struct cbf_handle_struct;
+    int cbf_read_buffered_file (cbf_handle_struct *handle, FILE *stream, int flags,
+                            const char * buffer, size_t buffer_len);
+}
 namespace py = boost::python;
 
 struct PySwigObject {

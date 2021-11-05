@@ -16,7 +16,16 @@ from scitbx.array_family import flex
 from dxtbx.format.Format import bz2, gzip
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatStill import FormatStill
-from dxtbx.format.image import cbf_read_buffer
+
+# Does the pybf library expose read_buffer?
+if hasattr(pycbf.cbf_handle_struct, "read_buffer"):
+
+    def cbf_read_buffer(handle, buffer, flags):
+        return handle.read_buffer(buffer, flags)
+
+
+else:
+    from dxtbx.format.image import cbf_read_buffer
 
 
 class FormatCBFFull(FormatCBF):

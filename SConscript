@@ -3,6 +3,18 @@ import os
 import libtbx.load_env
 from libtbx.env_config import get_boost_library_with_python_version
 
+try:
+    # Check if we have a "modernized" pycbf
+    import pycbf
+
+    if pycbf.__version__.startswith("CBFlib"):
+        # Old pycbf
+        raise ImportError
+    build_cbf_bindings = False
+except ImportError:
+    # We have to build CBFlib bindings ourselves
+    build_cbf_bindings = True
+
 Import("env_etc")
 
 env_etc.dxtbx_dist = libtbx.env.dist_path("dxtbx")
@@ -15,7 +27,7 @@ env_etc.dxtbx_common_includes = [
     env_etc.boost_adaptbx_include,
     env_etc.boost_include,
     env_etc.dxtbx_include,
-] + env_etc.cbflib_common_includes
+]
 
 Import("env_no_includes_boost_python_ext")
 env = env_no_includes_boost_python_ext.Clone()
@@ -28,7 +40,7 @@ if libtbx.env.build_options.use_conda:
 else:
     boost_python = "boost_python"
 
-env_etc.dxtbx_libs = ["tiff", "cbf", boost_python]
+env_etc.dxtbx_libs = ["tiff", boost_python]
 env_etc.dxtbx_lib_paths = [
     env_etc.base_lib,
     env_etc.libtbx_lib,
@@ -62,7 +74,11 @@ if sys.platform == "win32" and env_etc.compiler == "win32_cl":
             os.path.join(env_etc.cctbx_include, "msvc9.0_include")
         )
         env_etc.dxtbx_includes.append(libtbx.env.under_base("libtiff"))
-        env_etc.dxtbx_libs = ["libtiff", "cbf", "boost_python"]
+        env_etc.dxtbx_libs = ["libtiff", "boost_python"]
+
+if build_cbf_bindings:
+    env_etc.dxtbx_common_includes.extend(env_etc.cbflib_common_includes)
+    env_etc.dxtbx_libs.append("cbf")
 
 # for the hdf5.h file - look at where Python is coming from unless is OS X
 # framework build... messy but appears to work on Linux and OS X
@@ -117,6 +133,9 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         wd = ["-Wno-unused-function"]
         env.Append(CCFLAGS=wd)
 
+    if build_cbf_bindings:
+        env.Append(CPPDEFINES="BUILD_CBF")
+
     if hasattr(env_etc, "cppdefines"):
         env.Append(CPPDEFINES=env_etc.cppdefines)
 
@@ -147,12 +166,14 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         + env_etc.dxtbx_hdf5_libs,
     )
 
+    dxtbx_format_image_ext_sources = [
+        "src/dxtbx/format/boost_python/image_ext.cc",
+    ]
+    if build_cbf_bindings:
+        dxtbx_format_image_ext_sources.append("src/dxtbx/format/boost_python/cbf_read_buffer.cpp")
     image = env.SharedLibrary(
         target="#/lib/dxtbx_format_image_ext",
-        source=[
-            "src/dxtbx/format/boost_python/image_ext.cc",
-            "src/dxtbx/format/boost_python/cbf_read_buffer.cpp",
-        ],
+        source=dxtbx_format_image_ext_sources,
         LIBS=env_etc.libs_python
         + env_etc.libm
         + env_etc.dxtbx_libs
