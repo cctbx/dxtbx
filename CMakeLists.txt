@@ -15,6 +15,7 @@ find_package(Python REQUIRED COMPONENTS Interpreter Development)
 find_package(CCTBX COMPONENTS scitbx REQUIRED)
 find_package(HDF5 REQUIRED)
 find_package(pybind11 REQUIRED)
+find_package(CBFlib)
 
 # Find the boost::python library for this version of python
 find_package(Boost COMPONENTS "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" REQUIRED)
@@ -27,7 +28,7 @@ if(NOT TARGET Boost::python )
         INTERFACE_LINK_LIBRARIES  "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" )
 endif()
 
-# Put the libraries into lib/ so that we can run this in-place in a TBX install
+# Put the libraries into lib/ so that we can run this in-place in a TBX install
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/lib")
 
 add_subdirectory(src/dxtbx)

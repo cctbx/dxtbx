@@ -13,8 +13,17 @@ target_link_libraries( dxtbx_format_nexus_ext PRIVATE  Boost::python CCTBX::scit
 Python_add_library( dxtbx_imageset_ext MODULE boost_python/imageset_ext.cc )
 target_link_libraries( dxtbx_imageset_ext PUBLIC Boost::python CCTBX::scitbx )
 
-Python_add_library( dxtbx_format_image_ext MODULE format/boost_python/image_ext.cc )
+Python_add_library( dxtbx_format_image_ext
+    MODULE
+    format/boost_python/image_ext.cc
+)
 target_link_libraries( dxtbx_format_image_ext PUBLIC Boost::python CCTBX::scitbx )
+# If we have CBFlib available, use it
+if (TARGET CBFlib::cbf)
+    target_link_libraries( dxtbx_format_image_ext PRIVATE CBFlib::cbf )
+    target_compile_definitions( dxtbx_format_image_ext PRIVATE BUILD_CBF )
+    target_sources( dxtbx_format_image_ext PRIVATE format/boost_python/cbf_read_buffer.cpp )
+endif()
 
 Python_add_library( dxtbx_model_ext
     MODULE
