@@ -1525,21 +1525,27 @@ public:
    * @param last The last index
    * @returns The partial sequence
    */
-  ImageSequence partial_sequence(std::size_t first, std::size_t last) const {
+  ImageSequence partial_sequence(boost::python::object reader, std::size_t first, std::size_t last) const {
     // Check slice indices
     DXTBX_ASSERT(last > first);
 
-    // Construct a partial scan
-    Scan scan = detail::safe_dereference(ImageSet::get_scan_for_image(first));
-    for (std::size_t i = first + 1; i < last; ++i) {
-      scan += detail::safe_dereference(ImageSet::get_scan_for_image(i));
+    // Construct a partial data
+    ImageSetData _partial_data = data_.partial_data(reader, first, last);
+
+
+    // Now we use the partial data to construct the partial scan
+    Scan scan = detail::safe_dereference(_partial_data.get_scan(0));
+    for (std::size_t i=1; i<last-first; ++i) {
+      scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
+      Scan temp_scan = detail::safe_dereference(temp_scan_ptr);
+      scan += temp_scan;
     }
 
     // Construct the partial indices
     scitbx::af::const_ref<std::size_t> indices(&indices_[first], last - first);
 
     // Construct the partial sequence
-    ImageSequence result(data_,
+    ImageSequence result(_partial_data,
                          indices,
                          get_beam(),
                          get_detector(),
