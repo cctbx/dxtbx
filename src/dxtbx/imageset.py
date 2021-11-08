@@ -166,7 +166,10 @@ class _:
         """
         Return the list of paths
         """
-        return [self.reader().paths()[i] for i in self.indices()]
+        if self.data().has_single_file_reader():
+            return [self.get_path(i) for i in range(len(self))]
+        else:
+            return [self.reader().paths()[i] for i in self.indices()]
 
 
 class ImageSetLazy(ImageSet):
