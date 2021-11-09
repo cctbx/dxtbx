@@ -210,6 +210,15 @@ class ImageSetLazy(ImageSet):
     def get_beam(self, index=None):
         return self._get_item_from_parent_or_format("beam", index)
 
+    def get_mask(self, index=None):
+        """
+        ImageSet::get_mask internally dereferences a pointer to the _detector
+        member of ImageSetData, so we ensure the detector gets populated first.
+        """
+        if getattr(super(), "get_detector")(index) is None:
+            self._load_models(index)
+        return self._get_item_from_parent_or_format("mask", index)
+
     def get_goniometer(self, index=None):
         return self._get_item_from_parent_or_format("goniometer", index)
 
