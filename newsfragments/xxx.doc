@@ -1,0 +1,2 @@
+Update the documentation of the in-house convention for representing the goniostat rotation operator :math:`\mathbf{R}`, to match `the conventions page <https://dials.github.io/documentation/conventions.html#the-dxtbx-goniometer-model>`_ of the online DIALS documentation.
+
