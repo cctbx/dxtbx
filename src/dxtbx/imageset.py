@@ -295,12 +295,12 @@ class _:
 
                 return self.partial_set(start, stop)
             else:
+                start = item.start or 0
+                stop = item.stop or (len(self) + offset)
                 if self.data().has_single_file_reader():
                     reader = self.reader().copy(self.reader().paths(), stop-start)
                 else:
                     reader = self.reader().copy(self.reader().paths())
-                start = item.start or 0
-                stop = item.stop or (len(self) + offset)
                 return self.partial_set(reader, start - offset, stop - offset)
         else:
             return self.get_corrected_data(item)
