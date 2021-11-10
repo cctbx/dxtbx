@@ -104,7 +104,7 @@ class _:
             if item.step is not None and item.step != 1:
                 raise IndexError("Step must be 1")
             if self.data().has_single_file_reader():
-                reader = self.reader().copy(self.reader().paths(), stop-start)
+                reader = self.reader().copy(self.reader().paths(), stop - start)
             else:
                 reader = self.reader().copy(self.reader().paths())
             return self.partial_set(reader, start, stop)
@@ -248,10 +248,13 @@ class ImageSetLazy(ImageSet):
             if item.step is not None and item.step != 1:
                 raise IndexError("Step must be 1")
             if self.data().has_single_file_reader():
-                reader = self.reader().copy(self.reader().paths(), stop-start)
+                reader = self.reader().copy(self.reader().paths(), stop - start)
             else:
                 reader = self.reader().copy(self.reader().paths())
-            return ImageSetLazy(self.data().partial_data(reader, start, stop), indices=self.indices()[item])
+            return ImageSetLazy(
+                self.data().partial_data(reader, start, stop),
+                indices=self.indices()[item],
+            )
         self._load_models(item)
         return super().__getitem__(item)
 
@@ -305,7 +308,7 @@ class _:
                 start = item.start or 0
                 stop = item.stop or (len(self) + offset)
                 if self.data().has_single_file_reader():
-                    reader = self.reader().copy(self.reader().paths(), stop-start)
+                    reader = self.reader().copy(self.reader().paths(), stop - start)
                 else:
                     reader = self.reader().copy(self.reader().paths())
                 return self.partial_set(reader, start - offset, stop - offset)
