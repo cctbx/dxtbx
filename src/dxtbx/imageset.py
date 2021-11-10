@@ -50,6 +50,13 @@ class MemReader:
     def __init__(self, images):
         self._images = images
 
+    def copy(self, paths):
+        """
+        Experimental implementation where a copy of the reader also copies all
+        the data
+        """
+        return MemReader(self._images)
+
     def paths(self):
         return ["" for im in self._images]
 
