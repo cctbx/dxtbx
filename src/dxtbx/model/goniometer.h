@@ -242,8 +242,9 @@ namespace dxtbx { namespace model {
     /**
      * Rotate the goniometer about an axis.
      *
-     * This is equivalent to adding an additional component to the setting
-     * rotation, S.
+     * This represents an active rotation of the goniometer in the
+     * laboratory frame, and is equivalent to adding an additional component
+     * to the 'setting' rotation, S.
      */
     void rotate_around_origin(vec3<double> axis, double angle) {
       mat3<double> new_rotation = axis_and_angle_as_matrix(axis, angle);
