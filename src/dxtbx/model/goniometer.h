@@ -268,12 +268,16 @@ namespace dxtbx { namespace model {
                rhs.setting_rotation_.const_ref(), setting_rotation_tolerance);
     }
 
-    /** Rotate the goniometer about an axis */
+    /**
+     * Rotate the goniometer about an axis.
+     *
+     * This represents an active rotation of the goniometer in the
+     * laboratory frame, and is equivalent to adding an additional component
+     * to the 'setting' rotation, S.
+     */
     void rotate_around_origin(vec3<double> axis, double angle) {
-      mat3<double> R = axis_and_angle_as_matrix(axis, angle);
-      rotation_axis_ = rotation_axis_.rotate_around_origin(axis, angle);
-      fixed_rotation_ = R * fixed_rotation_;
-      setting_rotation_ = R * setting_rotation_;
+      mat3<double> new_rotation = axis_and_angle_as_matrix(axis, angle);
+      setting_rotation_ = new_rotation * setting_rotation_;
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Goniometer &gonio);
