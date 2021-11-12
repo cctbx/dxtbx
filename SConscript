@@ -170,7 +170,9 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         "src/dxtbx/format/boost_python/image_ext.cc",
     ]
     if build_cbf_bindings:
-        dxtbx_format_image_ext_sources.append("src/dxtbx/format/boost_python/cbf_read_buffer.cpp")
+        dxtbx_format_image_ext_sources.append(
+            "src/dxtbx/format/boost_python/cbf_read_buffer.cpp"
+        )
     image = env.SharedLibrary(
         target="#/lib/dxtbx_format_image_ext",
         source=dxtbx_format_image_ext_sources,
