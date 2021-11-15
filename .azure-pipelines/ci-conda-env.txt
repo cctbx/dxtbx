@@ -5,7 +5,7 @@ conda-forge::c-compiler
 conda-forge::cctbx-base==2021.8
 conda-forge::conda
 conda-forge::cxx-compiler
-conda-forge::python-dateutils>=2.7.0
+conda-forge::python-dateutil>=2.7.0
 conda-forge::dials-data
 conda-forge::docutils
 conda-forge::eigen
