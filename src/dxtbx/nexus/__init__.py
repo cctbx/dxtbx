@@ -123,7 +123,7 @@ def get_dxtbx_scan(
 
     return dxtbx.model.Scan(
         image_range,
-        tuple(float(o) for o in oscillation),
+        oscillation,
         exposure_times,
         epochs,
         batch_offset=0,
@@ -143,6 +143,7 @@ def get_dxtbx_detector(
 
     detector = dxtbx.model.Detector()
 
+    root: Union[dxtbx.model.Detector, dxtbx.model.DetectorNode]
     if len(nxdetector.modules) > 1:
         root = detector.hierarchy()
     else:

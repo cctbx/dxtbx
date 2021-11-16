@@ -246,7 +246,7 @@ class ImageSetLazy(ImageSet):
 
 
 @boost_adaptbx.boost.python.inject_into(ImageSequence)
-class _:
+class _imagesequence:
     def __getitem__(self, item):
         """Get an item from the sequence stream.
 

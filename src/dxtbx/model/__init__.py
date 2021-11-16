@@ -137,7 +137,7 @@ __all__ = (
 
 
 @boost_adaptbx.boost.python.inject_into(Detector)
-class _:
+class _detector:
     def iter_panels(self):
         """Iterate through just the panels depth-first."""
         for obj in self.iter_preorder():
@@ -164,7 +164,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(Crystal)
-class _:
+class _crystal:
     def show(self, show_scan_varying=False, out=None):
         if out is None:
             out = sys.stdout
@@ -412,7 +412,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(MosaicCrystalKabsch2010)
-class _:
+class _crystal_kabsch:
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -469,7 +469,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(MosaicCrystalSauter2014)
-class _:
+class _crystalsauter:
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -540,7 +540,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(Experiment)
-class _:
+class _experiment:
     def load_models(self, index=None):
         """Load the models from the imageset"""
         if index is None:
@@ -552,7 +552,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
-class _:
+class _experimentlist:
     def __repr__(self):
         if len(self):
             return "ExperimentList([{}])".format(", ".join(repr(x) for x in self))
