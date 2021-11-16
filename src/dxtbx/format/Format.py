@@ -29,7 +29,7 @@ from dxtbx.util import get_url_scheme
 try:
     import gzip
 except ImportError:
-    gzip = None
+    gzip = None  # type: ignore
 
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()

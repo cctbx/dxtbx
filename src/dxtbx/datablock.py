@@ -87,8 +87,6 @@ class DataBlock:
             and self._imagesets == rhs._imagesets
         )
 
-    __hash__ = None  # datablock objects are mutable and therefore unhashable
-
     def __ne__(self, rhs):
         """Check if two blocks are not equal."""
         return not self.__eq__(rhs)

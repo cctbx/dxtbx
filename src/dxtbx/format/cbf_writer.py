@@ -9,6 +9,7 @@ for i in range(10):
 
 import os
 import sys
+from typing import Optional
 
 import pycbf
 
@@ -565,7 +566,7 @@ class FullCBFWriter:
 if __name__ == "__main__":
     filename = sys.argv[1]
     if len(sys.argv) > 2:
-        index = int(sys.argv[2])
+        index: Optional[int] = int(sys.argv[2])
     else:
         index = None
 

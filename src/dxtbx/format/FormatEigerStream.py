@@ -1,4 +1,5 @@
 import json
+from typing import Any, Dict
 
 import numpy as np
 
@@ -24,7 +25,7 @@ try:
 except (ImportError, ValueError):
     bitshuffle = None
 
-injected_data = {}
+injected_data: Dict[str, Any] = {}
 
 
 class FormatEigerStream(FormatMultiImage, Format):
