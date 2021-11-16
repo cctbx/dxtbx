@@ -17,7 +17,8 @@ try:
 except ImportError:
     # Maybe scitbx-stubs isn't installed... fallback for now
     VT = TypeVar("VT")
-    FlexPlain = Generic[VT]
+    class FlexPlain(Generic[VT]):
+        pass
 
 Vec3Float = Tuple[float, float, float]
 Vec6Float = Tuple[float, float, float, float, float, float]
