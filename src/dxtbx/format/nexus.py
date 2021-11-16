@@ -26,11 +26,18 @@ from dxtbx.model import (
 )
 
 try:
-    from dxtbx_format_nexus_ext import (
-        dataset_as_flex_double,
-        dataset_as_flex_float,
-        dataset_as_flex_int,
-    )
+    try:
+        from ..dxtbx_format_nexus_ext import (
+            dataset_as_flex_double,
+            dataset_as_flex_float,
+            dataset_as_flex_int,
+        )
+    except ModuleNotFoundError:
+        from dxtbx_format_nexus_ext import (  # type: ignore
+            dataset_as_flex_double,
+            dataset_as_flex_float,
+            dataset_as_flex_int,
+        )
 except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
     if "SIT_ROOT" not in os.environ:
