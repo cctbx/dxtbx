@@ -8,7 +8,7 @@ try:
         MosaicCrystalSauter2014,
     )
 except ModuleNotFoundError:
-    from dxtbx_model_ext import (
+    from dxtbx_model_ext import (  # type: ignore
         Crystal,
         MosaicCrystalKabsch2010,
         MosaicCrystalSauter2014,

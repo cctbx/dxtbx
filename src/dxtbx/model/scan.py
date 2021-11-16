@@ -6,7 +6,11 @@ import libtbx.phil
 from scitbx.array_family import flex
 
 from dxtbx.model.scan_helpers import scan_helper_image_files
-from dxtbx_model_ext import Scan
+
+try:
+    from ..dxtbx_model_ext import Scan
+except ModuleNotFoundError:
+    from dxtbx_model_ext import Scan  # type: ignore
 
 scan_phil_scope = libtbx.phil.parse(
     """

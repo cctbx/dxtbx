@@ -5,7 +5,14 @@ import pycbf
 import libtbx.phil
 from scitbx.array_family import flex
 
-from dxtbx_model_ext import Goniometer, KappaGoniometer, MultiAxisGoniometer
+try:
+    from ..dxtbx_model_ext import Goniometer, KappaGoniometer, MultiAxisGoniometer
+except ModuleNotFoundError:
+    from dxtbx_model_ext import (  # type: ignore
+        Goniometer,
+        KappaGoniometer,
+        MultiAxisGoniometer,
+    )
 
 __all__ = [
     "Goniometer",

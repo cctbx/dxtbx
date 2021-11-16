@@ -14,12 +14,22 @@ from dxtbx.model.detector_helpers import (
     set_fast_slow_beam_centre_mm,
     set_mosflm_beam_centre,
 )
-from dxtbx_model_ext import (
-    Detector,
-    Panel,
-    ParallaxCorrectedPxMmStrategy,
-    SimplePxMmStrategy,
-)
+
+try:
+    from ..dxtbx_model_ext import (
+        Detector,
+        Panel,
+        ParallaxCorrectedPxMmStrategy,
+        SimplePxMmStrategy,
+    )
+
+except ModuleNotFoundError:
+    from dxtbx_model_ext import (  # type: ignore
+        Detector,
+        Panel,
+        ParallaxCorrectedPxMmStrategy,
+        SimplePxMmStrategy,
+    )
 
 # N.B. this should probably be generalized for non
 # flat detectors, or composite detectors constructed from a number of flat
