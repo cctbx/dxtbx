@@ -5,14 +5,25 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.model import MultiAxisGoniometer
-from dxtbx_masking_ext import (
-    GoniometerShadowMasker,
-    SmarGonShadowMasker,
-    is_inside_polygon,
-    mask_untrusted_circle,
-    mask_untrusted_polygon,
-    mask_untrusted_rectangle,
-)
+
+try:
+    from ..dxtbx_masking_ext import (
+        GoniometerShadowMasker,
+        SmarGonShadowMasker,
+        is_inside_polygon,
+        mask_untrusted_circle,
+        mask_untrusted_polygon,
+        mask_untrusted_rectangle,
+    )
+except ModuleNotFoundError:
+    from dxtbx_masking_ext import (  # type: ignore
+        GoniometerShadowMasker,
+        SmarGonShadowMasker,
+        is_inside_polygon,
+        mask_untrusted_circle,
+        mask_untrusted_polygon,
+        mask_untrusted_rectangle,
+    )
 
 __all__ = [
     "GoniometerShadowMasker",
