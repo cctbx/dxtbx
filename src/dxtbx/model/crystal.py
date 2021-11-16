@@ -1,7 +1,18 @@
 from cctbx.sgtbx import space_group as SG
 from scitbx import matrix
 
-from dxtbx_model_ext import Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014
+try:
+    from ..dxtbx_model_ext import (
+        Crystal,
+        MosaicCrystalKabsch2010,
+        MosaicCrystalSauter2014,
+    )
+except ModuleNotFoundError:
+    from dxtbx_model_ext import (
+        Crystal,
+        MosaicCrystalKabsch2010,
+        MosaicCrystalSauter2014,
+    )
 
 
 class CrystalFactory:
