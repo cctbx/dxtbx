@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, overload
+from typing import Any, Dict, Generic, List, Tuple, TypeVar, overload
 
 from scitbx.array_family import flex
 
@@ -13,7 +13,9 @@ try:
     # Attempt to use the stub typing for flex-inheritance
     from scitbx.array_family.flex import FlexPlain
 except ImportError:
-    pass
+    # Maybe scitbx-stubs isn't installed... fallback for now
+    VT = TypeVar("VT")
+    FlexPlain = Generic[VT]
 
 Vec3Float = Tuple[float, float, float]
 
