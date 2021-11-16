@@ -21,7 +21,7 @@ from dxtbx.model.scan import ScanFactory
 from dxtbx.util import format_float_with_standard_uncertainty
 
 try:
-    from .dxtbx_model_ext import (
+    from ..dxtbx_model_ext import (
         Beam,
         BeamBase,
         Crystal,
