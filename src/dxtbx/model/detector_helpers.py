@@ -324,7 +324,7 @@ def get_detector_projection_2d_axes(
     """
 
     # Extract panel vertices
-    vertices = []
+    vertices: List[matrix.rec] = []
     for panel in detector:
         origin = matrix.col(panel.get_origin())
         fast = matrix.col(panel.get_fast_axis())
@@ -345,7 +345,7 @@ def get_detector_projection_2d_axes(
     inertia_tensor = np.matmul(r, r.T)
     u = np.linalg.svd(inertia_tensor)[0]
     normal = matrix.col(u[:, 2].tolist()).normalize()
-    sum_vertices = matrix.col((0, 0, 0))
+    sum_vertices: matrix.rec = matrix.col((0, 0, 0))
     for v in vertices:
         sum_vertices += v
     if normal.dot(sum_vertices) > 0:
@@ -368,7 +368,9 @@ def get_detector_projection_2d_axes(
             clustered_axes = False
 
     if clustered_axes:
-        summed_axes = [matrix.col((0, 0, 0)) for i in range(nclusters)]
+        summed_axes: List[matrix.rec] = [
+            matrix.col((0, 0, 0)) for i in range(nclusters)
+        ]
         for axis, cluster in zip(axes, clusters):
             summed_axes[cluster] += matrix.col(axis)
 
