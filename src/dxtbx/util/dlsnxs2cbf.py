@@ -109,7 +109,7 @@ _array_data.header_contents
     result.append(f"# Beam_xy ({Bx:.2f}, {By:.2f}) pixels")
     result.append("# Flux 0.000000")
     result.append("# Filter_transmission %.3f" % A)
-    result.append("# Start_angle %.4f deg." % omega[nn])
+    result.append(f"# Start_angle {f[rot_axis][nn]:.4f} deg.")
     result.append("# Angle_increment %.4f deg." % rot_increment[nn])
     result.append("# Detector_2theta 0.0000 deg.")
     result.append("# Polarization 0.990")
