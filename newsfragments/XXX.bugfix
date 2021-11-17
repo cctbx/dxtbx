@@ -1,0 +1,3 @@
+Reduce memory usage of class ImageSetData. The savings are large (up to a
+couple MB per imageset) when the underlying image data is in multiimage
+container files.
