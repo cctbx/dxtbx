@@ -125,7 +125,7 @@ _array_data.header_contents
         result.append("# Omega %.4f deg." % omega[nn])
         result.append("# Omega_increment %.4f deg." % rot_increment[nn])
     else:
-        result.append(f"# Phi {np.squeeze(omega):.4f} deg.")
+        result.append(f"# Omega {np.squeeze(omega):.4f} deg.")
         result.append("# Omega_increment 0.0000 deg.")
     for key, name in {chi_key: "Chi", kappa_key: "Kappa"}:
         if key in f:
