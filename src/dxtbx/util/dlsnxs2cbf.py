@@ -61,18 +61,19 @@ def compute_cbf_header(f, nn=0):
     # least for purposes here (causes errors for old versions of dxtbx reading
     # the data) - 19 chars needed
     timestamp = f["/entry/start_time"][()].decode()[:19]
+
+    omega_key = "/entry/sample/transformations/omega"
+    chi_key = "/entry/sample/transformations/chi"
+    phi_key = "/entry/sample/transformations/phi"
+    kappa_key = "/entry/sample/transformations/kappa"
     omega = f["/entry/sample/transformations/omega"][()]
     rot_increment = None
-    for rot_axis in {"omega", "phi"}:
-        if f"/entry/sample/transformations/{rot_axis}_increment_set" in f:
-            rot_increment = f[
-                f"/entry/sample/transformations/{rot_axis}_increment_set"
-            ][()]
+    for rot_axis in {omega_key, phi_key}:
+        if f"{rot_axis}_increment_set" in f:
+            rot_increment = f[f"{rot_axis}_increment_set"][()]
             break
     if rot_increment is None:
         sys.exit("Could not determine rotation axis")
-    chi_key = "/entry/sample/transformations/chi"
-    phi_key = "/entry/sample/transformations/phi"
 
     if "/entry/instrument/detector/beam_centre_x" in f:
         Bx = instrument["detector/beam_centre_x"][()]
@@ -113,7 +114,6 @@ _array_data.header_contents
     result.append("# Detector_2theta 0.0000 deg.")
     result.append("# Polarization 0.990")
     result.append("# Alpha 0.0000 deg.")
-    result.append("# Kappa 0.0000 deg.")
     if phi_key in f:
         if rot_axis == "phi":
             result.append("# Phi %.4f deg." % f[phi_key][()][nn])
@@ -127,9 +127,11 @@ _array_data.header_contents
     else:
         result.append(f"# Phi {np.squeeze(omega):.4f} deg.")
         result.append("# Omega_increment 0.0000 deg.")
-    if chi_key in f:
-        result.append(f"# Chi {np.squeeze(f[chi_key][()]):.4f} deg.")
-        result.append("# Chi_increment 0.0000 deg.")
+    for key, name in {chi_key: "Chi", kappa_key: "Kappa"}:
+        if key in f:
+            result.append(f"# {name} {np.squeeze(f[key][()]):.4f} deg.")
+            result.append(f"# {name}_increment 0.0000 deg.")
+
     result.append("# Oscillation_axis X.CW")
     result.append("# N_oscillations 1")
     result.append(";")
