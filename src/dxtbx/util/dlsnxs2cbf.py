@@ -1,4 +1,5 @@
 import binascii
+import sys
 
 import h5py
 import hdf5plugin  # noqa; F401
@@ -61,7 +62,15 @@ def compute_cbf_header(f, nn=0):
     # the data) - 19 chars needed
     timestamp = f["/entry/start_time"][()].decode()[:19]
     omega = f["/entry/sample/transformations/omega"][()]
-    omega_increment = f["/entry/sample/transformations/omega_increment_set"][()]
+    rot_increment = None
+    for rot_axis in {"omega", "phi"}:
+        if f"/entry/sample/transformations/{rot_axis}_increment_set" in f:
+            rot_increment = f[
+                f"/entry/sample/transformations/{rot_axis}_increment_set"
+            ][()]
+            break
+    if rot_increment is None:
+        sys.exit("Could not determine rotation axis")
     chi_key = "/entry/sample/transformations/chi"
     phi_key = "/entry/sample/transformations/phi"
 
@@ -100,16 +109,24 @@ _array_data.header_contents
     result.append("# Flux 0.000000")
     result.append("# Filter_transmission %.3f" % A)
     result.append("# Start_angle %.4f deg." % omega[nn])
-    result.append("# Angle_increment %.4f deg." % omega_increment[nn])
+    result.append("# Angle_increment %.4f deg." % rot_increment[nn])
     result.append("# Detector_2theta 0.0000 deg.")
     result.append("# Polarization 0.990")
     result.append("# Alpha 0.0000 deg.")
     result.append("# Kappa 0.0000 deg.")
     if phi_key in f:
-        result.append(f"# Phi {np.squeeze(f[phi_key][()]):.4f} deg.")
-        result.append("# Phi_increment 0.0000 deg.")
-    result.append("# Omega %.4f deg." % omega[nn])
-    result.append("# Omega_increment %.4f deg." % omega_increment[nn])
+        if rot_axis == "phi":
+            result.append("# Phi %.4f deg." % f[phi_key][()][nn])
+            result.append("# Phi_increment %.4f deg." % rot_increment[nn])
+        else:
+            result.append(f"# Phi {np.squeeze(f[phi_key][()]):.4f} deg.")
+            result.append("# Phi_increment 0.0000 deg.")
+    if rot_axis == "omega":
+        result.append("# Omega %.4f deg." % omega[nn])
+        result.append("# Omega_increment %.4f deg." % rot_increment[nn])
+    else:
+        result.append(f"# Phi {np.squeeze(omega):.4f} deg.")
+        result.append("# Omega_increment 0.0000 deg.")
     if chi_key in f:
         result.append(f"# Chi {np.squeeze(f[chi_key][()]):.4f} deg.")
         result.append("# Chi_increment 0.0000 deg.")
