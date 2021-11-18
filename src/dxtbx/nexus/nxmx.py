@@ -59,17 +59,7 @@ logger = logging.getLogger(__name__)
 NXNode = Union[h5py.File, h5py.Group]
 
 
-@overload
-def h5str(h5_value: None) -> None:
-    ...
-
-
-@overload
 def h5str(h5_value: Union[str, np.bytes_, bytes]) -> str:
-    ...
-
-
-def h5str(h5_value):
     """
     Convert a value returned an h5py attribute to str.
 
