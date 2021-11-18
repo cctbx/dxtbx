@@ -41,7 +41,7 @@ _array_data.header_contents
 ;"""
     )
     result.append(
-        f"# Detector: EIGER 2XE 16M S/N {nxdetector.serial_number} {nxinstrument.name}"
+        f"# Detector: EIGER 2XE 16M S/N {nxdetector.serial_number} {nxinstrument.short_name}"
     )
     result.append(f"# {timestamp}")
     result.append("# Pixel_size 75e-6 m x 75e-6 m")
@@ -120,7 +120,7 @@ def make_cbf(in_name, template):
             scan_axis = nxsample.depends_on
 
         num_images = len(scan_axis)
-        static_mask = dxtbx.nexus.get_static_mask(nxdetector)[0]
+        static_mask = dxtbx.nexus.get_static_mask(nxdetector)
         bit_depth_readout = nxdetector.bit_depth_readout
 
         for j in range(num_images):
@@ -138,7 +138,8 @@ def make_cbf(in_name, template):
                 d1d.set_selected(d1d == top - 2, -2)
 
             # set the tile join regions to -1 - MOSFLM cares about this apparently
-            data.as_1d().set_selected(static_mask.as_1d(), -1)
+            if static_mask:
+                data.as_1d().set_selected(static_mask[0].as_1d(), -1)
             compressed = compress(data)
 
             mime = """
