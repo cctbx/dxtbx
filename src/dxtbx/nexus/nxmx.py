@@ -846,6 +846,12 @@ class NXdetector(H5Mapping):
             units = h5str(frame_time.attrs["units"])
             return frame_time[()] * ureg(units)
 
+    @cached_property
+    def serial_number(self) -> Optional[str]:
+        """Serial number for the detector."""
+        if "serial_number" in self._handle:
+            return h5str(self._handle["serial_number"][()])
+
 
 class NXdetector_module(H5Mapping):
     """Representation of the NXdetector_module class.

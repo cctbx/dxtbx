@@ -1,86 +1,35 @@
 import binascii
-import sys
 
 import h5py
 import hdf5plugin  # noqa; F401
 import numpy as np
 
-from scitbx.array_family import flex
-
+import dxtbx.model
+import dxtbx.nexus.nxmx
 from dxtbx.ext import compress
 
 
-def get_mask(nfast, nslow):
-    module_size_fast, module_size_slow = (1028, 512)
-    gap_size_fast, gap_size_slow = (12, 38)
-    n_fast, remainder = divmod(nfast, module_size_fast)
-    assert (n_fast - 1) * gap_size_fast == remainder
+def compute_cbf_header(nxmx: dxtbx.nexus.nxmx.NXmx, nn: int):
+    nxentry = nxmx.entries[0]
+    nxsample = nxentry.samples[0]
+    nxinstrument = nxentry.instruments[0]
+    nxdetector = nxinstrument.detectors[0]
+    nxbeam = nxinstrument.beams[0]
 
-    n_slow, remainder = divmod(nslow, module_size_slow)
-    assert (n_slow - 1) * gap_size_slow == remainder
-
-    mask = flex.bool(flex.grid(nslow, nfast), True)
-    blit = flex.bool(flex.grid(module_size_slow, module_size_fast), False)
-
-    for j in range(n_slow):
-        for i in range(n_fast):
-            o_i = i * (module_size_fast + gap_size_fast)
-            o_j = j * (module_size_slow + gap_size_slow)
-            mask.matrix_paste_block_in_place(blit, i_row=o_j, i_column=o_i)
-
-    return mask
-
-
-def get_distance_in_mm(f):
-    try:
-        D = f["/entry/instrument/detector_distance"]
-    except KeyError:
-        D = f["/entry/instrument/detector/detector_distance"]
-    d = D[()]
-    if D.attrs["units"] == np.string_("m"):
-        d *= 1000
-    elif D.attrs["units"] != np.string_("mm"):
-        raise RuntimeError(
-            "unknown distance unit '%s'" % D.attrs["units"].decode("latin-1")
-        )
-    return d
-
-
-def compute_cbf_header(f, nn=0):
+    distance = nxdetector.distance
+    if distance is None:
+        distance = dxtbx.nexus.get_dxtbx_detector(nxdetector, nxbeam)[0].get_distance()
 
     result = []
 
-    D = get_distance_in_mm(f)
-    instrument = f["/entry/instrument"]
-    name = instrument.attrs.get("short_name", "")
-    T = instrument["detector/count_time"][()]
-    L = instrument["beam/incident_wavelength"][()]
-    A = instrument["attenuator/attenuator_transmission"][()]
+    A = nxinstrument.attenuators[0]["attenuator_transmission"][()]
 
     # this timestamp _should_ be in UTC - so can ignore timezone info - at
     # least for purposes here (causes errors for old versions of dxtbx reading
     # the data) - 19 chars needed
-    timestamp = f["/entry/start_time"][()].decode()[:19]
+    timestamp = nxentry.start_time
 
-    omega_key = "/entry/sample/transformations/omega"
-    chi_key = "/entry/sample/transformations/chi"
-    phi_key = "/entry/sample/transformations/phi"
-    kappa_key = "/entry/sample/transformations/kappa"
-    omega = f["/entry/sample/transformations/omega"][()]
-    rot_increment = None
-    for rot_axis in {omega_key, phi_key}:
-        if f"{rot_axis}_increment_set" in f:
-            rot_increment = f[f"{rot_axis}_increment_set"][()]
-            break
-    if rot_increment is None:
-        sys.exit("Could not determine rotation axis")
-
-    if "/entry/instrument/detector/beam_centre_x" in f:
-        Bx = instrument["detector/beam_centre_x"][()]
-        By = instrument["detector/beam_centre_y"][()]
-    else:
-        Bx = instrument["detector/beam_center_x"][()]
-        By = instrument["detector/beam_center_y"][()]
+    dependency_chain = dxtbx.nexus.nxmx.get_dependency_chain(nxsample.depends_on)
 
     result.append("###CBF: VERSION 1.5, CBFlib v0.7.8 - Eiger detectors")
     result.append("")
@@ -91,12 +40,14 @@ def compute_cbf_header(f, nn=0):
 _array_data.header_contents
 ;"""
     )
-    result.append("# Detector: EIGER 2XE 16M S/N 160-0001 Diamond %s" % name)
-    result.append("# %s" % timestamp)
+    result.append(
+        f"# Detector: EIGER 2XE 16M S/N {nxdetector.serial_number} {nxinstrument.name}"
+    )
+    result.append(f"# {timestamp}")
     result.append("# Pixel_size 75e-6 m x 75e-6 m")
     result.append("# Silicon sensor, thickness 0.000450 m")
-    result.append("# Exposure_time %.5f s" % T)
-    result.append("# Exposure_period %.5f s" % T)
+    result.append(f"# Exposure_time {nxdetector.count_time:.5f} s")
+    result.append(f"# Exposure_period {nxdetector.count_time:.5f} s")
     result.append("# Tau = 1e-9 s")
     result.append("# Count_cutoff 65535 counts")
     result.append("# Threshold_setting: 0 eV")
@@ -104,34 +55,31 @@ _array_data.header_contents
     result.append("# N_excluded_pixels = 0")
     result.append("# Excluded_pixels: badpix_mask.tif")
     result.append("# Flat_field: (nil)")
-    result.append("# Wavelength %.5f A" % L)
-    result.append("# Detector_distance %.5f m" % (D / 1000.0))
-    result.append(f"# Beam_xy ({Bx:.2f}, {By:.2f}) pixels")
+    result.append(f"# Wavelength {nxbeam.incident_wavelength:.5f} A")
+    result.append(f"# Detector_distance {distance / 1000.0:.5f} m")
+    result.append(
+        f"# Beam_xy ({nxdetector.beam_center_x:.2f}, {nxdetector.beam_center_y:.2f}) pixels"
+    )
     result.append("# Flux 0.000000")
     result.append("# Filter_transmission %.3f" % A)
-    result.append(f"# Start_angle {f[rot_axis][nn]:.4f} deg.")
-    result.append("# Angle_increment %.4f deg." % rot_increment[nn])
     result.append("# Detector_2theta 0.0000 deg.")
     result.append("# Polarization 0.990")
     result.append("# Alpha 0.0000 deg.")
-    if phi_key in f:
-        if rot_axis == "phi":
-            result.append("# Phi %.4f deg." % f[phi_key][()][nn])
-            result.append("# Phi_increment %.4f deg." % rot_increment[nn])
+    for t in dependency_chain:
+        name = t.path.split("/")[-1].capitalize()
+        # Find the first varying rotation axis
+        if (
+            t.transformation_type == "rotation"
+            and len(t) > 1
+            and not np.all(t[()] == t[0])
+        ):
+            result.append(f"# {name} {t[nn].to('degree'):.4f} deg.")
+            result.append(f"# {name}_increment {(t[1] - t[0]).to('degree'):.4f} deg")
+            result.append(f"# Start_angle {t[nn].to('degree'):.4f} deg.")
+            result.append(f"# Angle_increment {(t[1] - t[0]).to('degree'):.4f} deg")
         else:
-            result.append(f"# Phi {np.squeeze(f[phi_key][()]):.4f} deg.")
-            result.append("# Phi_increment 0.0000 deg.")
-    if rot_axis == "omega":
-        result.append("# Omega %.4f deg." % omega[nn])
-        result.append("# Omega_increment %.4f deg." % rot_increment[nn])
-    else:
-        result.append(f"# Omega {np.squeeze(omega):.4f} deg.")
-        result.append("# Omega_increment 0.0000 deg.")
-    for key, name in {chi_key: "Chi", kappa_key: "Kappa"}:
-        if key in f:
-            result.append(f"# {name} {np.squeeze(f[key][()]):.4f} deg.")
-            result.append(f"# {name}_increment 0.0000 deg.")
-
+            result.append(f"# {name} {t[0].to('degree'):.4f} deg.")
+            result.append(f"# {name}_increment 0.0000 deg")
     result.append("# Oscillation_axis X.CW")
     result.append("# N_oscillations 1")
     result.append(";")
@@ -141,25 +89,56 @@ _array_data.header_contents
 
 def make_cbf(in_name, template):
     with h5py.File(in_name, "r") as f:
-        mask = None
-
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        for j in range(len(f["/entry/sample/transformations/omega"][()])):
-            block = 1 + (j // 1000)
-            i = j % 1000
-            header = compute_cbf_header(f, j)
-            depth, height, width = f["/entry/data/data_%06d" % block].shape
+        nxmx = dxtbx.nexus.nxmx.NXmx(f)
+        nxsample = nxmx.entries[0].samples[0]
+        nxinstrument = nxmx.entries[0].instruments[0]
+        nxdetector = nxinstrument.detectors[0]
+        nxdata = nxmx.entries[0].data[0]
 
-            data = flex.int(np.int32(f["/entry/data/data_%06d" % block][i]))
-            good = data.as_1d() < 65535
-            data.as_1d().set_selected(~good, -2)
+        dependency_chain = dxtbx.nexus.nxmx.get_dependency_chain(nxsample.depends_on)
+        scan_axis = None
+        for t in dependency_chain:
+            # Find the first varying rotation axis
+            if (
+                t.transformation_type == "rotation"
+                and len(t) > 1
+                and not np.all(t[()] == t[0])
+            ):
+                scan_axis = t
+                break
+
+        if scan_axis is None:
+            # Fall back on the first varying axis of any type
+            for t in dependency_chain:
+                if len(t) > 1 and not np.all(t[()] == t[0]):
+                    scan_axis = t
+                    break
+
+        if scan_axis is None:
+            scan_axis = nxsample.depends_on
+
+        num_images = len(scan_axis)
+        static_mask = dxtbx.nexus.get_static_mask(nxdetector)[0]
+        bit_depth_readout = nxdetector.bit_depth_readout
+
+        for j in range(num_images):
+            header = compute_cbf_header(nxmx, j)
+            data = dxtbx.nexus.get_raw_data(nxdata, nxdetector, j)[0]
+            if bit_depth_readout:
+                # if 32 bit then it is a signed int, I think if 8, 16 then it is
+                # unsigned with the highest two values assigned as masking values
+                if bit_depth_readout == 32:
+                    top = 2 ** 31
+                else:
+                    top = 2 ** bit_depth_readout
+                d1d = data.as_1d()
+                d1d.set_selected(d1d == top - 1, -1)
+                d1d.set_selected(d1d == top - 2, -2)
 
             # set the tile join regions to -1 - MOSFLM cares about this apparently
-            if mask is None:
-                mask = get_mask(width, height)
-            data.as_1d().set_selected(mask.as_1d(), -1)
-
+            data.as_1d().set_selected(static_mask.as_1d(), -1)
             compressed = compress(data)
 
             mime = """
