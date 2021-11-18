@@ -14,7 +14,7 @@ except ImportError:
     # Defined cached_property decorator as a noop
     import functools
 
-    def cached_property(func):  # type: ignore
+    def cached_property(func):
         @property
         @functools.wraps(func)
         def wrapper_decorator(*args, **kwargs):
@@ -24,7 +24,7 @@ except ImportError:
 
 
 from functools import reduce
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union, overload
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import dateutil.parser
 import h5py
@@ -48,18 +48,8 @@ logger = logging.getLogger(__name__)
 
 NXNode = Union[h5py.File, h5py.Group]
 
-# Type overloads for h5str - will only return None for None input
-@overload
-def h5str(h5_value: None) -> None:
-    ...
 
-
-@overload
-def h5str(h5_value: Union[str, np.bytes_, bytes]) -> str:
-    ...
-
-
-def h5str(h5_value: Union[None, str, np.bytes_, bytes]) -> Optional[str]:
+def h5str(h5_value: Optional[Union[str, np.string_, bytes]]) -> Optional[str]:
     """
     Convert a value returned an h5py attribute to str.
 
@@ -67,7 +57,7 @@ def h5str(h5_value: Union[None, str, np.bytes_, bytes]) -> Optional[str]:
     for attribute values depending on whether the value was written as
     fixed or variable length. This function collapses the two to str.
     """
-    if isinstance(h5_value, (np.bytes_, bytes)):
+    if hasattr(h5_value, "decode"):
         return h5_value.decode("utf-8")
     return h5_value
 
@@ -86,11 +76,8 @@ def find_classes(
     Returns:
         A list of matching nodes for each of the specified NX_class types.
     """
-    results: Dict[Optional[str], List[h5py.Group]] = {
-        nx_class: [] for nx_class in nx_classes
-    }
+    results = {nx_class: [] for nx_class in nx_classes}
 
-    v: h5py.Group
     for v in filter(None, node.values()):
         class_name = h5str(v.attrs.get("NX_class"))
         if class_name in nx_classes:
@@ -202,7 +189,6 @@ class NXentry(H5Mapping):
         """
         if "end_time" in self._handle:
             return dateutil.parser.isoparse(h5str(self._handle["end_time"][()]))
-        return None
 
     @cached_property
     def end_time_estimated(self) -> datetime.datetime:
@@ -418,8 +404,7 @@ class NXtransformationsAxis:
         example, as the mechanical offset from mounting the axis to its dependency.
         """
         if "offset" in self._handle.attrs:
-            return self._handle.attrs.get("offset") * ureg(self.offset_units or "")
-        return None
+            return self._handle.attrs.get("offset") * ureg(self.offset_units)
 
     @cached_property
     def offset_units(self) -> Optional[str]:
@@ -440,7 +425,6 @@ class NXtransformationsAxis:
         depends_on = h5str(self._handle.attrs.get("depends_on"))
         if depends_on and depends_on != ".":
             return NXtransformationsAxis(self._handle.parent[depends_on])
-        return None
 
     def __getitem__(self, key) -> pint.Quantity:
         return self._handle[key] * ureg(self.units)
@@ -878,7 +862,7 @@ class NXdetector_module(H5Mapping):
     """
 
     @cached_property
-    def data_origin(self) -> np.ndarray:
+    def data_origin(self) -> NXInt:
         """The offset of this module into the raw data array.
 
         A dimension-2 or dimension-3 field which gives the indices of the origin of the
@@ -894,20 +878,15 @@ class NXdetector_module(H5Mapping):
 
         The order of indices (i, j or i, j, k) is slow to fast.
         """
-        origin = self._handle["data_origin"][()]
-        assert not isinstance(origin, int)
-        return origin
+        return self._handle["data_origin"][()]
 
     @cached_property
-    def data_size(self) -> np.ndarray:
+    def data_size(self) -> NXInt:
         """Two or three values for the size of the module in pixels in each direction.
 
         Dimensionality and order of indices is the same as for data_origin.
         """
-        size = self._handle["data_size"][()]
-        # Validate that we aren't the int part of NXInt
-        assert not isinstance(size, int)
-        return size
+        return self._handle["data_size"][()]
 
     @cached_property
     def data_stride(self) -> Optional[NXInt]:
@@ -1054,7 +1033,7 @@ class NXbeam(H5Mapping):
 
 
 @dataclasses.dataclass(frozen=True)
-class DependencyChain(Sequence[NXtransformationsAxis]):
+class DependencyChain:
     transformations: List[NXtransformationsAxis]
 
     def __iter__(self) -> Iterator[NXtransformationsAxis]:
@@ -1098,7 +1077,7 @@ def get_dependency_chain(
 
 
 def get_cumulative_transformation(
-    dependency_chain: Union[DependencyChain, Sequence[NXtransformationsAxis]],
+    dependency_chain: DependencyChain,
 ) -> np.ndarray:
     """Compute the cumulative transformation for a given dependency chain"""
     return reduce(operator.__matmul__, reversed([t.matrix for t in dependency_chain]))
