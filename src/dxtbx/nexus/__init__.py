@@ -143,7 +143,7 @@ def get_dxtbx_detector(
 
     detector = dxtbx.model.Detector()
 
-    root: Union[dxtbx.model.Detector, dxtbx.model.DetectorNode]
+    root: Union[dxtbx.model.Detector, dxtbx.model.Panel]
     if len(nxdetector.modules) > 1:
         root = detector.hierarchy()
     else:
@@ -157,14 +157,15 @@ def get_dxtbx_detector(
                 reversed_dependency_chain = reversed(
                     nxmx.get_dependency_chain(module.fast_pixel_direction.depends_on)
                 )
-                pg = None
-                for i, transformation in enumerate(reversed_dependency_chain):
+                pg: Union[dxtbx.model.Detector, dxtbx.model.Panel] = root
+                for transformation in reversed_dependency_chain:
+                    assert isinstance(
+                        pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
+                    )
                     name = transformation.path
-                    if pg is None:
-                        pg = root
                     pg_names = [child.get_name() for child in pg]
                     if name in pg_names:
-                        pg = pg[pg_names.index(name)]
+                        pg = pg[pg_names.index(name)]  # Getitem always returns panel
                         continue
                     else:
                         pg = pg.add_group()
@@ -178,6 +179,7 @@ def get_dxtbx_detector(
                     )
                     pg.set_local_frame(fast, slow, origin)
                     pg.set_name(name)
+                # assert pg is not None
         else:
             # Use a flat detector model
             pg = root
