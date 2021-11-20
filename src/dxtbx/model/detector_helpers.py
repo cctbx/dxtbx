@@ -353,13 +353,14 @@ def get_detector_projection_2d_axes(
 
     # For multi-panel detectors cluster fast, slow axes by DBSCAN to get a
     # consensus X, Y for the 2D plane
+    axes: List[matrix.rec]
     clustered_axes = False
     if sklearn and len(detector) > 1:
         clustered_axes = True
         axes = []
         for panel in detector:
-            axes.append(panel.get_fast_axis())
-            axes.append(panel.get_slow_axis())
+            axes.append(matrix.col(panel.get_fast_axis()))
+            axes.append(matrix.col(panel.get_slow_axis()))
         clusters = sklearn.cluster.DBSCAN(eps=0.1, min_samples=2).fit_predict(axes)
         nclusters = max(clusters) + 1
 
