@@ -178,6 +178,7 @@ def get_dxtbx_detector(
                         MCSTAS_TO_IMGCIF @ (A @ np.array((0, 1, 0, 1)))[0, :3] - origin
                     )
                     pg.set_local_frame(fast, slow, origin)
+                    assert name is not None
                     pg.set_name(name)
                 # assert pg is not None
         else:
@@ -264,7 +265,9 @@ def get_dxtbx_detector(
         px_mm = dxtbx.model.ParallaxCorrectedPxMmStrategy(mu, thickness)
         name = module.path
 
+        assert name is not None
         assert pg is not None
+        assert isinstance(pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode))
         p = pg.add_panel()
         p.set_type("SENSOR_PAD")
         p.set_name(name)
