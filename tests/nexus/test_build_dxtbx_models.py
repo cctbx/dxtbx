@@ -212,7 +212,7 @@ def test_get_dxtbx_detector(nxmx_example):
     assert panel.get_image_size_mm() == pytest.approx((311.09999999999997, 327.15))
     assert panel.get_name() == "/entry/instrument/detector/module"
     assert panel.get_normal() == (0.0, 0.0, -1.0)
-    assert panel.get_trusted_range() == (-1, 9266)
+    assert panel.get_trusted_range() == (-2, 9266)
     assert panel.get_type() == "SENSOR_PAD"
     px_mm = panel.get_px_mm_strategy()
     assert px_mm.t0() == panel.get_thickness() == 0.45
