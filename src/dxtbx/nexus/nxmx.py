@@ -11,16 +11,17 @@ try:
     from functools import cached_property
 except ImportError:
     # Python 3.7 compatibility
-    # Defined cached_property decorator as a noop
-    import functools
+    # Based on https://github.com/pydanny/cached-property
+    class cached_property(object):
+        def __init__(self, func):
+            self.__doc__ = getattr(func, "__doc__")
+            self.func = func
 
-    def cached_property(func):  # type: ignore
-        @property
-        @functools.wraps(func)
-        def wrapper_decorator(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return wrapper_decorator
+        def __get__(self, obj, cls):
+            if obj is None:
+                return self
+            value = obj.__dict__[self.func.__name__] = self.func(obj)
+            return value
 
 
 from functools import reduce
