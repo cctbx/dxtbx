@@ -528,13 +528,28 @@ class NXinstrument(H5Mapping):
             self._detector_groups,
             self._detectors,
             self._beams,
+            self._transformations,
         ) = find_classes(
             handle,
             "NXattenuator",
             "NXdetector_group",
             "NXdetector",
             "NXbeam",
+            "NXtransformations",
         )
+
+    @cached_property
+    def transformations(self) -> NXtransformations:
+        """
+        Transformations relating to the diffractometer but not to the sample.
+
+        These might include a rotation to represent a 2θ arm on which a detector is
+        mounted, or a translation of the detector.
+        """
+        return [
+            NXtransformations(transformations)
+            for transformations in self._transformations
+        ]
 
     @cached_property
     def name(self) -> str:
