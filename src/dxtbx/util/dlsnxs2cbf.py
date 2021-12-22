@@ -33,7 +33,7 @@ def compute_cbf_header(nxmx: dxtbx.nexus.nxmx.NXmx, nn: int):
 
     result.append("###CBF: VERSION 1.5, CBFlib v0.7.8 - Eiger detectors")
     result.append("")
-    result.append("data_%06d" % (nn + 1))
+    result.append(f"data_{nn + 1:06d}")
     result.append("")
     result.append(
         """_array_data.header_convention "PILATUS_1.2"
@@ -41,45 +41,67 @@ _array_data.header_contents
 ;"""
     )
     result.append(
-        f"# Detector: EIGER 2XE 16M S/N {nxdetector.serial_number} {nxinstrument.short_name}"
+        f"# Detector: {nxdetector.description} S/N {nxdetector.serial_number} "
+        f"{nxinstrument.short_name}"
     )
     result.append(f"# {timestamp}")
-    result.append("# Pixel_size 75e-6 m x 75e-6 m")
-    result.append("# Silicon sensor, thickness 0.000450 m")
+    result.append(
+        f"# Pixel_size {nxdetector.modules[0].fast_pixel_direction[()]:~} "
+        f"x {nxdetector.modules[0].slow_pixel_direction[()]:~}"
+    )
+    result.append(
+        f"# {nxdetector.sensor_material} sensor, "
+        f"thickness {nxdetector.sensor_thickness:~}"
+    )
     result.append(f"# Exposure_time {nxdetector.count_time:.5f} s")
     result.append(f"# Exposure_period {nxdetector.count_time:.5f} s")
     result.append("# Tau = 1e-9 s")
-    result.append("# Count_cutoff 65535 counts")
+    result.append(f"# Count_cutoff {nxdetector.saturation_value} counts")
     result.append("# Threshold_setting: 0 eV")
     result.append("# Gain_setting: mid gain (vrf = -0.200)")
     result.append("# N_excluded_pixels = 0")
-    result.append("# Excluded_pixels: badpix_mask.tif")
-    result.append("# Flat_field: (nil)")
     result.append(f"# Wavelength {nxbeam.incident_wavelength:.5f} A")
     result.append(f"# Detector_distance {distance / 1000.0:.5f} m")
     result.append(
-        f"# Beam_xy ({nxdetector.beam_center_x:.2f}, {nxdetector.beam_center_y:.2f}) pixels"
+        f"# Beam_xy ({nxdetector.beam_center_x:.2f}, {nxdetector.beam_center_y:.2f}) "
+        "pixels"
     )
     result.append("# Flux 0.000000")
-    result.append("# Filter_transmission %.3f" % A)
-    result.append("# Detector_2theta 0.0000 deg.")
+    result.append(f"# Filter_transmission {A:.3f}")
+
+    transformations = {
+        t.path.split("/")[-1].capitalize(): t for t in nxinstrument.transformations
+    }
+    two_theta = transformations.get("TWO_THETA", np.array(0))[()]
+    result.append(f"# Detector_2theta {two_theta:.3f} deg.")
+
     result.append("# Polarization 0.990")
-    result.append("# Alpha 0.0000 deg.")
-    for t in dependency_chain:
-        name = t.path.split("/")[-1].capitalize()
+
+    rotations = {
+        t.path.split("/")[-1].capitalize(): t
+        for t in dependency_chain
+        if t.transformation_type == "rotation"
+    }
+
+    if "PHI" in rotations and "KAPPA" in rotations:
+        kappa_axis = rotations["KAPPA"].attrs["vector"]
+        phi_axis = rotations["PHI"].attrs["vector"]
+        alpha = np.degrees(np.arccos(np.dot(phi_axis, kappa_axis)))
+    else:
+        alpha = 0
+    result.append(f"# Alpha {alpha:.3f} deg.")
+
+    for name, r in rotations.items():
         # Find the first varying rotation axis
-        if (
-            t.transformation_type == "rotation"
-            and len(t) > 1
-            and not np.all(t[()] == t[0])
-        ):
-            result.append(f"# {name} {t[nn].to('degree'):.4f} deg.")
-            result.append(f"# {name}_increment {(t[1] - t[0]).to('degree'):.4f} deg")
-            result.append(f"# Start_angle {t[nn].to('degree'):.4f} deg.")
-            result.append(f"# Angle_increment {(t[1] - t[0]).to('degree'):.4f} deg")
+        if len(r) > 1 and not np.all(r[()] == r[0]):
+            result.append(f"# {name} {r[nn].to('degree'):.4f} deg.")
+            result.append(f"# {name}_increment {(r[1] - r[0]).to('degree'):.4f} deg")
+            result.append(f"# Start_angle {r[nn].to('degree'):.4f} deg.")
+            result.append(f"# Angle_increment {(r[1] - r[0]).to('degree'):.4f} deg")
         else:
-            result.append(f"# {name} {t[0].to('degree'):.4f} deg.")
+            result.append(f"# {name} {r[0].to('degree'):.4f} deg.")
             result.append(f"# {name}_increment 0.0000 deg")
+
     result.append("# Oscillation_axis X.CW")
     result.append("# N_oscillations 1")
     result.append(";")
@@ -142,7 +164,7 @@ def make_cbf(in_name, template):
                 data.as_1d().set_selected(static_mask[0].as_1d(), -1)
             compressed = compress(data)
 
-            mime = """
+            mime = f"""
 
 _array_data.data
 ;
@@ -150,21 +172,16 @@ _array_data.data
 Content-Type: application/octet-stream;
      conversions="x-CBF_BYTE_OFFSET"
 Content-Transfer-Encoding: BINARY
-X-Binary-Size: %d
+X-Binary-Size: {len(compressed)}
 X-Binary-ID: 1
 X-Binary-Element-Type: "signed 32-bit integer"
 X-Binary-Element-Byte-Order: LITTLE_ENDIAN
-X-Binary-Number-of-Elements: %d
-X-Binary-Size-Fastest-Dimension: %d
-X-Binary-Size-Second-Dimension: %d
+X-Binary-Number-of-Elements: {data.size()}
+X-Binary-Size-Fastest-Dimension: {data.focus()[1]}
+X-Binary-Size-Second-Dimension: {data.focus()[0]}
 X-Binary-Size-Padding: 4095
 
-""" % (
-                len(compressed),
-                data.size(),
-                data.focus()[1],
-                data.focus()[0],
-            )
+"""
 
             padding = (
                 bytearray(4095)
