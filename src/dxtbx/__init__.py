@@ -9,6 +9,7 @@ import dxtbx.format.Registry
 if sys.version_info.major == 2:
     sys.exit("Python 2 is no longer supported")
 
+from .version import version as __version__  # noqa: F401
 
 # Ensures that HDF5 has the conda_base plugin path configured.
 #
@@ -31,7 +32,6 @@ else:
     h5_plugin_paths = [h5py.h5pl.get(i).decode() for i in range(h5py.h5pl.size())]
     if _hdf5_plugin_path not in h5_plugin_paths:
         h5py.h5pl.prepend(_hdf5_plugin_path.encode())
-
 
 logging.getLogger("dxtbx").addHandler(logging.NullHandler())
 
