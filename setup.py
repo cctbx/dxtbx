@@ -4,9 +4,13 @@ import setuptools
 
 from build import build
 
+# Static version number which is updated by bump2version
+# Do not change this manually - use 'bump2version <major/minor/patch/release>'
+__version_tag__ = "3.8.dev"
+
 setup_kwargs = {
     "name": "dxtbx",
-    "version": "3.6.dev0",
+    "version": __version_tag__,
     "long_description": Path(__file__).parent.joinpath("README.md").read_text(),
     "description": "Diffraction Experiment Toolbox",
     "author": "Diamond Light Source",
