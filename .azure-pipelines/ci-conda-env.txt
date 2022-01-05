@@ -34,7 +34,7 @@ conda-forge::pytest>=4.5
 conda-forge::requests
 conda-forge::scipy
 conda-forge::scons
-conda-forge::setuptools
+conda-forge::setuptools<60
 conda-forge::six
 conda-forge::tabulate
 conda-forge::tqdm
