@@ -1,0 +1,1 @@
+Ensure that single-valued detector metadata in `NXmx-flavoured NeXus data sets <https://manual.nexusformat.org/classes/applications/NXmx.html>`_ are correctly handled, regardless of whether they are stored as scalar data sets or as length-1 n-dimensional data sets, where n > 0.
