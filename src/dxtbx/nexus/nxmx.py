@@ -703,7 +703,7 @@ class NXdetector(H5Mapping):
     def count_time(self) -> Optional[NXNumber]:
         """Elapsed actual counting time."""
         if "count_time" in self._handle:
-            return np.squeeze(self._handle["count_time"][()])
+            return np.squeeze(self._handle["count_time"])[()]
 
     @cached_property
     def beam_center_x(self) -> Optional[NXFloat]:
@@ -801,7 +801,7 @@ class NXdetector(H5Mapping):
     def sensor_thickness(self) -> pint.Quantity:
         thickness = self._handle["sensor_thickness"]
         units = h5str(thickness.attrs["units"])
-        return np.squeeze(thickness[()] * ureg(units))
+        return np.squeeze(thickness)[()] * ureg(units)
 
     @cached_property
     def underload_value(self) -> Optional[NXInt]:
@@ -844,7 +844,7 @@ class NXdetector(H5Mapping):
         if "frame_time" in self._handle:
             frame_time = self._handle["frame_time"]
             units = h5str(frame_time.attrs["units"])
-            return np.squeeze(frame_time[()] * ureg(units))
+            return np.squeeze(frame_time)[()] * ureg(units)
 
 
 class NXdetector_module(H5Mapping):
