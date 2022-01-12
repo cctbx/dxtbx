@@ -674,7 +674,7 @@ class NXdetector(H5Mapping):
     def description(self) -> Optional[str]:
         """name/manufacturer/model/etc. information."""
         if "description" in self._handle:
-            return h5str(self._handle["description"][()])
+            return h5str(np.squeeze(self._handle["description"][()]))
 
     @cached_property
     def distance(self) -> Optional[NXFloat]:
@@ -686,7 +686,7 @@ class NXdetector(H5Mapping):
         that may take precedence over the axis chain calculation.
         """
         if "distance" in self._handle:
-            return self._handle["distance"][()]
+            return float(self._handle["distance"][()])
 
     @cached_property
     def distance_derived(self) -> Optional[NXBool]:
@@ -697,13 +697,13 @@ class NXdetector(H5Mapping):
         derived from delector axis specifications.
         """
         if "distance_derived" in self._handle:
-            return self._handle["distance_derived"][()]
+            return bool(self._handle["distance_derived"][()])
 
     @cached_property
     def count_time(self) -> Optional[NXNumber]:
         """Elapsed actual counting time."""
         if "count_time" in self._handle:
-            return self._handle["count_time"][()]
+            return np.squeeze(self._handle["count_time"][()])
 
     @cached_property
     def beam_center_x(self) -> Optional[NXFloat]:
@@ -715,7 +715,7 @@ class NXdetector(H5Mapping):
         precedence if it is not a derived quantity.
         """
         if "beam_center_x" in self._handle:
-            return self._handle["beam_center_x"][()]
+            return float(self._handle["beam_center_x"][()])
 
     @cached_property
     def beam_center_y(self) -> Optional[NXFloat]:
@@ -727,7 +727,7 @@ class NXdetector(H5Mapping):
         precedence if it is not a derived quantity.
         """
         if "beam_center_y" in self._handle:
-            return self._handle["beam_center_y"][()]
+            return float(self._handle["beam_center_y"][()])
 
     @cached_property
     def pixel_mask_applied(self) -> Optional[NXBool]:
@@ -736,7 +736,7 @@ class NXdetector(H5Mapping):
         otherwise (optional).
         """
         if "pixel_mask_applied" in self._handle:
-            return self._handle["pixel_mask_applied"][()]
+            return bool(self._handle["pixel_mask_applied"][()])
 
     @cached_property
     def pixel_mask(self) -> Optional[NXInt]:
@@ -795,13 +795,13 @@ class NXdetector(H5Mapping):
         At times, radiation is not directly sensed by the detector. Rather, the detector
         might sense the output from some converter like a scintillator. This is the name
         of this converter material."""
-        return h5str(self._handle["sensor_material"][()])
+        return h5str(np.squeeze(self._handle["sensor_material"][()]))
 
     @cached_property
     def sensor_thickness(self) -> pint.Quantity:
         thickness = self._handle["sensor_thickness"]
         units = h5str(thickness.attrs["units"])
-        return thickness[()] * ureg(units)
+        return np.squeeze(thickness[()] * ureg(units))
 
     @cached_property
     def underload_value(self) -> Optional[NXInt]:
@@ -812,7 +812,7 @@ class NXdetector(H5Mapping):
         to the underload_value.
         """
         if "underload_value" in self._handle:
-            return self._handle["underload_value"][()]
+            return int(self._handle["underload_value"][()])
 
     @cached_property
     def saturation_value(self) -> Optional[NXInt]:
@@ -825,7 +825,7 @@ class NXdetector(H5Mapping):
         to the underload_value.
         """
         if "saturation_value" in self._handle:
-            return self._handle["saturation_value"][()]
+            return int(self._handle["saturation_value"][()])
 
     @cached_property
     def modules(self) -> List[NXdetector_module]:
@@ -836,7 +836,7 @@ class NXdetector(H5Mapping):
     def type(self) -> Optional[str]:
         """Description of type such as scintillator, ccd, pixel, image plate, CMOS, …"""
         if "type" in self._handle:
-            return h5str(self._handle["type"][()])
+            return h5str(np.squeeze(self._handle["type"][()]))
 
     @cached_property
     def frame_time(self) -> Optional[pint.Quantity]:
@@ -844,7 +844,7 @@ class NXdetector(H5Mapping):
         if "frame_time" in self._handle:
             frame_time = self._handle["frame_time"]
             units = h5str(frame_time.attrs["units"])
-            return frame_time[()] * ureg(units)
+            return np.squeeze(frame_time[()] * ureg(units))
 
 
 class NXdetector_module(H5Mapping):
