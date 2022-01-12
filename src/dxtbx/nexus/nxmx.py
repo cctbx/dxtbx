@@ -674,7 +674,7 @@ class NXdetector(H5Mapping):
     def description(self) -> Optional[str]:
         """name/manufacturer/model/etc. information."""
         if "description" in self._handle:
-            return h5str(np.squeeze(self._handle["description"][()]))
+            return h5str(np.squeeze(self._handle["description"])[()])
 
     @cached_property
     def distance(self) -> Optional[NXFloat]:
@@ -795,7 +795,7 @@ class NXdetector(H5Mapping):
         At times, radiation is not directly sensed by the detector. Rather, the detector
         might sense the output from some converter like a scintillator. This is the name
         of this converter material."""
-        return h5str(np.squeeze(self._handle["sensor_material"][()]))
+        return h5str(np.squeeze(self._handle["sensor_material"])[()])
 
     @cached_property
     def sensor_thickness(self) -> pint.Quantity:
@@ -836,7 +836,7 @@ class NXdetector(H5Mapping):
     def type(self) -> Optional[str]:
         """Description of type such as scintillator, ccd, pixel, image plate, CMOS, …"""
         if "type" in self._handle:
-            return h5str(np.squeeze(self._handle["type"][()]))
+            return h5str(np.squeeze(self._handle["type"])[()])
 
     @cached_property
     def frame_time(self) -> Optional[pint.Quantity]:
