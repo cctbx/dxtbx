@@ -155,7 +155,9 @@ namespace dxtbx { namespace format { namespace boost_python {
       .def("as_float", &ImageBuffer::as_float)
       .def("as_double", &ImageBuffer::as_double);
 
+#ifdef BUILD_CBF
     export_cbf_read_buffer();
+#endif
   }
 
 }}}  // namespace dxtbx::format::boost_python
