@@ -1,0 +1,1 @@
+Reduce, in some cases drastically, memory usage of ``ImageSet`` objects.

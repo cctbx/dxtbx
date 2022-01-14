@@ -434,6 +434,25 @@ public:
     format_ = x;
   }
 
+  ImageSetData partial_data(boost::python::object reader, std::size_t first, std::size_t last) const {
+    DXTBX_ASSERT(last > first);
+    ImageSetData partial = ImageSetData(reader, masker_);
+    for (size_t i = 0; i < last-first; i++) {
+      partial.beams_[i] = beams_[i+first];
+      partial.detectors_[i] = detectors_[i+first];
+      partial.goniometers_[i] = goniometers_[i+first];
+      partial.scans_[i] = scans_[i+first];
+      partial.reject_[i] = reject_[i+first];
+    }
+    partial.external_lookup_ = external_lookup_;
+    partial.template_ = template_;
+    partial.vendor_ = vendor_;
+    partial.params_ = params_;
+    partial.format_ = format_;
+
+    return partial;
+  }
+
 protected:
   ImageBuffer get_image_buffer_from_tuple(boost::python::tuple obj) {
     // Get the class name
@@ -581,7 +600,7 @@ public:
       }
     } else {
       // Check indices
-      if (scitbx::af::max(indices) >= data.size()) {
+      if (indices.size() > data.size()) {
         throw DXTBX_ERROR("Indices are not consistent with # of images");
       }
     }
@@ -903,7 +922,7 @@ public:
    */
   virtual beam_ptr get_beam_for_image(std::size_t index = 0) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_beam(indices_[index]);
+    return data_.get_beam(index);
   }
 
   /**
@@ -912,7 +931,7 @@ public:
    */
   virtual detector_ptr get_detector_for_image(std::size_t index = 0) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_detector(indices_[index]);
+    return data_.get_detector(index);
   }
 
   /**
@@ -921,7 +940,7 @@ public:
    */
   virtual goniometer_ptr get_goniometer_for_image(std::size_t index = 0) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_goniometer(indices_[index]);
+    return data_.get_goniometer(index);
   }
 
   /**
@@ -930,7 +949,7 @@ public:
    */
   virtual scan_ptr get_scan_for_image(std::size_t index = 0) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_scan(indices_[index]);
+    return data_.get_scan(index);
   }
 
   /**
@@ -940,7 +959,7 @@ public:
    */
   virtual void set_beam_for_image(const beam_ptr &beam, std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
-    data_.set_beam(beam, indices_[index]);
+    data_.set_beam(beam, index);
   }
 
   /**
@@ -951,7 +970,7 @@ public:
   virtual void set_detector_for_image(const detector_ptr &detector,
                                       std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
-    data_.set_detector(detector, indices_[index]);
+    data_.set_detector(detector, index);
   }
 
   /**
@@ -962,7 +981,7 @@ public:
   virtual void set_goniometer_for_image(const goniometer_ptr &goniometer,
                                         std::size_t index = 0) {
     DXTBX_ASSERT(index < indices_.size());
-    data_.set_goniometer(goniometer, indices_[index]);
+    data_.set_goniometer(goniometer, index);
   }
 
   /**
@@ -973,7 +992,7 @@ public:
   virtual void set_scan_for_image(const scan_ptr &scan, std::size_t index = 0) {
     DXTBX_ASSERT(scan == NULL || scan->get_num_images() == 1);
     DXTBX_ASSERT(index < indices_.size());
-    data_.set_scan(scan, indices_[index]);
+    data_.set_scan(scan, index);
   }
 
   /**
@@ -996,7 +1015,7 @@ public:
    */
   std::string get_image_identifier(std::size_t index) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.get_image_identifier(indices_[index]);
+    return data_.get_image_identifier(index);
   }
 
   /**
@@ -1006,7 +1025,7 @@ public:
    */
   void mark_for_rejection(std::size_t index, bool reject) {
     DXTBX_ASSERT(index < indices_.size());
-    data_.mark_for_rejection(indices_[index], reject);
+    data_.mark_for_rejection(index, reject);
   }
 
   /**
@@ -1015,7 +1034,7 @@ public:
    */
   bool is_marked_for_rejection(std::size_t index) const {
     DXTBX_ASSERT(index < indices_.size());
-    return data_.is_marked_for_rejection(indices_[index]);
+    return data_.is_marked_for_rejection(index);
   }
 
   /**
@@ -1037,9 +1056,9 @@ public:
    * @param last The last slice index
    * @returns The partial set
    */
-  virtual ImageSet partial_set(std::size_t first, std::size_t last) const {
+  virtual ImageSet partial_set(boost::python::object reader, std::size_t first, std::size_t last) const {
     DXTBX_ASSERT(last > first);
-    return ImageSet(data_,
+    return ImageSet(data_.partial_data(reader, first, last),
                     scitbx::af::const_ref<std::size_t>(&indices_[first], last - first));
   }
 
@@ -1476,21 +1495,27 @@ public:
    * @param last The last index
    * @returns The partial sequence
    */
-  ImageSequence partial_sequence(std::size_t first, std::size_t last) const {
+  ImageSequence partial_sequence(boost::python::object reader, std::size_t first, std::size_t last) const {
     // Check slice indices
     DXTBX_ASSERT(last > first);
 
-    // Construct a partial scan
-    Scan scan = detail::safe_dereference(ImageSet::get_scan_for_image(first));
-    for (std::size_t i = first + 1; i < last; ++i) {
-      scan += detail::safe_dereference(ImageSet::get_scan_for_image(i));
+    // Construct a partial data
+    ImageSetData _partial_data = data_.partial_data(reader, first, last);
+
+
+    // Now we use the partial data to construct the partial scan
+    Scan scan = detail::safe_dereference(_partial_data.get_scan(0));
+    for (std::size_t i=1; i<last-first; ++i) {
+      scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
+      Scan temp_scan = detail::safe_dereference(temp_scan_ptr);
+      scan += temp_scan;
     }
 
     // Construct the partial indices
     scitbx::af::const_ref<std::size_t> indices(&indices_[first], last - first);
 
     // Construct the partial sequence
-    ImageSequence result(data_,
+    ImageSequence result(_partial_data,
                          indices,
                          get_beam(),
                          get_detector(),

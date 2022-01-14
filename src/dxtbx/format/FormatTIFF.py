@@ -31,16 +31,18 @@ class FormatTIFF(Format):
         make sense of it."""
 
         try:
-            return bool(read_basic_tiff_header(image_file))
+            if None in read_basic_tiff_header(image_file):
+                return False
         except Exception:
             return False
+
+        return True
 
     @staticmethod
     def get_tiff_header(image_file):
         """Pun to get to the image header etc."""
 
         width, height, depth, header, order = read_basic_tiff_header(image_file)
-
         header_bytes = FormatTIFF.open_file(image_file, "rb").read(header)
 
         return width, height, depth // 8, order, header_bytes
