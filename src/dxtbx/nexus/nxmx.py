@@ -26,6 +26,7 @@ except ImportError:
 from functools import reduce
 from typing import (
     Dict,
+    Iterable,
     Iterator,
     List,
     Optional,
@@ -90,8 +91,8 @@ def find_classes(
         nx_class: [] for nx_class in nx_classes
     }
 
-    v: h5py.Group
-    for v in filter(None, node.values()):
+    values: Iterable[h5py.Group] = filter(None, node.values())
+    for v in values:
         class_name = h5str(v.attrs.get("NX_class"))
         if class_name in nx_classes:
             results[class_name].append(v)
