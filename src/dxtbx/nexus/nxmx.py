@@ -466,8 +466,7 @@ class NXtransformationsAxis:
             R = np.identity(3)
             T = values[:, np.newaxis] * self.vector
 
-        if self.offset and np.any(self.offset):
-            assert self.offset is not None
+        if self.offset is not None and np.any(self.offset):
             T += self.offset.to("mm").magnitude
 
         A = np.repeat(np.identity(4).reshape((1, 4, 4)), values.size, axis=0)
