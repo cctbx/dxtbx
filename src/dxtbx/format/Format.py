@@ -68,7 +68,7 @@ class Reader:
         return len(self._filenames)
 
     def copy(self, filenames):
-        return Reader(self.format_class, filenames)
+        return Reader(self.format_class, filenames, **self._kwargs)
 
     def is_single_file_reader(self):
         return False

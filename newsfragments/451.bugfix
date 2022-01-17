@@ -1,1 +1,0 @@
-Fix an arithmetic mistake in ``dxtbx.model.Goniometer.rotate_around_origin``, which was mangling the addition of a new rotation to the goniostat rotation operator :math:`\mathbf{R}`.

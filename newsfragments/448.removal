@@ -1,1 +1,0 @@
-The deprecated function ``dxtbx.model.detector_helpers.project_2d`` has been removed. The deprecation warning on usage of `DataBlock` has been made more visible.
