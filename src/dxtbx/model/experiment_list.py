@@ -917,10 +917,10 @@ class ImageMetadataRecord:
 
     def __init__(
         self,
-        beam: dxtbx.model.Beam = None,
-        detector: dxtbx.model.Detector = None,
-        goniometer: dxtbx.model.Goniometer = None,
-        scan: dxtbx.model.Scan = None,
+        beam: Optional[dxtbx.model.Beam] = None,
+        detector: Optional[dxtbx.model.Detector] = None,
+        goniometer: Optional[dxtbx.model.Goniometer] = None,
+        scan: Optional[dxtbx.model.Scan] = None,
         template: Optional[str] = None,
         filename: Optional[str] = None,
         index: Optional[int] = None,
@@ -1153,9 +1153,9 @@ def _openingpathiterator(pathnames: Iterable[str]):
 
 def _merge_model_metadata(
     records: Iterable[ImageMetadataRecord],
-    compare_beam: Callable = None,
-    compare_detector: Callable = None,
-    compare_goniometer: Callable = None,
+    compare_beam: Optional[Callable] = None,
+    compare_detector: Optional[Callable] = None,
+    compare_goniometer: Optional[Callable] = None,
 ):
     """
     Merge metadata between consecutive record objects.
@@ -1181,7 +1181,7 @@ def _merge_model_metadata(
 
 
 def _merge_scans(
-    records: Iterable[ImageMetadataRecord], scan_tolerance: float = None
+    records: Iterable[ImageMetadataRecord], scan_tolerance: Optional[float] = None
 ) -> List[ImageMetadataRecord]:
     """
     Merge consecutive scan records with identical metadata.
@@ -1245,7 +1245,7 @@ def _merge_scans(
 def _convert_to_imagesets(
     records: Iterable[ImageMetadataRecord],
     format_class: Type[Format],
-    format_kwargs: Dict = None,
+    format_kwargs: Optional[Dict] = None,
 ) -> Generator[dxtbx.imageset.ImageSet, None, None]:
     """
     Convert records into imagesets.
@@ -1282,7 +1282,7 @@ def _convert_to_imagesets(
 def _create_imageset(
     records: Iterable[ImageMetadataRecord],
     format_class: Type[Format],
-    format_kwargs: Dict = None,
+    format_kwargs: Optional[Dict] = None,
 ) -> dxtbx.imageset.ImageSet:
     """
     Create an ImageSet object from a set of single-image records.
@@ -1321,7 +1321,9 @@ def _create_imageset(
 
 
 def _create_imagesequence(
-    record: ImageMetadataRecord, format_class: Type[Format], format_kwargs: Dict = None
+    record: ImageMetadataRecord,
+    format_class: Type[Format],
+    format_kwargs: Optional[Dict] = None,
 ) -> dxtbx.imageset.ImageSequence:
     """
     Create an ImageSequence object from a single rotation data image.
