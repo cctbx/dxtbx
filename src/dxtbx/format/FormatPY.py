@@ -5,9 +5,10 @@ import pickle
 import sys
 
 from dxtbx import IncorrectFormatError
-from dxtbx.format.Format import Format
+from dxtbx.format.Format import Format, abstract
 
 
+@abstract
 class FormatPY(Format):
     """Let's take an educated guess as to how to recognize a Python
     pickle file containing a dictionary.  Not easy because there are
