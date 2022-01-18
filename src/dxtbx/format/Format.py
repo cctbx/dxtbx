@@ -12,7 +12,7 @@ from __future__ import annotations
 import bz2
 import functools
 import os
-from typing import ClassVar, List, Optional
+from typing import ClassVar
 
 import libtbx
 
@@ -96,11 +96,11 @@ class Format:
             not ever get called in Format registry searches.
     """
 
-    schemes: List[str] = [""]
+    schemes: list[str] = [""]
 
     # Which class is the abstract base. Assigned with the @abstract
     # decorator, and used to check initialization
-    _abstract_base: ClassVar[Optional[Format]] = None
+    _abstract_base: ClassVar[Format | None] = None
 
     @staticmethod
     def understand(image_file):

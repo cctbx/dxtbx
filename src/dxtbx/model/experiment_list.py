@@ -44,17 +44,7 @@ from dxtbx.serialize.filename import resolve_path
 from dxtbx.util import get_url_scheme
 
 try:
-    from typing import (
-        Any,
-        Callable,
-        Dict,
-        Generator,
-        Iterable,
-        List,
-        Optional,
-        Tuple,
-        Type,
-    )
+    from typing import Any, Callable, Generator, Iterable
 except ImportError:
     pass
 
@@ -172,8 +162,8 @@ class ExperimentListDict:
         return mlist
 
     def _load_pickle_path(
-        self, imageset_data: Dict, param: str
-    ) -> Tuple[Optional[str], Any]:
+        self, imageset_data: dict, param: str
+    ) -> tuple[str | None, Any]:
         """
         Read a filename from an imageset dict and load if required.
 
@@ -917,13 +907,13 @@ class ImageMetadataRecord:
 
     def __init__(
         self,
-        beam: Optional[dxtbx.model.Beam] = None,
-        detector: Optional[dxtbx.model.Detector] = None,
-        goniometer: Optional[dxtbx.model.Goniometer] = None,
-        scan: Optional[dxtbx.model.Scan] = None,
-        template: Optional[str] = None,
-        filename: Optional[str] = None,
-        index: Optional[int] = None,
+        beam: dxtbx.model.Beam | None = None,
+        detector: dxtbx.model.Detector | None = None,
+        goniometer: dxtbx.model.Goniometer | None = None,
+        scan: dxtbx.model.Scan | None = None,
+        template: str | None = None,
+        filename: str | None = None,
+        index: int | None = None,
     ):
         """
         Args:
@@ -1096,7 +1086,7 @@ def _iterate_with_previous(iterable):
 
 def _groupby_template_is_none(
     records: Iterable[ImageMetadataRecord],
-) -> Generator[List[ImageMetadataRecord], None, None]:
+) -> Generator[list[ImageMetadataRecord], None, None]:
     """Specialization of groupby that groups records by format=None"""
     for _, group in itertools.groupby(
         enumerate(records), key=lambda x: -1 if x[1].template is None else x[0]
@@ -1153,9 +1143,9 @@ def _openingpathiterator(pathnames: Iterable[str]):
 
 def _merge_model_metadata(
     records: Iterable[ImageMetadataRecord],
-    compare_beam: Optional[Callable] = None,
-    compare_detector: Optional[Callable] = None,
-    compare_goniometer: Optional[Callable] = None,
+    compare_beam: Callable | None = None,
+    compare_detector: Callable | None = None,
+    compare_goniometer: Callable | None = None,
 ):
     """
     Merge metadata between consecutive record objects.
@@ -1181,8 +1171,8 @@ def _merge_model_metadata(
 
 
 def _merge_scans(
-    records: Iterable[ImageMetadataRecord], scan_tolerance: Optional[float] = None
-) -> List[ImageMetadataRecord]:
+    records: Iterable[ImageMetadataRecord], scan_tolerance: float | None = None
+) -> list[ImageMetadataRecord]:
     """
     Merge consecutive scan records with identical metadata.
 
@@ -1244,8 +1234,8 @@ def _merge_scans(
 
 def _convert_to_imagesets(
     records: Iterable[ImageMetadataRecord],
-    format_class: Type[Format],
-    format_kwargs: Optional[Dict] = None,
+    format_class: type[Format],
+    format_kwargs: dict | None = None,
 ) -> Generator[dxtbx.imageset.ImageSet, None, None]:
     """
     Convert records into imagesets.
@@ -1281,8 +1271,8 @@ def _convert_to_imagesets(
 
 def _create_imageset(
     records: Iterable[ImageMetadataRecord],
-    format_class: Type[Format],
-    format_kwargs: Optional[Dict] = None,
+    format_class: type[Format],
+    format_kwargs: dict | None = None,
 ) -> dxtbx.imageset.ImageSet:
     """
     Create an ImageSet object from a set of single-image records.
@@ -1322,8 +1312,8 @@ def _create_imageset(
 
 def _create_imagesequence(
     record: ImageMetadataRecord,
-    format_class: Type[Format],
-    format_kwargs: Optional[Dict] = None,
+    format_class: type[Format],
+    format_kwargs: dict | None = None,
 ) -> dxtbx.imageset.ImageSequence:
     """
     Create an ImageSequence object from a single rotation data image.

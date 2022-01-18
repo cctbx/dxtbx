@@ -11,7 +11,7 @@ from dxtbx.util import get_url_scheme
 
 try:
     import typing
-    from typing import Callable, Dict, List, Optional, Tuple, Type
+    from typing import Callable
 
     if typing.TYPE_CHECKING:
         from dxtbx.format.Format import Format
@@ -19,7 +19,7 @@ except ImportError:
     pass
 
 
-def get_format_class_for(format_class_name: str) -> Type[Format]:
+def get_format_class_for(format_class_name: str) -> type[Format]:
     """Return the named format class
     :param format_class_name: Name of the format class
     :return: The (uninstantiated) class object
@@ -27,7 +27,7 @@ def get_format_class_for(format_class_name: str) -> Type[Format]:
     return get_format_class_index()[format_class_name][0]()
 
 
-def get_format_class_index() -> Dict[str, Tuple[Callable[[], Type[Format]], List[str]]]:
+def get_format_class_index() -> dict[str, tuple[Callable[[], type[Format]], list[str]]]:
     """Return a dictionary of all known format classes.
     :return: A dictionary containing entries
              {format_class_name: (format_class_factory_function, [base_class_names])}
@@ -49,7 +49,7 @@ def get_format_class_index() -> Dict[str, Tuple[Callable[[], Type[Format]], List
     return register
 
 
-def get_format_class_dag() -> Dict[str, List[str]]:
+def get_format_class_dag() -> dict[str, list[str]]:
     """Return a directed acyclical graph of the format classes.
     :return: A dictionary with entries
              {format class name: [subformat class names]}
@@ -58,7 +58,7 @@ def get_format_class_dag() -> Dict[str, List[str]]:
         index = {
             name: class_info[1] for name, class_info in get_format_class_index().items()
         }
-        dag: Dict[str, List[str]] = {}
+        dag: dict[str, list[str]] = {}
         for name in index:
             for parent in index[name]:
                 dag.setdefault(parent, []).append(name)
@@ -69,12 +69,12 @@ def get_format_class_dag() -> Dict[str, List[str]]:
     return dag
 
 
-_format_dag: Dict[str, List[str]] = get_format_class_dag()
+_format_dag: dict[str, list[str]] = get_format_class_dag()
 
 
 def get_format_class_for_file(
-    image_file: str, format_hint: Optional[str] = None
-) -> Optional[Type[Format]]:
+    image_file: str, format_hint: str | None = None
+) -> type[Format] | None:
     """Find the best format handler in the registry for given image file
     :param image_file: A string containing the file path to an image
     :param format_hint: An optional string of a format class name that should

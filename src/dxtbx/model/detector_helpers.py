@@ -4,7 +4,7 @@ import itertools
 import math
 import warnings
 from operator import itemgetter
-from typing import TYPE_CHECKING, List, Tuple, Union, cast
+from typing import TYPE_CHECKING, Tuple, cast
 
 import numpy as np
 
@@ -317,14 +317,14 @@ def set_detector_distance(detector, distance):
 
 def get_detector_projection_2d_axes(
     detector: Detector,
-) -> Tuple[List[Float2], List[Float2], List[Float2]]:
+) -> tuple[list[Float2], list[Float2], list[Float2]]:
 
     """
     Project panel origins, fast and slow axes onto the best-fitting 2D plane.
     """
 
     # Extract panel vertices
-    vertices: List[matrix.rec] = []
+    vertices: list[matrix.rec] = []
     for panel in detector:
         origin = matrix.col(panel.get_origin())
         fast = matrix.col(panel.get_fast_axis())
@@ -353,7 +353,7 @@ def get_detector_projection_2d_axes(
 
     # For multi-panel detectors cluster fast, slow axes by DBSCAN to get a
     # consensus X, Y for the 2D plane
-    axes: List[matrix.rec]
+    axes: list[matrix.rec]
     clustered_axes = False
     if sklearn and len(detector) > 1:
         clustered_axes = True
@@ -369,7 +369,7 @@ def get_detector_projection_2d_axes(
             clustered_axes = False
 
     if clustered_axes:
-        summed_axes: List[matrix.rec] = [
+        summed_axes: list[matrix.rec] = [
             matrix.col((0, 0, 0)) for i in range(nclusters)
         ]
         for axis, cluster in zip(axes, clusters):
@@ -413,9 +413,9 @@ def get_detector_projection_2d_axes(
     X = Y.cross(normal).normalize()
 
     # Project centre-shifted origins and fast, slow axes to the plane.
-    origin_2d: List[Float2] = []
-    fast_2d: List[Float2] = []
-    slow_2d: List[Float2] = []
+    origin_2d: list[Float2] = []
+    fast_2d: list[Float2] = []
+    slow_2d: list[Float2] = []
     centre = matrix.col(centre)
     for panel in detector:
         origin = matrix.col(panel.get_origin())
@@ -432,11 +432,11 @@ def get_detector_projection_2d_axes(
 
 def get_panel_projection_2d_from_axes(
     panel: Panel,
-    image_data: Union[flex.int, flex.double, flex.float],
+    image_data: flex.int | flex.double | flex.float,
     fast_axis_2d: matrix.col,
     slow_axis_2d: matrix.col,
     origin_2d: matrix.col,
-) -> Tuple[Float4, Float2]:
+) -> tuple[Float4, Float2]:
 
     """
     Gets translation and rotation required to project image_data from panel,
