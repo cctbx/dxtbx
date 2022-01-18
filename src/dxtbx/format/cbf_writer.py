@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import Optional
 
 import pycbf
 
@@ -568,7 +567,7 @@ class FullCBFWriter:
 if __name__ == "__main__":
     filename = sys.argv[1]
     if len(sys.argv) > 2:
-        index: Optional[int] = int(sys.argv[2])
+        index: int | None = int(sys.argv[2])
     else:
         index = None
 

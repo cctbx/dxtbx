@@ -4,7 +4,7 @@ import collections
 import itertools
 import math
 import os
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Iterable, Union
 
 import h5py
 import hdf5plugin  # noqa; F401
@@ -48,7 +48,7 @@ except ImportError:
 NXNode = Union[h5py.File, h5py.Group]
 
 
-def h5str(h5_value: Union[str, numpy.string_, bytes]) -> str:
+def h5str(h5_value: str | numpy.string_ | bytes) -> str:
     """
     Convert a value returned an h5py attribute to str.
 
@@ -93,9 +93,7 @@ class NXValidationError(RuntimeError):
     """A specific exception to record validation errors"""
 
 
-def find_classes(
-    node: NXNode, *nx_classes: Optional[str]
-) -> Tuple[List[h5py.Group], ...]:
+def find_classes(node: NXNode, *nx_classes: str | None) -> tuple[list[h5py.Group], ...]:
     """
     Find instances of multiple NXclass types within the children of the current node.
 
@@ -107,7 +105,7 @@ def find_classes(
     Returns:
         A list of matching nodes for each of the specified NX_class types.
     """
-    results: Dict[Optional[str], List[h5py.Group]] = {
+    results: dict[str | None, list[h5py.Group]] = {
         nx_class: [] for nx_class in nx_classes
     }
 
@@ -120,7 +118,7 @@ def find_classes(
     return tuple(results.values())
 
 
-def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
+def find_class(node: NXNode, nx_class: str | None) -> list[h5py.Group]:
     """
     Find instances of a single NXclass type within the children of the current node.
 
@@ -138,7 +136,7 @@ def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
     return find_classes(node, nx_class)[0]
 
 
-def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
+def find_entries(nx_file: h5py.File) -> list[h5py.Group]:
     """
     Find NXmx entries.
 

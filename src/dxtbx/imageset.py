@@ -29,7 +29,7 @@ except ModuleNotFoundError:
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
-from typing import Iterable, List
+from typing import Iterable
 
 __all__ = (
     "ExternalLookup",
@@ -45,7 +45,7 @@ __all__ = (
 )
 
 
-def _expand_template(template: str, indices: Iterable[int]) -> List[str]:
+def _expand_template(template: str, indices: Iterable[int]) -> list[str]:
     """Expand a template string to a list of filenames.
 
     Args:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from typing import Optional
 
 import dxtbx.util
 from dxtbx.format import Registry
@@ -9,7 +8,7 @@ from dxtbx.format import Registry
 dag = Registry.get_format_class_dag()
 
 
-def print_class(class_name: str, filename: Optional[str] = None, depth=1):
+def print_class(class_name: str, filename: str | None = None, depth=1):
     """Print a Format class name if it matches a file"""
     if filename is None or (
         Registry.get_format_class_for(class_name).understand(filename)
@@ -22,7 +21,7 @@ def print_class(class_name: str, filename: Optional[str] = None, depth=1):
         print_class(child, filename, depth + 1)
 
 
-def show_registry(filename: Optional[str] = None):
+def show_registry(filename: str | None = None):
     if filename:
         print(f"Format classes that understand {filename}:")
     else:

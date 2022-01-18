@@ -6,13 +6,12 @@ from __future__ import annotations
 
 import argparse
 import time
-from typing import List
 
 import dxtbx.util
 from dxtbx.imageset import ImageSetFactory
 
 
-def read_sequence(images: List[str]):
+def read_sequence(images: list[str]):
 
     sequences = ImageSetFactory.new(images)
 

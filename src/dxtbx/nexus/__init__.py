@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Tuple, Union, cast
+from typing import cast
 
 import numpy as np
 
@@ -31,7 +31,7 @@ KNOWN_SENSOR_MATERIALS = {
 MCSTAS_TO_IMGCIF = np.diag([-1, 1, -1])
 
 
-def get_dxtbx_goniometer(nxsample: nxmx.NXsample) -> Optional[dxtbx.model.Goniometer]:
+def get_dxtbx_goniometer(nxsample: nxmx.NXsample) -> dxtbx.model.Goniometer | None:
     """Generate a dxtbx goniometer model from an NXsample.
 
     If the NXsample doesn't have a valid depends_on field, then return None.
@@ -70,7 +70,7 @@ def get_dxtbx_beam(nxbeam: nxmx.NXbeam) -> dxtbx.model.Beam:
 
 def get_dxtbx_scan(
     nxsample: nxmx.NXsample, nxdetector: nxmx.NXdetector
-) -> Optional[dxtbx.model.Scan]:
+) -> dxtbx.model.Scan | None:
     """Generate a dxtbx scan model from an NXsample.
 
     If the NXsample doesn't have a valid depends_on field, then return None.
@@ -145,7 +145,7 @@ def get_dxtbx_detector(
 
     detector = dxtbx.model.Detector()
 
-    root: Union[dxtbx.model.Detector, dxtbx.model.Panel]
+    root: dxtbx.model.Detector | dxtbx.model.Panel
     if len(nxdetector.modules) > 1:
         root = detector.hierarchy()
     else:
@@ -159,7 +159,7 @@ def get_dxtbx_detector(
                 reversed_dependency_chain = reversed(
                     nxmx.get_dependency_chain(module.fast_pixel_direction.depends_on)
                 )
-                pg: Union[dxtbx.model.Detector, dxtbx.model.Panel] = root
+                pg: dxtbx.model.Detector | dxtbx.model.Panel = root
                 for transformation in reversed_dependency_chain:
                     assert isinstance(
                         pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
@@ -239,7 +239,7 @@ def get_dxtbx_detector(
         )
         # dxtbx requires image size in the order fast, slow - which is the reverse of what
         # is stored in module.data_size
-        image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[::-1])))
+        image_size = cast(tuple[int, int], tuple(map(int, module.data_size[::-1])))
         assert len(image_size) == 2
         underload = (
             float(nxdetector.underload_value)
@@ -287,7 +287,7 @@ def get_dxtbx_detector(
 
 def get_detector_module_slices(
     nxdetector: nxmx.NXdetector,
-) -> Tuple[Tuple[slice, ...], ...]:
+) -> tuple[tuple[slice, ...], ...]:
     """Return the slices pointing to the hyperslab of data for each module.
 
     This will be a tuple of tuples, where each tuple contains the slices corresponding
@@ -302,7 +302,7 @@ def get_detector_module_slices(
     )
 
 
-def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool, ...]:
+def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...]:
     """Return the static mask for an NXdetector.
 
     This will be a tuple of flex.bool, of length equal to the number of modules. The
@@ -317,7 +317,7 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool, ...]:
 
 def get_raw_data(
     nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int
-) -> Tuple[Union[flex.float, flex.double, flex.int], ...]:
+) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
     This will be a tuple of flex.float, flex.double or flex.int arrays, of length equal

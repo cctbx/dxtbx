@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 
@@ -27,7 +27,7 @@ try:
 except (ImportError, ValueError):
     bitshuffle = None
 
-injected_data: Dict[str, Any] = {}
+injected_data: dict[str, Any] = {}
 
 
 class FormatEigerStream(FormatMultiImage, Format):

@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import sys
-from typing import Optional, Type
 
 from iotbx.detectors.detectorbase import DetectorImageBase
 
@@ -18,7 +17,7 @@ try:
 
     import scitbx.array_family.flex as flex
 except ModuleNotFoundError:
-    Img: Optional[Type] = None  # type: ignore
+    Img: type | None = None  # type: ignore
     # Replicate fallback logic from iotbx.detectors.marIP
     try:
         from cbflib_adaptbx import Mar345Adaptor
