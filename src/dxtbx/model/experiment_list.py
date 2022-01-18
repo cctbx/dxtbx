@@ -9,6 +9,7 @@ import logging
 import operator
 import os
 import pickle
+from typing import Any, Callable, Generator, Iterable
 
 import pkg_resources
 
@@ -42,11 +43,6 @@ from dxtbx.sequence_filenames import (
 from dxtbx.serialize import xds
 from dxtbx.serialize.filename import resolve_path
 from dxtbx.util import get_url_scheme
-
-try:
-    from typing import Any, Callable, Generator, Iterable
-except ImportError:
-    pass
 
 __all__ = [
     "BeamComparison",

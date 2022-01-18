@@ -5,18 +5,15 @@ of image formats.
 """
 from __future__ import annotations
 
+import typing
+from typing import Callable
+
 import pkg_resources
 
 from dxtbx.util import get_url_scheme
 
-try:
-    import typing
-    from typing import Callable
-
-    if typing.TYPE_CHECKING:
-        from dxtbx.format.Format import Format
-except ImportError:
-    pass
+if typing.TYPE_CHECKING:
+    from dxtbx.format.Format import Format
 
 
 def get_format_class_for(format_class_name: str) -> type[Format]:
