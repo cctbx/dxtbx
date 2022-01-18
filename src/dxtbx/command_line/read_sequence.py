@@ -2,6 +2,8 @@
 
 """Tool to benchmark overall time cost for simply reading data"""
 
+from __future__ import annotations
+
 import argparse
 import time
 from typing import List

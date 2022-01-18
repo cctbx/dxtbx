@@ -4,6 +4,8 @@ detector types, hashed by the sensor type, image dimensions and pixel
 dimensions.
 """
 
+from __future__ import annotations
+
 import os
 import sys
 

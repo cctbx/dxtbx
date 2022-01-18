@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Tuple
 
 from scitbx.array_family import flex

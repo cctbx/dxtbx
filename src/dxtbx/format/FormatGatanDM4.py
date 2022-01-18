@@ -3,6 +3,8 @@ Experimental format for Gatan Digital Micrograph DM4 files. See
 https://personal.ntu.edu.sg/cbb/info/dmformat/index.html
 """
 
+from __future__ import annotations
+
 import struct
 
 from boost_adaptbx.boost.python import streambuf

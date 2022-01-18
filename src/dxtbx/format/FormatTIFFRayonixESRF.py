@@ -3,6 +3,8 @@ Subclass of FormatTiffRayonix to deal with images who have beam centers
 specified in pixels
 """
 
+from __future__ import annotations
+
 import struct
 import sys
 

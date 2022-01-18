@@ -3,6 +3,8 @@ Base implementation of CBF formats - which is just really a place holder
 which will tell you whether something is a CBF file (or no.)
 """
 
+from __future__ import annotations
+
 import sys
 
 from dxtbx import IncorrectFormatError

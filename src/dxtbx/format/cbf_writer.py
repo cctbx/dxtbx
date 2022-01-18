@@ -7,6 +7,8 @@ for i in range(10):
   writer.write_cbf("example_%d.cbf"%i, index=i)
 """
 
+from __future__ import annotations
+
 import os
 import sys
 from typing import Optional

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
 

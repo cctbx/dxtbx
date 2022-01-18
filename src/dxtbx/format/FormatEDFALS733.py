@@ -1,6 +1,8 @@
 """Implementation of an ImageFormat class to read MarIP-format image"""
 
 
+from __future__ import annotations
+
 import sys
 
 from iotbx.detectors import EDFWrapper

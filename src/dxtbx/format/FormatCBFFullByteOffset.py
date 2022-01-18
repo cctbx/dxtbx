@@ -1,6 +1,8 @@
 """Byte offset implementation of fullCBF format, for use with CBF files using
 byte offset compression which are _not_ made by dectris."""
 
+from __future__ import annotations
+
 import binascii
 import os
 from io import TextIOWrapper

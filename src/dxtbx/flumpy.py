@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 try:
     from .dxtbx_flumpy import *  # noqa: F403
 except ModuleNotFoundError:

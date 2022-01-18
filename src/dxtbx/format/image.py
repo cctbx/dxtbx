@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import boost_adaptbx.boost.python  # noqa # lgtm # Ensure boost python libraries are in memory
 
 try:

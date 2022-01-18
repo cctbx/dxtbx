@@ -3,6 +3,8 @@ Helper methods for class for working with Pilatus images, for instance for
 identifying the regions to be masked.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import List, Tuple
 

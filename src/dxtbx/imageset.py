@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import boost_adaptbx.boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling

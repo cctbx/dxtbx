@@ -3,6 +3,8 @@ An implementation of the SMV image reader for pseudo "ADSC" images, converted
 from Pilatus images using iotbx debug_write.
 """
 
+from __future__ import annotations
+
 import sys
 
 from iotbx.detectors import SMVImage

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame

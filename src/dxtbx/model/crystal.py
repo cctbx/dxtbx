@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from cctbx.sgtbx import space_group as SG
 from scitbx import matrix
 
