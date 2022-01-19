@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Tuple, cast
 
 import numpy as np
 
@@ -239,7 +239,7 @@ def get_dxtbx_detector(
         )
         # dxtbx requires image size in the order fast, slow - which is the reverse of what
         # is stored in module.data_size
-        image_size = cast(tuple[int, int], tuple(map(int, module.data_size[::-1])))
+        image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[::-1])))
         assert len(image_size) == 2
         underload = (
             float(nxdetector.underload_value)

@@ -531,4 +531,4 @@ def get_panel_projection_2d_from_axes(
     R = matrix.sqr((T(0, 0), T(0, 1), T(1, 0), T(1, 1)))
     t = matrix.col((T(0, 2), T(1, 2)))
 
-    return cast(Float4, tuple(R)), cast(Float2, tuple(t))
+    return cast(Float4, Tuple(R)), cast(Float2, Tuple(t))
