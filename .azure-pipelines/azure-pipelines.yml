@@ -83,44 +83,14 @@ stages:
       - template: unix-build.yml
 
   - ${{ if ne(variables['Build.Reason'], 'Schedule') }}:
-    - job: linux
-      pool:
-        vmImage: ubuntu-20.04
-      strategy:
-        matrix:
-          python37:
-            PYTHON_VERSION: 3.7
-          python38:
-            PYTHON_VERSION: 3.8
-          python39:
-            PYTHON_VERSION: 3.9
-      timeoutInMinutes: 60
-      steps:
-      - template: unix-build.yml
-
-    - job: macos
-      pool:
-        vmImage: macOS-latest
-      strategy:
-        matrix:
-          python37:
-            PYTHON_VERSION: 3.7
-          python38:
-            PYTHON_VERSION: 3.8
-          python39:
-            PYTHON_VERSION: 3.9
-      timeoutInMinutes: 60
-      steps:
-      - template: unix-build.yml
-
     - job: windows
       pool:
         vmImage: windows-latest
       strategy:
         matrix:
-          python37:
-            PYTHON_VERSION: 3.7
-      timeoutInMinutes: 20
+          python38:
+            PYTHON_VERSION: 3.8
+      timeoutInMinutes: 60
       steps:
       - template: windows-build.yml
 
