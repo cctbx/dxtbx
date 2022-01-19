@@ -634,9 +634,8 @@ def test_get_corrected_data(centroid_files):
 
 def test_multi_panel_gain_map(dials_data):
     pytest.importorskip("h5py")
-    filename = os.path.join(
-        dials_data("image_examples"),
-        "SACLA-MPCCD-run266702-0-subset.h5",
+    filename = (
+        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
@@ -677,7 +676,9 @@ def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
     raises=OverflowError, reason="https://github.com/cctbx/dxtbx/issues/213"
 )
 def test_scan_imageset_slice_consistency(dials_data):
-    files = dials_data("centroid_test_data").listdir("*.cbf", sort=True)[1:]
+    files = dials_data("centroid_test_data", pathlib=False).listdir("*.cbf", sort=True)[
+        1:
+    ]
     expt = ExperimentListFactory.from_filenames(f.strpath for f in files)[0]
     assert expt.scan[0:8] == expt.scan
     # The following doesn't work, and expects expt.imageset[1:9]
