@@ -14,8 +14,8 @@ from dxtbx.util.dlsnxs2cbf import make_cbf
 
 
 def test_dlsnxs2cbf(dials_data, tmp_path):
-    screen = dials_data("thaumatin_eiger_screen")
-    master = screen.join("Therm_6_1_master.h5")
+    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
+    master = screen / "Therm_6_1_master.h5"
     result = procrunner.run(
         ["dxtbx.dlsnxs2cbf", master, "junk_%04d.cbf"], working_directory=tmp_path
     )

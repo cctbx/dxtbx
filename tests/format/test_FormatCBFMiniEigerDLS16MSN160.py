@@ -6,7 +6,9 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def test_dlsnxs2cbf_therm(dials_data):
-    filename = dials_data("image_examples").join("dlsnxs2cbf_therm_0001.cbf.gz").strpath
+    filename = (
+        dials_data("image_examples", pathlib=True) / "dlsnxs2cbf_therm_0001.cbf.gz"
+    )
 
     assert FormatCBFMiniEigerDLS16MSN160.understand(filename)
     expts = ExperimentListFactory.from_filenames(

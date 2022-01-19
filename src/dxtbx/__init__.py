@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import logging
 import os
 import sys
+import typing
 
 import libtbx.load_env
 
@@ -10,6 +13,9 @@ if sys.version_info.major == 2:
     sys.exit("Python 2 is no longer supported")
 
 from .version import version as __version__  # noqa: F401
+
+if typing.TYPE_CHECKING:
+    from dxtbx.format.Format import Format
 
 # Ensures that HDF5 has the conda_base plugin path configured.
 #
@@ -48,16 +54,17 @@ class IncorrectFormatError(RuntimeError):
         self.args = (format_instance, filename)
 
 
-def load(filename):
+def load(filename: str | bytes | os.PathLike) -> Format:
     """Use DXTBX to load the input filename.
 
-    :param filename:  The input filename
-    :type  filename:  os.PathLike or str or bytes
-    :returns:         A dxtbx Format-subclass instance for the file type
-    :raises IOError:  if the file format could not be determined
+    Args:
+        filename:  The input filename
+
+    Returns
+        A dxtbx Format-subclass instance for the file type
+
+    Raises:
+        IOError: If the file format could not be determined
     """
-    # Unwrap PEP-519-style objects. This covers py.path, pathlib, ...
-    if hasattr(filename, "__fspath__"):
-        filename = filename.__fspath__()
     format_instance = dxtbx.format.Registry.get_format_class_for_file(filename)
-    return format_instance(filename)
+    return format_instance(os.fspath(filename))

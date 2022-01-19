@@ -6,7 +6,9 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def test_DLS_I03_smargon(dials_data):
-    filename = dials_data("image_examples").join("DLS_I03_smargon_0001.cbf.gz").strpath
+    filename = (
+        dials_data("image_examples", pathlib=True) / "DLS_I03_smargon_0001.cbf.gz"
+    )
     assert FormatCBFFullPilatusDLS6MSN126.understand(filename)
     expts = ExperimentListFactory.from_filenames(
         [filename], format_kwargs={"dynamic_shadowing": True}
