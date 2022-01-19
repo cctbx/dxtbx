@@ -5,6 +5,7 @@ of image formats.
 """
 from __future__ import annotations
 
+import os
 import typing
 from typing import Callable
 
@@ -83,6 +84,8 @@ def get_format_class_for_file(
     # Grab the scheme from this URI
     scheme = get_url_scheme(image_file)
 
+    image_file_str = os.fspath(image_file)
+
     # If a format hint was given then find all paths through the DAG leading
     # to this format class. Create a set containing all format class names
     # on those paths (priority_formats), and use the information whether a
@@ -116,7 +119,7 @@ def get_format_class_for_file(
     # accepting leaf node
     for format in sorted(_format_dag["Format"], key=format_sort):
         format_class = get_format_class_for(format)
-        if scheme in format_class.schemes and format_class.understand(image_file):
-            return recurse(format, image_file)
+        if scheme in format_class.schemes and format_class.understand(image_file_str):
+            return recurse(format, image_file_str)
 
     return None

@@ -544,11 +544,12 @@ class Format:
     def open_file(cls, filename, mode="rb"):
         """Open file for reading, decompressing silently if necessary,
         caching transparently if possible."""
+        filename_str = os.fspath(filename)
 
-        if filename.endswith(".bz2"):
+        if filename_str.endswith(".bz2"):
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
 
-        elif filename.endswith(".gz"):
+        elif filename_str.endswith(".gz"):
             if not gzip:
                 raise RuntimeError("gz file provided without gzip module")
             fh_func = functools.partial(gzip.GzipFile, filename, mode=mode)
@@ -558,4 +559,4 @@ class Format:
 
         ##  To disable caching logic:
         # return fh_func()
-        return cls.get_cache_controller().check(filename, fh_func)
+        return cls.get_cache_controller().check(filename_str, fh_func)
