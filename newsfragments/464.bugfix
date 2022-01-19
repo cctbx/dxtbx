@@ -1,1 +1,1 @@
-Disable reading non-image pickle files
+Make FormatPY abstract so that dxtbx doesn't try to read ``.pickle`` reflection files as images.
