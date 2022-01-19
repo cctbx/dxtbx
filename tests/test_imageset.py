@@ -487,8 +487,7 @@ class TestImageSequence:
 def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
     pytest.importorskip("h5py")
     filename = (
-        dials_data("image_examples", pathlib=True)
-        / "SACLA-MPCCD-run266702-0-subset.h5",
+        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
@@ -522,7 +521,7 @@ def test_imagesetfactory(centroid_files, dials_data):
 
     assert isinstance(sequence[0], ImageSequence)
 
-    template = dials_data("centroid_test_data").join("centroid_####.cbf").strpath
+    template = str(dials_data("centroid_test_data", pathlib=True) / "centroid_####.cbf")
     image_range = (3, 6)
 
     sequence = ImageSetFactory.from_template(template, image_range)
