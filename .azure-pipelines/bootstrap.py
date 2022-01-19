@@ -853,8 +853,8 @@ def run():
         action="append",
         default=[],
         help=(
-            "during 'update' step when a repository is newly cloned set it to a given branch."
-            "Specify as repository@branch, eg. 'dials@dials-next'"
+            "during 'update' step when a repository is newly cloned set it to a given "
+            "branch. Specify as repository@branch, eg. 'dials@dials-next'"
         ),
     )
     parser.add_argument(
