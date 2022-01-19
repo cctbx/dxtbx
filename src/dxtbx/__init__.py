@@ -67,4 +67,6 @@ def load(filename: str | bytes | os.PathLike) -> Format:
         IOError: If the file format could not be determined
     """
     format_instance = dxtbx.format.Registry.get_format_class_for_file(filename)
+    if not format_instance:
+        raise ValueError(f"Could not find matching format for {filename!r}")
     return format_instance(os.fspath(filename))

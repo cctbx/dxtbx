@@ -71,7 +71,7 @@ _format_dag: dict[str, list[str]] = get_format_class_dag()
 
 
 def get_format_class_for_file(
-    image_file: str, format_hint: str | None = None
+    image_file: str | bytes | os.PathLike, format_hint: str | None = None
 ) -> type[Format] | None:
     """Find the best format handler in the registry for given image file
     :param image_file: A string containing the file path to an image

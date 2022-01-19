@@ -12,7 +12,8 @@ from __future__ import annotations
 import bz2
 import functools
 import os
-from typing import ClassVar
+from io import IOBase
+from typing import Callable, ClassVar
 
 import libtbx
 
@@ -541,11 +542,13 @@ class Format:
     ####################################################################
 
     @classmethod
-    def open_file(cls, filename, mode="rb"):
+    def open_file(cls, filename: str | bytes | os.PathLike, mode="rb"):
         """Open file for reading, decompressing silently if necessary,
         caching transparently if possible."""
         filename_str = os.fspath(filename)
+        assert isinstance(filename_str, str)
 
+        fh_func: Callable[..., IOBase]
         if filename_str.endswith(".bz2"):
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
 
