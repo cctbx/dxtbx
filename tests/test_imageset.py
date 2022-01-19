@@ -32,9 +32,9 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
         "_beam",
         side_effect=dummy_beam,
     ) as obj:
-        filename = os.path.join(
-            dials_data("image_examples"),
-            "SACLA-MPCCD-run266702-0-subset.h5",
+        filename = (
+            dials_data("image_examples", pathlib=True)
+            / "SACLA-MPCCD-run266702-0-subset.h5"
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
         iset = format_class.get_imageset(
@@ -75,7 +75,7 @@ def test_format(dials_regression, image):
 def image_examples(dials_data):
 
     return [
-        dials_data("image_examples").join(e).strpath
+        str(dials_data("image_examples", pathlib=True) / e)
         for e in [
             "ThermoFisher_EPU-D_1.5_001.mrc.gz",
             "Gatan_float32_zero_array_001.dm4.gz",
@@ -230,7 +230,7 @@ def test_imagesetdata(centroid_files):
 @pytest.fixture(scope="session")
 def centroid_files(dials_data):
     return [
-        dials_data("centroid_test_data").join("centroid_%04d.cbf" % i).strpath
+        str(dials_data("centroid_test_data", pathlib=True) / f"centroid_{i:04d}.cbf")
         for i in range(1, 10)
     ]
 
@@ -486,9 +486,9 @@ class TestImageSequence:
 @pytest.mark.parametrize("lazy", (True, False))
 def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
     pytest.importorskip("h5py")
-    filename = os.path.join(
-        dials_data("image_examples"),
-        "SACLA-MPCCD-run266702-0-subset.h5",
+    filename = (
+        dials_data("image_examples", pathlib=True)
+        / "SACLA-MPCCD-run266702-0-subset.h5",
     )
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
