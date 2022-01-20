@@ -1,6 +1,8 @@
 """An implementation of the CBF image reader for Pilatus images, for the P12M-DLS"""
 
 
+from __future__ import annotations
+
 import binascii
 import calendar
 import math

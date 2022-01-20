@@ -4,6 +4,8 @@ FormatSMVADSCSN, customised for example on Australian Synchrotron SN 928
 which has reversed phi.
 """
 
+from __future__ import annotations
+
 import sys
 
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN

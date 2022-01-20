@@ -1,5 +1,7 @@
 # LIBTBX_SET_DISPATCHER_NAME dev.dxtbx.debug_memory
 
+from __future__ import annotations
+
 import argparse
 import resource
 

@@ -1,6 +1,8 @@
 """Format object for XDS files"""
 
 
+from __future__ import annotations
+
 import sys
 
 from rstbx.cftbx.coordinate_frame_converter import coordinate_frame_converter

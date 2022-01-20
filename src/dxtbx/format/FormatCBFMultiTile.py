@@ -1,6 +1,8 @@
 """Reads a multi-tile CBF image, discovering its detector geometry automatically"""
 
 
+from __future__ import annotations
+
 import sys
 
 import numpy

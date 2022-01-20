@@ -3,6 +3,8 @@ An implementation of the SMV image reader for Rigaku Saturn images, for
 the instrument at CSHL, SN 09040159.
 """
 
+from __future__ import annotations
+
 import sys
 
 from scitbx import matrix

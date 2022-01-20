@@ -3,25 +3,21 @@ A registry class to handle Format classes and provide lists of them when
 this is useful for i.e. identifying the best tool to read a given range
 of image formats.
 """
+from __future__ import annotations
 
 import os
+import typing
+from typing import Callable
 
 import pkg_resources
 
 from dxtbx.util import get_url_scheme
 
-try:
-    import typing
-    from typing import Callable, Dict, List, Maybe, Tuple, Type
-
-    if typing.TYPE_CHECKING:
-        from dxtbx.format.Format import Format
-except ImportError:
-    pass
+if typing.TYPE_CHECKING:
+    from dxtbx.format.Format import Format
 
 
-def get_format_class_for(format_class_name):
-    # type: (str) -> Type[Format]
+def get_format_class_for(format_class_name: str) -> type[Format]:
     """Return the named format class
     :param format_class_name: Name of the format class
     :return: The (uninstantiated) class object
@@ -29,8 +25,7 @@ def get_format_class_for(format_class_name):
     return get_format_class_index()[format_class_name][0]()
 
 
-def get_format_class_index():
-    # type: () -> Dict[str, Tuple[Callable[[], Type[Format]], List[str]]]
+def get_format_class_index() -> dict[str, tuple[Callable[[], type[Format]], list[str]]]:
     """Return a dictionary of all known format classes.
     :return: A dictionary containing entries
              {format_class_name: (format_class_factory_function, [base_class_names])}
@@ -42,18 +37,17 @@ def get_format_class_index():
         class_index = {}
         for e in pkg_resources.iter_entry_points("dxtbx.format"):
             if ":" in e.name:
-                format_name, base_classes = e.name.split(":", 1)
-                base_classes = tuple(base_classes.split(","))
+                format_name, base_classes_str = e.name.split(":", 1)
+                base_classes = tuple(base_classes_str.split(","))
             else:
                 format_name, base_classes = e.name, ()
             class_index[format_name] = (e.load, base_classes)
         setattr(get_format_class_index, "cache", class_index)
-    register = get_format_class_index.cache.copy()
+    register = get_format_class_index.cache.copy()  # type: ignore
     return register
 
 
-def get_format_class_dag():
-    # type: () -> Dict[str, List[str]]
+def get_format_class_dag() -> dict[str, list[str]]:
     """Return a directed acyclical graph of the format classes.
     :return: A dictionary with entries
              {format class name: [subformat class names]}
@@ -62,22 +56,23 @@ def get_format_class_dag():
         index = {
             name: class_info[1] for name, class_info in get_format_class_index().items()
         }
-        dag = {}
+        dag: dict[str, list[str]] = {}
         for name in index:
             for parent in index[name]:
                 dag.setdefault(parent, []).append(name)
         for key in dag:
             dag[key].sort()
         setattr(get_format_class_dag, "cache", dag)
-    dag = get_format_class_dag.cache.copy()
+    dag = get_format_class_dag.cache.copy()  # type: ignore
     return dag
 
 
-_format_dag = get_format_class_dag()  # type: Dict[str, List[str]]
+_format_dag: dict[str, list[str]] = get_format_class_dag()
 
 
-def get_format_class_for_file(image_file, format_hint=None):
-    # type: (str, str) -> Maybe[Type[Format]]
+def get_format_class_for_file(
+    image_file: str | bytes | os.PathLike, format_hint: str | None = None
+) -> type[Format] | None:
     """Find the best format handler in the registry for given image file
     :param image_file: A string containing the file path to an image
     :param format_hint: An optional string of a format class name that should
@@ -126,3 +121,5 @@ def get_format_class_for_file(image_file, format_hint=None):
         format_class = get_format_class_for(format)
         if scheme in format_class.schemes and format_class.understand(image_file_str):
             return recurse(format, image_file_str)
+
+    return None

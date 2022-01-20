@@ -4,6 +4,8 @@ http://www.x-spectrum.de/
 """
 
 
+from __future__ import annotations
+
 import sys
 
 import h5py

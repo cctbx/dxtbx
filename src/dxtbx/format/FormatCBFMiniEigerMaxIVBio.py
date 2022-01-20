@@ -3,6 +3,8 @@ An implementation of the FormatCBFMiniEiger image reader for the Eiger16M
 detector at the MaxIV BioMAX beamline, which has a vertical goniometer.
 """
 
+from __future__ import annotations
+
 import sys
 
 from dxtbx.format.FormatCBFMiniEiger import FormatCBFMiniEiger

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dxtbx.format.Format import abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 

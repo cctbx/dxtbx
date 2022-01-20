@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import json
 import os
@@ -19,40 +21,77 @@ from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.util import format_float_with_standard_uncertainty
-from dxtbx_model_ext import (
-    Beam,
-    BeamBase,
-    Crystal,
-    CrystalBase,
-    Detector,
-    DetectorNode,
-    Experiment,
-    ExperimentList,
-    Goniometer,
-    GoniometerBase,
-    KappaDirection,
-    KappaGoniometer,
-    KappaScanAxis,
-    MosaicCrystalKabsch2010,
-    MosaicCrystalSauter2014,
-    MultiAxisGoniometer,
-    OffsetParallaxCorrectedPxMmStrategy,
-    OffsetPxMmStrategy,
-    Panel,
-    ParallaxCorrectedPxMmStrategy,
-    PxMmStrategy,
-    Scan,
-    ScanBase,
-    SimplePxMmStrategy,
-    Spectrum,
-    VirtualPanel,
-    VirtualPanelFrame,
-    get_mod2pi_angles_in_range,
-    get_range_of_mod2pi_angles,
-    is_angle_in_range,
-    parallax_correction,
-    parallax_correction_inv,
-)
+
+try:
+    from ..dxtbx_model_ext import (
+        Beam,
+        BeamBase,
+        Crystal,
+        CrystalBase,
+        Detector,
+        DetectorNode,
+        Experiment,
+        ExperimentList,
+        Goniometer,
+        GoniometerBase,
+        KappaDirection,
+        KappaGoniometer,
+        KappaScanAxis,
+        MosaicCrystalKabsch2010,
+        MosaicCrystalSauter2014,
+        MultiAxisGoniometer,
+        OffsetParallaxCorrectedPxMmStrategy,
+        OffsetPxMmStrategy,
+        Panel,
+        ParallaxCorrectedPxMmStrategy,
+        PxMmStrategy,
+        Scan,
+        ScanBase,
+        SimplePxMmStrategy,
+        Spectrum,
+        VirtualPanel,
+        VirtualPanelFrame,
+        get_mod2pi_angles_in_range,
+        get_range_of_mod2pi_angles,
+        is_angle_in_range,
+        parallax_correction,
+        parallax_correction_inv,
+    )
+except ModuleNotFoundError:
+    from dxtbx_model_ext import (  # type: ignore
+        Beam,
+        BeamBase,
+        Crystal,
+        CrystalBase,
+        Detector,
+        DetectorNode,
+        Experiment,
+        ExperimentList,
+        Goniometer,
+        GoniometerBase,
+        KappaDirection,
+        KappaGoniometer,
+        KappaScanAxis,
+        MosaicCrystalKabsch2010,
+        MosaicCrystalSauter2014,
+        MultiAxisGoniometer,
+        OffsetParallaxCorrectedPxMmStrategy,
+        OffsetPxMmStrategy,
+        Panel,
+        ParallaxCorrectedPxMmStrategy,
+        PxMmStrategy,
+        Scan,
+        ScanBase,
+        SimplePxMmStrategy,
+        Spectrum,
+        VirtualPanel,
+        VirtualPanelFrame,
+        get_mod2pi_angles_in_range,
+        get_range_of_mod2pi_angles,
+        is_angle_in_range,
+        parallax_correction,
+        parallax_correction_inv,
+    )
 
 __all__ = (
     "Beam",
@@ -100,7 +139,7 @@ __all__ = (
 
 
 @boost_adaptbx.boost.python.inject_into(Detector)
-class _:
+class _detector:
     def iter_panels(self):
         """Iterate through just the panels depth-first."""
         for obj in self.iter_preorder():
@@ -127,7 +166,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(Crystal)
-class _:
+class _crystal:
     def show(self, show_scan_varying=False, out=None):
         if out is None:
             out = sys.stdout
@@ -375,7 +414,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(MosaicCrystalKabsch2010)
-class _:
+class _crystal_kabsch:
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -432,7 +471,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(MosaicCrystalSauter2014)
-class _:
+class _crystalsauter:
     def as_str(self, show_scan_varying=False):
         return "\n".join(
             (
@@ -503,7 +542,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(Experiment)
-class _:
+class _experiment:
     def load_models(self, index=None):
         """Load the models from the imageset"""
         if index is None:
@@ -515,7 +554,7 @@ class _:
 
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
-class _:
+class _experimentlist:
     def __repr__(self):
         if len(self):
             return "ExperimentList([{}])".format(", ".join(repr(x) for x in self))
@@ -835,8 +874,7 @@ class _:
             raise RuntimeError(f"expected extension {{{ext_str}}}, got {ext}")
 
     @staticmethod
-    def from_file(filename, check_format=True):
-        # type: (str, bool) -> ExperimentList
+    def from_file(filename: str, check_format: bool = True) -> ExperimentList:
         """
         Load an ExperimentList from a serialized file.
 

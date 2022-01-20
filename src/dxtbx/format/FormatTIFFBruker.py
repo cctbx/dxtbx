@@ -1,6 +1,8 @@
 """An implementation of the TIFF image reader for Bruker images"""
 
 
+from __future__ import annotations
+
 import datetime
 import struct
 import sys
