@@ -66,8 +66,9 @@ def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
     make_cbf(tmp_path / master, template=str(tmp_path / "image_%04d.cbf"))
 
 
-def test_dlsnxs2cbf_help(capsys):
-    run(["-h"])
+def test_dlsnxs2cbf_help(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        run(["-h"])
     captured = capsys.readouterr()
     assert parser.description in captured.out
     assert "Template cbf output name e.g. 'image_%04d.cbf'" in captured.out
