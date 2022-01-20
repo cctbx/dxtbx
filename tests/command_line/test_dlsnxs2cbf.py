@@ -66,7 +66,7 @@ def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
     make_cbf(tmp_path / master, template=str(tmp_path / "image_%04d.cbf"))
 
 
-def test_dlsnxs2cbf_help(monkeypatch, capsys):
+def test_dlsnxs2cbf_help(capsys):
     with pytest.raises(SystemExit):
         run(["-h"])
     captured = capsys.readouterr()
