@@ -13,11 +13,9 @@ from dxtbx.util.dlsnxs2cbf import make_cbf
 
 
 def test_dlsnxs2cbf(dials_data, tmp_path, capsys):
-    screen = dials_data("thaumatin_eiger_screen")
-    master = screen.join("Therm_6_1_master.h5")
-    run(
-        [os.fspath(master), "junk_%04d.cbf"],
-    )
+    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
+    master = screen / "Therm_6_1_master.h5"
+    run([str(master), "junk_%04d.cbf"])
 
     output_files = ["junk_%04d.cbf" % j for j in (1, 2, 3)]
     captured = capsys.readouterr()

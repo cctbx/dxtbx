@@ -3,6 +3,8 @@ ADSC SMV Format for Q315 SN 915, installed at BL38B1 at SPring-8. Resembles
 FormatSMVADSCSN920 but returns a reverse phi goniometer
 """
 
+from __future__ import annotations
+
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN
 
 

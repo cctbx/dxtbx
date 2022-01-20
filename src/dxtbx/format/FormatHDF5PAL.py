@@ -2,6 +2,8 @@
 Format class for the PAL XFEL raw data format
 """
 
+from __future__ import annotations
+
 import sys
 
 import h5py

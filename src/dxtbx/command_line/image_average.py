@@ -5,6 +5,8 @@
 Average images of any dxtbx-supported format. Handles many individual images or single container files.
 """
 
+from __future__ import annotations
+
 import copy
 import os
 import sys

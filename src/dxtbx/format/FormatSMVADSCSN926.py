@@ -5,6 +5,8 @@ two-theta offsets in the vertical direction, as well as idiosyncratic ways
 of recording the beam centre... which work fine for ADXV...
 """
 
+from __future__ import annotations
+
 import math
 
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN

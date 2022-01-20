@@ -4,13 +4,15 @@ import itertools
 import math
 import warnings
 from operator import itemgetter
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Tuple, cast
 
 import numpy as np
 
 from scitbx import matrix
 
 if TYPE_CHECKING:
+    from scitbx.array_family import flex
+
     from dxtbx.model import Detector, Panel
 
 try:
@@ -315,14 +317,14 @@ def set_detector_distance(detector, distance):
 
 def get_detector_projection_2d_axes(
     detector: Detector,
-) -> Tuple[Float2, Float2, Float2]:
+) -> tuple[list[Float2], list[Float2], list[Float2]]:
 
     """
     Project panel origins, fast and slow axes onto the best-fitting 2D plane.
     """
 
     # Extract panel vertices
-    vertices = []
+    vertices: list[matrix.rec] = []
     for panel in detector:
         origin = matrix.col(panel.get_origin())
         fast = matrix.col(panel.get_fast_axis())
@@ -343,7 +345,7 @@ def get_detector_projection_2d_axes(
     inertia_tensor = np.matmul(r, r.T)
     u = np.linalg.svd(inertia_tensor)[0]
     normal = matrix.col(u[:, 2].tolist()).normalize()
-    sum_vertices = matrix.col((0, 0, 0))
+    sum_vertices: matrix.rec = matrix.col((0, 0, 0))
     for v in vertices:
         sum_vertices += v
     if normal.dot(sum_vertices) > 0:
@@ -351,13 +353,14 @@ def get_detector_projection_2d_axes(
 
     # For multi-panel detectors cluster fast, slow axes by DBSCAN to get a
     # consensus X, Y for the 2D plane
+    axes: list[matrix.rec]
     clustered_axes = False
     if sklearn and len(detector) > 1:
         clustered_axes = True
         axes = []
         for panel in detector:
-            axes.append(panel.get_fast_axis())
-            axes.append(panel.get_slow_axis())
+            axes.append(matrix.col(panel.get_fast_axis()))
+            axes.append(matrix.col(panel.get_slow_axis()))
         clusters = sklearn.cluster.DBSCAN(eps=0.1, min_samples=2).fit_predict(axes)
         nclusters = max(clusters) + 1
 
@@ -366,7 +369,9 @@ def get_detector_projection_2d_axes(
             clustered_axes = False
 
     if clustered_axes:
-        summed_axes = [matrix.col((0, 0, 0)) for i in range(nclusters)]
+        summed_axes: list[matrix.rec] = [
+            matrix.col((0, 0, 0)) for i in range(nclusters)
+        ]
         for axis, cluster in zip(axes, clusters):
             summed_axes[cluster] += matrix.col(axis)
 
@@ -408,9 +413,9 @@ def get_detector_projection_2d_axes(
     X = Y.cross(normal).normalize()
 
     # Project centre-shifted origins and fast, slow axes to the plane.
-    origin_2d = []
-    fast_2d = []
-    slow_2d = []
+    origin_2d: list[Float2] = []
+    fast_2d: list[Float2] = []
+    slow_2d: list[Float2] = []
     centre = matrix.col(centre)
     for panel in detector:
         origin = matrix.col(panel.get_origin())
@@ -427,11 +432,11 @@ def get_detector_projection_2d_axes(
 
 def get_panel_projection_2d_from_axes(
     panel: Panel,
-    image_data: matrix,
+    image_data: flex.int | flex.double | flex.float,
     fast_axis_2d: matrix.col,
     slow_axis_2d: matrix.col,
     origin_2d: matrix.col,
-) -> Tuple[Float2, Float4]:
+) -> tuple[Float4, Float2]:
 
     """
     Gets translation and rotation required to project image_data from panel,
@@ -526,4 +531,4 @@ def get_panel_projection_2d_from_axes(
     R = matrix.sqr((T(0, 0), T(0, 1), T(1, 0), T(1, 1)))
     t = matrix.col((T(0, 2), T(1, 2)))
 
-    return tuple(R), tuple(t)
+    return cast(Float4, tuple(R)), cast(Float2, tuple(t))

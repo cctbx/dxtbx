@@ -1,6 +1,8 @@
 """An ImageFormat class to read MarIP-format image"""
 
 
+from __future__ import annotations
+
 import sys
 
 from iotbx.detectors.detectorbase import DetectorImageBase
@@ -15,7 +17,7 @@ try:
 
     import scitbx.array_family.flex as flex
 except ModuleNotFoundError:
-    Img = None
+    Img: type | None = None  # type: ignore
     # Replicate fallback logic from iotbx.detectors.marIP
     try:
         from cbflib_adaptbx import Mar345Adaptor
@@ -25,7 +27,7 @@ except ModuleNotFoundError:
 if Img is not None:
     # We have the modernised pycbf with the img bindings.
     # Declare Mar345Adaptor in pure python
-    class Mar345Adaptor:  # noqa: F811
+    class Mar345Adaptor:  # type: ignore # noqa: F811
         def __init__(self, filename):
             self.filename = filename
 

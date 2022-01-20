@@ -14,11 +14,11 @@ stages:
     steps:
       - checkout: none
 
-      # Use Python >=3.7 for syntax validation
+      # Use Python >=3.8 for syntax validation
       - task: UsePythonVersion@0
         displayName: Set up python
         inputs:
-          versionSpec: 3.7
+          versionSpec: 3.8
 
       # Run syntax validation on a shallow clone
       - bash: |
@@ -73,12 +73,12 @@ stages:
   - ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
     # A single build job is sufficient to regenerate caches, no need to waste build time
     - job: linux
-      displayName: linux python37 (scheduled)
+      displayName: linux python38 (scheduled)
       pool:
         vmImage: ubuntu-20.04
       timeoutInMinutes: 60
       variables:
-        PYTHON_VERSION: 3.7
+        PYTHON_VERSION: 3.8
       steps:
       - template: unix-build.yml
 
@@ -88,8 +88,6 @@ stages:
         vmImage: ubuntu-20.04
       strategy:
         matrix:
-          python37:
-            PYTHON_VERSION: 3.7
           python38:
             PYTHON_VERSION: 3.8
           python39:
@@ -103,8 +101,6 @@ stages:
         vmImage: macOS-latest
       strategy:
         matrix:
-          python37:
-            PYTHON_VERSION: 3.7
           python38:
             PYTHON_VERSION: 3.8
           python39:
@@ -118,8 +114,8 @@ stages:
         vmImage: windows-latest
       strategy:
         matrix:
-          python37:
-            PYTHON_VERSION: 3.7
+          python38:
+            PYTHON_VERSION: 3.8
       timeoutInMinutes: 20
       steps:
       - template: windows-build.yml

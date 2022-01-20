@@ -5,6 +5,8 @@ day which had its own way of recording beam centre.
 """
 
 
+from __future__ import annotations
+
 import dateutil.parser
 from dateutil.tz import gettz
 

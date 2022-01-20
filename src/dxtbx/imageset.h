@@ -434,15 +434,17 @@ public:
     format_ = x;
   }
 
-  ImageSetData partial_data(boost::python::object reader, std::size_t first, std::size_t last) const {
+  ImageSetData partial_data(boost::python::object reader,
+                            std::size_t first,
+                            std::size_t last) const {
     DXTBX_ASSERT(last > first);
     ImageSetData partial = ImageSetData(reader, masker_);
-    for (size_t i = 0; i < last-first; i++) {
-      partial.beams_[i] = beams_[i+first];
-      partial.detectors_[i] = detectors_[i+first];
-      partial.goniometers_[i] = goniometers_[i+first];
-      partial.scans_[i] = scans_[i+first];
-      partial.reject_[i] = reject_[i+first];
+    for (size_t i = 0; i < last - first; i++) {
+      partial.beams_[i] = beams_[i + first];
+      partial.detectors_[i] = detectors_[i + first];
+      partial.goniometers_[i] = goniometers_[i + first];
+      partial.scans_[i] = scans_[i + first];
+      partial.reject_[i] = reject_[i + first];
     }
     partial.external_lookup_ = external_lookup_;
     partial.template_ = template_;
@@ -1056,7 +1058,9 @@ public:
    * @param last The last slice index
    * @returns The partial set
    */
-  virtual ImageSet partial_set(boost::python::object reader, std::size_t first, std::size_t last) const {
+  virtual ImageSet partial_set(boost::python::object reader,
+                               std::size_t first,
+                               std::size_t last) const {
     DXTBX_ASSERT(last > first);
     return ImageSet(data_.partial_data(reader, first, last),
                     scitbx::af::const_ref<std::size_t>(&indices_[first], last - first));
@@ -1495,17 +1499,18 @@ public:
    * @param last The last index
    * @returns The partial sequence
    */
-  ImageSequence partial_sequence(boost::python::object reader, std::size_t first, std::size_t last) const {
+  ImageSequence partial_sequence(boost::python::object reader,
+                                 std::size_t first,
+                                 std::size_t last) const {
     // Check slice indices
     DXTBX_ASSERT(last > first);
 
     // Construct a partial data
     ImageSetData _partial_data = data_.partial_data(reader, first, last);
 
-
     // Now we use the partial data to construct the partial scan
     Scan scan = detail::safe_dereference(_partial_data.get_scan(0));
-    for (std::size_t i=1; i<last-first; ++i) {
+    for (std::size_t i = 1; i < last - first; ++i) {
       scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
       Scan temp_scan = detail::safe_dereference(temp_scan_ptr);
       scan += temp_scan;
