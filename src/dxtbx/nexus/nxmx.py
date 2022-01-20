@@ -686,7 +686,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def distance(self) -> NXFloat | None:
+    def distance(self) -> float | None:
         """Distance from the sample to the beam center.
 
         Normally this value is for guidance only, the proper geometry can be found
@@ -699,7 +699,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def distance_derived(self) -> NXBool | None:
+    def distance_derived(self) -> bool | None:
         """Boolean to indicate if the distance is a derived, rather than a primary
         observation.
 
@@ -711,14 +711,14 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def count_time(self) -> NXNumber | None:
+    def count_time(self) -> int | float | None:
         """Elapsed actual counting time."""
         if "count_time" in self._handle:
             return np.squeeze(self._handle["count_time"])[()]
         return None
 
     @cached_property
-    def beam_center_x(self) -> NXFloat | None:
+    def beam_center_x(self) -> float | None:
         """This is the x position where the direct beam would hit the detector.
 
         This is a length and can be outside of the actual detector. The length can be in
@@ -731,7 +731,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def beam_center_y(self) -> NXFloat | None:
+    def beam_center_y(self) -> float | None:
         """This is the y position where the direct beam would hit the detector.
 
         This is a length and can be outside of the actual detector. The length can be in
@@ -744,7 +744,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def pixel_mask_applied(self) -> NXBool | None:
+    def pixel_mask_applied(self) -> bool | None:
         """
         True when the pixel mask correction has been applied in the electronics, false
         otherwise (optional).
@@ -799,7 +799,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def bit_depth_readout(self) -> NXInt | None:
+    def bit_depth_readout(self) -> int | None:
         """How many bits the electronics record per pixel (recommended)."""
         if "bit_depth_readout" in self._handle:
             return int(self._handle["bit_depth_readout"][()])
@@ -821,7 +821,7 @@ class NXdetector(H5Mapping):
         return np.squeeze(thickness)[()] * ureg(units)
 
     @cached_property
-    def underload_value(self) -> NXInt | None:
+    def underload_value(self) -> int | None:
         """The lowest value at which pixels for this detector would be reasonably be measured.
 
         For example, given a saturation_value and an underload_value, the valid pixels
@@ -833,7 +833,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def saturation_value(self) -> NXInt | None:
+    def saturation_value(self) -> int | None:
         """The value at which the detector goes into saturation.
 
         Data above this value is known to be invalid.
