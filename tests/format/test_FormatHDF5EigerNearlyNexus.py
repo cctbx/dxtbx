@@ -31,7 +31,7 @@ def test_biomax_vertical_goniometer_at_diamond(tmpdir):
 
 
 def test_semi_synthetic_dectris_eiger_nearly_nexus(dials_data, tmpdir):
-    master_h5 = dials_data("image_examples").join("dectris_eiger_master.h5").strpath
+    master_h5 = dials_data("image_examples", pathlib=True) / "dectris_eiger_master.h5"
 
     if not os.access(master_h5, os.R_OK):
         pytest.skip("Test images not available")

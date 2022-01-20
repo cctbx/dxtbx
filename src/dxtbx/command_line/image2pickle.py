@@ -5,6 +5,8 @@ Convert images of any extant format to pickle files suitable for processing with
 cxi.index.  Note, oscillation values are not preserved.
 """
 
+from __future__ import annotations
+
 import math
 import os
 import sys

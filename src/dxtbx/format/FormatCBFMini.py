@@ -5,6 +5,8 @@ pairs.
 """
 
 
+from __future__ import annotations
+
 import binascii
 import os
 import sys

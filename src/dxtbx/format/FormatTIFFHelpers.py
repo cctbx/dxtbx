@@ -3,6 +3,8 @@ Helper code to assist with reading TIFF file headers, which are by their
 nature binary so we need to mess with things like byte swapping.
 """
 
+from __future__ import annotations
+
 import struct
 import sys
 

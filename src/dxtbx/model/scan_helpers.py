@@ -3,6 +3,8 @@ Helpers for the scan class, which are things for handling e.g. filenames,
 templates and so on.
 """
 
+from __future__ import annotations
+
 import math
 import os
 import re

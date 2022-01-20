@@ -37,6 +37,8 @@ Any further access attempts will then result in an exception.
 """
 
 
+from __future__ import annotations
+
 import io
 import os
 from threading import Lock

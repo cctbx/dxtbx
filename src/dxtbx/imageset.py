@@ -1,21 +1,35 @@
+from __future__ import annotations
+
 import boost_adaptbx.boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
 from dxtbx.sequence_filenames import group_files_by_imageset, template_image_range
-from dxtbx_imageset_ext import (
-    ExternalLookup,
-    ExternalLookupItemBool,
-    ExternalLookupItemDouble,
-    ImageGrid,
-    ImageSequence,
-    ImageSet,
-    ImageSetData,
-)
+
+try:
+    from .dxtbx_imageset_ext import (
+        ExternalLookup,
+        ExternalLookupItemBool,
+        ExternalLookupItemDouble,
+        ImageGrid,
+        ImageSequence,
+        ImageSet,
+        ImageSetData,
+    )
+except ModuleNotFoundError:
+    from dxtbx_imageset_ext import (  # type: ignore
+        ExternalLookup,
+        ExternalLookupItemBool,
+        ExternalLookupItemDouble,
+        ImageGrid,
+        ImageSequence,
+        ImageSet,
+        ImageSetData,
+    )
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
-from typing import Iterable, List
+from typing import Iterable
 
 __all__ = (
     "ExternalLookup",
@@ -31,7 +45,7 @@ __all__ = (
 )
 
 
-def _expand_template(template: str, indices: Iterable[int]) -> List[str]:
+def _expand_template(template: str, indices: Iterable[int]) -> list[str]:
     """Expand a template string to a list of filenames.
 
     Args:
@@ -49,6 +63,13 @@ class MemReader:
 
     def __init__(self, images):
         self._images = images
+
+    def copy(self, paths):
+        """
+        Experimental implementation where a copy of the reader also copies all
+        the data
+        """
+        return MemReader(self._images)
 
     def paths(self):
         return ["" for im in self._images]
@@ -96,7 +117,11 @@ class _:
             stop = item.stop or len(self)
             if item.step is not None and item.step != 1:
                 raise IndexError("Step must be 1")
-            return self.partial_set(start, stop)
+            if self.data().has_single_file_reader():
+                reader = self.reader().copy(self.reader().paths(), stop - start)
+            else:
+                reader = self.reader().copy(self.reader().paths())
+            return self.partial_set(reader, start, stop)
         else:
             return self.get_corrected_data(item)
 
@@ -162,7 +187,10 @@ class _:
         """
         Return the list of paths
         """
-        return [self.get_path(i) for i in range(len(self))]
+        if self.data().has_single_file_reader():
+            return [self.get_path(i) for i in range(len(self))]
+        else:
+            return [self.reader().paths()[i] for i in self.indices()]
 
 
 class ImageSetLazy(ImageSet):
@@ -203,6 +231,15 @@ class ImageSetLazy(ImageSet):
     def get_beam(self, index=None):
         return self._get_item_from_parent_or_format("beam", index)
 
+    def get_mask(self, index=None):
+        """
+        ImageSet::get_mask internally dereferences a pointer to the _detector
+        member of ImageSetData, so we ensure the detector gets populated first.
+        """
+        if getattr(super(), "get_detector")(index) is None:
+            self._load_models(index)
+        return self._get_item_from_parent_or_format("mask", index)
+
     def get_goniometer(self, index=None):
         return self._get_item_from_parent_or_format("goniometer", index)
 
@@ -220,7 +257,18 @@ class ImageSetLazy(ImageSet):
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            return ImageSetLazy(self.data(), indices=self.indices()[item])
+            start = item.start or 0
+            stop = item.stop or len(self)
+            if item.step is not None and item.step != 1:
+                raise IndexError("Step must be 1")
+            if self.data().has_single_file_reader():
+                reader = self.reader().copy(self.reader().paths(), stop - start)
+            else:
+                reader = self.reader().copy(self.reader().paths())
+            return ImageSetLazy(
+                self.data().partial_data(reader, start, stop),
+                indices=self.indices()[item],
+            )
         self._load_models(item)
         return super().__getitem__(item)
 
@@ -234,7 +282,7 @@ class ImageSetLazy(ImageSet):
 
 
 @boost_adaptbx.boost.python.inject_into(ImageSequence)
-class _:
+class _imagesequence:
     def __getitem__(self, item):
         """Get an item from the sequence stream.
 
@@ -268,11 +316,16 @@ class _:
                     stop = len(self)
                 else:
                     stop -= offset
+
                 return self.partial_set(start, stop)
             else:
                 start = item.start or 0
                 stop = item.stop or (len(self) + offset)
-                return self.partial_set(start - offset, stop - offset)
+                if self.data().has_single_file_reader():
+                    reader = self.reader().copy(self.reader().paths(), stop - start)
+                else:
+                    reader = self.reader().copy(self.reader().paths())
+                return self.partial_set(reader, start - offset, stop - offset)
         else:
             return self.get_corrected_data(item)
 

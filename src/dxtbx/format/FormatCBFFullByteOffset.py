@@ -1,10 +1,12 @@
 """Byte offset implementation of fullCBF format, for use with CBF files using
 byte offset compression which are _not_ made by dectris."""
 
+from __future__ import annotations
+
 import binascii
 import os
 from io import TextIOWrapper
-from typing import IO, Union
+from typing import IO
 
 from scitbx.array_family import flex
 
@@ -31,7 +33,7 @@ class FormatCBFFullByteOffset(FormatCBFFull):
     """An image reading class for full CBF format images with byte-offset compression"""
 
     @staticmethod
-    def understand(image_file: Union[str, bytes, os.PathLike]) -> bool:
+    def understand(image_file: str | bytes | os.PathLike) -> bool:
         """Check to see if this looks like an CBF format image, i.e. we can
         make sense of it."""
 

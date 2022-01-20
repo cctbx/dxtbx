@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from iotbx.detectors.hamamatsu import HamamatsuImage
 
 from dxtbx.format.FormatSMVHamamatsu import FormatSMVHamamatsu

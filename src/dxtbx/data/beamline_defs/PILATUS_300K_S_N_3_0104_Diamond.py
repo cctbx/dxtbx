@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import iotbx.cif.model
 
 import dxtbx.data.beamline_defs

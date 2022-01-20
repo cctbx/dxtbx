@@ -3,6 +3,8 @@ standard used in electron microscopy
 (http://www.ccpem.ac.uk/mrc_format/mrc2014.php)"""
 
 
+from __future__ import annotations
+
 import logging
 import os
 import re

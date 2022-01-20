@@ -6,7 +6,7 @@ from build import build
 
 # Static version number which is updated by bump2version
 # Do not change this manually - use 'bump2version <major/minor/patch/release>'
-__version_tag__ = "3.8.dev"
+__version_tag__ = "3.9.dev"
 
 setup_kwargs = {
     "name": "dxtbx",
@@ -24,7 +24,7 @@ setup_kwargs = {
     "package_dir": {"": "src"},
     "package_data": {
         "": ["*"],
-        "dxtbx": ["boost_python/*", "example/*"],
+        "dxtbx": ["boost_python/*", "example/*", "py.typed"],
         "dxtbx.format": ["boost_python/*"],
         "dxtbx.masking": ["boost_python/*"],
         "dxtbx.model": ["boost_python/*"],
