@@ -886,7 +886,7 @@ class NXdetector(H5Mapping):
     def serial_number(self) -> str | None:
         """Serial number for the detector."""
         if "serial_number" in self._handle:
-            return h5str(self._handle["serial_number"][()])
+            return h5str(np.squeeze(self._handle["serial_number"])[()])
         return None
 
 
