@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import math
 import sys
 from urllib.parse import urlparse
@@ -16,10 +15,8 @@ def encode_output_as_utf8() -> None:
         return
 
     if sys.stdout.encoding.lower() != "utf-8":
-        assert isinstance(sys.stdout, io.TextIOWrapper)
-        assert isinstance(sys.stderr, io.TextIOWrapper)
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore
     encode_output_as_utf8.done = True  # type: ignore
 
 
