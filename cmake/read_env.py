@@ -8,6 +8,8 @@ shown as the regular, joined path (from inspection all base off of the build
 path anyway).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import pickle

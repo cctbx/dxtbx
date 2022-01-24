@@ -2,6 +2,8 @@
 Image reading tests against the dials_regression suite
 """
 
+from __future__ import annotations
+
 import bz2
 import gzip
 import os

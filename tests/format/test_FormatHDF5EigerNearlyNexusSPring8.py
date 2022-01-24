@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from dxtbx.format.FormatHDF5EigerNearlyNexusSPring8 import (
