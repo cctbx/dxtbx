@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import binascii
+import math
+from pathlib import Path
 
 import h5py
 import hdf5plugin  # noqa; F401
 import numpy as np
+from tqdm import tqdm
 
 import dxtbx.model
 import dxtbx.nexus.nxmx
@@ -111,8 +114,13 @@ _array_data.header_contents
     return "\n".join(result)
 
 
-def make_cbf(in_name, template):
-    with h5py.File(in_name, "r") as f:
+def make_cbf(
+    in_name: Path | str,
+    output_directory: Path,
+    template: str | None = None,
+    num_digits: int | None = None,
+):
+    with h5py.File(in_name) as f:
         start_tag = binascii.unhexlify("0c1a04d5")
 
         nxmx = dxtbx.nexus.nxmx.NXmx(f)
@@ -143,11 +151,16 @@ def make_cbf(in_name, template):
         if scan_axis is None:
             scan_axis = nxsample.depends_on
 
-        num_images = len(scan_axis)
         static_mask = dxtbx.nexus.get_static_mask(nxdetector)
         bit_depth_readout = nxdetector.bit_depth_readout
 
-        for j in range(num_images):
+        if template is None:
+            template = Path(in_name).stem + "_"
+        num_images = len(scan_axis)
+        num_digits = num_digits or max(num_digits, int(math.log10(num_images)) + 1)
+
+        print(f"Writing images to {template}{'#' * num_digits}.cbf:")
+        for j in tqdm(range(num_images), unit=" images"):
             header = compute_cbf_header(nxmx, j)
             (data,) = dxtbx.nexus.get_raw_data(nxdata, nxdetector, j)
             if bit_depth_readout:
@@ -191,8 +204,9 @@ X-Binary-Size-Padding: 4095
 ;"""
             )
 
-            with open(template % (j + 1), "wb") as fout:
-                print(template % (j + 1))
+            n = j + 1
+            filename = f"{template}{n:0{num_digits}d}.cbf"
+            with open(output_directory / filename, "wb") as fout:
                 fout.write(
                     ("".join(header) + mime).replace("\n", "\r\n").encode("latin-1")
                 )
