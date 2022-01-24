@@ -1087,7 +1087,7 @@ def _groupby_template_is_none(
     for _, group in itertools.groupby(
         enumerate(records), key=lambda x: -1 if x[1].template is None else x[0]
     ):
-        yield list(x[1] for x in group)
+        yield [x[1] for x in group]
 
 
 def _openingpathiterator(pathnames: Iterable[str]):

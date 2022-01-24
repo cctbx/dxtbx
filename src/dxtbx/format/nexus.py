@@ -592,7 +592,7 @@ class BeamFactory:
         self.index = index
 
         def get_wavelength(wavelength):
-            if wavelength.shape in (tuple(), (1,)):
+            if wavelength.shape in ((), (1,)):
                 wavelength_value = wavelength[()]
             else:
                 wavelength_value = wavelength[index]
