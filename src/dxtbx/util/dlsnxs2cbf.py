@@ -149,7 +149,7 @@ def make_cbf(in_name, template):
 
         for j in range(num_images):
             header = compute_cbf_header(nxmx, j)
-            data = dxtbx.nexus.get_raw_data(nxdata, nxdetector, j)[0]
+            (data,) = dxtbx.nexus.get_raw_data(nxdata, nxdetector, j)
             if bit_depth_readout:
                 # if 32 bit then it is a signed int, I think if 8, 16 then it is
                 # unsigned with the highest two values assigned as masking values
@@ -163,7 +163,7 @@ def make_cbf(in_name, template):
 
             # set the tile join regions to -1 - MOSFLM cares about this apparently
             if static_mask:
-                data.as_1d().set_selected(static_mask[0].as_1d(), -1)
+                data.as_1d().set_selected(~static_mask[0].as_1d(), -1)
             compressed = compress(data)
 
             mime = f"""
