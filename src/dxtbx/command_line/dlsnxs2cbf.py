@@ -29,7 +29,7 @@ parser.add_argument(
 parser.add_argument(
     "-p",
     "--parents",
-    help="Create the output directory and all parents if they do not already exist.  "
+    help="Create all parents of the output directory if they do not already exist.  "
     "By default, an exception will be raised if part of the output path is missing.",
     action="store_true",
 )
