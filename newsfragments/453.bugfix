@@ -1,0 +1,1 @@
+``dxtbx.dlsnxs2cbf``: Provide more general support for correctly formatted NXmx-flavoured NeXus data.  Previously, only a very limited subset of experiment geometries and data formats were supported.
