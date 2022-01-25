@@ -1,3 +1,12 @@
+DIALS 3.8.1 (2022-01-25)
+========================
+
+Features
+--------
+
+- Updated bad pixel mask for DLS I23 PILATUS 12M for 2022 run 1 (`#469 <https://github.com/cctbx/dxtbx/issues/469>`_)
+
+
 dxtbx 3.8.0 (2022-01-11)
 ========================
 
