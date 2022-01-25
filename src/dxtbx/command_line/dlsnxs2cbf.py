@@ -3,7 +3,11 @@ Convert a NXmx-format NeXus file to a set of CBF-format image files.
 
 Note that this tool does not produce full imgCIF-format files, only
 Dectris-style mini-CBF files consisting of a plain text simplified
-header and the binary compressed image data.
+header and the binary compressed image data.  The simplified header
+does not contain a full description of the experiment geometry and some
+metadata, including the detector orientation, are unspecified.  As
+such, you may need to use these mini-CBF files in conjunction with a
+known instrument model in a separate file.
 """
 
 from __future__ import annotations
