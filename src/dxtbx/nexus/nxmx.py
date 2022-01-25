@@ -534,13 +534,28 @@ class NXinstrument(H5Mapping):
             self._detector_groups,
             self._detectors,
             self._beams,
+            self._transformations,
         ) = find_classes(
             handle,
             "NXattenuator",
             "NXdetector_group",
             "NXdetector",
             "NXbeam",
+            "NXtransformations",
         )
+
+    @cached_property
+    def transformations(self) -> NXtransformations:
+        """
+        Transformations relating to the diffractometer but not to the sample.
+
+        These might include a rotation to represent a 2θ arm on which a detector is
+        mounted, or a translation of the detector.
+        """
+        return [
+            NXtransformations(transformations)
+            for transformations in self._transformations
+        ]
 
     @cached_property
     def name(self) -> str:
@@ -865,6 +880,13 @@ class NXdetector(H5Mapping):
             frame_time = self._handle["frame_time"]
             units = h5str(frame_time.attrs["units"])
             return np.squeeze(frame_time)[()] * ureg(units)
+        return None
+
+    @cached_property
+    def serial_number(self) -> str | None:
+        """Serial number for the detector."""
+        if "serial_number" in self._handle:
+            return h5str(np.squeeze(self._handle["serial_number"])[()])
         return None
 
 
