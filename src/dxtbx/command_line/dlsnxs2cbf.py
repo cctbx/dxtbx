@@ -1,4 +1,10 @@
-"""Convert a NXmx-format NeXus file to a set of CBF-format image files."""
+"""
+Convert a NXmx-format NeXus file to a set of CBF-format image files.
+
+Note that this tool does not produce full imgCIF-format files, only
+Dectris-style mini-CBF files consisting of a plain text simplified
+header and the binary compressed image data.
+"""
 
 from __future__ import annotations
 
@@ -13,23 +19,23 @@ parser.add_argument(
     "nexus_file", metavar="nexus-file", help="Input NeXus file.", type=Path
 )
 parser.add_argument(
-    "--output-directory",
     "-o",
+    "--output-directory",
     help="Directory in which to store the CBF image files.  Defaults to the current "
     "working directory.",
     type=Path,
     default=Path(),
 )
 parser.add_argument(
-    "--parents",
     "-p",
+    "--parents",
     help="Create the output directory and all parents if they do not already exist.  "
     "By default, an exception will be raised if part of the output path is missing.",
     action="store_true",
 )
 parser.add_argument(
-    "--name-template",
     "-t",
+    "--name-template",
     help="Template for the CBF file name stem.  The output filenames will be "
     "constructed by appending an image number and '.cbf' file extension to this "
     "template.  For example, the template 'image_' will result in files named like "
@@ -37,8 +43,8 @@ parser.add_argument(
     "added trailing underscore.",
 )
 parser.add_argument(
-    "--number-of-digits",
     "-n",
+    "--number-of-digits",
     help="The number of digits to use for the image number label in the CBF file "
     "names.  If this exceeds the minimal necessary number of digits to accommodate "
     "the number of the last CBF image, the image number label will be padded with "
