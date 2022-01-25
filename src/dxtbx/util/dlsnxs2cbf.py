@@ -204,8 +204,7 @@ X-Binary-Size-Padding: 4095
 ;"""
             )
 
-            n = j + 1
-            filename = f"{template}{n:0{num_digits}d}.cbf"
+            filename = f"{template}{j + 1:0{num_digits}d}.cbf"
             with open(output_directory / filename, "wb") as fout:
                 fout.write(
                     ("".join(header) + mime).replace("\n", "\r\n").encode("latin-1")

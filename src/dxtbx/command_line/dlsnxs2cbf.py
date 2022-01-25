@@ -39,8 +39,9 @@ parser.add_argument(
     help="Template for the CBF file name stem.  The output filenames will be "
     "constructed by appending an image number and '.cbf' file extension to this "
     "template.  For example, the template 'image_' will result in files named like "
-    "'image_001.cbf'.  Defaults to the stem of the input NeXus file name, with an "
-    "added trailing underscore.",
+    "'image_001.cbf'.  To name the files by image number alone, e.g. '0001.cbf', "
+    "pass an empty template string with '-t \"\"'.  The default template is the stem "
+    "of the input NeXus file name, with an added trailing underscore.",
 )
 parser.add_argument(
     "-n",
