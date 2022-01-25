@@ -118,7 +118,7 @@ def make_cbf(
     in_name: Path | str,
     output_directory: Path,
     template: str | None = None,
-    num_digits: int | None = None,
+    num_digits: int = 0,
 ):
     with h5py.File(in_name) as f:
         start_tag = binascii.unhexlify("0c1a04d5")
@@ -157,7 +157,7 @@ def make_cbf(
         if template is None:
             template = Path(in_name).stem + "_"
         num_images = len(scan_axis)
-        num_digits = num_digits or max(num_digits, int(math.log10(num_images)) + 1)
+        num_digits = max(num_digits, int(math.log10(num_images)) + 1)
 
         print(f"Writing images to {template}{'#' * num_digits}.cbf:")
         for j in tqdm(range(num_images), unit=" images"):
