@@ -169,7 +169,7 @@ def _should_assume_readonly_base(package_name: str) -> bool:
         return True
 
     # Otherwise, physically test the writability
-    return _test_writable_dir(Path(site.getsitepackages()[0]))
+    return not _test_writable_dir(Path(site.getsitepackages()[0]))
 
 
 # Detect case where base python environment is read-only
