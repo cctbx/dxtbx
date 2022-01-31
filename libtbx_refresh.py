@@ -75,7 +75,7 @@ def _install_setup_readonly_fallback(package_name: str):
     )
 
     # Mark this as having happened
-    Path(libtbx.env.build_path).joinpath(
+    Path(abs(libtbx.env.build_path)).joinpath(
         package_name, "CCTBX_INSTALL_PACKAGE_BUILD"
     ).touch()
 
@@ -166,7 +166,7 @@ def _should_assume_readonly_base(package_name: str) -> bool:
 
     # Is there a file marking this in the module build subdirectory?
     if (
-        Path(libtbx.env.build_path)
+        Path(abs(libtbx.env.build_path))
         .joinpath(package_name, "CCTBX_INSTALL_PACKAGE_BUILD")
         .is_file()
     ):
