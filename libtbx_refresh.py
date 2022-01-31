@@ -153,18 +153,30 @@ def _get_real_env_hack_hack_hack():
     raise RuntimeError("Could not determine real libtbx.env_config.environment object")
 
 
+def _should_assume_readonly_base(package_name: str) -> bool:
+    """Stickily evaluate whether we should assume readonly conda_base"""
+    # Easiest to check: The environment variable is set
+    if os.getenv("CCTBX_INSTALL_PACKAGE_BUILD"):
+        return True
+
+    # Work out what the PYTHONPATH entry would be, if we had configured it before
+    import_path = os.path.join(libtbx.env.dist_path(package_name), "src")
+    rel_path = libtbx.env.as_relocatable_path(import_path)
+    # Is this already in the libtbx environment? This will only happen
+    # on reconfiguration, so using the old (non-hack) environment is safe...
+    if rel_path in libtbx.env.pythonpath:
+        # We configured this as read-only before, so do so again
+        return True
+
+    # Otherwise, physically test the writability
+    return _test_writable_dir(Path(site.getsitepackages()[0]))
+
+
 # Detect case where base python environment is read-only
 # e.g. on an LCLS session on a custom cctbx installation where the
 # source is editable but the conda_base is read-only
-#
-# We need to check before trying to install as pip does os.access-based
-# checks then installs with --user if it fails. We don't want that.
-# Additionally, if the CCTBX_INSTALL_PACKAGE_BUILD environment variable
-# is set, then we explicitly want to do the readonly fallback.
-if ("CCTBX_INSTALL_PACKAGE_BUILD" not in os.environ) and _test_writable_dir(
-    Path(site.getsitepackages()[0])
-):
-    _install_dxtbx_setup()
-else:
+if _should_assume_readonly_base("dxtbx"):
     print("Python site directory not writable - falling back to tbx install")
     _install_dxtbx_setup_readonly_fallback()
+else:
+    _install_dxtbx_setup()
