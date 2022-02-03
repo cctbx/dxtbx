@@ -1,1 +1,0 @@
-Invert the base environment readonly flag - now requires ``TBX_INSTALL_PACKAGE_BASE`` to use standard python package behaviour.
