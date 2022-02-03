@@ -43,9 +43,7 @@ def _install_setup(package_name: str):
     )
 
     # Mark this as having happened so we don't use workaround on reconfigure
-    Path(abs(libtbx.env.build_path)).joinpath(
-        package_name, "TBX_INSTALL_PACKAGE_BASE"
-    ).touch()
+    Path(abs(libtbx.env.build_path)).joinpath("TBX_INSTALL_PACKAGE_BASE").touch()
 
 
 def _install_setup_readonly_fallback(package_name: str):
@@ -141,11 +139,7 @@ def _should_use_standard_package_install(package_name: str) -> bool:
         return True
 
     # Is there a file marking this in the module build subdirectory?
-    if (
-        Path(abs(libtbx.env.build_path))
-        .joinpath(package_name, "TBX_INSTALL_PACKAGE_BASE")
-        .is_file()
-    ):
+    if Path(abs(libtbx.env.build_path)).joinpath("TBX_INSTALL_PACKAGE_BASE").is_file():
         return True
 
     # Otherwise, no.
