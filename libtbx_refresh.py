@@ -1,7 +1,5 @@
 import inspect
 import os
-import random
-import site
 import subprocess
 import sys
 from pathlib import Path
@@ -44,6 +42,11 @@ def _install_setup(package_name: str):
         check=True,
     )
 
+    # Mark this as having happened so we don't use workaround on reconfigure
+    Path(abs(libtbx.env.build_path)).joinpath(
+        package_name, "TBX_INSTALL_PACKAGE_BASE"
+    ).touch()
+
 
 def _install_setup_readonly_fallback(package_name: str):
     """
@@ -74,11 +77,6 @@ def _install_setup_readonly_fallback(package_name: str):
         check=True,
     )
 
-    # Mark this as having happened
-    Path(abs(libtbx.env.build_path)).joinpath(
-        package_name, "CCTBX_INSTALL_PACKAGE_BUILD"
-    ).touch()
-
     # Get the actual environment being configured (NOT libtbx.env)
     env = _get_real_env_hack_hack_hack()
 
@@ -106,28 +104,6 @@ def _install_setup_readonly_fallback(package_name: str):
     module = env.module_dict[package_name]
     if f"src/{package_name}" not in module.extra_command_line_locations:
         module.extra_command_line_locations.append(f"src/{package_name}")
-
-
-def _test_writable_dir(path: Path) -> bool:
-    """Test a path is writable. Based on pip's _test_writable_dir_win."""
-    # os.access doesn't work on windows
-    # os.access won't always work with network filesystems
-    # pip doesn't use tempfile on windows because https://bugs.python.org/issue22107
-    basename = "test_site_packages_writable_dxtbx_"
-    alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
-    for _ in range(10):
-        name = basename + "".join(random.choice(alphabet) for _ in range(6))
-        file = path / name
-        try:
-            fd = os.open(file, os.O_RDWR | os.O_CREAT | os.O_EXCL)
-        except FileExistsError:
-            pass
-        except PermissionError:
-            return False
-        else:
-            os.close(fd)
-            os.unlink(file)
-            return True
 
 
 def _get_real_env_hack_hack_hack():
@@ -158,29 +134,26 @@ def _get_real_env_hack_hack_hack():
     raise RuntimeError("Could not determine real libtbx.env_config.environment object")
 
 
-def _should_assume_readonly_base(package_name: str) -> bool:
-    """Stickily evaluate whether we should assume readonly conda_base"""
+def _should_use_standard_package_install(package_name: str) -> bool:
+    """Stickily evaluate whether we should assume nonstandard python packaging"""
     # Easiest to check: The environment variable is set
-    if os.getenv("CCTBX_INSTALL_PACKAGE_BUILD"):
+    if os.getenv("TBX_INSTALL_PACKAGE_BASE"):
         return True
 
     # Is there a file marking this in the module build subdirectory?
     if (
         Path(abs(libtbx.env.build_path))
-        .joinpath(package_name, "CCTBX_INSTALL_PACKAGE_BUILD")
+        .joinpath(package_name, "TBX_INSTALL_PACKAGE_BASE")
         .is_file()
     ):
         return True
 
-    # Otherwise, physically test the writability
-    return not _test_writable_dir(Path(site.getsitepackages()[0]))
+    # Otherwise, no.
+    return False
 
 
-# Detect case where base python environment is read-only
-# e.g. on an LCLS session on a custom cctbx installation where the
-# source is editable but the conda_base is read-only
-if _should_assume_readonly_base("dxtbx"):
-    print("Python site directory not writable - falling back to tbx install")
-    _install_setup_readonly_fallback("dxtbx")
-else:
+# Decide whether to use standard package installation
+if _should_use_standard_package_install("dxtbx"):
     _install_setup("dxtbx")
+else:
+    _install_setup_readonly_fallback("dxtbx")
