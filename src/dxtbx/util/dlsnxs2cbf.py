@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import binascii
 import math
 from pathlib import Path
+from typing import Optional, Union
 
 import h5py
 import hdf5plugin  # noqa; F401
@@ -113,9 +116,9 @@ _array_data.header_contents
 
 
 def make_cbf(
-    in_name: Path | str,
+    in_name: Union[Path, str],
     output_directory: Path,
-    template: str | None = None,
+    template: Optional[str] = None,
     num_digits: int = 0,
 ):
     with h5py.File(in_name) as f:
