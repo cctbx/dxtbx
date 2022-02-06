@@ -30,7 +30,7 @@ conda-forge::pytest-forked
 conda-forge::pytest-mock
 conda-forge::pytest-timeout
 conda-forge::pytest-xdist
-conda-forge::pytest
+conda-forge::pytest<7
 conda-forge::requests
 conda-forge::scipy
 conda-forge::scons
