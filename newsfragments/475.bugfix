@@ -1,1 +1,0 @@
-Fix ``dxtbx.plot_detector_models`` running on newer matplotlib versions.
