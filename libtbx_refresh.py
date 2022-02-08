@@ -2,7 +2,6 @@ import inspect
 import os
 import subprocess
 import sys
-from pathlib import Path
 
 import libtbx
 import libtbx.pkg_utils
@@ -18,32 +17,6 @@ try:
     import pkg_resources
 except ModuleNotFoundError:
     pkg_resources = None
-
-
-def _install_setup(package_name: str):
-    """Install as a regular/editable python package"""
-
-    # We need to find this from libtbx.env because libtbx doesn't read
-    # this properly, as a module - it's just eval'd in scope
-    root_path = libtbx.env.dist_path(package_name)
-
-    # Call pip
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "--no-build-isolation",
-            "--no-deps",
-            "-e",
-            root_path,
-        ],
-        check=True,
-    )
-
-    # Mark this as having happened so we don't use workaround on reconfigure
-    Path(abs(libtbx.env.build_path)).joinpath("TBX_INSTALL_PACKAGE_BASE").touch()
 
 
 def _install_setup_readonly_fallback(package_name: str):
@@ -132,22 +105,5 @@ def _get_real_env_hack_hack_hack():
     raise RuntimeError("Could not determine real libtbx.env_config.environment object")
 
 
-def _should_use_standard_package_install(package_name: str) -> bool:
-    """Stickily evaluate whether we should assume nonstandard python packaging"""
-    # Easiest to check: The environment variable is set
-    if os.getenv("TBX_INSTALL_PACKAGE_BASE"):
-        return True
-
-    # Is there a file marking this in the module build subdirectory?
-    if Path(abs(libtbx.env.build_path)).joinpath("TBX_INSTALL_PACKAGE_BASE").is_file():
-        return True
-
-    # Otherwise, no.
-    return False
-
-
-# Decide whether to use standard package installation
-if _should_use_standard_package_install("dxtbx"):
-    _install_setup("dxtbx")
-else:
-    _install_setup_readonly_fallback("dxtbx")
+# When building in libtbx, always assume it's unsafe to write to base/
+_install_setup_readonly_fallback("dxtbx")
