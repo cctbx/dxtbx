@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sys
-import uuid
 
 import h5py
 import numpy as np
@@ -23,6 +22,7 @@ from dxtbx.format.nexus import (
     NXmxReader,
     generate_scan_model,
 )
+from dxtbx.util import ersatz_uuid4
 
 
 def find_entries(nx_file):
@@ -319,7 +319,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
 
     def _start(self):
         # Read the file structure
-        temp_file = "tmp_master_%s.nxs" % uuid.uuid1().hex
+        temp_file = "tmp_master_%s.nxs" % ersatz_uuid4()
         fixer = EigerNXmxFixer(self._image_file, temp_file)
         reader = NXmxReader(handle=fixer.handle)
 
