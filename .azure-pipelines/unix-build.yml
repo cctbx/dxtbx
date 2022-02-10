@@ -13,9 +13,6 @@ steps:
   fetchDepth: 1
   displayName: Checkout $(Build.SourceBranch)
 
-- task: CMake@1
-  inputs:
-
 # Download other source repositories
 - bash: |
     set -eux
