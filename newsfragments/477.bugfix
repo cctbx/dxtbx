@@ -1,0 +1,1 @@
+Add method ersatz_uuid4 which gives an implementation of a random 128 bit UUID4
