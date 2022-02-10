@@ -13,6 +13,9 @@ steps:
   fetchDepth: 1
   displayName: Checkout $(Build.SourceBranch)
 
+- task: CMake@1
+  inputs:
+
 # Download other source repositories
 - bash: |
     set -eux
@@ -28,12 +31,12 @@ steps:
 
 # Download additional source repositories required by cctbx-base (but not dxtbx)
 # cf. https://github.com/conda-forge/cctbx-base-feedstock/issues/12
-- bash: |
-    set -eux
-    git clone https://github.com/dials/annlib.git modules/annlib
-    git clone https://github.com/dials/annlib_adaptbx.git modules/annlib_adaptbx
-  displayName: Repository checkout (additional cctbx)
-  workingDirectory: $(Pipeline.Workspace)
+# - bash: |
+#     set -eux
+#     git clone https://github.com/dials/annlib.git modules/annlib
+#     git clone https://github.com/dials/annlib_adaptbx.git modules/annlib_adaptbx
+#   displayName: Repository checkout (additional cctbx)
+#   workingDirectory: $(Pipeline.Workspace)
 
 # Create a new conda environment using the bootstrap script
 # Extract the dials-data version so we can correctly cache regression data.
@@ -43,6 +46,7 @@ steps:
 
     set +ux
     . conda_base/bin/activate
+    mamba install -y pycbf
     set -ux
 
     dials.data info -v
@@ -59,8 +63,10 @@ steps:
     set -ux
     mkdir build
     cd build
-    libtbx.configure dxtbx cbflib_adaptbx
-    make reconf
+    cmake ../modules/dxtbx
+    cmake --build .
+    cmake --install .
+    pip install ../modules/dxtbx
   displayName: Build dxtbx
   workingDirectory: $(Pipeline.Workspace)
 
@@ -87,7 +93,7 @@ steps:
     set -e
     . conda_base/bin/activate
     set -x
-    . build/setpaths.sh
+    # . build/setpaths.sh
     set -u
     export DIALS_DATA=${PWD}/data
     cd modules/dxtbx
