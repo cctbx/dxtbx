@@ -18,6 +18,11 @@ class FormatNXmx(FormatNexus):
 
     @staticmethod
     def understand(image_file):
+        """This format class currently only applies to beamline I19-2 at DLS."""
+        with h5py.File(image_file, swmr=True) as handle:
+            name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
+        if name and "I19-2" in name:
+            return True
         return False
 
     def __init__(self, image_file, **kwargs):
