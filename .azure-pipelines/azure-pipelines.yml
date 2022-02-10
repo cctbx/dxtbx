@@ -109,16 +109,16 @@ stages:
       steps:
       - template: unix-build.yml
 
-    # - job: windows
-    #   pool:
-    #     vmImage: windows-latest
-    #   strategy:
-    #     matrix:
-    #       python38:
-    #         PYTHON_VERSION: 3.8
-    #   timeoutInMinutes: 20
-    #   steps:
-    #   - template: windows-build.yml
+    - job: windows
+      pool:
+        vmImage: windows-latest
+      strategy:
+        matrix:
+          python38:
+            PYTHON_VERSION: 3.8
+      timeoutInMinutes: 20
+      steps:
+      - template: windows-build.yml
 
     - ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
       - job: pr
