@@ -67,9 +67,7 @@ steps:
 - bash: |
     set -e
     . conda_base/bin/activate
-    set -x
-    # . build/setpaths.sh
-    set -u
+    set -xu
     export DIALS_DATA=${PWD}/data
     cd modules/dxtbx
     export PYTHONDEVMODE=1
