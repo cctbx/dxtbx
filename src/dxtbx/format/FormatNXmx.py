@@ -32,7 +32,7 @@ class FormatNXmx(FormatNexus):
     def _start(self):
         self._static_mask = None
 
-        with h5py.File(self._image_file, "r", swmr=True) as fh:
+        with h5py.File(self._image_file, swmr=True) as fh:
             nxmx = dxtbx.nexus.nxmx.NXmx(fh)
             nxsample = nxmx.entries[0].samples[0]
             nxinstrument = nxmx.entries[0].instruments[0]
@@ -67,7 +67,7 @@ class FormatNXmx(FormatNexus):
 
     def get_raw_data(self, index):
         if self._cached_file_handle is None:
-            self._cached_file_handle = h5py.File(self._image_file, "r", swmr=True)
+            self._cached_file_handle = h5py.File(self._image_file, swmr=True)
 
         nxmx = dxtbx.nexus.nxmx.NXmx(self._cached_file_handle)
         nxdata = nxmx.entries[0].data[0]
@@ -98,7 +98,7 @@ class FormatNXmxI19_2(FormatNXmx):
     @staticmethod
     def understand(image_file):
         """This format class applies if the instrument name contains 'I19-2'."""
-        with h5py.File(image_file, "r", swmr=True) as handle:
+        with h5py.File(image_file, swmr=True) as handle:
             name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
         if name and "I19-2" in name:
             return True
