@@ -90,24 +90,24 @@ stages:
         matrix:
           python38:
             PYTHON_VERSION: 3.8
-          # python39:
-          #   PYTHON_VERSION: 3.9
+          python39:
+            PYTHON_VERSION: 3.9
       timeoutInMinutes: 60
       steps:
       - template: unix-build.yml
 
-    # - job: macos
-    #   pool:
-    #     vmImage: macOS-latest
-    #   strategy:
-    #     matrix:
-    #       python38:
-    #         PYTHON_VERSION: 3.8
-    #       # python39:
-    #       #   PYTHON_VERSION: 3.9
-    #   timeoutInMinutes: 60
-    #   steps:
-    #   - template: unix-build.yml
+    - job: macos
+      pool:
+        vmImage: macOS-latest
+      strategy:
+        matrix:
+          python38:
+            PYTHON_VERSION: 3.8
+          python39:
+            PYTHON_VERSION: 3.9
+      timeoutInMinutes: 60
+      steps:
+      - template: unix-build.yml
 
     # - job: windows
     #   pool:
