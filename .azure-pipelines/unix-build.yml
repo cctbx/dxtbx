@@ -22,7 +22,6 @@ steps:
     cctbx_version="$(echo "${BASH_REMATCH[1]}" | xargs)"
     echo "Using cctbx conda release ${cctbx_version}"
     echo pycbf >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
-    python3 modules/dxtbx/.azure-pipelines/bootstrap.py update --branch cctbx_project@"v${cctbx_version}"
   displayName: Repository checkout
   workingDirectory: $(Pipeline.Workspace)
 
