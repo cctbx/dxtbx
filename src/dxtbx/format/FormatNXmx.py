@@ -1,22 +1,23 @@
 from __future__ import annotations
 
+import math
+
 import h5py
+
+from libtbx import Auto
 
 import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
+from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatNXmx(FormatNexus):
+    """Read NXmx-flavour NeXus-format HDF5 data."""
 
     _cached_file_handle = None
 
     @staticmethod
     def understand(image_file):
-        with h5py.File(image_file, "r", swmr=True) as handle:
-            name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
-        # Temporarily restrict this to I19-2 while developing
-        if name and "I19-2" in name:
-            return True
         return False
 
     def __init__(self, image_file, **kwargs):
@@ -79,3 +80,43 @@ class FormatNXmx(FormatNexus):
                 d1d.set_selected(d1d == top - 1, -1)
                 d1d.set_selected(d1d == top - 2, -2)
         return raw_data
+
+
+class FormatNXmxI19_2(FormatNXmx):
+    """
+    Read NXmx-flavour data from beamline I19-2 at Diamond Light Source.
+
+    Include the option of dynamic shadowing of the standard I19-2 diamond anvil
+    pressure cell with a 76° conical aperture.
+    """
+
+    @staticmethod
+    def understand(image_file):
+        """This format class applies if the instrument name contains 'I19-2'."""
+        with h5py.File(image_file, "r", swmr=True) as handle:
+            name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
+        if name and "I19-2" in name:
+            return True
+        return False
+
+    @staticmethod
+    def has_dynamic_shadowing(**kwargs):
+        """Check if dynamic shadowing should be applied for a diamond anvil cell."""
+        dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
+        if dynamic_shadowing in (Auto, "Auto"):
+            return False
+        return dynamic_shadowing
+
+    def __init__(self, image_file, **kwargs):
+        """Initialise the image structure from the given file."""
+        self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
+        super().__init__(image_file, **kwargs)
+
+    def get_goniometer_shadow_masker(self, goniometer=None):
+        """Apply the dynamic mask for a diamond anvil cell with a 76° aperture."""
+        if goniometer is None:
+            goniometer = self.get_goniometer()
+
+        return GoniometerMaskerFactory.diamond_anvil_cell(
+            goniometer, cone_opening_angle=math.radians(76)
+        )
