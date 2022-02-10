@@ -13,31 +13,11 @@ steps:
   fetchDepth: 1
   displayName: Checkout $(Build.SourceBranch)
 
-# Download other source repositories
-- bash: |
-    set -eux
-
-    # Extract the version of cctbx-base from the conda environment file
-    [[ "$(cat modules/dxtbx/.azure-pipelines/ci-conda-env.txt)" =~ cctbx-base==([^:space:]+) ]]
-    cctbx_version="$(echo "${BASH_REMATCH[1]}" | xargs)"
-    echo "Using cctbx conda release ${cctbx_version}"
-    echo pycbf >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
-  displayName: Repository checkout
-  workingDirectory: $(Pipeline.Workspace)
-
-# Download additional source repositories required by cctbx-base (but not dxtbx)
-# cf. https://github.com/conda-forge/cctbx-base-feedstock/issues/12
-# - bash: |
-#     set -eux
-#     git clone https://github.com/dials/annlib.git modules/annlib
-#     git clone https://github.com/dials/annlib_adaptbx.git modules/annlib_adaptbx
-#   displayName: Repository checkout (additional cctbx)
-#   workingDirectory: $(Pipeline.Workspace)
-
 # Create a new conda environment using the bootstrap script
 # Extract the dials-data version so we can correctly cache regression data.
 - bash: |
     set -eux
+    echo pycbf >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
     python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --clean --python $(PYTHON_VERSION)
 
     set +ux
