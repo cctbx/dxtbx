@@ -1,0 +1,1 @@
+Check ``CCTBX_INSTALL_PACKAGE_BUILD`` environment variable and install to the ``build/`` if it is set, regardless of base writeability.

@@ -35,6 +35,12 @@ n_pixels_vertical_gaps = 195 * 7 * 4 * 24
         ),
         (calendar.timegm((2020, 9, 8, 0, 0, 1)), True, 3053),
         (calendar.timegm((2020, 9, 8, 0, 0, 1)), False, 3053 + n_pixels_vertical_gaps),
+        (calendar.timegm((2022, 1, 24, 0, 0, 1)), True, 98006),
+        (
+            calendar.timegm((2022, 1, 24, 0, 0, 1)),
+            False,
+            98006 + n_pixels_vertical_gaps,
+        ),
     ),
 )
 def test_bad_pixel_mask(

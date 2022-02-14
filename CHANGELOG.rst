@@ -1,3 +1,23 @@
+DIALS 3.8.2 (2022-02-07)
+========================
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Provide more general support for correctly formatted NXmx-flavoured NeXus data.  Previously, only a very limited subset of experiment geometries and data formats were supported. (`#453 <https://github.com/cctbx/dxtbx/issues/453>`_)
+- More robustly handle different ways of recording single-value NXmx detector metadata. (`#460 <https://github.com/cctbx/dxtbx/issues/460>`_)
+- Fix ``dxtbx.plot_detector_models`` running on newer matplotlib versions. (`#475 <https://github.com/cctbx/dxtbx/issues/475>`_)
+
+
+DIALS 3.8.1 (2022-01-25)
+========================
+
+Features
+--------
+
+- Updated bad pixel mask for DLS I23 PILATUS 12M for 2022 run 1 (`#469 <https://github.com/cctbx/dxtbx/issues/469>`_)
+
+
 dxtbx 3.8.0 (2022-01-11)
 ========================
 

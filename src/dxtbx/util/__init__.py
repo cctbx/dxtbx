@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import os
 import sys
 from urllib.parse import urlparse
 
@@ -80,3 +81,10 @@ def get_url_scheme(url) -> str:
     """Extract the URL scheme from the string url, respecting Windows file paths"""
 
     return urlparse(str(url)).scheme if "://" in str(url) else ""
+
+
+def ersatz_uuid4() -> str:
+    """Generate an ersatz UUID4 i.e. random 128 bit UUID."""
+
+    h = "%032x" % int.from_bytes(os.urandom(16), byteorder="little")
+    return "%s-%s-%s-%s-%s" % (h[:8], h[8:12], h[12:16], h[16:20], h[20:])
