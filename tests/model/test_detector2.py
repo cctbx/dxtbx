@@ -196,10 +196,10 @@ def test_get_valid_D_matrix(detector):
     # Test the panel coordinate systems
 
     eps = 1e-7
-    p1_d0 = matrix.col((10.0 + sqrt(5.0 ** 2 / 2), 10.0 + sqrt(5.0 ** 2 / 2), 110))
-    p2_d0 = matrix.col((10.0 - sqrt(5.0 ** 2 / 2), 10.0 + sqrt(5.0 ** 2 / 2), 90))
-    p3_d0 = matrix.col((20.0 + sqrt(5.0 ** 2 / 2), 20.0 + sqrt(5.0 ** 2 / 2), 90))
-    p4_d0 = matrix.col((20.0 + sqrt(5.0 ** 2 / 2), 20.0 - sqrt(5.0 ** 2 / 2), 110))
+    p1_d0 = matrix.col((10.0 + sqrt(5.0**2 / 2), 10.0 + sqrt(5.0**2 / 2), 110))
+    p2_d0 = matrix.col((10.0 - sqrt(5.0**2 / 2), 10.0 + sqrt(5.0**2 / 2), 90))
+    p3_d0 = matrix.col((20.0 + sqrt(5.0**2 / 2), 20.0 + sqrt(5.0**2 / 2), 90))
+    p4_d0 = matrix.col((20.0 + sqrt(5.0**2 / 2), 20.0 - sqrt(5.0**2 / 2), 110))
     p1_d1 = matrix.col((1, 0, 0))
     p2_d1 = matrix.col((0, 1, 0))
     p3_d1 = matrix.col((0, -1, 0))

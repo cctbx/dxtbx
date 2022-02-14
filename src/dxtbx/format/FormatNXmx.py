@@ -71,9 +71,9 @@ class FormatNXmx(FormatNexus):
             # if 32 bit then it is a signed int, I think if 8, 16 then it is
             # unsigned with the highest two values assigned as masking values
             if self._bit_depth_readout == 32:
-                top = 2 ** 31
+                top = 2**31
             else:
-                top = 2 ** self._bit_depth_readout
+                top = 2**self._bit_depth_readout
             for data in raw_data:
                 d1d = data.as_1d()
                 d1d.set_selected(d1d == top - 1, -1)
