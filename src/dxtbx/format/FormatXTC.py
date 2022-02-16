@@ -6,7 +6,6 @@ import time
 
 import numpy as np
 
-from cctbx import factor_ev_angstrom
 from libtbx.phil import parse
 
 from scitbx.array_family import flex
@@ -310,12 +309,12 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         try:
             fee = self._fee.get(evt)
             y = fee.hproj()
-        except AttributeError: # Handle older spectometers without the hproj method
+        except AttributeError:  # Handle older spectometers without the hproj method
             img = self._fee.image(evt)
             x = (
                 self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
             ) + self.params.spectrum_eV_offset
-            y = img.mean(axis=0) # Collapse 2D image to 1D trace
+            y = img.mean(axis=0)  # Collapse 2D image to 1D trace
         else:
             x = (
                 self.params.spectrum_eV_per_pixel * np.array(range(len(y)))
