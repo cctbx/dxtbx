@@ -374,8 +374,6 @@ class TestImageSequence:
         self.tst_get_models(sequence, range(len(centroid_files)), 9)
         self.tst_set_models(sequence)
 
-
-
     def tst_get_item(self, sequence):
         _ = sequence[0]
         with pytest.raises(RuntimeError):
@@ -400,7 +398,7 @@ class TestImageSequence:
         sequence_ = copy.deepcopy(sequence)
         sequence_.get_scan().set_batch_offset(-1)
         sequence3 = sequence_[3:7]
-        assert sequence3.get_array_range() == (4,8)
+        assert sequence3.get_array_range() == (4, 8)
 
     @staticmethod
     def tst_paths(sequence, filenames1):
