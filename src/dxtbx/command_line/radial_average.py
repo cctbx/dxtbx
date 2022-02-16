@@ -346,7 +346,7 @@ def run(args=None, imageset=None):
                     results = results.select(xvals <= params.plot_x_max)
                     xvals = xvals.select(xvals <= params.plot_x_max)
                 if params.x_axis == "resolution":
-                    xvals = 1 / (xvals**2)
+                    xvals = 1 / (xvals ** 2)
                 if params.normalize:
                     plt.plot(
                         xvals.as_numpy_array(),
@@ -400,7 +400,7 @@ def run(args=None, imageset=None):
                     / (2 * flex.asin((math.pi / 180) * tt.select(nonzero) / 2)),
                 )
                 vals = resolution
-                vals = 1 / (vals**2)
+                vals = 1 / (vals ** 2)
             elif params.x_axis == "two_theta":
                 vals = tt
 
