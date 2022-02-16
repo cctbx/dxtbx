@@ -2,6 +2,7 @@ import os
 import pickle
 import shutil
 from unittest import mock
+import copy
 
 import pytest
 
@@ -392,6 +393,12 @@ class TestImageSequence:
 
         with pytest.raises(IndexError):
             _ = sequence[3:7:2]
+
+        # Simulate a scan starting from image 0
+        sequence_ = copy.deepcopy(sequence)
+        sequence_.get_scan().set_batch_offset(-1)
+        sequence3 = sequence_[3:7]
+        assert sequence3.get_array_range() == (4, 8)
 
     @staticmethod
     def tst_paths(sequence, filenames1):
