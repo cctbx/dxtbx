@@ -304,6 +304,8 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
     def get_psana_timestamp(self, index):
         """Get the cctbx.xfel style event timestamp given an index"""
         evt = self._get_event(index)
+        if not evt:
+            return None
         time = evt.get(psana.EventId).time()
         # fid = evt.get(psana.EventId).fiducials()
 
@@ -325,6 +327,9 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         if self._beam_index != index:
             self._beam_index = index
             evt = self._get_event(index)
+            if not evt:
+                self._beam_cache = None
+                return None
             spectrum = self.get_spectrum(index)
             if spectrum:
                 wavelength = spectrum.get_weighted_wavelength()
@@ -355,6 +360,8 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             return None
 
         evt = self._get_event(index)
+        if not evt:
+            return None
         if self._fee is None:
             self._fee = psana.Detector(self.params.spectrum_address)
         if self._fee is None:
