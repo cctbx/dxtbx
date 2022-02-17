@@ -480,7 +480,12 @@ class DetectorFactory:
         if fast_slow_beam_centre is not None:
             panel_id = 0
             if len(fast_slow_beam_centre) > 2:
-                panel_id = fast_slow_beam_centre[2]
+                if fast_slow_beam_centre[2].is_intiger():
+                    panel_id = int(fast_slow_beam_centre[2])
+                else:
+                    raise TypeError(
+                        f"Panel ID received float: {fast_slow_beam_centre[2]}"
+                    )
             if panel_id >= len(detector):
                 raise IndexError(f"Detector does not have panel index {panel_id}")
             px_size_f, px_size_s = detector[0].get_pixel_size()
