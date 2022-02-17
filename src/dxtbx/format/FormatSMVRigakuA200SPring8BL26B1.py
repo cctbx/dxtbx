@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from iotbx.detectors.dtrek import DTREKImage
 
 from dxtbx.format.FormatSMVRigakuA200 import FormatSMVRigakuA200

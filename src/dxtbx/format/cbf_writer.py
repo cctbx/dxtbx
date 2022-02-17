@@ -7,6 +7,8 @@ for i in range(10):
   writer.write_cbf("example_%d.cbf"%i, index=i)
 """
 
+from __future__ import annotations
+
 import os
 import sys
 
@@ -565,7 +567,7 @@ class FullCBFWriter:
 if __name__ == "__main__":
     filename = sys.argv[1]
     if len(sys.argv) > 2:
-        index = int(sys.argv[2])
+        index: int | None = int(sys.argv[2])
     else:
         index = None
 

@@ -1,6 +1,8 @@
 """An implementation of the SMV image reader for JHSim images."""
 
 
+from __future__ import annotations
+
 import calendar
 import sys
 import time
@@ -17,9 +19,9 @@ class FormatSMVJHSim(FormatSMV):
     # all ADSC detectors generate images with an ADC offset of 40
     # for Mar/Rayonix it is 10
     # Rigaku SMV uses 20, and 5 for image plate formats
-    # for one particular simulation, I used 1
+    # The images generated for https://bl831.als.lbl.gov/~jamesh/dose_slice/results.html
+    # use 1, so if a value is not provided in the header, default to 1
     ADC_OFFSET = 1
-    image_pedestal = 1
 
     @staticmethod
     def understand(image_file):
@@ -59,13 +61,11 @@ class FormatSMVJHSim(FormatSMV):
             float(self._header_dictionary["SIZE1"]),
             float(self._header_dictionary["SIZE2"]),
         )
-        image_pedestal = 1
-        try:
-            image_pedestal = float(self._header_dictionary["ADC_OFFSET"])
-        except (KeyError):
-            pass
+        image_pedestal = float(
+            self._header_dictionary.get("ADC_OFFSET", self.ADC_OFFSET)
+        )
         overload = 65535 - image_pedestal
-        underload = 1 - image_pedestal
+        underload = -1
 
         # interpret beam center conventions
         image_height_mm = pixel_size * image_size[1]
@@ -92,7 +92,7 @@ class FormatSMVJHSim(FormatSMV):
             image_size,
             (underload, overload),
             [],
-            pedestal=int(self._header_dictionary.get("ADC_OFFSET", 1)),
+            pedestal=image_pedestal,
         )
 
     def _beam(self):

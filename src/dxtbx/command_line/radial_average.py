@@ -1,6 +1,8 @@
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.radial_average
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 
+from __future__ import annotations
+
 import math
 import os
 import sys

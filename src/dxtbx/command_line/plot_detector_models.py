@@ -1,5 +1,7 @@
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 
+from __future__ import annotations
+
 import os
 import sys
 
@@ -51,14 +53,15 @@ phil_scope = parse(
 # http://stackoverflow.com/questions/22867620/putting-arrowheads-on-vectors-in-matplotlibs-3d-plot
 class Arrow3D(FancyArrowPatch):
     def __init__(self, xs, ys, zs, *args, **kwargs):
-        FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
+        super().__init__((0, 0), (0, 0), *args, **kwargs)
         self._verts3d = xs, ys, zs
 
-    def draw(self, renderer):
+    def do_3d_projection(self, renderer=None):
         xs3d, ys3d, zs3d = self._verts3d
-        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
+        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, self.axes.M)
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
-        FancyArrowPatch.draw(self, renderer)
+
+        return np.min(zs)
 
 
 def plot_group(
@@ -156,6 +159,7 @@ def run(args=None):
     fig = plt.figure()
     colormap = plt.cm.gist_ncar
     colors = [colormap(i) for i in np.linspace(0, 0.9, len(files))]
+    min_z = max_z = None
     for file_name, color in zip(files, colors):
 
         # read the data and get the detector models
@@ -191,10 +195,23 @@ def run(args=None):
                     panel_numbers=params.panel_numbers,
                 )
 
+                if not params.orthographic:
+                    all_z = [p.get_origin()[2] for p in detector]
+                    if min_z is None:
+                        min_z = min(all_z)
+                        max_z = max(all_z)
+                    else:
+                        min_z = min(min_z, min(all_z))
+                        max_z = max(max_z, max(all_z))
+
     plt.xlabel("x")
     plt.ylabel("y")
     if params.orthographic:
-        plt.axes().set_aspect("equal", "datalim")
+        ax.set_aspect("equal", "datalim")
+    else:
+        if min_z == max_z:
+            min_z, max_z = plt.gca().zaxis.get_major_locator().nonsingular(min_z, max_z)
+        plt.gca().set_zlim(zmin=min_z, zmax=max_z)
 
     if params.pdf_file:
         pp = PdfPages(params.pdf_file)

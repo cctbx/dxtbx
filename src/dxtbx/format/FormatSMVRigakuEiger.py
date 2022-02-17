@@ -3,6 +3,8 @@ An implementation of the SMV image reader for Rigaku Eiger.
 Be aware: this is completely unrelated to the HDF5 Eiger format.
 """
 
+from __future__ import annotations
+
 import sys
 import time
 

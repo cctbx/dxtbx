@@ -1,0 +1,9 @@
+from __future__ import annotations
+
+from typing import Any, Tuple
+
+from scitbx.array_family import flex
+
+def dataset_as_flex_double(dataset_id: Any, selection: Tuple[slice]) -> flex.double: ...
+def dataset_as_flex_float(dataset_id: Any, selection: Tuple[slice]) -> flex.float: ...
+def dataset_as_flex_int(dataset_id: Any, selection: Tuple[slice]) -> flex.int: ...

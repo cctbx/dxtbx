@@ -5,6 +5,8 @@ Located in dxtbx/format
 """
 
 
+from __future__ import annotations
+
 import binascii
 import calendar
 import re

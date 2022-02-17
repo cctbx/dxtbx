@@ -5,6 +5,8 @@ FormatSMVRigakuSaturn customizing only the difference (incorrect definition
 of fast and slow directions.)
 """
 
+from __future__ import annotations
+
 import sys
 
 from scitbx import matrix

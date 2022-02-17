@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import logging
-from typing import Optional, Tuple, Union
+from typing import Tuple, cast
 
 import numpy as np
 
@@ -29,7 +31,7 @@ KNOWN_SENSOR_MATERIALS = {
 MCSTAS_TO_IMGCIF = np.diag([-1, 1, -1])
 
 
-def get_dxtbx_goniometer(nxsample: nxmx.NXsample) -> Optional[dxtbx.model.Goniometer]:
+def get_dxtbx_goniometer(nxsample: nxmx.NXsample) -> dxtbx.model.Goniometer | None:
     """Generate a dxtbx goniometer model from an NXsample.
 
     If the NXsample doesn't have a valid depends_on field, then return None.
@@ -68,7 +70,7 @@ def get_dxtbx_beam(nxbeam: nxmx.NXbeam) -> dxtbx.model.Beam:
 
 def get_dxtbx_scan(
     nxsample: nxmx.NXsample, nxdetector: nxmx.NXdetector
-) -> Optional[dxtbx.model.Scan]:
+) -> dxtbx.model.Scan | None:
     """Generate a dxtbx scan model from an NXsample.
 
     If the NXsample doesn't have a valid depends_on field, then return None.
@@ -123,7 +125,7 @@ def get_dxtbx_scan(
 
     return dxtbx.model.Scan(
         image_range,
-        tuple(float(o) for o in oscillation),
+        oscillation,
         exposure_times,
         epochs,
         batch_offset=0,
@@ -143,6 +145,7 @@ def get_dxtbx_detector(
 
     detector = dxtbx.model.Detector()
 
+    root: dxtbx.model.Detector | dxtbx.model.Panel
     if len(nxdetector.modules) > 1:
         root = detector.hierarchy()
     else:
@@ -156,14 +159,15 @@ def get_dxtbx_detector(
                 reversed_dependency_chain = reversed(
                     nxmx.get_dependency_chain(module.fast_pixel_direction.depends_on)
                 )
-                pg = None
-                for i, transformation in enumerate(reversed_dependency_chain):
+                pg: dxtbx.model.Detector | dxtbx.model.Panel = root
+                for transformation in reversed_dependency_chain:
+                    assert isinstance(
+                        pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
+                    )
                     name = transformation.path
-                    if pg is None:
-                        pg = root
                     pg_names = [child.get_name() for child in pg]
                     if name in pg_names:
-                        pg = pg[pg_names.index(name)]
+                        pg = pg[pg_names.index(name)]  # Getitem always returns panel
                         continue
                     else:
                         pg = pg.add_group()
@@ -176,7 +180,9 @@ def get_dxtbx_detector(
                         MCSTAS_TO_IMGCIF @ (A @ np.array((0, 1, 0, 1)))[0, :3] - origin
                     )
                     pg.set_local_frame(fast, slow, origin)
+                    assert name is not None
                     pg.set_name(name)
+                # assert pg is not None
         else:
             # Use a flat detector model
             pg = root
@@ -190,6 +196,7 @@ def get_dxtbx_detector(
             # Flat detector model
 
             # Apply any rotation components of the dependency chain to the fast axis
+            assert module.fast_pixel_direction.depends_on is not None
             fast_axis_depends_on = [
                 t
                 for t in nxmx.get_dependency_chain(
@@ -204,6 +211,7 @@ def get_dxtbx_detector(
             fast_axis = MCSTAS_TO_IMGCIF @ R @ module.fast_pixel_direction.vector
 
             # Apply any rotation components of the dependency chain to the slow axis
+            assert module.slow_pixel_direction.depends_on is not None
             slow_axis_depends_on = [
                 t
                 for t in nxmx.get_dependency_chain(
@@ -231,7 +239,8 @@ def get_dxtbx_detector(
         )
         # dxtbx requires image size in the order fast, slow - which is the reverse of what
         # is stored in module.data_size
-        image_size = tuple(map(int, module.data_size[::-1]))
+        image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[::-1])))
+        assert len(image_size) == 2
         underload = (
             float(nxdetector.underload_value)
             if nxdetector.underload_value is not None
@@ -258,6 +267,9 @@ def get_dxtbx_detector(
         px_mm = dxtbx.model.ParallaxCorrectedPxMmStrategy(mu, thickness)
         name = module.path
 
+        assert name is not None
+        assert pg is not None
+        assert isinstance(pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode))
         p = pg.add_panel()
         p.set_type("SENSOR_PAD")
         p.set_name(name)
@@ -275,7 +287,7 @@ def get_dxtbx_detector(
 
 def get_detector_module_slices(
     nxdetector: nxmx.NXdetector,
-) -> Tuple[Tuple[slice, slice], ...]:
+) -> tuple[tuple[slice, ...], ...]:
     """Return the slices pointing to the hyperslab of data for each module.
 
     This will be a tuple of tuples, where each tuple contains the slices corresponding
@@ -290,7 +302,7 @@ def get_detector_module_slices(
     )
 
 
-def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool]:
+def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...]:
     """Return the static mask for an NXdetector.
 
     This will be a tuple of flex.bool, of length equal to the number of modules. The
@@ -298,14 +310,14 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> Tuple[flex.bool]:
     format classes.
     """
     pixel_mask = nxdetector.get("pixel_mask")
-    if pixel_mask and pixel_mask.ndim == 2:
-        all_slices = get_detector_module_slices(nxdetector)
-        return tuple(dataset_as_flex(pixel_mask, slices) == 0 for slices in all_slices)
+    assert pixel_mask and pixel_mask.ndim == 2
+    all_slices = get_detector_module_slices(nxdetector)
+    return tuple(dataset_as_flex(pixel_mask, slices) == 0 for slices in all_slices)
 
 
 def get_raw_data(
     nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int
-) -> Tuple[Union[flex.float, flex.double, flex.int]]:
+) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
     This will be a tuple of flex.float, flex.double or flex.int arrays, of length equal

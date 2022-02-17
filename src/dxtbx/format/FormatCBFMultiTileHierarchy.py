@@ -3,6 +3,8 @@ Reads a multi-tile CBF image, discovering it's detector geometery
 automatically, and builds a hierarchy if present
 """
 
+from __future__ import annotations
+
 import struct
 import sys
 
