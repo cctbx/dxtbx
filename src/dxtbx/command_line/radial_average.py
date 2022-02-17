@@ -18,7 +18,7 @@ from scitbx.array_family import flex
 from scitbx.matrix import col
 from xfel import radial_average
 
-import dxtbx.datablock
+import dxtbx
 import dxtbx.util
 from dxtbx.model.experiment_list import ExperimentListFactory
 
@@ -163,16 +163,9 @@ def run(args=None, imageset=None):
 
         def load_func(x):
             try:
-                obj = dxtbx.datablock.DataBlockFactory.from_filenames([x])[
-                    0
-                ].extract_imagesets()[0]
-            except IndexError:
-                try:
-                    obj = dxtbx.datablock.DataBlockFactory.from_json_file(x)[
-                        0
-                    ].extract_imagesets()[0]
-                except dxtbx.datablock.InvalidDataBlockError:
-                    obj = ExperimentListFactory.from_json_file(x)[0].imageset
+                obj = dxtbx.load(x).get_imageset([x])
+            except TypeError:
+                obj = ExperimentListFactory.from_json_file(x)[0].imageset
             return obj
 
     else:
