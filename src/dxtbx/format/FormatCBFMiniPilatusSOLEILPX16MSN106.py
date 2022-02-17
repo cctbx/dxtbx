@@ -1,6 +1,8 @@
 """Set up for Soleil PX1, with full kappa goniometer"""
 
 
+from __future__ import annotations
+
 import sys
 
 from scitbx.array_family import flex

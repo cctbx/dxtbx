@@ -1,0 +1,1 @@
+Remove Python 3.7 support and associated Azure builds. Update Azure build environment to HDF5 1.12.

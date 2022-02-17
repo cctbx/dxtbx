@@ -1,6 +1,8 @@
 """Print out the resolution (two-theta) of the corners of the detector"""
 
 
+from __future__ import annotations
+
 import math
 import sys
 

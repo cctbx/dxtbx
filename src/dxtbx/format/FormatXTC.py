@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import sys
 import time
@@ -66,7 +68,6 @@ locator_scope = parse(locator_str)
 class XtcReader(Reader):
     def nullify_format_instance(self):
         """No-op for XTC streams. No issue with multiprocessing."""
-        pass
 
 
 @abstract

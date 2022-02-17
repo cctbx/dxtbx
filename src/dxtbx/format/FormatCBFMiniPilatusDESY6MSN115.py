@@ -4,6 +4,8 @@ detector at PETRA III beamline P14, which has a vertical goniometer.
 """
 
 
+from __future__ import annotations
+
 import sys
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus

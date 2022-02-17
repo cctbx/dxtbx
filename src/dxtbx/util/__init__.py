@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import math
+import os
 import sys
 from urllib.parse import urlparse
 
@@ -13,9 +16,9 @@ def encode_output_as_utf8() -> None:
         return
 
     if sys.stdout.encoding.lower() != "utf-8":
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    encode_output_as_utf8.done = True
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore
+    encode_output_as_utf8.done = True  # type: ignore
 
 
 def format_float_with_standard_uncertainty(value, standard_uncertainty, minimum=1e-12):
@@ -78,3 +81,10 @@ def get_url_scheme(url) -> str:
     """Extract the URL scheme from the string url, respecting Windows file paths"""
 
     return urlparse(str(url)).scheme if "://" in str(url) else ""
+
+
+def ersatz_uuid4() -> str:
+    """Generate an ersatz UUID4 i.e. random 128 bit UUID."""
+
+    h = "%032x" % int.from_bytes(os.urandom(16), byteorder="little")
+    return "%s-%s-%s-%s-%s" % (h[:8], h[8:12], h[12:16], h[16:20], h[20:])

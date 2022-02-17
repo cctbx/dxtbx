@@ -5,6 +5,8 @@ but will allow for extension for specific implementations of CBF.
 """
 
 
+from __future__ import annotations
+
 import sys
 
 import numpy as np

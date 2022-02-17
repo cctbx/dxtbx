@@ -1,3 +1,62 @@
+DIALS 3.8.2 (2022-02-07)
+========================
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Provide more general support for correctly formatted NXmx-flavoured NeXus data.  Previously, only a very limited subset of experiment geometries and data formats were supported. (`#453 <https://github.com/cctbx/dxtbx/issues/453>`_)
+- More robustly handle different ways of recording single-value NXmx detector metadata. (`#460 <https://github.com/cctbx/dxtbx/issues/460>`_)
+- Fix ``dxtbx.plot_detector_models`` running on newer matplotlib versions. (`#475 <https://github.com/cctbx/dxtbx/issues/475>`_)
+
+
+DIALS 3.8.1 (2022-01-25)
+========================
+
+Features
+--------
+
+- Updated bad pixel mask for DLS I23 PILATUS 12M for 2022 run 1 (`#469 <https://github.com/cctbx/dxtbx/issues/469>`_)
+
+
+dxtbx 3.8.0 (2022-01-11)
+========================
+
+Features
+--------
+
+- dxtbx can be optionally used without ``cbflib_adaptbx``. (`#368 <https://github.com/cctbx/dxtbx/issues/368>`_)
+- Experimental support for building dxtbx with CMake. (`#449 <https://github.com/cctbx/dxtbx/issues/449>`_)
+- Track dxtbx version explicitly, with bump2version. (`#458 <https://github.com/cctbx/dxtbx/issues/458>`_)
+
+
+Bugfixes
+--------
+
+- Fix an arithmetic mistake in ``dxtbx.model.Goniometer.rotate_around_origin``, which was mangling the addition of a new rotation to the goniostat rotation operator :math:`\mathbf{R}`. (`#451 <https://github.com/cctbx/dxtbx/issues/451>`_)
+- Correct pedestal handling for simulated images from ``simtbx``. (`#456 <https://github.com/cctbx/dxtbx/issues/456>`_)
+- Ensure ``FormatTIFF`` only understands images with the expected basic TIFF header. (`#457 <https://github.com/cctbx/dxtbx/issues/457>`_)
+- Get CI builds working again by restricting ``setuptools<60``. (`#459 <https://github.com/cctbx/dxtbx/issues/459>`_)
+
+
+Improved Documentation
+----------------------
+
+- Update the documentation of the in-house convention for representing the goniostat rotation operator :math:`\mathbf{R}`, to match `the conventions page <https://dials.github.io/documentation/conventions.html#the-dxtbx-goniometer-model>`_ of the online DIALS documentation. (`#450 <https://github.com/cctbx/dxtbx/issues/450>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Remove ``ImageToEwaldSphere``, which was used in a now-removed utility. (`#446 <https://github.com/cctbx/dxtbx/issues/446>`_)
+- The deprecated function ``dxtbx.model.detector_helpers.project_2d`` has been removed. The deprecation warning on usage of `DataBlock` has been made more visible. (`#448 <https://github.com/cctbx/dxtbx/issues/448>`_)
+
+
+Misc
+----
+
+- `#366 <https://github.com/cctbx/dxtbx/issues/366>`_
+
+
 DIALS 3.7.0 (2021-11-01)
 ========================
 

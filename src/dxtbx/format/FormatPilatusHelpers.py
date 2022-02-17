@@ -3,8 +3,9 @@ Helper methods for class for working with Pilatus images, for instance for
 identifying the regions to be masked.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List, Tuple
 
 
 @dataclass(frozen=True)
@@ -13,10 +14,10 @@ class _Detector:
     module_size_slow: int
     gap_fast: int
     gap_slow: int
-    module_configs_fast: Tuple[int, ...]
+    module_configs_fast: tuple[int, ...]
 
     @property
-    def all_widths(self) -> List[int]:
+    def all_widths(self) -> list[int]:
         return [
             self.module_size_fast * j + self.gap_fast * (j - 1)
             for j in self.module_configs_fast

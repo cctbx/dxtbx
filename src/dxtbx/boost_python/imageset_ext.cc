@@ -610,6 +610,7 @@ namespace dxtbx { namespace boost_python {
       .def("set_params", &ImageSetData_set_params)
       .def("get_format_class", &ImageSetData_get_format)
       .def("set_format_class", &ImageSetData_set_format)
+      .def("partial_data", &ImageSetData::partial_data)
       .add_property(
         "external_lookup",
         make_function(&ImageSetData::external_lookup, return_internal_reference<>()))

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import h5py
 
 from dxtbx.format.FormatNexus import FormatNexus

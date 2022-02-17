@@ -4,6 +4,8 @@ https://personal.ntu.edu.sg/cbb/info/TIAformat/index.html
 """
 
 
+from __future__ import annotations
+
 import os
 import re
 import struct

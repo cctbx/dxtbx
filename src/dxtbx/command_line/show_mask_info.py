@@ -1,5 +1,7 @@
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.show_mask_info
 
+from __future__ import annotations
+
 import argparse
 import sys
 
