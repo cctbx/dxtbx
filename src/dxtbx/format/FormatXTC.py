@@ -73,16 +73,14 @@ locator_str = """
       .type = str
       .help = Address for evr object which stores event codes. Should be evr0,\
               evr1, or evr2.
-    event_code = None
+    required_present_codes = None
       .type = int
       .multiple = True
-      .help = Which event code(s) to filter on
-    mode = require_all require_any require_none
-      .type = choice
-      .help = Whether to keep or reject events that match event_code. \
-              require_all: all event codes must be present \
-              require_any: any of the event codes must be present \
-              require_none: none of the event codes must be present
+      .help = These codes must be present to keep the event
+    required_absent_codes = None
+      .type = int
+      .multiple = True
+      .help = These codes must be absent to keep the event
     pre_filter = False
       .type = bool
       .help = If True, read the event codes for all events up front, and \
@@ -194,7 +192,10 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         self.run_mapping = {}
         for run in self._psana_runs.values():
             times = run.times()
-            if self.params.filter.event_code and self.params.filter.pre_filter:
+            if (
+                self.params.filter.required_present_codes
+                or self.params.filter.required_absent_codes
+            ) and self.params.filter.pre_filter:
                 times = [t for t in times if self.filter_event(run.event(t))]
             self.run_mapping[run.run()] = (
                 len(self.times),
@@ -205,25 +206,24 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
     def filter_event(self, evt):
         """Return True to keep the event, False to reject it."""
-        if not self.params.filter.event_code:
+        if not (
+            self.params.filter.required_present_codes
+            or self.params.filter.required_absent_codes
+        ):
             return True
-        assert self.params.filter.mode in [
-            "require_all",
-            "require_any",
-            "require_none",
-        ], (
-            "Unknown filter mode: %s" % self.params.filter.mode
-        )
         if not self._evr:
             self._evr = psana.Detector(self.params.filter.evr_address)
         codes = self._evr.eventCodes(evt)
-        if self.params.filter.mode == "require_all":
-            return all([c in codes for c in self.params.filter.event_code])
-        elif self.params.filter.mode == "require_any":
-            return any([c in codes for c in self.params.filter.event_code])
-        elif self.params.filter.mode == "require_none":
-            return not all([c in codes for c in self.params.filter.event_code])
-        assert False
+
+        if self.params.filter.required_present_codes and not all(
+            [c in codes for c in self.params.filter.required_present_codes]
+        ):
+            return False
+        if self.params.filter.required_absent_codes and any(
+            [c in codes for c in self.params.filter.required_absent_codes]
+        ):
+            return False
+        return True
 
     def get_run_from_index(self, index=None):
         """Look up the run number given an index"""
@@ -244,7 +244,10 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             self.current_index = index
             evt = self.get_run_from_index(index).event(self.times[index])
             if (
-                self.params.filter.event_code
+                (
+                    self.params.filter.required_present_codes
+                    or self.params.filter.required_absent_codes
+                )
                 and not self.params.filter.pre_filter
                 and not self.filter_event(evt)
             ):
