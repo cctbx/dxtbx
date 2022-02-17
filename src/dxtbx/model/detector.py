@@ -480,7 +480,7 @@ class DetectorFactory:
         if fast_slow_beam_centre is not None:
             panel_id = 0
             if len(fast_slow_beam_centre) > 2:
-                if fast_slow_beam_centre[2].is_intiger():
+                if fast_slow_beam_centre[2].is_integer():
                     panel_id = int(fast_slow_beam_centre[2])
                 else:
                     raise TypeError(
