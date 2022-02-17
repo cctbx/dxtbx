@@ -200,7 +200,7 @@ detector_phil_scope = libtbx.phil.parse(
       .short_caption = "Beam centre coordinates (px fast, px slow, [panel id])"
 
     slow_fast_beam_centre = None
-      .type = floats(size_min=2, size_max=3)
+      .type = ints(size_min=2, size_max=3)
       .help = "Alternative to fast_slow_beam_centre in which the coordinates"
               "are given in order (px slow, px fast, [panel id]). If"
               "fast_slow_beam_centre is set it will take priority over any"
