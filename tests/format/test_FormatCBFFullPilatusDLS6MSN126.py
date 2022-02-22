@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from dxtbx.format.FormatCBFFullPilatusDLS6MSN126 import FormatCBFFullPilatusDLS6MSN126

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 from dxtbx.format.FormatPYunspecifiedStill import FormatPYunspecifiedStill

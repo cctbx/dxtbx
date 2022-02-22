@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dxtbx.util import ersatz_uuid4
 from dxtbx.util import format_float_with_standard_uncertainty as ffwsu
 

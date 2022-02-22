@@ -155,7 +155,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         print("Get raw data")
 
         if info["type"] == "uint16":
-            bad_sel = data == 2 ** 16 - 1
+            bad_sel = data == 2**16 - 1
             data[bad_sel] = -1
 
         return flex.int(data)
