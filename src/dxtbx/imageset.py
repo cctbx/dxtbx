@@ -297,7 +297,9 @@ class _imagesequence:
             An image or new Sequence object
 
         """
-        if isinstance(item, slice):
+        if not isinstance(item, slice):
+            return self.get_corrected_data(item)
+        else:
             offset = self.get_scan().get_batch_offset()
             if item.step is not None:
                 raise IndexError("Sequences must be sequential")
@@ -316,18 +318,16 @@ class _imagesequence:
                     stop = len(self)
                 else:
                     stop -= offset
-
-                return self.partial_set(start, stop)
             else:
                 start = item.start or 0
                 stop = item.stop or (len(self) + offset)
-                if self.data().has_single_file_reader():
-                    reader = self.reader().copy(self.reader().paths(), stop - start)
-                else:
-                    reader = self.reader().copy(self.reader().paths())
-                return self.partial_set(reader, start - offset, stop - offset)
-        else:
-            return self.get_corrected_data(item)
+                start -= offset
+                stop -= offset
+            if self.data().has_single_file_reader():
+                reader = self.reader().copy(self.reader().paths(), stop - start)
+            else:
+                reader = self.reader().copy(self.reader().paths())
+            return self.partial_set(reader, start, stop)
 
     def get_template(self):
         """Return the template"""
