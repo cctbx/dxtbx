@@ -15,7 +15,7 @@ repos:
     name: "Don't commit to 'main' directly"
 
 # Automatically sort imports
-- repo: https://github.com/PyCQA/isort.git
+- repo: https://github.com/PyCQA/isort
   rev: 5.10.1
   hooks:
   - id: isort
