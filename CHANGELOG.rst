@@ -1,3 +1,12 @@
+DIALS 3.8.3 (2022-02-22)
+========================
+
+Bugfixes
+--------
+
+- FormatNXmx: Open nexus files in SWMR mode. (`#478 <https://github.com/cctbx/dxtbx/issues/478>`_)
+
+
 DIALS 3.8.2 (2022-02-07)
 ========================
 
