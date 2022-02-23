@@ -6,14 +6,15 @@ import time
 
 import numpy as np
 
-from cctbx import factor_ev_angstrom
 from libtbx.phil import parse
 
+from scitbx.array_family import flex
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
+from dxtbx.model import Spectrum
 
 try:
     import psana
@@ -48,9 +49,15 @@ locator_str = """
   use_ffb = False
     .type = bool
     .help = Run on the ffb if possible. Only for active users!
+  wavelength_delta_k = None
+    .type = float
+    .help = Correction factor, needed during 2014
   wavelength_offset = None
     .type = float
     .help = Optional constant shift to apply to each wavelength
+  spectrum_address = FEE-SPEC0
+    .type = str
+    .help = Address for incident beam spectrometer
   spectrum_eV_per_pixel = None
     .type = float
     .help = If not None, use the FEE spectrometer to determine the wavelength. \
@@ -265,20 +272,13 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         if self._beam_index != index:
             self._beam_index = index
             evt = self._get_event(index)
-            if self.params.spectrum_eV_per_pixel is not None:
-                if self._fee is None:
-                    self._fee = psana.Detector("FEE-SPEC0")
-                fee = self._fee.get(evt)
-                if fee is None:
-                    wavelength = cspad_tbx.evt_wavelength(evt)
-                else:
-                    x = (
-                        self.params.spectrum_eV_per_pixel
-                        * np.array(range(len(fee.hproj())))
-                    ) + self.params.spectrum_eV_offset
-                    wavelength = factor_ev_angstrom / np.average(x, weights=fee.hproj())
+            spectrum = self.get_spectrum(index)
+            if spectrum:
+                wavelength = spectrum.get_weighted_wavelength()
             else:
-                wavelength = cspad_tbx.evt_wavelength(evt)
+                wavelength = cspad_tbx.evt_wavelength(
+                    evt, delta_k=self.params.wavelength_delta_k
+                )
             if wavelength is None:
                 self._beam_cache = None
             else:
@@ -294,6 +294,32 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                     self._beam_cache.set_polarization_normal((1, 0, 0))
 
         return self._beam_cache
+
+    def get_spectrum(self, index=None):
+        if index is None:
+            index = 0
+        if self.params.spectrum_eV_per_pixel is None:
+            return None
+
+        evt = self._get_event(index)
+        if self._fee is None:
+            self._fee = psana.Detector(self.params.spectrum_address)
+        if self._fee is None:
+            return None
+        try:
+            fee = self._fee.get(evt)
+            y = fee.hproj()
+        except AttributeError:  # Handle older spectometers without the hproj method
+            img = self._fee.image(evt)
+            x = (
+                self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
+            ) + self.params.spectrum_eV_offset
+            y = img.mean(axis=0)  # Collapse 2D image to 1D trace
+        else:
+            x = (
+                self.params.spectrum_eV_per_pixel * np.array(range(len(y)))
+            ) + self.params.spectrum_eV_offset
+        return Spectrum(flex.double(x), flex.double(y))
 
     def get_goniometer(self, index=None):
         return None
