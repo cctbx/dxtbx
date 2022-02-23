@@ -29,75 +29,49 @@ namespace dxtbx { namespace model {
   public:
     virtual ~BeamBase() {}
 
-    // Get the direction
     virtual vec3<double> get_sample_to_source_direction() const = 0;
-    // Get the wavelength
     virtual double get_wavelength() const = 0;
-    // Get the beam divergence
     virtual double get_divergence() const = 0;
     // Get the standard deviation of the beam divergence
     virtual double get_sigma_divergence() const = 0;
-    // Set the direction.
-    virtual void set_direction(vec3<double> direction) = 0;
-    // Set the wavelength
-    virtual void set_wavelength(double wavelength) = 0;
-    // Get the wave vector in units of inverse angstroms
     virtual vec3<double> get_s0() const = 0;
-    // Set the direction and wavelength from s0
-    virtual void set_s0(vec3<double> s0) = 0;
-    // Get the wave vector from source to sample with unit length
     virtual vec3<double> get_unit_s0() const = 0;
-    // Set the direction using the unit_s0 vector
+    virtual vec3<double> get_polarization_normal() const = 0;
+    virtual double get_polarization_fraction() const = 0;
+    virtual double get_flux() const = 0;
+    virtual double get_transmission() const = 0;
+    virtual std::size_t get_num_scan_points() const = 0;
+    virtual scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const = 0;
+    virtual vec3<double> get_s0_at_scan_point(std::size_t index) const = 0;
+
+    virtual void set_direction(vec3<double> direction) = 0;
+    virtual void set_wavelength(double wavelength) = 0;
+    virtual void set_s0(vec3<double> s0) = 0;
     virtual void set_unit_s0(vec3<double> unit_s0) = 0;
-    // Set the beam divergence
     virtual void set_divergence(double divergence) = 0;
     // Set the standard deviation of the beam divergence
     virtual void set_sigma_divergence(double sigma_divergence) = 0;
-    // Get the polarization
-    virtual vec3<double> get_polarization_normal() const = 0;
-    // Get the polarization fraction
-    virtual double get_polarization_fraction() const = 0;
-    // Set the polarization plane
     virtual void set_polarization_normal(vec3<double> polarization_normal) = 0;
-    // Set the polarization fraction
     virtual void set_polarization_fraction(double polarization_fraction) = 0;
-    // Set the flux
     virtual void set_flux(double flux) = 0;
-    // Set the transmission
     virtual void set_transmission(double transmission) = 0;
-    // Get the flux
-    virtual double get_flux() const = 0;
-    // Get the transmission
-    virtual double get_transmission() const = 0;
-    // @returns the number of scan points
-    virtual std::size_t get_num_scan_points() const = 0;
-    // Set the s0 vector at scan points
     virtual void set_s0_at_scan_points(
       const scitbx::af::const_ref<vec3<double> > &s0) = 0;
-    // Get the s0 vector at scan points
-    virtual scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const = 0;
-    // Get the s0 vector at the scan point
-    virtual vec3<double> get_s0_at_scan_point(std::size_t index) const = 0;
-    // Reset the scan points
+
     virtual void reset_scan_points() = 0;
-    // Check wavelength and direction are (almost) same
-    virtual bool operator==(const BeamBase &rhs) const = 0;
-    // Check if two models are similar
     virtual bool is_similar_to(const BeamBase &rhs,
                                double wavelength_tolerance,
                                double direction_tolerance,
                                double polarization_normal_tolerance,
                                double polarization_fraction_tolerance) const = 0;
-    // Check wavelength and direction are not (almost) equal.
-    virtual bool operator!=(const BeamBase &rhs) const = 0;
-    //  Rotate the beam about an axis
     virtual void rotate_around_origin(vec3<double> axis, double angle) = 0;
+    virtual bool operator!=(const BeamBase &rhs) const = 0;
+    virtual bool operator==(const BeamBase &rhs) const = 0;
   };
 
   /** A class to represent a simple beam. */
   class Beam : public BeamBase {
   public:
-    /** Default constructor: initialise all to zero */
     Beam()
         : wavelength_(0.0),
           direction_(0.0, 0.0, 1.0),
@@ -109,8 +83,7 @@ namespace dxtbx { namespace model {
           transmission_(1.0) {}
 
     /**
-     * Initialise all the beam parameters.
-     * @param direction The beam direction vector.
+     * @param s0 The incident beam vector.
      */
     Beam(vec3<double> s0)
         : divergence_(0.0),
@@ -125,10 +98,8 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Initialise all the beam parameters. Normalize the direction vector
-     * and give it the length of 1.0 / wavelength
+     * @param direction The beam direction vector from sample to source
      * @param wavelength The wavelength of the beam
-     * @param direction The beam direction vector.
      */
     Beam(vec3<double> direction, double wavelength)
         : wavelength_(wavelength),
@@ -143,8 +114,9 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Initialise all the beam parameters.
-     * @param direction The beam direction vector.
+     * @param s0 The incident beam vector.
+     * @param divergence The beam divergence
+     * @param sigma_divergence The standard deviation of the beam divergence
      */
     Beam(vec3<double> s0, double divergence, double sigma_divergence)
         : divergence_(divergence),
@@ -159,10 +131,10 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Initialise all the beam parameters. Normalize the direction vector
-     * and give it the length of 1.0 / wavelength
+     * @param direction The beam direction vector from sample to source
      * @param wavelength The wavelength of the beam
-     * @param direction The beam direction vector.
+     * @param divergence The beam divergence
+     * @param sigma_divergence The standard deviation of the beam divergence
      */
     Beam(vec3<double> direction,
          double wavelength,
@@ -179,6 +151,16 @@ namespace dxtbx { namespace model {
       direction_ = direction.normalize();
     }
 
+    /**
+     * @param direction The beam direction vector from sample to source
+     * @param wavelength The wavelength of the beam
+     * @param divergence The beam divergence
+     * @param sigma_divergence The standard deviation of the beam divergence
+     * @param polarization_normal The polarization plane
+     * @param polarization_fraction The polarization fraction
+     * @param flux The beam flux
+     * @param transmission The beam transmission
+     */
     Beam(vec3<double> direction,
          double wavelength,
          double divergence,
@@ -192,26 +174,22 @@ namespace dxtbx { namespace model {
           sigma_divergence_(sigma_divergence),
           polarization_normal_(polarization_normal),
           polarization_fraction_(polarization_fraction),
-          flux_(0),
-          transmission_(1.0) {
+          flux_(flux),
+          transmission_(transmission) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
 
-    /** Virtual destructor */
     virtual ~Beam() {}
 
-    /** Get the direction */
     vec3<double> get_sample_to_source_direction() const {
       return direction_;
     }
 
-    /** Get the wavelength */
     double get_wavelength() const {
       return wavelength_;
     }
 
-    /** Get the beam divergence */
     double get_divergence() const {
       return divergence_;
     }
@@ -221,42 +199,36 @@ namespace dxtbx { namespace model {
       return sigma_divergence_;
     }
 
-    /** Set the direction. */
+    /** Set the sample to source direction. */
     void set_direction(vec3<double> direction) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
 
-    /** Set the wavelength */
     void set_wavelength(double wavelength) {
       wavelength_ = wavelength;
     }
 
-    /** Get the wave vector in units of inverse angstroms */
     vec3<double> get_s0() const {
       DXTBX_ASSERT(wavelength_ != 0.0);
       return -direction_ * 1.0 / wavelength_;
     }
 
-    /** Set the direction and wavelength from s0 */
     void set_s0(vec3<double> s0) {
       DXTBX_ASSERT(s0.length() > 0);
       direction_ = -s0.normalize();
       wavelength_ = 1.0 / s0.length();
     }
 
-    /** Get the wave vector from source to sample with unit length */
     vec3<double> get_unit_s0() const {
       return -direction_;
     }
 
-    /** Set the direction using the unit_s0 vector */
     void set_unit_s0(vec3<double> unit_s0) {
       DXTBX_ASSERT(unit_s0.length() > 0);
       direction_ = -(unit_s0.normalize());
     }
 
-    /** Set the beam divergence */
     void set_divergence(double divergence) {
       divergence_ = divergence;
     }
@@ -266,91 +238,59 @@ namespace dxtbx { namespace model {
       sigma_divergence_ = sigma_divergence;
     }
 
-    /** Get the polarization */
     vec3<double> get_polarization_normal() const {
       return polarization_normal_;
     }
 
-    /** Get the polarization fraction */
     double get_polarization_fraction() const {
       return polarization_fraction_;
     }
 
-    /** Set the polarization plane */
     void set_polarization_normal(vec3<double> polarization_normal) {
       polarization_normal_ = polarization_normal;
     }
 
-    /** Set the polarization fraction */
     void set_polarization_fraction(double polarization_fraction) {
       polarization_fraction_ = polarization_fraction;
     }
 
-    /**
-     * Set the flux
-     */
     void set_flux(double flux) {
       flux_ = flux;
     }
 
-    /**
-     * Set the transmission
-     */
     void set_transmission(double transmission) {
       transmission_ = transmission;
     }
 
-    /**
-     * Get the flux
-     */
     double get_flux() const {
       return flux_;
     }
 
-    /**
-     * Get the transmission
-     */
     double get_transmission() const {
       return transmission_;
     }
 
-    /**
-     * @returns the number of scan points
-     */
     std::size_t get_num_scan_points() const {
       return s0_at_scan_points_.size();
     }
 
-    /**
-     * Set the s0 vector at scan points
-     */
     void set_s0_at_scan_points(const scitbx::af::const_ref<vec3<double> > &s0) {
       s0_at_scan_points_ = scitbx::af::shared<vec3<double> >(s0.begin(), s0.end());
     }
 
-    /**
-     * Get the s0 vector at scan points
-     */
     scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const {
       return s0_at_scan_points_;
     }
 
-    /**
-     * Get the s0 vector at the scan point
-     */
     vec3<double> get_s0_at_scan_point(std::size_t index) const {
       DXTBX_ASSERT(index < s0_at_scan_points_.size());
       return s0_at_scan_points_[index];
     }
 
-    /**
-     * Reset the scan points
-     */
     void reset_scan_points() {
       s0_at_scan_points_.clear();
     }
 
-    /** Check two beam models are (almost) the same */
     bool operator==(const BeamBase &rhs) const {
       double eps = 1.0e-6;
 
@@ -385,9 +325,6 @@ namespace dxtbx { namespace model {
                   <= eps;
     }
 
-    /**
-     * Check if two models are similar
-     */
     bool is_similar_to(const BeamBase &rhs,
                        double wavelength_tolerance,
                        double direction_tolerance,
@@ -425,12 +362,10 @@ namespace dxtbx { namespace model {
                   <= polarization_fraction_tolerance;
     }
 
-    /** Check two beam models are not (almost) the same. */
     bool operator!=(const BeamBase &rhs) const {
       return !(*this == rhs);
     }
 
-    /** Rotate the beam about an axis */
     void rotate_around_origin(vec3<double> axis, double angle) {
       const double EPS = 1e-7;
       DXTBX_ASSERT(std::abs(direction_ * polarization_normal_) < EPS);
@@ -463,6 +398,8 @@ namespace dxtbx { namespace model {
     os << "    polarization normal: " << b.get_polarization_normal().const_ref()
        << "\n";
     os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
+    os << "    flux: " << b.get_flux() << "\n";
+    os << "    transmission: " << b.get_transmission() << "\n";
     return os;
   }
 
