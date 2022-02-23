@@ -34,7 +34,6 @@ namespace dxtbx { namespace model {
     virtual double get_divergence() const = 0;
     // Get the standard deviation of the beam divergence
     virtual double get_sigma_divergence() const = 0;
-    // Get the wave vector in units of inverse angstroms
     virtual vec3<double> get_s0() const = 0;
     virtual vec3<double> get_unit_s0() const = 0;
     virtual vec3<double> get_polarization_normal() const = 0;
@@ -47,7 +46,6 @@ namespace dxtbx { namespace model {
 
     virtual void set_direction(vec3<double> direction) = 0;
     virtual void set_wavelength(double wavelength) = 0;
-    // Set the wave vector in units of inverse angstroms
     virtual void set_s0(vec3<double> s0) = 0;
     virtual void set_unit_s0(vec3<double> unit_s0) = 0;
     virtual void set_divergence(double divergence) = 0;
