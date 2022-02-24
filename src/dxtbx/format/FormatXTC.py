@@ -68,6 +68,25 @@ locator_str = """
   spectrum_eV_offset = None
     .type = float
     .help = See spectrum_eV_per_pixel
+  filter {
+    evr_address = evr1
+      .type = str
+      .help = Address for evr object which stores event codes. Should be evr0,\
+              evr1, or evr2.
+    required_present_codes = None
+      .type = int
+      .multiple = True
+      .help = These codes must be present to keep the event
+    required_absent_codes = None
+      .type = int
+      .multiple = True
+      .help = These codes must be absent to keep the event
+    pre_filter = False
+      .type = bool
+      .help = If True, read the event codes for all events up front, and \
+              apply the filter then. Otherwise, apply when loading an \
+              event.
+  }
 """
 locator_scope = parse(locator_str)
 
@@ -100,6 +119,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         assert self.params.mode == "idx", "idx mode should be used for analysis"
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
+        self._evr = None
         self.populate_events()
         self.n_images = len(self.times)
 
@@ -172,12 +192,38 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         self.run_mapping = {}
         for run in self._psana_runs.values():
             times = run.times()
+            if (
+                self.params.filter.required_present_codes
+                or self.params.filter.required_absent_codes
+            ) and self.params.filter.pre_filter:
+                times = [t for t in times if self.filter_event(run.event(t))]
             self.run_mapping[run.run()] = (
                 len(self.times),
                 len(self.times) + len(times),
                 run,
             )
             self.times.extend(times)
+
+    def filter_event(self, evt):
+        """Return True to keep the event, False to reject it."""
+        if not (
+            self.params.filter.required_present_codes
+            or self.params.filter.required_absent_codes
+        ):
+            return True
+        if not self._evr:
+            self._evr = psana.Detector(self.params.filter.evr_address)
+        codes = self._evr.eventCodes(evt)
+
+        if self.params.filter.required_present_codes and not all(
+            [c in codes for c in self.params.filter.required_present_codes]
+        ):
+            return False
+        if self.params.filter.required_absent_codes and any(
+            [c in codes for c in self.params.filter.required_absent_codes]
+        ):
+            return False
+        return True
 
     def get_run_from_index(self, index=None):
         """Look up the run number given an index"""
@@ -196,7 +242,17 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             return self.current_event
         else:
             self.current_index = index
-            self.current_event = self.get_run_from_index(index).event(self.times[index])
+            evt = self.get_run_from_index(index).event(self.times[index])
+            if (
+                (
+                    self.params.filter.required_present_codes
+                    or self.params.filter.required_absent_codes
+                )
+                and not self.params.filter.pre_filter
+                and not self.filter_event(evt)
+            ):
+                evt = None
+            self.current_event = evt
             return self.current_event
 
     @staticmethod
@@ -251,6 +307,8 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
     def get_psana_timestamp(self, index):
         """Get the cctbx.xfel style event timestamp given an index"""
         evt = self._get_event(index)
+        if not evt:
+            return None
         time = evt.get(psana.EventId).time()
         # fid = evt.get(psana.EventId).fiducials()
 
@@ -272,6 +330,9 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         if self._beam_index != index:
             self._beam_index = index
             evt = self._get_event(index)
+            if not evt:
+                self._beam_cache = None
+                return None
             spectrum = self.get_spectrum(index)
             if spectrum:
                 wavelength = spectrum.get_weighted_wavelength()
@@ -302,6 +363,8 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             return None
 
         evt = self._get_event(index)
+        if not evt:
+            return None
         if self._fee is None:
             self._fee = psana.Detector(self.params.spectrum_address)
         if self._fee is None:
