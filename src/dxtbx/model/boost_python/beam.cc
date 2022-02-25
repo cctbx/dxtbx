@@ -23,6 +23,8 @@ namespace dxtbx { namespace model { namespace boost_python {
   using scitbx::deg_as_rad;
   using scitbx::rad_as_deg;
 
+  // Beam wrappers 
+
   std::string beam_to_string(const Beam &beam) {
     std::stringstream ss;
     ss << beam;
@@ -218,6 +220,127 @@ namespace dxtbx { namespace model { namespace boost_python {
     return b;
   }
 
+  // TOFBeam wrappers
+
+  std::string tof_beam_to_string(const TOFBeam &beam){
+    std::stringstream ss;
+    ss << beam;
+    return ss.str();
+  }
+
+  struct TOFBeamPickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(const TOFBeam &obj) {
+      return boost::python::make_tuple(obj.get_sample_to_source_direction(),
+                                       obj.get_divergence(),
+                                       obj.get_sigma_divergence(),
+                                       obj.get_polarization_normal(),
+                                       obj.get_polarization_fraction(),
+                                       obj.get_flux(),
+                                       obj.get_transmission());
+    }
+
+    static boost::python::tuple getstate(boost::python::object obj) {
+      const TOFBeam &beam = boost::python::extract<const TOFBeam &>(obj)();
+      return boost::python::make_tuple(obj.attr("__dict__"),
+                                       beam.get_s0_at_scan_points());
+    }
+
+    static void setstate(boost::python::object obj, boost::python::tuple state) {
+      TOFBeam &beam = boost::python::extract<TOFBeam &>(obj)();
+      DXTBX_ASSERT(boost::python::len(state) == 2);
+
+      // restore the object's __dict__
+      boost::python::dict d =
+        boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
+      d.update(state[0]);
+
+      // restore the internal state of the C++ object
+      scitbx::af::const_ref<vec3<double> > s0_list =
+        boost::python::extract<scitbx::af::const_ref<vec3<double> > >(state[1]);
+      beam.set_s0_at_scan_points(s0_list);
+    }
+
+    static bool getstate_manages_dict() {
+      return true;
+    }
+  };
+
+  static TOFBeam *tof_beam_constructor(vec3<double> sample_to_source,
+                               double sample_to_moderator_distance,
+                               double divergence,
+                               double sigma_divergence,
+                               vec3<double> polarization_normal,
+                               double polarization_fraction,
+                               double flux,
+                               double transmission,
+                               bool deg) {
+    TOFBeam *beam = NULL;
+    if (deg) {
+      beam = new TOFBeam(sample_to_source,
+                      sample_to_moderator_distance,
+                      deg_as_rad(divergence),
+                      deg_as_rad(sigma_divergence),
+                      polarization_normal,
+                      polarization_fraction,
+                      flux,
+                      transmission);
+    } else {
+      beam = new TOFBeam(sample_to_source,
+                      sample_to_moderator_distance,
+                      divergence,
+                      sigma_divergence,
+                      polarization_normal,
+                      polarization_fraction,
+                      flux,
+                      transmission);
+    }
+    return beam;
+  }
+
+  template <>
+  boost::python::dict to_dict<TOFBeam>(const TOFBeam &obj) {
+    boost::python::dict result;
+    result["direction"] = obj.get_sample_to_source_direction();
+    result["sample_to_moderator_distance"] = obj.get_sample_to_moderator_distance();
+    result["divergence"] = rad_as_deg(obj.get_divergence());
+    result["sigma_divergence"] = rad_as_deg(obj.get_sigma_divergence());
+    result["polarization_normal"] = obj.get_polarization_normal();
+    result["polarization_fraction"] = obj.get_polarization_fraction();
+    result["flux"] = obj.get_flux();
+    result["transmission"] = obj.get_transmission();
+    if (obj.get_num_scan_points() > 0) {
+      boost::python::list l;
+      scitbx::af::shared<vec3<double> > s0_at_scan_points = obj.get_s0_at_scan_points();
+      for (scitbx::af::shared<vec3<double> >::iterator it = s0_at_scan_points.begin();
+           it != s0_at_scan_points.end();
+           ++it) {
+        l.append(boost::python::make_tuple((*it)[0], (*it)[1], (*it)[2]));
+      }
+      result["s0_at_scan_points"] = l;
+    }
+    return result;
+  }
+
+  template <>
+  TOFBeam *from_dict<TOFBeam>(boost::python::dict obj) {
+    TOFBeam *b = new TOFBeam(
+      boost::python::extract<vec3<double> >(obj["direction"]),
+      boost::python::extract<double>(obj["sample_to_moderator_distance"]),
+      deg_as_rad(boost::python::extract<double>(obj.get("divergence", 0.0))),
+      deg_as_rad(boost::python::extract<double>(obj.get("sigma_divergence", 0.0))),
+      boost::python::extract<vec3<double> >(
+        obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
+      boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
+      boost::python::extract<double>(obj.get("flux", 0)),
+      boost::python::extract<double>(obj.get("transmission", 1)));
+    if (obj.has_key("s0_at_scan_points")) {
+      boost::python::list s0_at_scan_points =
+        boost::python::extract<boost::python::list>(obj["s0_at_scan_points"]);
+      Beam_set_s0_at_scan_points_from_list(*b, s0_at_scan_points);
+    }
+    return b;
+  }
+
   void export_beam() {
     // Export BeamBase
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
@@ -300,6 +423,28 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("from_dict", &from_dict<Beam>, return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
       .def_pickle(BeamPickleSuite());
+
+    // Export TOFBeam :Beam
+    class_<TOFBeam, boost::shared_ptr<TOFBeam>, bases<Beam> >("TOFBeam")
+      .def(init<const TOFBeam &>())
+      .def(init<vec3<double>, double>((arg("direction"), arg("sample_to_moderator_distance"))))
+      .def("__init__",
+           make_constructor(&tof_beam_constructor,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("sample_to_moderator_distance"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("polarization_normal"),
+                             arg("polarization_fraction"),
+                             arg("flux"),
+                             arg("transmission"),
+                             arg("deg") = true)))
+      .def("__str__", &tof_beam_to_string)
+      .def("to_dict", &to_dict<TOFBeam>)
+      .def("from_dict", &from_dict<TOFBeam>, return_value_policy<manage_new_object>())
+      .staticmethod("from_dict")
+      .def_pickle(TOFBeamPickleSuite());
 
     scitbx::af::boost_python::flex_wrapper<Beam>::plain("flex_Beam");
   }

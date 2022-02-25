@@ -188,7 +188,7 @@ namespace dxtbx { namespace model {
       return direction_;
     }
 
-    double get_wavelength() const {
+    virtual double get_wavelength() const {
       return wavelength_;
     }
 
@@ -207,16 +207,16 @@ namespace dxtbx { namespace model {
       direction_ = direction.normalize();
     }
 
-    void set_wavelength(double wavelength) {
+    virtual void set_wavelength(double wavelength) {
       wavelength_ = wavelength;
     }
 
-    vec3<double> get_s0() const {
+    virtual vec3<double> get_s0() const {
       DXTBX_ASSERT(wavelength_ != 0.0);
       return -direction_ * 1.0 / wavelength_;
     }
 
-    void set_s0(vec3<double> s0) {
+    virtual void set_s0(vec3<double> s0) {
       DXTBX_ASSERT(s0.length() > 0);
       direction_ = -s0.normalize();
       wavelength_ = 1.0 / s0.length();
@@ -293,7 +293,7 @@ namespace dxtbx { namespace model {
       s0_at_scan_points_.clear();
     }
 
-    bool operator==(const BeamBase &rhs) const {
+    virtual bool operator==(const BeamBase &rhs) const {
       double eps = 1.0e-6;
 
       // scan-varying model checks
@@ -327,7 +327,7 @@ namespace dxtbx { namespace model {
                   <= eps;
     }
 
-    bool is_similar_to(const BeamBase &rhs,
+    virtual bool is_similar_to(const BeamBase &rhs,
                        double wavelength_tolerance,
                        double direction_tolerance,
                        double polarization_normal_tolerance,
@@ -377,7 +377,7 @@ namespace dxtbx { namespace model {
 
     friend std::ostream &operator<<(std::ostream &os, const Beam &b);
 
-  private:
+  protected:
     double wavelength_;
     vec3<double> direction_;
     double divergence_;
@@ -389,12 +389,299 @@ namespace dxtbx { namespace model {
     scitbx::af::shared<vec3<double> > s0_at_scan_points_;
   };
 
-  /** Print beam information */
+  /** Print Beam information */
   inline std::ostream &operator<<(std::ostream &os, const Beam &b) {
     os << "Beam:\n";
     os << "    wavelength: " << b.get_wavelength() << "\n";
     os << "    sample to source direction : "
        << b.get_sample_to_source_direction().const_ref() << "\n";
+    os << "    divergence: " << b.get_divergence() << "\n";
+    os << "    sigma divergence: " << b.get_sigma_divergence() << "\n";
+    os << "    polarization normal: " << b.get_polarization_normal().const_ref()
+       << "\n";
+    os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
+    os << "    flux: " << b.get_flux() << "\n";
+    os << "    transmission: " << b.get_transmission() << "\n";
+    return os;
+  }
+
+  /** 
+   * A class to represent a time-of-flight beam. 
+   * Wavelengths are reflection-specific for time-of-flight experments.
+   * To satisfy the BeamBase interface TOFBeam can hold data
+   * of a given reflection (reflection_tof_ and reflection_s1_length_)
+   */
+  class TOFBeam : public Beam{
+  public:
+
+    TOFBeam()
+      : sample_to_moderator_distance_(0){}
+
+    /**
+     * @param direction The beam direction vector from sample to source
+     * @param sample_to_moderator_distance (m)
+     */
+    TOFBeam(vec3<double> direction, double sample_to_moderator_distance){
+      set_direction(direction);
+      set_sample_to_moderator_distance(sample_to_moderator_distance);
+    }
+
+    /**
+     * @param direction The beam direction vector from sample to source
+     * @param sample_to_moderator_distance (m)
+     * @param divergence The beam divergence
+     * @param sigma_divergence The standard deviation of the beam divergence
+     * @param polarization_normal The polarization plane
+     * @param polarization_fraction The polarization fraction
+     * @param flux The beam flux
+     * @param transmission The beam transmission
+     */
+    TOFBeam(
+      vec3<double> direction,
+      double sample_to_moderator_distance,
+      double divergence,
+      double sigma_divergence,
+      vec3<double> polarization_normal,
+      double polarization_fraction,
+      double flux,
+      double transmission
+      ){
+      set_direction(direction);
+      set_sample_to_moderator_distance(sample_to_moderator_distance);
+      set_divergence(divergence);
+      set_sigma_divergence(sigma_divergence);
+      set_polarization_normal(polarization_normal);
+      set_polarization_fraction(polarization_fraction);
+      set_flux(flux);
+      set_transmission(transmission);
+      }
+
+
+    virtual ~TOFBeam(){}
+
+    double get_sample_to_moderator_distance() const{
+      return sample_to_moderator_distance_;
+    }
+
+    boost::optional<float> get_reflection_tof() const{
+      return reflection_tof_;
+    }
+
+    boost::optional<float> get_reflection_s1_length() const{
+      return reflection_s1_length_;
+    }
+
+    double get_wavelength() const{
+      DXTBX_ASSERT(reflection_tof_);
+      DXTBX_ASSERT(reflection_s1_length_);
+      return get_wavelength(*reflection_tof_, *reflection_s1_length_);
+    }
+
+    /**
+     * @param reflection_tof time-of-flight (s)
+     * @param reflection_s1_length length of diffracted beam vector (m)
+     * @returns wavelength (A)
+     */
+    double get_wavelength(float reflection_tof, float reflection_s1_length) const{
+      // TODO use scitbx/constants.h instead when #738 has been merged
+      double Planck = 6.62607015e-34;
+      double m_n = 1.67492749804e-27;
+      double L = reflection_s1_length + sample_to_moderator_distance_;
+      return std::pow((Planck * reflection_tof) / (m_n * L), -10);
+    }
+
+    vec3<double> get_s0() const{
+      return -direction_ * 1.0 / get_wavelength();
+    }
+
+    /**
+     * @param reflection_tof time-of-flight (s)
+     * @param reflection_s1_length length of diffracted beam vector (m)
+     * @returns s0 (A^-1)
+     */
+    vec3<double> get_s0(float reflection_tof, float reflection_s1_length) const{
+      return -direction_ * 1.0 / get_wavelength(
+                                          reflection_tof, 
+                                          reflection_s1_length
+                                          );
+    }
+
+    /**
+     * @param wavelength (A)
+     */
+    void set_wavelength(double wavelength){
+      DXTBX_ERROR("wavelength is set via set_reflection for TOFBeam");
+    } 
+
+    /**
+     * @param s0 (A^-1)
+     */
+    void set_s0(vec3<double> s0){
+      DXTBX_ERROR("s0 is set via set_reflection for TOFBeam");
+    } 
+
+    /**
+     * @param sample_to_moderator_distance (m)
+     */
+    void set_sample_to_moderator_distance(float sample_to_moderator_distance){
+      DXTBX_ASSERT(sample_to_moderator_distance > 0);
+      sample_to_moderator_distance_ = sample_to_moderator_distance;
+    }
+
+    /**
+     * @param tof time-of-flight (s)
+     * @param s1_length length of diffracted beam vector (m)
+     */
+    void set_reflection(float tof, float s1_length){
+      DXTBX_ASSERT(tof > 0);
+      reflection_tof_ = tof;
+      DXTBX_ASSERT(s1_length > 0);
+      reflection_s1_length_ = s1_length;
+    }
+
+    void clear_reflection(){
+      reflection_tof_ = boost::none;
+      reflection_s1_length_ = boost::none;
+    }
+
+    bool has_reflection() const{
+      return (reflection_tof_ && reflection_s1_length_);
+    }
+
+
+    virtual bool operator==(const BeamBase &rhs) const{
+      double eps = 1.0e-6;
+      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
+               <= eps
+             && std::abs(divergence_ - rhs.get_divergence()) <= eps
+             && std::abs(sigma_divergence_ - rhs.get_sigma_divergence()) <= eps
+             && std::abs(
+                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                  <= eps
+             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                  <= eps;
+
+    }
+
+    virtual bool operator==(const TOFBeam &rhs) const {
+      double eps = 1.0e-6;
+
+      // Only compare scan varying and wavelength if both have reflection data
+      if (has_reflection() && rhs.has_reflection()){
+
+        if (std::abs(get_wavelength() - rhs.get_wavelength()) > eps){
+          return false;
+        }
+
+        // scan-varying model checks
+        if (get_num_scan_points() > 0) {
+          if (get_num_scan_points() != rhs.get_num_scan_points()) {
+            return false;
+          }
+          for (std::size_t j = 0; j < get_num_scan_points(); ++j) {
+            vec3<double> this_s0 = get_s0_at_scan_point(j);
+            vec3<double> other_s0 = rhs.get_s0_at_scan_point(j);
+            double d_s0 = 0.0;
+            for (std::size_t i = 0; i < 3; ++i) {
+              d_s0 += std::abs(this_s0[i] - other_s0[i]);
+            }
+            if (d_s0 > eps) {
+              return false;
+            }
+          }
+        }
+      }
+
+      // static model checks
+      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
+               <= eps
+             && std::abs(divergence_ - rhs.get_divergence()) <= eps
+             && std::abs(sigma_divergence_ - rhs.get_sigma_divergence()) <= eps
+             && std::abs(
+                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                  <= eps
+             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                  <= eps;
+    }
+
+    virtual bool is_similar_to(const BeamBase &rhs,
+                       double wavelength_tolerance,
+                       double direction_tolerance,
+                       double polarization_normal_tolerance,
+                       double polarization_fraction_tolerance) const {
+
+      // static model checks
+      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
+               <= direction_tolerance
+             && std::abs(
+                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                  <= polarization_normal_tolerance
+             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                  <= polarization_fraction_tolerance;
+
+    }
+
+    virtual bool is_similar_to(const TOFBeam &rhs,
+                       double wavelength_tolerance,
+                       double direction_tolerance,
+                       double polarization_normal_tolerance,
+                       double polarization_fraction_tolerance) const {
+
+
+      // Only compare scan varying and wavelength if both have reflection data
+      if (has_reflection() && rhs.has_reflection()){
+
+        if (std::abs(get_wavelength() - rhs.get_wavelength()) > wavelength_tolerance){
+          return false;
+        }
+
+        // scan varying model checks
+        if (get_num_scan_points() != rhs.get_num_scan_points()) {
+          return false;
+        }
+        for (std::size_t i = 0; i < get_num_scan_points(); ++i) {
+          vec3<double> s0_a = get_s0_at_scan_point(i);
+          vec3<double> s0_b = rhs.get_s0_at_scan_point(i);
+
+          vec3<double> us0_a = s0_a.normalize();
+          vec3<double> us0_b = s0_b.normalize();
+          if (std::abs(angle_safe(us0_a, us0_b)) > direction_tolerance) {
+            return false;
+          }
+
+          double wavelength_a = 1.0 / s0_a.length();
+          double wavelength_b = 1.0 / s0_b.length();
+          if (std::abs(wavelength_a - wavelength_b) > wavelength_tolerance) {
+            return false;
+          }
+        }
+      }
+
+      // static model checks
+      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
+               <= direction_tolerance
+             && std::abs(
+                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                  <= polarization_normal_tolerance
+             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                  <= polarization_fraction_tolerance;
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const TOFBeam &b);
+
+
+  private:
+    double sample_to_moderator_distance_;
+    boost::optional<float> reflection_tof_;
+    boost::optional<float> reflection_s1_length_;
+  };
+
+  /** Print TOFBeam information */
+  inline std::ostream &operator<<(std::ostream &os, const TOFBeam &b) {
+    os << "TOFBeam:\n";
+    os << "    sample to source direction : "
+       << b.get_sample_to_source_direction().const_ref() << "\n";
+    os << "    sample_to_moderator_distance: " << b.get_sample_to_moderator_distance() << "\n";
     os << "    divergence: " << b.get_divergence() << "\n";
     os << "    sigma divergence: " << b.get_sigma_divergence() << "\n";
     os << "    polarization normal: " << b.get_polarization_normal().const_ref()
