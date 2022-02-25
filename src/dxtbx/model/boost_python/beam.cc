@@ -424,7 +424,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .staticmethod("from_dict")
       .def_pickle(BeamPickleSuite());
 
-    // Export TOFBeam :Beam
+    // Export TOFBeam : Beam
     class_<TOFBeam, boost::shared_ptr<TOFBeam>, bases<Beam> >("TOFBeam")
       .def(init<const TOFBeam &>())
       .def(init<vec3<double>, double>((arg("direction"), arg("sample_to_moderator_distance"))))
@@ -440,6 +440,33 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("flux"),
                              arg("transmission"),
                              arg("deg") = true)))
+      .def("get_sample_to_moderator_distance", &TOFBeam::get_sample_to_moderator_distance)
+      .def("get_reflection_tof", &TOFBeam::get_reflection_tof)
+      .def("get_reflection_s1_length", &TOFBeam::get_reflection_s1_length)
+      .def("get_wavelength",
+           static_cast<double (TOFBeam::*)(double, double) const>(&TOFBeam::get_wavelength))
+      .def("get_s0",
+           static_cast<vec3<double> (TOFBeam::*)(double, double) const>(&TOFBeam::get_s0))
+      .def("set_sample_to_moderator_distance", &TOFBeam::set_sample_to_moderator_distance)
+      .def("set_reflection", &TOFBeam::set_reflection)
+      .def("__eq__", 
+           static_cast<bool (TOFBeam::*)(const TOFBeam&) const>(&TOFBeam::operator==))
+      .def("__ne__", 
+           static_cast<bool (TOFBeam::*)(const TOFBeam&) const>(&TOFBeam::operator!=))
+      .def("is_similar_to",
+           static_cast<bool (TOFBeam::*)(
+             const TOFBeam&, 
+             double, 
+             double, 
+             double, 
+             double) const>(&TOFBeam::is_similar_to),
+           (arg("other"),
+            arg("wavelength_tolerance") = 1e-6,
+            arg("direction_tolerance") = 1e-6,
+            arg("polarization_normal_tolerance") = 1e-6,
+            arg("polarization_fraction_tolerance") = 1e-6))
+      .def("clear_reflection", &TOFBeam::clear_reflection)
+      .def("has_reflection", &TOFBeam::has_reflection)
       .def("__str__", &tof_beam_to_string)
       .def("to_dict", &to_dict<TOFBeam>)
       .def("from_dict", &from_dict<TOFBeam>, return_value_policy<manage_new_object>())

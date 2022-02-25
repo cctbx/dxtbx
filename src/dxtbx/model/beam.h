@@ -463,11 +463,11 @@ namespace dxtbx { namespace model {
       return sample_to_moderator_distance_;
     }
 
-    boost::optional<float> get_reflection_tof() const{
+    boost::optional<double> get_reflection_tof() const{
       return reflection_tof_;
     }
 
-    boost::optional<float> get_reflection_s1_length() const{
+    boost::optional<double> get_reflection_s1_length() const{
       return reflection_s1_length_;
     }
 
@@ -482,7 +482,7 @@ namespace dxtbx { namespace model {
      * @param reflection_s1_length length of diffracted beam vector (m)
      * @returns wavelength (A)
      */
-    double get_wavelength(float reflection_tof, float reflection_s1_length) const{
+    double get_wavelength(double reflection_tof, double reflection_s1_length) const{
       // TODO use scitbx/constants.h instead when #738 has been merged
       double Planck = 6.62607015e-34;
       double m_n = 1.67492749804e-27;
@@ -499,7 +499,7 @@ namespace dxtbx { namespace model {
      * @param reflection_s1_length length of diffracted beam vector (m)
      * @returns s0 (A^-1)
      */
-    vec3<double> get_s0(float reflection_tof, float reflection_s1_length) const{
+    vec3<double> get_s0(double reflection_tof, double reflection_s1_length) const{
       return -direction_ * 1.0 / get_wavelength(
                                           reflection_tof, 
                                           reflection_s1_length
@@ -523,7 +523,7 @@ namespace dxtbx { namespace model {
     /**
      * @param sample_to_moderator_distance (m)
      */
-    void set_sample_to_moderator_distance(float sample_to_moderator_distance){
+    void set_sample_to_moderator_distance(double sample_to_moderator_distance){
       DXTBX_ASSERT(sample_to_moderator_distance > 0);
       sample_to_moderator_distance_ = sample_to_moderator_distance;
     }
@@ -532,7 +532,7 @@ namespace dxtbx { namespace model {
      * @param tof time-of-flight (s)
      * @param s1_length length of diffracted beam vector (m)
      */
-    void set_reflection(float tof, float s1_length){
+    void set_reflection(double tof, double s1_length){
       DXTBX_ASSERT(tof > 0);
       reflection_tof_ = tof;
       DXTBX_ASSERT(s1_length > 0);
@@ -604,6 +604,10 @@ namespace dxtbx { namespace model {
                   <= eps;
     }
 
+    bool operator!=(const TOFBeam &rhs) const {
+      return !(*this == rhs);
+    }
+
     virtual bool is_similar_to(const BeamBase &rhs,
                        double wavelength_tolerance,
                        double direction_tolerance,
@@ -672,8 +676,8 @@ namespace dxtbx { namespace model {
 
   private:
     double sample_to_moderator_distance_;
-    boost::optional<float> reflection_tof_;
-    boost::optional<float> reflection_s1_length_;
+    boost::optional<double> reflection_tof_;
+    boost::optional<double> reflection_s1_length_;
   };
 
   /** Print TOFBeam information */
