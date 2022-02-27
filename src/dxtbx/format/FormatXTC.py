@@ -7,8 +7,8 @@ import time
 import numpy as np
 
 from libtbx.phil import parse
-
 from scitbx.array_family import flex
+
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import Reader
