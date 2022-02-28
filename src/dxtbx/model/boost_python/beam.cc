@@ -179,6 +179,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<Beam>(const Beam &obj) {
     boost::python::dict result;
+    result["__id__"] = "Monochromatic";
     result["direction"] = obj.get_sample_to_source_direction();
     result["wavelength"] = obj.get_wavelength();
     result["divergence"] = rad_as_deg(obj.get_divergence());
@@ -300,6 +301,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<TOFBeam>(const TOFBeam &obj) {
     boost::python::dict result;
+    result["__id__"] = "TOF";
     result["direction"] = obj.get_sample_to_source_direction();
     result["sample_to_moderator_distance"] = obj.get_sample_to_moderator_distance();
     result["divergence"] = rad_as_deg(obj.get_divergence());
