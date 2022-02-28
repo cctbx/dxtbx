@@ -25,7 +25,7 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet, ImageSetFactory
 from dxtbx.model import (
-    BeamFactory,
+    BeamBaseFactory,
     CrystalFactory,
     DetectorFactory,
     Experiment,
@@ -96,7 +96,7 @@ class ExperimentListDict:
         self._lookups = {
             model: self._extract_models(model, function)
             for model, function in (
-                ("beam", BeamFactory.from_dict),
+                ("beam", BeamBaseFactory.from_dict),
                 ("detector", DetectorFactory.from_dict),
                 ("goniometer", GoniometerFactory.from_dict),
                 ("scan", ScanFactory.from_dict),

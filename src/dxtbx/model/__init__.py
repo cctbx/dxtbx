@@ -14,7 +14,7 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet
-from dxtbx.model.beam import BeamFactory
+from dxtbx.model.beam import BeamBaseFactory, BeamFactory, TOFBeamFactory
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory

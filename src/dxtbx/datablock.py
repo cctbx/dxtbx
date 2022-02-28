@@ -428,7 +428,7 @@ def datablocks_from_dict(obj, check_format=True, directory=None):
 
     def load_models(obj):
         try:
-            beam = dxtbx.model.BeamFactory.from_dict(blist[obj["beam"]])
+            beam = dxtbx.model.BeamBaseFactory.from_dict(blist[obj["beam"]])
         except Exception:
             beam = None
         try:
