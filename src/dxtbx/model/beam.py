@@ -1,15 +1,27 @@
 from __future__ import annotations
 
 import math
+from abc import ABC, abstractmethod
+from typing import Dict, Tuple
 
 import pycbf
 
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam
+    from ..dxtbx_model_ext import Beam, BeamBase, TOFBeam
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam  # type: ignore
+    from dxtbx_model_ext import BeamBase, Beam, TOFBeam  # type: ignore
+
+from enum import Enum
+
+
+class BeamType(Enum):
+    Monochromatic = 1
+    TOF = 2
+
+
+Vec3Float = Tuple[float, float, float]
 
 beam_phil_scope = libtbx.phil.parse(
     """
@@ -17,6 +29,10 @@ beam_phil_scope = libtbx.phil.parse(
     .expert_level = 1
     .short_caption = "Beam overrides"
   {
+    type = *monochromatic, tof
+      .type = choice
+      .help = "Override the beam type"
+      .short_caption = "beam_type"
 
     wavelength = None
       .type = float
@@ -37,31 +53,105 @@ beam_phil_scope = libtbx.phil.parse(
       .help = "Override the polarization fraction"
       .short_caption = "Polarization fraction"
 
-    transmission = None
+    sample_to_moderator_distance = None
         .type = float
-        .help = "Override the transmission"
-        .short_caption = "transmission"
-
-    flux = None
-        .type = float
-        .help = "Override the flux"
-        .short_caption = "flux"
+        .help = "Override sample to moderator distance"
   }
 """
 )
 
 
-class BeamFactory:
-    """A factory class for beam objects, which encapsulate standard beam
-    models. In cases where a full cbf description is available this
-    will be used, otherwise simplified descriptions can be applied."""
+class AbstractBeamFactory(ABC):
+
+    """
+    Factory interface for all beam factories.
+    """
 
     @staticmethod
-    def from_phil(params, reference=None):
-        """
-        Convert the phil parameters into a beam model
+    @abstractmethod
+    def from_phil(params, reference: BeamBase = None) -> BeamBase:
+        """Convert the phil parameters into a beam model"""
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def from_dict(dict: Dict, template: Dict) -> BeamBase:
+        """Convert the dictionary to a beam model"""
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def make_beam(**kwargs) -> BeamBase:
+        """Convert params into a beam model"""
+        ...
+
+
+class BeamBaseFactory(AbstractBeamFactory):
+
+    """
+    Factory for selecting which beam factory to use.
+    """
+
+    @staticmethod
+    def from_phil(params, reference: BeamBase = None) -> BeamBase:
+        """Convert the phil parameters into a beam model"""
+
+        if params.beam.type == "TOF":
+            return TOFBeamFactory.from_phil(params=params, reference=reference)
+        else:  # Default to monochromatic for back compatibility
+            return BeamFactory.from_phil(params=params, reference=reference)
+
+    @staticmethod
+    def from_dict(dict: Dict, template: Dict = None) -> BeamBase:
+        """Convert the dictionary to a beam model"""
+
+        if template is not None:
+            if "__id__" in dict and "__id__" in template:
+                assert (
+                    dict["__id__"] == template["__id__"]
+                ), "Beam and template dictionaries are not the same type."
+
+        # Assume dictionaries without "__id__" are for Beam objects
+        if "__id__" not in dict or dict["__id__"] == "Monochromatic":
+            return BeamFactory.from_dict(dict=dict, template=template)
+        elif dict["__id__"] == "TOF":
+            return TOFBeamFactory.from_dict(dict=dict, template=template)
+        else:
+            raise NotImplementedError(f"Unknown beam type {dict['__id__']}")
+
+    @staticmethod
+    def make_beam(beam_type: BeamType = BeamType.Monochromatic, **kwargs) -> BeamBase:
 
         """
+        Convert params into a beam model. Any missing params default to None.
+        """
+
+        beam_type = kwargs.get("beam_type")
+
+        if beam_type == BeamType.Monochromatic:
+            return BeamFactory.make_beam(kwargs=kwargs)
+        elif beam_type == BeamType.TOF:
+            return TOFBeamFactory.make_beam(kwargs=kwargs)
+        else:
+            raise NotImplementedError(f"Unknown beam type {beam_type}")
+
+
+class BeamFactory(AbstractBeamFactory):
+
+    """
+    A factory class for Beam objects, which encapsulate standard
+    monochromatic beam models. In cases where a full cbf description
+    is available this will be used, otherwise simplified descriptions
+    can be applied.
+    """
+
+    @staticmethod
+    def from_phil(params, reference: Beam = None) -> Beam:
+
+        """
+        Convert the phil parameters into a beam model
+        """
+
         # Check the input
         if reference is None:
             beam = Beam()
@@ -81,11 +171,16 @@ class BeamFactory:
             beam.set_polarization_normal(params.beam.polarization_normal)
         if params.beam.polarization_fraction is not None:
             beam.set_polarization_fraction(params.beam.polarization_fraction)
+        if params.beam.transmission is not None:
+            beam.set_transmission(params.beam.transmission)
+        if params.beam.flux is not None:
+            beam.set_flux(params.beam.flux)
 
         return beam
 
     @staticmethod
-    def from_dict(d, t=None):
+    def from_dict(d: Dict, t: Dict = None) -> Beam:
+
         """Convert the dictionary to a beam model
 
         Params:
@@ -95,6 +190,7 @@ class BeamFactory:
         Returns:
             The beam model
         """
+
         if d is None and t is None:
             return None
         joint = t.copy() if t else {}
@@ -105,13 +201,15 @@ class BeamFactory:
 
     @staticmethod
     def make_beam(
-        sample_to_source=None,
-        wavelength=None,
-        s0=None,
-        unit_s0=None,
-        divergence=None,
-        sigma_divergence=None,
-    ):
+        sample_to_source: Vec3Float = None,
+        wavelength: float = None,
+        s0: Vec3Float = None,
+        unit_s0: Vec3Float = None,
+        divergence: float = None,
+        sigma_divergence: float = None,
+    ) -> Beam:
+
+        """Convert params into a beam model"""
 
         if divergence is None or sigma_divergence is None:
             divergence = 0.0
@@ -139,17 +237,17 @@ class BeamFactory:
 
     @staticmethod
     def make_polarized_beam(
-        sample_to_source=None,
-        wavelength=None,
-        s0=None,
-        unit_s0=None,
-        polarization=None,
-        polarization_fraction=None,
-        divergence=None,
-        sigma_divergence=None,
-        flux=None,
-        transmission=None,
-    ):
+        sample_to_source: Vec3Float = None,
+        wavelength: float = None,
+        s0: Vec3Float = None,
+        unit_s0: Vec3Float = None,
+        polarization: Vec3Float = None,
+        polarization_fraction: float = None,
+        divergence: float = None,
+        sigma_divergence: float = None,
+        flux: float = None,
+        transmission: float = None,
+    ) -> Beam:
         assert polarization
         assert 0.0 <= polarization_fraction <= 1.0
 
@@ -199,12 +297,15 @@ class BeamFactory:
             )
 
     @staticmethod
-    def simple(wavelength):
-        """Construct a beam object on the principle that the beam is aligned
+    def simple(wavelength: float) -> Beam:
+
+        """
+        Construct a beam object on the principle that the beam is aligned
         with the +z axis, as is quite normal. Also assume the beam has
         polarization fraction 0.999 and is polarized in the x-z plane, unless
         it has a wavelength shorter than 0.05 Å in which case we assume
-        electron diffraction and return an unpolarized beam model."""
+        electron diffraction and return an unpolarized beam model.
+        """
 
         if wavelength > 0.05:
             return BeamFactory.make_beam(
@@ -219,7 +320,7 @@ class BeamFactory:
             )
 
     @staticmethod
-    def simple_directional(sample_to_source, wavelength):
+    def simple_directional(sample_to_source: Vec3Float, wavelength: float) -> Beam:
         """Construct a beam with direction and wavelength."""
 
         if wavelength > 0.05:
@@ -236,10 +337,16 @@ class BeamFactory:
 
     @staticmethod
     def complex(
-        sample_to_source, polarization_fraction, polarization_plane_normal, wavelength
-    ):
-        """Full access to the constructor for cases where we do know everything
-        that we need..."""
+        sample_to_source: Vec3Float,
+        polarization_fraction: float,
+        polarization_plane_normal: Vec3Float,
+        wavelength: float,
+    ) -> Beam:
+
+        """
+        Full access to the constructor for cases where we do know everything
+        that we need.
+        """
 
         return BeamFactory.make_polarized_beam(
             sample_to_source=sample_to_source,
@@ -249,11 +356,14 @@ class BeamFactory:
         )
 
     @staticmethod
-    def imgCIF(cif_file):
-        """Initialize a detector model from an imgCIF file. N.B. the
+    def imgCIF(cif_file: str) -> Beam:
+
+        """
+        Initialize a Beam model from an imgCIF file. N.B. the
         definition of the polarization plane is not completely helpful
         in this - it is the angle between the polarization plane and the
-        +Y laboratory frame vector."""
+        +Y laboratory frame vector.
+        """
 
         cbf_handle = pycbf.cbf_handle_struct()
         cbf_handle.read_widefile(cif_file.encode(), pycbf.MSG_DIGEST)
@@ -263,12 +373,15 @@ class BeamFactory:
         return result
 
     @staticmethod
-    def imgCIF_H(cbf_handle):
-        """Initialize a detector model from an imgCIF file. N.B. the
+    def imgCIF_H(cbf_handle: pycbf.cbf_handle_struct) -> Beam:
+
+        """
+        Initialize a Beam model from an imgCIF file. N.B. the
         definition of the polarization plane is not completely helpful
         in this - it is the angle between the polarization plane and the
         +Y laboratory frame vector. This example works from a cbf_handle,
-        which is already configured."""
+        which is already configured.
+        """
 
         d2r = math.pi / 180.0
 
@@ -315,4 +428,96 @@ class BeamFactory:
             wavelength=wavelength,
             polarization=polar_plane_normal,
             polarization_fraction=polar_fraction,
+        )
+
+
+class TOFBeamFactory(AbstractBeamFactory):
+
+    """
+    A factory for creating TOFBeam objects.
+    """
+
+    @staticmethod
+    def from_phil(params, reference: TOFBeam = None) -> TOFBeam:
+
+        """
+        Convert the phil parameters into a TOFBeam model
+        """
+
+        def check_for_required_params(params, reference):
+            if params.beam.direction is None and reference is None:
+                raise RuntimeError("Cannot create TOFBeam: direction not set")
+            if params.beam.sample_to_moderator_distance is None and reference is None:
+                raise RuntimeError(
+                    "Cannot create ToF beam: sample_to_moderator_distance not set"
+                )
+
+        check_for_required_params(params=params, reference=reference)
+
+        if reference is None:
+            beam = TOFBeam()
+        else:
+            beam = reference
+
+        if params.beam.direction is not None:
+            beam.set_sample_to_source_direction(params.beam.direction)
+        if params.sample_to_moderator_distance is not None:
+            beam.set_sample_to_moderator_distance(
+                params.beam.sample_to_moderator_distance
+            )
+        if params.beam.polarization_normal is not None:
+            beam.set_polarization_normal(params.beam.polarization_normal)
+        if params.beam.polarization_fraction is not None:
+            beam.set_polarization_fraction(params.beam.polarization_fraction)
+        if params.beam.transmission is not None:
+            beam.set_transmission(params.beam.transmission)
+        if params.beam.flux is not None:
+            beam.set_flux(params.beam.flux)
+
+        return beam
+
+    @staticmethod
+    def from_dict(dict: Dict, template: Dict = None) -> TOFBeam:
+
+        """Convert the dictionary to a TOFBeam model"""
+
+        def check_for_required_keys(dict, required_keys):
+            for i in required_keys:
+                if i not in dict:
+                    raise RuntimeError(f"Cannot create TOFBeam: {i} not in dictionary")
+
+        required_keys = [
+            "direction",
+            "sample_to_moderator_distance",
+        ]
+        if dict is None and template is None:
+            return None
+        # Use the template as the initial dictionary,
+        # and update/replace fields with dict
+        beam_dict = template.copy() if template else {}
+        beam_dict.update(dict)
+        check_for_required_keys(dict=beam_dict, required_keys=required_keys)
+
+        return TOFBeam.from_dict(beam_dict)
+
+    @staticmethod
+    def make_beam(**kwargs) -> TOFBeam:
+
+        """Convert params into a TOFBeam model"""
+
+        sample_to_source_direction = kwargs.get("sample_to_source_direction")
+        if not sample_to_source_direction:
+            raise RuntimeError(
+                "Cannot create TOFBeam: sample_to_source_direction not set"
+            )
+
+        sample_to_moderator_distance = kwargs.get("sample_to_moderator_distance")
+        if not sample_to_moderator_distance:
+            raise RuntimeError(
+                "Cannot create TOFBeam: sample_to_moderator_distance not set"
+            )
+
+        return TOFBeam(
+            tuple(map(float, sample_to_source_direction)),
+            float(sample_to_moderator_distance),
         )
