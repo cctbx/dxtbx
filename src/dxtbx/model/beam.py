@@ -53,6 +53,14 @@ beam_phil_scope = libtbx.phil.parse(
       .help = "Override the polarization fraction"
       .short_caption = "Polarization fraction"
 
+    transmission = None
+        .type = float
+        .help = "Override the transmission"
+
+    flux = None
+        .type = float
+        .help = "Override the flux"
+
     sample_to_moderator_distance = None
         .type = float
         .help = "Override sample to moderator distance"
