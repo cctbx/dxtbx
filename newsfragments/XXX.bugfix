@@ -1,0 +1,1 @@
+scan.h: remove useless asserts which only ever caused problems
