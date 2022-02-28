@@ -29,7 +29,7 @@ beam_phil_scope = libtbx.phil.parse(
     .expert_level = 1
     .short_caption = "Beam overrides"
   {
-    type = *monochromatic, tof
+    type = *monochromatic tof
       .type = choice
       .help = "Override the beam type"
       .short_caption = "beam_type"
@@ -104,7 +104,7 @@ class BeamBaseFactory(AbstractBeamFactory):
     def from_phil(params, reference: BeamBase = None) -> BeamBase:
         """Convert the phil parameters into a beam model"""
 
-        if params.beam.type == "TOF":
+        if params.beam.type == "tof":
             return TOFBeamFactory.from_phil(params=params, reference=reference)
         else:  # Default to monochromatic for back compatibility
             return BeamFactory.from_phil(params=params, reference=reference)
@@ -128,7 +128,7 @@ class BeamBaseFactory(AbstractBeamFactory):
             raise NotImplementedError(f"Unknown beam type {dict['__id__']}")
 
     @staticmethod
-    def make_beam(beam_type: BeamType = BeamType.Monochromatic, **kwargs) -> BeamBase:
+    def make_beam(**kwargs) -> BeamBase:
 
         """
         Convert params into a beam model. Any missing params default to None.
@@ -136,10 +136,11 @@ class BeamBaseFactory(AbstractBeamFactory):
 
         beam_type = kwargs.get("beam_type")
 
-        if beam_type == BeamType.Monochromatic:
-            return BeamFactory.make_beam(kwargs=kwargs)
+        # Default to Beam for back compatability
+        if beam_type is None or beam_type == BeamType.Monochromatic:
+            return BeamFactory.make_beam(**kwargs)
         elif beam_type == BeamType.TOF:
-            return TOFBeamFactory.make_beam(kwargs=kwargs)
+            return TOFBeamFactory.make_beam(**kwargs)
         else:
             raise NotImplementedError(f"Unknown beam type {beam_type}")
 
@@ -187,37 +188,29 @@ class BeamFactory(AbstractBeamFactory):
         return beam
 
     @staticmethod
-    def from_dict(d: Dict, t: Dict = None) -> Beam:
+    def from_dict(dict: Dict, template: Dict = None) -> Beam:
 
-        """Convert the dictionary to a beam model
+        """Convert the dictionary to a beam model"""
 
-        Params:
-            d The dictionary of parameters
-            t The template dictionary to use
-
-        Returns:
-            The beam model
-        """
-
-        if d is None and t is None:
+        if dict is None and template is None:
             return None
-        joint = t.copy() if t else {}
-        joint.update(d)
+        joint = template.copy() if template else {}
+        joint.update(dict)
 
         # Create the model from the joint dictionary
         return Beam.from_dict(joint)
 
     @staticmethod
-    def make_beam(
-        sample_to_source: Vec3Float = None,
-        wavelength: float = None,
-        s0: Vec3Float = None,
-        unit_s0: Vec3Float = None,
-        divergence: float = None,
-        sigma_divergence: float = None,
-    ) -> Beam:
+    def make_beam(**kwargs) -> Beam:
 
         """Convert params into a beam model"""
+
+        sample_to_source = kwargs.get("sample_to_source")
+        wavelength = kwargs.get("wavelength")
+        s0 = kwargs.get("s0")
+        unit_s0 = kwargs.get("unit_s0")
+        divergence = kwargs.get("divergence")
+        sigma_divergence = kwargs.get("sigma_divergence")
 
         if divergence is None or sigma_divergence is None:
             divergence = 0.0
@@ -468,8 +461,8 @@ class TOFBeamFactory(AbstractBeamFactory):
             beam = reference
 
         if params.beam.direction is not None:
-            beam.set_sample_to_source_direction(params.beam.direction)
-        if params.sample_to_moderator_distance is not None:
+            beam.set_direction(params.beam.direction)
+        if params.beam.sample_to_moderator_distance is not None:
             beam.set_sample_to_moderator_distance(
                 params.beam.sample_to_moderator_distance
             )
