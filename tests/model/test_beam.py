@@ -376,3 +376,39 @@ def test_tof_beam_factory_from_dict(eps):
     )
     beam_dir = beam.get_sample_to_source_direction()
     assert abs(beam_dict["direction"].normalize() - matrix.col(beam_dir)) < eps
+
+
+def test_tof_beam_wavelength_and_s0():
+
+    eps = 1e-5
+
+    tof = 500e-6
+    s1_length = 0.225
+
+    expected_wavelength = 0.19345
+    expected_s0 = matrix.col((0, 0, 5.16932))
+
+    sample_to_moderator_distance = 10.0
+    direction = (0, 0, -1)
+    beam = TOFBeam(direction, sample_to_moderator_distance)
+
+    with pytest.raises(RuntimeError):
+        beam.get_wavelength()
+    with pytest.raises(RuntimeError):
+        beam.get_s0()
+
+    assert beam.get_reflection_tof() is None
+    assert beam.get_reflection_s1_length() is None
+    assert not beam.has_reflection()
+
+    beam.set_reflection(tof, s1_length)
+    assert beam.has_reflection()
+    assert beam.get_wavelength() == pytest.approx(expected_wavelength, 1e-5)
+    assert abs(matrix.col(beam.get_s0()) - expected_s0) < eps
+
+    beam.clear_reflection()
+    with pytest.raises(RuntimeError):
+        beam.get_wavelength()
+    with pytest.raises(RuntimeError):
+        beam.get_s0()
+    assert not beam.has_reflection()

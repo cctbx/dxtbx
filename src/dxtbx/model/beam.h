@@ -487,7 +487,7 @@ namespace dxtbx { namespace model {
       double Planck = 6.62607015e-34;
       double m_n = 1.67492749804e-27;
       double L = reflection_s1_length + sample_to_moderator_distance_;
-      return std::pow((Planck * reflection_tof) / (m_n * L), -10);
+      return ((Planck * reflection_tof) / (m_n * L)) * std::pow(10,10);
     }
 
     vec3<double> get_s0() const{

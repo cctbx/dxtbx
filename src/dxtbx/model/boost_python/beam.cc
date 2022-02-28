@@ -445,8 +445,10 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_sample_to_moderator_distance", &TOFBeam::get_sample_to_moderator_distance)
       .def("get_reflection_tof", &TOFBeam::get_reflection_tof)
       .def("get_reflection_s1_length", &TOFBeam::get_reflection_s1_length)
+      .def("get_wavelength", &BeamBase::get_wavelength)
       .def("get_wavelength",
            static_cast<double (TOFBeam::*)(double, double) const>(&TOFBeam::get_wavelength))
+      .def("get_s0", &BeamBase::get_s0)
       .def("get_s0",
            static_cast<vec3<double> (TOFBeam::*)(double, double) const>(&TOFBeam::get_s0))
       .def("set_sample_to_moderator_distance", &TOFBeam::set_sample_to_moderator_distance)
