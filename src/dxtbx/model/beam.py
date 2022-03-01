@@ -56,10 +56,12 @@ beam_phil_scope = libtbx.phil.parse(
     transmission = None
         .type = float
         .help = "Override the transmission"
+        .short_caption = "transmission"
 
     flux = None
         .type = float
         .help = "Override the flux"
+        .short_caption = "flux"
 
     sample_to_moderator_distance = None
         .type = float
