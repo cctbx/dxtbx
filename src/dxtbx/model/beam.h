@@ -17,6 +17,7 @@
 #include <scitbx/array_family/shared.h>
 #include <scitbx/array_family/simple_io.h>
 #include <scitbx/array_family/simple_tiny_io.h>
+#include <scitbx/constants.h>
 #include <dxtbx/error.h>
 #include "model_helpers.h"
 
@@ -482,10 +483,11 @@ namespace dxtbx { namespace model {
      * @param reflection_s1_length length of diffracted beam vector (m)
      * @returns wavelength (A)
      */
-    double get_wavelength(double reflection_tof, double reflection_s1_length) const{
-      // TODO use scitbx/constants.h instead when #738 has been merged
-      double Planck = 6.62607015e-34;
-      double m_n = 1.67492749804e-27;
+    double get_wavelength(
+      double reflection_tof, 
+      double reflection_s1_length) const{
+      double Planck = scitbx::constants::Planck;
+      double m_n = scitbx::constants::m_n;
       double L = reflection_s1_length + sample_to_moderator_distance_;
       return ((Planck * reflection_tof) / (m_n * L)) * std::pow(10,10);
     }
