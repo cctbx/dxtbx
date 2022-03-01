@@ -66,6 +66,7 @@ beam_phil_scope = libtbx.phil.parse(
     sample_to_moderator_distance = None
         .type = float
         .help = "Override sample to moderator distance"
+        .short_caption = "Sample to moderator distance"
   }
 """
 )
