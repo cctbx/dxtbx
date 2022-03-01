@@ -209,6 +209,7 @@ class FullCBFWriter:
                 diffrn_id,
                 False,
                 gain=[panel.get_gain() for panel in detector],
+                flux=beam.get_flux(),
             )
 
         """Data items in the AXIS category record the information required
