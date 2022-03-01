@@ -37,6 +37,15 @@ beam_phil_scope = libtbx.phil.parse(
       .help = "Override the polarization fraction"
       .short_caption = "Polarization fraction"
 
+    transmission = None
+        .type = float
+        .help = "Override the transmission"
+        .short_caption = "transmission"
+
+    flux = None
+        .type = float
+        .help = "Override the flux"
+        .short_caption = "flux"
   }
 """
 )
