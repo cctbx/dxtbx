@@ -41,7 +41,7 @@ namespace dxtbx { namespace model {
           oscillation_(0.0, 0.0),
           num_images_(0),
           batch_offset_(0),
-          is_still_(false) {}
+          is_still_(true) {}
 
     /**
      * Initialise the class
