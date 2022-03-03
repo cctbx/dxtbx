@@ -60,7 +60,7 @@ namespace dxtbx { namespace model {
           exposure_times_(num_images_, 0.0),
           epochs_(num_images_, 0.0) {
       DXTBX_ASSERT(num_images_ >= 0);
-      if (oscillation[1] != 0.0) {
+      if (oscillation[1] > min_oscillation_width_) {
         is_still_ = false;
       } else {
         is_still_ = true;
@@ -90,7 +90,7 @@ namespace dxtbx { namespace model {
           exposure_times_(exposure_times),
           epochs_(epochs) {
       DXTBX_ASSERT(num_images_ >= 0);
-      if (oscillation[1] != 0.0) {
+      if (oscillation[1] > min_oscillation_width_) {
         is_still_ = false;
       } else {
         is_still_ = true;
@@ -233,17 +233,12 @@ namespace dxtbx { namespace model {
     /** Set the oscillation */
     void set_oscillation(vec2<double> oscillation) {
       DXTBX_ASSERT(oscillation[1] >= 0.0);
-      if (oscillation[1] != 0.0) {
+      if (oscillation[1] > min_oscillation_width_) {
         is_still_ = false;
       } else {
         is_still_ = true;
       }
       oscillation_ = oscillation;
-      if (oscillation[1] != 0.0) {
-        is_still_ = false;
-      } else {
-        is_still_ = true;
-      }
     }
 
     /** Set the exposure time */
@@ -346,7 +341,7 @@ namespace dxtbx { namespace model {
     void append_rotation(const Scan &rhs, double scan_tolerance) {
       double eps = scan_tolerance * std::abs(oscillation_[1]);
       DXTBX_ASSERT(eps > 0);
-      DXTBX_ASSERT(std::abs(oscillation_[1]) > 0.0);
+      DXTBX_ASSERT(std::abs(oscillation_[1]) > min_oscillation_width_);
       DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
       DXTBX_ASSERT(std::abs(oscillation_[1] - rhs.oscillation_[1]) < eps);
       DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
@@ -517,6 +512,7 @@ namespace dxtbx { namespace model {
     vec2<int> image_range_;
     ExpImgRangeMap valid_image_ranges_; /** initialised as an empty map **/
     vec2<double> oscillation_;
+    double min_oscillation_width_ = 1e-7;
     int num_images_;
     int batch_offset_;
     bool is_still_;
