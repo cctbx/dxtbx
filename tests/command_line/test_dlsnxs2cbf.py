@@ -9,29 +9,24 @@ import numpy as np
 import pytest
 
 from dxtbx.command_line.dlsnxs2cbf import parser, run
-from dxtbx.format.FormatCBFMiniEigerDLS16MSN160 import FormatCBFMiniEigerDLS16MSN160
+from dxtbx.format.FormatCBFMiniEiger import FormatCBFMiniEiger
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.util.dlsnxs2cbf import make_cbf
 
 
-@pytest.mark.xfail(reason="Broken for old data while collecting new data")
 def test_dlsnxs2cbf(dials_data, tmp_path, capsys):
-    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
-    master = screen / "Therm_6_1_master.h5"
-    run([str(master), "junk_%04d.cbf"])
+    screen = dials_data("four_circle_eiger", pathlib=True)
+    master = screen / "03_CuHF2pyz2PF6b_P_O" / "CuHF2pyz2PF6b_P_O_02.nxs"
+    run([str(master), "-o", str(tmp_path)])
 
-    output_files = ["junk_%04d.cbf" % j for j in (1, 2, 3)]
+    output_files = [tmp_path / f"{master.stem}_{j:03d}.cbf" for j in (1, 2, 3)]
     captured = capsys.readouterr()
-    for file in output_files:
-        assert file.encode("latin-1") in captured.out
-        assert tmp_path.joinpath(file).is_file()
+    assert f"{master.stem}_###.cbf" in captured.out
+    assert all(path.is_file() for path in output_files)
 
-    expts = ExperimentListFactory.from_filenames(
-        str(tmp_path / file) for file in output_files
-    )
+    expts = ExperimentListFactory.from_filenames(output_files)
     assert all(
-        imgset.get_format_class() == FormatCBFMiniEigerDLS16MSN160
-        for imgset in expts.imagesets()
+        imgset.get_format_class() == FormatCBFMiniEiger for imgset in expts.imagesets()
     )
 
     with h5py.File(master) as fh:
@@ -39,8 +34,7 @@ def test_dlsnxs2cbf(dials_data, tmp_path, capsys):
             original = fh["/entry/data/data_000001"][i][()]
             sel = np.where(original < original.max())
             np.testing.assert_equal(
-                fh["/entry/data/data_000001"][i][sel],
-                imgset.get_raw_data(0)[0].as_numpy_array()[sel],
+                original[sel], imgset.get_raw_data(0)[0].as_numpy_array()[sel]
             )
 
 
