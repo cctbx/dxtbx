@@ -15,6 +15,7 @@ from dxtbx.util.dlsnxs2cbf import make_cbf
 
 
 def test_dlsnxs2cbf(dials_data, tmp_path, capsys):
+    """Test basic behaviour of dxtbx.dlsnxs2cbf."""
     screen = dials_data("four_circle_eiger", pathlib=True)
     master = screen / "03_CuHF2pyz2PF6b_P_O" / "CuHF2pyz2PF6b_P_O_02.nxs"
     run([str(master), "-o", str(tmp_path)])
