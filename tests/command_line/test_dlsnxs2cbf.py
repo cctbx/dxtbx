@@ -14,6 +14,19 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.util.dlsnxs2cbf import make_cbf
 
 
+def rationalise_whitespace(string: str):
+    """
+    Reformat argparse output in a common layout.
+
+    argparse.parser.print_help() merges consecutive spaces and changes the linebreaks in
+    argparse.parser.description, allowing breaks on a hyphen.  In order to compare
+    expected and actual help output, rationalise a string to a common layout by
+    replacing all instances of '-\n' with '-', and then replacing multiple consecutive
+    whitespace characters with a single space.
+    """
+    return " ".join(string.replace("-\n", "-").split())
+
+
 def test_dlsnxs2cbf(dials_data, tmp_path, capsys):
     """Test basic behaviour of dxtbx.dlsnxs2cbf."""
     screen = dials_data("four_circle_eiger", pathlib=True)
@@ -64,10 +77,10 @@ def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
     make_cbf(tmp_path / master, template=str(tmp_path / "image_%04d.cbf"))
 
 
-@pytest.mark.xfail(reason="Broken for old data while collecting new data")
 def test_dlsnxs2cbf_help(capsys):
+    """Test that the expected help message appears."""
     with pytest.raises(SystemExit):
         run(["-h"])
-    captured = capsys.readouterr()
-    assert parser.description in captured.out
-    assert "Template cbf output name e.g. 'image_%04d.cbf'" in captured.out
+
+    captured = rationalise_whitespace(capsys.readouterr().out)
+    assert rationalise_whitespace(parser.description) in captured
