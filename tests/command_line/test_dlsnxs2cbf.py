@@ -52,20 +52,19 @@ def test_dlsnxs2cbf(dials_data, tmp_path, capsys):
             )
 
 
-@pytest.mark.xfail(reason="The dependency chain is broken")
-@pytest.mark.parametrize("remove_axis", ["phi", "chi"], ids=["no phi", "no chi"])
+@pytest.mark.parametrize("remove_axis", ["phi", "kappa"], ids=["no phi", "no kappa"])
 def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
-    """Check that a master file without φ or χ axes processes OK."""
-    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
-    master = "Therm_6_1_master.h5"
+    """Check that a master file without φ or κ axes processes OK."""
+    screen = dials_data("four_circle_eiger", pathlib=True) / "03_CuHF2pyz2PF6b_P_O"
+    master = "CuHF2pyz2PF6b_P_O_02.nxs"
     links = (path.name for path in screen.glob("*") if path.name != master)
     try:
         for name in links:
             (tmp_path / name).symlink_to(screen / name)
     except OSError:
         warnings.warn(
-            "Copying files where unable to symlink. On Windows, Administrators"
-            " or users with Developer Mode can create symlinks freely."
+            "Copying files where unable to symlink. On Windows, Administrators "
+            "or users with Developer Mode can create symlinks freely."
         )
         for name in links:
             shutil.copy(os.fspath(screen / name), os.fspath(tmp_path))
@@ -73,8 +72,18 @@ def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
 
     with h5py.File(tmp_path / master, "r+") as f:
         del f[f"entry/sample/transformations/{remove_axis}"]
+        # When removing φ, ensure that the sample's depends_on data set is redirected
+        # to point to κ.  When removing κ, ensure that the depends_on attribute of φ is
+        # redirected to point to ω.
+        if remove_axis == "phi":
+            depends_on_key = "entry/sample/depends_on"
+            del f[depends_on_key]
+            f.create_dataset(depends_on_key, data="/entry/sample/transformations/kappa")
+        elif remove_axis == "kappa":
+            phi = f["entry/sample/transformations/phi"]
+            phi.attrs["depends_on"] = "/entry/sample/transformations/omega"
 
-    make_cbf(tmp_path / master, template=str(tmp_path / "image_%04d.cbf"))
+    make_cbf(tmp_path / master, tmp_path)
 
 
 def test_dlsnxs2cbf_help(capsys):
