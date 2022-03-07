@@ -105,6 +105,24 @@ def test_nxmx(nxmx_example):
     assert nxentry.source.short_name == "DLS"
 
 
+def test_nxmx_single_value_properties(dials_data):
+    """
+    Check we correctly interpret scalar data stored as single-valued arrays.
+
+    Some data sources, notably Dectris Eiger detectors at Diamond Light Source,
+    record some scalar data as length-1 arrays.  Check here that we correctly
+    interpret such data as scalars.  The dials_data four_circle_eiger data set is an
+    example of one such data set.
+    """
+    data = dials_data("four_circle_eiger", pathlib=True)
+    with h5py.File(data / "03_CuHF2pyz2PF6b_P_O" / "CuHF2pyz2PF6b_P_O_02.nxs") as f:
+        nx_detector = nxmx.NXmx(f).entries[0].instruments[0].detectors[0]
+        # These scalar parameters are populated with data from single-valued arrays.
+        assert nx_detector.pixel_mask_applied is True
+        assert nx_detector.saturation_value == 1382150
+        assert nx_detector.serial_number == "E-08-0148"
+
+
 def test_get_rotation_axes(nxmx_example):
     sample = nxmx.NXmx(nxmx_example).entries[0].samples[0]
     dependency_chain = nxmx.get_dependency_chain(sample.depends_on)
