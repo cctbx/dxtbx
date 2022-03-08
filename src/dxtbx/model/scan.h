@@ -39,7 +39,9 @@ namespace dxtbx { namespace model {
     Scan()
         : image_range_(0, 0),
           oscillation_(0.0, 0.0),
-          num_images_(0),
+          num_images_(1),
+          exposure_times_(1, 0.0),
+          epochs_(1, 0.0),
           batch_offset_(0),
           is_still_(false) {}
 
