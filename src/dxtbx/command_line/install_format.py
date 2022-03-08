@@ -1,25 +1,25 @@
 from __future__ import annotations
 
+import argparse
 import ast
-import optparse
-import os
+import shutil
 import sys
+from pathlib import Path
 from urllib.request import urlretrieve
 
 import procrunner
-import py
 
 import dxtbx.util
 
 
-def find_format_classes(directory, base_python_path="dxtbx.format"):
+def find_format_classes(directory: Path, base_python_path="dxtbx.format"):
     format_classes = []
-    for name in directory.listdir("Format*.py"):
-        content = name.read()
+    for name in directory.glob("Format*.py"):
+        content = name.read_text()
         try:
             parsetree = ast.parse(content)
         except SyntaxError:
-            print("  *** Could not parse %s" % name.strpath)
+            print(f"  *** Could not parse {name}")
             continue
         for top_level_def in parsetree.body:
             if not isinstance(top_level_def, ast.ClassDef):
@@ -36,14 +36,14 @@ def find_format_classes(directory, base_python_path="dxtbx.format"):
                         baseclasses=",".join(base_names),
                         base_python_path=base_python_path,
                         classname=classname,
-                        modulename=name.purebasename,
+                        modulename=name.stem,
                     )
                 )
                 print("  found", classname, "based on", str(base_names))
     return format_classes
 
 
-def install_package(home_location, format_classes):
+def install_package(home_location: Path, format_classes):
     setup = (
         """
 from __future__ import absolute_import, division, print_function
@@ -70,10 +70,10 @@ setup(
 """
     )
 
-    (home_location / "setup.py").write(setup)
-    (home_location / "__init__.py").ensure()
-    if not (home_location / "dxtbx_custom").check():
-        (home_location / "dxtbx_custom").mksymlinkto(home_location)
+    home_location.joinpath("setup.py").write_text(setup)
+    home_location.joinpath("__init__.py").touch()
+    if not (dxtbx_custom := home_location / "dxtbx_custom").exists():
+        dxtbx_custom.symlink_to(home_location, target_is_directory=True)
     procrunner.run(
         ["libtbx.python", home_location / "setup.py", "develop", "--user"],
         working_directory=home_location,
@@ -82,9 +82,9 @@ setup(
 
 
 def run(args=None):
+    # usage="dxtbx.install_format (--user | --global) [/path/to/format/class.py] [URL]",
     dxtbx.util.encode_output_as_utf8()
-    parser = optparse.OptionParser(
-        usage="dxtbx.install_format (--user | --global) [/path/to/format/class.py] [URL]",
+    parser = argparse.ArgumentParser(
         description=(
             "Updates the dxtbx format class registry and installs format classes "
             "by copying/downloading them into the format class directory. "
@@ -92,66 +92,68 @@ def run(args=None):
             "manually."
         ),
     )
-    parser.add_option("-?", action="help", help=optparse.SUPPRESS_HELP)
-    parser.add_option(
+    parser.add_argument("-?", action="help", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "sources",
+        metavar="SOURCE",
+        nargs="+",
+        help="The path to the format class file (/path/to/format/class.py) to import, or URL to download from",
+    )
+    destination_group = parser.add_mutually_exclusive_group(required=True)
+    destination_group.add_argument(
         "-g",
         "--global",
         action="store_true",
-        dest="glob",
-        default=False,
+        dest="write_global",
         help=(
             "Install format classes globally (requires write access to base python, "
             "affects everyone using the installation, files go to /build/dxtbx/formats)"
         ),
     )
-    parser.add_option(
+    destination_group.add_argument(
         "-u",
         "--user",
         action="store_true",
-        dest="user",
-        default=False,
+        dest="write_user",
         help=(
             "Install format classes for current user only (requires write access to home directory, "
             "affects all python installations for the current user, files go to ~/.dxtbx)"
         ),
     )
-    options, args = parser.parse_args(args)
+    args = parser.parse_args(args)
 
-    if options.glob:
+    if args.write_global:
         import libtbx.load_env
 
-        home_location = py.path.local(abs(libtbx.env.build_path)) / "dxtbx" / "formats"
-    elif options.user:
-        home_location = py.path.local(os.path.expanduser("~")) / ".dxtbx"
-    else:
-        parser.print_help()
-        print("\nYou must specify --global or --user")
-        sys.exit(1 if args else 0)
-    home_location.ensure(dir=True)
+        home_location = Path(abs(libtbx.env.build_path)) / "dxtbx" / "formats"
+    elif args.write_user:
+        home_location = Path.home() / ".dxtbx"
 
-    for fc in args:
+    home_location.mkdir(exist_ok=True)
+
+    for fc in args.sources:
         try:
-            local_file = py.path.local(fc)
+            local_file = Path(fc)
         except Exception:
             local_file = False
-        if local_file and local_file.check(file=1):
-            home_location_copy = home_location / local_file.basename
+        if local_file and local_file.is_file():
+            home_location_copy = home_location / local_file.name
             if local_file == home_location_copy:
                 continue
-            local_file.copy(home_location_copy)
-            print("Copied", local_file.strpath, "to", home_location_copy.strpath)
+            shutil.copy(local_file, home_location_copy)
+            print(f"Copied {local_file} to {home_location_copy}")
             continue
         # Download the file from `url` and save it locally under `file_name`:
         if "/" in fc:
             local_file = home_location / fc.split("/")[-1]
-            if local_file.ext != ".py":
-                local_file = local_file.new(basename=local_file.basename + ".py")
+            if local_file.suffix != ".py":
+                local_file = local_file.parent / (local_file.name + ".py")
             try:
-                urlretrieve(fc, local_file.strpath)
+                urlretrieve(fc, str(local_file))
             except Exception:
                 local_file = False
-            if local_file and local_file.check(file=1):
-                print("Downloaded", fc, "to", local_file.strpath)
+            if local_file and local_file.is_file():
+                print(f"Downloaded {fc} to {local_file}")
                 continue
         sys.exit("Could not understand " + repr(fc))
 
