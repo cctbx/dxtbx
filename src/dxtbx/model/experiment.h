@@ -150,7 +150,7 @@ namespace dxtbx { namespace model {
      * Check if this experiment represents a still image
      */
     bool is_still() const {
-      return !goniometer_ || !scan_ || scan_->get_oscillation()[1] == 0.0;
+      return !goniometer_ || !scan_ || scan_->is_still();
     }
 
     /**
