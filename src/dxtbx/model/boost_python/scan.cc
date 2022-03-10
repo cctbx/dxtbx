@@ -173,7 +173,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     return Scan(scan);
   }
 
-  static void set_valid_image_ranges(Scan &scan,
+  static void set_valid_image_ranges(ScanBase &scan,
                                      std::string i,
                                      boost::python::list obj) {
     int n = boost::python::len(obj);
@@ -184,7 +184,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     scan.set_valid_image_ranges_array(i, ranges);
   }
 
-  static boost::python::list get_valid_image_ranges(Scan &scan, std::string i) {
+  static boost::python::list get_valid_image_ranges(ScanBase &scan, std::string i) {
     scitbx::af::shared<vec2<int> > ranges = scan.get_valid_image_ranges_key(i);
     boost::python::list result;
     if (ranges.size() != 0) {
@@ -374,7 +374,22 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_scan() {
     // Export ScanBase
-    class_<ScanBase>("ScanBase");
+    class_<ScanBase, boost::noncopyable>("ScanBase", no_init)
+      .def("get_image_range", &ScanBase::get_image_range)
+      .def("set_image_range", &ScanBase::set_image_range)
+      .def("get_valid_image_ranges", get_valid_image_ranges)
+      .def("set_valid_image_ranges", set_valid_image_ranges)
+      .def("get_batch_offset", &ScanBase::get_batch_offset)
+      .def("set_batch_offset", &ScanBase::set_batch_offset)
+      .def("get_batch_for_image_index", &ScanBase::get_batch_for_image_index)
+      .def("get_batch_for_array_index", &ScanBase::get_batch_for_array_index)
+      .def("get_batch_range", &ScanBase::get_batch_range)
+      .def("get_array_range", &ScanBase::get_array_range)
+      .def("is_still", &ScanBase::is_still)
+      .def("get_num_images", &ScanBase::get_num_images)
+      .def("is_image_index_valid", &ScanBase::is_image_index_valid, (arg("index")))
+      .def("is_array_index_valid", &ScanBase::is_array_index_valid, (arg("index")))
+      .def("is_batch_valid", &ScanBase::is_batch_valid, (arg("batch")));
 
     // Export Scan : ScanBase
     class_<Scan, boost::shared_ptr<Scan>, bases<ScanBase> >("Scan")
@@ -395,16 +410,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("epochs"),
                              arg("batch_offset") = 0,
                              arg("deg") = true)))
-      .def("get_image_range", &Scan::get_image_range)
-      .def("get_valid_image_ranges", get_valid_image_ranges)
-      .def("set_valid_image_ranges", set_valid_image_ranges)
       .def("set_image_range", &Scan::set_image_range)
-      .def("get_batch_offset", &Scan::get_batch_offset)
-      .def("set_batch_offset", &Scan::set_batch_offset)
-      .def("get_batch_for_image_index", &Scan::get_batch_for_image_index)
-      .def("get_batch_for_array_index", &Scan::get_batch_for_array_index)
-      .def("get_batch_range", &Scan::get_batch_range)
-      .def("get_array_range", &Scan::get_array_range)
       .def("get_oscillation", &get_oscillation, (arg("deg") = true))
       .def("set_oscillation", &set_oscillation, (arg("deg") = true))
       .def("is_still", &Scan::is_still)
@@ -412,7 +418,6 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_exposure_times", &Scan::set_exposure_times)
       .def("get_epochs", &Scan::get_epochs)
       .def("set_epochs", &Scan::set_epochs)
-      .def("get_num_images", &Scan::get_num_images)
       .def("get_image_oscillation",
            &get_image_oscillation,
            (arg("index"), arg("deg") = true))
@@ -422,9 +427,6 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("__deepcopy__", &scan_deepcopy)
       .def("__copy__", &scan_copy)
       .def("is_angle_valid", &is_angle_valid_array, (arg("angle"), arg("deg") = true))
-      .def("is_image_index_valid", &Scan::is_image_index_valid, (arg("index")))
-      .def("is_array_index_valid", &Scan::is_array_index_valid, (arg("index")))
-      .def("is_batch_valid", &Scan::is_batch_valid, (arg("batch")))
       .def("get_angle_from_image_index",
            &get_angle_from_image_index,
            (arg("index"), arg("deg") = true))

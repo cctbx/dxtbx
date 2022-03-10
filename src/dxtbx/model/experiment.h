@@ -54,7 +54,7 @@ namespace dxtbx { namespace model {
     Experiment(boost::shared_ptr<BeamBase> beam,
                boost::shared_ptr<Detector> detector,
                boost::shared_ptr<Goniometer> goniometer,
-               boost::shared_ptr<Scan> scan,
+               boost::shared_ptr<ScanBase> scan,
                boost::shared_ptr<CrystalBase> crystal,
                boost::python::object profile,
                boost::python::object imageset,
@@ -94,7 +94,7 @@ namespace dxtbx { namespace model {
     /**
      * Check if the goniometer model is the same.
      */
-    bool contains(const boost::shared_ptr<Scan> &scan) const {
+    bool contains(const boost::shared_ptr<ScanBase> &scan) const {
       return scan_ == scan;
     }
 
@@ -112,7 +112,7 @@ namespace dxtbx { namespace model {
       boost::python::extract<boost::shared_ptr<BeamBase> > get_beam(obj);
       boost::python::extract<boost::shared_ptr<Detector> > get_detector(obj);
       boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer(obj);
-      boost::python::extract<boost::shared_ptr<Scan> > get_scan(obj);
+      boost::python::extract<boost::shared_ptr<ScanBase> > get_scan(obj);
       boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal(obj);
       if (get_beam.check()) {
         return contains(get_beam());
@@ -205,14 +205,14 @@ namespace dxtbx { namespace model {
     /**
      * Get the scan model
      */
-    void set_scan(boost::shared_ptr<Scan> scan) {
+    void set_scan(boost::shared_ptr<ScanBase> scan) {
       scan_ = scan;
     }
 
     /**
      * Get the scan model
      */
-    boost::shared_ptr<Scan> get_scan() const {
+    boost::shared_ptr<ScanBase> get_scan() const {
       return scan_;
     }
 
@@ -290,7 +290,7 @@ namespace dxtbx { namespace model {
     boost::shared_ptr<BeamBase> beam_;
     boost::shared_ptr<Detector> detector_;
     boost::shared_ptr<Goniometer> goniometer_;
-    boost::shared_ptr<Scan> scan_;
+    boost::shared_ptr<ScanBase> scan_;
     boost::shared_ptr<CrystalBase> crystal_;
     boost::python::object profile_;
     boost::python::object imageset_;
