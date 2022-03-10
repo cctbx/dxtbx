@@ -43,7 +43,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       const boost::shared_ptr<Detector> &) const;
     typedef bool (Experiment::*goniometer_type)(
       const boost::shared_ptr<Goniometer> &) const;
-    typedef bool (Experiment::*scan_type)(const boost::shared_ptr<Scan> &) const;
+    typedef bool (Experiment::*scan_type)(const boost::shared_ptr<ScanBase> &) const;
     typedef bool (Experiment::*crystal_type)(
       const boost::shared_ptr<CrystalBase> &) const;
     typedef bool (Experiment::*object_type)(boost::python::object) const;
@@ -78,7 +78,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def(init<boost::shared_ptr<BeamBase>,
                 boost::shared_ptr<Detector>,
                 boost::shared_ptr<Goniometer>,
-                boost::shared_ptr<Scan>,
+                boost::shared_ptr<ScanBase>,
                 boost::shared_ptr<CrystalBase>,
                 boost::python::object,
                 boost::python::object,
@@ -86,7 +86,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 std::string>((arg("beam") = boost::shared_ptr<BeamBase>(),
                               arg("detector") = boost::shared_ptr<Detector>(),
                               arg("goniometer") = boost::shared_ptr<Goniometer>(),
-                              arg("scan") = boost::shared_ptr<Scan>(),
+                              arg("scan") = boost::shared_ptr<ScanBase>(),
                               arg("crystal") = boost::shared_ptr<CrystalBase>(),
                               arg("profile") = boost::python::object(),
                               arg("imageset") = boost::python::object(),
