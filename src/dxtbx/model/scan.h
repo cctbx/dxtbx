@@ -129,6 +129,43 @@ namespace dxtbx { namespace model {
       return is_image_index_valid(index + 1);
     }
 
+    virtual bool operator==(const ScanBase &rhs) const {
+      double eps = 1e-7;
+      return image_range_ == rhs.image_range_ && batch_offset_ == rhs.batch_offset_;
+    }
+    virtual bool operator!=(const ScanBase &rhs) const {
+      return !(*this == rhs);
+    }
+    virtual bool operator<(const ScanBase &rhs) const {
+      return image_range_[0] < rhs.image_range_[0];
+    }
+    virtual bool operator<=(const ScanBase &rhs) const {
+      return image_range_[0] <= rhs.image_range_[0];
+    }
+    virtual bool operator>(const ScanBase &rhs) const {
+      return image_range_[0] > rhs.image_range_[0];
+    }
+    virtual bool operator>=(const ScanBase &rhs) const {
+      return image_range_[0] >= rhs.image_range_[0];
+    }
+    ScanBase &operator+=(const ScanBase &rhs) {
+      append(rhs, 0.01);
+      return *this;
+    }
+    ScanBase &operator+(const ScanBase &rhs) const {
+      ScanBase lhs(*this);
+      lhs += rhs;
+      return lhs;
+    }
+    // ScanBase operator[](int index) const {return *this;}
+
+    virtual void append(const ScanBase &rhs, double scan_tolerance) {
+      DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
+      DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
+      image_range_[1] = rhs.image_range_[1];
+      num_images_ = 1 + image_range_[1] - image_range_[0];
+    }
+
   protected:
     vec2<int> image_range_;
     ExpImgRangeMap valid_image_ranges_; /** initialised as an empty map **/
@@ -267,7 +304,11 @@ namespace dxtbx { namespace model {
       return exposure_times_[index - image_range_[0]];
     }
 
-    /** Check the scans are the same */
+    bool operator==(const ScanBase &rhs) const {
+      const Scan &scan = dynamic_cast<const Scan &>(rhs);
+      return *this == scan;
+    }
+
     bool operator==(const Scan &rhs) const {
       double eps = 1e-7;
       return image_range_ == rhs.image_range_ && batch_offset_ == rhs.batch_offset_
@@ -278,27 +319,47 @@ namespace dxtbx { namespace model {
              && epochs_.const_ref().all_approx_equal(rhs.epochs_.const_ref(), eps);
     }
 
-    /** Check the scans are not the same */
-    bool operator!=(const Scan &scan) const {
-      return !(*this == scan);
+    bool operator!=(const ScanBase &rhs) const {
+      const Scan &scan = dynamic_cast<const Scan &>(rhs);
+      return *this != scan;
     }
 
-    /** Comparison operator */
+    bool operator!=(const Scan &rhs) const {
+      return !(*this == rhs);
+    }
+
+    bool operator<(const ScanBase &rhs) const {
+      const Scan &scan = dynamic_cast<const Scan &>(rhs);
+      return *this < scan;
+    }
+
     bool operator<(const Scan &scan) const {
       return image_range_[0] < scan.image_range_[0];
     }
 
-    /** Comparison operator */
+    bool operator<=(const ScanBase &rhs) const {
+      const Scan &scan = dynamic_cast<const Scan &>(rhs);
+      return *this <= scan;
+    }
+
     bool operator<=(const Scan &scan) const {
       return image_range_[0] <= scan.image_range_[0];
     }
 
-    /** Comparison operator */
+    bool operator>(const ScanBase &rhs) const {
+      const Scan &scan = dynamic_cast<const Scan &>(rhs);
+      return *this > scan;
+    }
+
     bool operator>(const Scan &scan) const {
       return image_range_[0] > scan.image_range_[0];
     }
 
-    /** Comparison operator */
+    bool operator>=(const ScanBase &rhs) const {
+      const Scan &scan = dynamic_cast<const Scan &>(rhs);
+      return *this >= scan;
+    }
+
     bool operator>=(const Scan &scan) const {
       return image_range_[0] >= scan.image_range_[0];
     }
@@ -307,6 +368,17 @@ namespace dxtbx { namespace model {
      * Append the rhs scan onto the current scan
      */
 
+    void append(const ScanBase &rhs, double scan_tolerance) {
+      const Scan &scan = dynamic_cast<const Scan &>(rhs);
+      DXTBX_ASSERT(is_still() == scan.is_still());
+      if (is_still()) {
+        append_still(scan);
+      } else {
+        append_rotation(scan, scan_tolerance);
+      }
+    }
+
+    /*
     void append(const Scan &rhs, double scan_tolerance) {
       DXTBX_ASSERT(is_still() == rhs.is_still());
       if (is_still()) {
@@ -315,6 +387,7 @@ namespace dxtbx { namespace model {
         append_rotation(rhs, scan_tolerance);
       }
     }
+    */
 
     void append_still(const Scan &rhs) {
       DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
@@ -366,7 +439,7 @@ namespace dxtbx { namespace model {
      * the contents of the other scan, provided that they are consistent.
      * If they are not consistent then an AssertionError will result.
      */
-    Scan operator+(const Scan &rhs) const {
+    Scan &operator+(const Scan &rhs) const {
       Scan lhs(*this);
       lhs += rhs;
       return lhs;
