@@ -39,6 +39,7 @@ using model::Detector;
 using model::Goniometer;
 using model::Panel;
 using model::Scan;
+using model::ScanBase;
 using scitbx::rad_as_deg;
 using scitbx::af::int2;
 
@@ -156,7 +157,7 @@ public:
   typedef boost::shared_ptr<BeamBase> beam_ptr;
   typedef boost::shared_ptr<Detector> detector_ptr;
   typedef boost::shared_ptr<Goniometer> goniometer_ptr;
-  typedef boost::shared_ptr<Scan> scan_ptr;
+  typedef boost::shared_ptr<ScanBase> scan_ptr;
   typedef boost::shared_ptr<GoniometerShadowMasker> masker_ptr;
 
   ImageSetData() {}
@@ -1234,7 +1235,7 @@ public:
     DXTBX_ASSERT(scan.get() != NULL);
     if (data.size() > 1) {
       if (data.size() != scan->get_num_images()) {
-        throw DXTBX_ERROR("Scan size is not compatible with number of images");
+        throw DXTBX_ERROR("ScanBase size is not compatible with number of images");
       }
     }
 
@@ -1243,7 +1244,7 @@ public:
       ImageSet::set_beam_for_image(beam_, i);
       ImageSet::set_detector_for_image(detector_, i);
       ImageSet::set_goniometer_for_image(goniometer_, i);
-      ImageSet::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
+      ImageSet::set_scan_for_image(scan_ptr(new ScanBase((*scan)[i])), i);
     }
   }
 
@@ -1273,7 +1274,7 @@ public:
     // Check indices are sequential
     if (indices.size() > 0) {
       if (indices.size() != scan->get_num_images()) {
-        throw DXTBX_ERROR("Scan size is not compatible with number of images");
+        throw DXTBX_ERROR("ScanBase size is not compatible with number of images");
       }
       for (std::size_t i = 1; i < indices.size(); ++i) {
         DXTBX_ASSERT(indices[i] == indices[i - 1] + 1);
@@ -1285,7 +1286,7 @@ public:
       ImageSet::set_beam_for_image(beam_, i);
       ImageSet::set_detector_for_image(detector_, i);
       ImageSet::set_goniometer_for_image(goniometer_, i);
-      ImageSet::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
+      ImageSet::set_scan_for_image(scan_ptr(new ScanBase((*scan)[i])), i);
     }
   }
 
@@ -1310,9 +1311,12 @@ public:
     if (masker != NULL) {
       DXTBX_ASSERT(scan_ != NULL);
       DXTBX_ASSERT(detector_ != NULL);
-      double scan_angle = rad_as_deg(
-        scan_->get_angle_from_image_index(index + scan_->get_image_range()[0]));
-      dyn_mask = masker->get_mask(*detector_, scan_angle);
+      boost::shared_ptr<Scan> scan = boost::dynamic_pointer_cast<Scan>(scan_);
+      if (scan != NULL) {
+        double scan_angle = rad_as_deg(
+          scan->get_angle_from_image_index(index + scan->get_image_range()[0]));
+        dyn_mask = masker->get_mask(*detector_, scan_angle);
+      }
     }
 
     // Return the dynamic mask
@@ -1413,7 +1417,7 @@ public:
     DXTBX_ASSERT(scan->get_num_images() == size());
     scan_ = scan;
     for (std::size_t i = 0; i < size(); ++i) {
-      ImageSet::set_scan_for_image(scan_ptr(new Scan((*scan)[i])), i);
+      ImageSet::set_scan_for_image(scan_ptr(new ScanBase((*scan)[i])), i);
     }
   }
 
@@ -1480,14 +1484,17 @@ public:
    */
   ImageSequence complete_sequence() const {
     // Compute scan
-    Scan scan = detail::safe_dereference(data_.get_scan(0));
+    ScanBase scan = detail::safe_dereference(data_.get_scan(0));
     for (std::size_t i = 1; i < data_.size(); ++i) {
       scan += detail::safe_dereference(data_.get_scan(i));
     }
 
     // Construct a sequence
-    ImageSequence result(
-      data_, get_beam(), get_detector(), get_goniometer(), scan_ptr(new Scan(scan)));
+    ImageSequence result(data_,
+                         get_beam(),
+                         get_detector(),
+                         get_goniometer(),
+                         scan_ptr(new ScanBase(scan)));
 
     // Return the sequence
     return result;
@@ -1509,10 +1516,10 @@ public:
     ImageSetData _partial_data = data_.partial_data(reader, first, last);
 
     // Now we use the partial data to construct the partial scan
-    Scan scan = detail::safe_dereference(_partial_data.get_scan(0));
+    ScanBase scan = detail::safe_dereference(_partial_data.get_scan(0));
     for (std::size_t i = 1; i < last - first; ++i) {
       scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
-      Scan temp_scan = detail::safe_dereference(temp_scan_ptr);
+      ScanBase temp_scan = detail::safe_dereference(temp_scan_ptr);
       scan += temp_scan;
     }
 
@@ -1525,7 +1532,7 @@ public:
                          get_beam(),
                          get_detector(),
                          get_goniometer(),
-                         scan_ptr(new Scan(scan)));
+                         scan_ptr(new ScanBase(scan)));
 
     // Return the sequence
     return result;

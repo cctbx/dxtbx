@@ -319,7 +319,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   static Scan getitem_single(const Scan &scan, int index) {
-    return scan[index];
+    return Scan(scan[index]);
   }
 
   static Scan getitem_slice(const Scan &scan, const slice index) {
@@ -389,7 +389,14 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_num_images", &ScanBase::get_num_images)
       .def("is_image_index_valid", &ScanBase::is_image_index_valid, (arg("index")))
       .def("is_array_index_valid", &ScanBase::is_array_index_valid, (arg("index")))
-      .def("is_batch_valid", &ScanBase::is_batch_valid, (arg("batch")));
+      .def("is_batch_valid", &ScanBase::is_batch_valid, (arg("batch")))
+      .def(self == self)
+      .def(self != self)
+      .def(self < self)
+      .def(self <= self)
+      .def(self > self)
+      .def(self >= self)
+      .def("append", &ScanBase::append, (arg("rhs"), arg("scan_tolerance") = 0.03));
 
     // Export Scan : ScanBase
     class_<Scan, boost::shared_ptr<Scan>, bases<ScanBase> >("Scan")
