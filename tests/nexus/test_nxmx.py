@@ -5,6 +5,7 @@ import datetime
 import dateutil
 import h5py
 import numpy as np
+import pint
 import pytest
 
 from dxtbx.nexus import nxmx
@@ -118,6 +119,7 @@ def test_nxmx_single_value_properties(dials_data):
     with h5py.File(data / "03_CuHF2pyz2PF6b_P_O" / "CuHF2pyz2PF6b_P_O_02.nxs") as f:
         nx_detector = nxmx.NXmx(f).entries[0].instruments[0].detectors[0]
         # These scalar parameters are populated with data from single-valued arrays.
+        assert nx_detector.distance == pint.Quantity(85, "mm")
         assert nx_detector.pixel_mask_applied is True
         assert nx_detector.saturation_value == 1382150
         assert nx_detector.serial_number == "E-08-0148"
