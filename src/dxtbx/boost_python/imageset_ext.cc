@@ -147,7 +147,8 @@ namespace dxtbx { namespace boost_python {
       return self.get_goniometer(i);
     }
 
-    static boost::shared_ptr<Scan> get_scan(const ImageSetData &self, std::size_t i) {
+    static boost::shared_ptr<ScanBase> get_scan(const ImageSetData &self,
+                                                std::size_t i) {
       return self.get_scan(i);
     }
 
@@ -191,7 +192,7 @@ namespace dxtbx { namespace boost_python {
           obj, &ImageSetDataPickleSuite::get_detector),
         ImageSetDataPickleSuite::get_model_list<Goniometer>(
           obj, &ImageSetDataPickleSuite::get_goniometer),
-        ImageSetDataPickleSuite::get_model_list<Scan>(
+        ImageSetDataPickleSuite::get_model_list<ScanBase>(
           obj, &ImageSetDataPickleSuite::get_scan));
     }
 
@@ -259,7 +260,7 @@ namespace dxtbx { namespace boost_python {
         obj,
         boost::python::extract<boost::python::tuple>(models[2]),
         &ImageSetData::set_goniometer);
-      ImageSetDataPickleSuite::set_model_list<Scan>(
+      ImageSetDataPickleSuite::set_model_list<ScanBase>(
         obj,
         boost::python::extract<boost::python::tuple>(models[3]),
         &ImageSetData::set_scan);
