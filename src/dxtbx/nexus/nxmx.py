@@ -358,7 +358,7 @@ class NXtransformationsAxis:
         return h5str(self._handle.name)
 
     @cached_property
-    def units(self) -> str:
+    def units(self) -> pint.Unit:
         """Units of the specified transformation.
 
         Could be any of these: NX_LENGTH, NX_ANGLE, or NX_UNITLESS
@@ -373,7 +373,7 @@ class NXtransformationsAxis:
           - NX_ANGLE for rotation
           - NX_UNITLESS for axes for which no transformation type is specified.
         """
-        return h5str(self._handle.attrs.get("units"))
+        return units(self._handle)
 
     @cached_property
     def transformation_type(self) -> str:
@@ -411,20 +411,21 @@ class NXtransformationsAxis:
         example, as the mechanical offset from mounting the axis to its dependency.
         """
         if "offset" in self._handle.attrs:
-            return self._handle.attrs.get("offset") * ureg(self.offset_units or "")
+            return self._handle.attrs["offset"] * self.offset_units
         return None
 
     @cached_property
-    def offset_units(self) -> str | None:
+    def offset_units(self) -> pint.Unit:
         """Units of the offset. Values should be consistent with NX_LENGTH."""
         if "offset_units" in self._handle.attrs:
-            return h5str(self._handle.attrs.get("offset_units"))
+            return ureg.Unit(h5str(self._handle.attrs["offset_units"]))
         # This shouldn't be the case, but DLS EIGER NeXus files include offset without
         # accompanying offset_units, so use units instead (which should strictly only
         # apply to vector, not offset.
         # See also https://jira.diamond.ac.uk/browse/MXGDA-3668
         # logger.warning(
-        # f"'offset_units' attribute not present for {self.path}, falling back to 'units'"
+        # f"'offset_units' attribute not present for {self.path}, "
+        # "falling back to 'units'"
         # )
         return self.units
 
@@ -436,7 +437,7 @@ class NXtransformationsAxis:
         return None
 
     def __getitem__(self, key) -> pint.Quantity:
-        return self._handle[key] * ureg(self.units)
+        return self._handle[key] * self.units
 
     @cached_property
     def matrix(self) -> np.ndarray:
