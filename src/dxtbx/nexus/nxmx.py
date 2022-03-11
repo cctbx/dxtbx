@@ -62,6 +62,11 @@ def h5str(h5_value: str | np.bytes_ | bytes | None) -> str | None:
     return h5_value
 
 
+def units(data: h5py.Dataset, default: str | None = None) -> pint.Unit:
+    """Extract the units attribute, if any, from an h5py data set."""
+    return ureg.Unit(h5str(data.attrs.get("units", default)))
+
+
 def find_classes(node: NXNode, *nx_classes: str | None) -> tuple[list[h5py.Group], ...]:
     """
     Find instances of multiple NXclass types within the children of the current node.
@@ -490,10 +495,8 @@ class NXsample(H5Mapping):
     @cached_property
     def temperature(self) -> pint.Quantity | None:
         """The temperature of the sample."""
-        if "temperature" in self._handle:
-            temperature = self._handle["temperature"]
-            units = h5str(temperature.attrs["units"])
-            return temperature[()] * ureg(units)
+        if temperature := self._handle.get("temperature"):
+            return temperature[()] * units(temperature)
         return None
 
     @cached_property
@@ -701,7 +704,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def distance(self) -> float | None:
+    def distance(self) -> pint.Quantity | None:
         """Distance from the sample to the beam center.
 
         Normally this value is for guidance only, the proper geometry can be found
@@ -709,8 +712,8 @@ class NXdetector(H5Mapping):
         dectector distance to the sample is observable independent of the axis chain,
         that may take precedence over the axis chain calculation.
         """
-        if "distance" in self._handle:
-            return float(self._handle["distance"][()])
+        if distance := self._handle.get("distance"):
+            return np.squeeze(distance[()] * units(distance))
         return None
 
     @cached_property
@@ -719,21 +722,21 @@ class NXdetector(H5Mapping):
         observation.
 
         If distance_derived true or is not specified, the distance is assumed to be
-        derived from delector axis specifications.
+        derived from detector axis specifications.
         """
         if "distance_derived" in self._handle:
             return bool(self._handle["distance_derived"][()])
         return None
 
     @cached_property
-    def count_time(self) -> int | float | None:
+    def count_time(self) -> pint.Quantity | None:
         """Elapsed actual counting time."""
-        if "count_time" in self._handle:
-            return np.squeeze(self._handle["count_time"])[()]
+        if count_time := self._handle.get("count_time"):
+            return np.squeeze(count_time[()] * units(count_time))
         return None
 
     @cached_property
-    def beam_center_x(self) -> float | None:
+    def beam_center_x(self) -> pint.Quantity | None:
         """This is the x position where the direct beam would hit the detector.
 
         This is a length and can be outside of the actual detector. The length can be in
@@ -741,12 +744,12 @@ class NXdetector(H5Mapping):
         should be derived from the axis chain, but the direct specification may take
         precedence if it is not a derived quantity.
         """
-        if "beam_center_x" in self._handle:
-            return float(self._handle["beam_center_x"][()])
+        if beam_centre_x := self._handle.get("beam_center_x"):
+            return np.squeeze(beam_centre_x[()] * units(beam_centre_x, "pixels"))
         return None
 
     @cached_property
-    def beam_center_y(self) -> float | None:
+    def beam_center_y(self) -> pint.Quantity | None:
         """This is the y position where the direct beam would hit the detector.
 
         This is a length and can be outside of the actual detector. The length can be in
@@ -754,8 +757,8 @@ class NXdetector(H5Mapping):
         should be derived from the axis chain, but the direct specification may take
         precedence if it is not a derived quantity.
         """
-        if "beam_center_y" in self._handle:
-            return float(self._handle["beam_center_y"][()])
+        if beam_centre_y := self._handle.get("beam_center_y"):
+            return np.squeeze(beam_centre_y[()] * units(beam_centre_y))
         return None
 
     @cached_property
@@ -832,8 +835,7 @@ class NXdetector(H5Mapping):
     @cached_property
     def sensor_thickness(self) -> pint.Quantity:
         thickness = self._handle["sensor_thickness"]
-        units = h5str(thickness.attrs["units"])
-        return np.squeeze(thickness)[()] * ureg(units)
+        return np.squeeze(thickness)[()] * units(thickness)
 
     @cached_property
     def underload_value(self) -> int | None:
@@ -876,10 +878,8 @@ class NXdetector(H5Mapping):
     @cached_property
     def frame_time(self) -> pint.Quantity | None:
         """This is time for each frame. This is exposure_time + readout time."""
-        if "frame_time" in self._handle:
-            frame_time = self._handle["frame_time"]
-            units = h5str(frame_time.attrs["units"])
-            return np.squeeze(frame_time)[()] * ureg(units)
+        if frame_time := self._handle.get("frame_time"):
+            return np.squeeze(frame_time[()] * units(frame_time))
         return None
 
     @cached_property
@@ -1033,8 +1033,7 @@ class NXbeam(H5Mapping):
         along with the original spectrum from which it was calibrated.
         """
         wavelength = self._handle["incident_wavelength"]
-        units = h5str(wavelength.attrs["units"])
-        return wavelength[()] * ureg(units)
+        return wavelength[()] * units(wavelength)
 
     @cached_property
     def flux(self) -> pint.Quantity | None:
@@ -1043,10 +1042,8 @@ class NXbeam(H5Mapping):
         In the case of a beam that varies in flux shot-to-shot, this is an array of
         values, one for each recorded shot.
         """
-        if "flux" in self._handle:
-            flux = self._handle["flux"]
-            units = h5str(flux.attrs["units"])
-            return flux[()] * ureg(units)
+        if flux := self._handle.get("flux"):
+            return flux[()] * units(flux)
         return None
 
     @cached_property
@@ -1056,10 +1053,8 @@ class NXbeam(H5Mapping):
         In the case of a beam that varies in total flux shot-to-shot, this is an array
         of values, one for each recorded shot.
         """
-        if "total_flux" in self._handle:
-            total_flux = self._handle["total_flux"]
-            units = h5str(total_flux.attrs["units"])
-            return total_flux[()] * ureg(units)
+        if total_flux := self._handle.get("total_flux"):
+            return total_flux[()] * units(total_flux)
         return None
 
     @cached_property
@@ -1067,10 +1062,8 @@ class NXbeam(H5Mapping):
         """Two-element array of FWHM (if Gaussian or Airy function) or diameters
         (if top hat) or widths (if rectangular) of the beam in the order x, y.
         """
-        if "incident_beam_size" in self._handle:
-            beam_size = self._handle["incident_beam_size"]
-            units = h5str(beam_size.attrs["units"])
-            return beam_size[()] * ureg(units)
+        if beam_size := self._handle.get("incident_beam_size"):
+            return beam_size[()] * units(beam_size)
         return None
 
     @cached_property
