@@ -1,0 +1,1 @@
+Pin pytest<=7.0.1 for ci to workaround pytest-azurepipelines incompatibility with pytest 7.1.0
