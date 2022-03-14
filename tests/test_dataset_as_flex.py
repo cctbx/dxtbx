@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import h5py
+import hdf5plugin
 import numpy
 import pytest
 
@@ -11,11 +12,6 @@ from dxtbx_format_nexus_ext import (
     dataset_as_flex_float,
     dataset_as_flex_int,
 )
-
-try:
-    import bitshuffle.h5
-except ImportError:
-    bitshuffle = None
 
 
 def uncompressed(file, shape, type_name):
@@ -36,12 +32,10 @@ def gzip(file, shape, type_name):
 
 
 def bshuf_lz4(file, shape, type_name):
-    block_size = 0
     return file.create_dataset(
         "data",
         shape,
-        compression=bitshuffle.h5.H5FILTER,
-        compression_opts=(block_size, bitshuffle.h5.H5_COMPRESS_LZ4),
+        **hdf5plugin.Bitshuffle(),
         dtype=type_name,
     )
 
@@ -51,12 +45,7 @@ def bshuf_lz4(file, shape, type_name):
     [
         uncompressed,
         gzip,
-        pytest.param(
-            bshuf_lz4,
-            marks=pytest.mark.skipif(
-                bitshuffle is None, reason="bitshuffle module not available"
-            ),
-        ),
+        bshuf_lz4,
     ],
 )
 @pytest.mark.parametrize(
