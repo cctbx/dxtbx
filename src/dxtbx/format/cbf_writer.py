@@ -201,15 +201,28 @@ class FullCBFWriter:
             )
 
         if not detector_only:
-            add_frame_specific_cbf_tables(
-                cbf,
-                beam.get_wavelength(),
-                "unknown",
-                [panel.get_trusted_range() for panel in detector],
-                diffrn_id,
-                False,
-                gain=[panel.get_gain() for panel in detector],
-            )
+            try:
+                add_frame_specific_cbf_tables(
+                    cbf,
+                    beam.get_wavelength(),
+                    "unknown",
+                    [panel.get_trusted_range() for panel in detector],
+                    diffrn_id,
+                    False,
+                    gain=[panel.get_gain() for panel in detector],
+                    flux=beam.get_flux(),
+                )
+            except TypeError:
+                # Needed until next cctbx release
+                add_frame_specific_cbf_tables(
+                    cbf,
+                    beam.get_wavelength(),
+                    "unknown",
+                    [panel.get_trusted_range() for panel in detector],
+                    diffrn_id,
+                    False,
+                    gain=[panel.get_gain() for panel in detector],
+                )
 
         """Data items in the AXIS category record the information required
        to describe the various goniometer, detector, source and other

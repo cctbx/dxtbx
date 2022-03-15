@@ -370,7 +370,7 @@ class Format:
                 test_scan = format_instance.get_scan()
             else:
                 test_scan = scan
-            if test_scan is not None and test_scan.get_oscillation()[1] != 0:
+            if test_scan is not None and not test_scan.is_still():
                 is_sequence = True
             else:
                 is_sequence = False
