@@ -122,10 +122,13 @@ def nx_detector(request):
         detector = instrument.create_group("detector")
         detector.attrs["NX_class"] = "NXdetector"
 
+        time = detector.create_dataset("count_time", data=0, shape=shape)
+        time.attrs["units"] = "s"
+
         distance = detector.create_dataset("distance", data=0.00314159, shape=shape)
         distance.attrs["units"] = "m"
 
-        detector.create_dataset("pixel_mask_applied", data=True, shape=shape)
+        detector.create_dataset("pixel_mask_applied", data=False, shape=shape)
 
         detector.create_dataset("saturation_value", data=12345, shape=shape)
 
@@ -146,8 +149,9 @@ def test_nxmx_single_value_properties(nx_detector):
     with nx_detector as f:
         nx_detector = nxmx.NXmx(f).entries[0].instruments[0].detectors[0]
         # These scalar parameters are populated with data from single-valued arrays.
+        assert nx_detector.count_time == pint.Quantity(0, "s")
         assert nx_detector.distance == pint.Quantity(3.14159, "mm")
-        assert nx_detector.pixel_mask_applied is True
+        assert nx_detector.pixel_mask_applied is False
         assert nx_detector.saturation_value == 12345
         assert nx_detector.serial_number == "ABCDE"
 
