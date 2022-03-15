@@ -157,7 +157,6 @@ namespace dxtbx { namespace model {
       lhs += rhs;
       return lhs;
     }
-    // ScanBase operator[](int index) const {return *this;}
 
     virtual void append(const ScanBase &rhs, double scan_tolerance) {
       DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
@@ -378,17 +377,6 @@ namespace dxtbx { namespace model {
       }
     }
 
-    /*
-    void append(const Scan &rhs, double scan_tolerance) {
-      DXTBX_ASSERT(is_still() == rhs.is_still());
-      if (is_still()) {
-        append_still(rhs);
-      } else {
-        append_rotation(rhs, scan_tolerance);
-      }
-    }
-    */
-
     void append_still(const Scan &rhs) {
       DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
       DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
@@ -439,7 +427,7 @@ namespace dxtbx { namespace model {
      * the contents of the other scan, provided that they are consistent.
      * If they are not consistent then an AssertionError will result.
      */
-    Scan &operator+(const Scan &rhs) const {
+    Scan operator+(const Scan &rhs) const {
       Scan lhs(*this);
       lhs += rhs;
       return lhs;
