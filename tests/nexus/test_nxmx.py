@@ -5,6 +5,7 @@ import datetime
 import dateutil
 import h5py
 import numpy as np
+import pint
 import pytest
 
 from dxtbx.nexus import nxmx
@@ -47,7 +48,7 @@ def test_nxmx(nxmx_example):
     sample = samples[0]
     assert sample.name == "mysample"
     assert sample.depends_on.path == "/entry/sample/transformations/phi"
-    assert sample.temperature is None
+    assert sample.temperature == pint.Quantity(273, "K")
     assert sample.path == "/entry/sample"
 
     transformations = sample.transformations
@@ -65,7 +66,10 @@ def test_nxmx(nxmx_example):
 
     assert len(instrument.beams) == 1
     beam = instrument.beams[0]
+    assert np.all(beam.incident_beam_size == pint.Quantity([3e-5, 3e-5], "m"))
     assert beam.incident_wavelength.to("angstrom").magnitude == 0.976223
+    assert beam.flux is None
+    assert beam.total_flux == pint.Quantity(1e12, "Hz")
 
     assert len(instrument.detectors) == 1
     detector = instrument.detectors[0]
@@ -76,6 +80,8 @@ def test_nxmx(nxmx_example):
         detector.depends_on.path == "/entry/instrument/detector/transformations/det_z"
     )
     assert detector.bit_depth_readout == 32
+    assert detector.beam_center_x == pint.Quantity(2079.79727597266, "pixel")
+    assert detector.beam_center_y == pint.Quantity(2225.38773853771, "pixel")
 
     assert len(detector.modules) == 1
     module = detector.modules[0]
@@ -103,6 +109,56 @@ def test_nxmx(nxmx_example):
 
     assert nxentry.source.name == "Diamond"
     assert nxentry.source.short_name == "DLS"
+
+
+@pytest.fixture(params=[(), (1,)], ids=["scalar", "length-1 array"])
+def nx_detector(request):
+    """A dummy NXdetector with some data sets that may be scalar or length-1 arrays."""
+    shape = request.param
+
+    with h5py.File("_", "w", **pytest.h5_in_memory) as f:
+        entry = f.create_group("entry")
+        entry.attrs["NX_class"] = "NXentry"
+        entry["definition"] = "NXmx"
+
+        instrument = entry.create_group("instrument")
+        instrument.attrs["NX_class"] = "NXinstrument"
+
+        detector = instrument.create_group("detector")
+        detector.attrs["NX_class"] = "NXdetector"
+
+        time = detector.create_dataset("count_time", data=0, shape=shape)
+        time.attrs["units"] = "s"
+
+        distance = detector.create_dataset("distance", data=0.00314159, shape=shape)
+        distance.attrs["units"] = "m"
+
+        detector.create_dataset("pixel_mask_applied", data=False, shape=shape)
+
+        detector.create_dataset("saturation_value", data=12345, shape=shape)
+
+        detector.create_dataset("serial_number", data="ABCDE", shape=shape)
+
+        yield f
+
+
+def test_nxmx_single_value_properties(nx_detector):
+    """
+    Check we correctly interpret scalar data stored as single-valued arrays.
+
+    Some data sources, notably Dectris Eiger detectors at Diamond Light Source,
+    record some scalar data as length-1 arrays.  Check here that we correctly
+    interpret such data as scalars, whether they are recorded as scalars or as
+    length-1 arrays.
+    """
+    with nx_detector as f:
+        nx_detector = nxmx.NXmx(f).entries[0].instruments[0].detectors[0]
+        # These scalar parameters are populated with data from single-valued arrays.
+        assert nx_detector.count_time == pint.Quantity(0, "s")
+        assert nx_detector.distance == pint.Quantity(3.14159, "mm")
+        assert nx_detector.pixel_mask_applied is False
+        assert nx_detector.saturation_value == 12345
+        assert nx_detector.serial_number == "ABCDE"
 
 
 def test_get_rotation_axes(nxmx_example):
