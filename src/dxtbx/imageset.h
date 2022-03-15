@@ -1244,8 +1244,9 @@ public:
       ImageSet::set_beam_for_image(beam_, i);
       ImageSet::set_detector_for_image(detector_, i);
       ImageSet::set_goniometer_for_image(goniometer_, i);
-      ImageSet::set_scan_for_image(scan_ptr(new ScanBase((*scan)[i])), i);
     }
+    // Treated separately due to dynamic_cast
+    set_scan_for_sequence(scan);
   }
 
   /**
@@ -1286,8 +1287,9 @@ public:
       ImageSet::set_beam_for_image(beam_, i);
       ImageSet::set_detector_for_image(detector_, i);
       ImageSet::set_goniometer_for_image(goniometer_, i);
-      ImageSet::set_scan_for_image(scan_ptr(new ScanBase((*scan)[i])), i);
     }
+    // Treated separately due to dynamic_cast
+    set_scan_for_sequence(scan);
   }
 
   /**
@@ -1416,9 +1418,7 @@ public:
     }
     DXTBX_ASSERT(scan->get_num_images() == size());
     scan_ = scan;
-    for (std::size_t i = 0; i < size(); ++i) {
-      ImageSet::set_scan_for_image(scan_ptr(new ScanBase((*scan)[i])), i);
-    }
+    set_scan_for_sequence(scan);
   }
 
   /**
@@ -1447,6 +1447,19 @@ public:
    */
   void set_scan_for_image(const scan_ptr &scan, std::size_t index) {
     throw DXTBX_ERROR("Cannot set per-image model in sequence");
+  }
+
+  /**
+   * Sets a copy of scan for all images
+   */
+  void set_scan_for_sequence(const scan_ptr &scan) {
+    // Cannot overload ScanBase operator[] so cast needed here
+    const boost::shared_ptr<Scan> _scan = boost::dynamic_pointer_cast<Scan>(scan);
+    if (_scan != NULL) {
+      for (std::size_t i = 0; i < size(); ++i) {
+        ImageSet::set_scan_for_image(scan_ptr(new Scan((*_scan)[i])), i);
+      }
+    }
   }
 
   /**
@@ -1479,25 +1492,44 @@ public:
   }
 
   /**
-   * Get the complete seta
+   * Get the complete set
    * @returns The complete sequence
    */
   ImageSequence complete_sequence() const {
-    // Compute scan
-    ScanBase scan = detail::safe_dereference(data_.get_scan(0));
-    for (std::size_t i = 1; i < data_.size(); ++i) {
-      scan += detail::safe_dereference(data_.get_scan(i));
+    // Need to know the underlying scan type before constructing sequence
+    const boost::shared_ptr<Scan> _scan =
+      boost::dynamic_pointer_cast<Scan>(data_.get_scan(0));
+    if (_scan != NULL) {
+      // Compute scan
+      Scan scan = detail::safe_dereference(_scan);
+      for (std::size_t i = 1; i < data_.size(); ++i) {
+        scan += detail::safe_dereference(
+          boost::dynamic_pointer_cast<Scan>(data_.get_scan(i)));
+      }
+
+      // Construct a sequence
+      ImageSequence result(
+        data_, get_beam(), get_detector(), get_goniometer(), scan_ptr(new Scan(scan)));
+
+      // Return the sequence
+      return result;
+    } else {
+      // Compute scan
+      ScanBase scan = detail::safe_dereference(data_.get_scan(0));
+      for (std::size_t i = 1; i < data_.size(); ++i) {
+        scan += detail::safe_dereference(data_.get_scan(i));
+      }
+
+      // Construct a sequence
+      ImageSequence result(data_,
+                           get_beam(),
+                           get_detector(),
+                           get_goniometer(),
+                           scan_ptr(new ScanBase(scan)));
+
+      // Return the sequence
+      return result;
     }
-
-    // Construct a sequence
-    ImageSequence result(data_,
-                         get_beam(),
-                         get_detector(),
-                         get_goniometer(),
-                         scan_ptr(new ScanBase(scan)));
-
-    // Return the sequence
-    return result;
   }
 
   /**
@@ -1514,28 +1546,46 @@ public:
 
     // Construct a partial data
     ImageSetData _partial_data = data_.partial_data(reader, first, last);
-
-    // Now we use the partial data to construct the partial scan
-    ScanBase scan = detail::safe_dereference(_partial_data.get_scan(0));
-    for (std::size_t i = 1; i < last - first; ++i) {
-      scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
-      ScanBase temp_scan = detail::safe_dereference(temp_scan_ptr);
-      scan += temp_scan;
-    }
-
     // Construct the partial indices
     scitbx::af::const_ref<std::size_t> indices(&indices_[first], last - first);
 
-    // Construct the partial sequence
-    ImageSequence result(_partial_data,
-                         indices,
-                         get_beam(),
-                         get_detector(),
-                         get_goniometer(),
-                         scan_ptr(new ScanBase(scan)));
+    // Need to know the underlying scan type before constructing partial sequence
+    const boost::shared_ptr<Scan> _scan =
+      boost::dynamic_pointer_cast<Scan>(_partial_data.get_scan(0));
+    if (_scan != NULL) {
+      // Now we use the partial data to construct the partial scan
+      Scan scan = detail::safe_dereference(_scan);
+      for (std::size_t i = 1; i < last - first; ++i) {
+        scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
+        Scan temp_scan =
+          detail::safe_dereference(boost::dynamic_pointer_cast<Scan>(temp_scan_ptr));
+        scan += temp_scan;
+      }
 
-    // Return the sequence
-    return result;
+      ImageSequence result(_partial_data,
+                           indices,
+                           get_beam(),
+                           get_detector(),
+                           get_goniometer(),
+                           scan_ptr(new Scan(scan)));
+      return result;
+    } else {
+      // Now we use the partial data to construct the partial scan
+      ScanBase scanbase = detail::safe_dereference(_partial_data.get_scan(0));
+      for (std::size_t i = 1; i < last - first; ++i) {
+        scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
+        ScanBase temp_scan = detail::safe_dereference(temp_scan_ptr);
+        scanbase += temp_scan;
+      }
+      ImageSequence result(_partial_data,
+                           indices,
+                           get_beam(),
+                           get_detector(),
+                           get_goniometer(),
+                           scan_ptr(new ScanBase(scanbase)));
+
+      return result;
+    }
   }
 
 protected:

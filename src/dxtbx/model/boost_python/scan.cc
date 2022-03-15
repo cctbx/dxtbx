@@ -374,7 +374,8 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_scan() {
     // Export ScanBase
-    class_<ScanBase, boost::noncopyable>("ScanBase", no_init)
+    class_<ScanBase, boost::shared_ptr<ScanBase>, boost::noncopyable>("ScanBase",
+                                                                      no_init)
       .def("get_image_range", &ScanBase::get_image_range)
       .def("set_image_range", &ScanBase::set_image_range)
       .def("get_valid_image_ranges", get_valid_image_ranges)
@@ -395,8 +396,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def(self < self)
       .def(self <= self)
       .def(self > self)
-      .def(self >= self)
-      .def("append", &ScanBase::append, (arg("rhs"), arg("scan_tolerance") = 0.03));
+      .def(self >= self);
 
     // Export Scan : ScanBase
     class_<Scan, boost::shared_ptr<Scan>, bases<ScanBase> >("Scan")
