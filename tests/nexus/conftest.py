@@ -34,8 +34,12 @@ def nxmx_example():
 
         beam = instrument.create_group("beam")
         beam.attrs["NX_class"] = "NXbeam"
+        beam.create_dataset("incident_beam_size", data=np.array([3e-5, 3e-5]))
+        beam["incident_beam_size"].attrs["units"] = b"m"
         beam["incident_wavelength"] = 0.976223
         beam["incident_wavelength"].attrs["units"] = b"angstrom"
+        beam["total_flux"] = 1e12
+        beam["total_flux"].attrs["units"] = b"Hz"
 
         detector = instrument.create_group("detector")
         detector.attrs["NX_class"] = "NXdetector"
@@ -106,6 +110,8 @@ def nxmx_example():
         sample.attrs["NX_class"] = "NXsample"
         sample["name"] = "mysample"
         sample["depends_on"] = b"/entry/sample/transformations/phi"
+        sample["temperature"] = 273
+        sample["temperature"].attrs["units"] = b"K"
 
         transformations = sample.create_group("transformations")
         transformations.attrs["NX_class"] = "NXtransformations"

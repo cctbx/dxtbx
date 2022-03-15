@@ -48,7 +48,7 @@ def test_nxmx(nxmx_example):
     sample = samples[0]
     assert sample.name == "mysample"
     assert sample.depends_on.path == "/entry/sample/transformations/phi"
-    assert sample.temperature is None
+    assert sample.temperature == pint.Quantity(273, "K")
     assert sample.path == "/entry/sample"
 
     transformations = sample.transformations
@@ -66,7 +66,10 @@ def test_nxmx(nxmx_example):
 
     assert len(instrument.beams) == 1
     beam = instrument.beams[0]
+    assert np.all(beam.incident_beam_size == pint.Quantity([3e-5, 3e-5], "m"))
     assert beam.incident_wavelength.to("angstrom").magnitude == 0.976223
+    assert beam.flux is None
+    assert beam.total_flux == pint.Quantity(1e12, "Hz")
 
     assert len(instrument.detectors) == 1
     detector = instrument.detectors[0]
