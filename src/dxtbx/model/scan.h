@@ -152,7 +152,7 @@ namespace dxtbx { namespace model {
       append(rhs, 0.01);
       return *this;
     }
-    ScanBase &operator+(const ScanBase &rhs) const {
+    ScanBase operator+(const ScanBase &rhs) const {
       ScanBase lhs(*this);
       lhs += rhs;
       return lhs;
