@@ -6,7 +6,7 @@ import pytest
 
 
 def pytest_configure():
-    # Incantations to create an in-memory file in h5py.
+    """Incantations to create an in-memory file in h5py."""
     pytest.h5_in_memory = {"driver": "core", "backing_store": False}
 
 
@@ -45,7 +45,7 @@ def nxmx_example():
         detector["depends_on"] = "/entry/instrument/detector/transformations/det_z"
         detector["description"] = "Eiger 16M"
         detector["distance"] = 0.237015940260233
-        data = detector.create_dataset("data", data=np.zeros((100, 100)))
+        detector.create_dataset("data", data=np.zeros((100, 100)))
         detector["sensor_material"] = "Silicon"
         detector["sensor_thickness"] = 0.00045
         detector["sensor_thickness"].attrs["units"] = b"m"

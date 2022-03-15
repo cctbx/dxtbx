@@ -108,6 +108,7 @@ def test_nxmx(nxmx_example):
 
 @pytest.fixture(params=[(), (1,)], ids=["scalar", "length-1 array"])
 def nx_detector(request):
+    """A dummy NXdetector with some data sets that may be scalar or length-1 arrays."""
     shape = request.param
 
     with h5py.File("_", "w", **pytest.h5_in_memory) as f:
