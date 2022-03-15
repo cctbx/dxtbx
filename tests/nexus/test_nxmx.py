@@ -106,23 +106,49 @@ def test_nxmx(nxmx_example):
     assert nxentry.source.short_name == "DLS"
 
 
-def test_nxmx_single_value_properties(dials_data):
+@pytest.fixture(params=[(), (1,)], ids=["scalar", "length-1 array"])
+def nx_detector(request):
+    shape = request.param
+
+    with h5py.File("_", "w", **pytest.h5_in_memory) as f:
+        entry = f.create_group("entry")
+        entry.attrs["NX_class"] = "NXentry"
+        entry["definition"] = "NXmx"
+
+        instrument = entry.create_group("instrument")
+        instrument.attrs["NX_class"] = "NXinstrument"
+
+        detector = instrument.create_group("detector")
+        detector.attrs["NX_class"] = "NXdetector"
+
+        distance = detector.create_dataset("distance", data=0.00314159, shape=shape)
+        distance.attrs["units"] = "m"
+
+        detector.create_dataset("pixel_mask_applied", data=True, shape=shape)
+
+        detector.create_dataset("saturation_value", data=12345, shape=shape)
+
+        detector.create_dataset("serial_number", data="ABCDE", shape=shape)
+
+        yield f
+
+
+def test_nxmx_single_value_properties(nx_detector):
     """
     Check we correctly interpret scalar data stored as single-valued arrays.
 
     Some data sources, notably Dectris Eiger detectors at Diamond Light Source,
     record some scalar data as length-1 arrays.  Check here that we correctly
-    interpret such data as scalars.  The dials_data four_circle_eiger data set is an
-    example of one such data set.
+    interpret such data as scalars, whether they are recorded as scalars or as
+    length-1 arrays.
     """
-    data = dials_data("four_circle_eiger", pathlib=True)
-    with h5py.File(data / "03_CuHF2pyz2PF6b_P_O" / "CuHF2pyz2PF6b_P_O_02.nxs") as f:
+    with nx_detector as f:
         nx_detector = nxmx.NXmx(f).entries[0].instruments[0].detectors[0]
         # These scalar parameters are populated with data from single-valued arrays.
-        assert nx_detector.distance == pint.Quantity(85, "mm")
+        assert nx_detector.distance == pint.Quantity(3.14159, "mm")
         assert nx_detector.pixel_mask_applied is True
-        assert nx_detector.saturation_value == 1382150
-        assert nx_detector.serial_number == "E-08-0148"
+        assert nx_detector.saturation_value == 12345
+        assert nx_detector.serial_number == "ABCDE"
 
 
 def test_get_rotation_axes(nxmx_example):
