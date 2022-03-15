@@ -1,0 +1,1 @@
+Replace ``bitshuffle`` usage with ``hdf5plugin``
