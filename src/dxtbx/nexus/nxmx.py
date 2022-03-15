@@ -755,7 +755,7 @@ class NXdetector(H5Mapping):
         precedence if it is not a derived quantity.
         """
         if beam_centre_y := self._handle.get("beam_center_y"):
-            return np.squeeze(beam_centre_y[()] * units(beam_centre_y))
+            return np.squeeze(beam_centre_y[()] * units(beam_centre_y, "pixels"))
         return None
 
     @cached_property

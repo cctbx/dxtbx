@@ -77,6 +77,8 @@ def test_nxmx(nxmx_example):
         detector.depends_on.path == "/entry/instrument/detector/transformations/det_z"
     )
     assert detector.bit_depth_readout == 32
+    assert detector.beam_center_x == pint.Quantity(2079.79727597266, "pixel")
+    assert detector.beam_center_y == pint.Quantity(2225.38773853771, "pixel")
 
     assert len(detector.modules) == 1
     module = detector.modules[0]
