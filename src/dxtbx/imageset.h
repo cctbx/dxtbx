@@ -1513,23 +1513,6 @@ public:
     // Return the sequence
     return result;
   }
-  else {
-    // Compute scan
-    ScanBase scan = detail::safe_dereference(data_.get_scan(0));
-    for (std::size_t i = 1; i < data_.size(); ++i) {
-      scan += detail::safe_dereference(data_.get_scan(i));
-    }
-
-    // Construct a sequence
-    ImageSequence result(data_,
-                         get_beam(),
-                         get_detector(),
-                         get_goniometer(),
-                         scan_ptr(new ScanBase(scan)));
-
-    // Return the sequence
-    return result;
-  }
 }
 
 /**
