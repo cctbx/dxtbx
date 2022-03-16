@@ -1513,51 +1513,70 @@ public:
     // Return the sequence
     return result;
   }
-
-  /**
-   * Get a partial set
-   * @param first The first index
-   * @param last The last index
-   * @returns The partial sequence
-   */
-  ImageSequence partial_sequence(boost::python::object reader,
-                                 std::size_t first,
-                                 std::size_t last) const {
-    // Check slice indices
-    DXTBX_ASSERT(last > first);
-
-    // Construct a partial data
-    ImageSetData _partial_data = data_.partial_data(reader, first, last);
-    // Construct the partial indices
-    scitbx::af::const_ref<std::size_t> indices(&indices_[first], last - first);
-
-    // Need to know the underlying scan type before constructing partial sequence
-    const boost::shared_ptr<Scan> rot_scan =
-      boost::dynamic_pointer_cast<Scan>(_partial_data.get_scan(0));
-    DXTBX_ASSERT(rot_scan != NULL);
-    // Now we use the partial data to construct the partial scan
-    Scan scan = detail::safe_dereference(rot_scan);
-    for (std::size_t i = 1; i < last - first; ++i) {
-      scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
-      Scan temp_scan =
-        detail::safe_dereference(boost::dynamic_pointer_cast<Scan>(temp_scan_ptr));
-      scan += temp_scan;
+  else {
+    // Compute scan
+    ScanBase scan = detail::safe_dereference(data_.get_scan(0));
+    for (std::size_t i = 1; i < data_.size(); ++i) {
+      scan += detail::safe_dereference(data_.get_scan(i));
     }
 
-    ImageSequence result(_partial_data,
-                         indices,
+    // Construct a sequence
+    ImageSequence result(data_,
                          get_beam(),
                          get_detector(),
                          get_goniometer(),
-                         scan_ptr(new Scan(scan)));
+                         scan_ptr(new ScanBase(scan)));
+
+    // Return the sequence
     return result;
   }
+}
+
+/**
+ * Get a partial set
+ * @param first The first index
+ * @param last The last index
+ * @returns The partial sequence
+ */
+ImageSequence
+partial_sequence(boost::python::object reader,
+                 std::size_t first,
+                 std::size_t last) const {
+  // Check slice indices
+  DXTBX_ASSERT(last > first);
+
+  // Construct a partial data
+  ImageSetData _partial_data = data_.partial_data(reader, first, last);
+  // Construct the partial indices
+  scitbx::af::const_ref<std::size_t> indices(&indices_[first], last - first);
+
+  // Need to know the underlying scan type before constructing partial sequence
+  const boost::shared_ptr<Scan> rot_scan =
+    boost::dynamic_pointer_cast<Scan>(_partial_data.get_scan(0));
+  DXTBX_ASSERT(rot_scan != NULL);
+  // Now we use the partial data to construct the partial scan
+  Scan scan = detail::safe_dereference(rot_scan);
+  for (std::size_t i = 1; i < last - first; ++i) {
+    scan_ptr temp_scan_ptr = _partial_data.get_scan(i);
+    Scan temp_scan =
+      detail::safe_dereference(boost::dynamic_pointer_cast<Scan>(temp_scan_ptr));
+    scan += temp_scan;
+  }
+
+  ImageSequence result(_partial_data,
+                       indices,
+                       get_beam(),
+                       get_detector(),
+                       get_goniometer(),
+                       scan_ptr(new Scan(scan)));
+  return result;
+}
 
 protected:
-  beam_ptr beam_;
-  detector_ptr detector_;
-  goniometer_ptr goniometer_;
-  scan_ptr scan_;
+beam_ptr beam_;
+detector_ptr detector_;
+goniometer_ptr goniometer_;
+scan_ptr scan_;
 };
 
 }  // namespace dxtbx
