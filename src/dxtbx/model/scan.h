@@ -29,10 +29,21 @@ namespace dxtbx { namespace model {
 
   typedef std::map<std::string, scitbx::af::shared<vec2<int> > > ExpImgRangeMap;
 
+  /**
+   * Minimal base class that contains basic properties of a sequence of images,
+   * without specifying how they are connected (e.g. no rotational information).
+   * The exception is the is_still method, which is currently left for back
+   * compatability.
+   */
   class ScanBase {
   public:
     ScanBase() : image_range_(0, 0), num_images_(1), batch_offset_(0) {}
 
+    /**
+     * @param image_range The range of images covered by the scan
+     * @param batch_offset A offset to add to the image number (for tracking of
+     *                     unique batch numbers for multi-crystal datasets)
+     */
     ScanBase(vec2<int> image_range, int batch_offset = 0)
         : image_range_(image_range),
           num_images_(1 + image_range_[1] - image_range_[0]),
@@ -55,7 +66,10 @@ namespace dxtbx { namespace model {
       return valid_image_ranges_;
     }
 
-    /** Get the element for a given key if it exists, else return empty array**/
+    /**
+     * Get the element for a given key if it exists, else return empty array
+     * @param i The key of the element
+     */
     scitbx::af::shared<vec2<int> > get_valid_image_ranges_key(std::string i) const {
       typedef ExpImgRangeMap::const_iterator iterator;
       for (iterator it = valid_image_ranges_.begin(); it != valid_image_ranges_.end();
@@ -68,9 +82,13 @@ namespace dxtbx { namespace model {
       return empty;
     }
 
+    /**
+     * Set a list of valid image range tuples for experiment identifier 'i'
+     * @param i The key of the element
+     * @param values The valid image range tuples
+     */
     void set_valid_image_ranges_array(std::string i,
                                       scitbx::af::shared<vec2<int> > values) {
-      /** Set a list of valid image range tuples for experiment identifier 'i'**/
       for (std::size_t j = 0; j < values.size(); ++j) {
         vec2<int> pair = values[j];
         DXTBX_ASSERT(pair[0] >= image_range_[0]);
@@ -129,41 +147,18 @@ namespace dxtbx { namespace model {
       return is_image_index_valid(index + 1);
     }
 
-    virtual bool operator==(const ScanBase &rhs) const {
-      double eps = 1e-7;
-      return image_range_ == rhs.image_range_ && batch_offset_ == rhs.batch_offset_;
-    }
-    virtual bool operator!=(const ScanBase &rhs) const {
-      return !(*this == rhs);
-    }
-    virtual bool operator<(const ScanBase &rhs) const {
-      return image_range_[0] < rhs.image_range_[0];
-    }
-    virtual bool operator<=(const ScanBase &rhs) const {
-      return image_range_[0] <= rhs.image_range_[0];
-    }
-    virtual bool operator>(const ScanBase &rhs) const {
-      return image_range_[0] > rhs.image_range_[0];
-    }
-    virtual bool operator>=(const ScanBase &rhs) const {
-      return image_range_[0] >= rhs.image_range_[0];
-    }
-    ScanBase &operator+=(const ScanBase &rhs) {
-      append(rhs, 0.01);
-      return *this;
-    }
-    ScanBase operator+(const ScanBase &rhs) const {
-      ScanBase lhs(*this);
-      lhs += rhs;
-      return lhs;
-    }
+    virtual bool operator==(const ScanBase &rhs) const = 0;
+    virtual bool operator!=(const ScanBase &rhs) const = 0;
+    virtual bool operator<(const ScanBase &rhs) const = 0;
+    virtual bool operator<=(const ScanBase &rhs) const = 0;
+    virtual bool operator>(const ScanBase &rhs) const = 0;
+    virtual bool operator>=(const ScanBase &rhs) const = 0;
 
-    virtual void append(const ScanBase &rhs, double scan_tolerance) {
-      DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
-      DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
-      image_range_[1] = rhs.image_range_[1];
-      num_images_ = 1 + image_range_[1] - image_range_[0];
-    }
+    /**
+     * Append the rhs scan onto the current scan
+     * @param scan_tolerance Left for back compatability for Scan.append
+     */
+    virtual void append(const ScanBase &rhs, double scan_tolerance) = 0;
 
   protected:
     vec2<int> image_range_;
@@ -365,8 +360,9 @@ namespace dxtbx { namespace model {
 
     /**
      * Append the rhs scan onto the current scan
+     * @param scan_tolerance The product of this and the oscillation width is
+     * used as a delta value to compare if the two scans are compatible
      */
-
     void append(const ScanBase &rhs, double scan_tolerance) {
       const Scan &scan = dynamic_cast<const Scan &>(rhs);
       DXTBX_ASSERT(is_still() == scan.is_still());
