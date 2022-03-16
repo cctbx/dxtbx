@@ -32,11 +32,10 @@ class FormatXTCRayonix(FormatXTC):
 
         cfgs = self._ds.env().configStore()
         rayonix_cfg = cfgs.get(psana.Rayonix.ConfigV2, psana.Source("Rayonix"))
-        if self.params.rayonix.bin_size is None:
-            assert rayonix_cfg.binning_f() == rayonix_cfg.binning_s()
-            bin_size = rayonix_cfg.binning_f()
-        else:
-            bin_size = self.params.rayonix.bin_size
+        assert rayonix_cfg.binning_f() == rayonix_cfg.binning_s()
+        bin_size = rayonix_cfg.binning_f()
+        if self.params.rayonix.bin_size is not None:
+            assert bin_size == self.params.rayonix.bin_size
         self._pixel_size = rayonix_tbx.get_rayonix_pixel_size(bin_size)
         self._image_size = rayonix_tbx.get_rayonix_detector_dimensions(self._ds.env())
 
