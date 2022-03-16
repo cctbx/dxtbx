@@ -164,7 +164,7 @@ def run(args=None, imageset=None):
         def load_func(x):
             try:
                 obj = dxtbx.load(x).get_imageset([x])
-            except TypeError:
+            except (TypeError, ValueError):
                 obj = ExperimentListFactory.from_json_file(x)[0].imageset
             return obj
 
@@ -186,7 +186,10 @@ def run(args=None, imageset=None):
         else:
             subiterable = [params.image_number]
         for image_number in subiterable:
-            beam = iset.get_beam(image_number)
+            try:
+              beam = iset.get_beam(image_number)
+            except:
+              continue
             if params.reference_geometry is None:
                 detector = iset.get_detector(image_number)
             s0 = col(beam.get_s0())
@@ -343,8 +346,12 @@ def run(args=None, imageset=None):
 
             if params.show_plots:
                 if params.plot_x_max is not None:
-                    results = results.select(xvals <= params.plot_x_max)
-                    xvals = xvals.select(xvals <= params.plot_x_max)
+                    if params.x_axis == "resolution":
+                        results = results.select(xvals >= params.plot_x_max)
+                        xvals = xvals.select(xvals >= params.plot_x_max)
+                    else:
+                        results = results.select(xvals <= params.plot_x_max)
+                        xvals = xvals.select(xvals <= params.plot_x_max)
                 if params.x_axis == "resolution":
                     xvals = 1 / (xvals**2)
                 if params.normalize:
@@ -404,8 +411,9 @@ def run(args=None, imageset=None):
             elif params.x_axis == "two_theta":
                 vals = tt
 
+            y_max = 1 if params.normalize else 50
             for val in vals:
-                plt.plot([val, val], [0, 50], "r")
+                plt.plot([val, val], [0, y_max], "r")
 
         # plt.legend([os.path.basename(os.path.splitext(f)[0]) for f in params.file_path], ncol=2)
         plt.show()
