@@ -121,12 +121,11 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             self.params = FormatXTC.params_from_phil(
                 master_phil=locator_scope, user_phil=image_file, strict=True
             )
-        assert self.params.mode == "idx", "idx mode should be used for analysis"
+        assert self.params.mode in ["idx","smd"], "idx or smd mode should be used for analysis (idx is often faster)"
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None
         self.populate_events()
-        self.n_images = len(self.times)
 
         self._cached_psana_detectors = {}
         self._beam_index = None
@@ -187,27 +186,60 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         """Read the timestamps from the XTC stream.  Assumes the psana idx mode of reading data.
         Handles multiple LCLS runs by concatenating the timestamps from multiple runs together
         in a single list and creating a mapping."""
-        if hasattr(self, "times") and len(self.times) > 0:
-            return
+        if self.params.mode == "idx":
+          if hasattr(self, "times") and len(self.times) > 0:
+              return
+        elif self.params.mode == "smd":
+          if hasattr(self, "run_mapping") and self.run_mapping:
+              return
 
         if not self._psana_runs:
             self._psana_runs = self._get_psana_runs(self._ds)
 
         self.times = []
         self.run_mapping = {}
-        for run in self._psana_runs.values():
-            times = run.times()
-            if (
-                self.params.filter.required_present_codes
-                or self.params.filter.required_absent_codes
-            ) and self.params.filter.pre_filter:
-                times = [t for t in times if self.filter_event(run.event(t))]
-            self.run_mapping[run.run()] = (
-                len(self.times),
-                len(self.times) + len(times),
-                run,
-            )
-            self.times.extend(times)
+
+        if self.params.mode == "idx":
+            for run in self._psana_runs.values():
+                times = run.times()
+                if (
+                    self.params.filter.required_present_codes
+                    or self.params.filter.required_absent_codes
+                ) and self.params.filter.pre_filter:
+                    times = [t for t in times if self.filter_event(run.event(t))]
+                self.run_mapping[run.run()] = (
+                    len(self.times),
+                    len(self.times) + len(times),
+                    run,
+                )
+                self.times.extend(times)
+            self.n_images = len(self.times)
+
+        elif self.params.mode == "smd":
+            self._ds = FormatXTC._get_datasource(self._image_file, self.params)
+            for event in self._ds.events():
+                run = event.run()
+                if run not in self.run_mapping:
+                    self.run_mapping[run] = []
+                if (
+                    self.params.filter.required_present_codes
+                    or self.params.filter.required_absent_codes
+                ) and self.params.filter.pre_filter:
+                    if self.filter_event(event):
+                        self.run_mapping[run].append(event)
+                else:
+                    self.run_mapping[run].append(event)
+            total = 0
+            remade_mapping = {}
+            for run in list(sorted(self.run_mapping)):
+                start = total
+                end = len(self.run_mapping[run]) + total
+                total += len(self.run_mapping[run])
+                events = self.run_mapping[run]
+                remade_mapping[run] = start, end, run, events
+            self.run_mapping = remade_mapping
+            self.n_images = sum([self.run_mapping[r][1] - self.run_mapping[r][0] for r in self.run_mapping])
+
 
     def filter_event(self, evt):
         """Return True to keep the event, False to reject it."""
@@ -235,7 +267,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         if index is None:
             index = 0
         for run_number in self.run_mapping:
-            start, stop, run = self.run_mapping[run_number]
+            start, stop, run = self.run_mapping[run_number][0:3]
             if index >= start and index < stop:
                 return run
         raise IndexError("Index is not within bounds")
@@ -247,7 +279,13 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             return self.current_event
         else:
             self.current_index = index
-            evt = self.get_run_from_index(index).event(self.times[index])
+            if self.params.mode == 'idx':
+               evt = self.get_run_from_index(index).event(self.times[index])
+            elif self.params.mode == 'smd':
+               for run_number in self.run_mapping:
+                   start, stop, run, events = self.run_mapping[run_number]
+                   if index >= start and index < stop:
+                       evt = events[index - start]
             if (
                 (
                     self.params.filter.required_present_codes
