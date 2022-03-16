@@ -15,6 +15,7 @@ from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model import Spectrum
+from dxtbx.util.rotate_and_average import rotate_and_average
 
 try:
     import psana
@@ -68,6 +69,10 @@ locator_str = """
   spectrum_eV_offset = None
     .type = float
     .help = See spectrum_eV_per_pixel
+  spectrum_rotation_angle = None
+    .type = float
+    .help = If present, first rotate the spectrum image a given amount in \
+            degrees. Only applies to 2D spectrometers
   filter {
     evr_address = evr1
       .type = str
@@ -374,10 +379,18 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             y = fee.hproj()
         except AttributeError:  # Handle older spectometers without the hproj method
             img = self._fee.image(evt)
-            x = (
-                self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
-            ) + self.params.spectrum_eV_offset
-            y = img.mean(axis=0)  # Collapse 2D image to 1D trace
+            if self.params.spectrum_rotation_angle is None:
+                x = (
+                    self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
+                ) + self.params.spectrum_eV_offset
+                y = img.mean(axis=0)  # Collapse 2D image to 1D trace
+            else:
+                mask = img == 2**16 - 1
+                mask = np.invert(mask)
+
+                x, y = rotate_and_average(img, self.params.spectrum_rotation_angle, deg=True, mask=mask)
+                x = (self.params.spectrum_eV_per_pixel * x) + self.params.spectrum_eV_offset
+
         else:
             x = (
                 self.params.spectrum_eV_per_pixel * np.array(range(len(y)))
