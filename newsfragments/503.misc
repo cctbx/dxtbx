@@ -1,0 +1,1 @@
+Moved non-rotational Scan methods to ScanBase and changed ImageSetData and Experiment to have a pointer to ScanBase instead of Scan.
