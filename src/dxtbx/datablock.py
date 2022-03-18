@@ -30,6 +30,8 @@ class DataBlock:
     def __init__(self, imagesets=None):
         """Instantiate from a list of imagesets."""
 
+        raise RuntimeError("DataBlock class now removed")
+
         warnings.warn(
             "Datablocks are deprecated; please use ExperimentLists instead",
             UserWarning,
