@@ -49,6 +49,9 @@ class DataBlock:
 
     def append(self, imageset):
         """Add an imageset to the block."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         if self._format_class is None:
             self._format_class = imageset.get_format_class()
         elif not self._format_class == imageset.get_format_class():
@@ -57,35 +60,59 @@ class DataBlock:
 
     def extend(self, datablock):
         """Add two datablocks."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         for iset in datablock:
             self.append(iset)
 
     def format_class(self):
         """Return the format class."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._format_class
 
     def extract_stills(self):
         """Extract all the still imagesets"""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return list(self.iter_stills())
 
     def extract_sequences(self):
         """Extract all the sequences from the block."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return list(self.iter_sequences())
 
     def extract_imagesets(self):
         """Extract all imagesets."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return list(self._imagesets)
 
     def num_images(self):
         """Get the number of images."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return sum(len(iset) for iset in self._imagesets)
 
     def __len__(self):
         """The number of image sets."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return len(self._imagesets)
 
     def __eq__(self, rhs):
         """Check if two blocks are the same."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return (
             self._format_class == rhs._format_class
             and self._imagesets == rhs._imagesets
@@ -93,20 +120,32 @@ class DataBlock:
 
     def __ne__(self, rhs):
         """Check if two blocks are not equal."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return not self.__eq__(rhs)
 
     def __iter__(self):
         """Iterate through the imagesets."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         yield from self._imagesets
 
     def iter_sequences(self):
         """Iterate over sequence groups."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         for iset in self._imagesets:
             if isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
 
     def iter_stills(self):
         """Iterate over still groups."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         for iset in self._imagesets:
             if not isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
@@ -115,6 +154,9 @@ class DataBlock:
         """Return a list of unique beams, detectors, ... in order.
         Optionally filter out None values (unless they came in via
         an ImageSequence)."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         items = {}
         for imageset in self._imagesets:
             getter_function = getattr(imageset, "get_" + item_name)
@@ -128,19 +170,33 @@ class DataBlock:
         return list(items)
 
     def unique_beams(self):
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._find_unique_items("beam")
 
     def unique_detectors(self):
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._find_unique_items("detector")
 
     def unique_goniometers(self):
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._find_unique_items("goniometer", filter_none=True)
 
     def unique_scans(self):
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._find_unique_items("scan", filter_none=True)
 
     def to_dict(self):
         """Convert the datablock to a dictionary"""
+
+        raise RuntimeError("DataBlock class now removed")
 
         def abspath_or_none(filename):
             if filename is None or filename == "":
