@@ -5,12 +5,13 @@ import sys
 import numpy as np
 
 from cctbx import factor_kev_angstrom
+from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
-from dxtbx.model import Detector
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 epix_locator_str = """
 """
@@ -136,6 +137,32 @@ class FormatXTCEpix(FormatXTC):
                 p.set_trusted_range((-1, 2e6))
                 p.set_gain(factor_kev_angstrom / wavelength)
                 p.set_name(val)
+
+        try:
+            beam = self._beam(index)
+        except Exception:
+            print(
+                "No beam object initialized. Returning ePix detector without parallax corrections"
+            )
+            self._cached_detector[run.run()] = d
+            return d
+
+        # take into consideration here the thickness of the sensor also the
+        # wavelength of the radiation (which we have in the same file...)
+        wavelength = beam.get_wavelength()
+        thickness = 0.5  # mm
+
+        material = "Si"
+        table = attenuation_coefficient.get_table(material)
+        # mu_at_angstrom returns cm^-1
+        mu = table.mu_at_angstrom(wavelength) / 10.0  # mu: mm^-1
+        t0 = thickness
+        for panel in d:
+            panel.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, t0))
+            panel.set_thickness(thickness)
+            panel.set_material(material)
+            panel.set_mu(mu)
+
         self._cached_detector[run.run()] = d
         return d
 
