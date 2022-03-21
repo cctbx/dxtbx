@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from cctbx import uctbx
 from cctbx.eltbx import attenuation_coefficient
 from cctbx.sgtbx import space_group, space_group_symbols

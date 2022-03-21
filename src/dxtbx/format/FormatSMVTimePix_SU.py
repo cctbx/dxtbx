@@ -2,6 +2,8 @@
 with a 2x2 array of Timepix modules, converted to SMV in various ways."""
 
 
+from __future__ import annotations
+
 import calendar
 import sys
 import time

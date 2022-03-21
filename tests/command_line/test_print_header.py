@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import procrunner
 
 
 def test_print_header(dials_data):
-    screen = dials_data("thaumatin_eiger_screen")
-    master = screen.join("Therm_6_1_master.h5")
+    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
+    master = screen / "Therm_6_1_master.h5"
     result = procrunner.run(["dxtbx.print_header", master])
     assert not result.returncode and not result.stderr
 

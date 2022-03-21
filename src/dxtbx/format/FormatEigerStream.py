@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import json
+from typing import Any
 
 import numpy as np
 
@@ -24,7 +27,7 @@ try:
 except (ImportError, ValueError):
     bitshuffle = None
 
-injected_data = {}
+injected_data: dict[str, Any] = {}
 
 
 class FormatEigerStream(FormatMultiImage, Format):
@@ -152,7 +155,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         print("Get raw data")
 
         if info["type"] == "uint16":
-            bad_sel = data == 2 ** 16 - 1
+            bad_sel = data == 2**16 - 1
             data[bad_sel] = -1
 
         return flex.int(data)

@@ -1,6 +1,8 @@
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.radial_average
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 
+from __future__ import annotations
+
 import math
 import os
 import sys
@@ -16,7 +18,7 @@ from scitbx.array_family import flex
 from scitbx.matrix import col
 from xfel import radial_average
 
-import dxtbx.datablock
+import dxtbx
 import dxtbx.util
 from dxtbx.model.experiment_list import ExperimentListFactory
 
@@ -161,16 +163,9 @@ def run(args=None, imageset=None):
 
         def load_func(x):
             try:
-                obj = dxtbx.datablock.DataBlockFactory.from_filenames([x])[
-                    0
-                ].extract_imagesets()[0]
-            except IndexError:
-                try:
-                    obj = dxtbx.datablock.DataBlockFactory.from_json_file(x)[
-                        0
-                    ].extract_imagesets()[0]
-                except dxtbx.datablock.InvalidDataBlockError:
-                    obj = ExperimentListFactory.from_json_file(x)[0].imageset
+                obj = dxtbx.load(x).get_imageset([x])
+            except TypeError:
+                obj = ExperimentListFactory.from_json_file(x)[0].imageset
             return obj
 
     else:
@@ -351,7 +346,7 @@ def run(args=None, imageset=None):
                     results = results.select(xvals <= params.plot_x_max)
                     xvals = xvals.select(xvals <= params.plot_x_max)
                 if params.x_axis == "resolution":
-                    xvals = 1 / (xvals ** 2)
+                    xvals = 1 / (xvals**2)
                 if params.normalize:
                     plt.plot(
                         xvals.as_numpy_array(),
@@ -405,7 +400,7 @@ def run(args=None, imageset=None):
                     / (2 * flex.asin((math.pi / 180) * tt.select(nonzero) / 2)),
                 )
                 vals = resolution
-                vals = 1 / (vals ** 2)
+                vals = 1 / (vals**2)
             elif params.x_axis == "two_theta":
                 vals = tt
 

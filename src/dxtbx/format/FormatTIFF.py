@@ -7,6 +7,8 @@ and generate the experimental model representations.
 """
 
 
+from __future__ import annotations
+
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatTIFFHelpers import (

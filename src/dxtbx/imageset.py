@@ -1,21 +1,35 @@
+from __future__ import annotations
+
 import boost_adaptbx.boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
 from dxtbx.sequence_filenames import group_files_by_imageset, template_image_range
-from dxtbx_imageset_ext import (
-    ExternalLookup,
-    ExternalLookupItemBool,
-    ExternalLookupItemDouble,
-    ImageGrid,
-    ImageSequence,
-    ImageSet,
-    ImageSetData,
-)
+
+try:
+    from .dxtbx_imageset_ext import (
+        ExternalLookup,
+        ExternalLookupItemBool,
+        ExternalLookupItemDouble,
+        ImageGrid,
+        ImageSequence,
+        ImageSet,
+        ImageSetData,
+    )
+except ModuleNotFoundError:
+    from dxtbx_imageset_ext import (  # type: ignore
+        ExternalLookup,
+        ExternalLookupItemBool,
+        ExternalLookupItemDouble,
+        ImageGrid,
+        ImageSequence,
+        ImageSet,
+        ImageSetData,
+    )
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
-from typing import Iterable, List
+from typing import Iterable
 
 __all__ = (
     "ExternalLookup",
@@ -31,7 +45,7 @@ __all__ = (
 )
 
 
-def _expand_template(template: str, indices: Iterable[int]) -> List[str]:
+def _expand_template(template: str, indices: Iterable[int]) -> list[str]:
     """Expand a template string to a list of filenames.
 
     Args:
@@ -268,7 +282,7 @@ class ImageSetLazy(ImageSet):
 
 
 @boost_adaptbx.boost.python.inject_into(ImageSequence)
-class _:
+class _imagesequence:
     def __getitem__(self, item):
         """Get an item from the sequence stream.
 
@@ -283,7 +297,9 @@ class _:
             An image or new Sequence object
 
         """
-        if isinstance(item, slice):
+        if not isinstance(item, slice):
+            return self.get_corrected_data(item)
+        else:
             offset = self.get_scan().get_batch_offset()
             if item.step is not None:
                 raise IndexError("Sequences must be sequential")
@@ -302,18 +318,16 @@ class _:
                     stop = len(self)
                 else:
                     stop -= offset
-
-                return self.partial_set(start, stop)
             else:
                 start = item.start or 0
                 stop = item.stop or (len(self) + offset)
-                if self.data().has_single_file_reader():
-                    reader = self.reader().copy(self.reader().paths(), stop - start)
-                else:
-                    reader = self.reader().copy(self.reader().paths())
-                return self.partial_set(reader, start - offset, stop - offset)
-        else:
-            return self.get_corrected_data(item)
+                start -= offset
+                stop -= offset
+            if self.data().has_single_file_reader():
+                reader = self.reader().copy(self.reader().paths(), stop - start)
+            else:
+                reader = self.reader().copy(self.reader().paths())
+            return self.partial_set(reader, start, stop)
 
     def get_template(self):
         """Return the template"""

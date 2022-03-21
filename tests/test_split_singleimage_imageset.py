@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -9,7 +11,9 @@ Test deserializing an experiment list that has single file indices while using c
 
 def test_split_single_image_imageset(dials_data, tmpdir):
     pytest.importorskip("h5py")
-    sacla_file = dials_data("image_examples") / "SACLA-MPCCD-run266702-0-subset.h5"
+    sacla_file = (
+        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
+    )
     expts = ExperimentListFactory.from_filenames([sacla_file])
     assert len(expts) == 4
     subset = expts[2:3]

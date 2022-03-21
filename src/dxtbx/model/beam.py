@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import math
 
 import pycbf
 
 import libtbx.phil
 
-from dxtbx_model_ext import Beam
+try:
+    from ..dxtbx_model_ext import Beam
+except ModuleNotFoundError:
+    from dxtbx_model_ext import Beam  # type: ignore
 
 beam_phil_scope = libtbx.phil.parse(
     """
@@ -32,6 +37,15 @@ beam_phil_scope = libtbx.phil.parse(
       .help = "Override the polarization fraction"
       .short_caption = "Polarization fraction"
 
+    transmission = None
+        .type = float
+        .help = "Override the transmission"
+        .short_caption = "transmission"
+
+    flux = None
+        .type = float
+        .help = "Override the flux"
+        .short_caption = "flux"
   }
 """
 )
@@ -296,9 +310,20 @@ class BeamFactory:
             0.0,
         )
 
+        # and the flux if available
+        try:
+            cbf_handle.find_category(b"diffrn_radiation")
+            cbf_handle.find_column(b"beam_flux")
+            flux = cbf_handle.get_value()
+        except Exception as e:
+            if str(e).split()[-1] != "CBF_NOTFOUND":
+                raise
+            flux = None
+
         return BeamFactory.make_polarized_beam(
             sample_to_source=direction,
             wavelength=wavelength,
             polarization=polar_plane_normal,
             polarization_fraction=polar_fraction,
+            flux=flux,
         )

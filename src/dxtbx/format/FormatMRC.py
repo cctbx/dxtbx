@@ -3,6 +3,8 @@ standard used in electron microscopy
 (http://www.ccpem.ac.uk/mrc_format/mrc2014.php)"""
 
 
+from __future__ import annotations
+
 import logging
 import os
 import re
@@ -188,10 +190,10 @@ class FormatMRC(Format):
         camera = self._header_dictionary.get("camera", b"").lower()
         if b"ceta" in camera:
             gain = 26.0
-            saturation = 8000 * binning ** 2
+            saturation = 8000 * binning**2
         elif b"falcon" in camera:
             gain = 1.0
-            saturation = 8000 * binning ** 2
+            saturation = 8000 * binning**2
         else:
             gain = 1.0
             saturation = 1e6

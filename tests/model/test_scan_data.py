@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 
 import pytest
@@ -172,3 +174,15 @@ def test_from_phil():
     for i in range(ir1, ir2):
         assert s2.get_batch_for_image_index(i) == i + s2.get_batch_offset()
         assert s2.is_batch_valid(s2.get_batch_for_image_index(i))
+
+
+def test_scan_factory_from_dict(scan):
+
+    empty_scan = Scan()
+    empty_scan_from_dict = ScanFactory.from_dict(empty_scan.to_dict())
+
+    assert empty_scan_from_dict == empty_scan
+
+    scan_from_dict = ScanFactory.from_dict(scan.to_dict())
+
+    assert scan_from_dict == scan

@@ -3,6 +3,8 @@
 # write and run pytest tests, and an overview of the available features.
 #
 
+from __future__ import annotations
+
 import os
 import socket
 

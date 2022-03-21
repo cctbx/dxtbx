@@ -4,6 +4,8 @@ FormatSMVADSC, customised for old detector on Diamond Light Source I03,
 correctly accounting for the image pedestal & similar
 """
 
+from __future__ import annotations
+
 from dxtbx.format.FormatSMVADSCSN import FormatSMVADSCSN
 
 

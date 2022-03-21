@@ -7,10 +7,13 @@ from the X(component)Factories which will allow construction of e.g.
 goniometers etc. from the headers and hence a format specific factory.
 """
 
+from __future__ import annotations
+
 import bz2
 import functools
 import os
-from typing import ClassVar, List
+from io import IOBase
+from typing import Callable, ClassVar
 
 import libtbx
 
@@ -27,7 +30,7 @@ from dxtbx.util import get_url_scheme
 try:
     import gzip
 except ImportError:
-    gzip = None
+    gzip = None  # type: ignore
 
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
@@ -94,11 +97,11 @@ class Format:
             not ever get called in Format registry searches.
     """
 
-    schemes = [""]  # type: List[str]
+    schemes: list[str] = [""]
 
     # Which class is the abstract base. Assigned with the @abstract
     # decorator, and used to check initialization
-    _abstract_base: "ClassVar[Format]" = None
+    _abstract_base: ClassVar[Format | None] = None
 
     @staticmethod
     def understand(image_file):
@@ -367,7 +370,7 @@ class Format:
                 test_scan = format_instance.get_scan()
             else:
                 test_scan = scan
-            if test_scan is not None and test_scan.get_oscillation()[1] != 0:
+            if test_scan is not None and not test_scan.is_still():
                 is_sequence = True
             else:
                 is_sequence = False
@@ -539,14 +542,17 @@ class Format:
     ####################################################################
 
     @classmethod
-    def open_file(cls, filename, mode="rb"):
+    def open_file(cls, filename: str | bytes | os.PathLike, mode="rb"):
         """Open file for reading, decompressing silently if necessary,
         caching transparently if possible."""
+        filename_str = os.fspath(filename)
+        assert isinstance(filename_str, str)
 
-        if filename.endswith(".bz2"):
+        fh_func: Callable[..., IOBase]
+        if filename_str.endswith(".bz2"):
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
 
-        elif filename.endswith(".gz"):
+        elif filename_str.endswith(".gz"):
             if not gzip:
                 raise RuntimeError("gz file provided without gzip module")
             fh_func = functools.partial(gzip.GzipFile, filename, mode=mode)
@@ -556,4 +562,4 @@ class Format:
 
         ##  To disable caching logic:
         # return fh_func()
-        return cls.get_cache_controller().check(filename, fh_func)
+        return cls.get_cache_controller().check(filename_str, fh_func)

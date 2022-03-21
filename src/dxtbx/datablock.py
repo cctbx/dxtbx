@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import collections
 import json
 import logging
@@ -87,8 +89,6 @@ class DataBlock:
             and self._imagesets == rhs._imagesets
         )
 
-    __hash__ = None  # datablock objects are mutable and therefore unhashable
-
     def __ne__(self, rhs):
         """Check if two blocks are not equal."""
         return not self.__eq__(rhs)
@@ -162,79 +162,42 @@ class DataBlock:
             if isinstance(iset, dxtbx.imageset.ImageSequence):
                 if iset.reader().is_single_file_reader():
                     result["imageset"].append(
-                        dict(
-                            [
-                                ("__id__", "ImageSequence"),
-                                (
-                                    "master",
-                                    os.path.abspath(iset.reader().master_path()),
-                                ),
-                                (
-                                    "mask",
-                                    abspath_or_none(iset.external_lookup.mask.filename),
-                                ),
-                                (
-                                    "gain",
-                                    abspath_or_none(iset.external_lookup.gain.filename),
-                                ),
-                                (
-                                    "pedestal",
-                                    abspath_or_none(
-                                        iset.external_lookup.pedestal.filename
-                                    ),
-                                ),
-                                (
-                                    "dx",
-                                    abspath_or_none(iset.external_lookup.dx.filename),
-                                ),
-                                (
-                                    "dy",
-                                    abspath_or_none(iset.external_lookup.dy.filename),
-                                ),
-                                ("beam", b.index(iset.get_beam())),
-                                ("detector", d.index(iset.get_detector())),
-                                ("goniometer", g.index(iset.get_goniometer())),
-                                ("scan", s.index(iset.get_scan())),
-                                ("images", list(iset.indices())),
-                                ("params", iset.params()),
-                            ]
-                        )
+                        {
+                            "__id__": "ImageSequence",
+                            "master": os.path.abspath(iset.reader().master_path()),
+                            "mask": abspath_or_none(iset.external_lookup.mask.filename),
+                            "gain": abspath_or_none(iset.external_lookup.gain.filename),
+                            "pedestal": abspath_or_none(
+                                iset.external_lookup.pedestal.filename
+                            ),
+                            "dx": abspath_or_none(iset.external_lookup.dx.filename),
+                            "dy": abspath_or_none(iset.external_lookup.dy.filename),
+                            "beam": b.index(iset.get_beam()),
+                            "detector": d.index(iset.get_detector()),
+                            "goniometer": g.index(iset.get_goniometer()),
+                            "scan": s.index(iset.get_scan()),
+                            "images": list(iset.indices()),
+                            "params": iset.params(),
+                        }
                     )
                 else:
                     result["imageset"].append(
-                        dict(
-                            [
-                                ("__id__", "ImageSequence"),
-                                ("template", os.path.abspath(iset.get_template())),
-                                (
-                                    "mask",
-                                    abspath_or_none(iset.external_lookup.mask.filename),
-                                ),
-                                (
-                                    "gain",
-                                    abspath_or_none(iset.external_lookup.gain.filename),
-                                ),
-                                (
-                                    "pedestal",
-                                    abspath_or_none(
-                                        iset.external_lookup.pedestal.filename
-                                    ),
-                                ),
-                                (
-                                    "dx",
-                                    abspath_or_none(iset.external_lookup.dx.filename),
-                                ),
-                                (
-                                    "dy",
-                                    abspath_or_none(iset.external_lookup.dy.filename),
-                                ),
-                                ("beam", b.index(iset.get_beam())),
-                                ("detector", d.index(iset.get_detector())),
-                                ("goniometer", g.index(iset.get_goniometer())),
-                                ("scan", s.index(iset.get_scan())),
-                                ("params", iset.params()),
-                            ]
-                        )
+                        {
+                            "__id__": "ImageSequence",
+                            "template": os.path.abspath(iset.get_template()),
+                            "mask": abspath_or_none(iset.external_lookup.mask.filename),
+                            "gain": abspath_or_none(iset.external_lookup.gain.filename),
+                            "pedestal": abspath_or_none(
+                                iset.external_lookup.pedestal.filename
+                            ),
+                            "dx": abspath_or_none(iset.external_lookup.dx.filename),
+                            "dy": abspath_or_none(iset.external_lookup.dy.filename),
+                            "beam": b.index(iset.get_beam()),
+                            "detector": d.index(iset.get_detector()),
+                            "goniometer": g.index(iset.get_goniometer()),
+                            "scan": s.index(iset.get_scan()),
+                            "params": iset.params(),
+                        }
                     )
             else:
                 imageset = {}

@@ -60,6 +60,8 @@
 # useful. So need to read first 1K of the image header.
 
 
+from __future__ import annotations
+
 import calendar
 import datetime
 import math

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import h5py
@@ -65,7 +67,7 @@ def nexus_file(tmp_path_factory) -> Path:
 
 
 def test_data_factory_nxs(dials_data):
-    nxs_file = dials_data("vmxi_thaumatin") / "image_15799.nxs"
+    nxs_file = dials_data("vmxi_thaumatin", pathlib=True) / "image_15799.nxs"
     with h5py.File(nxs_file) as fh:
         data = fh["/entry/data"]
         data_factory = nexus.DataFactory(nexus.NXdata(data))

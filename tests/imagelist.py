@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 def id_conversion(path):
     return path.replace("/", "-")
 

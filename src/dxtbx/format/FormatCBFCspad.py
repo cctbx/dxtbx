@@ -1,6 +1,8 @@
 """Methods specific to interacting with CSPAD images"""
 
 
+from __future__ import annotations
+
 import pycbf
 
 from cctbx.eltbx import attenuation_coefficient

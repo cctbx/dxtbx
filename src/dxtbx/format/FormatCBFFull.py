@@ -5,6 +5,8 @@ but will allow for extension for specific implementations of CBF.
 """
 
 
+from __future__ import annotations
+
 import sys
 
 import numpy as np
@@ -22,7 +24,6 @@ if hasattr(pycbf.cbf_handle_struct, "read_buffer"):
 
     def cbf_read_buffer(handle, buffer, flags):
         return handle.read_buffer(buffer, flags)
-
 
 else:
     from dxtbx.format.image import cbf_read_buffer

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 from libtbx.test_utils import approx_equal
@@ -13,8 +15,7 @@ def test_to_xds(dials_data, tmpdir):
     sequence = ImageSetFactory.new(list(file_names))[0]
     to_xds = xds.to_xds(sequence)
     s1 = to_xds.XDS_INP()
-    expected_f = (
-        """\
+    expected_f = """\
 DETECTOR=PILATUS MINIMUM_VALID_PIXEL_VALUE=0 OVERLOAD=495976
 SENSOR_THICKNESS= 0.320
 !SENSOR_MATERIAL / THICKNESS Si 0.320
@@ -50,8 +51,8 @@ UNTRUSTED_RECTANGLE= 0 2464 2103 2121
 UNTRUSTED_RECTANGLE= 0 2464 2315 2333
 DATA_RANGE= 1 9
 JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
-"""
-        % dials_data("centroid_test_data").join("centroid_????.cbf").strpath
+""" % (
+        dials_data("centroid_test_data", pathlib=True) / "centroid_????.cbf"
     )
 
     # universe changed once, so be flexible
@@ -125,8 +126,8 @@ SEGMENT_ORGX= 1075.00 SEGMENT_ORGY= 4973.67""",
 
 
 def test_vmxi_thaumatin(dials_data):
-    master_h5 = dials_data("vmxi_thaumatin") / "image_15799_master.h5"
-    expts = ExperimentListFactory.from_filenames([master_h5.strpath])
+    master_h5 = dials_data("vmxi_thaumatin", pathlib=True) / "image_15799_master.h5"
+    expts = ExperimentListFactory.from_filenames([master_h5])
     to_xds = xds.to_xds(expts[0].imageset)
     s = to_xds.XDS_INP()
     assert "DETECTOR=EIGER" in s

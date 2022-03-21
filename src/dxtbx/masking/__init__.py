@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 
 from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
@@ -5,14 +7,25 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.model import MultiAxisGoniometer
-from dxtbx_masking_ext import (
-    GoniometerShadowMasker,
-    SmarGonShadowMasker,
-    is_inside_polygon,
-    mask_untrusted_circle,
-    mask_untrusted_polygon,
-    mask_untrusted_rectangle,
-)
+
+try:
+    from ..dxtbx_masking_ext import (
+        GoniometerShadowMasker,
+        SmarGonShadowMasker,
+        is_inside_polygon,
+        mask_untrusted_circle,
+        mask_untrusted_polygon,
+        mask_untrusted_rectangle,
+    )
+except ModuleNotFoundError:
+    from dxtbx_masking_ext import (  # type: ignore
+        GoniometerShadowMasker,
+        SmarGonShadowMasker,
+        is_inside_polygon,
+        mask_untrusted_circle,
+        mask_untrusted_polygon,
+        mask_untrusted_rectangle,
+    )
 
 __all__ = [
     "GoniometerShadowMasker",
@@ -109,10 +122,10 @@ class GoniometerMaskerFactory:
 
         alpha = flex.double_range(180, 370, step=10) * math.pi / 180
         r = flex.double(alpha.size(), 33)
-        x = flex.sqrt(flex.pow2(r * flex.sin(alpha)) + 89.02 ** 2) * flex.cos(
+        x = flex.sqrt(flex.pow2(r * flex.sin(alpha)) + 89.02**2) * flex.cos(
             (50 * math.pi / 180) - flex.atan(r / 89.02 * flex.sin(alpha))
         )
-        y = flex.sqrt(flex.pow2(r * flex.sin(alpha)) + 89.02 ** 2) * flex.sin(
+        y = flex.sqrt(flex.pow2(r * flex.sin(alpha)) + 89.02**2) * flex.sin(
             (50 * math.pi / 180) - flex.atan(r / 89.02 * flex.sin(alpha))
         )
         z = -r * flex.cos(alpha)

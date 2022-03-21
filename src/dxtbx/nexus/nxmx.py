@@ -14,7 +14,7 @@ except ImportError:
     # Defined cached_property decorator as a noop
     import functools
 
-    def cached_property(func):
+    def cached_property(func):  # type: ignore
         @property
         @functools.wraps(func)
         def wrapper_decorator(*args, **kwargs):
@@ -24,7 +24,7 @@ except ImportError:
 
 
 from functools import reduce
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Iterable, Iterator, Sequence, Union, cast, overload
 
 import dateutil.parser
 import h5py
@@ -49,22 +49,25 @@ logger = logging.getLogger(__name__)
 NXNode = Union[h5py.File, h5py.Group]
 
 
-def h5str(h5_value: Optional[Union[str, np.string_, bytes]]) -> Optional[str]:
+def h5str(h5_value: str | np.bytes_ | bytes | None) -> str | None:
     """
-    Convert a value returned an h5py attribute to str.
+    Convert a value returned from an h5py attribute to str.
 
     h5py can return either a bytes-like (numpy.string_) or str object
     for attribute values depending on whether the value was written as
     fixed or variable length. This function collapses the two to str.
     """
-    if hasattr(h5_value, "decode"):
+    if isinstance(h5_value, (np.bytes_, bytes)):
         return h5_value.decode("utf-8")
     return h5_value
 
 
-def find_classes(
-    node: NXNode, *nx_classes: Optional[str]
-) -> Tuple[List[h5py.Group], ...]:
+def units(data: h5py.Dataset, default: str | None = None) -> pint.Unit:
+    """Extract the units attribute, if any, from an h5py data set."""
+    return ureg.Unit(h5str(data.attrs.get("units", default)))
+
+
+def find_classes(node: NXNode, *nx_classes: str | None) -> tuple[list[h5py.Group], ...]:
     """
     Find instances of multiple NXclass types within the children of the current node.
 
@@ -76,9 +79,12 @@ def find_classes(
     Returns:
         A list of matching nodes for each of the specified NX_class types.
     """
-    results = {nx_class: [] for nx_class in nx_classes}
+    results: dict[str | None, list[h5py.Group]] = {
+        nx_class: [] for nx_class in nx_classes
+    }
 
-    for v in filter(None, node.values()):
+    values: Iterable[h5py.Group] = filter(None, node.values())
+    for v in values:
         class_name = h5str(v.attrs.get("NX_class"))
         if class_name in nx_classes:
             results[class_name].append(v)
@@ -86,7 +92,7 @@ def find_classes(
     return tuple(results.values())
 
 
-def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
+def find_class(node: NXNode, nx_class: str | None) -> list[h5py.Group]:
     """
     Find instances of a single NXclass type within the children of the current node.
 
@@ -105,10 +111,10 @@ def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
 
 
 class H5Mapping(Mapping):
-    def __init__(self, handle: Union[h5py.File, h5py.Group]):
+    def __init__(self, handle: h5py.File | h5py.Group):
         self._handle = handle
 
-    def __getitem__(self, key: str) -> Union[h5py.Group, h5py.Dataset]:
+    def __getitem__(self, key: str) -> h5py.Group | h5py.Dataset:
         return self._handle[key]
 
     def __iter__(self) -> Iterator[str]:
@@ -118,7 +124,7 @@ class H5Mapping(Mapping):
         return len(self._handle)
 
     @cached_property
-    def path(self) -> Optional[str]:
+    def path(self) -> str | None:
         return h5str(self._handle.name)
 
 
@@ -132,7 +138,7 @@ class NXmx(H5Mapping):
         ]
 
     @cached_property
-    def entries(self) -> List[NXentry]:
+    def entries(self) -> list[NXentry]:
         return [NXentry(entry) for entry in self._entries]
 
 
@@ -151,15 +157,15 @@ class NXentry(H5Mapping):
         )
 
     @cached_property
-    def instruments(self) -> List[NXinstrument]:
+    def instruments(self) -> list[NXinstrument]:
         return [NXinstrument(instrument) for instrument in self._instruments]
 
     @cached_property
-    def samples(self) -> List[NXsample]:
+    def samples(self) -> list[NXsample]:
         return [NXsample(sample) for sample in self._samples]
 
     @cached_property
-    def data(self) -> List[NXdata]:
+    def data(self) -> list[NXdata]:
         return [NXdata(data) for data in self._data]
 
     @cached_property
@@ -177,7 +183,7 @@ class NXentry(H5Mapping):
         return dateutil.parser.isoparse(h5str(self._handle["start_time"][()]))
 
     @cached_property
-    def end_time(self) -> Optional[datetime.datetime]:
+    def end_time(self) -> datetime.datetime | None:
         """Ending time of measurement.
 
         ISO 8601 time/date of the last data point collected in UTC, using the Z suffix
@@ -189,6 +195,7 @@ class NXentry(H5Mapping):
         """
         if "end_time" in self._handle:
             return dateutil.parser.isoparse(h5str(self._handle["end_time"][()]))
+        return None
 
     @cached_property
     def end_time_estimated(self) -> datetime.datetime:
@@ -211,7 +218,7 @@ class NXdata(H5Mapping):
     """NXdata describes the plottable data and related dimension scales."""
 
     @cached_property
-    def signal(self) -> Optional[str]:
+    def signal(self) -> str | None:
         """Declares which dataset is the default.
 
         The value is the name of the dataset to be plotted. A field of this name must
@@ -304,7 +311,7 @@ class NXtransformations(H5Mapping):
         return h5str(self._handle.attrs.get("default"))
 
     @cached_property
-    def axes(self) -> Dict[str, NXtransformationsAxis]:
+    def axes(self) -> dict[str, NXtransformationsAxis]:
         return self._axes
 
 
@@ -347,11 +354,11 @@ class NXtransformationsAxis:
         return self._handle.size
 
     @cached_property
-    def path(self) -> Optional[str]:
+    def path(self) -> str | None:
         return h5str(self._handle.name)
 
     @cached_property
-    def units(self) -> str:
+    def units(self) -> pint.Unit:
         """Units of the specified transformation.
 
         Could be any of these: NX_LENGTH, NX_ANGLE, or NX_UNITLESS
@@ -366,7 +373,7 @@ class NXtransformationsAxis:
           - NX_ANGLE for rotation
           - NX_UNITLESS for axes for which no transformation type is specified.
         """
-        return h5str(self._handle.attrs.get("units"))
+        return units(self._handle)
 
     @cached_property
     def transformation_type(self) -> str:
@@ -397,42 +404,41 @@ class NXtransformationsAxis:
         return self._handle.attrs.get("vector")
 
     @cached_property
-    def offset(self) -> Optional[pint.Quantity]:
+    def offset(self) -> pint.Quantity | None:
         """A fixed offset applied before the transformation (three vector components).
 
         This is not intended to be a substitute for a fixed translation axis but, for
         example, as the mechanical offset from mounting the axis to its dependency.
         """
         if "offset" in self._handle.attrs:
-            return self._handle.attrs.get("offset") * ureg(self.offset_units)
+            return self._handle.attrs["offset"] * self.offset_units
+        return None
 
     @cached_property
-    def offset_units(self) -> Optional[str]:
+    def offset_units(self) -> pint.Unit:
         """Units of the offset. Values should be consistent with NX_LENGTH."""
         if "offset_units" in self._handle.attrs:
-            return h5str(self._handle.attrs.get("offset_units"))
+            return ureg.Unit(h5str(self._handle.attrs["offset_units"]))
         # This shouldn't be the case, but DLS EIGER NeXus files include offset without
         # accompanying offset_units, so use units instead (which should strictly only
-        # apply to vector, not offset.
+        # apply to vector, not offset).
         # See also https://jira.diamond.ac.uk/browse/MXGDA-3668
-        # logger.warning(
-        # f"'offset_units' attribute not present for {self.path}, falling back to 'units'"
-        # )
         return self.units
 
     @cached_property
-    def depends_on(self) -> Optional[NXtransformationsAxis]:
+    def depends_on(self) -> NXtransformationsAxis | None:
         depends_on = h5str(self._handle.attrs.get("depends_on"))
         if depends_on and depends_on != ".":
             return NXtransformationsAxis(self._handle.parent[depends_on])
+        return None
 
     def __getitem__(self, key) -> pint.Quantity:
-        return self._handle[key] * ureg(self.units)
+        return self._handle[key] * self.units
 
     @cached_property
     def matrix(self) -> np.ndarray:
 
-        values = np.atleast_1d(self[()])
+        values = cast(pint.Quantity, np.atleast_1d(self[()]))
         if np.any(values):
             values = (
                 values.to("mm").magnitude
@@ -449,7 +455,7 @@ class NXtransformationsAxis:
             R = np.identity(3)
             T = values[:, np.newaxis] * self.vector
 
-        if np.any(self.offset):
+        if self.offset is not None and np.any(self.offset):
             T += self.offset.to("mm").magnitude
 
         A = np.repeat(np.identity(4).reshape((1, 4, 4)), values.size, axis=0)
@@ -476,22 +482,22 @@ class NXsample(H5Mapping):
         return h5str(self._handle["name"][()])
 
     @cached_property
-    def depends_on(self) -> Optional[NXtransformationsAxis]:
+    def depends_on(self) -> NXtransformationsAxis | None:
         """The axis on which the sample position depends"""
         depends_on = h5str(self._handle["depends_on"][()])
         if depends_on and depends_on != ".":
             return NXtransformationsAxis(self._handle[depends_on])
+        return None
 
     @cached_property
-    def temperature(self) -> Optional[pint.Quantity]:
+    def temperature(self) -> pint.Quantity | None:
         """The temperature of the sample."""
-        if "temperature" in self._handle:
-            temperature = self._handle["temperature"]
-            units = h5str(temperature.attrs["units"])
-            return temperature[()] * ureg(units)
+        if temperature := self._handle.get("temperature"):
+            return temperature[()] * units(temperature)
+        return None
 
     @cached_property
-    def transformations(self) -> NXtransformations:
+    def transformations(self) -> list[NXtransformations]:
         """This is the recommended location for sample goniometer and other related axes.
 
         This is a requirement to describe for any scan experiment. The reason it is
@@ -528,13 +534,28 @@ class NXinstrument(H5Mapping):
             self._detector_groups,
             self._detectors,
             self._beams,
+            self._transformations,
         ) = find_classes(
             handle,
             "NXattenuator",
             "NXdetector_group",
             "NXdetector",
             "NXbeam",
+            "NXtransformations",
         )
+
+    @cached_property
+    def transformations(self) -> NXtransformations:
+        """
+        Transformations relating to the diffractometer but not to the sample.
+
+        These might include a rotation to represent a 2θ arm on which a detector is
+        mounted, or a translation of the detector.
+        """
+        return [
+            NXtransformations(transformations)
+            for transformations in self._transformations
+        ]
 
     @cached_property
     def name(self) -> str:
@@ -554,7 +575,7 @@ class NXinstrument(H5Mapping):
         return h5str(self._handle["name"].attrs.get("short_name"))
 
     @cached_property
-    def time_zone(self) -> Optional[str]:
+    def time_zone(self) -> str | None:
         """ISO 8601 time_zone offset from UTC."""
         return self._handle.get("time_zone")
 
@@ -563,12 +584,12 @@ class NXinstrument(H5Mapping):
         return self._attenuators
 
     @cached_property
-    def detector_groups(self) -> List[NXdetector_group]:
+    def detector_groups(self) -> list[NXdetector_group]:
         """Optional logical grouping of detectors."""
         return [NXdetector_group(group) for group in self._detector_groups]
 
     @cached_property
-    def detectors(self) -> List[NXdetector]:
+    def detectors(self) -> list[NXdetector]:
         """A detector, detector bank, or multidetector.
 
         Normally the detector group will have the name detector. However, in the case of
@@ -577,7 +598,7 @@ class NXinstrument(H5Mapping):
         return [NXdetector(detector) for detector in self._detectors]
 
     @cached_property
-    def beams(self) -> List[NXbeam]:
+    def beams(self) -> list[NXbeam]:
         """Properties of the neutron or X-ray beam at a given location."""
         return [NXbeam(beam) for beam in self._beams]
 
@@ -649,7 +670,7 @@ class NXdetector(H5Mapping):
         (self._modules,) = find_classes(handle, "NXdetector_module")
 
     @cached_property
-    def depends_on(self) -> Optional[NXtransformationsAxis]:
+    def depends_on(self) -> NXtransformationsAxis | None:
         """The axis on which the detector position depends.
 
         NeXus path to the detector positioner axis that most directly supports the
@@ -658,9 +679,10 @@ class NXdetector(H5Mapping):
         """
         if "depends_on" in self._handle:
             return NXtransformationsAxis(self._handle[self._handle["depends_on"][()]])
+        return None
 
     @cached_property
-    def data(self) -> Optional[NXNumber]:
+    def data(self) -> NXNumber | None:
         """The raw data array for this detector.
 
         For a dimension-2 detector, the rank of the data array will be 3. For a
@@ -669,15 +691,17 @@ class NXdetector(H5Mapping):
         """
         if "data" in self._handle:
             return self._handle["data"][()]
+        return None
 
     @cached_property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         """name/manufacturer/model/etc. information."""
         if "description" in self._handle:
-            return h5str(self._handle["description"][()])
+            return h5str(np.squeeze(self._handle["description"])[()])
+        return None
 
     @cached_property
-    def distance(self) -> Optional[NXFloat]:
+    def distance(self) -> pint.Quantity | None:
         """Distance from the sample to the beam center.
 
         Normally this value is for guidance only, the proper geometry can be found
@@ -685,28 +709,31 @@ class NXdetector(H5Mapping):
         dectector distance to the sample is observable independent of the axis chain,
         that may take precedence over the axis chain calculation.
         """
-        if "distance" in self._handle:
-            return self._handle["distance"][()]
+        if distance := self._handle.get("distance"):
+            return np.squeeze(distance[()] * units(distance))
+        return None
 
     @cached_property
-    def distance_derived(self) -> Optional[NXBool]:
+    def distance_derived(self) -> bool | None:
         """Boolean to indicate if the distance is a derived, rather than a primary
         observation.
 
         If distance_derived true or is not specified, the distance is assumed to be
-        derived from delector axis specifications.
+        derived from detector axis specifications.
         """
         if "distance_derived" in self._handle:
-            return self._handle["distance_derived"][()]
+            return bool(self._handle["distance_derived"][()])
+        return None
 
     @cached_property
-    def count_time(self) -> Optional[NXNumber]:
+    def count_time(self) -> pint.Quantity | None:
         """Elapsed actual counting time."""
-        if "count_time" in self._handle:
-            return self._handle["count_time"][()]
+        if count_time := self._handle.get("count_time"):
+            return np.squeeze(count_time[()] * units(count_time))
+        return None
 
     @cached_property
-    def beam_center_x(self) -> Optional[NXFloat]:
+    def beam_center_x(self) -> pint.Quantity | None:
         """This is the x position where the direct beam would hit the detector.
 
         This is a length and can be outside of the actual detector. The length can be in
@@ -714,11 +741,12 @@ class NXdetector(H5Mapping):
         should be derived from the axis chain, but the direct specification may take
         precedence if it is not a derived quantity.
         """
-        if "beam_center_x" in self._handle:
-            return self._handle["beam_center_x"][()]
+        if beam_centre_x := self._handle.get("beam_center_x"):
+            return np.squeeze(beam_centre_x[()] * units(beam_centre_x, "pixels"))
+        return None
 
     @cached_property
-    def beam_center_y(self) -> Optional[NXFloat]:
+    def beam_center_y(self) -> pint.Quantity | None:
         """This is the y position where the direct beam would hit the detector.
 
         This is a length and can be outside of the actual detector. The length can be in
@@ -726,20 +754,22 @@ class NXdetector(H5Mapping):
         should be derived from the axis chain, but the direct specification may take
         precedence if it is not a derived quantity.
         """
-        if "beam_center_y" in self._handle:
-            return self._handle["beam_center_y"][()]
+        if beam_centre_y := self._handle.get("beam_center_y"):
+            return np.squeeze(beam_centre_y[()] * units(beam_centre_y, "pixels"))
+        return None
 
     @cached_property
-    def pixel_mask_applied(self) -> Optional[NXBool]:
+    def pixel_mask_applied(self) -> bool | None:
         """
         True when the pixel mask correction has been applied in the electronics, false
         otherwise (optional).
         """
         if "pixel_mask_applied" in self._handle:
-            return self._handle["pixel_mask_applied"][()]
+            return bool(self._handle["pixel_mask_applied"][()])
+        return None
 
     @cached_property
-    def pixel_mask(self) -> Optional[NXInt]:
+    def pixel_mask(self) -> NXInt | None:
         """The 32-bit pixel mask for the detector.
 
         Can be either one mask for the whole dataset (i.e. an array with indices i, j)
@@ -781,12 +811,14 @@ class NXdetector(H5Mapping):
         """
         if "pixel_mask" in self._handle:
             return self._handle["pixel_mask"][()]
+        return None
 
     @cached_property
-    def bit_depth_readout(self) -> Optional[NXInt]:
+    def bit_depth_readout(self) -> int | None:
         """How many bits the electronics record per pixel (recommended)."""
         if "bit_depth_readout" in self._handle:
             return int(self._handle["bit_depth_readout"][()])
+        return None
 
     @cached_property
     def sensor_material(self) -> str:
@@ -795,16 +827,15 @@ class NXdetector(H5Mapping):
         At times, radiation is not directly sensed by the detector. Rather, the detector
         might sense the output from some converter like a scintillator. This is the name
         of this converter material."""
-        return h5str(self._handle["sensor_material"][()])
+        return h5str(np.squeeze(self._handle["sensor_material"])[()])
 
     @cached_property
     def sensor_thickness(self) -> pint.Quantity:
         thickness = self._handle["sensor_thickness"]
-        units = h5str(thickness.attrs["units"])
-        return thickness[()] * ureg(units)
+        return np.squeeze(thickness)[()] * units(thickness)
 
     @cached_property
-    def underload_value(self) -> Optional[NXInt]:
+    def underload_value(self) -> int | None:
         """The lowest value at which pixels for this detector would be reasonably be measured.
 
         For example, given a saturation_value and an underload_value, the valid pixels
@@ -812,10 +843,11 @@ class NXdetector(H5Mapping):
         to the underload_value.
         """
         if "underload_value" in self._handle:
-            return self._handle["underload_value"][()]
+            return int(self._handle["underload_value"][()])
+        return None
 
     @cached_property
-    def saturation_value(self) -> Optional[NXInt]:
+    def saturation_value(self) -> int | None:
         """The value at which the detector goes into saturation.
 
         Data above this value is known to be invalid.
@@ -825,26 +857,34 @@ class NXdetector(H5Mapping):
         to the underload_value.
         """
         if "saturation_value" in self._handle:
-            return self._handle["saturation_value"][()]
+            return int(self._handle["saturation_value"][()])
+        return None
 
     @cached_property
-    def modules(self) -> List[NXdetector_module]:
+    def modules(self) -> list[NXdetector_module]:
         """The list of NXdetector_modules comprising this NXdetector."""
         return [NXdetector_module(module) for module in self._modules]
 
     @cached_property
-    def type(self) -> Optional[str]:
+    def type(self) -> str | None:
         """Description of type such as scintillator, ccd, pixel, image plate, CMOS, …"""
         if "type" in self._handle:
-            return h5str(self._handle["type"][()])
+            return h5str(np.squeeze(self._handle["type"])[()])
+        return None
 
     @cached_property
-    def frame_time(self) -> Optional[pint.Quantity]:
+    def frame_time(self) -> pint.Quantity | None:
         """This is time for each frame. This is exposure_time + readout time."""
-        if "frame_time" in self._handle:
-            frame_time = self._handle["frame_time"]
-            units = h5str(frame_time.attrs["units"])
-            return frame_time[()] * ureg(units)
+        if frame_time := self._handle.get("frame_time"):
+            return np.squeeze(frame_time[()] * units(frame_time))
+        return None
+
+    @cached_property
+    def serial_number(self) -> str | None:
+        """Serial number for the detector."""
+        if "serial_number" in self._handle:
+            return h5str(np.squeeze(self._handle["serial_number"])[()])
+        return None
 
 
 class NXdetector_module(H5Mapping):
@@ -862,7 +902,7 @@ class NXdetector_module(H5Mapping):
     """
 
     @cached_property
-    def data_origin(self) -> NXInt:
+    def data_origin(self) -> np.ndarray:
         """The offset of this module into the raw data array.
 
         A dimension-2 or dimension-3 field which gives the indices of the origin of the
@@ -878,18 +918,23 @@ class NXdetector_module(H5Mapping):
 
         The order of indices (i, j or i, j, k) is slow to fast.
         """
-        return self._handle["data_origin"][()]
+        origin = self._handle["data_origin"][()]
+        assert not isinstance(origin, int)
+        return origin
 
     @cached_property
-    def data_size(self) -> NXInt:
+    def data_size(self) -> np.ndarray:
         """Two or three values for the size of the module in pixels in each direction.
 
         Dimensionality and order of indices is the same as for data_origin.
         """
-        return self._handle["data_size"][()]
+        size = self._handle["data_size"][()]
+        # Validate that we aren't the int part of NXInt
+        assert not isinstance(size, int)
+        return size
 
     @cached_property
-    def data_stride(self) -> Optional[NXInt]:
+    def data_stride(self) -> NXInt | None:
         """Two or three values for the stride of the module in pixels in each direction.
 
         By default the stride is [1,1] or [1,1,1], and this is the most likely case.
@@ -897,14 +942,16 @@ class NXdetector_module(H5Mapping):
         """
         if "data_stride" in self._handle:
             return self._handle["data_stride"][()]
+        return None
 
     @cached_property
-    def module_offset(self) -> Optional[NXtransformationsAxis]:
+    def module_offset(self) -> NXtransformationsAxis | None:
         """Offset of the module in regards to the origin of the detector in an arbitrary
         direction.
         """
         if "module_offset" in self._handle:
             return NXtransformationsAxis(self._handle["module_offset"])
+        return None
 
     @cached_property
     def fast_pixel_direction(self) -> NXtransformationsAxis:
@@ -937,7 +984,7 @@ class NXsource(H5Mapping):
         return h5str(self._handle["name"][()])
 
     @cached_property
-    def short_name(self) -> Optional[str]:
+    def short_name(self) -> str | None:
         """Short name for source, perhaps the acronym"""
         return h5str(self._handle["name"].attrs.get("short_name"))
 
@@ -983,45 +1030,41 @@ class NXbeam(H5Mapping):
         along with the original spectrum from which it was calibrated.
         """
         wavelength = self._handle["incident_wavelength"]
-        units = h5str(wavelength.attrs["units"])
-        return wavelength[()] * ureg(units)
+        return wavelength[()] * units(wavelength)
 
     @cached_property
-    def flux(self) -> Optional[pint.Quantity]:
+    def flux(self) -> pint.Quantity | None:
         """Flux density incident on beam plane area in photons per second per unit area.
 
         In the case of a beam that varies in flux shot-to-shot, this is an array of
         values, one for each recorded shot.
         """
-        if "flux" in self._handle:
-            flux = self._handle["flux"]
-            units = h5str(flux.attrs["units"])
-            return flux[()] * ureg(units)
+        if flux := self._handle.get("flux"):
+            return flux[()] * units(flux)
+        return None
 
     @cached_property
-    def total_flux(self) -> Optional[pint.Quantity]:
+    def total_flux(self) -> pint.Quantity | None:
         """Flux incident on beam plane in photons per second.
 
         In the case of a beam that varies in total flux shot-to-shot, this is an array
         of values, one for each recorded shot.
         """
-        if "total_flux" in self._handle:
-            total_flux = self._handle["total_flux"]
-            units = h5str(total_flux.attrs["units"])
-            return total_flux[()] * ureg(units)
+        if total_flux := self._handle.get("total_flux"):
+            return total_flux[()] * units(total_flux)
+        return None
 
     @cached_property
-    def incident_beam_size(self) -> Optional[pint.Quantity]:
+    def incident_beam_size(self) -> pint.Quantity | None:
         """Two-element array of FWHM (if Gaussian or Airy function) or diameters
         (if top hat) or widths (if rectangular) of the beam in the order x, y.
         """
-        if "incident_beam_size" in self._handle:
-            beam_size = self._handle["incident_beam_size"]
-            units = h5str(beam_size.attrs["units"])
-            return beam_size[()] * ureg(units)
+        if beam_size := self._handle.get("incident_beam_size"):
+            return beam_size[()] * units(beam_size)
+        return None
 
     @cached_property
-    def profile(self) -> Optional[str]:
+    def profile(self) -> str | None:
         """The beam profile, Gaussian, Airy function, top-hat or rectangular.
 
         The profile is given in the plane of incidence of the beam on the sample.
@@ -1030,16 +1073,25 @@ class NXbeam(H5Mapping):
         """
         if "profile" in self._handle:
             return h5str(self._handle["profile"][()])
+        return None
 
 
 @dataclasses.dataclass(frozen=True)
-class DependencyChain:
-    transformations: List[NXtransformationsAxis]
+class DependencyChain(Sequence[NXtransformationsAxis]):
+    transformations: list[NXtransformationsAxis]
 
     def __iter__(self) -> Iterator[NXtransformationsAxis]:
         return iter(self.transformations)
 
-    def __getitem__(self, idx) -> NXtransformationsAxis:
+    @overload
+    def __getitem__(self, idx: int) -> NXtransformationsAxis:
+        ...
+
+    @overload
+    def __getitem__(self, idx: slice) -> Sequence[NXtransformationsAxis]:
+        ...
+
+    def __getitem__(self, idx):
         return self.transformations[idx]
 
     def __len__(self) -> int:
@@ -1070,20 +1122,21 @@ def get_dependency_chain(
     resulting list of NXtransformationsAxis.
     """
     transformations = []
-    while transformation is not None:
-        transformations.append(transformation)
-        transformation = transformation.depends_on
+    transform: NXtransformationsAxis | None = transformation
+    while transform is not None:
+        transformations.append(transform)
+        transform = transform.depends_on
     return DependencyChain(transformations)
 
 
 def get_cumulative_transformation(
-    dependency_chain: DependencyChain,
+    dependency_chain: DependencyChain | Sequence[NXtransformationsAxis],
 ) -> np.ndarray:
     """Compute the cumulative transformation for a given dependency chain"""
     return reduce(operator.__matmul__, reversed([t.matrix for t in dependency_chain]))
 
 
-Axes = namedtuple("axes", ["axes", "angles", "names", "is_scan_axis"])
+Axes = namedtuple("Axes", ["axes", "angles", "names", "is_scan_axis"])
 
 
 def get_rotation_axes(dependency_chain: DependencyChain) -> Axes:
@@ -1095,11 +1148,12 @@ def get_rotation_axes(dependency_chain: DependencyChain) -> Axes:
     for transformation in dependency_chain:
         if transformation.transformation_type != "rotation":
             continue
-        values = np.atleast_1d(transformation[()])
+        values = cast(pint.Quantity, np.atleast_1d(transformation[()]))
         values = values.to("degrees").magnitude
         is_scan = len(values) > 1 and not np.all(values == values[0])
         axes.append(transformation.vector)
         angles.append(values[0])
+        assert transformation.path
         axis_names.append(transformation.path.split("/")[-1])
         is_scan_axis.append(is_scan)
 

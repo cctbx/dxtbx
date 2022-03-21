@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 try:
     from importlib import metadata
 
@@ -5,7 +7,7 @@ try:
 except ImportError:
     try:
         # Running on pre-3.8 Python; use importlib-metadata backport package
-        import importlib_metadata as metadata
+        import importlib_metadata as metadata  # type: ignore
 
         version = metadata.version("dxtbx")
     except ImportError:

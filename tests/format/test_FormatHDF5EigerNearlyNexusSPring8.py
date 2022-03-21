@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from dxtbx.format.FormatHDF5EigerNearlyNexusSPring8 import (
@@ -9,9 +11,11 @@ from dxtbx.model.goniometer import Goniometer
 
 def test_spring8_ccp4_2018_zenodo_1443110_data03(dials_data):
     master_h5 = (
-        dials_data("spring8_ccp4_2018")
-        .join("ccp4school2018_bl41xu", "05", "data03", "data03_master.h5")
-        .strpath
+        dials_data("spring8_ccp4_2018", pathlib=True)
+        / "ccp4school2018_bl41xu"
+        / "05"
+        / "data03"
+        / "data03_master.h5"
     )
     assert FormatHDF5EigerNearlyNexusSPring8.understand(master_h5)
 

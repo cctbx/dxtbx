@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import collections
 import itertools
 import math
 import os
-from typing import List, Optional, Tuple, Union
+from typing import Iterable, Union
 
 import h5py
 import hdf5plugin  # noqa; F401
@@ -26,11 +28,18 @@ from dxtbx.model import (
 )
 
 try:
-    from dxtbx_format_nexus_ext import (
-        dataset_as_flex_double,
-        dataset_as_flex_float,
-        dataset_as_flex_int,
-    )
+    try:
+        from ..dxtbx_format_nexus_ext import (
+            dataset_as_flex_double,
+            dataset_as_flex_float,
+            dataset_as_flex_int,
+        )
+    except ModuleNotFoundError:
+        from dxtbx_format_nexus_ext import (  # type: ignore
+            dataset_as_flex_double,
+            dataset_as_flex_float,
+            dataset_as_flex_int,
+        )
 except ImportError:
     # Workaround for psana build, which doesn't link HDF5 properly
     if "SIT_ROOT" not in os.environ:
@@ -39,7 +48,7 @@ except ImportError:
 NXNode = Union[h5py.File, h5py.Group]
 
 
-def h5str(h5_value: Union[str, numpy.string_, bytes]) -> str:
+def h5str(h5_value: str | numpy.string_ | bytes) -> str:
     """
     Convert a value returned an h5py attribute to str.
 
@@ -47,7 +56,7 @@ def h5str(h5_value: Union[str, numpy.string_, bytes]) -> str:
     for attribute values depending on whether the value was written as
     fixed or variable length. This function collapses the two to str.
     """
-    if hasattr(h5_value, "decode"):
+    if isinstance(h5_value, (numpy.string_, bytes)):
         return h5_value.decode("utf-8")
     return h5_value
 
@@ -84,7 +93,7 @@ class NXValidationError(RuntimeError):
     """A specific exception to record validation errors"""
 
 
-def find_classes(node: NXNode, *nx_classes: Optional[str]) -> Tuple[List[h5py.Group]]:
+def find_classes(node: NXNode, *nx_classes: str | None) -> tuple[list[h5py.Group], ...]:
     """
     Find instances of multiple NXclass types within the children of the current node.
 
@@ -96,9 +105,12 @@ def find_classes(node: NXNode, *nx_classes: Optional[str]) -> Tuple[List[h5py.Gr
     Returns:
         A list of matching nodes for each of the specified NX_class types.
     """
-    results = {nx_class: [] for nx_class in nx_classes}
+    results: dict[str | None, list[h5py.Group]] = {
+        nx_class: [] for nx_class in nx_classes
+    }
 
-    for v in filter(None, node.values()):
+    values: Iterable[h5py.Group] = filter(None, node.values())
+    for v in values:
         class_name = h5str(v.attrs.get("NX_class"))
         if class_name in nx_classes:
             results[class_name].append(v)
@@ -106,7 +118,7 @@ def find_classes(node: NXNode, *nx_classes: Optional[str]) -> Tuple[List[h5py.Gr
     return tuple(results.values())
 
 
-def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
+def find_class(node: NXNode, nx_class: str | None) -> list[h5py.Group]:
     """
     Find instances of a single NXclass type within the children of the current node.
 
@@ -124,7 +136,7 @@ def find_class(node: NXNode, nx_class: Optional[str]) -> List[h5py.Group]:
     return find_classes(node, nx_class)[0]
 
 
-def find_entries(nx_file: h5py.File) -> List[h5py.Group]:
+def find_entries(nx_file: h5py.File) -> list[h5py.Group]:
     """
     Find NXmx entries.
 
@@ -580,7 +592,7 @@ class BeamFactory:
         self.index = index
 
         def get_wavelength(wavelength):
-            if wavelength.shape in (tuple(), (1,)):
+            if wavelength.shape in ((), (1,)):
                 wavelength_value = wavelength[()]
             else:
                 wavelength_value = wavelength[index]

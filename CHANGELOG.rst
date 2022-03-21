@@ -1,3 +1,62 @@
+dxtbx 3.9.0 (2022-03-14)
+========================
+
+Features
+--------
+
+- Add get_spectrum to FormatXTC (`#484 <https://github.com/cctbx/dxtbx/issues/484>`_)
+- Add filtering by event code for processing LCLS data (`#489 <https://github.com/cctbx/dxtbx/issues/489>`_)
+- Beam flux is now written to, and read from, CBF files. (`#493 <https://github.com/cctbx/dxtbx/issues/493>`_)
+
+
+Bugfixes
+--------
+
+- Reduce, in some cases drastically, memory usage of ``ImageSet`` objects. (`#438 <https://github.com/cctbx/dxtbx/issues/438>`_)
+- Make FormatPY abstract so that dxtbx doesn't try to read ``.pickle`` reflection files as images. (`#464 <https://github.com/cctbx/dxtbx/issues/464>`_)
+- Add method ersatz_uuid4 which gives an implementation of a random 128 bit UUID4 (`#477 <https://github.com/cctbx/dxtbx/issues/477>`_)
+- ``FormatNXmxI19_2``:  Allow data from beamline I19-2 at Diamond Light Source to be processed with optional masking of the beamline's standard diamond anvil pressure cell with a 76° aperture. (`#481 <https://github.com/cctbx/dxtbx/issues/481>`_)
+- Correctly handle slicing ImageSequences made from images starting with 0 (`#485 <https://github.com/cctbx/dxtbx/issues/485>`_)
+- The Beam object constructor no longer discards "transmission" and "flux". (`#488 <https://github.com/cctbx/dxtbx/issues/488>`_)
+- Fix wavelength bug in FormatXTC for older datasets (`#490 <https://github.com/cctbx/dxtbx/issues/490>`_)
+- Fixed inconsistency in ``dxtbx.model.Scan`` default constructor that gave different results when loading from Python dictionary. (`#496 <https://github.com/cctbx/dxtbx/issues/496>`_)
+
+
+Misc
+----
+
+- `#462 <https://github.com/cctbx/dxtbx/issues/462>`_, `#463 <https://github.com/cctbx/dxtbx/issues/463>`_, `#466 <https://github.com/cctbx/dxtbx/issues/466>`_, `#468 <https://github.com/cctbx/dxtbx/issues/468>`_, `#471 <https://github.com/cctbx/dxtbx/issues/471>`_, `#477 <https://github.com/cctbx/dxtbx/issues/477>`_, `#479 <https://github.com/cctbx/dxtbx/issues/479>`_, `#480 <https://github.com/cctbx/dxtbx/issues/480>`_, `#482 <https://github.com/cctbx/dxtbx/issues/482>`_, `#487 <https://github.com/cctbx/dxtbx/issues/487>`_, `#494 <https://github.com/cctbx/dxtbx/issues/494>`_, `#495 <https://github.com/cctbx/dxtbx/issues/495>`_
+
+
+DIALS 3.8.3 (2022-02-22)
+========================
+
+Bugfixes
+--------
+
+- FormatNXmx: Open nexus files in SWMR mode. (`#478 <https://github.com/cctbx/dxtbx/issues/478>`_)
+
+
+DIALS 3.8.2 (2022-02-07)
+========================
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Provide more general support for correctly formatted NXmx-flavoured NeXus data.  Previously, only a very limited subset of experiment geometries and data formats were supported. (`#453 <https://github.com/cctbx/dxtbx/issues/453>`_)
+- More robustly handle different ways of recording single-value NXmx detector metadata. (`#460 <https://github.com/cctbx/dxtbx/issues/460>`_)
+- Fix ``dxtbx.plot_detector_models`` running on newer matplotlib versions. (`#475 <https://github.com/cctbx/dxtbx/issues/475>`_)
+
+
+DIALS 3.8.1 (2022-01-25)
+========================
+
+Features
+--------
+
+- Updated bad pixel mask for DLS I23 PILATUS 12M for 2022 run 1 (`#469 <https://github.com/cctbx/dxtbx/issues/469>`_)
+
+
 dxtbx 3.8.0 (2022-01-11)
 ========================
 

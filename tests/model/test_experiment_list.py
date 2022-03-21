@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import collections
 import errno
 import os
@@ -161,7 +163,9 @@ def test_experiment_equality():
 
 def test_experiment_consistent(dials_data):
     # Create a sequence
-    sequence_filenames = dials_data("centroid_test_data").listdir("centroid*.cbf")
+    sequence_filenames = dials_data("centroid_test_data", pathlib=False).listdir(
+        "centroid*.cbf"
+    )
     sequence = ImageSetFactory.new(sorted(f.strpath for f in sequence_filenames))[0]
 
     # Create experiment with sequence and good scan
@@ -557,7 +561,10 @@ def test_experimentlist_factory_from_datablock():
 
 def test_experimentlist_to_datablock_imageset(dials_data):
     filenames = [
-        str(f) for f in dials_data("thaumatin_grid_scan").listdir("thau_3_2_*.cbf.bz2")
+        str(f)
+        for f in dials_data("thaumatin_grid_scan", pathlib=False).listdir(
+            "thau_3_2_*.cbf.bz2"
+        )
     ]
     imageset = Format.get_imageset(filenames, as_imageset=True)
     expts = ExperimentListFactory.from_imageset_and_crystal(imageset, crystal=None)
@@ -569,7 +576,10 @@ def test_experimentlist_to_datablock_imageset(dials_data):
 
 def test_experimentlist_to_datablock_centroid_test_data(dials_data):
     filenames = [
-        str(f) for f in dials_data("centroid_test_data").listdir("centroid_*.cbf")
+        str(f)
+        for f in dials_data("centroid_test_data", pathlib=False).listdir(
+            "centroid_*.cbf"
+        )
     ]
     expts = ExperimentListFactory.from_filenames(filenames)
     datablocks = expts.to_datablocks()
@@ -700,7 +710,10 @@ def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmp_path):
 
 
 def test_experimentlist_dumper_dump_with_bad_lookup(dials_data, tmpdir):
-    filename = dials_data("centroid_test_data") / "experiments_with_bad_lookup.json"
+    filename = (
+        dials_data("centroid_test_data", pathlib=True)
+        / "experiments_with_bad_lookup.json"
+    )
     experiments = ExperimentListFactory.from_json_file(filename, check_format=False)
 
     imageset = experiments[0].imageset
@@ -763,9 +776,8 @@ def test_experimentlist_with_identifiers():
 
 def test_load_models(dials_data):
     pytest.importorskip("h5py")
-    filename = os.path.join(
-        dials_data("image_examples"),
-        "SACLA-MPCCD-run266702-0-subset.h5",
+    filename = (
+        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
     )
 
     # Test different ways of loading the data
@@ -780,13 +792,13 @@ def test_load_models(dials_data):
         oris1.append(img.get_detector(i)[0].get_origin())
 
     # Test using the imageset clases
-    imageset = img.get_imageset(filename)
+    imageset = img.get_imageset(str(filename))
     for i in range(len(imageset)):
         waves2.append(imageset.get_beam(i).get_wavelength())
         oris2.append(imageset.get_detector(i)[0].get_origin())
 
     # Test using imageset subsets
-    imageset = img.get_imageset(filename)
+    imageset = img.get_imageset(str(filename))
     for i in range(len(imageset)):
         subset = imageset[i : i + 1]
         waves3.append(subset.get_beam(0).get_wavelength())
@@ -893,7 +905,10 @@ def test_experimentlist_from_file(monkeypatch, dials_regression, tmpdir):
 
 def test_experimentlist_imagesequence_stills(dials_data):
     filenames = [
-        str(dials_data("thaumatin_grid_scan") / f"thau_3_2_{i:04d}.cbf.bz2")
+        str(
+            dials_data("thaumatin_grid_scan", pathlib=True)
+            / f"thau_3_2_{i:04d}.cbf.bz2"
+        )
         for i in range(1, 4)
     ]
     experiments = ExperimentListFactory.from_filenames(filenames)
@@ -977,7 +992,8 @@ def test_experimentlist_change_basis(dials_data):
     for i in range(4):
         experiments.extend(
             ExperimentList.from_file(
-                dials_data("vmxi_proteinase_k_sweeps") / ("experiments_%i.expt" % i),
+                dials_data("vmxi_proteinase_k_sweeps", pathlib=True)
+                / ("experiments_%i.expt" % i),
                 check_format=False,
             )
         )
@@ -1059,8 +1075,8 @@ def test_extract_metadata_record():
 
 
 def _equal_but_not_same(thing):
-    object_1 = tuple([thing])
-    object_2 = tuple([thing])
+    object_1 = (thing,)
+    object_2 = (thing,)
     assert object_1 == object_2
     assert object_1 is not object_2
     return object_1, object_2

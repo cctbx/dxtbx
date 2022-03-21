@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 import h5py
@@ -183,7 +185,9 @@ def test_grid_scan_i04():
     raises=AssertionError, reason="https://github.com/cctbx/dxtbx/issues/13"
 )
 def test_screening(dials_data):
-    master_h5 = dials_data("thaumatin_eiger_screen").join("Therm_6_1_master.h5").strpath
+    master_h5 = (
+        dials_data("thaumatin_eiger_screen", pathlib=True) / "Therm_6_1_master.h5"
+    )
     assert FormatNexusEigerDLS16M.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])

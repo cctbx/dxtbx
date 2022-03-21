@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import multiprocessing.pool
 import os
@@ -844,8 +846,8 @@ def run():
     parser.add_argument(
         "--python",
         help="Install this minor version of Python (default: %(default)s)",
-        default="3.8",
-        choices=("3.7", "3.8", "3.9"),
+        default="3.9",
+        choices=("3.8", "3.9", "3.10"),
     )
     parser.add_argument(
         "--branch",
@@ -853,8 +855,8 @@ def run():
         action="append",
         default=[],
         help=(
-            "during 'update' step when a repository is newly cloned set it to a given branch."
-            "Specify as repository@branch, eg. 'dials@dials-next'"
+            "during 'update' step when a repository is newly cloned set it to a given "
+            "branch. Specify as repository@branch, eg. 'dials@dials-next'"
         ),
     )
     parser.add_argument(

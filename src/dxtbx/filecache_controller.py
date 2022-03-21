@@ -1,6 +1,8 @@
 """A simple cache controller. Caching only one file at a time."""
 
 
+from __future__ import annotations
+
 import os
 import threading
 

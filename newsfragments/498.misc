@@ -1,0 +1,1 @@
+dxtbx:  In the internals of the NeXus handling code, we now use ``pint.Quantity`` objects more widely to represent data with units.

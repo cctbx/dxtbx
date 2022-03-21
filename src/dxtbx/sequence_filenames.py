@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import re
 from collections import defaultdict
@@ -162,7 +164,7 @@ def find_matching_images(image_name):
 
         matching_images = []
 
-        for j in range(0, 10 ** len_digits):
+        for j in range(0, 10**len_digits):
             if template_str % j in files_in_directory:
                 matching_images.append(os.path.join(directory, template_str % j))
 
