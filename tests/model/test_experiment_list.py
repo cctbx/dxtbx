@@ -13,7 +13,6 @@ from scitbx.array_family import flex
 
 import dxtbx
 import dxtbx.model.experiment_list
-from dxtbx.datablock import DataBlockFactory
 from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSetFactory
 from dxtbx.model import (
@@ -529,64 +528,6 @@ def test_experimentlist_factory_from_sequence():
     assert experiments[0].goniometer
     assert experiments[0].scan
     assert experiments[0].crystal
-
-
-def test_experimentlist_factory_from_datablock():
-    filenames = ["filename_%01d.cbf" % (i + 1) for i in range(0, 2)]
-
-    imageset = Format.get_imageset(
-        filenames,
-        beam=Beam(),
-        detector=Detector(),
-        goniometer=Goniometer(),
-        scan=Scan((1, 2), (0, 1)),
-        as_sequence=True,
-    )
-
-    crystal = Crystal((1, 0, 0), (0, 1, 0), (0, 0, 1), space_group_symbol="P1")
-
-    datablock = DataBlockFactory.from_imageset(imageset)
-    assert datablock[0].format_class()
-
-    experiments = ExperimentListFactory.from_datablock_and_crystal(datablock, crystal)
-
-    assert len(experiments) == 1
-    assert experiments[0].imageset
-    assert experiments[0].beam
-    assert experiments[0].detector is not None
-    assert experiments[0].goniometer
-    assert experiments[0].scan
-    assert experiments[0].crystal
-
-
-def test_experimentlist_to_datablock_imageset(dials_data):
-    filenames = [
-        str(f)
-        for f in dials_data("thaumatin_grid_scan", pathlib=False).listdir(
-            "thau_3_2_*.cbf.bz2"
-        )
-    ]
-    imageset = Format.get_imageset(filenames, as_imageset=True)
-    expts = ExperimentListFactory.from_imageset_and_crystal(imageset, crystal=None)
-    datablocks = expts.to_datablocks()
-    assert len(datablocks) == 1
-    assert datablocks[0].num_images() == len(expts) == len(imageset)
-    assert len(datablocks[0].extract_imagesets()) == len(expts)
-
-
-def test_experimentlist_to_datablock_centroid_test_data(dials_data):
-    filenames = [
-        str(f)
-        for f in dials_data("centroid_test_data", pathlib=False).listdir(
-            "centroid_*.cbf"
-        )
-    ]
-    expts = ExperimentListFactory.from_filenames(filenames)
-    datablocks = expts.to_datablocks()
-    assert len(datablocks) == 1
-    assert datablocks[0].num_images() == len(expts[0].imageset)
-    assert len(datablocks[0].extract_imagesets()) == len(expts)
-    assert len(datablocks[0].extract_imagesets()[0]) == len(expts[0].imageset)
 
 
 def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmp_path):
