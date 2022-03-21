@@ -21,7 +21,7 @@ from dxtbx.model.experiment_list import (
         "image_examples/DLS_I02/X4_wide_M1S4_1_0001.cbf",
     ],
 )
-def test_cbf_writer(image_file, dials_regression, run_in_tmpdir):
+def test_cbf_writer(image_file, dials_regression, run_in_tmp_path):
     filename = os.path.join(dials_regression, image_file)
     imageset = ExperimentListFactory.from_filenames([filename])[0].imageset
 

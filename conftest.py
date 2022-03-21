@@ -10,6 +10,8 @@ import socket
 
 import pytest
 
+from dials.conftest import run_in_tmp_path  # noqa; lgtm; exported symbol
+
 collect_ignore = []
 
 
@@ -70,13 +72,3 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "regression" in item.keywords:
                 item.add_marker(skip_regression)
-
-
-@pytest.fixture
-def run_in_tmpdir(tmpdir):
-    """Shortcut to create a temporary directory and then run the test inside
-    this directory."""
-    cwd = os.getcwd()
-    tmpdir.chdir()
-    yield tmpdir
-    os.chdir(cwd)
