@@ -5,6 +5,7 @@ import json
 import logging
 import os.path
 import pickle
+import sys
 import warnings
 
 import libtbx
@@ -724,6 +725,8 @@ class DataBlockFactory:
     ):
         """Try to load datablocks from any recognized format."""
 
+        raise RuntimeError("DataBlock class now removed")
+
         if unhandled is None:
             unhandled = []
         unhandled1 = []
@@ -761,6 +764,15 @@ class DataBlockFactory:
     ):
         """Create a list of data blocks from a list of directory or file names."""
         from dxtbx.model.experiment_list import ExperimentList, ExperimentListFactory
+
+        # commentary as part of remove-datablocks branch:
+        #
+        # one context where this method is used is in ... making an experiment...
+        # so we make an experiment list to make a data block to ... make an experiment
+        # list :thinking face:
+
+        sys.stdout.write("Calling DataBlockFactory.from_filenames()\n")
+        raise RuntimeError("DataBlock class now removed")
 
         expts = ExperimentListFactory.from_filenames(
             filenames,
