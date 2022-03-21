@@ -7,10 +7,9 @@ from __future__ import annotations
 
 import os
 import socket
+from pathlib import Path
 
 import pytest
-
-from dials.conftest import run_in_tmp_path  # noqa; lgtm; exported symbol
 
 collect_ignore = []
 
@@ -72,3 +71,23 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "regression" in item.keywords:
                 item.add_marker(skip_regression)
+
+
+@pytest.fixture
+def run_in_tmp_path(tmp_path) -> Path:
+    """
+    A fixture to change the working directory for the test to a temporary directory.
+
+    The original working directory is restored upon teardown of the fixture.
+
+    Args:
+        tmp_path: Pytest tmp_path fixture, see
+                  https://docs.pytest.org/en/latest/how-to/tmp_path.html
+
+    Yields:
+        The path to the temporary working directory defined by tmp_path.
+    """
+    cwd = Path.cwd()
+    os.chdir(tmp_path)
+    yield tmp_path
+    os.chdir(cwd)
