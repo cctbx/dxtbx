@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 project(dxtbx LANGUAGES C CXX)
 
-set(CMAKE_SKIP_RPATH NO)
-set(CMAKE_MACOSX_RPATH YES)
-
 # Add the included modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
