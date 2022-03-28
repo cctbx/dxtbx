@@ -51,8 +51,8 @@ target_link_libraries(
 if(WIN32)
     # Technically required on other platforms, but already loaded by time
     # of use in dxtbx, and a bug with -install_name settings for these
-    # prevents direct linking from working without fiddling around with
-    # install_name_tool.
+    # prevents direct linking from working on MacOS without fiddling
+    # around with install_name_tool.
     target_link_libraries(
         dxtbx_model_ext
         PUBLIC
