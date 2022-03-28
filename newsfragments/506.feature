@@ -1,0 +1,1 @@
+Recognise `NXmx standard <https://manual.nexusformat.org/classes/applications/NXmx.html>`_ data from the Diamond Light Source `DIAD <https://www.diamond.ac.uk/Instruments/Imaging-and-Microscopy/DIAD.html>`_ beamline.
