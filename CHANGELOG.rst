@@ -1,3 +1,12 @@
+DIALS 3.9.1 (2022-03-31)
+========================
+
+Features
+--------
+
+- Windows support for the CMake build. (`#507 <https://github.com/cctbx/dxtbx/issues/507>`_)
+
+
 dxtbx 3.9.0 (2022-03-14)
 ========================
 
