@@ -1,4 +1,13 @@
-DIALS 3.9.1 (2022-03-31)
+dxtbx 3.8.4 (2022-04-01)
+========================
+
+Bugfixes
+--------
+
+- ``FormatNXmxI19_2``:  Allow data from beamline I19-2 at Diamond Light Source to be processed with optional masking of the beamline's standard diamond anvil pressure cell with a 76° aperture. (`#481 <https://github.com/cctbx/dxtbx/issues/481>`_)
+
+
+dxtbx 3.9.1 (2022-03-31)
 ========================
 
 Features
