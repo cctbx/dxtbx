@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import binascii
 import os
+import pathlib
 import sys
 
 import pycbf
@@ -294,9 +295,10 @@ class FormatCBFMini(FormatCBF):
           Auxiliary files (bad pixel mask, flat field, trim, image path)
           Detector not normal to beam
         """
+        path = pathlib.Path(path)
         cbf = cbf_wrapper()
-        cbf_root = os.path.splitext(os.path.basename(path))[0] + ".cbf"
-        cbf.new_datablock(os.path.splitext(os.path.basename(path))[0].encode())
+        cbf_root = path.with_suffix(".cbf")
+        cbf.new_datablock(path.stem.encode())
 
         """Data items in the ARRAY_DATA category are the containers for the array data
         items described in the category ARRAY_STRUCTURE."""
@@ -417,7 +419,7 @@ class FormatCBFMini(FormatCBF):
         )
 
         cbf.write_widefile(
-            cbf_root.encode(),
+            str(cbf_root).encode(),
             pycbf.CBF,
             pycbf.MIME_HEADERS | pycbf.MSG_DIGEST | pycbf.PAD_4K,
             0,
