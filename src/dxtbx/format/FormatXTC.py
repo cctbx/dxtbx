@@ -73,6 +73,9 @@ locator_str = """
     .type = float
     .help = If present, first rotate the spectrum image a given amount in \
             degrees. Only applies to 2D spectrometers
+  spectrum_pedestal = None
+    .type = path
+    .help = Path to pickled pedestal file to subtract from the pedestal
   filter {
     evr_address = evr1
       .type = str
@@ -132,6 +135,12 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         self._beam_cache = None
         self._initialized = True
         self._fee = None
+
+        if self.params.spectrum_pedestal:
+            from libtbx import easy_pickle
+            self._spectrum_pedestal = easy_pickle.load(self.params.spectrum_pedestal)
+        else:
+            self._spectrum_pedestal = None
 
     @staticmethod
     def understand(image_file):
@@ -415,8 +424,14 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         try:
             fee = self._fee.get(evt)
             y = fee.hproj()
+            if self.params.spectrum_pedestal:
+              y = y - self._spectrum_pedestal.as_numpy_array()
+
         except AttributeError:  # Handle older spectometers without the hproj method
-            img = self._fee.image(evt)
+            try:
+                img = self._fee.image(evt)
+            except AttributeError:
+                return None
             if self.params.spectrum_rotation_angle is None:
                 x = (
                     self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
