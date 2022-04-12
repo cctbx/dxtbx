@@ -75,7 +75,7 @@ def _install_setup_readonly_fallback(package_name: str):
     if f"src/{package_name}" not in module.extra_command_line_locations:
         module.extra_command_line_locations.append(f"src/{package_name}")
 
-    # Regenerate the DIALS dispatchers now we've properly configured
+    # Regenerate the dispatchers now we've properly configured
     module.process_command_line_directories()
 
 
