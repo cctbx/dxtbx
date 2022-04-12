@@ -1,1 +1,1 @@
-``FormatCBFFullPilatus``: loop over panels when setting panel identifiers
+``FormatCBFFullPilatus``: Handle detector information better in cases of multiple or missing panels.
