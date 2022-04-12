@@ -397,11 +397,13 @@ def test_detector_has_projection_2d():
 
     # Test detector with all panels having 2d projections gives a detector
     # with a 2d projection
-    image_size = detector[0].get_image_size()
-    for i in detector:
+    detector2 = create_detector(offset=0)
+    image_size = detector2[0].get_image_size()
+    for i in detector2:
         i.set_projection_2d(rotation, (image_size[0], 0))
 
-    assert detector.has_projection_2d()
+    assert detector2.has_projection_2d()
+    assert detector != detector2
 
     ## Test multipanel detector
     detector = create_multipanel_detector(offset=0)
@@ -409,13 +411,46 @@ def test_detector_has_projection_2d():
     # Test detector with no projections set explicity has no 2d projection
     assert not detector.has_projection_2d()
 
-    image_size = detector[0].get_image_size()
-    for i in detector:
+    detector2 = create_multipanel_detector(offset=0)
+    image_size = detector2[0].get_image_size()
+    for i in detector2:
         # Test detector with only some panels with 2d projections gives a
         # detector without a 2d projection
-        assert not detector.has_projection_2d()
+        assert not detector2.has_projection_2d()
         i.set_projection_2d(rotation, (image_size[0], 0))
 
     # Test detector with all panels having 2d projections gives a detector
     # with a 2d projection
-    assert detector.has_projection_2d()
+    assert detector2.has_projection_2d()
+    assert detector != detector2
+
+
+def test_pickle_suite():
+
+    rotation = (1, 0, 0, 1)
+
+    ## Test single panel detector without 2d projection
+    detector = create_detector(offset=0)
+    detector2 = pickle.loads(pickle.dumps(detector))
+    assert detector == detector2
+
+    ## Test single panel detector with 2d projection
+    image_size = detector[0].get_image_size()
+    for i in detector:
+        i.set_projection_2d(rotation, (image_size[0], 0))
+
+    detector2 = pickle.loads(pickle.dumps(detector))
+    assert detector == detector2
+
+    ## Test multipanel detector without 2d projection
+    detector = create_multipanel_detector(offset=0)
+    detector2 = pickle.loads(pickle.dumps(detector))
+    assert detector == detector2
+
+    ## Test multipanel detector with 2d projection
+    image_size = detector[0].get_image_size()
+    for i in detector:
+        i.set_projection_2d(rotation, (image_size[0], 0))
+
+    detector2 = pickle.loads(pickle.dumps(detector))
+    assert detector == detector2
