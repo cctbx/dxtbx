@@ -1,1 +1,1 @@
-Fixed `Panel.projection_2d_` not being serialized.
+Fixed ``Panel.projection_2d_`` not being serialized.
