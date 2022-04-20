@@ -309,7 +309,7 @@ class NXtransformations(H5Mapping):
         self._axes = {
             k: NXtransformationsAxis(v)
             for k, v in handle.items()
-            if isinstance(v, h5py.Dataset)
+            if isinstance(v, h5py.Dataset) and "vector" in v.attrs
         }
 
     @cached_property
