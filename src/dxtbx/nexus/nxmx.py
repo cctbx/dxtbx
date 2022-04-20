@@ -511,9 +511,10 @@ class NXsample(H5Mapping):
     @cached_property
     def depends_on(self) -> NXtransformationsAxis | None:
         """The axis on which the sample position depends"""
-        depends_on = h5str(self._handle["depends_on"][()])
-        if depends_on and depends_on != ".":
-            return NXtransformationsAxis(self._handle[depends_on])
+        if "depends_on" in self._handle:
+            depends_on = h5str(self._handle["depends_on"][()])
+            if depends_on and depends_on != ".":
+                return NXtransformationsAxis(self._handle[depends_on])
         return None
 
     @cached_property
