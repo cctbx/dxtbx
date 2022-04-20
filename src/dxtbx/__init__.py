@@ -9,9 +9,6 @@ import libtbx.load_env
 
 import dxtbx.format.Registry
 
-if sys.version_info.major == 2:
-    sys.exit("Python 2 is no longer supported")
-
 from .version import version as __version__  # noqa: F401
 
 if typing.TYPE_CHECKING:
