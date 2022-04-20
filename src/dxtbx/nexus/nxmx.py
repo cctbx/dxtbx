@@ -48,6 +48,20 @@ logger = logging.getLogger(__name__)
 NXNode = Union[h5py.File, h5py.Group]
 
 
+class NXNumber(abc.Sequence):
+    def __init__(self, handle: h5py.Dataset, unit: pint.Unit | None):
+        self._handle = handle
+        self._unit = unit
+
+    def __getitem__(self, key) -> NXNumberT:
+        if self._unit:
+            return self._handle[key] * self._unit
+        return self._handle[key]
+
+    def __len__(self):
+        return len(self._handle)
+
+
 def h5str(h5_value: str | np.bytes_ | bytes | None) -> str | None:
     """
     Convert a value returned from an h5py attribute to str.
@@ -475,20 +489,6 @@ class NXtransformationsAxis:
         A[:, :3, :3] = R
         A[:, :3, 3] = T
         return A
-
-
-class NXNumber(abc.Sequence):
-    def __init__(self, handle: h5py.Dataset, unit: pint.Unit | None):
-        self._handle = handle
-        self._unit = unit
-
-    def __getitem__(self, key) -> NXNumberT:
-        if self._unit:
-            return self._handle[key] * self._unit
-        return self._handle[key]
-
-    def __len__(self):
-        return len(self._handle)
 
 
 class NXsample(H5Mapping):
