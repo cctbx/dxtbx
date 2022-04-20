@@ -1,4 +1,8 @@
+from __future__ import annotations
+
+import contextlib
 import inspect
+import io
 import os
 import subprocess
 import sys
@@ -73,8 +77,14 @@ def _install_setup_readonly_fallback(package_name: str):
     if f"src/{package_name}" not in module.extra_command_line_locations:
         module.extra_command_line_locations.append(f"src/{package_name}")
 
-    # Regenerate the dispatchers now we've properly configured
-    module.process_command_line_directories()
+    # Because dispatchers for all modules are generated _before_ any of
+    # libtbx_refresh are run, then we need to potentially regenerate
+    # the dispatchers for everything downstream of this package. Since
+    # there isn't a dependency graph to walk, just do everything afterwards
+    my_index = env.module_list.index(module)
+    with contextlib.redirect_stdout(io.StringIO()):
+        for module in env.module_list[my_index:]:
+            module.process_command_line_directories()
 
 
 def _get_real_env_hack_hack_hack():
