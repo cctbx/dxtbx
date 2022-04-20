@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import contextlib
 import inspect
+import io
 import os
 import subprocess
 import sys
@@ -80,8 +82,9 @@ def _install_setup_readonly_fallback(package_name: str):
     # the dispatchers for everything downstream of this package. Since
     # there isn't a dependency graph to walk, just do everything afterwards
     my_index = env.module_list.index(module)
-    for module in env.module_list[my_index:]:
-        module.process_command_line_directories()
+    with contextlib.redirect_stdout(io.StringIO()) as _:
+        for module in env.module_list[my_index:]:
+            module.process_command_line_directories()
 
 
 def _get_real_env_hack_hack_hack():
