@@ -10,7 +10,7 @@ try:
 except ImportError:
     pass
 
-from dials.array_family import flex
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.format.nexus import h5str
