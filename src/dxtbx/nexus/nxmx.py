@@ -4,8 +4,7 @@ import dataclasses
 import datetime
 import logging
 import operator
-from collections import namedtuple
-from collections.abc import Mapping
+from collections import abc, namedtuple
 
 try:
     from functools import cached_property
@@ -34,10 +33,10 @@ from scipy.spatial.transform import Rotation
 
 # NeXus field type for type annotations
 # https://manual.nexusformat.org/nxdl-types.html#nxdl-field-types-and-units
-NXBool = Union[bool, np.ndarray]
-NXFloat = Union[float, np.ndarray]
-NXInt = Union[int, np.ndarray]
-NXNumber = Union[NXFloat, NXInt]
+NXBoolT = Union[bool, np.ndarray]
+NXFloatT = Union[float, np.ndarray]
+NXIntT = Union[int, np.ndarray]
+NXNumberT = Union[NXFloatT, NXIntT]
 
 
 ureg = pint.UnitRegistry()
@@ -47,6 +46,20 @@ logger = logging.getLogger(__name__)
 
 
 NXNode = Union[h5py.File, h5py.Group]
+
+
+class NXNumber(abc.Sequence):
+    def __init__(self, handle: h5py.Dataset, unit: pint.Unit | None):
+        self._handle = handle
+        self._unit = unit
+
+    def __getitem__(self, key) -> NXNumberT:
+        if self._unit:
+            return self._handle[key] * self._unit
+        return self._handle[key]
+
+    def __len__(self):
+        return len(self._handle)
 
 
 def h5str(h5_value: str | np.bytes_ | bytes | None) -> str | None:
@@ -110,7 +123,7 @@ def find_class(node: NXNode, nx_class: str | None) -> list[h5py.Group]:
     return find_classes(node, nx_class)[0]
 
 
-class H5Mapping(Mapping):
+class H5Mapping(abc.Mapping):
     def __init__(self, handle: h5py.File | h5py.Group):
         self._handle = handle
 
@@ -296,7 +309,7 @@ class NXtransformations(H5Mapping):
         self._axes = {
             k: NXtransformationsAxis(v)
             for k, v in handle.items()
-            if isinstance(v, h5py.Dataset)
+            if isinstance(v, h5py.Dataset) and "vector" in v.attrs
         }
 
     @cached_property
@@ -392,7 +405,7 @@ class NXtransformationsAxis:
         return h5str(self._handle.attrs.get("transformation_type"))
 
     @cached_property
-    def vector(self) -> NXNumber:
+    def vector(self) -> NXNumberT:
         """Three values that define the axis for this transformation.
 
         The axis should be normalized to unit length, making it dimensionless. For
@@ -434,6 +447,20 @@ class NXtransformationsAxis:
 
     def __getitem__(self, key) -> pint.Quantity:
         return self._handle[key] * self.units
+
+    @cached_property
+    def end(self) -> NXNumber | None:
+        end_name = self._handle.name + "_end"
+        if end_name in self._handle.parent:
+            return NXNumber(self._handle.parent[end_name], self.units)
+        return None
+
+    @cached_property
+    def increment_set(self) -> pint.Quantity | None:
+        increment_set_name = self._handle.name + "_increment_set"
+        if increment_set_name in self._handle.parent:
+            return self._handle.parent[increment_set_name][()] * self.units
+        return None
 
     @cached_property
     def matrix(self) -> np.ndarray:
@@ -484,9 +511,10 @@ class NXsample(H5Mapping):
     @cached_property
     def depends_on(self) -> NXtransformationsAxis | None:
         """The axis on which the sample position depends"""
-        depends_on = h5str(self._handle["depends_on"][()])
-        if depends_on and depends_on != ".":
-            return NXtransformationsAxis(self._handle[depends_on])
+        if "depends_on" in self._handle:
+            depends_on = h5str(self._handle["depends_on"][()])
+            if depends_on and depends_on != ".":
+                return NXtransformationsAxis(self._handle[depends_on])
         return None
 
     @cached_property
@@ -638,7 +666,7 @@ class NXdetector_group(H5Mapping):
         return self._handle["group_names"].asstr()[()]
 
     @cached_property
-    def group_index(self) -> NXInt:
+    def group_index(self) -> NXIntT:
         """An array of unique identifiers for detectors or groupings of detectors.
 
         Each ID is a unique ID for the corresponding detector or group named in the
@@ -647,7 +675,7 @@ class NXdetector_group(H5Mapping):
         return self._handle["group_index"][()]
 
     @cached_property
-    def group_parent(self) -> NXInt:
+    def group_parent(self) -> NXIntT:
         """
         An array of the hierarchical levels of the parents of detectors or groupings of
         detectors.
@@ -729,7 +757,7 @@ class NXdetector(H5Mapping):
     def count_time(self) -> pint.Quantity | None:
         """Elapsed actual counting time."""
         if count_time := self._handle.get("count_time"):
-            return np.squeeze(count_time[()] * units(count_time))
+            return np.squeeze(count_time[()] * units(count_time, default="seconds"))
         return None
 
     @cached_property
@@ -769,7 +797,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def pixel_mask(self) -> NXInt | None:
+    def pixel_mask(self) -> NXIntT | None:
         """The 32-bit pixel mask for the detector.
 
         Can be either one mask for the whole dataset (i.e. an array with indices i, j)
@@ -929,12 +957,12 @@ class NXdetector_module(H5Mapping):
         Dimensionality and order of indices is the same as for data_origin.
         """
         size = self._handle["data_size"][()]
-        # Validate that we aren't the int part of NXInt
+        # Validate that we aren't the int part of NXIntT
         assert not isinstance(size, int)
         return size
 
     @cached_property
-    def data_stride(self) -> NXInt | None:
+    def data_stride(self) -> NXIntT | None:
         """Two or three values for the stride of the module in pixels in each direction.
 
         By default the stride is [1,1] or [1,1,1], and this is the most likely case.

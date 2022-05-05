@@ -121,6 +121,8 @@ def nxmx_example():
         omega.attrs["units"] = b"deg"
         omega.attrs["vector"] = np.array([-1.0, 0.0, 0.0])
         omega.attrs["omega_offset"] = np.array([0.0, 0.0, 0.0])
+        transformations.create_dataset("omega_end", data=np.arange(0.1, 1.1, 0.1))
+        transformations.create_dataset("omega_increment_set", data=0.1)
 
         phi = transformations.create_dataset("phi", data=np.array([0.0]))
         phi.attrs["depends_on"] = b"/entry/sample/transformations/chi"
