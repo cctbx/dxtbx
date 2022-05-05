@@ -25,7 +25,8 @@ class FormatBrukerFixedChi(FormatBruker):
     def _start(self):
         self.header_dict = {}
         image_blob = open(self._image_file, 'rb').read()
-        header_text = image_blob.decode(errors='ignore').split("......")[0]
+        header_text = image_blob.split(b"......")[0].decode()
+        # header_text = image_blob.decode(errors='ignore').split("......")[0]
         for j in range(0, len(header_text), 80):
             record = header_text[j : j + 80]
             if record.startswith("CFR:"):
