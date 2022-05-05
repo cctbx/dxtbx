@@ -1,1 +1,1 @@
-Correct a unicode error reading Bruker ``.sfrm`` files. With thanks to `Dennish Brookner <https://github.com/dennisbrookner>`_ for this change.
+Correct a unicode error reading Bruker ``.sfrm`` files. With thanks to `Dennis Brookner <https://github.com/dennisbrookner>`_ for this change.
