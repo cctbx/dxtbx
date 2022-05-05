@@ -187,9 +187,9 @@ def run(args=None, imageset=None):
             subiterable = [params.image_number]
         for image_number in subiterable:
             try:
-              beam = iset.get_beam(image_number)
-            except:
-              continue
+                beam = iset.get_beam(image_number)
+            except Exception:
+                continue
             if params.reference_geometry is None:
                 detector = iset.get_detector(image_number)
             s0 = col(beam.get_s0())

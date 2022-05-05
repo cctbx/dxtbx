@@ -124,7 +124,10 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             self.params = FormatXTC.params_from_phil(
                 master_phil=locator_scope, user_phil=image_file, strict=True
             )
-        assert self.params.mode in ["idx","smd"], "idx or smd mode should be used for analysis (idx is often faster)"
+        assert self.params.mode in [
+            "idx",
+            "smd",
+        ], "idx or smd mode should be used for analysis (idx is often faster)"
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None
@@ -138,6 +141,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
         if self.params.spectrum_pedestal:
             from libtbx import easy_pickle
+
             self._spectrum_pedestal = easy_pickle.load(self.params.spectrum_pedestal)
         else:
             self._spectrum_pedestal = None
@@ -196,11 +200,11 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
         Handles multiple LCLS runs by concatenating the timestamps from multiple runs together
         in a single list and creating a mapping."""
         if self.params.mode == "idx":
-          if hasattr(self, "times") and len(self.times) > 0:
-              return
+            if hasattr(self, "times") and len(self.times) > 0:
+                return
         elif self.params.mode == "smd":
-          if hasattr(self, "run_mapping") and self.run_mapping:
-              return
+            if hasattr(self, "run_mapping") and self.run_mapping:
+                return
 
         if not self._psana_runs:
             self._psana_runs = self._get_psana_runs(self._ds)
@@ -247,8 +251,12 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 events = self.run_mapping[run]
                 remade_mapping[run] = start, end, run, events
             self.run_mapping = remade_mapping
-            self.n_images = sum([self.run_mapping[r][1] - self.run_mapping[r][0] for r in self.run_mapping])
-
+            self.n_images = sum(
+                [
+                    self.run_mapping[r][1] - self.run_mapping[r][0]
+                    for r in self.run_mapping
+                ]
+            )
 
     def filter_event(self, evt):
         """Return True to keep the event, False to reject it."""
@@ -288,13 +296,13 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             return self.current_event
         else:
             self.current_index = index
-            if self.params.mode == 'idx':
-               evt = self.get_run_from_index(index).event(self.times[index])
-            elif self.params.mode == 'smd':
-               for run_number in self.run_mapping:
-                   start, stop, run, events = self.run_mapping[run_number]
-                   if index >= start and index < stop:
-                       evt = events[index - start]
+            if self.params.mode == "idx":
+                evt = self.get_run_from_index(index).event(self.times[index])
+            elif self.params.mode == "smd":
+                for run_number in self.run_mapping:
+                    start, stop, run, events = self.run_mapping[run_number]
+                    if index >= start and index < stop:
+                        evt = events[index - start]
             if (
                 (
                     self.params.filter.required_present_codes
@@ -425,7 +433,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             fee = self._fee.get(evt)
             y = fee.hproj()
             if self.params.spectrum_pedestal:
-              y = y - self._spectrum_pedestal.as_numpy_array()
+                y = y - self._spectrum_pedestal.as_numpy_array()
 
         except AttributeError:  # Handle older spectometers without the hproj method
             try:
@@ -441,8 +449,12 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 mask = img == 2**16 - 1
                 mask = np.invert(mask)
 
-                x, y = rotate_and_average(img, self.params.spectrum_rotation_angle, deg=True, mask=mask)
-                x = (self.params.spectrum_eV_per_pixel * x) + self.params.spectrum_eV_offset
+                x, y = rotate_and_average(
+                    img, self.params.spectrum_rotation_angle, deg=True, mask=mask
+                )
+                x = (
+                    self.params.spectrum_eV_per_pixel * x
+                ) + self.params.spectrum_eV_offset
 
         else:
             x = (
