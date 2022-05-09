@@ -1,1 +1,0 @@
-Remove check for beam/normalization orthogonality in ``Beam.rotate_around_origin``. This could stop processing of older, incorrectly configured data.
