@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import struct
 import sys
+import os
 
 import pycbf
 
@@ -17,9 +18,27 @@ from scitbx.matrix import col, sqr
 from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile, FormatCBFMultiTileStill
 from dxtbx.model import Detector
 
+import pickle
+
+
+class CachedDetector:
+    def __init__(self):
+        self.pixel = None
+        self.axis0 = None
+        self.axis1 = None
+
 
 class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
     """An image reading class multi-tile CBF files"""
+
+    def __init__(self, *args, **kwargs):
+        if "cbf_cache_dir" in kwargs:
+            self.detector_cache_path = os.path.join(
+                kwargs["cbf_cache_dir"], "cbf_cache.pickle"
+            )
+        else:
+            self.detector_cache_path = None
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def understand(image_file):
@@ -209,11 +228,32 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
         detector_axes = []
         has_sections = cbf.has_sections()
 
+        if self.detector_cache_path is not None:
+            try:
+                self.detector_cache = pickle.load(open(self.detector_cache_path, "rb"))
+                self.detector_cache_mode = "r"
+            except FileNotFoundError:
+                self.detector_cache = {}
+                self.detector_cache_mode = "w"
+                print("cache to {}".format(self.detector_cache_path))
+        else:
+            self.detector_cache = None
+            self.detector_cache_mode = None
+
         for i in range(len(panel_names)):
-            cbf_detector = cbf.construct_detector(i)
-            axis0 = cbf_detector.get_detector_surface_axes(0)
-            detector_axes.append(axis0)
-            cbf_detector.__swig_destroy__(cbf_detector)
+            if self.detector_cache_mode == "r":
+                dc = self.detector_cache[i]
+                axis0 = dc.axis0
+                detector_axes.append(axis0)
+            else:
+                cbf_detector = cbf.construct_detector(i)
+                axis0 = cbf_detector.get_detector_surface_axes(0)
+                detector_axes.append(axis0)
+                if self.detector_cache_mode == "w":
+                    dc = CachedDetector()
+                    dc.axis0 = axis0
+                    self.detector_cache[i] = dc
+                cbf_detector.__swig_destroy__(cbf_detector)
         cbf.find_category(b"array_structure_list")
         array_ids_detectororder = []
         panel_names_detectororder = []
@@ -236,18 +276,29 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             panel_names_detectororder.append(cbf.get_value())
 
         for panel_number, panel_name in enumerate(panel_names):
-            cbf_detector = cbf.construct_detector(
-                panel_names_detectororder.index(panel_name)
-            )
+            i_det = panel_names_detectororder.index(panel_name)
+            if self.detector_cache_mode == "r":
+                cbf_detector = None
+                dc = self.detector_cache[i_det]
+                axis0 = dc.axis0
+                axis1 = dc.axis1
+                pixel = dc.pixel
+            else:
+                cbf_detector = cbf.construct_detector(i_det)
+                # code adapted below from dxtbx.model.detector.DetectorFactory.imgCIF_H
+                pixel = (
+                    cbf_detector.get_inferred_pixel_size(1),
+                    cbf_detector.get_inferred_pixel_size(2),
+                )
 
-            # code adapted below from dxtbx.model.detector.DetectorFactory.imgCIF_H
-            pixel = (
-                cbf_detector.get_inferred_pixel_size(1),
-                cbf_detector.get_inferred_pixel_size(2),
-            )
-
-            axis0 = cbf_detector.get_detector_surface_axes(0)
-            axis1 = cbf_detector.get_detector_surface_axes(1)
+                axis0 = cbf_detector.get_detector_surface_axes(0)
+                axis1 = cbf_detector.get_detector_surface_axes(1)
+                if self.detector_cache_mode == "w":
+                    dc = self.detector_cache[i_det]
+                    dc.axis0 = axis0
+                    dc.axis1 = axis1
+                    dc.pixel = pixel
+                    self.detector_cache[i_det] = dc
             assert cbf.get_axis_depends_on(axis0) == axis1
 
             try:
@@ -311,8 +362,13 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             p.set_name(panel_name)
             # p.set_px_mm_strategy(px_mm) FIXME
 
-            cbf_detector.__swig_destroy__(cbf_detector)
-            del cbf_detector
+            if cbf_detector is not None:
+                cbf_detector.__swig_destroy__(cbf_detector)
+                del cbf_detector
+
+        if self.detector_cache_mode == "w":
+            with open(self.detector_cache_path, "wb") as f:
+                pickle.dump(self.detector_cache, f)
 
         return d
 
@@ -416,6 +472,9 @@ class FormatCBFMultiTileHierarchyStill(
     """An image reading class for full CBF format images i.e. those from
     a variety of cameras which support this format. Custom derived from
     the FormatStill to handle images without a gonimeter or scan"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def understand(image_file):
