@@ -432,8 +432,6 @@ namespace dxtbx { namespace model {
 
     /** Rotate the beam about an axis */
     void rotate_around_origin(vec3<double> axis, double angle) {
-      const double EPS = 1e-7;
-      DXTBX_ASSERT(std::abs(direction_ * polarization_normal_) < EPS);
       direction_ = direction_.rotate_around_origin(axis, angle);
       polarization_normal_ = polarization_normal_.rotate_around_origin(axis, angle);
     }

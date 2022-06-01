@@ -1,3 +1,26 @@
+DIALS 3.8.5 (2022-06-01)
+========================
+
+Features
+--------
+
+- When installed as a libtbx module, dxtbx will not install python packages into ``conda_base/``. (`#511 <https://github.com/cctbx/dxtbx/issues/511>`_)
+
+
+Bugfixes
+--------
+
+- ``FormatCBFFullPilatus``: Handle detector information better in cases of multiple or missing panels. (`#508 <https://github.com/cctbx/dxtbx/issues/508>`_)
+- Remove check for beam/normalization orthogonality in ``Beam.rotate_around_origin``. This could stop processing of older, incorrectly configured data. (`#510 <https://github.com/cctbx/dxtbx/issues/510>`_)
+- Correct a unicode error reading Bruker ``.sfrm`` files. With thanks to `Dennis Brookner <https://github.com/dennisbrookner>`_ for this change. (`#518 <https://github.com/cctbx/dxtbx/issues/518>`_)
+
+
+Misc
+----
+
+- `#513 <https://github.com/cctbx/dxtbx/issues/513>`_, `#520 <https://github.com/cctbx/dxtbx/issues/520>`_
+
+
 DIALS 3.8.4 (2022-04-01)
 ========================
 
