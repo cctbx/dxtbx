@@ -1,14 +1,3 @@
-/*
- * flex_table_suite.h
- *
- *  Copyright (C) 2013 Diamond Light Source
- *
- *  Author: James Parkhurst
- *
- *  This code is distributed under the BSD license, a copy of which is
- *  included in the root directory of this package.
- */
-
 #ifndef DXTBX_FRAMEWORK_TABLE_BOOST_PYTHON_FLEX_TABLE_SUITE_H
 #define DXTBX_FRAMEWORK_TABLE_BOOST_PYTHON_FLEX_TABLE_SUITE_H
 
@@ -1193,11 +1182,7 @@ namespace dxtbx { namespace af { namespace boost_python { namespace flex_table_s
         .def("del_selected", &del_selected_cols_tuple<flex_table_type>)
         .def("reorder", &reorder<flex_table_type>)
         .def("__copy__", &copy<flex_table_type>)
-        .def("__deepcopy__", &deepcopy<flex_table_type>)
-        //.def("sort", &sort<flex_table_type>, (
-        // arg("column"),
-        // arg("reverse")=false))
-        ;
+        .def("__deepcopy__", &deepcopy<flex_table_type>);
 
       // For each column type, create a __setitem__ method to set column data
       boost::mpl::for_each<typename flex_types::types>(
