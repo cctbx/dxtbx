@@ -1,5 +1,5 @@
-#ifndef DXTBX_FRAMEWORK_TABLE_BOOST_PYTHON_FLEX_TABLE_SUITE_H
-#define DXTBX_FRAMEWORK_TABLE_BOOST_PYTHON_FLEX_TABLE_SUITE_H
+#ifndef DXTBX_ARRAY_FAMILY_FLEX_TABLE_SUITE_H
+#define DXTBX_ARRAY_FAMILY_FLEX_TABLE_SUITE_H
 
 #include <string>
 #include <iterator>
@@ -1195,4 +1195,4 @@ namespace dxtbx { namespace af { namespace boost_python { namespace flex_table_s
 
 }}}}  // namespace dxtbx::af::boost_python::flex_table_suite
 
-#endif  // DXTBX_FRAMEWORK_TABLE_BOOST_PYTHON_FLEX_TABLE_SUITE_H
+#endif  // DXTBX_ARRAY_FAMILY_FLEX_TABLE_SUITE_H
