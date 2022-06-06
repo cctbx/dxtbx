@@ -1,0 +1,1 @@
+Added ``flex_table.h`` and ``flex_table_suite.h`` objects from DIALS. These contain the C++ classes backing the ``dials.array_family.flex.reflection_table`` object, and allow a collection of ``array_family.flex`` arrays to be grouped together into a multi-columnar, row-addressable format. They are moved here to allow extension of the dxtbx models in this form.
