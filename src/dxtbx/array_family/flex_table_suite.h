@@ -20,7 +20,7 @@
 #include <scitbx/array_family/versa.h>
 #include <dxtbx/error.h>
 
-namespace dxtbx { namespace af { namespace boost_python { namespace flex_table_suite {
+namespace dxtbx { namespace af { namespace flex_table_suite {
 
   using namespace boost::python;
 
@@ -1193,6 +1193,6 @@ namespace dxtbx { namespace af { namespace boost_python { namespace flex_table_s
     }
   };
 
-}}}}  // namespace dxtbx::af::boost_python::flex_table_suite
+}}}  // namespace dxtbx::af::flex_table_suite
 
 #endif  // DXTBX_ARRAY_FAMILY_FLEX_TABLE_SUITE_H
