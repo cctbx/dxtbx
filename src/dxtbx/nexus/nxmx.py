@@ -5,24 +5,7 @@ import datetime
 import logging
 import operator
 from collections import abc, namedtuple
-
-try:
-    from functools import cached_property
-except ImportError:
-    # Python 3.7 compatibility
-    # Defined cached_property decorator as a noop
-    import functools
-
-    def cached_property(func):  # type: ignore
-        @property
-        @functools.wraps(func)
-        def wrapper_decorator(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return wrapper_decorator
-
-
-from functools import reduce
+from functools import cached_property, reduce
 from typing import Iterable, Iterator, Sequence, Union, cast, overload
 
 import dateutil.parser
