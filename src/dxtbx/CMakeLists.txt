@@ -18,7 +18,7 @@ Python_add_library( dxtbx_format_image_ext
     format/boost_python/image_ext.cc
 )
 target_link_libraries( dxtbx_format_image_ext PUBLIC Boost::python CCTBX::scitbx )
-# If we have CBFlib available, use it
+# If we have CBFlib available, use it
 if (TARGET CBFlib::cbf)
     target_link_libraries( dxtbx_format_image_ext PRIVATE CBFlib::cbf )
     target_compile_definitions( dxtbx_format_image_ext PRIVATE BUILD_CBF )
@@ -42,7 +42,24 @@ Python_add_library( dxtbx_model_ext
     model/boost_python/experiment.cc
     model/boost_python/experiment_list.cc
     model/boost_python/model_ext.cc )
-target_link_libraries( dxtbx_model_ext PUBLIC Boost::python CCTBX::scitbx )
+target_link_libraries(
+    dxtbx_model_ext
+    PUBLIC
+    Boost::python
+    CCTBX::scitbx
+)
+if(WIN32)
+    # Technically required on other platforms, but already loaded by time
+    # of use in dxtbx, and a bug with -install_name settings for these
+    # prevents direct linking from working on MacOS without fiddling
+    # around with install_name_tool.
+    target_link_libraries(
+        dxtbx_model_ext
+        PUBLIC
+        CCTBX::scitbx::boost_python
+        CCTBX::cctbx
+    )
+endif()
 
 Python_add_library( dxtbx_masking_ext
     MODULE
@@ -51,7 +68,12 @@ target_link_libraries( dxtbx_masking_ext PUBLIC Boost::python CCTBX::scitbx )
 
 pybind11_add_module(dxtbx_flumpy boost_python/flumpy.cc)
 target_link_libraries(dxtbx_flumpy PUBLIC Boost::python CCTBX::scitbx )
-target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)
+
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-fvisibility=hidden HAS_VISIBILITY)
+if(HAS_VISIBILITY)
+    target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)
+endif()
 
 install(
     TARGETS

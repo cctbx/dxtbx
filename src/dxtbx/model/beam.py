@@ -427,11 +427,22 @@ class BeamFactory(AbstractBeamFactory):
             0.0,
         )
 
+        # and the flux if available
+        try:
+            cbf_handle.find_category(b"diffrn_radiation")
+            cbf_handle.find_column(b"beam_flux")
+            flux = cbf_handle.get_value()
+        except Exception as e:
+            if str(e).split()[-1] != "CBF_NOTFOUND":
+                raise
+            flux = None
+
         return BeamFactory.make_polarized_beam(
             sample_to_source=direction,
             wavelength=wavelength,
             polarization=polar_plane_normal,
             polarization_fraction=polar_fraction,
+            flux=flux,
         )
 
 

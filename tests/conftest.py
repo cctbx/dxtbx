@@ -6,7 +6,7 @@ import pytest
 
 
 def pytest_configure():
-    # Incantations to create an in-memory file in h5py.
+    """Incantations to create an in-memory file in h5py."""
     pytest.h5_in_memory = {"driver": "core", "backing_store": False}
 
 
@@ -34,8 +34,12 @@ def nxmx_example():
 
         beam = instrument.create_group("beam")
         beam.attrs["NX_class"] = "NXbeam"
+        beam.create_dataset("incident_beam_size", data=np.array([3e-5, 3e-5]))
+        beam["incident_beam_size"].attrs["units"] = b"m"
         beam["incident_wavelength"] = 0.976223
         beam["incident_wavelength"].attrs["units"] = b"angstrom"
+        beam["total_flux"] = 1e12
+        beam["total_flux"].attrs["units"] = b"Hz"
 
         detector = instrument.create_group("detector")
         detector.attrs["NX_class"] = "NXdetector"
@@ -45,7 +49,7 @@ def nxmx_example():
         detector["depends_on"] = "/entry/instrument/detector/transformations/det_z"
         detector["description"] = "Eiger 16M"
         detector["distance"] = 0.237015940260233
-        data = detector.create_dataset("data", data=np.zeros((100, 100)))
+        detector.create_dataset("data", data=np.zeros((100, 100)))
         detector["sensor_material"] = "Silicon"
         detector["sensor_thickness"] = 0.00045
         detector["sensor_thickness"].attrs["units"] = b"m"
@@ -106,6 +110,8 @@ def nxmx_example():
         sample.attrs["NX_class"] = "NXsample"
         sample["name"] = "mysample"
         sample["depends_on"] = b"/entry/sample/transformations/phi"
+        sample["temperature"] = 273
+        sample["temperature"].attrs["units"] = b"K"
 
         transformations = sample.create_group("transformations")
         transformations.attrs["NX_class"] = "NXtransformations"
@@ -115,6 +121,8 @@ def nxmx_example():
         omega.attrs["units"] = b"deg"
         omega.attrs["vector"] = np.array([-1.0, 0.0, 0.0])
         omega.attrs["omega_offset"] = np.array([0.0, 0.0, 0.0])
+        transformations.create_dataset("omega_end", data=np.arange(0.1, 1.1, 0.1))
+        transformations.create_dataset("omega_increment_set", data=0.1)
 
         phi = transformations.create_dataset("phi", data=np.array([0.0]))
         phi.attrs["depends_on"] = b"/entry/sample/transformations/chi"

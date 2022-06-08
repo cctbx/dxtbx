@@ -1,3 +1,62 @@
+dxtbx DIALS 3.9.2 (2022-05-09)
+==============================
+
+Bugfixes
+--------
+
+- ``FormatCBFFullPilatus``: Handle detector information better in cases of multiple or missing panels. (`#508 <https://github.com/cctbx/dxtbx/issues/508>`_)
+- Remove check for beam/normalization orthogonality in ``Beam.rotate_around_origin``. This could stop processing of older, incorrectly configured data. (`#510 <https://github.com/cctbx/dxtbx/issues/510>`_)
+- Correct a unicode error reading Bruker ``.sfrm`` files. With thanks to `Dennis Brookner <https://github.com/dennisbrookner>`_ for this change. (`#518 <https://github.com/cctbx/dxtbx/issues/518>`_)
+
+
+dxtbx 3.8.4 (2022-04-01)
+========================
+
+Bugfixes
+--------
+
+- ``FormatNXmxI19_2``:  Allow data from beamline I19-2 at Diamond Light Source to be processed with optional masking of the beamline's standard diamond anvil pressure cell with a 76° aperture. (`#481 <https://github.com/cctbx/dxtbx/issues/481>`_)
+
+
+dxtbx 3.9.1 (2022-03-31)
+========================
+
+Features
+--------
+
+- Windows support for the CMake build. (`#507 <https://github.com/cctbx/dxtbx/issues/507>`_)
+
+
+dxtbx 3.9.0 (2022-03-14)
+========================
+
+Features
+--------
+
+- Add get_spectrum to FormatXTC (`#484 <https://github.com/cctbx/dxtbx/issues/484>`_)
+- Add filtering by event code for processing LCLS data (`#489 <https://github.com/cctbx/dxtbx/issues/489>`_)
+- Beam flux is now written to, and read from, CBF files. (`#493 <https://github.com/cctbx/dxtbx/issues/493>`_)
+
+
+Bugfixes
+--------
+
+- Reduce, in some cases drastically, memory usage of ``ImageSet`` objects. (`#438 <https://github.com/cctbx/dxtbx/issues/438>`_)
+- Make FormatPY abstract so that dxtbx doesn't try to read ``.pickle`` reflection files as images. (`#464 <https://github.com/cctbx/dxtbx/issues/464>`_)
+- Add method ersatz_uuid4 which gives an implementation of a random 128 bit UUID4 (`#477 <https://github.com/cctbx/dxtbx/issues/477>`_)
+- ``FormatNXmxI19_2``:  Allow data from beamline I19-2 at Diamond Light Source to be processed with optional masking of the beamline's standard diamond anvil pressure cell with a 76° aperture. (`#481 <https://github.com/cctbx/dxtbx/issues/481>`_)
+- Correctly handle slicing ImageSequences made from images starting with 0 (`#485 <https://github.com/cctbx/dxtbx/issues/485>`_)
+- The Beam object constructor no longer discards "transmission" and "flux". (`#488 <https://github.com/cctbx/dxtbx/issues/488>`_)
+- Fix wavelength bug in FormatXTC for older datasets (`#490 <https://github.com/cctbx/dxtbx/issues/490>`_)
+- Fixed inconsistency in ``dxtbx.model.Scan`` default constructor that gave different results when loading from Python dictionary. (`#496 <https://github.com/cctbx/dxtbx/issues/496>`_)
+
+
+Misc
+----
+
+- `#462 <https://github.com/cctbx/dxtbx/issues/462>`_, `#463 <https://github.com/cctbx/dxtbx/issues/463>`_, `#466 <https://github.com/cctbx/dxtbx/issues/466>`_, `#468 <https://github.com/cctbx/dxtbx/issues/468>`_, `#471 <https://github.com/cctbx/dxtbx/issues/471>`_, `#477 <https://github.com/cctbx/dxtbx/issues/477>`_, `#479 <https://github.com/cctbx/dxtbx/issues/479>`_, `#480 <https://github.com/cctbx/dxtbx/issues/480>`_, `#482 <https://github.com/cctbx/dxtbx/issues/482>`_, `#487 <https://github.com/cctbx/dxtbx/issues/487>`_, `#494 <https://github.com/cctbx/dxtbx/issues/494>`_, `#495 <https://github.com/cctbx/dxtbx/issues/495>`_
+
+
 DIALS 3.8.3 (2022-02-22)
 ========================
 

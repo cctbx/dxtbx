@@ -1,0 +1,1 @@
+Remove disused ``FormatEigerStream`` format class. This was used internally at Diamond Light Source as an intermediate solution before implementing SWMR support.

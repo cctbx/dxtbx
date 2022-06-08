@@ -21,6 +21,9 @@
 
 namespace dxtbx { namespace model { namespace boost_python {
 
+  using scitbx::af::int2;
+  using scitbx::af::int4;
+
   struct VirtualPanelPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getstate(boost::python::object obj) {
       using namespace boost::python;
@@ -89,6 +92,11 @@ namespace dxtbx { namespace model { namespace boost_python {
       data["mu"] = p.get_mu();
       data["mask"] = boost::python::list(p.get_mask());
       data["px_mm_strategy"] = p.get_px_mm_strategy();
+      if (p.get_projection_2d()) {
+        Projection2D projection_2d = p.get_projection_2d().get();
+        data["projection_2d_tr"] = projection_2d.translation;
+        data["projection_2d_rot"] = projection_2d.rotation;
+      }
       return boost::python::make_tuple(version, obj.attr("__dict__"), data);
     }
 
@@ -148,6 +156,11 @@ namespace dxtbx { namespace model { namespace boost_python {
           boost::python::extract<scitbx::af::shared<int4> >(
             boost::python::extract<boost::python::list>(data["mask"]));
         p.set_mask(mask.const_ref());
+      }
+      if (data.has_key("projection_2d_tr") && data.has_key("projection_2d_rot")) {
+        int4 rotation = boost::python::extract<int4>(data["projection_2d_rot"]);
+        int2 translation = boost::python::extract<int2>(data["projection_2d_tr"]);
+        p.set_projection_2d(rotation, translation);
       }
     }
 

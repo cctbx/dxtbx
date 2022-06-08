@@ -21,7 +21,7 @@ class FormatNXmx(FormatNexus):
         """This format class currently only applies to beamline I19-2 at DLS."""
         with h5py.File(image_file, swmr=True) as handle:
             name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
-        if name and "I19-2" in name:
+        if name and ("I19-2" in name or "DIAD" in name):
             return True
         return False
 

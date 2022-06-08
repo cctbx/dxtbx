@@ -89,7 +89,8 @@ class FormatCBFFullPilatus(FormatCBFFull):
 
         m = re.search(r"^#\s*Detector:\s+(.*?)\s*$", self._cif_header, re.MULTILINE)
         if m and m.group(1):
-            panel.set_identifier(m.group(1).encode())
+            for panel in detector:
+                panel.set_identifier(m.group(1).encode())
 
         size = detector[0].get_image_size()
         if size == (2463, 2527):
