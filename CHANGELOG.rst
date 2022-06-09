@@ -1,3 +1,34 @@
+dxtbx 3.10.0 (2022-06-09)
+=========================
+
+Features
+--------
+
+- Recognise `NXmx standard <https://manual.nexusformat.org/classes/applications/NXmx.html>`_ data from the Diamond Light Source `DIAD <https://www.diamond.ac.uk/Instruments/Imaging-and-Microscopy/DIAD.html>`_ beamline. (`#506 <https://github.com/cctbx/dxtbx/issues/506>`_)
+- When installed as a libtbx module, dxtbx will not install python packages into ``conda_base/``. (`#511 <https://github.com/cctbx/dxtbx/issues/511>`_)
+- Added ``flex_table.h`` and ``flex_table_suite.h`` objects from DIALS. These contain the C++ classes backing the ``dials.array_family.flex.reflection_table`` object, and allow a collection of ``array_family.flex`` arrays to be grouped together into a multi-columnar, row-addressable format. They are moved here to allow extension of the dxtbx models in this form. (`#521 <https://github.com/cctbx/dxtbx/issues/521>`_)
+
+
+Bugfixes
+--------
+
+- Fixed ``Panel.projection_2d_`` not being serialized. (`#509 <https://github.com/cctbx/dxtbx/issues/509>`_)
+- ``dxtbx.dlsnxs2cbf``: Fix image oscillation for screening images (`#514 <https://github.com/cctbx/dxtbx/issues/514>`_)
+- Fix ``dxtbx.image_average`` for raster scans. (`#522 <https://github.com/cctbx/dxtbx/issues/522>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Remove disused ``FormatEigerStream`` format class. This was used internally at Diamond Light Source as an intermediate solution before implementing SWMR support. (`#499 <https://github.com/cctbx/dxtbx/issues/499>`_)
+
+
+Misc
+----
+
+- `#498 <https://github.com/cctbx/dxtbx/issues/498>`_, `#500 <https://github.com/cctbx/dxtbx/issues/500>`_, `#502 <https://github.com/cctbx/dxtbx/issues/502>`_, `#505 <https://github.com/cctbx/dxtbx/issues/505>`_, `#512 <https://github.com/cctbx/dxtbx/issues/512>`_, `#513 <https://github.com/cctbx/dxtbx/issues/513>`_, `#515 <https://github.com/cctbx/dxtbx/issues/515>`_, `#520 <https://github.com/cctbx/dxtbx/issues/520>`_
+
+
 dxtbx DIALS 3.9.2 (2022-05-09)
 ==============================
 
