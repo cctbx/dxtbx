@@ -1,0 +1,1 @@
+``dxtbx.install_format``: Handle case on MacOS ``.pkg`` installations where URL-formats could not be installed.
