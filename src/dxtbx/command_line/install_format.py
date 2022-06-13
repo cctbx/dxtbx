@@ -4,6 +4,7 @@ import ast
 import optparse
 import os
 import sys
+from pathlib import Path
 from urllib.request import urlretrieve
 
 import procrunner
@@ -41,6 +42,25 @@ def find_format_classes(directory, base_python_path="dxtbx.format"):
                 )
                 print("  found", classname, "based on", str(base_names))
     return format_classes
+
+
+def _ensure_cert_file():
+    """
+    Validate that the SSL_CERT_FILE environment variable is correct.
+
+    On MacOS .pkg installations, the SSL_CERT_FILE path is incorrect.
+    This means that the following GET fails. Check for this, and work
+    out where certifi actually is.
+    """
+    cert_file = os.getenv("SSL_CERT_FILE")
+    if cert_file and not Path(cert_file).resolve().is_file():
+        try:
+            import certifi
+
+            os.environ["SSL_CERT_FILE"] = certifi.where()
+        except ModuleNotFoundError:
+            # Better to try default instead of a nonexistent file
+            del os.environ["SSL_CERT_FILE"]
 
 
 def install_package(home_location, format_classes):
@@ -143,12 +163,14 @@ def run(args=None):
             continue
         # Download the file from `url` and save it locally under `file_name`:
         if "/" in fc:
+            _ensure_cert_file()
             local_file = home_location / fc.split("/")[-1]
             if local_file.ext != ".py":
                 local_file = local_file.new(basename=local_file.basename + ".py")
             try:
                 urlretrieve(fc, local_file.strpath)
-            except Exception:
+            except Exception as e:
+                print("Could not load from URL:", e)
                 local_file = False
             if local_file and local_file.check(file=1):
                 print("Downloaded", fc, "to", local_file.strpath)
