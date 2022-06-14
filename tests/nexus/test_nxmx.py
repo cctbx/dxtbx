@@ -24,6 +24,18 @@ def test_nxentry(nxmx_example):
     assert isinstance(nxentry.data[0], nxmx.NXdata)
 
 
+def test_axis_end_increment_set(nxmx_example):
+    omega = nxmx.NXtransformationsAxis(
+        nxmx_example["/entry/sample/transformations/omega"]
+    )
+    assert len(omega.end) == len(omega)
+    assert omega.end[0] - omega[0] == omega.increment_set
+
+    phi = nxmx.NXtransformationsAxis(nxmx_example["/entry/sample/transformations/phi"])
+    assert phi.end is None
+    assert phi.increment_set is None
+
+
 def test_nxmx(nxmx_example):
     nx = nxmx.NXmx(nxmx_example)
     assert len(nx) == 1

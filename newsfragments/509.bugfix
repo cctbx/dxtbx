@@ -1,1 +1,0 @@
-Fixed ``Panel.projection_2d_`` not being serialized.
