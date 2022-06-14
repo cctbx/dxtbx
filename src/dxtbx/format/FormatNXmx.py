@@ -13,7 +13,7 @@ class FormatNXmx(FormatNexus):
 
     @staticmethod
     def understand(image_file):
-        with h5py.File(image_file, "r") as handle:
+        with h5py.File(image_file) as handle:
             return (
                 len(
                     [
@@ -33,7 +33,7 @@ class FormatNXmx(FormatNexus):
     def _start(self):
         self._static_mask = None
 
-        with h5py.File(self._image_file, "r", swmr=True) as fh:
+        with h5py.File(self._image_file, swmr=True) as fh:
             nxmx = self._get_nxmx(fh)
             nxentry = nxmx.entries[0]
             nxsample = nxentry.samples[0]

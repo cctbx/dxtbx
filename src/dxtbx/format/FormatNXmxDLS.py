@@ -13,7 +13,7 @@ from dxtbx.format.FormatNXmx import FormatNXmx
 
 
 def get_bit_depth_from_meta(meta_file_name):
-    with h5py.File(meta_file_name, "r") as f:
+    with h5py.File(meta_file_name) as f:
         return int(f["/_dectris/bit_depth_image"][()])
 
 
@@ -50,7 +50,7 @@ class FormatNXmxDLS(FormatNXmx):
 
     @staticmethod
     def understand(image_file):
-        with h5py.File(image_file, "r") as handle:
+        with h5py.File(image_file) as handle:
             name = dxtbx.nexus.nxmx.h5str(FormatNXmxDLS.get_instrument_name(handle))
             if name and name.lower() in ("i03", "i04", "i24", "vmxi"):
                 return True

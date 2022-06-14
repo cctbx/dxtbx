@@ -28,7 +28,7 @@ class FormatNXmxDLS16M(FormatNXmxDLS):
     @staticmethod
     def understand(image_file):
         # Get the file handle
-        with h5py.File(image_file, "r") as handle:
+        with h5py.File(image_file) as handle:
             name = FormatNXmxDLS16M.get_instrument_name(handle)
             return name and name.upper() in VALID_NAMES
 

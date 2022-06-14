@@ -20,7 +20,7 @@ class FormatNXmxDLS16MI03(FormatNXmxDLS16M):
     @staticmethod
     def understand(image_file):
         # Get the file handle
-        with h5py.File(image_file, "r") as fh:
+        with h5py.File(image_file) as fh:
             name = FormatNXmxDLS16M.get_instrument_name(fh)
             if name and name.upper() in {"DIAMOND BEAMLINE I03", "DLS I03"}:
                 timestamp = get_pilatus_timestamp(
