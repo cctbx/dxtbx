@@ -2,15 +2,9 @@ from __future__ import annotations
 
 import datetime
 import os
+from functools import cached_property
 from pathlib import Path
 from typing import Union
-
-try:
-    from functools import cached_property
-except ImportError:
-    # Python 3.7 compatibility
-    # Defined cached_property decorator as a noop
-    from dxtbx.nexus.nxmx import cached_property
 
 import h5py
 
