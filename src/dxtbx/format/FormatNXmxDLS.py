@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import os
 from pathlib import Path
@@ -98,10 +100,6 @@ class FormatNXmxDLS(FormatNXmx):
                 self._legacy = nxentry.start_time.replace(
                     tzinfo=None
                 ) < datetime.datetime(2021, 9, 14, 15, 3, 0)
-            elif "VMXI" in name.upper():
-                self._legacy = True
-            else:
-                self._legacy = False
 
         nxdetector = nxentry.instruments[0].detectors[0]
         if nxdetector.underload_value is None:
