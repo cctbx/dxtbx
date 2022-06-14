@@ -134,7 +134,7 @@ class FormatNexus(FormatHDF5):
         raise NotImplementedError
 
     @staticmethod
-    def get_instrument_name(handle) -> Optional[str]:
+    def get_instrument_name(handle) -> str | None:
         if "short_name" in handle["/entry/instrument"].attrs:
             name = handle["/entry/instrument"].attrs["short_name"]
         elif "/entry/instrument/name" in handle:
