@@ -10,7 +10,6 @@ from scitbx.array_family import flex
 
 import dxtbx.model
 from dxtbx import flumpy
-from dxtbx.format.nexus import dataset_as_flex
 
 from . import nxmx
 
@@ -351,8 +350,8 @@ def get_raw_data(
     for module_slices in get_detector_module_slices(nxdetector):
         slices = [slice(index, index + 1, 1)]
         slices.extend(module_slices)
-        data_as_flex = dataset_as_flex(data, tuple(slices))
-        # Convert a slice of a 3- or 4-dimension array to a 2D array
-        data_as_flex.reshape(flex.grid(data_as_flex.all()[-2:]))
+        data_as_flex = flumpy.from_numpy(
+            np.squeeze(data[tuple(slices)], axis=0)
+        ).as_double()
         all_data.append(data_as_flex)
     return tuple(all_data)
