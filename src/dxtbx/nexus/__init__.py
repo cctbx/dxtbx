@@ -345,8 +345,6 @@ def get_raw_data(
     for module_slices in get_detector_module_slices(nxdetector):
         slices = [slice(index, index + 1, 1)]
         slices.extend(module_slices)
-        data_as_flex = flumpy.from_numpy(
-            np.squeeze(data[tuple(slices)], axis=0)
-        ).as_double()
+        data_as_flex = flumpy.from_numpy(np.squeeze(data[tuple(slices)], axis=0))
         all_data.append(data_as_flex)
     return tuple(all_data)
