@@ -15,7 +15,7 @@ class FormatNXmx(FormatNexus):
     def understand(image_file):
         with h5py.File(image_file) as handle:
             return (
-                len(
+                bool(
                     [
                         entry
                         for entry in dxtbx.nexus.nxmx.find_class(handle, "NXentry")
@@ -23,7 +23,6 @@ class FormatNXmx(FormatNexus):
                         and dxtbx.nexus.nxmx.h5str(entry["definition"][()]) == "NXmx"
                     ]
                 )
-                > 0
             )
 
     def __init__(self, image_file, **kwargs):
