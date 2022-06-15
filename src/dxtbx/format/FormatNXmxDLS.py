@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Union
 
 import h5py
+import numpy as np
 
 import dxtbx.nexus
 from dxtbx.format.FormatNXmx import FormatNXmx
@@ -84,6 +85,10 @@ class FormatNXmxDLS(FormatNXmx):
         nxmx = dxtbx.nexus.nxmx.NXmx(fh)
         nxentry = nxmx.entries[0]
 
+        nxdetector = nxentry.instruments[0].detectors[0]
+        if nxdetector.underload_value is None:
+            nxdetector.underload_value = 0
+
         if self._legacy is None:
             name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(fh))
             if nxentry.start_time and "I03" in name.upper():
@@ -94,10 +99,10 @@ class FormatNXmxDLS(FormatNXmx):
                 self._legacy = nxentry.start_time.replace(
                     tzinfo=None
                 ) < datetime.datetime(2021, 9, 14, 15, 3, 0)
-
-        nxdetector = nxentry.instruments[0].detectors[0]
-        if nxdetector.underload_value is None:
-            nxdetector.underload_value = 0
+            elif "VMXI" in name.upper():
+                # Until some point between July 2021 and  November 2021 the
+                # data_size recorded in the VMXi NeXus files were reversed
+                self._legacy = np.all(nxdetector.modules[0].data_size == (2068, 2162))
 
         if self._legacy:
             # data_size was reversed, see https://jira.diamond.ac.uk/browse/MXGDA-3676
