@@ -551,6 +551,6 @@ def test_get_raw_data_single_panel(nxdata_example):
     for i in range(3):
         raw_data = dxtbx.nexus.get_raw_data(nxdata, det, i)
         assert len(raw_data) == 1
-        assert isinstance(raw_data[0], flex.long)
+        assert isinstance(raw_data[0], flex.int)
         assert raw_data[0].all() == (4362, 4148)
         assert raw_data[0].all_eq(i)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Tuple, cast
 
+import h5py
 import numpy as np
 
 from cctbx import eltbx
@@ -324,6 +325,28 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...]:
         )
 
 
+def _dataset_as_flex(
+    data: h5py.Dataset, slices: tuple
+) -> flex.float | flex.double | flex.int:
+    data_np = np.squeeze(data[slices], axis=0)
+    np_float_types = (
+        np.half,
+        np.single,
+        np.float_,
+        np.float16,
+        np.float32,
+    )
+    if np.issubdtype(data_np.dtype, np.integer):
+        data_np = data_np.astype(np.int32, copy=False)
+    elif data_np.dtype in np_float_types:
+        data_np = data_np.astype(np.float32, copy=False)
+    else:
+        # assume double
+        assert np.issubdtype(data_np.dtype, np.floating)
+        data_np = data_np.astype(np.float64, copy=False)
+    return flumpy.from_numpy(data_np)
+
+
 def get_raw_data(
     nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
@@ -345,6 +368,6 @@ def get_raw_data(
     for module_slices in get_detector_module_slices(nxdetector):
         slices = [slice(index, index + 1, 1)]
         slices.extend(module_slices)
-        data_as_flex = flumpy.from_numpy(np.squeeze(data[tuple(slices)], axis=0))
+        data_as_flex = _dataset_as_flex(data, tuple(slices))
         all_data.append(data_as_flex)
     return tuple(all_data)
