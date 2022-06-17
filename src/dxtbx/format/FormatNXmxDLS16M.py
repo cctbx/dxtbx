@@ -4,8 +4,7 @@ import h5py
 
 import libtbx
 
-from dxtbx.format.FormatNexusEigerDLS import FormatNexusEigerDLS
-from dxtbx.format.nexus import h5str
+from dxtbx.format.FormatNXmxDLS import FormatNXmxDLS
 from dxtbx.masking import GoniometerMaskerFactory
 from dxtbx.model import MultiAxisGoniometer
 
@@ -25,12 +24,12 @@ VALID_NAMES = {
 }
 
 
-class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
+class FormatNXmxDLS16M(FormatNXmxDLS):
     @staticmethod
     def understand(image_file):
         # Get the file handle
-        with h5py.File(image_file, "r") as handle:
-            name = h5str(FormatNexusEigerDLS16M.get_instrument_name(handle))
+        with h5py.File(image_file) as handle:
+            name = FormatNXmxDLS16M.get_instrument_name(handle)
             return name and name.upper() in VALID_NAMES
 
     def has_dynamic_shadowing(self, **kwargs):
@@ -64,5 +63,5 @@ class FormatNexusEigerDLS16M(FormatNexusEigerDLS):
 
         else:
             raise RuntimeError(
-                "Don't understand this goniometer: %s" % list(goniometer.get_names())
+                f"Don't understand this goniometer: {list(goniometer.get_names())}"
             )

@@ -3,13 +3,14 @@ from __future__ import annotations
 import logging
 from typing import Tuple, cast
 
+import h5py
 import numpy as np
 
 from cctbx import eltbx
 from scitbx.array_family import flex
 
 import dxtbx.model
-from dxtbx.format.nexus import dataset_as_flex
+from dxtbx import flumpy
 
 from . import nxmx
 
@@ -104,22 +105,17 @@ def get_dxtbx_scan(
     num_images = len(scan_axis)
     image_range = (1, num_images)
 
+    oscillation = (0, 0)
     if is_rotation:
         if scan_axis.end:
-            oscillation = (
-                float(scan_axis[0].to("degree").magnitude),
-                float((scan_axis.end[0] - scan_axis[0]).to("degree").magnitude),
-            )
-        # elif scan_axis.increment_set:
+            end = scan_axis.end[0]
         elif num_images > 1:
-            oscillation = (
-                float(scan_axis[0].to("degree").magnitude),
-                float((scan_axis[1] - scan_axis[0]).to("degree").magnitude),
-            )
-    else:
+            end = scan_axis[1]
+        else:
+            end = scan_axis[0]
         oscillation = (
-            0,
-            0,
+            float(scan_axis[0].to("degree").magnitude),
+            float((end - scan_axis[0]).to("degree").magnitude),
         )
 
     if nxdetector.frame_time is not None:
@@ -258,7 +254,9 @@ def get_dxtbx_detector(
             if nxdetector.saturation_value is not None
             else 0x7FFFFFFF
         )
-        trusted_range = (underload, overload)
+        # Not entirely clear whether the dxtbx trusted_range is inclusive or exclusive
+        # https://github.com/cctbx/dxtbx/issues/182
+        trusted_range = (underload - 1, overload)
 
         material = KNOWN_SENSOR_MATERIALS.get(nxdetector.sensor_material)
         if not material:
@@ -316,10 +314,37 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...]:
     result is intended to be compatible with the get_static_mask() method of dxtbx
     format classes.
     """
-    pixel_mask = nxdetector.get("pixel_mask")
-    assert pixel_mask and pixel_mask.ndim == 2
-    all_slices = get_detector_module_slices(nxdetector)
-    return tuple(dataset_as_flex(pixel_mask, slices) == 0 for slices in all_slices)
+    try:
+        pixel_mask = nxdetector.pixel_mask
+    except KeyError:
+        return None
+    if pixel_mask is not None and pixel_mask.ndim == 2:
+        all_slices = get_detector_module_slices(nxdetector)
+        return tuple(
+            flumpy.from_numpy(pixel_mask[slices]) == 0 for slices in all_slices
+        )
+
+
+def _dataset_as_flex(
+    data: h5py.Dataset, slices: tuple
+) -> flex.float | flex.double | flex.int:
+    data_np = np.squeeze(data[slices], axis=0)
+    np_float_types = (
+        np.half,
+        np.single,
+        np.float_,
+        np.float16,
+        np.float32,
+    )
+    if np.issubdtype(data_np.dtype, np.integer):
+        data_np = data_np.astype(np.int32, copy=False)
+    elif data_np.dtype in np_float_types:
+        data_np = data_np.astype(np.float32, copy=False)
+    else:
+        # assume double
+        assert np.issubdtype(data_np.dtype, np.floating)
+        data_np = data_np.astype(np.float64, copy=False)
+    return flumpy.from_numpy(data_np)
 
 
 def get_raw_data(
@@ -332,15 +357,17 @@ def get_raw_data(
     get_raw_data() method of dxtbx format classes.
     """
     if nxdata.signal:
-        data = nxdata[nxdata.signal]
+        try:
+            data = nxdata[nxdata.signal]
+        except KeyError:
+            logger.warning(f"Key {nxdata.signal} specified by NXdata.signal missing")
+            data = list(nxdata.values())[0]
     else:
         data = list(nxdata.values())[0]
     all_data = []
     for module_slices in get_detector_module_slices(nxdetector):
         slices = [slice(index, index + 1, 1)]
         slices.extend(module_slices)
-        data_as_flex = dataset_as_flex(data, tuple(slices))
-        # Convert a slice of a 3- or 4-dimension array to a 2D array
-        data_as_flex.reshape(flex.grid(data_as_flex.all()[-2:]))
+        data_as_flex = _dataset_as_flex(data, tuple(slices))
         all_data.append(data_as_flex)
     return tuple(all_data)

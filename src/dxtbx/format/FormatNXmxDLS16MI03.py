@@ -5,11 +5,11 @@ import calendar
 import h5py
 
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
-from dxtbx.format.FormatNexusEigerDLS16M import FormatNexusEigerDLS16M
+from dxtbx.format.FormatNXmxDLS16M import FormatNXmxDLS16M
 from dxtbx.format.nexus import h5str
 
 
-class FormatNexusEigerDLS16MI03(FormatNexusEigerDLS16M):
+class FormatNXmxDLS16MI03(FormatNXmxDLS16M):
     """Format class for the Eiger 2XE 16M on DLS I03
 
     Only active for data collected between 20210422 and 20210503 (inclusive).
@@ -20,8 +20,8 @@ class FormatNexusEigerDLS16MI03(FormatNexusEigerDLS16M):
     @staticmethod
     def understand(image_file):
         # Get the file handle
-        with h5py.File(image_file, "r") as fh:
-            name = h5str(FormatNexusEigerDLS16M.get_instrument_name(fh))
+        with h5py.File(image_file) as fh:
+            name = FormatNXmxDLS16M.get_instrument_name(fh)
             if name and name.upper() in {"DIAMOND BEAMLINE I03", "DLS I03"}:
                 timestamp = get_pilatus_timestamp(
                     h5str(fh["/entry/start_time"][()]).rstrip("Z")

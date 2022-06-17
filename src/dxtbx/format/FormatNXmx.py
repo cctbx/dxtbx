@@ -1,14 +1,9 @@
 from __future__ import annotations
 
-import math
-
 import h5py
-
-from libtbx import Auto
 
 import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
-from dxtbx.masking import GoniometerMaskerFactory
 
 
 class FormatNXmx(FormatNexus):
@@ -18,12 +13,17 @@ class FormatNXmx(FormatNexus):
 
     @staticmethod
     def understand(image_file):
-        """This format class currently only applies to beamline I19-2 at DLS."""
-        with h5py.File(image_file, swmr=True) as handle:
-            name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
-        if name and ("I19-2" in name or "DIAD" in name):
-            return True
-        return False
+        with h5py.File(image_file) as handle:
+            return (
+                bool(
+                    [
+                        entry
+                        for entry in dxtbx.nexus.nxmx.find_class(handle, "NXentry")
+                        if "definition" in entry
+                        and dxtbx.nexus.nxmx.h5str(entry["definition"][()]) == "NXmx"
+                    ]
+                )
+            )
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
@@ -33,9 +33,10 @@ class FormatNXmx(FormatNexus):
         self._static_mask = None
 
         with h5py.File(self._image_file, swmr=True) as fh:
-            nxmx = dxtbx.nexus.nxmx.NXmx(fh)
-            nxsample = nxmx.entries[0].samples[0]
-            nxinstrument = nxmx.entries[0].instruments[0]
+            nxmx = self._get_nxmx(fh)
+            nxentry = nxmx.entries[0]
+            nxsample = nxentry.samples[0]
+            nxinstrument = nxentry.instruments[0]
             nxdetector = nxinstrument.detectors[0]
             nxbeam = nxinstrument.beams[0]
 
@@ -56,6 +57,9 @@ class FormatNXmx(FormatNexus):
                     data = list(nxdata.values())[0]
                 self._num_images, *_ = data.shape
 
+    def _get_nxmx(self, fh: h5py.File):
+        return dxtbx.nexus.nxmx.NXmx(fh)
+
     def _beam(self, index=None):
         return self._beam_model
 
@@ -69,7 +73,7 @@ class FormatNXmx(FormatNexus):
         if self._cached_file_handle is None:
             self._cached_file_handle = h5py.File(self._image_file, swmr=True)
 
-        nxmx = dxtbx.nexus.nxmx.NXmx(self._cached_file_handle)
+        nxmx = self._get_nxmx(self._cached_file_handle)
         nxdata = nxmx.entries[0].data[0]
         nxdetector = nxmx.entries[0].instruments[0].detectors[0]
         raw_data = dxtbx.nexus.get_raw_data(nxdata, nxdetector, index)
@@ -85,43 +89,3 @@ class FormatNXmx(FormatNexus):
                 d1d.set_selected(d1d == top - 1, -1)
                 d1d.set_selected(d1d == top - 2, -2)
         return raw_data
-
-
-class FormatNXmxI19_2(FormatNXmx):
-    """
-    Read NXmx-flavour data from beamline I19-2 at Diamond Light Source.
-
-    Include the option of dynamic shadowing of the standard I19-2 diamond anvil
-    pressure cell with a 76° conical aperture.
-    """
-
-    @staticmethod
-    def understand(image_file):
-        """This format class applies if the instrument name contains 'I19-2'."""
-        with h5py.File(image_file, swmr=True) as handle:
-            name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
-        if name and "I19-2" in name:
-            return True
-        return False
-
-    @staticmethod
-    def has_dynamic_shadowing(**kwargs):
-        """Check if dynamic shadowing should be applied for a diamond anvil cell."""
-        dynamic_shadowing = kwargs.get("dynamic_shadowing", False)
-        if dynamic_shadowing in (Auto, "Auto"):
-            return False
-        return dynamic_shadowing
-
-    def __init__(self, image_file, **kwargs):
-        """Initialise the image structure from the given file."""
-        self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
-        super().__init__(image_file, **kwargs)
-
-    def get_goniometer_shadow_masker(self, goniometer=None):
-        """Apply the dynamic mask for a diamond anvil cell with a 76° aperture."""
-        if goniometer is None:
-            goniometer = self.get_goniometer()
-
-        return GoniometerMaskerFactory.diamond_anvil_cell(
-            goniometer, cone_opening_angle=math.radians(76)
-        )
