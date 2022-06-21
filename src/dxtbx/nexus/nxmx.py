@@ -31,18 +31,22 @@ logger = logging.getLogger(__name__)
 NXNode = Union[h5py.File, h5py.Group]
 
 
-class NXNumber(abc.Sequence):
+class NXNumber(h5py.Dataset):
     def __init__(self, handle: h5py.Dataset, unit: pint.Unit | None):
-        self._handle = handle
+        super(NXNumber, self).__init__(handle.id)
         self._unit = unit
 
-    def __getitem__(self, key) -> NXNumberT:
+    def __getitem__(self, key, new_dtype=None) -> NXNumberT:
+        item = super(NXNumber, self).__getitem__(self, key, new_dtype=new_dtype)
         if self._unit:
-            return self._handle[key] * self._unit
-        return self._handle[key]
+            return item * self._unit
+        return item
 
-    def __len__(self):
-        return len(self._handle)
+    def __array__(self, dtype=None):
+        array = super(NXNumber, self).__array__(self, dtype=dtype)
+        if self._unit:
+            return array * self._unit
+        return array
 
 
 def h5str(h5_value: str | np.bytes_ | bytes | None) -> str | None:
