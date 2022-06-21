@@ -111,7 +111,7 @@ def get_dxtbx_scan(
         if scan_axis.end:
             step = np.median(scan_axis.end[()] - scan_axis[()]).to("degree").magnitude
         elif num_images > 1:
-            step = np.diff(scan_axis).median().to("degree").magnitude
+            step = np.median(np.diff(scan_axis)).to("degree").magnitude
         else:
             step = 0
         oscillation = (start, step)
