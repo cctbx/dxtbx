@@ -109,12 +109,12 @@ def get_dxtbx_scan(
     if is_rotation:
         start = scan_axis[0].to("degree").magnitude
         if scan_axis.end:
-            step = scan_axis.end[()] - scan_axis[()]
+            step = np.median(scan_axis.end[()] - scan_axis[()]).to("degree").magnitude
         elif num_images > 1:
-            step = np.diff(scan_axis)
+            step = np.diff(scan_axis).median().to("degree").magnitude
         else:
             step = 0
-        oscillation = (start, np.median(step).to("degree").magnitude)
+        oscillation = (start, step)
 
     if nxdetector.frame_time is not None:
         frame_time = nxdetector.frame_time.to("seconds").magnitude
