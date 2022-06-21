@@ -107,7 +107,7 @@ def get_dxtbx_scan(
 
     oscillation = (0, 0)
     if is_rotation:
-        start = float(scan_axis[0].to("degree").magnitude)
+        start = scan_axis[0].to("degree").magnitude
         if scan_axis.end:
             step = scan_axis.end[()] - scan_axis[()]
         elif num_images > 1:
