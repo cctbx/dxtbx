@@ -1,4 +1,4 @@
 Fixed an occasional issue with finding the correct oscillation width when reading NeXus data in which the goniometer scan axis positions are read-back values, rather than demand values.
 In such data, DXTBX would previously use the difference between the axis positions of the first and second images as the oscillation width for the entire scan.
 If this first oscillation width is anomalous (for example, if the goniometer is a little slow to reach a steady speed), then the first oscillation width will not accurately reflect the scan geometry.
-Instead, DXTBX now uses the mean oscillation width across the entire scan.
+Instead, DXTBX now uses the median oscillation width across the entire scan.

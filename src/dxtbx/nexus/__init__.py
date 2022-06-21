@@ -114,7 +114,7 @@ def get_dxtbx_scan(
             step = np.diff(scan_axis)
         else:
             step = 0
-        oscillation = (start, np.mean(step).to("degree").magnitude)
+        oscillation = (start, np.median(step).to("degree").magnitude)
 
     if nxdetector.frame_time is not None:
         frame_time = nxdetector.frame_time.to("seconds").magnitude
