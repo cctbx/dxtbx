@@ -72,7 +72,6 @@ class BeamFactory:
         else:
             assert len(self.incident_wavelength) > index, len(self.incident_wavelength)
             wavelength = self.incident_wavelength[index]
-        print(f"{wavelength=}")
         return dxtbx.model.BeamFactory.make_beam(
             sample_to_source=(0, 0, 1),
             wavelength=wavelength,
