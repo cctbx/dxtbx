@@ -66,7 +66,6 @@ class BeamFactory:
         self.incident_wavelength = nxbeam.incident_wavelength.to("angstrom").magnitude
 
     def __call__(self, index: int = 0) -> dxtbx.model.Beam:
-        print(f"{self.incident_wavelength=}")
         if np.isscalar(self.incident_wavelength):
             wavelength = self.incident_wavelength
         else:
