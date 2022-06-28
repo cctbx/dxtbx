@@ -107,7 +107,7 @@ def get_dxtbx_scan(
 
     oscillation = (0, 0)
     if is_rotation:
-        if scan_axis.end:
+        if scan_axis.end is not None:
             end = scan_axis.end[0]
         elif num_images > 1:
             end = scan_axis[1]

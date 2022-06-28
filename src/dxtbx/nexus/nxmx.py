@@ -31,20 +31,6 @@ logger = logging.getLogger(__name__)
 NXNode = Union[h5py.File, h5py.Group]
 
 
-class NXNumber(abc.Sequence):
-    def __init__(self, handle: h5py.Dataset, unit: pint.Unit | None):
-        self._handle = handle
-        self._unit = unit
-
-    def __getitem__(self, key) -> NXNumberT:
-        if self._unit:
-            return self._handle[key] * self._unit
-        return self._handle[key]
-
-    def __len__(self):
-        return len(self._handle)
-
-
 def h5str(h5_value: str | np.bytes_ | bytes | None) -> str | None:
     """
     Convert a value returned from an h5py attribute to str.
@@ -436,10 +422,10 @@ class NXtransformationsAxis:
         return self._handle[key] * self.units
 
     @cached_property
-    def end(self) -> NXNumber | None:
+    def end(self) -> pint.Quantity | None:
         end_name = self._handle.name + "_end"
         if end_name in self._handle.parent:
-            return NXNumber(self._handle.parent[end_name], self.units)
+            return self._handle.parent[end_name][()] * self.units
         return None
 
     @cached_property
@@ -697,7 +683,7 @@ class NXdetector(H5Mapping):
         return None
 
     @cached_property
-    def data(self) -> NXNumber | None:
+    def data(self) -> NXNumberT | None:
         """The raw data array for this detector.
 
         For a dimension-2 detector, the rank of the data array will be 3. For a
