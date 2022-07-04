@@ -1,0 +1,1 @@
+``ExperimentList.append()``: No longer O(N²) with experiment identifiers.

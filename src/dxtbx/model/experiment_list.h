@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <unordered_set>
 #include <boost/shared_ptr.hpp>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
@@ -41,6 +42,13 @@ namespace dxtbx { namespace model {
      */
     ExperimentList(const const_ref_type &data) : data_(data.begin(), data.end()) {
       DXTBX_ASSERT(is_consistent());
+      // Read all the experiment identifiers into our membership set
+      for (auto &exp : data) {
+        auto identifier = exp.get_identifier();
+        if (identifier != "") {
+          _experiment_identifiers.insert(identifier);
+        }
+      }
     }
 
     /**
@@ -71,6 +79,10 @@ namespace dxtbx { namespace model {
      */
     void erase(std::size_t index) {
       DXTBX_ASSERT(index < data_.size());
+      auto identifier = data_[index].get_identifier();
+      if (identifier != "") {
+        _experiment_identifiers.erase(_experiment_identifiers.find(identifier));
+      }
       data_.erase(data_.begin() + index, data_.begin() + index + 1);
     }
 
@@ -84,6 +96,9 @@ namespace dxtbx { namespace model {
         std::string elem_str = boost::python::extract<std::string>(elem);
         std::size_t j = find(elem_str);
         erase(j);
+        if (elem_str != "") {
+          _experiment_identifiers.erase(_experiment_identifiers.find(elem_str));
+        }
       }
     }
     /**
@@ -186,9 +201,12 @@ namespace dxtbx { namespace model {
      */
     void append(const Experiment &experiment) {
       // Check the identifier is unique if set
-      int index = find(experiment.get_identifier());
-      DXTBX_ASSERT(index < 0);
-
+      auto identifier = experiment.get_identifier();
+      if (identifier != "") {
+        DXTBX_ASSERT(_experiment_identifiers.find(identifier)
+                     == _experiment_identifiers.end());
+        _experiment_identifiers.insert(identifier);
+      }
       // Add the experiment
       data_.push_back(experiment);
     }
@@ -541,6 +559,7 @@ namespace dxtbx { namespace model {
 
   protected:
     shared_type data_;
+    std::unordered_set<std::string> _experiment_identifiers;
   };
 
 }}  // namespace dxtbx::model
