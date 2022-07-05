@@ -77,7 +77,7 @@ class BeamFactory:
         )
 
 
-def get_dxtbx_beam_factory(nxbeam: nxmx.NXbeam) -> dxtbx.model.Beam:
+def get_dxtbx_beam_factory(nxbeam: nxmx.NXbeam) -> BeamFactory:
     """Generate a dxtbx beam model from an NXbeam."""
     return BeamFactory(nxbeam)
 
