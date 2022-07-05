@@ -1,0 +1,1 @@
+FormatNXmx: ignore empty pixel masks (the current behaviour results in an obscure traceback)
