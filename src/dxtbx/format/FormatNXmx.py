@@ -60,8 +60,8 @@ class FormatNXmx(FormatNexus):
     def _get_nxmx(self, fh: h5py.File):
         return dxtbx.nexus.nxmx.NXmx(fh)
 
-    def _beam(self, index: int = 0):
-        return self._beam_factory(index=index)
+    def _beam(self, index: int | None = None):
+        return self._beam_factory(index=index or 0)
 
     def get_num_images(self) -> int:
         return self._num_images
