@@ -538,22 +538,25 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Check if experiments are consistent
+     * Check if all experiments are consistent, as defined by:
+     *   - The experiment object itself claims to be consistent
+     *   - There are no duplicate non-empty identifiers
+     *
+     * The former of these appears to always be true - it is left in
+     * here so as to preserve technically identical behaviour.
      */
     bool is_consistent() const {
-      typedef std::map<std::string, std::size_t> map_type;
-      typedef map_type::iterator iterator;
-      map_type identifiers;
-      for (std::size_t i = 0; i < size(); ++i) {
-        if (!data_[i].is_consistent()) {
+      std::unordered_set<std::string> identifiers{};
+      for (auto &exp : data_) {
+        if (!exp.is_consistent()) {
           return false;
         }
-        std::string id = data_[i].get_identifier();
+        auto id = exp.get_identifier();
         if (id != "") {
-          iterator it = identifiers.find(id);
-          if (it != identifiers.end()) {
+          if (identifiers.find(id) != identifiers.end()) {
             return false;
           }
+          identifiers.insert(id);
         }
       }
       return true;
@@ -561,7 +564,7 @@ namespace dxtbx { namespace model {
 
   protected:
     shared_type data_;
-    std::unordered_set<std::string> _experiment_identifiers;
+    std::unordered_set<std::string> _experiment_identifiers{};
   };
 
 }}  // namespace dxtbx::model
