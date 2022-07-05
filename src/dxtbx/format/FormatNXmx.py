@@ -38,8 +38,8 @@ class FormatNXmx(FormatNexus):
             nxdetector = nxinstrument.detectors[0]
             nxbeam = nxinstrument.beams[0]
             self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
-            self._beam_factory = dxtbx.nexus.get_dxtbx_beam_factory(nxbeam)
-            wavelength = self._beam_factory(index=0).get_wavelength()
+            self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+            wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
             self._detector_model = dxtbx.nexus.get_dxtbx_detector(
                 nxdetector, wavelength
             )
@@ -61,7 +61,7 @@ class FormatNXmx(FormatNexus):
         return dxtbx.nexus.nxmx.NXmx(fh)
 
     def _beam(self, index: int | None = None) -> dxtbx.model.Beam:
-        return self._beam_factory(index=index or 0)
+        return self._beam_factory.make_beam(index=index or 0)
 
     def get_num_images(self) -> int:
         return self._num_images

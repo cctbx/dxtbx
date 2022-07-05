@@ -61,11 +61,13 @@ def get_dxtbx_goniometer(nxsample: nxmx.NXsample) -> dxtbx.model.Goniometer | No
         )
 
 
-class BeamFactory:
+class CachedWavelengthBeamFactory:
+    """Defer Beam generation whilst caching the wavelength value"""
+
     def __init__(self, nxbeam: nxmx.NXbeam):
         self.incident_wavelength = nxbeam.incident_wavelength.to("angstrom").magnitude
 
-    def __call__(self, index: int = 0) -> dxtbx.model.Beam:
+    def make_beam(self, index: int = 0) -> dxtbx.model.Beam:
         if np.isscalar(self.incident_wavelength):
             wavelength = self.incident_wavelength
         else:
@@ -75,11 +77,6 @@ class BeamFactory:
             sample_to_source=(0, 0, 1),
             wavelength=wavelength,
         )
-
-
-def get_dxtbx_beam_factory(nxbeam: nxmx.NXbeam) -> BeamFactory:
-    """Generate a dxtbx beam model from an NXbeam."""
-    return BeamFactory(nxbeam)
 
 
 def get_dxtbx_scan(

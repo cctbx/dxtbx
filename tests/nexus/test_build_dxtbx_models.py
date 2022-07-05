@@ -154,7 +154,7 @@ def test_get_dxtbx_goniometer_grid_scan(nxsample_gridscan):
 
 def test_get_dxtbx_beam(nxmx_example):
     instrument = dxtbx.nexus.nxmx.NXmx(nxmx_example).entries[0].instruments[0]
-    beam = dxtbx.nexus.get_dxtbx_beam_factory(instrument.beams[0])()
+    beam = dxtbx.nexus.CachedWavelengthBeamFactory(instrument.beams[0]).make_beam()
     assert isinstance(beam, dxtbx.model.Beam)
     assert beam.get_wavelength() == 0.976223
     assert beam.get_sample_to_source_direction() == (0.0, 0.0, 1.0)
@@ -168,8 +168,8 @@ def test_get_dxtbx_beam_array_length_1():
         beam["incident_wavelength"].attrs["units"] = b"angstrom"
 
         nxbeam = dxtbx.nexus.nxmx.NXbeam(f["/entry/instrument/beam"])
-        beam_factory = dxtbx.nexus.get_dxtbx_beam_factory(nxbeam)
-        assert beam_factory(index=0).get_wavelength() == 0.987
+        beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        assert beam_factory.make_beam(index=0).get_wavelength() == 0.987
 
 
 def test_get_dxtbx_beam_array():
@@ -181,9 +181,9 @@ def test_get_dxtbx_beam_array():
         beam["incident_wavelength"].attrs["units"] = b"angstrom"
 
         nxbeam = dxtbx.nexus.nxmx.NXbeam(f["/entry/instrument/beam"])
-        beam_factory = dxtbx.nexus.get_dxtbx_beam_factory(nxbeam)
+        beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
         for i, w in enumerate(wavelengths):
-            assert beam_factory(index=i).get_wavelength() == w
+            assert beam_factory.make_beam(index=i).get_wavelength() == w
 
 
 def test_get_dxtbx_scan(nxmx_example):
