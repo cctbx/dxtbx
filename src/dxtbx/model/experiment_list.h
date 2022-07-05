@@ -588,7 +588,7 @@ namespace dxtbx { namespace model {
         // Let's check that we haven't built a list of duplicates...
         // if so, then we've mutated the experiments into an inconsistent
         // state, and shouldn't allow continuing until this is fixed.
-        if (_experiment_identifiers.find(id) != identifiers.end()) {
+        if (_experiment_identifiers.find(id) != _experiment_identifiers.end()) {
           throw std::runtime_error(
             "ExperimentList has been mutated into an inconsistent state; please fix "
             "before trying to extend.");
