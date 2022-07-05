@@ -96,8 +96,10 @@ namespace dxtbx { namespace model {
         std::string elem_str = boost::python::extract<std::string>(elem);
         std::size_t j = find(elem_str);
         erase(j);
-        if (elem_str != "") {
-          _experiment_identifiers.erase(_experiment_identifiers.find(elem_str));
+        // It's possible that we changed identifiers since adding, check
+        auto iter = _experiment_identifiers.find(elem_str);
+        if (elem_str != "" && iter != _experiment_identifiers.end()) {
+          _experiment_identifiers.erase(iter);
         }
       }
     }
