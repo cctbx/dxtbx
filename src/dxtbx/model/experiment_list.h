@@ -203,8 +203,10 @@ namespace dxtbx { namespace model {
       // Check the identifier is unique if set
       auto identifier = experiment.get_identifier();
       if (identifier != "") {
-        DXTBX_ASSERT(_experiment_identifiers.find(identifier)
-                     == _experiment_identifiers.end());
+        if (_experiment_identifiers.find(identifier) != _experiment_identifiers.end()) {
+          throw std::runtime_error("Experiment with identifier \"" + identifier
+                                   + "\" already in ExperimentList");
+        }
         _experiment_identifiers.insert(identifier);
       }
       // Add the experiment
