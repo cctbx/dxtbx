@@ -204,8 +204,15 @@ namespace dxtbx { namespace model {
       auto identifier = experiment.get_identifier();
       if (identifier != "") {
         if (_experiment_identifiers.find(identifier) != _experiment_identifiers.end()) {
-          throw std::runtime_error("Experiment with identifier \"" + identifier
-                                   + "\" already in ExperimentList");
+          // We might have mutated the experiments in the list. Rebuild our identifier
+          // map before checking again. This is relatively expensive, so we only do
+          // when we have encountered a conflict.
+          rebuild_experiment_map();
+          if (_experiment_identifiers.find(identifier)
+              != _experiment_identifiers.end()) {
+            throw std::runtime_error("Experiment with identifier \"" + identifier
+                                     + "\" already in ExperimentList");
+          }
         }
         _experiment_identifiers.insert(identifier);
       }
@@ -563,6 +570,33 @@ namespace dxtbx { namespace model {
     }
 
   protected:
+    /** Rebuild the internal experiment identifier map.
+     *
+     * This is because experiment identifiers can be mutated, making
+     * our internal reference out-of-date. This rebuilds the map with the
+     * new current identifiers for every experiment.
+     *
+     * \throws runtime_error ExperimentList has been mutated into an inconsistent state.
+     **/
+    void rebuild_experiment_map() {
+      _experiment_identifiers.clear();
+      for (auto &exp : data_) {
+        auto id = exp.get_identifier();
+        if (id == "") {
+          continue;
+        }
+        // Let's check that we haven't built a list of duplicates...
+        // if so, then we've mutated the experiments into an inconsistent
+        // state, and shouldn't allow continuing until this is fixed.
+        if (_experiment_identifiers.find(id) != identifiers.end()) {
+          throw std::runtime_error(
+            "ExperimentList has been mutated into an inconsistent state; please fix "
+            "before trying to extend.");
+        }
+        _experiment_identifiers.insert(id);
+      }
+    }
+
     shared_type data_;
     std::unordered_set<std::string> _experiment_identifiers{};
   };
