@@ -80,7 +80,7 @@ namespace dxtbx { namespace model {
     void erase(std::size_t index) {
       DXTBX_ASSERT(index < data_.size());
       auto identifier = data_[index].get_identifier();
-      auto iter = _experiment_identifiers.find(elem_str);
+      auto iter = _experiment_identifiers.find(identifier);
       if (identifier != "" && iter != _experiment_identifiers.end()) {
         _experiment_identifiers.erase(iter);
       }
