@@ -170,7 +170,11 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         cy = 97  # chip pixels y
         dx = 7  # module gap size
 
-        if timestamp > calendar.timegm((2021, 2, 24, 0, 0, 0)):
+        if timestamp > calendar.timegm((2022, 7, 1, 0, 0, 0)):
+            # 2022 run 3
+            # Detector serviced by Dectris, no bad modules
+            pass
+        elif timestamp > calendar.timegm((2022, 1, 24, 0, 0, 0)):
             # 2022 run 1
             # module @ row 10 column 3
             if self._multi_panel:
