@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <unordered_set>
 #include <boost/shared_ptr.hpp>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
@@ -41,6 +42,13 @@ namespace dxtbx { namespace model {
      */
     ExperimentList(const const_ref_type &data) : data_(data.begin(), data.end()) {
       DXTBX_ASSERT(is_consistent());
+      // Read all the experiment identifiers into our membership set
+      for (auto &exp : data) {
+        auto identifier = exp.get_identifier();
+        if (identifier != "") {
+          _experiment_identifiers.insert(identifier);
+        }
+      }
     }
 
     /**
@@ -71,6 +79,11 @@ namespace dxtbx { namespace model {
      */
     void erase(std::size_t index) {
       DXTBX_ASSERT(index < data_.size());
+      auto identifier = data_[index].get_identifier();
+      auto iter = _experiment_identifiers.find(identifier);
+      if (identifier != "" && iter != _experiment_identifiers.end()) {
+        _experiment_identifiers.erase(iter);
+      }
       data_.erase(data_.begin() + index, data_.begin() + index + 1);
     }
 
@@ -84,6 +97,11 @@ namespace dxtbx { namespace model {
         std::string elem_str = boost::python::extract<std::string>(elem);
         std::size_t j = find(elem_str);
         erase(j);
+        // It's possible that we changed identifiers since adding, check
+        auto iter = _experiment_identifiers.find(elem_str);
+        if (elem_str != "" && iter != _experiment_identifiers.end()) {
+          _experiment_identifiers.erase(iter);
+        }
       }
     }
     /**
@@ -186,9 +204,21 @@ namespace dxtbx { namespace model {
      */
     void append(const Experiment &experiment) {
       // Check the identifier is unique if set
-      int index = find(experiment.get_identifier());
-      DXTBX_ASSERT(index < 0);
-
+      auto identifier = experiment.get_identifier();
+      if (identifier != "") {
+        if (_experiment_identifiers.find(identifier) != _experiment_identifiers.end()) {
+          // We might have mutated the experiments in the list. Rebuild our identifier
+          // map before checking again. This is relatively expensive, so we only do
+          // when we have encountered a conflict.
+          rebuild_experiment_map();
+          if (_experiment_identifiers.find(identifier)
+              != _experiment_identifiers.end()) {
+            throw std::runtime_error("Experiment with identifier \"" + identifier
+                                     + "\" already in ExperimentList");
+          }
+        }
+        _experiment_identifiers.insert(identifier);
+      }
       // Add the experiment
       data_.push_back(experiment);
     }
@@ -518,29 +548,60 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Check if experiments are consistent
+     * Check if all experiments are consistent, as defined by:
+     *   - The experiment object itself claims to be consistent
+     *   - There are no duplicate non-empty identifiers
+     *
+     * The former of these appears to always be true - it is left in
+     * here so as to preserve technically identical behaviour.
      */
     bool is_consistent() const {
-      typedef std::map<std::string, std::size_t> map_type;
-      typedef map_type::iterator iterator;
-      map_type identifiers;
-      for (std::size_t i = 0; i < size(); ++i) {
-        if (!data_[i].is_consistent()) {
+      std::unordered_set<std::string> identifiers{};
+      for (auto &exp : data_) {
+        if (!exp.is_consistent()) {
           return false;
         }
-        std::string id = data_[i].get_identifier();
+        auto id = exp.get_identifier();
         if (id != "") {
-          iterator it = identifiers.find(id);
-          if (it != identifiers.end()) {
+          if (identifiers.find(id) != identifiers.end()) {
             return false;
           }
+          identifiers.insert(id);
         }
       }
       return true;
     }
 
   protected:
+    /** Rebuild the internal experiment identifier map.
+     *
+     * This is because experiment identifiers can be mutated, making
+     * our internal reference out-of-date. This rebuilds the map with the
+     * new current identifiers for every experiment.
+     *
+     * \throws runtime_error ExperimentList has been mutated into an inconsistent state.
+     **/
+    void rebuild_experiment_map() {
+      _experiment_identifiers.clear();
+      for (auto &exp : data_) {
+        auto id = exp.get_identifier();
+        if (id == "") {
+          continue;
+        }
+        // Let's check that we haven't built a list of duplicates...
+        // if so, then we've mutated the experiments into an inconsistent
+        // state, and shouldn't allow continuing until this is fixed.
+        if (_experiment_identifiers.find(id) != _experiment_identifiers.end()) {
+          throw std::runtime_error(
+            "ExperimentList has been mutated into an inconsistent state; please fix "
+            "before trying to extend.");
+        }
+        _experiment_identifiers.insert(id);
+      }
+    }
+
     shared_type data_;
+    std::unordered_set<std::string> _experiment_identifiers{};
   };
 
 }}  // namespace dxtbx::model
