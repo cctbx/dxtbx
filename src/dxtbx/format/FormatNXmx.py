@@ -14,15 +14,13 @@ class FormatNXmx(FormatNexus):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file) as handle:
-            return (
-                bool(
-                    [
-                        entry
-                        for entry in dxtbx.nexus.nxmx.find_class(handle, "NXentry")
-                        if "definition" in entry
-                        and dxtbx.nexus.nxmx.h5str(entry["definition"][()]) == "NXmx"
-                    ]
-                )
+            return bool(
+                [
+                    entry
+                    for entry in dxtbx.nexus.nxmx.find_class(handle, "NXentry")
+                    if "definition" in entry
+                    and dxtbx.nexus.nxmx.h5str(entry["definition"][()]) == "NXmx"
+                ]
             )
 
     def __init__(self, image_file, **kwargs):
@@ -39,10 +37,12 @@ class FormatNXmx(FormatNexus):
             nxinstrument = nxentry.instruments[0]
             nxdetector = nxinstrument.detectors[0]
             nxbeam = nxinstrument.beams[0]
-
             self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
-            self._beam_model = dxtbx.nexus.get_dxtbx_beam(nxbeam)
-            self._detector_model = dxtbx.nexus.get_dxtbx_detector(nxdetector, nxbeam)
+            self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+            wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
+            self._detector_model = dxtbx.nexus.get_dxtbx_detector(
+                nxdetector, wavelength
+            )
             self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
             self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
             self._bit_depth_readout = nxdetector.bit_depth_readout
@@ -60,8 +60,8 @@ class FormatNXmx(FormatNexus):
     def _get_nxmx(self, fh: h5py.File):
         return dxtbx.nexus.nxmx.NXmx(fh)
 
-    def _beam(self, index=None):
-        return self._beam_model
+    def _beam(self, index: int | None = None) -> dxtbx.model.Beam:
+        return self._beam_factory.make_beam(index=index or 0)
 
     def get_num_images(self) -> int:
         return self._num_images

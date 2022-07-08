@@ -61,12 +61,22 @@ def get_dxtbx_goniometer(nxsample: nxmx.NXsample) -> dxtbx.model.Goniometer | No
         )
 
 
-def get_dxtbx_beam(nxbeam: nxmx.NXbeam) -> dxtbx.model.Beam:
-    """Generate a dxtbx beam model from an NXbeam."""
-    return dxtbx.model.BeamFactory.make_beam(
-        sample_to_source=(0, 0, 1),
-        wavelength=nxbeam.incident_wavelength.to("angstrom").magnitude,
-    )
+class CachedWavelengthBeamFactory:
+    """Defer Beam generation whilst caching the wavelength value"""
+
+    def __init__(self, nxbeam: nxmx.NXbeam):
+        self.incident_wavelength = nxbeam.incident_wavelength.to("angstrom").magnitude
+
+    def make_beam(self, index: int = 0) -> dxtbx.model.Beam:
+        if np.isscalar(self.incident_wavelength):
+            wavelength = self.incident_wavelength
+        else:
+            assert len(self.incident_wavelength) > index, len(self.incident_wavelength)
+            wavelength = self.incident_wavelength[index]
+        return dxtbx.model.BeamFactory.make_beam(
+            sample_to_source=(0, 0, 1),
+            wavelength=wavelength,
+        )
 
 
 def get_dxtbx_scan(
@@ -137,7 +147,8 @@ def get_dxtbx_scan(
 
 
 def get_dxtbx_detector(
-    nxdetector: nxmx.NXdetector, nxbeam: nxmx.NXbeam
+    nxdetector: nxmx.NXdetector,
+    wavelength: float,
 ) -> dxtbx.model.Detector:
     """Generate a dxtbx detector model from an NXdetector and NXbeam.
 
@@ -263,12 +274,7 @@ def get_dxtbx_detector(
             raise ValueError(f"Unknown material: {nxdetector.sensor_material}")
         thickness = nxdetector.sensor_thickness.to("mm").magnitude
         table = eltbx.attenuation_coefficient.get_table(material)
-        mu = (
-            table.mu_at_angstrom(
-                nxbeam.incident_wavelength.to("angstrom").magnitude.item()
-            )
-            / 10.0
-        )
+        mu = table.mu_at_angstrom(wavelength) / 10.0
         px_mm = dxtbx.model.ParallaxCorrectedPxMmStrategy(mu, thickness)
         name = module.path
 
