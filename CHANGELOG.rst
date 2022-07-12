@@ -1,3 +1,18 @@
+DIALS 3.10.1 (2022-07-12)
+=========================
+
+Features
+--------
+
+- Updated bad pixel mask for DLS I23 PILATUS 12M for 2022 run 3 (`#530 <https://github.com/cctbx/dxtbx/issues/530>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.install_format``: Handle case on MacOS ``.pkg`` installations where URL-formats could not be installed. (`#524 <https://github.com/cctbx/dxtbx/issues/524>`_)
+
+
 dxtbx 3.10.0 (2022-06-09)
 =========================
 
