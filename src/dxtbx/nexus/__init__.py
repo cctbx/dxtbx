@@ -122,7 +122,7 @@ def get_dxtbx_scan(
                     "One or more recorded oscillation widths differ from the median "
                     "by 10% or more.  The rotation axis of your goniometer may not "
                     "have been scanning at a constant speed throughout the data "
-                    "collection. "
+                    "collection."
                 )
         except ZeroDivisionError:
             pass
