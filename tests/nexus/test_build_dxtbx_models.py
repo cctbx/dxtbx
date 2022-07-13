@@ -192,8 +192,8 @@ def test_get_dxtbx_scan(nxmx_example):
     scan = dxtbx.nexus.get_dxtbx_scan(sample, instrument.detectors[0])
     assert scan.get_num_images() == 10
     assert scan.get_image_range() == (1, 10)
-    assert scan.get_oscillation() == (0.0, 0.1)
-    assert scan.get_oscillation_range() == (0.0, 1.0)
+    assert pytest.approx(scan.get_oscillation()) == (0.0, 0.1)
+    assert pytest.approx(scan.get_oscillation_range()) == (0.0, 1.0)
     assert list(scan.get_exposure_times()) == [0.1] * 10
 
 

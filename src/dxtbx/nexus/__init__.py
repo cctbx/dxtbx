@@ -117,16 +117,27 @@ def get_dxtbx_scan(
 
     oscillation = (0, 0)
     if is_rotation:
+        start = scan_axis[0].to("degree")
         if scan_axis.end:
-            end = scan_axis.end[0]
+            steps = scan_axis.end[()] - scan_axis[()]
         elif num_images > 1:
-            end = scan_axis[1]
+            steps = np.diff(scan_axis[()])
         else:
-            end = scan_axis[0]
-        oscillation = (
-            float(scan_axis[0].to("degree").magnitude),
-            float((end - scan_axis[0]).to("degree").magnitude),
-        )
+            steps = nxmx.ureg.Quantity(0, "degree")
+
+        step = np.median(steps).to("degree")
+        try:
+            if np.any(np.abs((steps - step) / step) >= 0.1):
+                logger.warning(
+                    "One or more recorded oscillation widths differ from the median "
+                    "by 10% or more.  The rotation axis of your goniometer may not "
+                    "have been scanning at a constant speed throughout the data "
+                    "collection."
+                )
+        except ZeroDivisionError:
+            pass
+
+        oscillation = (start.magnitude, step.magnitude)
 
     if nxdetector.frame_time is not None:
         frame_time = nxdetector.frame_time.to("seconds").magnitude
