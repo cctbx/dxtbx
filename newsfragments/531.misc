@@ -1,0 +1,1 @@
+Use ``pytest.approx`` to fix failing test
