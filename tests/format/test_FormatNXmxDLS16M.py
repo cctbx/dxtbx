@@ -59,7 +59,7 @@ def test_rotation_scan_i04(master_h5):
         assert a1 == pytest.approx(a2, abs=5e-2)
     assert gonio.get_scan_axis() == 2
 
-    assert scan.get_oscillation() == (0, 0.1)
+    assert pytest.approx(scan.get_oscillation()) == (0, 0.1)
     assert scan.get_image_range() == (1, 3600)
 
     assert beam.get_wavelength() == pytest.approx(0.979499130984)
