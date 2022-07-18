@@ -872,7 +872,10 @@ class NXdetector(H5Mapping):
         to the underload_value.
         """
         if "saturation_value" in self._handle:
-            return int(self._handle["saturation_value"][()])
+            try:
+                return int(self._handle["saturation_value"][()])
+            except TypeError as e:
+                logger.warning(f"Error extracting {self.path}/saturation_value: {e}")
         return None
 
     @cached_property
