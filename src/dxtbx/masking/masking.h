@@ -72,7 +72,7 @@ namespace dxtbx { namespace masking {
     x0 = std::max(x0, 0);
     y0 = std::max(y0, 0);
     x1 = std::min(x1, (int)width);
-    y1 = std::max(y1, (int)height);
+    y1 = std::min(y1, (int)height);
     DXTBX_ASSERT(x1 > x0);
     DXTBX_ASSERT(y1 > y0);
     double r2 = radius * radius;

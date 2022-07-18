@@ -1,0 +1,1 @@
+Fix ``mask_untrusted_circle()`` crash when untrusted circle extends outside detector. This affected ``dials.generate_mask``.
