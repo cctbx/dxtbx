@@ -875,7 +875,7 @@ class NXdetector(H5Mapping):
             try:
                 return int(self._handle["saturation_value"][()])
             except TypeError as e:
-                logger.warning(f"Error extracting {self.path}: {e} ")
+                logger.warning(f"Error extracting {self.path}/saturation_value: {e}")
         return None
 
     @cached_property
