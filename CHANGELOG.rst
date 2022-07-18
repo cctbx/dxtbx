@@ -1,3 +1,19 @@
+DIALS 3.8.7 (2022-07-18)
+========================
+
+Features
+--------
+
+- Updated bad pixel mask for DLS I23 PILATUS 12M for 2022 run 3 (`#530 <https://github.com/cctbx/dxtbx/issues/530>`_)
+
+
+Bugfixes
+--------
+
+- Correct a unicode error reading Bruker ``.sfrm`` files. With thanks to `Dennis Brookner <https://github.com/dennisbrookner>`_ for this change. (`#518 <https://github.com/cctbx/dxtbx/issues/518>`_)
+- Fix ``dxtbx.image_average`` for raster scans. (`#522 <https://github.com/cctbx/dxtbx/issues/522>`_)
+
+
 DIALS 3.8.5 (2022-06-01)
 ========================
 

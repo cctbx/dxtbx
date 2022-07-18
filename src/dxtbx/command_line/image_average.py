@@ -254,6 +254,10 @@ def run(argv=None):
 
     experiments = ExperimentListFactory.from_filenames([paths[0]], load_models=False)
     if len(paths) == 1:
+        if len(experiments) == 1 and len(experiments[0].imageset) > 1:
+            experiments = ExperimentListFactory.from_stills_and_crystal(
+                experiments[0].imageset, None, load_models=False
+            )
         worker = multi_image_worker(command_line, paths[0], experiments)
         iterable = list(range(len(experiments)))
     else:
