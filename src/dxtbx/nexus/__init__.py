@@ -324,7 +324,7 @@ def get_detector_module_slices(
     )
 
 
-def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...]:
+def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None:
     """Return the static mask for an NXdetector.
 
     This will be a tuple of flex.bool, of length equal to the number of modules. The
@@ -335,11 +335,10 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...]:
         pixel_mask = nxdetector.pixel_mask
     except KeyError:
         return None
-    if pixel_mask is not None and pixel_mask.ndim == 2:
-        all_slices = get_detector_module_slices(nxdetector)
-        return tuple(
-            flumpy.from_numpy(pixel_mask[slices]) == 0 for slices in all_slices
-        )
+    if pixel_mask is None or not pixel_mask.size or pixel_mask.ndim != 2:
+        return None
+    all_slices = get_detector_module_slices(nxdetector)
+    return tuple(flumpy.from_numpy(pixel_mask[slices]) == 0 for slices in all_slices)
 
 
 def _dataset_as_flex(
