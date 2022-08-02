@@ -1,3 +1,13 @@
+DIALS 3.10.3 (2022-08-02)
+=========================
+
+Bugfixes
+--------
+
+- Fix ``mask_untrusted_circle()`` crash when untrusted circle extends outside detector. This affected ``dials.generate_mask``. (`#525 <https://github.com/cctbx/dxtbx/issues/525>`_)
+- ``FormatNXmx``: Allow empty ``saturation_value`` field when importing data. (`#534 <https://github.com/cctbx/dxtbx/issues/534>`_)
+
+
 DIALS 3.10.1 (2022-07-12)
 =========================
 
