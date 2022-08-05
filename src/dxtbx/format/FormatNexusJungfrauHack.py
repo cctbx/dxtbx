@@ -90,9 +90,9 @@ class FormatNexusJungfrauHack(FormatNexus):
 
         # Get the trusted range of pixel values
         if "saturation_value" in nx_detector:
-            trusted_range = (-1, float(nx_detector["saturation_value"][()]))
+            trusted_range = (0, float(nx_detector["saturation_value"][()]))
         else:
-            trusted_range = (-1, 99999999)
+            trusted_range = (0, 99999999)
 
         # Get the detector thickness
         thickness = nx_detector["sensor_thickness"]
