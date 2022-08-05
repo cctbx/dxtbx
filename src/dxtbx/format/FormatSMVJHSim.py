@@ -64,8 +64,8 @@ class FormatSMVJHSim(FormatSMV):
         image_pedestal = float(
             self._header_dictionary.get("ADC_OFFSET", self.ADC_OFFSET)
         )
-        overload = 65535 - image_pedestal
-        underload = -1
+        max_trusted_value = 65535 - image_pedestal
+        min_trusted_value = 0
 
         # interpret beam center conventions
         image_height_mm = pixel_size * image_size[1]
@@ -90,7 +90,7 @@ class FormatSMVJHSim(FormatSMV):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            (underload, overload),
+            (min_trusted_value, max_trusted_value),
             [],
             pedestal=image_pedestal,
         )

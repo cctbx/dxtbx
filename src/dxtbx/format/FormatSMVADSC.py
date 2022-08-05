@@ -73,16 +73,16 @@ class FormatSMVADSC(FormatSMV):
             return self._goniometer_factory.single_axis_reverse()
 
     def _adsc_trusted_range(self, pedestal=None):
-        """Return a 16 bit trusted range shifted to account for any image
-        pedestal that is present"""
+        """Return a 16 bit trusted range with the lower end shifted to account
+        for any image pedestal that is present"""
 
         if pedestal is None:
             pedestal = float(self._header_dictionary.get("IMAGE_PEDESTAL", 0))
 
-        overload = 65535 - pedestal
-        underload = -1 - pedestal
+        saturation = 65535
+        min_trusted_value = pedestal
 
-        return underload, overload
+        return min_trusted_value, saturation
 
     def _adsc_module_gain(self, model=None):
         """Return an appropriate gain value in ADU per captured X-ray for an
