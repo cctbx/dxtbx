@@ -189,7 +189,7 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
                 slow_direction="-y",
                 pixel_size=(self.PIXEL_SIZE, self.PIXEL_SIZE),
                 image_size=(self.RECONST_SIZE, self.RECONST_SIZE),
-                trusted_range=(-1, 65535),
+                trusted_range=(0, 65535),
                 mask=[],
             )  # TODO: add gaps
 
@@ -216,7 +216,7 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
             p.set_type("SENSOR_PAD")
             p.set_name("Panel%d" % i)
             p.set_image_size((512, 1024))
-            p.set_trusted_range((-1, 65535))
+            p.set_trusted_range((0, 65535))
             p.set_pixel_size((self.PIXEL_SIZE, self.PIXEL_SIZE))
             p.set_thickness(self.thickness)
             p.set_local_frame(fast.elems, slow.elems, origin.elems)

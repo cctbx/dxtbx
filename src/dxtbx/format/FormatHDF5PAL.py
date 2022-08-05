@@ -66,7 +66,7 @@ class FormatHDF5PAL(FormatHDF5):
         beam_x = 0.5 * self._detector_size
         beam_y = 0.5 * self._detector_size
         trusted_range = (
-            -1,
+            0,
             65534,
         )  # note one less than normal due to how bad pixels are encoded for this detector
 
