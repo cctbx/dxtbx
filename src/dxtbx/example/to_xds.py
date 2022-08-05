@@ -79,7 +79,7 @@ class to_xds:
         # overloaded value (https://xds.mr.mpg.de/html_doc/xds_parameters.html#OVERLOAD=)
         print(
             "DETECTOR=%s MINIMUM_VALID_PIXEL_VALUE=%d OVERLOAD=%d"
-            % (detector, trusted[0] + 1, trusted[1])
+            % (detector, trusted[0], trusted[1])
         )
 
         if detector == "PILATUS":
