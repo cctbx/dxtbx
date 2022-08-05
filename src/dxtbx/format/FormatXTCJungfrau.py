@@ -241,7 +241,7 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
             slow_direction="-y",
             pixel_size=(0.075, 0.075),
             image_size=(1030, 1064),
-            trusted_range=(-10, 2e6),
+            trusted_range=(-9, 2e6),
             mask=[],
         )
 
