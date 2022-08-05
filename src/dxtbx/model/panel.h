@@ -172,7 +172,7 @@ namespace dxtbx { namespace model {
 
     /** Check the value is valid */
     bool is_value_in_trusted_range(double value) const {
-      return (trusted_range_[0] <= value && value < trusted_range_[1]);
+      return (trusted_range_[0] <= value && value <= trusted_range_[1]);
     }
 
     /** Check the coordinate is valid */
@@ -388,7 +388,7 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Apply a mask with the trusted range
+     * Apply a mask with the trusted range: [min_trusted_value, max_trusted_value]
      */
     template <typename T>
     void apply_trusted_range_mask(
@@ -399,12 +399,12 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT(data.accessor().all_eq(mask.accessor()));
       for (std::size_t i = 0; i < mask.size(); ++i) {
         mask[i] =
-          mask[i] && (trusted_range_[0] < data[i] && data[i] < trusted_range_[1]);
+          mask[i] && (trusted_range_[0] <= data[i] && data[i] <= trusted_range_[1]);
       }
     }
 
     /**
-     * Apply a mask with the trusted range
+     * Apply a mask with the trusted range: [min_trusted_value, max_trusted_value]
      */
     template <typename T>
     scitbx::af::versa<bool, scitbx::af::c_grid<2> > get_trusted_range_mask(
