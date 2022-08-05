@@ -130,9 +130,10 @@ class FormatCBFMultiTile(FormatCBFFull):
                 cbf.find_category(b"array_intensities")
                 cbf.find_column(b"undefined_value")
                 cbf.select_row(i)
+                # undefined_value, interpreted as 1 less than the minimum acceptable value
                 underload = cbf.get_doublevalue()
                 overload = cbf.get_overload(i)
-                trusted_range = (underload, overload)
+                trusted_range = (underload + 1, overload)
             except Exception as e:
                 if "CBF_NOTFOUND" not in str(e):
                     raise

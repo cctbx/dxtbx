@@ -152,7 +152,7 @@ class FormatCBFMini(FormatCBF):
         overload = dxtbx_overload_scale * int(
             self._cif_header_dictionary["Count_cutoff"].split()[0]
         )
-        underload = -1
+        minimum_trusted_value = 0
 
         if material is not None:
             # take into consideration here the thickness of the sensor also the
@@ -172,7 +172,7 @@ class FormatCBFMini(FormatCBF):
             "-y",
             (1000 * pixel_x, 1000 * pixel_y),
             (nx, ny),
-            (underload, overload),
+            (minimum_trusted_value, overload),
             [],
             px_mm=px_mm,
         )
