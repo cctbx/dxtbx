@@ -852,18 +852,19 @@ class DetectorFactoryFromGroup:
 
                 # Get the trusted range of pixel values - if missing use
                 # full range of signed 32 bit int
+                try:
+                    min_trusted_value = float(nx_detector.handle["underload_value"][()])
+                except KeyError:
+                    min_trusted_value = -0x7FFFFFFF
 
                 try:
-                    underload = float(nx_detector.handle["underload_value"][()])
+                    max_trusted_value = float(
+                        nx_detector.handle["saturation_value"][()]
+                    )
                 except KeyError:
-                    underload = -0x7FFFFFFF
+                    max_trusted_value = 0x7FFFFFFF
 
-                try:
-                    overload = float(nx_detector.handle["saturation_value"][()])
-                except KeyError:
-                    overload = 0x7FFFFFFF
-
-                trusted_range = underload, overload
+                trusted_range = min_trusted_value, max_trusted_value
 
                 fast_pixel_direction_handle = nx_detector_module.handle[
                     "fast_pixel_direction"
@@ -995,16 +996,20 @@ class DetectorFactory:
         detector_name = str(nx_detector.name)
 
         try:
-            underload = float(nx_detector["underload_value"][()])
+            # underload_value: The lowest value at which pixels for this detector would be reasonably be measured.
+            # https://manual.nexusformat.org/classes/applications/NXmx.html#nxmx-entry-instrument-detector-underload-value-field
+            min_trusted_value = float(nx_detector["underload_value"][()])
         except KeyError:
-            underload = -0x7FFFFFFF
+            min_trusted_value = -0x7FFFFFFF
 
         try:
-            overload = float(nx_detector["saturation_value"][()])
+            # saturation_value: The value at which the detector goes into saturation. Data above this value is known to be invalid.
+            # https://manual.nexusformat.org/classes/applications/NXmx.html#nxmx-entry-instrument-detector-saturation-value-field
+            max_trusted_value = float(nx_detector["saturation_value"][()])
         except KeyError:
-            overload = 0x7FFFFFFF
+            max_trusted_value = 0x7FFFFFFF
 
-        trusted_range = underload, overload
+        trusted_range = min_trusted_value, max_trusted_value
 
         # Get the detector thickness
         thickness = nx_detector["sensor_thickness"]
