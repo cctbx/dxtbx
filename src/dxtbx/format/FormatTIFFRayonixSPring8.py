@@ -89,8 +89,10 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
         beam_x, beam_y = self._get_rayonix_beam_xy()
         pixel_size = self._get_rayonix_pixel_size()
         image_size = self._tiff_width, self._tiff_height
-        overload = struct.unpack(self._i, self._tiff_header_bytes[1128:1132])[0]
-        underload = 0
+        max_trusted_value = struct.unpack(self._i, self._tiff_header_bytes[1128:1132])[
+            0
+        ]
+        min_trusted_value = 0
 
         beam = beam_x * pixel_size[0], beam_y * pixel_size[1]
 
@@ -117,7 +119,7 @@ class FormatTIFFRayonixSPring8(FormatTIFFRayonix):
             "-y",
             pixel_size,
             image_size,
-            (underload, overload),
+            (min_trusted_value, max_trusted_value),
             [],
             gain=gain,
         )
