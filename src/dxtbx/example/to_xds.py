@@ -75,6 +75,8 @@ class to_xds:
         )
         trusted = self.get_detector().get_trusted_range()
 
+        # XDS OVERLOAD parameter is the maximum trusted value, not the first
+        # overloaded value (https://xds.mr.mpg.de/html_doc/xds_parameters.html#OVERLOAD=)
         print(
             "DETECTOR=%s MINIMUM_VALID_PIXEL_VALUE=%d OVERLOAD=%d"
             % (detector, trusted[0] + 1, trusted[1])
