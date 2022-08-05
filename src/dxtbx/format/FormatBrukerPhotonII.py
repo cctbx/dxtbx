@@ -96,8 +96,9 @@ class FormatBrukerPhotonII(FormatBruker):
         # goniometer angles in ANGLES are 2-theta, omega, phi, chi (FIXED)
         two_theta = float(self.header_dict["ANGLES"].split()[0])
 
-        overload = float(self.header_dict["CCDPARM"].split()[-1])
-        underload = -1
+        # Assume Bruker full_scale value means saturation
+        full_scale = float(self.header_dict["CCDPARM"].split()[-1])
+        min_trusted_value = 0
 
         fast = matrix.col((1, 0, 0))
         slow = matrix.col((0, 1, 0))
@@ -130,7 +131,7 @@ class FormatBrukerPhotonII(FormatBruker):
             slow.elems,
             pixel_size,
             image_size,
-            (underload, overload),
+            (min_trusted_value, full_scale),
             gain=gain,
         )
 
