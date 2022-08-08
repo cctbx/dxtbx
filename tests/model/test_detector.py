@@ -115,11 +115,13 @@ def test_get_image_size_mm(detector):
 
 
 def test_is_value_in_trusted_range(detector):
-    """Check values are either inside or outside trusted range."""
+    """Check values are either inside or outside trusted range. Note trusted_range
+    is defined as the inclusive [min-valid-value, max-valid-value], which in
+    this test has been set to [0,1000]"""
     assert detector[0].is_value_in_trusted_range(-1) is False
     assert detector[0].is_value_in_trusted_range(0) is True
-    assert detector[0].is_value_in_trusted_range(999) is True
-    assert detector[0].is_value_in_trusted_range(1000) is False
+    assert detector[0].is_value_in_trusted_range(1000) is True
+    assert detector[0].is_value_in_trusted_range(1001) is False
 
 
 def test_is_coord_valid(detector):
