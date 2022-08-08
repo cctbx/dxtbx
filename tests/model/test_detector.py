@@ -233,7 +233,7 @@ def test_panel_mask():
     panel.set_image_size((100, 100))
     panel.add_mask(40, 0, 60, 100)
     panel.add_mask(0, 40, 100, 60)
-    panel.set_trusted_range((-1, 10))
+    panel.set_trusted_range((0, 9))
 
     data = flex.double(flex.grid(100, 100))
     data[10, 10] = -1
