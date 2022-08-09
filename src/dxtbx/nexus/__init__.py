@@ -6,11 +6,13 @@ from typing import Tuple, cast
 import h5py
 import numpy as np
 
+import cctbx
 from cctbx import eltbx
 from scitbx.array_family import flex
 
 import dxtbx.model
 from dxtbx import flumpy
+from dxtbx.format.nexus import convert_units
 
 from . import nxmx
 
@@ -65,18 +67,96 @@ class CachedWavelengthBeamFactory:
     """Defer Beam generation whilst caching the wavelength value"""
 
     def __init__(self, nxbeam: nxmx.NXbeam):
-        self.incident_wavelength = nxbeam.incident_wavelength.to("angstrom").magnitude
+        self.handle = nxbeam._handle
+        self.index = None
+        self.model = None
+        self.spectrum = None
 
     def make_beam(self, index: int = 0) -> dxtbx.model.Beam:
-        if np.isscalar(self.incident_wavelength):
-            wavelength = self.incident_wavelength
+        self.read_models(index)
+        return self.model
+
+    def make_spectrum(self, index: int = 0) -> dxtbx.model.Spectrum:
+        self.read_models(index)
+        return self.spectrum
+
+    def read_models(self, index: int = 0):
+        # Cached model
+        if self.model is not None and index == self.index:
+            return
+
+        # Get the items from the NXbeam class
+        primary_key = "incident_wavelength"
+        wavelength = self.handle[primary_key]
+        spectrum_wavelengths = wavelength
+        spectrum_weights = self.handle.get(primary_key + "_weight")
+
+        # If the wavelength array does not represent spectra, look for spectra
+        # in the variant chain
+        variant_test = wavelength
+        has_variant_spectra = False
+        while spectrum_weights is None:
+            if "variant" in variant_test.attrs:
+                variant_key = variant_test.attrs["variant"]
+                variant_wavelengths = self.handle[variant_key]
+                variant_weights = self.handle.get(variant_key + "_weight")
+                if variant_weights is None:
+                    variant_test = variant_wavelengths  # Keep looking
+                else:
+                    # Found spectra
+                    spectrum_wavelengths = variant_wavelengths
+                    spectrum_weights = variant_weights  # cause while loop to end
+                    has_variant_spectra = True
+            else:
+                break
+
+        if index is None:
+            index = 0
+        self.index = index
+
+        def get_wavelength(wavelength):
+            if wavelength.shape in ((), (1,)):
+                wavelength_value = wavelength[()]
+            else:
+                wavelength_value = wavelength[index]
+            wavelength_units = wavelength.attrs["units"]
+            wavelength_value = float(
+                convert_units(wavelength_value, wavelength_units, "angstrom")
+            )
+            return wavelength_value
+
+        if spectrum_weights is None:
+            # Construct the beam model
+            wavelength_value = get_wavelength(wavelength)
+            self.model = dxtbx.model.Beam(
+                direction=(0, 0, 1), wavelength=wavelength_value
+            )
         else:
-            assert len(self.incident_wavelength) > index, len(self.incident_wavelength)
-            wavelength = self.incident_wavelength[index]
-        return dxtbx.model.BeamFactory.make_beam(
-            sample_to_source=(0, 0, 1),
-            wavelength=wavelength,
-        )
+            self.model = dxtbx.model.Beam()
+            self.model.set_direction((0, 0, 1))
+
+            wavelength_units = spectrum_wavelengths.attrs["units"]
+
+            if len(spectrum_wavelengths.shape) > 1:
+                spectrum_wavelengths = spectrum_wavelengths[index]
+            else:
+                spectrum_wavelengths = spectrum_wavelengths[()]
+            if len(spectrum_weights.shape) > 1:
+                spectrum_weights = spectrum_weights[index]
+            else:
+                spectrum_weights = spectrum_weights[()]
+
+            spectrum_wavelengths = convert_units(
+                spectrum_wavelengths, wavelength_units, "angstrom"
+            )
+            spectrum_energies = cctbx.factor_ev_angstrom / spectrum_wavelengths
+            self.spectrum = dxtbx.model.Spectrum(spectrum_energies, spectrum_weights)
+
+            if has_variant_spectra:
+                wavelength_value = get_wavelength(wavelength)
+                self.model.set_wavelength(wavelength_value)
+            else:
+                self.model.set_wavelength(self.spectrum.get_weighted_wavelength())
 
 
 def get_dxtbx_scan(
@@ -338,7 +418,10 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None
     if pixel_mask is None or not pixel_mask.size or pixel_mask.ndim != 2:
         return None
     all_slices = get_detector_module_slices(nxdetector)
-    return tuple(flumpy.from_numpy(pixel_mask[slices]) == 0 for slices in all_slices)
+    return tuple(
+        flumpy.from_numpy(np.ascontiguousarray(pixel_mask[slices])) == 0
+        for slices in all_slices
+    )
 
 
 def _dataset_as_flex(

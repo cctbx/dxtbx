@@ -63,6 +63,9 @@ class FormatNXmx(FormatNexus):
     def _beam(self, index: int | None = None) -> dxtbx.model.Beam:
         return self._beam_factory.make_beam(index=index or 0)
 
+    def get_spectrum(self, index=None):
+        return self._beam_factory.make_spectrum(index=index or 0)
+
     def get_num_images(self) -> int:
         return self._num_images
 
