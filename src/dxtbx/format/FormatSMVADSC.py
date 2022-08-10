@@ -79,7 +79,7 @@ class FormatSMVADSC(FormatSMV):
         if pedestal is None:
             pedestal = float(self._header_dictionary.get("IMAGE_PEDESTAL", 0))
 
-        saturation = 65535
+        max_trusted_value = 65535
         min_trusted_value = pedestal
 
         return min_trusted_value, saturation
