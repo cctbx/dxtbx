@@ -98,8 +98,8 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         nx = int(self._cif_header_dictionary["X-Binary-Size-Fastest-Dimension"])
         ny = int(self._cif_header_dictionary["X-Binary-Size-Second-Dimension"])
 
-        overload = int(self._cif_header_dictionary["Count_cutoff"].split()[0])
-        minimum_trusted_value = 0
+        max_trusted_value = int(self._cif_header_dictionary["Count_cutoff"].split()[0])
+        min_trusted_value = 0
 
         # take into consideration here the thickness of the sensor also the
         # wavelength of the radiation (which we have in the same file...)
@@ -165,7 +165,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
                 p.set_name(panel_name)
                 p.set_raw_image_offset((xmin, ymin))
                 p.set_image_size((xmax - xmin, ymax - ymin))
-                p.set_trusted_range((minimum_trusted_value, overload))
+                p.set_trusted_range((min_trusted_value, max_trusted_value))
                 p.set_pixel_size((pixel_x, pixel_y))
                 p.set_thickness(thickness)
                 p.set_material("Si")
