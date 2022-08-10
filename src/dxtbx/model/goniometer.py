@@ -425,7 +425,7 @@ class GoniometerFactory:
             cbf_handle.find_column(b"angle_increment")
             increment = float(cbf_handle.get_value())
             angles[axis_name] = axis_angle
-            if abs(increment) > 0:
+            if increment != 0:
                 if scan_axis:
                     raise ValueError(
                         "More than one scan axis is defined: not currently supported."
