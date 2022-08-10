@@ -39,6 +39,8 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
 
     def _detector(self):
 
+        max_trusted_value = 1e7
+
         if "_lower_" in self._image_file:
             # Detector:
             # Panel:
@@ -59,7 +61,7 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
                 slow=(-0.0026197, -0.862841, 0.505469),
                 pixel=(0.075, 0.075),
                 size=(2070, 2167),
-                trusted_range=(0, 1e7),
+                trusted_range=(0, max_trusted_value),
             )
 
         elif "_upper_" in self._image_file:
@@ -82,7 +84,7 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
                 slow=(0.00213163, 0.863573, 0.504219),
                 pixel=(0.075, 0.075),
                 size=(2070, 2167),
-                trusted_range=(0, 1e7),
+                trusted_range=(0, max_trusted_value),
             )
 
         else:
