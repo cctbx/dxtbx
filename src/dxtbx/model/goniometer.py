@@ -392,24 +392,23 @@ class GoniometerFactory:
         it is assumed that the file has already been read."""
 
         # find the goniometer axes and dependencies
-        axis_names = flex.std_string()
-        depends_on = flex.std_string()
-        axes = flex.vec3_double()
-        angles = flex.double()
+        dependants = {}
+        axis_vectors = {}
+        angles = {}
         scan_axis = None
         cbf_handle.find_category(b"axis")
         for i in range(cbf_handle.count_rows()):
             cbf_handle.find_column(b"equipment")
             if cbf_handle.get_value() == b"goniometer":
                 cbf_handle.find_column(b"id")
-                axis_names.append(cbf_handle.get_value())
-                axis = []
+                axis_name = cbf_handle.get_value().decode()
+                axis_vector = []
                 for i in range(3):
                     cbf_handle.find_column(b"vector[%i]" % (i + 1))
-                    axis.append(float(cbf_handle.get_value()))
-                axes.append(axis)
+                    axis_vector.append(float(cbf_handle.get_value()))
+                axis_vectors[axis_name] = axis_vector
                 cbf_handle.find_column(b"depends_on")
-                depends_on.append(cbf_handle.get_value())
+                dependants[cbf_handle.get_value().decode()] = axis_name
             cbf_handle.next_row()
 
         # find the starting angles of each goniometer axis and figure out which one
@@ -417,44 +416,45 @@ class GoniometerFactory:
         cbf_handle.find_category(b"diffrn_scan_axis")
         for i in range(cbf_handle.count_rows()):
             cbf_handle.find_column(b"axis_id")
-            axis_name = cbf_handle.get_value()
-            if axis_name.decode() not in axis_names:
+            axis_name = cbf_handle.get_value().decode()
+            if axis_name not in axis_vectors:
                 cbf_handle.next_row()
                 continue
             cbf_handle.find_column(b"angle_start")
             axis_angle = float(cbf_handle.get_value())
             cbf_handle.find_column(b"angle_increment")
             increment = float(cbf_handle.get_value())
-            angles.append(axis_angle)
+            angles[axis_name] = axis_angle
             if abs(increment) > 0:
-                assert (
-                    scan_axis is None
-                ), "More than one scan axis is defined: not currently supported"
-                scan_axis = flex.first_index(axis_names, axis_name)
+                if scan_axis:
+                    raise ValueError(
+                        "More than one scan axis is defined: not currently supported."
+                    )
+                scan_axis = axis_name
             cbf_handle.next_row()
-        assert axes.size() == angles.size()
-        if scan_axis is None:
-            # probably a still shot -> scan axis arbitrary as no scan
-            scan_axis = 0
+        if not len(axis_vectors) == len(angles):
+            raise ValueError(
+                "The number of goniometer axes specified in the 'axis' category of the "
+                "raw data does not match the number specified in the "
+                "'diffrn_scan_axis' category."
+            )
 
         # figure out the order of the axes from the depends_on values
-        order = flex.size_t()
-        for i in range(axes.size()):
-            if depends_on[i] == ".":
-                o = 0
-            else:
-                o = flex.first_index(axis_names, depends_on[i]) + 1
-            assert o not in order
-            order.append(o)
+        ordered_axes = []
+        axis = "."
+        while axis := dependants.get(axis):
+            ordered_axes.append(axis)
 
         # multi-axis gonio requires axes in order as viewed from crystal to gonio base
         # i.e. the reverse of the order we have from cbf header
-        order = order.reversed()
-        axes = axes.select(order)
-        angles = angles.select(order)
-        axis_names = axis_names.select(order)
-        scan_axis = axes.size() - scan_axis - 1
+        ordered_axes = ordered_axes[::-1]
+        axis_vectors = flex.vec3_double(axis_vectors[axis] for axis in ordered_axes)
+        angles = flex.double(angles[axis] for axis in ordered_axes)
+        # If no scan_axis, probably a still shot ⇒ scan axis arbitrary, set to 0.
+        scan_axis = ordered_axes.index(scan_axis) if scan_axis else 0
 
         # construct a multi-axis goniometer
-        gonio = GoniometerFactory.multi_axis(axes, angles, axis_names, scan_axis)
+        gonio = GoniometerFactory.multi_axis(
+            axis_vectors, angles, flex.std_string(ordered_axes), scan_axis
+        )
         return gonio
