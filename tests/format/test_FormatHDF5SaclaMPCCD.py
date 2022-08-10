@@ -51,7 +51,7 @@ def test_MPCCD_Phase3_21528(dials_data):
     panel = detector[0]
     assert panel.get_pixel_size() == pytest.approx((0.05, 0.05))
     assert panel.get_image_size() == (512, 1024)
-    assert panel.get_trusted_range() == (0.0, 65535.0)
+    assert panel.get_trusted_range() == (0, 65535)
     assert panel.get_fast_axis() == pytest.approx(
         (-0.0026929852392799875, -0.9999963739086762, 0.0)
     )
