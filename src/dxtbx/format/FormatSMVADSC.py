@@ -82,7 +82,7 @@ class FormatSMVADSC(FormatSMV):
         max_trusted_value = 65535
         min_trusted_value = pedestal
 
-        return min_trusted_value, saturation
+        return min_trusted_value, max_trusted_value
 
     def _adsc_module_gain(self, model=None):
         """Return an appropriate gain value in ADU per captured X-ray for an
