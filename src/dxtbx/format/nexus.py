@@ -1003,7 +1003,8 @@ class DetectorFactory:
             min_trusted_value = -0x7FFFFFFF
 
         try:
-            # saturation_value: The value at which the detector goes into saturation. Data above this value is known to be invalid.
+            # saturation_value: The value at which the detector goes into saturation.
+            # Data above this value is known to be invalid.
             # https://manual.nexusformat.org/classes/applications/NXmx.html#nxmx-entry-instrument-detector-saturation-value-field
             max_trusted_value = float(nx_detector["saturation_value"][()])
         except KeyError:
