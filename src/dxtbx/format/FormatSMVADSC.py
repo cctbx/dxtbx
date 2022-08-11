@@ -72,15 +72,16 @@ class FormatSMVADSC(FormatSMV):
         else:
             return self._goniometer_factory.single_axis_reverse()
 
-    def _adsc_trusted_range(self, pedestal=None):
-        """Return a 16 bit trusted range with the lower end shifted to account
-        for any image pedestal that is present"""
+    def _adsc_trusted_range(self):
+        """The data is 16-bit uint, where the upper value, 65535, is untrusted
+        as overloads will be truncated to this value.
 
-        if pedestal is None:
-            pedestal = float(self._header_dictionary.get("IMAGE_PEDESTAL", 0))
+        ADSC CCD detectors always have a software pedestal, even if the value is
+        not recorded in the header. In practice, this means that useful data
+        values are always > 0, while the pixels at module boundaries are == 0"""
 
-        max_trusted_value = 65535
-        min_trusted_value = pedestal
+        max_trusted_value = 65535 - 1
+        min_trusted_value = 1
 
         return min_trusted_value, max_trusted_value
 

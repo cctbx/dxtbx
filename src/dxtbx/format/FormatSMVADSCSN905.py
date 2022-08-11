@@ -45,7 +45,7 @@ class FormatSMVADSCSN905(FormatSMVADSCSN):
             float(self._header_dictionary["SIZE1"]),
             float(self._header_dictionary["SIZE2"]),
         )
-        trusted_range = self._adsc_trusted_range(pedestal=40)
+        trusted_range = self._adsc_trusted_range()
 
         return self._detector_factory.simple(
             "CCD",
