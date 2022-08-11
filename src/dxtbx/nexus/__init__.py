@@ -276,9 +276,8 @@ def get_dxtbx_detector(
             if nxdetector.saturation_value is not None
             else 0x7FFFFFFF
         )
-        # Not entirely clear whether the dxtbx trusted_range is inclusive or exclusive
-        # https://github.com/cctbx/dxtbx/issues/182
-        trusted_range = (underload - 1, overload)
+        # The dxtbx trusted_range is inclusive [min-trusted-value, max-trusted-value]
+        trusted_range = (underload, overload)
 
         material = KNOWN_SENSOR_MATERIALS.get(nxdetector.sensor_material)
         if not material:
