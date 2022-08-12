@@ -4,9 +4,10 @@ import dataclasses
 import datetime
 import logging
 import operator
+from abc import ABC, abstractmethod
 from collections import abc, namedtuple
 from functools import cached_property, reduce
-from typing import Iterable, Iterator, Sequence, Union, cast, overload
+from typing import Any, Iterable, Iterator, Sequence, Union, cast, overload
 
 import dateutil.parser
 import h5py
@@ -138,6 +139,125 @@ class NXmx(H5Mapping):
         return [NXentry(entry) for entry in self._entries]
 
 
+class NXField(ABC):
+    def __init__(self, optional: bool = False, description: str | None = None):
+        self.optional = optional
+        self.__doc__ = description
+
+    def __set_name__(self, owner, name):
+        self.key = name
+
+    @abstractmethod
+    def __get__(self, obj, owner) -> Any:
+        pass
+
+
+class NXDateTimeField(NXField):
+    def __get__(self, obj, owner) -> datetime.datetime | None:
+        if obj is None:
+            return self
+        elif self.key in obj._handle:
+            return dateutil.parser.isoparse(h5str(obj._handle[self.key][()]))
+        elif not self.optional:
+            raise KeyError(self.key)
+        return None
+
+
+class NXBoolField(NXField):
+    def __get__(self, obj, owner) -> bool | None:
+        if obj is None:
+            return self
+        elif value := obj._handle.get(self.key):
+            return bool(np.squeeze(value)[()])
+        elif not self.optional:
+            raise KeyError(self.key)
+        return None
+
+
+class NXStrField(NXField):
+    def __get__(self, obj, owner) -> str | None:
+        if obj is None:
+            return self
+        elif value := obj._handle.get(self.key):
+            return h5str(np.squeeze(value)[()])
+        elif not self.optional:
+            raise KeyError(self.key)
+        return None
+
+
+class NXStringsField(NXField):
+    def __get__(self, obj, owner) -> np.ndarray | None:
+        if obj is None:
+            return self
+        elif value := obj._handle.get(self.key):
+            return value.asstr()[()]
+        elif not self.optional:
+            raise KeyError(self.key)
+        return None
+
+
+class NXIntField(NXField):
+    def __init__(self, *args, type_error_as_warning: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.type_error_as_warning = type_error_as_warning
+
+    def __get__(self, obj, owner) -> pint.Quantity | None:
+        if obj is None:
+            return self
+        elif value := obj._handle.get(self.key):
+            try:
+                return int(np.squeeze(value)[()])
+            except TypeError as e:
+                if self.type_error_as_warning:
+                    logger.warning(f"Error extracting {obj.path}/{self.key}: {e}")
+                    return None
+                raise
+        elif not self.optional:
+            raise KeyError(self.key)
+        return None
+
+
+class NXNumbersField(NXField):
+    def __get__(self, obj, owner) -> np.ndarray | None:
+        if obj is None:
+            return self
+        elif value := obj._handle.get(self.key):
+            return value[()]
+        elif not self.optional:
+            raise KeyError(self.key)
+        return None
+
+
+class NXNumberWithUnitsField(NXField):
+    def __init__(self, *args, default_units=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.default_units = default_units
+
+    def __get__(self, obj, owner) -> pint.Quantity | None:
+        if obj is None:
+            return self
+        elif value := obj._handle.get(self.key):
+            return np.squeeze(value[()] * units(value, default=self.default_units))
+        elif not self.optional:
+            raise KeyError(self.key)
+        return None
+
+
+class NXNumbersWithUnitsField(NXField):
+    def __init__(self, *args, default_units=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.default_units = default_units
+
+    def __get__(self, obj, owner) -> pint.Quantity | None:
+        if obj is None:
+            return self
+        elif value := obj._handle.get(self.key):
+            return value[()] * units(value, default=self.default_units)
+        elif not self.optional:
+            raise KeyError(self.key)
+        return None
+
+
 class NXentry(H5Mapping):
     """NXentry describes the measurement.
 
@@ -168,20 +288,18 @@ class NXentry(H5Mapping):
     def source(self) -> NXsource:
         return NXsource(self._sources[0])
 
-    @cached_property
-    def start_time(self) -> datetime.datetime:
-        """Starting time of measurement.
+    start_time: datetime.datetime = NXDateTimeField(
+        optional=True,
+        description="""Starting time of measurement.
 
         ISO 8601 time/date of the first data point collected in UTC, using the Z suffix
         to avoid confusion with local time. Note that the time zone of the beamline
         should be provided in NXentry/NXinstrument/time_zone.
-        """
-        if "start_time" in self._handle:
-            return dateutil.parser.isoparse(h5str(self._handle["start_time"][()]))
-
-    @cached_property
-    def end_time(self) -> datetime.datetime | None:
-        """Ending time of measurement.
+        """,
+    )
+    end_time: datetime.datetime | None = NXDateTimeField(
+        optional=True,
+        description="""Ending time of measurement.
 
         ISO 8601 time/date of the last data point collected in UTC, using the Z suffix
         to avoid confusion with local time. Note that the time zone of the beamline
@@ -189,37 +307,28 @@ class NXentry(H5Mapping):
         filled when the value is accurately observed. If the data collection aborts or
         otherwise prevents accurate recording of the end_time, this field should be
         omitted.
-        """
-        if "end_time" in self._handle:
-            return dateutil.parser.isoparse(h5str(self._handle["end_time"][()]))
-        return None
-
-    @cached_property
-    def end_time_estimated(self) -> datetime.datetime:
-        """Estimated ending time of the measurement.
+        """,
+    )
+    end_time_estimated: datetime.datetime = NXDateTimeField(
+        description="""Estimated ending time of the measurement.
 
         ISO 8601 time/date of the last data point collected in UTC, using the Z suffix
         to avoid confusion with local time. Note that the time zone of the beamline
         should be provided in NXentry/NXinstrument/time_zone. This field may be filled
         with a value estimated before an observed value is available.
         """
-        if "end_time_estimated" in self._handle:
-            return dateutil.parser.isoparse(
-                h5str(self._handle["end_time_estimated"][()])
-            )
-
-    @cached_property
-    def definition(self) -> str:
-        """NeXus NXDL schema to which this file conforms."""
-        return h5str(self._handle["definition"][()])
+    )
+    definition: str = NXStrField(
+        description="NeXus NXDL schema to which this file conforms."
+    )
 
 
 class NXdata(H5Mapping):
     """NXdata describes the plottable data and related dimension scales."""
 
-    @cached_property
-    def signal(self) -> str | None:
-        """Declares which dataset is the default.
+    signal: str | None = NXStrField(
+        optional=True,
+        description="""Declares which dataset is the default.
 
         The value is the name of the dataset to be plotted. A field of this name must
         exist (either as dataset or as a link to a dataset).
@@ -228,8 +337,8 @@ class NXdata(H5Mapping):
         signal attribute to the dataset. See
         https://www.nexusformat.org/2014_How_to_find_default_data.html for a summary of
         the discussion.
-        """
-        return self._handle.attrs.get("signal")
+        """,
+    )
 
 
 class NXtransformations(H5Mapping):
@@ -299,16 +408,15 @@ class NXtransformations(H5Mapping):
             if isinstance(v, h5py.Dataset) and "vector" in v.attrs
         }
 
-    @cached_property
-    def default(self) -> str:
-        """Declares which child group contains a path leading to a NXdata group.
+    default: str | None = NXStrField(
+        description="""Declares which child group contains a path leading to a NXdata group.
 
         It is recommended (as of NIAC2014) to use this attribute to help define the path
         to the default dataset to be plotted. See
         https://www.nexusformat.org/2014_How_to_find_default_data.html for a summary of
         the discussion.
         """
-        return h5str(self._handle.attrs.get("default"))
+    )
 
     @cached_property
     def axes(self) -> dict[str, NXtransformationsAxis]:
@@ -490,10 +598,10 @@ class NXsample(H5Mapping):
         super().__init__(handle)
         self._transformations = find_class(handle, "NXtransformations")
 
-    @cached_property
-    def name(self) -> str:
-        """Descriptive name of sample"""
-        return h5str(self._handle["name"][()])
+    name: str = NXStrField(description="Descriptive name of sample")
+    temperature: pint.Quantity = NXNumberWithUnitsField(
+        description="The temperature of the sample."
+    )
 
     @cached_property
     def depends_on(self) -> NXtransformationsAxis | None:
@@ -502,13 +610,6 @@ class NXsample(H5Mapping):
             depends_on = h5str(self._handle["depends_on"][()])
             if depends_on and depends_on != ".":
                 return NXtransformationsAxis(self._handle[depends_on])
-        return None
-
-    @cached_property
-    def temperature(self) -> pint.Quantity | None:
-        """The temperature of the sample."""
-        if temperature := self._handle.get("temperature"):
-            return temperature[()] * units(temperature)
         return None
 
     @cached_property
@@ -572,9 +673,8 @@ class NXinstrument(H5Mapping):
             for transformations in self._transformations
         ]
 
-    @cached_property
-    def name(self) -> str:
-        """Name of instrument.
+    name: str = NXStrField(
+        description="""Name of instrument.
 
         Consistency with the controlled vocabulary beamline naming in
         https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_diffrn_source.pdbx_synchrotron_beamline.html
@@ -582,17 +682,14 @@ class NXinstrument(H5Mapping):
         https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_diffrn_source.type.html
         is highly recommended.
         """
-        return h5str(self._handle["name"][()])
+    )
 
     @cached_property
     def short_name(self) -> str:
         """Short name for instrument, perhaps the acronym."""
         return h5str(self._handle["name"].attrs.get("short_name"))
 
-    @cached_property
-    def time_zone(self) -> str | None:
-        """ISO 8601 time_zone offset from UTC."""
-        return self._handle.get("time_zone")
+    time_zone: str = NXStrField(description="ISO 8601 time_zone offset from UTC.")
 
     @cached_property
     def attenuators(self):
@@ -644,32 +741,25 @@ class NXdetector_group(H5Mapping):
         group_parent:  [-1, 1, 1, 1, 1]
     """
 
-    @cached_property
-    def group_names(self) -> np.ndarray:
-        """
-        An array of the names of the detectors or the names of hierarchical groupings of
-        detectors.
-        """
-        return self._handle["group_names"].asstr()[()]
+    group_names: np.ndarray = NXStringsField(
+        description="An array of the names of the detectors or the names of hierarchical groupings of detectors."
+    )
 
-    @cached_property
-    def group_index(self) -> NXIntT:
-        """An array of unique identifiers for detectors or groupings of detectors.
+    group_index: np.ndarray = NXNumbersField(
+        description="""An array of unique identifiers for detectors or groupings of detectors.
 
         Each ID is a unique ID for the corresponding detector or group named in the
         field group_names. The IDs are positive integers starting with 1.
         """
-        return self._handle["group_index"][()]
-
-    @cached_property
-    def group_parent(self) -> NXIntT:
-        """
+    )
+    group_parent: np.ndarray = NXNumbersField(
+        description="""
         An array of the hierarchical levels of the parents of detectors or groupings of
         detectors.
 
         A top-level grouping has parent level -1.
         """
-        return self._handle["group_parent"][()]
+    )
 
 
 class NXdetector(H5Mapping):
@@ -708,84 +798,63 @@ class NXdetector(H5Mapping):
             return self._handle["data"][()]
         return None
 
-    @cached_property
-    def description(self) -> str | None:
-        """name/manufacturer/model/etc. information."""
-        if "description" in self._handle:
-            return h5str(np.squeeze(self._handle["description"])[()])
-        return None
-
-    @cached_property
-    def distance(self) -> pint.Quantity | None:
-        """Distance from the sample to the beam center.
+    description: str | None = NXStrField(
+        optional=True, description="name/manufacturer/model/etc. information."
+    )
+    distance: pint.Quantity | None = NXNumberWithUnitsField(
+        optional=True,
+        description="""Distance from the sample to the beam center.
 
         Normally this value is for guidance only, the proper geometry can be found
         following the depends_on axis chain, But in appropriate cases where the
         dectector distance to the sample is observable independent of the axis chain,
         that may take precedence over the axis chain calculation.
-        """
-        if distance := self._handle.get("distance"):
-            return np.squeeze(distance[()] * units(distance))
-        return None
-
-    @cached_property
-    def distance_derived(self) -> bool | None:
-        """Boolean to indicate if the distance is a derived, rather than a primary
+        """,
+    )
+    distance_derived: bool | None = NXBoolField(
+        optional=True,
+        description="""Boolean to indicate if the distance is a derived, rather than a primary
         observation.
 
         If distance_derived true or is not specified, the distance is assumed to be
         derived from detector axis specifications.
-        """
-        if "distance_derived" in self._handle:
-            return bool(self._handle["distance_derived"][()])
-        return None
-
-    @cached_property
-    def count_time(self) -> pint.Quantity | None:
-        """Elapsed actual counting time."""
-        if count_time := self._handle.get("count_time"):
-            return np.squeeze(count_time[()] * units(count_time, default="seconds"))
-        return None
-
-    @cached_property
-    def beam_center_x(self) -> pint.Quantity | None:
-        """This is the x position where the direct beam would hit the detector.
+        """,
+    )
+    count_time: pint.Quantity | None = NXNumberWithUnitsField(
+        optional=True,
+        description="Elapsed actual counting time.",
+    )
+    beam_center_x: pint.Quantity | None = NXNumberWithUnitsField(
+        optional=True,
+        default_units="pixels",
+        description="""This is the x position where the direct beam would hit the detector.
 
         This is a length and can be outside of the actual detector. The length can be in
         physical units or pixels as documented by the units attribute. Normally, this
         should be derived from the axis chain, but the direct specification may take
         precedence if it is not a derived quantity.
-        """
-        if beam_centre_x := self._handle.get("beam_center_x"):
-            return np.squeeze(beam_centre_x[()] * units(beam_centre_x, "pixels"))
-        return None
-
-    @cached_property
-    def beam_center_y(self) -> pint.Quantity | None:
-        """This is the y position where the direct beam would hit the detector.
+        """,
+    )
+    beam_center_y: pint.Quantity | None = NXNumberWithUnitsField(
+        optional=True,
+        default_units="pixels",
+        description="""This is the y position where the direct beam would hit the detector.
 
         This is a length and can be outside of the actual detector. The length can be in
         physical units or pixels as documented by the units attribute. Normally, this
         should be derived from the axis chain, but the direct specification may take
         precedence if it is not a derived quantity.
-        """
-        if beam_centre_y := self._handle.get("beam_center_y"):
-            return np.squeeze(beam_centre_y[()] * units(beam_centre_y, "pixels"))
-        return None
-
-    @cached_property
-    def pixel_mask_applied(self) -> bool | None:
-        """
-        True when the pixel mask correction has been applied in the electronics, false
+        """,
+    )
+    pixel_mask_applied: bool | None = NXBoolField(
+        optional=True,
+        description="""True when the pixel mask correction has been applied in the electronics, false
         otherwise (optional).
-        """
-        if "pixel_mask_applied" in self._handle:
-            return bool(self._handle["pixel_mask_applied"][()])
-        return None
-
-    @cached_property
-    def pixel_mask(self) -> NXIntT | None:
-        """The 32-bit pixel mask for the detector.
+        """,
+    )
+    pixel_mask: np.ndarray | None = NXNumbersField(
+        optional=True,
+        description="""The 32-bit pixel mask for the detector.
 
         Can be either one mask for the whole dataset (i.e. an array with indices i, j)
         or each frame can have its own mask (in which case it would be an array with
@@ -823,86 +892,64 @@ class NXdetector(H5Mapping):
         and any pixel_mask_N entries.
 
         If provided, it is recommended that it be compressed.
-        """
-        if "pixel_mask" in self._handle:
-            return self._handle["pixel_mask"][()]
-        return None
-
-    @cached_property
-    def bit_depth_readout(self) -> int | None:
-        """How many bits the electronics record per pixel (recommended)."""
-        if "bit_depth_readout" in self._handle:
-            return int(self._handle["bit_depth_readout"][()])
-        return None
-
-    @cached_property
-    def sensor_material(self) -> str:
-        """The name of the material a detector sensor is constructed from.
+        """,
+    )
+    bit_depth_readout: int | None = NXIntField(
+        optional=True,
+        description="How many bits the electronics record per pixel (recommended).",
+    )
+    sensor_material: str = NXStrField(
+        description="""The name of the material a detector sensor is constructed from.
 
         At times, radiation is not directly sensed by the detector. Rather, the detector
         might sense the output from some converter like a scintillator. This is the name
         of this converter material."""
-        return h5str(np.squeeze(self._handle["sensor_material"])[()])
+    )
+    sensor_thickness: pint.Quantity = NXNumberWithUnitsField(
+        description="""Thickness of the sensor.
 
-    @cached_property
-    def sensor_thickness(self) -> pint.Quantity:
-        thickness = self._handle["sensor_thickness"]
-        return np.squeeze(thickness)[()] * units(thickness)
-
-    @cached_property
-    def underload_value(self) -> int | None:
-        """The lowest value at which pixels for this detector would be reasonably be measured.
+        At times, radiation is not directly sensed by the detector. Rather, the detector
+        might sense the output from some converter like a scintillator. This is the
+        thickness of this converter material."""
+    )
+    underload_value: int | None = NXIntField(
+        optional=True,
+        description="""The lowest value at which pixels for this detector would be reasonably be measured.
 
         For example, given a saturation_value and an underload_value, the valid pixels
         are those less than or equal to the saturation_value and greater than or equal
-        to the underload_value.
-        """
-        if "underload_value" in self._handle:
-            return int(self._handle["underload_value"][()])
-        return None
-
-    @cached_property
-    def saturation_value(self) -> int | None:
-        """The value at which the detector goes into saturation.
+        to the underload_value.""",
+    )
+    saturation_value: int | None = NXIntField(
+        optional=True,
+        type_error_as_warning=True,
+        description="""The value at which the detector goes into saturation.
 
         Data above this value is known to be invalid.
 
         For example, given a saturation_value and an underload_value, the valid pixels
         are those less than or equal to the saturation_value and greater than or equal
         to the underload_value.
-        """
-        if "saturation_value" in self._handle:
-            try:
-                return int(self._handle["saturation_value"][()])
-            except TypeError as e:
-                logger.warning(f"Error extracting {self.path}/saturation_value: {e}")
-        return None
+        """,
+    )
 
     @cached_property
     def modules(self) -> list[NXdetector_module]:
         """The list of NXdetector_modules comprising this NXdetector."""
         return [NXdetector_module(module) for module in self._modules]
 
-    @cached_property
-    def type(self) -> str | None:
-        """Description of type such as scintillator, ccd, pixel, image plate, CMOS, …"""
-        if "type" in self._handle:
-            return h5str(np.squeeze(self._handle["type"])[()])
-        return None
-
-    @cached_property
-    def frame_time(self) -> pint.Quantity | None:
-        """This is time for each frame. This is exposure_time + readout time."""
-        if frame_time := self._handle.get("frame_time"):
-            return np.squeeze(frame_time[()] * units(frame_time))
-        return None
-
-    @cached_property
-    def serial_number(self) -> str | None:
-        """Serial number for the detector."""
-        if "serial_number" in self._handle:
-            return h5str(np.squeeze(self._handle["serial_number"])[()])
-        return None
+    type: str | None = NXStrField(
+        optional=True,
+        description="Description of type such as scintillator, ccd, pixel, image plate, CMOS, …",
+    )
+    frame_time: pint.Quantity | None = NXNumberWithUnitsField(
+        optional=True,
+        description="This is time for each frame. This is exposure_time + readout time.",
+    )
+    serial_number: str | None = NXStrField(
+        optional=True,
+        description="Serial number for the detector.",
+    )
 
 
 class NXdetector_module(H5Mapping):
@@ -919,9 +966,8 @@ class NXdetector_module(H5Mapping):
     module should be defined, spanning the entire array.
     """
 
-    @cached_property
-    def data_origin(self) -> np.ndarray:
-        """The offset of this module into the raw data array.
+    data_origin: np.ndarray = NXNumbersField(
+        description="""The offset of this module into the raw data array.
 
         A dimension-2 or dimension-3 field which gives the indices of the origin of the
         hyperslab of data for this module in the main area detector image in the parent
@@ -936,31 +982,20 @@ class NXdetector_module(H5Mapping):
 
         The order of indices (i, j or i, j, k) is slow to fast.
         """
-        origin = self._handle["data_origin"][()]
-        assert not isinstance(origin, int)
-        return origin
-
-    @cached_property
-    def data_size(self) -> np.ndarray:
-        """Two or three values for the size of the module in pixels in each direction.
+    )
+    data_size: np.ndarray = NXNumbersField(
+        description="""Two or three values for the size of the module in pixels in each direction.
 
         Dimensionality and order of indices is the same as for data_origin.
         """
-        size = self._handle["data_size"][()]
-        # Validate that we aren't the int part of NXIntT
-        assert not isinstance(size, int)
-        return size
-
-    @cached_property
-    def data_stride(self) -> NXIntT | None:
-        """Two or three values for the stride of the module in pixels in each direction.
+    )
+    data_stride: NXNumbersField(
+        description="""Two or three values for the stride of the module in pixels in each direction.
 
         By default the stride is [1,1] or [1,1,1], and this is the most likely case.
         This optional field is included for completeness.
         """
-        if "data_stride" in self._handle:
-            return self._handle["data_stride"][()]
-        return None
+    )
 
     @cached_property
     def module_offset(self) -> NXtransformationsAxis | None:
@@ -991,15 +1026,14 @@ class NXdetector_module(H5Mapping):
 class NXsource(H5Mapping):
     """The neutron or x-ray storage ring/facility."""
 
-    @cached_property
-    def name(self) -> str:
-        """Name of source.
+    name: str = NXStrField(
+        description="""Name of source.
 
         Consistency with the naming in
         https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_diffrn_source.pdbx_synchrotron_site.html
         controlled vocabulary is highly recommended.
         """
-        return h5str(self._handle["name"][()])
+    )
 
     @cached_property
     def short_name(self) -> str | None:
@@ -1019,9 +1053,8 @@ class NXbeam(H5Mapping):
     sample, e.g., energy transfer, polarizations.
     """
 
-    @cached_property
-    def incident_wavelength(self) -> pint.Quantity:
-        """Wavelength on entering beamline component.
+    incident_wavelength: pint.Quantity = NXNumbersWithUnitsField(
+        description="""Wavelength on entering beamline component.
 
         In the case of a monchromatic beam this is the scalar wavelength.
 
@@ -1047,51 +1080,38 @@ class NXbeam(H5Mapping):
         single dataset, e.g. if a calibrated, single-value wavelength value is available
         along with the original spectrum from which it was calibrated.
         """
-        wavelength = self._handle["incident_wavelength"]
-        return wavelength[()] * units(wavelength)
-
-    @cached_property
-    def flux(self) -> pint.Quantity | None:
-        """Flux density incident on beam plane area in photons per second per unit area.
+    )
+    flux: pint.Quantity | None = NXNumbersField(
+        optional=True,
+        description="""Flux density incident on beam plane area in photons per second per unit area.
 
         In the case of a beam that varies in flux shot-to-shot, this is an array of
         values, one for each recorded shot.
-        """
-        if flux := self._handle.get("flux"):
-            return flux[()] * units(flux)
-        return None
-
-    @cached_property
-    def total_flux(self) -> pint.Quantity | None:
-        """Flux incident on beam plane in photons per second.
+        """,
+    )
+    total_flux: pint.Quantity | None = NXNumberWithUnitsField(
+        optional=True,
+        description="""Flux incident on beam plane in photons per second.
 
         In the case of a beam that varies in total flux shot-to-shot, this is an array
         of values, one for each recorded shot.
-        """
-        if total_flux := self._handle.get("total_flux"):
-            return total_flux[()] * units(total_flux)
-        return None
-
-    @cached_property
-    def incident_beam_size(self) -> pint.Quantity | None:
-        """Two-element array of FWHM (if Gaussian or Airy function) or diameters
+        """,
+    )
+    incident_beam_size: pint.Quantity | None = NXNumberWithUnitsField(
+        optional=True,
+        description="""Two-element array of FWHM (if Gaussian or Airy function) or diameters
         (if top hat) or widths (if rectangular) of the beam in the order x, y.
-        """
-        if beam_size := self._handle.get("incident_beam_size"):
-            return beam_size[()] * units(beam_size)
-        return None
-
-    @cached_property
-    def profile(self) -> str | None:
-        """The beam profile, Gaussian, Airy function, top-hat or rectangular.
+        """,
+    )
+    profile: str | None = NXStrField(
+        optional=True,
+        description="""The beam profile, Gaussian, Airy function, top-hat or rectangular.
 
         The profile is given in the plane of incidence of the beam on the sample.
 
         Any of these values: Gaussian | Airy | top-hat | rectangular
-        """
-        if "profile" in self._handle:
-            return h5str(self._handle["profile"][()])
-        return None
+        """,
+    )
 
 
 @dataclasses.dataclass(frozen=True)
