@@ -123,6 +123,60 @@ def test_nxmx(nxmx_example):
     assert nxentry.source.short_name == "DLS"
 
 
+def test_nxdatafield_cache(nxmx_example, mocker):
+    nx = nxmx.NXmx(nxmx_example)
+    spy = mocker.spy(nxmx.NXDateTimeField, "__get__")
+    assert nx.entries[0].start_time == nx.entries[0].start_time
+    spy.assert_called_once()
+
+
+def test_nxstrfield_cache(nxmx_example, mocker):
+    nx = nxmx.NXmx(nxmx_example)
+    spy = mocker.spy(nxmx.NXStrField, "__get__")
+    assert nx.entries[0].definition == nx.entries[0].definition
+    spy.assert_called_once()
+
+
+def test_nxboolfield_cache(nxmx_example, mocker):
+    nx = nxmx.NXmx(nxmx_example)
+    nxdetector = nx.entries[0].instruments[0].detectors[0]
+    spy = mocker.spy(nxmx.NXBoolField, "__get__")
+    assert nxdetector.pixel_mask_applied == nxdetector.pixel_mask_applied
+    spy.assert_called_once()
+
+
+def test_nxintfield_cache(nxmx_example, mocker):
+    nx = nxmx.NXmx(nxmx_example)
+    nxdetector = nx.entries[0].instruments[0].detectors[0]
+    spy = mocker.spy(nxmx.NXIntField, "__get__")
+    assert nxdetector.underload_value == nxdetector.underload_value
+    spy.assert_called_once()
+
+
+def test_nxnumbersfield_cache(nxmx_example, mocker):
+    nx = nxmx.NXmx(nxmx_example)
+    module = nx.entries[0].instruments[0].detectors[0].modules[0]
+    spy = mocker.spy(nxmx.NXNumbersField, "__get__")
+    assert module.data_origin.tolist() == module.data_origin.tolist()
+    spy.assert_called_once()
+
+
+def test_nxnumberwithunitsfield_cache(nxmx_example, mocker):
+    nx = nxmx.NXmx(nxmx_example)
+    nxsample = nx.entries[0].samples[0]
+    spy = mocker.spy(nxmx.NXNumberWithUnitsField, "__get__")
+    assert nxsample.temperature == nxsample.temperature
+    spy.assert_called_once()
+
+
+def test_nxnumberswithunitsfield_cache(nxmx_example, mocker):
+    nx = nxmx.NXmx(nxmx_example)
+    nxbeam = nx.entries[0].instruments[0].beams[0]
+    spy = mocker.spy(nxmx.NXNumbersWithUnitsField, "__get__")
+    assert nxbeam.incident_wavelength == nxbeam.incident_wavelength
+    spy.assert_called_once()
+
+
 @pytest.fixture(params=[(), (1,)], ids=["scalar", "length-1 array"])
 def nx_detector(request):
     """A dummy NXdetector with some data sets that may be scalar or length-1 arrays."""

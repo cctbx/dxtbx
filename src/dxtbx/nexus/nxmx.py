@@ -156,11 +156,14 @@ class NXDateTimeField(NXField):
     def __get__(self, obj, owner) -> datetime.datetime | None:
         if obj is None:
             return self
-        elif self.key in obj._handle:
-            return dateutil.parser.isoparse(h5str(obj._handle[self.key][()]))
+        elif value := obj._handle.get(self.key):
+            value = dateutil.parser.isoparse(h5str(value[()]))
         elif not self.optional:
             raise KeyError(self.key)
-        return None
+        else:
+            value = None
+        obj.__dict__[self.key] = value
+        return obj.__dict__[self.key]
 
 
 class NXBoolField(NXField):
@@ -168,10 +171,11 @@ class NXBoolField(NXField):
         if obj is None:
             return self
         elif value := obj._handle.get(self.key):
-            return bool(np.squeeze(value)[()])
+            value = bool(np.squeeze(value)[()])
         elif not self.optional:
             raise KeyError(self.key)
-        return None
+        obj.__dict__[self.key] = value
+        return obj.__dict__[self.key]
 
 
 class NXStrField(NXField):
@@ -179,10 +183,11 @@ class NXStrField(NXField):
         if obj is None:
             return self
         elif value := obj._handle.get(self.key):
-            return h5str(np.squeeze(value)[()])
+            value = h5str(np.squeeze(value)[()])
         elif not self.optional:
             raise KeyError(self.key)
-        return None
+        obj.__dict__[self.key] = value
+        return obj.__dict__[self.key]
 
 
 class NXStringsField(NXField):
@@ -190,10 +195,11 @@ class NXStringsField(NXField):
         if obj is None:
             return self
         elif value := obj._handle.get(self.key):
-            return value.asstr()[()]
+            value = value.asstr()[()]
         elif not self.optional:
             raise KeyError(self.key)
-        return None
+        obj.__dict__[self.key] = value
+        return obj.__dict__[self.key]
 
 
 class NXIntField(NXField):
@@ -206,15 +212,16 @@ class NXIntField(NXField):
             return self
         elif value := obj._handle.get(self.key):
             try:
-                return int(np.squeeze(value)[()])
+                value = int(np.squeeze(value)[()])
             except TypeError as e:
                 if self.type_error_as_warning:
                     logger.warning(f"Error extracting {obj.path}/{self.key}: {e}")
-                    return None
+                    value = None
                 raise
         elif not self.optional:
             raise KeyError(self.key)
-        return None
+        obj.__dict__[self.key] = value
+        return obj.__dict__[self.key]
 
 
 class NXNumbersField(NXField):
@@ -222,10 +229,11 @@ class NXNumbersField(NXField):
         if obj is None:
             return self
         elif value := obj._handle.get(self.key):
-            return value[()]
+            value = value[()]
         elif not self.optional:
             raise KeyError(self.key)
-        return None
+        obj.__dict__[self.key] = value
+        return obj.__dict__[self.key]
 
 
 class NXNumberWithUnitsField(NXField):
@@ -237,10 +245,11 @@ class NXNumberWithUnitsField(NXField):
         if obj is None:
             return self
         elif value := obj._handle.get(self.key):
-            return np.squeeze(value[()] * units(value, default=self.default_units))
+            value = np.squeeze(value[()] * units(value, default=self.default_units))
         elif not self.optional:
             raise KeyError(self.key)
-        return None
+        obj.__dict__[self.key] = value
+        return obj.__dict__[self.key]
 
 
 class NXNumbersWithUnitsField(NXField):
@@ -252,10 +261,11 @@ class NXNumbersWithUnitsField(NXField):
         if obj is None:
             return self
         elif value := obj._handle.get(self.key):
-            return value[()] * units(value, default=self.default_units)
+            value = value[()] * units(value, default=self.default_units)
         elif not self.optional:
             raise KeyError(self.key)
-        return None
+        obj.__dict__[self.key] = value
+        return obj.__dict__[self.key]
 
 
 class NXentry(H5Mapping):
