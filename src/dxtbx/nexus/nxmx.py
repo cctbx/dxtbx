@@ -106,22 +106,16 @@ def find_class(node: NXNode, nx_class: str | None) -> list[h5py.Group]:
     return find_classes(node, nx_class)[0]
 
 
-class H5Mapping(abc.Mapping):
+class H5Mapping(h5py.Group):
     def __init__(self, handle: h5py.File | h5py.Group):
-        self._handle = handle
+        super(H5Mapping, self).__init__(handle.id)
 
     def __getitem__(self, key: str) -> h5py.Group | h5py.Dataset:
-        return self._handle[key]
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(self._handle)
-
-    def __len__(self) -> int:
-        return len(self._handle)
+        return self[key]
 
     @cached_property
     def path(self) -> str | None:
-        return h5str(self._handle.name)
+        return h5str(self.name)
 
 
 class NXmx(H5Mapping):
@@ -478,7 +472,7 @@ class NXtransformationsAxis:
         return A
 
 
-class NXsample(H5Mapping):
+class NXsample(h5py.Group):
     """Any information on the sample.
 
     This could include scanned variables that are associated with one of the data
@@ -487,27 +481,27 @@ class NXsample(H5Mapping):
     """
 
     def __init__(self, handle):
-        super().__init__(handle)
+        super(NXsample, self).__init__(handle.id)
         self._transformations = find_class(handle, "NXtransformations")
 
     @cached_property
     def name(self) -> str:
         """Descriptive name of sample"""
-        return h5str(self._handle["name"][()])
+        return h5str(self["name"][()])
 
     @cached_property
     def depends_on(self) -> NXtransformationsAxis | None:
         """The axis on which the sample position depends"""
-        if "depends_on" in self._handle:
-            depends_on = h5str(self._handle["depends_on"][()])
+        if "depends_on" in self:
+            depends_on = h5str(self["depends_on"][()])
             if depends_on and depends_on != ".":
-                return NXtransformationsAxis(self._handle[depends_on])
+                return NXtransformationsAxis(self[depends_on])
         return None
 
     @cached_property
     def temperature(self) -> pint.Quantity | None:
         """The temperature of the sample."""
-        if temperature := self._handle.get("temperature"):
+        if temperature := self.get("temperature"):
             return temperature[()] * units(temperature)
         return None
 
