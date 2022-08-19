@@ -12,7 +12,7 @@ from scitbx.array_family import flex
 
 import dxtbx.model
 from dxtbx import flumpy
-from dxtbx.format.nexus import convert_units
+from dxtbx.nexus.nxmx import units
 
 from . import nxmx
 
@@ -119,9 +119,9 @@ class CachedWavelengthBeamFactory:
                 wavelength_value = wavelength[()]
             else:
                 wavelength_value = wavelength[index]
-            wavelength_units = wavelength.attrs["units"]
+            wavelength_units = units(wavelength)
             wavelength_value = float(
-                convert_units(wavelength_value, wavelength_units, "angstrom")
+                (wavelength_value * wavelength_units).to("angstrom").magnitude
             )
             return wavelength_value
 
@@ -135,7 +135,7 @@ class CachedWavelengthBeamFactory:
             self.model = dxtbx.model.Beam()
             self.model.set_direction((0, 0, 1))
 
-            wavelength_units = spectrum_wavelengths.attrs["units"]
+            wavelength_units = units(spectrum_wavelengths)
 
             if len(spectrum_wavelengths.shape) > 1:
                 spectrum_wavelengths = spectrum_wavelengths[index]
@@ -146,8 +146,8 @@ class CachedWavelengthBeamFactory:
             else:
                 spectrum_weights = spectrum_weights[()]
 
-            spectrum_wavelengths = convert_units(
-                spectrum_wavelengths, wavelength_units, "angstrom"
+            spectrum_wavelengths = (
+                (spectrum_wavelengths * wavelength_units).to("angstrom").magnitude
             )
             spectrum_energies = cctbx.factor_ev_angstrom / spectrum_wavelengths
             self.spectrum = dxtbx.model.Spectrum(spectrum_energies, spectrum_weights)
