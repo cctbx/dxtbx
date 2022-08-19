@@ -9,8 +9,6 @@ from dxtbx.format.FormatNexus import FormatNexus
 class FormatNXmx(FormatNexus):
     """Read NXmx-flavour NeXus-format HDF5 data."""
 
-    _cached_file_handle = None
-
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file) as handle:
@@ -30,32 +28,30 @@ class FormatNXmx(FormatNexus):
     def _start(self):
         self._static_mask = None
 
-        with h5py.File(self._image_file, swmr=True) as fh:
-            nxmx = self._get_nxmx(fh)
-            nxentry = nxmx.entries[0]
-            nxsample = nxentry.samples[0]
-            nxinstrument = nxentry.instruments[0]
-            nxdetector = nxinstrument.detectors[0]
-            nxbeam = nxinstrument.beams[0]
-            self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
-            self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
-            wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
-            self._detector_model = dxtbx.nexus.get_dxtbx_detector(
-                nxdetector, wavelength
-            )
-            self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
-            self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
-            self._bit_depth_readout = nxdetector.bit_depth_readout
+        self._cached_file_handle = h5py.File(self._image_file, swmr=True)
+        nxmx = self._get_nxmx(self._cached_file_handle)
+        nxentry = nxmx.entries[0]
+        nxsample = nxentry.samples[0]
+        nxinstrument = nxentry.instruments[0]
+        nxdetector = nxinstrument.detectors[0]
+        nxbeam = nxinstrument.beams[0]
+        self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
+        self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
+        self._detector_model = dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)
+        self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
+        self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
+        self._bit_depth_readout = nxdetector.bit_depth_readout
 
-            if self._scan_model:
-                self._num_images = len(self._scan_model)
+        if self._scan_model:
+            self._num_images = len(self._scan_model)
+        else:
+            nxdata = nxmx.entries[0].data[0]
+            if nxdata.signal:
+                data = nxdata[nxdata.signal]
             else:
-                nxdata = nxmx.entries[0].data[0]
-                if nxdata.signal:
-                    data = nxdata[nxdata.signal]
-                else:
-                    data = list(nxdata.values())[0]
-                self._num_images, *_ = data.shape
+                data = list(nxdata.values())[0]
+            self._num_images, *_ = data.shape
 
     def _get_nxmx(self, fh: h5py.File):
         return dxtbx.nexus.nxmx.NXmx(fh)
@@ -73,9 +69,6 @@ class FormatNXmx(FormatNexus):
         return self._static_mask
 
     def get_raw_data(self, index):
-        if self._cached_file_handle is None:
-            self._cached_file_handle = h5py.File(self._image_file, swmr=True)
-
         nxmx = self._get_nxmx(self._cached_file_handle)
         nxdata = nxmx.entries[0].data[0]
         nxdetector = nxmx.entries[0].instruments[0].detectors[0]
