@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.xfail(
-    raises=ValueError, reason="https://github.com/cctbx/dxtbx/issues/537"
+    raises=AssertionError, reason="https://github.com/cctbx/dxtbx/issues/537"
 )
 def test_jf16M(tmp_path, dials_data):
     if dials_data._attempt_fetch("lysozyme_JF16M_4img") is None:
