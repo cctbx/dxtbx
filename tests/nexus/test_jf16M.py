@@ -26,9 +26,9 @@ def test_jf16M(tmp_path, dials_data):
 
     d2 = expts[0].detector
 
-    assert (
-        not d1 == d2
-    )  # expt file imported using FormatNexus, naming is different and hierarchy has different structure
+    # expt file imported using FormatNexus, but data file is imported using
+    # FormatNXmx. Panel group naming is different and hierarchy has different structure
+    assert not d1 == d2
 
     for p1, p2 in zip(d1, d2):
         assert p1.is_similar_to(p2, ignore_trusted_range=True)
