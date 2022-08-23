@@ -1,11 +1,7 @@
 import dxtbx
 from dxtbx.model.experiment_list import ExperimentList
-import pytest
 
 
-@pytest.mark.xfail(
-    raises=AssertionError, reason="https://github.com/cctbx/dxtbx/issues/537"
-)
 def test_jf16M(tmp_path, dials_data):
     try:
         h5path = (
@@ -27,4 +23,9 @@ def test_jf16M(tmp_path, dials_data):
 
     d2 = expts[0].detector
 
-    assert d1 == d2
+    assert (
+        not d1 == d2
+    )  # expt file imported using FormatNexus, naming is different and hierarchy has different structure
+
+    for p1, p2 in zip(d1, d2):
+        assert p1.is_similar_to(p2, ignore_trusted_range=True)
