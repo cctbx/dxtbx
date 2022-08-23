@@ -296,8 +296,14 @@ def get_dxtbx_detector(
             # Hierarchical detector model
             fast_axis = MCSTAS_TO_IMGCIF @ module.fast_pixel_direction.vector
             slow_axis = MCSTAS_TO_IMGCIF @ module.slow_pixel_direction.vector
-            origin = MCSTAS_TO_IMGCIF @ (
-                module.fast_pixel_direction.offset + module.slow_pixel_direction.offset
+            origin = (
+                MCSTAS_TO_IMGCIF
+                @ (
+                    module.fast_pixel_direction.offset
+                    + module.slow_pixel_direction.offset
+                )
+                .to("mm")
+                .magnitude
             )
         else:
             # Flat detector model
