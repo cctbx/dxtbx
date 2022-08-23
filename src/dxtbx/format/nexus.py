@@ -635,7 +635,7 @@ class BeamFactory:
         return self.model
 
 
-def get_change_of_basis(transformation):
+def get_change_of_basis(transformation, include_setting=True):
     """
     Get the 4x4 homogenous coordinate matrix for a given NXtransformation.
     """
@@ -645,7 +645,7 @@ def get_change_of_basis(transformation):
     axis_type = h5str(transformation.attrs["transformation_type"])
 
     vector = n2i_cob * col(transformation.attrs["vector"]).normalize()
-    setting = transformation[0]
+    setting = transformation[0] if include_setting else 0
     units = h5str(transformation.attrs["units"])
 
     if "offset" in transformation.attrs:
@@ -924,7 +924,11 @@ class DetectorFactoryFromGroup:
                 fast = matrix.col([-fast[0], fast[1], -fast[2]])
                 slow = slow_pixel_direction_handle.attrs["vector"]
                 slow = matrix.col([-slow[0], slow[1], -slow[2]])
-                parent, cob = get_cumulative_change_of_basis(depends_on)
+                cob = get_change_of_basis(
+                    fast_pixel_direction_handle, include_setting=False
+                ) * get_change_of_basis(
+                    slow_pixel_direction_handle, include_setting=False
+                )
                 origin = matrix.col((cob * matrix.col((0, 0, 0, 1)))[0:3])
 
                 p.set_local_frame(fast.elems, slow.elems, origin.elems)
