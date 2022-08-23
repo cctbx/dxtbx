@@ -89,7 +89,10 @@ class CachedWavelengthBeamFactory:
         primary_key = "incident_wavelength"
         wavelength = self.handle[primary_key]
         spectrum_wavelengths = wavelength
-        spectrum_weights = self.handle.get(primary_key + "_weight")
+        spectrum_weights = self.handle.get(primary_key + "_weights")
+        if spectrum_weights is None:
+            # Handle deprecation: https://github.com/nexusformat/definitions/issues/837
+            spectrum_weights = self.handle.get(primary_key + "_weight")
 
         # If the wavelength array does not represent spectra, look for spectra
         # in the variant chain
@@ -99,7 +102,10 @@ class CachedWavelengthBeamFactory:
             if "variant" in variant_test.attrs:
                 variant_key = variant_test.attrs["variant"]
                 variant_wavelengths = self.handle[variant_key]
-                variant_weights = self.handle.get(variant_key + "_weight")
+                variant_weights = self.handle.get(variant_key + "_weights")
+                if variant_weights is None:
+                    # Handle deprecation: https://github.com/nexusformat/definitions/issues/837
+                    variant_weights = self.handle.get(variant_key + "_weight")
                 if variant_weights is None:
                     variant_test = variant_wavelengths  # Keep looking
                 else:
