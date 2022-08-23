@@ -4,6 +4,9 @@ import h5py
 import numpy as np
 import pytest
 
+from cctbx import factor_ev_angstrom
+
+import scipy.stats as stats
 from scitbx.array_family import flex
 
 import dxtbx.model
@@ -184,6 +187,62 @@ def test_get_dxtbx_beam_array():
         beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
         for i, w in enumerate(wavelengths):
             assert beam_factory.make_beam(index=i).get_wavelength() == w
+
+
+def test_get_dxtbx_spectrum():
+    # gaussian bandpass with 20eV std dev centered on 9500 eV
+    energy = 9500
+    channels = np.linspace(9400, 9600, 1000)
+    weights = stats.norm.pdf(channels, energy, 20)
+
+    with h5py.File(" ", mode="w", **pytest.h5_in_memory) as f:
+        beam = f.create_group("/entry/instrument/beam")
+        beam.attrs["NX_class"] = "NXbeam"
+        beam["incident_wavelength"] = factor_ev_angstrom / channels
+        beam["incident_wavelength"].attrs["units"] = b"angstrom"
+        beam["incident_wavelength_weights"] = weights
+
+        nxbeam = dxtbx.nexus.nxmx.NXbeam(f["/entry/instrument/beam"])
+        beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        assert (
+            pytest.approx(beam_factory.make_beam().get_wavelength())
+            == factor_ev_angstrom / energy
+        )
+        assert pytest.approx(
+            beam_factory.make_spectrum().get_weighted_energy_eV() == energy
+        )
+
+
+def test_get_dxtbx_spectrum_with_variants():
+    # drifting gaussian bandpass with 20eV std dev
+    energies = np.array([9500, 9520, 9510])
+    channels = np.linspace(9400, 9600, 1000)
+    weights = np.vstack([stats.norm.pdf(channels, e, 20) for e in energies])
+    # calibrated energies not necessarily matching the weighted mean of the spectra
+    calibrated_energies = np.array([e + 5 for e in energies])
+
+    with h5py.File(" ", mode="w", **pytest.h5_in_memory) as f:
+        beam = f.create_group("/entry/instrument/beam")
+        beam.attrs["NX_class"] = "NXbeam"
+        beam["incident_wavelength"] = factor_ev_angstrom / calibrated_energies
+        beam["incident_wavelength"].attrs["units"] = b"angstrom"
+        beam["incident_wavelength"].attrs["variant"] = b"incident_wavelength_1Dspectrum"
+        beam["incident_wavelength_1Dspectrum"] = factor_ev_angstrom / energies
+        beam["incident_wavelength_1Dspectrum"].attrs["units"] = b"angstrom"
+        beam["incident_wavelength_1Dspectrum_weights"] = weights
+
+        nxbeam = dxtbx.nexus.nxmx.NXbeam(f["/entry/instrument/beam"])
+        beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        for i, (calibrated_energy, energy) in enumerate(
+            zip(calibrated_energies, energies)
+        ):
+            assert (
+                pytest.approx(beam_factory.make_beam(i).get_wavelength())
+                == factor_ev_angstrom / calibrated_energy
+            )
+            assert pytest.approx(
+                beam_factory.make_spectrum(i).get_weighted_energy_eV() == energy
+            )
 
 
 def test_get_dxtbx_scan(nxmx_example):
