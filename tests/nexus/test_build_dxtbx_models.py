@@ -208,8 +208,9 @@ def test_get_dxtbx_spectrum():
             pytest.approx(beam_factory.make_beam().get_wavelength())
             == factor_ev_angstrom / energy
         )
-        assert pytest.approx(
-            beam_factory.make_spectrum().get_weighted_energy_eV() == energy
+        assert (
+            pytest.approx(beam_factory.make_spectrum().get_weighted_energy_eV())
+            == energy
         )
 
 
@@ -227,7 +228,7 @@ def test_get_dxtbx_spectrum_with_variants():
         beam["incident_wavelength"] = factor_ev_angstrom / calibrated_energies
         beam["incident_wavelength"].attrs["units"] = b"angstrom"
         beam["incident_wavelength"].attrs["variant"] = b"incident_wavelength_1Dspectrum"
-        beam["incident_wavelength_1Dspectrum"] = factor_ev_angstrom / energies
+        beam["incident_wavelength_1Dspectrum"] = factor_ev_angstrom / channels
         beam["incident_wavelength_1Dspectrum"].attrs["units"] = b"angstrom"
         beam["incident_wavelength_1Dspectrum_weights"] = weights
 
@@ -240,8 +241,9 @@ def test_get_dxtbx_spectrum_with_variants():
                 pytest.approx(beam_factory.make_beam(i).get_wavelength())
                 == factor_ev_angstrom / calibrated_energy
             )
-            assert pytest.approx(
-                beam_factory.make_spectrum(i).get_weighted_energy_eV() == energy
+            assert (
+                pytest.approx(beam_factory.make_spectrum(i).get_weighted_energy_eV())
+                == energy
             )
 
 
