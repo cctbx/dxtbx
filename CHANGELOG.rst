@@ -1,3 +1,28 @@
+dxtbx 3.11.0 (2022-08-24)
+=========================
+
+Features
+--------
+
+- Replace use of legacy ``FormatNexusEiger`` with new ``FormatNXmx`` format class. (`#455 <https://github.com/cctbx/dxtbx/issues/455>`_)
+
+
+Bugfixes
+--------
+
+- DXTBX now uses the median oscillation width from across the entire scan. This resolved issues where the goniometer scan positions were read-back values instead of set-point values, and a slow rotation start across the first two images would cause the oscillation width for the whole scan to be calculated incorrectly. (`#526 <https://github.com/cctbx/dxtbx/issues/526>`_)
+- ``FormatNXmx``: Support NXmx files with one wavelength per image. (`#527 <https://github.com/cctbx/dxtbx/issues/527>`_)
+- ``ExperimentList.append()``: No longer O(N²) with experiment identifiers. (`#528 <https://github.com/cctbx/dxtbx/issues/528>`_)
+- ``FormatNXmx``: Ignore empty pixel masks, instead of printing a confusing error. (`#529 <https://github.com/cctbx/dxtbx/issues/529>`_)
+- Correct assumptions about interpreting multi-axis goniometer axes from full-CBF files. Previously, it was assumed the ``axis`` and ``diffrn_scan_axis`` categories listed axes in the same order, and that this matched a standard diffractometer axis order. The goniometer model is now build correctly, regardless of the order specified in the file. (`#539 <https://github.com/cctbx/dxtbx/issues/539>`_)
+
+
+Misc
+----
+
+- `#531 <https://github.com/cctbx/dxtbx/issues/531>`_, `#533 <https://github.com/cctbx/dxtbx/issues/533>`_
+
+
 DIALS 3.10.3 (2022-08-02)
 =========================
 
