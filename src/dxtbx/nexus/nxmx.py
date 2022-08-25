@@ -6,7 +6,7 @@ import logging
 import operator
 from collections import abc, namedtuple
 from functools import cached_property, reduce
-from typing import Iterable, Iterator, Sequence, Union, cast, overload
+from typing import Iterable, Iterator, Sequence, Union, overload
 
 import dateutil.parser
 import h5py
@@ -433,7 +433,7 @@ class NXtransformationsAxis:
         return None
 
     def __getitem__(self, key) -> pint.Quantity:
-        return self._handle[key] * self.units
+        return np.atleast_1d(self._handle)[key] * self.units
 
     @cached_property
     def end(self) -> NXNumber | None:
@@ -451,8 +451,7 @@ class NXtransformationsAxis:
 
     @cached_property
     def matrix(self) -> np.ndarray:
-
-        values = cast(pint.Quantity, np.atleast_1d(self[()]))
+        values = self[()]
         if np.any(values):
             values = (
                 values.to("mm").magnitude
@@ -1166,8 +1165,7 @@ def get_rotation_axes(dependency_chain: DependencyChain) -> Axes:
     for transformation in dependency_chain:
         if transformation.transformation_type != "rotation":
             continue
-        values = cast(pint.Quantity, np.atleast_1d(transformation[()]))
-        values = values.to("degrees").magnitude
+        values = transformation[()].to("degrees").magnitude
         is_scan = len(values) > 1 and not np.all(values == values[0])
         axes.append(transformation.vector)
         angles.append(values[0])
