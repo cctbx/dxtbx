@@ -21,9 +21,13 @@ def compute_cbf_header(nxmx: dxtbx.nexus.nxmx.NXmx, nn: int):
     nxdetector = nxinstrument.detectors[0]
     nxbeam = nxinstrument.beams[0]
 
+    beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+    wavelength = beam_factory.make_beam(index=0).get_wavelength()
     distance = nxdetector.distance
     if distance is None:
-        distance = dxtbx.nexus.get_dxtbx_detector(nxdetector, nxbeam)[0].get_distance()
+        distance = dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)[
+            0
+        ].get_distance()
 
     result = []
 
