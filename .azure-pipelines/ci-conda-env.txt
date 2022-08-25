@@ -30,11 +30,11 @@ conda-forge::pytest-forked
 conda-forge::pytest-mock
 conda-forge::pytest-timeout
 conda-forge::pytest-xdist
-conda-forge::pytest<7.1
+conda-forge::pytest
 conda-forge::requests
 conda-forge::scipy
 conda-forge::scons
-conda-forge::setuptools<60
+conda-forge::setuptools
 conda-forge::six
 conda-forge::tabulate
 conda-forge::tqdm
