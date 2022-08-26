@@ -7,6 +7,7 @@ from pathlib import Path
 import h5py
 import hdf5plugin  # noqa; F401
 import numpy as np
+import pint
 from tqdm import tqdm
 
 import dxtbx.model
@@ -25,9 +26,10 @@ def compute_cbf_header(nxmx: dxtbx.nexus.nxmx.NXmx, nn: int):
     wavelength = beam_factory.make_beam(index=0).get_wavelength()
     distance = nxdetector.distance
     if distance is None:
-        distance = dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)[
-            0
-        ].get_distance()
+        distance = pint.Quantity(
+            dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)[0].get_distance(),
+            "mm",
+        )
 
     result = []
 
@@ -71,7 +73,7 @@ _array_data.header_contents
     result.append(
         f"# Wavelength {nxbeam.incident_wavelength.to('angstrom').magnitude:.5f} A"
     )
-    result.append(f"# Detector_distance {distance / 1000.0:.5f} m")
+    result.append(f"# Detector_distance {distance.to('m').magnitude:.5f} m")
     result.append(
         f"# Beam_xy ({nxdetector.beam_center_x.magnitude:.2f}, {nxdetector.beam_center_y.magnitude:.2f}) "
         "pixels"
