@@ -86,6 +86,9 @@ class CachedWavelengthBeamFactory:
             return
 
         # Get the items from the NXbeam class
+        # Note it would be better if there were a general way to read weights
+        # and variants from the nxmx classes
+        # See https://github.com/cctbx/dxtbx/issues/549
         primary_key = "incident_wavelength"
         wavelength = self.handle[primary_key]
         spectrum_wavelengths = wavelength
