@@ -1,0 +1,1 @@
+NXmx: if the detector reads as between the sample and source invert the detector distance. Unfortunate side-effect of a feature of the dectris Eiger file writer.

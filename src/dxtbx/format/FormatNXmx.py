@@ -6,6 +6,38 @@ import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
 
 
+def detector_between_sample_and_source(detector, beam):
+    """Check if the detector is perpendicular to beam and
+    upstream of the sample."""
+
+    if len(detector) != 1:
+        return False
+    p = detector[0]
+
+    n = p.get_normal()
+    o = p.get_origin()
+    x = beam.get_sample_to_source_direction()
+
+    dot = sum(_n * _x for _n, _x in zip(n, x))
+    doto = sum(_o * _x for _o, _x in zip(o, x))
+
+    if abs(dot) > 0.99 and doto > 0:
+        return True
+
+    return False
+
+
+def inverted_distance_detector(detector):
+    """Move the detector origin to x, y, -z"""
+
+    origin = detector[0].get_origin()
+    origin = origin[0], origin[1], -origin[2]
+    fast = detector[0].get_fast_axis()
+    slow = detector[0].get_slow_axis()
+    detector[0].set_frame(fast, slow, origin)
+    return detector
+
+
 class FormatNXmx(FormatNexus):
     """Read NXmx-flavour NeXus-format HDF5 data."""
 
@@ -43,6 +75,14 @@ class FormatNXmx(FormatNexus):
             self._detector_model = dxtbx.nexus.get_dxtbx_detector(
                 nxdetector, wavelength
             )
+
+            # if the detector is between the sample and the source, and perpendicular
+            # to the beam, then invert the distance vector as this is probably wrong
+
+            beam = self._beam()
+            if detector_between_sample_and_source(self._detector_model, beam):
+                self._detector_model = inverted_distance_detector(self._detector_model)
+
             self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
             self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
             self._bit_depth_readout = nxdetector.bit_depth_readout
