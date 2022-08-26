@@ -56,9 +56,13 @@ _array_data.header_contents
         f"{nxinstrument.short_name}"
     )
     result.append(f"# {timestamp}")
-    px_size_fast = nxdetector.modules[0].fast_pixel_direction[()].to("m")
-    px_size_slow = nxdetector.modules[0].slow_pixel_direction[()].to("m")
-    result.append(f"# Pixel_size {px_size_fast:~} x {px_size_slow:~}")
+    px_size_fast = (
+        nxdetector.modules[0].fast_pixel_direction[()].to("m").magnitude.item()
+    )
+    px_size_slow = (
+        nxdetector.modules[0].slow_pixel_direction[()].to("m").magnitude.item()
+    )
+    result.append(f"# Pixel_size {px_size_fast} m x {px_size_slow} m")
     result.append(
         f"# {nxdetector.sensor_material} sensor, "
         f"thickness {nxdetector.sensor_thickness:~}"
