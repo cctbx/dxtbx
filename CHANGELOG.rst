@@ -1,3 +1,12 @@
+DIALS 3.11.1 (2022-09-02)
+=========================
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Fix bug introduced by #572. (`#545 <https://github.com/cctbx/dxtbx/issues/545>`_)
+
+
 dxtbx 3.11.0 (2022-08-24)
 =========================
 
