@@ -7,9 +7,6 @@ import pytest
     raises=ValueError, reason="https://github.com/cctbx/dxtbx/issues/537"
 )
 def test_jf16M(tmp_path, dials_data):
-    if dials_data._attempt_fetch("lysozyme_JF16M_4img") is None:
-        return  # data not availible yet, remove after dials/data#389 is merged
-
     try:
         h5path = (
             dials_data("lysozyme_JF16M_4img", pathlib=True)
