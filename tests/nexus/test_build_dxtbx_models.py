@@ -3,10 +3,9 @@ from __future__ import annotations
 import h5py
 import numpy as np
 import pytest
+import scipy.stats as stats
 
 from cctbx import factor_ev_angstrom
-
-import scipy.stats as stats
 from scitbx.array_family import flex
 
 import dxtbx.model
