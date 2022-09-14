@@ -217,7 +217,10 @@ def run(args=None):
                 pixel_size = command_line.options.pixel_size
 
             if command_line.options.overload is None:
-                overload = detector.get_trusted_range()[1]
+                # Here an assumption is made that the overload value is 1 ADU greater
+                # than the maximum trusted value of the detector. This is not
+                # correct for detectors with floating point raw data.
+                overload = detector.get_trusted_range()[1] + 1
             else:
                 overload = command_line.options.overload
 

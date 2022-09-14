@@ -87,7 +87,7 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
         ny = int(self._cif_header_dictionary["X-Binary-Size-Second-Dimension"])
 
         overload = int(self._cif_header_dictionary["Count_cutoff"].split()[0])
-        underload = -1
+        minimum_trusted_value = 0
 
         # take into consideration here the thickness of the sensor also the
         # wavelength of the radiation (which we have in the same file...)
@@ -106,7 +106,7 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
             "-y",
             (1000 * pixel_x, 1000 * pixel_y),
             (nx, ny),
-            (underload, overload),
+            (minimum_trusted_value, overload),
             [],
             ParallaxCorrectedPxMmStrategy(mu, t0),
         )

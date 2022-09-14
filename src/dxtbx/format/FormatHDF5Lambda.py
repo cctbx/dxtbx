@@ -71,7 +71,7 @@ class FormatHDF5Lambda(FormatHDF5):
         )
         layout = detector["layout"].value[0].split("X")
         image_size = int(layout[0]), int(layout[1])
-        trusted_range = (-1, detector["saturation_value"][0])
+        trusted_range = (0, detector["saturation_value"][0])
         thickness = float(detector["sensor_thickness"].value) / 1000.0
         material = str(detector["sensor_material"].value[0])
 

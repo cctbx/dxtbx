@@ -86,7 +86,7 @@ detector_phil_scope = libtbx.phil.parse(
 
       trusted_range = None
         .type = floats(size=2)
-        .help = "Override the panel trusted range"
+        .help = "Override the panel trusted range: [min-trusted-value, max-trusted-value]"
         .short_caption = "Panel trusted range"
 
       thickness = None
