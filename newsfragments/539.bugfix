@@ -1,6 +1,0 @@
-This removes two unstated assumptions about the way goniometer axis metadata must be formatted when constructing a multi-axis diffractometer model from CBF image files.
-Firstly, it had been assumed that goniometer axes in the ``axis`` category would be listed in order of dependency, starting with the axis mounted on the lab floor and ending with the axis on which the sample is mounted (e.g. the order *ω*, *κ*, *φ* for a *κ*-geometry diffractometer).
-Separately, there was an assumption that the rotation angle metadata in the ``diffrn_scan_axis`` category would list the axes in the same order as in the ``axis`` category.
-The result was that perfectly valid data would be misinterpreted either whenever ``diffrn_scan_axis`` was ordered differently to ``axis``, or whenever the ``axis`` metadata were not in order of axis dependency.
-With this change, the order in which the metadata are listed in either category is now immaterial.
-The goniometer model is built correctly, based only on the specified axis dependencies.

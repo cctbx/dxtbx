@@ -227,7 +227,7 @@ def test_get_dependency_chain(nxmx_example):
   @vector = [-1.  0.  0.]
   @offset = None
   @depends_on = /entry/sample/transformations/chi
-/entry/sample/transformations/chi = 0 degree
+/entry/sample/transformations/chi = [0] degree
   @transformation_type = rotation
   @vector = [0 0 1]
   @offset = None
