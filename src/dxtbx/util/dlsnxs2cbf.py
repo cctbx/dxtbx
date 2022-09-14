@@ -7,6 +7,7 @@ from pathlib import Path
 import h5py
 import hdf5plugin  # noqa; F401
 import numpy as np
+import pint
 from tqdm import tqdm
 
 import dxtbx.model
@@ -21,9 +22,14 @@ def compute_cbf_header(nxmx: dxtbx.nexus.nxmx.NXmx, nn: int):
     nxdetector = nxinstrument.detectors[0]
     nxbeam = nxinstrument.beams[0]
 
+    beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+    wavelength = beam_factory.make_beam(index=0).get_wavelength()
     distance = nxdetector.distance
     if distance is None:
-        distance = dxtbx.nexus.get_dxtbx_detector(nxdetector, nxbeam)[0].get_distance()
+        distance = pint.Quantity(
+            dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)[0].get_distance(),
+            "mm",
+        )
 
     result = []
 
@@ -50,9 +56,13 @@ _array_data.header_contents
         f"{nxinstrument.short_name}"
     )
     result.append(f"# {timestamp}")
-    px_size_fast = nxdetector.modules[0].fast_pixel_direction[()].to("m")
-    px_size_slow = nxdetector.modules[0].slow_pixel_direction[()].to("m")
-    result.append(f"# Pixel_size {px_size_fast:~} x {px_size_slow:~}")
+    px_size_fast = (
+        nxdetector.modules[0].fast_pixel_direction[()].to("m").magnitude.item()
+    )
+    px_size_slow = (
+        nxdetector.modules[0].slow_pixel_direction[()].to("m").magnitude.item()
+    )
+    result.append(f"# Pixel_size {px_size_fast} m x {px_size_slow} m")
     result.append(
         f"# {nxdetector.sensor_material} sensor, "
         f"thickness {nxdetector.sensor_thickness:~}"
@@ -67,7 +77,7 @@ _array_data.header_contents
     result.append(
         f"# Wavelength {nxbeam.incident_wavelength.to('angstrom').magnitude:.5f} A"
     )
-    result.append(f"# Detector_distance {distance / 1000.0:.5f} m")
+    result.append(f"# Detector_distance {distance.to('m').magnitude:.5f} m")
     result.append(
         f"# Beam_xy ({nxdetector.beam_center_x.magnitude:.2f}, {nxdetector.beam_center_y.magnitude:.2f}) "
         "pixels"
