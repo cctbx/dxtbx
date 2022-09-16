@@ -45,7 +45,7 @@ def test_rotation_scan_i04(master_h5):
     panel = detector[0]
     assert panel.get_pixel_size() == (0.075, 0.075)
     assert panel.get_image_size() == (4148, 4362)
-    assert panel.get_trusted_range() == (-1, 22726)
+    assert panel.get_trusted_range() == (0, 22726)
     assert panel.get_fast_axis() == (1, 0, 0)
     assert panel.get_slow_axis() == (0, -1, 0)
     assert panel.get_origin() == pytest.approx(
@@ -159,7 +159,7 @@ def test_grid_scan_i04():
     panel = detector[0]
     assert panel.get_pixel_size() == (0.075, 0.075)
     assert panel.get_image_size() == (4148, 4362)
-    assert panel.get_trusted_range() == (-1, 65535)
+    assert panel.get_trusted_range() == (0, 65535)
     assert panel.get_fast_axis() == (1, 0, 0)
     assert panel.get_slow_axis() == (0, -1, 0)
     assert panel.get_origin() == pytest.approx(
