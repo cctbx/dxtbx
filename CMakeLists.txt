@@ -9,7 +9,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(SetDefaultBuildRelWithDebInfo) # Default builds to release with debug info
 include(AlwaysColourCompilation) # Always show coloured compiler output
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Generate compile_commands.json
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 find_package(CCTBX COMPONENTS scitbx cctbx REQUIRED)
