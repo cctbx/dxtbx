@@ -53,8 +53,8 @@ class FormatSMVADSCDBG(FormatSMVADSC):
             float(self._header_dictionary["SIZE2"]),
             float(self._header_dictionary["SIZE1"]),
         )
-        overload = 65535
-        underload = 0
+        max_trusted_value = 65535
+        min_trusted_value = 0
 
         return self._detector_factory.simple(
             "CCD",
@@ -64,7 +64,7 @@ class FormatSMVADSCDBG(FormatSMVADSC):
             "-y",
             (pixel_size, pixel_size),
             image_size,
-            (underload, overload),
+            (min_trusted_value, max_trusted_value),
             [],
         )
 

@@ -17,7 +17,7 @@ Python_add_library( dxtbx_format_image_ext
     MODULE
     format/boost_python/image_ext.cc
 )
-target_link_libraries( dxtbx_format_image_ext PUBLIC Boost::python CCTBX::scitbx )
+target_link_libraries( dxtbx_format_image_ext PUBLIC Boost::python CCTBX::scitbx HDF5::HDF5)
 # If we have CBFlib available, use it
 if (TARGET CBFlib::cbf)
     target_link_libraries( dxtbx_format_image_ext PRIVATE CBFlib::cbf )

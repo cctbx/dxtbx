@@ -5,25 +5,8 @@ import datetime
 import logging
 import operator
 from collections import abc, namedtuple
-
-try:
-    from functools import cached_property
-except ImportError:
-    # Python 3.7 compatibility
-    # Defined cached_property decorator as a noop
-    import functools
-
-    def cached_property(func):  # type: ignore
-        @property
-        @functools.wraps(func)
-        def wrapper_decorator(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return wrapper_decorator
-
-
-from functools import reduce
-from typing import Iterable, Iterator, Sequence, Union, cast, overload
+from functools import cached_property, reduce
+from typing import Iterable, Iterator, Sequence, Union, overload
 
 import dateutil.parser
 import h5py
@@ -193,7 +176,8 @@ class NXentry(H5Mapping):
         to avoid confusion with local time. Note that the time zone of the beamline
         should be provided in NXentry/NXinstrument/time_zone.
         """
-        return dateutil.parser.isoparse(h5str(self._handle["start_time"][()]))
+        if "start_time" in self._handle:
+            return dateutil.parser.isoparse(h5str(self._handle["start_time"][()]))
 
     @cached_property
     def end_time(self) -> datetime.datetime | None:
@@ -219,7 +203,10 @@ class NXentry(H5Mapping):
         should be provided in NXentry/NXinstrument/time_zone. This field may be filled
         with a value estimated before an observed value is available.
         """
-        return dateutil.parser.isoparse(h5str(self._handle["end_time_estimated"][()]))
+        if "end_time_estimated" in self._handle:
+            return dateutil.parser.isoparse(
+                h5str(self._handle["end_time_estimated"][()])
+            )
 
     @cached_property
     def definition(self) -> str:
@@ -446,7 +433,7 @@ class NXtransformationsAxis:
         return None
 
     def __getitem__(self, key) -> pint.Quantity:
-        return self._handle[key] * self.units
+        return np.atleast_1d(self._handle)[key] * self.units
 
     @cached_property
     def end(self) -> NXNumber | None:
@@ -464,8 +451,7 @@ class NXtransformationsAxis:
 
     @cached_property
     def matrix(self) -> np.ndarray:
-
-        values = cast(pint.Quantity, np.atleast_1d(self[()]))
+        values = self[()]
         if np.any(values):
             values = (
                 values.to("mm").magnitude
@@ -885,7 +871,10 @@ class NXdetector(H5Mapping):
         to the underload_value.
         """
         if "saturation_value" in self._handle:
-            return int(self._handle["saturation_value"][()])
+            try:
+                return int(self._handle["saturation_value"][()])
+            except TypeError as e:
+                logger.warning(f"Error extracting {self.path}/saturation_value: {e}")
         return None
 
     @cached_property
@@ -1176,8 +1165,7 @@ def get_rotation_axes(dependency_chain: DependencyChain) -> Axes:
     for transformation in dependency_chain:
         if transformation.transformation_type != "rotation":
             continue
-        values = cast(pint.Quantity, np.atleast_1d(transformation[()]))
-        values = values.to("degrees").magnitude
+        values = transformation[()].to("degrees").magnitude
         is_scan = len(values) > 1 and not np.all(values == values[0])
         axes.append(transformation.vector)
         angles.append(values[0])

@@ -45,6 +45,13 @@ def test_cbf_writer(image_file, dials_regression, tmp_path):
     print(sequence_diff(imageset, imageset2, tolerance=tolerance))
 
     assert BeamComparison()(imageset.get_beam(), imageset2.get_beam())
+
+    # FormatCBFMini.as_file does not account for detectors where the lower value
+    # of trusted_range is not 0. It is not clear if that is even possible to
+    # express in the miniCBF header. So force the original detector
+    # trusted_range to start from 0 for the purposes of this comparison
+    max_trusted_value = imageset.get_detector()[0].get_trusted_range()[1]
+    imageset.get_detector()[0].set_trusted_range((0, max_trusted_value))
     assert DetectorComparison(origin_tolerance=tolerance.detector.origin)(
         imageset.get_detector(), imageset2.get_detector()
     )

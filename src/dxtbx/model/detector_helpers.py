@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import math
-import warnings
 from operator import itemgetter
 from typing import TYPE_CHECKING, Tuple, cast
 
@@ -173,14 +172,6 @@ class detector_helper_sensors:
             detector_helper_sensors.SENSOR_PAD,
             detector_helper_sensors.SENSOR_IMAGE_PLATE,
         ]
-
-
-def set_slow_fast_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
-    beam_centre[0], beam_centre[1] = beam_centre[1], beam_centre[0]
-    warnings.warn(
-        "set_slow_fast_beam_centre_mm is deprecated", DeprecationWarning, stacklevel=2
-    )
-    return set_fast_slow_beam_centre_mm(detector, beam, beam_centre, panel_id)
 
 
 def set_fast_slow_beam_centre_mm(detector, beam, beam_centre, panel_id=None):

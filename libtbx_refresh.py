@@ -78,12 +78,10 @@ def _install_setup_readonly_fallback(package_name: str):
         module.extra_command_line_locations.append(f"src/{package_name}")
 
     # Because dispatchers for all modules are generated _before_ any of
-    # libtbx_refresh are run, then we need to potentially regenerate
-    # the dispatchers for everything downstream of this package. Since
-    # there isn't a dependency graph to walk, just do everything afterwards
-    my_index = env.module_list.index(module)
+    # libtbx_refresh are run, then we need to regenerate all of the
+    # dispatchers now we've added the extra PYTHONPATH
     with contextlib.redirect_stdout(io.StringIO()):
-        for module in env.module_list[my_index:]:
+        for module in env.module_list:
             module.process_command_line_directories()
 
 

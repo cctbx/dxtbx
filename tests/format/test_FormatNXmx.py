@@ -6,7 +6,8 @@ import h5py
 import numpy as np
 import pytest
 
-from dxtbx.format.FormatNXmx import FormatNXmx, FormatNXmxI19_2
+from dxtbx.format.FormatNXmx import FormatNXmx
+from dxtbx.format.FormatNXmxDLSI19_2 import FormatNXmxDLSI19_2
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
@@ -24,12 +25,12 @@ def nxmx_example_on_disk(tmp_path, nxmx_example):
 
         # Define a pixel mask, as required for creating a DXTBX model.
         pixel_mask = "/entry/instrument/detector/pixel_mask"
-        g.create_dataset(pixel_mask, data=np.zeros((4400, 4200)))
+        g.create_dataset(pixel_mask, data=np.zeros((4362, 4148), dtype=np.int32))
 
         yield g
 
 
-parameters = [("DIAMOND BEAMLINE I19-2", FormatNXmxI19_2), ("DIAD", FormatNXmx)]
+parameters = [("DIAMOND BEAMLINE I19-2", FormatNXmxDLSI19_2), ("DIAD", FormatNXmx)]
 
 
 @pytest.mark.parametrize("instrument, format_class", parameters, ids=["I19-2", "DIAD"])

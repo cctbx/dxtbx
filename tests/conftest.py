@@ -55,7 +55,7 @@ def nxmx_example():
         detector["sensor_thickness"].attrs["units"] = b"m"
         detector["x_pixel_size"] = 7.5e-05
         detector["y_pixel_size"] = 7.5e-05
-        detector["underload_value"] = -1
+        detector["underload_value"] = 0
         detector["saturation_value"] = 9266
         detector["frame_time"] = 0.1
         detector["frame_time"].attrs["units"] = "s"
