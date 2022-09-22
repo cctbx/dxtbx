@@ -189,6 +189,7 @@ def run(args=None, imageset=None):
             try:
                 beam = iset.get_beam(image_number)
             except Exception:
+                print("Beam not found for image %d" % image_number)
                 continue
             if params.reference_geometry is None:
                 detector = iset.get_detector(image_number)
