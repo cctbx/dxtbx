@@ -1,14 +1,13 @@
 from __future__ import annotations
 
+import numpy as np
+import pytest
+from scipy.ndimage import rotate
+from scipy.stats import norm
+
 from dxtbx.util import ersatz_uuid4
 from dxtbx.util import format_float_with_standard_uncertainty as ffwsu
 from dxtbx.util.rotate_and_average import rotate_and_average
-
-import numpy as np
-import pytest
-
-from scipy.stats import norm
-from scipy.ndimage import rotate
 
 
 def test_format_float_with_standard_uncertainty():

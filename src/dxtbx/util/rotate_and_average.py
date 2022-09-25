@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import math
+
 import numpy as np
 
 
@@ -17,7 +20,7 @@ def rotate_and_average(data, angle, deg=False, mask=None):
     R = np.array(((np.cos(angle), -np.sin(angle)), (np.sin(angle), np.cos(angle))))
     xx_yy_rotated = np.matmul(R, xx_yy)
     xx_rotated = xx_yy_rotated[0, :].reshape((ny, nx))
-    #yy_rotated = xx_yy_rotated[1, :].reshape((ny, nx))
+    # yy_rotated = xx_yy_rotated[1, :].reshape((ny, nx))
     bin_x = np.arange(-nx, nx)
     bin_x_centers = (bin_x[1:] + bin_x[:-1]) / 2
 
