@@ -1,3 +1,20 @@
+DIALS 3.11.2 (2022-09-27)
+=========================
+
+Bugfixes
+--------
+
+- ``NXmx``: Cope more gracefully with scalar NXtransformations values. (`#546 <https://github.com/cctbx/dxtbx/issues/546>`_)
+- ``dxtbx.dlsnxs2cbf``: Fix distance and pixel size bugs. (`#548 <https://github.com/cctbx/dxtbx/issues/548>`_)
+- NXmx reading: Handle cases where the detector is read as between the sample and source. This is to compensate for an incorrect definition in the Dectris Eiger file writer. (`#550 <https://github.com/cctbx/dxtbx/issues/550>`_)
+
+
+Misc
+----
+
+- `#547 <https://github.com/cctbx/dxtbx/issues/547>`_
+
+
 DIALS 3.11.1 (2022-09-02)
 =========================
 
