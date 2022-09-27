@@ -1,1 +1,0 @@
-NXmx reading: Handle cases where the detector is read as between the sample and source. This is to compensate for an incorrect definition in the Dectris Eiger file writer.

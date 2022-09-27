@@ -1,1 +1,0 @@
-Fix ``test_get_dependency_chain``: Minor change to output as a result of #546
