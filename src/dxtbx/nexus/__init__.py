@@ -273,19 +273,43 @@ def get_dxtbx_detector(
                 reversed_dependency_chain = reversed(
                     nxmx.get_dependency_chain(module.fast_pixel_direction.depends_on)
                 )
-                pg: dxtbx.model.Detector | dxtbx.model.Panel = root
+                pg: dxtbx.model.Detector | dxtbx.model.Panel | None = None
+                grouped = []
+                current = []
                 for transformation in reversed_dependency_chain:
-                    assert isinstance(
-                        pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
-                    )
-                    name = transformation.path
-                    pg_names = [child.get_name() for child in pg]
-                    if name in pg_names:
-                        pg = pg[pg_names.index(name)]  # Getitem always returns panel
-                        continue
+                    if current:
+                        if (
+                            transformation.equipment_component
+                            and current[-1].equipment_component
+                            and transformation.equipment_component
+                            == current[-1].equipment_component
+                        ):
+                            current.append(transformation)
+                        else:
+                            grouped.append(current)
+                            current = [transformation]
                     else:
-                        pg = pg.add_group()
-                    A = transformation.matrix
+                        current = [transformation]
+                if current:
+                    grouped.append(current)
+
+                for transformation_group in grouped:
+                    name = transformation_group[-1].path
+                    if pg is None:
+                        pg = root
+                    else:
+                        assert isinstance(
+                            pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
+                        )
+                        pg_names = [child.get_name() for child in pg]
+                        if name in pg_names:
+                            pg = pg[
+                                pg_names.index(name)
+                            ]  # Getitem always returns panel
+                            continue
+                        else:
+                            pg = pg.add_group()
+                    A = nxmx.get_cumulative_transformation(transformation_group)
                     origin = MCSTAS_TO_IMGCIF @ A[0, :3, 3]
                     fast = (
                         MCSTAS_TO_IMGCIF @ (A @ np.array((-1, 0, 0, 1)))[0, :3] - origin
