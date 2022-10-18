@@ -153,17 +153,6 @@ _files_with_detectorbase = sorted(
 )
 
 
-def test_berkeley_special_h5():
-    # Handle the special berkeley-only h5 file
-    special_h5 = "/net/viper/raid1/dectris/eiger16MNov2015/2015_11_10/insu6_1_master.h5"
-    if not os.path.isfile(special_h5):
-        pytest.skip("LBL-only file not present")
-
-    # Run the tests, but without dials_regression fixture, circumventing the path resolution step
-    test_read_image(special_h5, dials_regression=None)
-    test_format_class_API_assumptions(special_h5, dials_regression=None)
-
-
 @pytest.mark.regression
 @pytest.mark.parametrize("test_image", _files_with_detectorbase)
 def test_detectorbase(test_image, dials_regression):
