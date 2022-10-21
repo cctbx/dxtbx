@@ -442,7 +442,7 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None
 def _dataset_as_flex(
     data: h5py.Dataset, slices: tuple
 ) -> flex.float | flex.double | flex.int:
-    data_np = np.squeeze(data[slices], axis=0)
+    data_np = np.ascontiguousarray(data[slices])
     np_float_types = (
         np.half,
         np.single,
@@ -479,9 +479,8 @@ def get_raw_data(
     else:
         data = list(nxdata.values())[0]
     all_data = []
+    sliced_outer = data[index]
     for module_slices in get_detector_module_slices(nxdetector):
-        slices = [slice(index, index + 1, 1)]
-        slices.extend(module_slices)
-        data_as_flex = _dataset_as_flex(data, tuple(slices))
+        data_as_flex = _dataset_as_flex(sliced_outer, tuple(module_slices))
         all_data.append(data_as_flex)
     return tuple(all_data)
