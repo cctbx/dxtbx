@@ -122,10 +122,10 @@ class GoniometerMaskerFactory:
 
         alpha = flex.double_range(180, 370, step=10) * math.pi / 180
         r = flex.double(alpha.size(), 33)
-        x = flex.sqrt(flex.pow2(r * flex.sin(alpha)) + 89.02 ** 2) * flex.cos(
+        x = flex.sqrt(flex.pow2(r * flex.sin(alpha)) + 89.02**2) * flex.cos(
             (50 * math.pi / 180) - flex.atan(r / 89.02 * flex.sin(alpha))
         )
-        y = flex.sqrt(flex.pow2(r * flex.sin(alpha)) + 89.02 ** 2) * flex.sin(
+        y = flex.sqrt(flex.pow2(r * flex.sin(alpha)) + 89.02**2) * flex.sin(
             (50 * math.pi / 180) - flex.atan(r / 89.02 * flex.sin(alpha))
         )
         z = -r * flex.cos(alpha)

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
+import copy
 import os
 import pickle
 import shutil
 from unittest import mock
-import copy
 
 import pytest
 

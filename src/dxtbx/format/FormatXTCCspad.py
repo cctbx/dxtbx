@@ -96,7 +96,9 @@ class FormatXTCCspad(FormatXTC):
             det,
             event,
             use_default=self.params.cspad.use_psana_calib,
-            dark=self._pedestals[run_number],
+            dark=self._pedestals[run_number]
+            if self.params.cspad.dark_correction
+            else False,
             common_mode=self.params.cspad.common_mode,
             apply_gain_mask=self.params.cspad.apply_gain_mask,
             gain_mask_value=None,

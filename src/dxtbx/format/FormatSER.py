@@ -281,7 +281,7 @@ class FormatSER(Format):
             pixel_size = 0.028, 0.028
             binning = 2
         binning = self._header_dictionary.get("Binning", binning)
-        saturation = 8000 * binning ** 2
+        saturation = 8000 * binning**2
         trusted_range = (-1000, saturation)
 
         distance = float(self._header_dictionary.get("Camera length [m]", 2)) * 1000

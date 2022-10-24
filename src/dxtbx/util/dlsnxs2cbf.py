@@ -7,6 +7,7 @@ from pathlib import Path
 import h5py
 import hdf5plugin  # noqa; F401
 import numpy as np
+import pint
 from tqdm import tqdm
 
 import dxtbx.model
@@ -21,9 +22,14 @@ def compute_cbf_header(nxmx: dxtbx.nexus.nxmx.NXmx, nn: int):
     nxdetector = nxinstrument.detectors[0]
     nxbeam = nxinstrument.beams[0]
 
+    beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+    wavelength = beam_factory.make_beam(index=0).get_wavelength()
     distance = nxdetector.distance
     if distance is None:
-        distance = dxtbx.nexus.get_dxtbx_detector(nxdetector, nxbeam)[0].get_distance()
+        distance = pint.Quantity(
+            dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)[0].get_distance(),
+            "mm",
+        )
 
     result = []
 
@@ -46,29 +52,34 @@ _array_data.header_contents
 ;"""
     )
     result.append(
-        f"# Detector: {nxdetector.description} S/N {nxdetector.serial_number} "
+        f"# Detector: {nxdetector.description.upper()} S/N {nxdetector.serial_number} "
         f"{nxinstrument.short_name}"
     )
     result.append(f"# {timestamp}")
-    result.append(
-        f"# Pixel_size {nxdetector.modules[0].fast_pixel_direction[()]:~} "
-        f"x {nxdetector.modules[0].slow_pixel_direction[()]:~}"
+    px_size_fast = (
+        nxdetector.modules[0].fast_pixel_direction[()].to("m").magnitude.item()
     )
+    px_size_slow = (
+        nxdetector.modules[0].slow_pixel_direction[()].to("m").magnitude.item()
+    )
+    result.append(f"# Pixel_size {px_size_fast} m x {px_size_slow} m")
     result.append(
         f"# {nxdetector.sensor_material} sensor, "
         f"thickness {nxdetector.sensor_thickness:~}"
     )
-    result.append(f"# Exposure_time {nxdetector.count_time:.5f} s")
-    result.append(f"# Exposure_period {nxdetector.count_time:.5f} s")
+    result.append(f"# Exposure_time {nxdetector.count_time.to('s'):~.5f}")
+    result.append(f"# Exposure_period {nxdetector.count_time.to('s'):~.5f}")
     result.append("# Tau = 1e-9 s")
     result.append(f"# Count_cutoff {nxdetector.saturation_value} counts")
     result.append("# Threshold_setting: 0 eV")
     result.append("# Gain_setting: mid gain (vrf = -0.200)")
     result.append("# N_excluded_pixels = 0")
-    result.append(f"# Wavelength {nxbeam.incident_wavelength:.5f} A")
-    result.append(f"# Detector_distance {distance / 1000.0:.5f} m")
     result.append(
-        f"# Beam_xy ({nxdetector.beam_center_x:.2f}, {nxdetector.beam_center_y:.2f}) "
+        f"# Wavelength {nxbeam.incident_wavelength.to('angstrom').magnitude:.5f} A"
+    )
+    result.append(f"# Detector_distance {distance.to('m').magnitude:.5f} m")
+    result.append(
+        f"# Beam_xy ({nxdetector.beam_center_x.magnitude:.2f}, {nxdetector.beam_center_y.magnitude:.2f}) "
         "pixels"
     )
     result.append("# Flux 0.000000")
@@ -94,18 +105,29 @@ _array_data.header_contents
         alpha = np.degrees(np.arccos(np.dot(phi_axis, kappa_axis)))
     else:
         alpha = 0
-    result.append(f"# Alpha {alpha:.3f} deg.")
+    result.append(f"# Alpha {alpha:.4f} deg.")
 
-    for name, r in rotations.items():
-        # Find the first varying rotation axis
-        if len(r) > 1 and not np.all(r[()] == r[0]):
-            result.append(f"# {name} {r[nn].to('degree'):.4f} deg.")
-            result.append(f"# {name}_increment {(r[1] - r[0]).to('degree'):.4f} deg")
-            result.append(f"# Start_angle {r[nn].to('degree'):.4f} deg.")
-            result.append(f"# Angle_increment {(r[1] - r[0]).to('degree'):.4f} deg")
+    for name, transformation in rotations.items():
+        if len(transformation) > 1 and transformation.transformation_type == "rotation":
+            image_start_angle = float(transformation[nn].to("degree").magnitude)
+            if transformation.end:
+                angle_increment = (
+                    float(transformation.end[nn].to("degree").magnitude)
+                    - image_start_angle
+                )
+            else:
+                # Fallback to inferring the per-image oscillation from the image start angles
+                angle_increment = float(
+                    (transformation[1] - transformation[0]).to("degree").magnitude
+                )
+            if angle_increment:
+                result.append(f"# Start_angle {image_start_angle:.4f} deg.")
+                result.append(f"# Angle_increment {angle_increment:.4f} deg.")
         else:
-            result.append(f"# {name} {r[0].to('degree'):.4f} deg.")
-            result.append(f"# {name}_increment 0.0000 deg")
+            image_start_angle = float(transformation[0].to("degree").magnitude)
+            angle_increment = 0
+        result.append(f"# {name} {image_start_angle:.4f} deg.")
+        result.append(f"# {name}_increment {angle_increment:.4f} deg.")
 
     result.append("# Oscillation_axis X.CW")
     result.append("# N_oscillations 1")
@@ -167,9 +189,9 @@ def make_cbf(
                 # if 32 bit then it is a signed int, I think if 8, 16 then it is
                 # unsigned with the highest two values assigned as masking values
                 if bit_depth_readout == 32:
-                    top = 2 ** 31
+                    top = 2**31
                 else:
-                    top = 2 ** bit_depth_readout
+                    top = 2**bit_depth_readout
                 d1d = data.as_1d()
                 d1d.set_selected(d1d == top - 1, -1)
                 d1d.set_selected(d1d == top - 2, -2)

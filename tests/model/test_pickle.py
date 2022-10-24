@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pickle
 
 from dxtbx.model import Beam, Detector, Goniometer, Panel, Scan

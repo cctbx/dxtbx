@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import collections
 import errno
 import os
@@ -1073,8 +1075,8 @@ def test_extract_metadata_record():
 
 
 def _equal_but_not_same(thing):
-    object_1 = tuple([thing])
-    object_2 = tuple([thing])
+    object_1 = (thing,)
+    object_2 = (thing,)
     assert object_1 == object_2
     assert object_1 is not object_2
     return object_1, object_2

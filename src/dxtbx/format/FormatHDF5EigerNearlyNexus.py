@@ -359,10 +359,12 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
             detector, self._beam_factory.model, shape=self._raw_data.shape()
         ).model
 
-        # Override the minimum trusted value - for Eiger should be -1
+        # Override the minimum trusted value - for Eiger should be 0.
+        # This needs a careful check in the context of testing the
+        # trust-the-trusted_range branch
         for panel in self._detector_model:
             trusted = panel.get_trusted_range()
-            panel.set_trusted_range((-1, trusted[1]))
+            panel.set_trusted_range((0, trusted[1]))
 
         self._goniometer_model = GoniometerFactory(sample).model
         self._scan_model = generate_scan_model(sample, detector)

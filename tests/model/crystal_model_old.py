@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from io import StringIO
 from math import pi, sqrt

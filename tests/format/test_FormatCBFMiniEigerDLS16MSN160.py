@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from dxtbx.format.FormatCBFMiniEigerDLS16MSN160 import FormatCBFMiniEigerDLS16MSN160

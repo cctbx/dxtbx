@@ -289,8 +289,9 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                 else:
                     cbf.find_row(panel_name)
                 cbf.find_column(b"undefined_value")
+                # undefined_value, interpreted as 1 less than the minimum acceptable value
                 underload = cbf.get_doublevalue()
-                trusted_range = (underload, overload)
+                trusted_range = (underload + 1, overload)
             except Exception as e:
                 if "CBF_NOTFOUND" not in str(e):
                     raise

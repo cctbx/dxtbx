@@ -17,7 +17,7 @@ def run(args=None):
     parser.add_argument("image_frame", help="An image to reload repeatedly")
     options = parser.parse_args(args)
 
-    powers = [2 ** n for n in range(20)]
+    powers = [2**n for n in range(20)]
 
     for j in range(powers[-1] + 1):
         dxtbx.load(options.image_frame)

@@ -8,13 +8,19 @@ shown as the regular, joined path (from inspection all base off of the build
 path anyway).
 """
 
+from __future__ import annotations
+
+import argparse
 import json
 import os
 import pickle
 import sys
-from argparse import ArgumentParser
 from pathlib import Path
 from types import ModuleType
+
+BUILD_PATH = None
+_all_relocatable_paths = set()
+_all_absolute_paths = set()
 
 
 def _read_obj(obj, prev=None):
@@ -59,11 +65,17 @@ def pathed_prop_object(path):
 
 class relocatable_path(object):
     def __repr__(self):
-        return os.path.normpath(os.path.join(self._anchor._path, self.relocatable))
+        _all_relocatable_paths.add(self)
+        return os.path.normpath(os.path.join(str(self._anchor), self.relocatable))
 
 
 class absolute_path(object):
+    def __init__(self, path):
+        # This init not used by unpickle - only for rewriting in here
+        self._path = str(path)
+
     def __repr__(self):
+        _all_absolute_paths.add(self)
         return self._path
 
 
@@ -103,13 +115,83 @@ libtbx.path.absolute_path = absolute_path
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description="Read information from a libtbx_env file")
+    parser = argparse.ArgumentParser(
+        description="Read information from a libtbx_env file"
+    )
     parser.add_argument("libtbx_env", type=Path)
+    parser.add_argument(
+        "--build-path",
+        type=Path,
+        help=(
+            "The actual build path. If this disagrees with the environment, "
+            "relative paths will be rewritten. This is to help match the "
+            "libtbx behaviour under transplanted installs (e.g. conda)."
+        ),
+    )
+    parser.add_argument(
+        "--sys-prefix",
+        type=Path,
+        help=(
+            "The sys.prefix for the distribution the libtbx_env sits within. "
+            "If set, and the libtbx_env is an installed one, will rewrite internal prefix."
+        ),
+    )
+    parser.add_argument(
+        "--windows",
+        action="store_true",
+        help=(
+            "Apply libtbx-installed-on-windows rewrite-rules, if the libtbx "
+            "environment is an installed one. "
+            "On windows, libtbx transplants the system root for some paths."
+        ),
+    )
     args = parser.parse_args()
     if not args.libtbx_env.is_file():
         sys.exit(f"Error: {args.libtbx_env} is not a file")
-
-    # Load the environment dump and
+    # Use the libtbx_env path as the real build_path, for rewriting paths
+    BUILD_PATH = args.build_path
+    # Load the environment dump
     env = pickle.loads(args.libtbx_env.read_bytes())
+    # Because of pickle, we need to __repr__ everything in order to register it
+    plainlify(env.to_dict())
+    # Rewrite the build folder, if we've been provided one
+    if args.build_path:
+        orig_build_path = str(env.build_path)
+        new_build_path = str(args.build_path.resolve())
+        # The relocatable path uses an "absolute path" as a parent. So,
+        # make sure we translate all absolute paths that exist, and this
+        # means that we've moved all relocatable paths.
+        for a_path in _all_absolute_paths:
+            if a_path._path == orig_build_path:
+                a_path._path = new_build_path
+
+    if env.installed and args.sys_prefix:
+        # If this is an installed libtbx_env, then we have rules about rewriting it
+        # this is... non-ideal, but since release libtbx_env files are broken on
+        # windows, this is the best place to deal with it.
+        if sys.platform == "darwin":
+            print(
+                "Warning: Not properly handling python.app nuances for environment determination",
+                file=sys.stderr,
+            )
+        new_prefix = absolute_path(args.sys_prefix.resolve())
+        if args.windows:
+            new_prefix = absolute_path(args.sys_prefix.resolve() / "library")
+        # Replace the anchor for each of the repository paths
+        for path in env.repository_paths:
+            path._anchor = new_prefix
+        env.bin_path._anchor = new_prefix
+        env.exe_path._anchor = new_prefix
+        env.include_path._anchor = new_prefix
+        env.lib_path._anchor = new_prefix
+        env.path_utility._anchor = new_prefix
+        # Rewrite all of the module dist paths
+        if args.windows:
+            for module in env.module_list:
+                for dist_path in module.dist_paths:
+                    if dist_path is not None:
+                        dist_path._anchor = new_prefix
+
+    # Regenerate the plain dictionary now we've rewritten the paths
     d = plainlify(env.to_dict())
     print(json.dumps(d, indent=4))

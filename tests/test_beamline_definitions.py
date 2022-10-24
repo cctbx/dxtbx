@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dxtbx.data.beamline_defs as dxbd
 
 

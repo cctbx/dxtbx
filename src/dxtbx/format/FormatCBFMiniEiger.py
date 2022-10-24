@@ -84,7 +84,7 @@ class FormatCBFMiniEiger(FormatCBFMini):
         else:
             # missing from data transformed with GPhL converter - dials#376
             overload = 100000000
-        underload = -1
+        minimum_trusted_value = 0
 
         try:
             identifier = self._cif_header_dictionary["Detector"].encode()
@@ -103,7 +103,7 @@ class FormatCBFMiniEiger(FormatCBFMini):
             "-y",
             (1000 * pixel_x, 1000 * pixel_y),
             (nx, ny),
-            (underload, overload),
+            (minimum_trusted_value, overload),
             [],
             px_mm=ParallaxCorrectedPxMmStrategy(mu, t0),
             mu=mu,

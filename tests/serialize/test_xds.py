@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 from libtbx.test_utils import approx_equal
