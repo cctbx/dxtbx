@@ -24,6 +24,18 @@ def test_nxentry(nxmx_example):
     assert isinstance(nxentry.data[0], nxmx.NXdata)
 
 
+def test_axis_end_increment_set(nxmx_example):
+    omega = nxmx.NXtransformationsAxis(
+        nxmx_example["/entry/sample/transformations/omega"]
+    )
+    assert len(omega.end) == len(omega)
+    assert omega.end[0] - omega[0] == omega.increment_set
+
+    phi = nxmx.NXtransformationsAxis(nxmx_example["/entry/sample/transformations/phi"])
+    assert phi.end is None
+    assert phi.increment_set is None
+
+
 def test_nxmx(nxmx_example):
     nx = nxmx.NXmx(nxmx_example)
     assert len(nx) == 1
@@ -215,7 +227,7 @@ def test_get_dependency_chain(nxmx_example):
   @vector = [-1.  0.  0.]
   @offset = None
   @depends_on = /entry/sample/transformations/chi
-/entry/sample/transformations/chi = 0 degree
+/entry/sample/transformations/chi = [0] degree
   @transformation_type = rotation
   @vector = [0 0 1]
   @offset = None

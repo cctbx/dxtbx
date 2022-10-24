@@ -24,7 +24,8 @@ class FormatBrukerFixedChi(FormatBruker):
 
     def _start(self):
         self.header_dict = {}
-        header_text = open(self._image_file).read().split("......")[0]
+        image_blob = open(self._image_file, "rb").read()
+        header_text = image_blob.split(b"......")[0].decode()
         for j in range(0, len(header_text), 80):
             record = header_text[j : j + 80]
             if record.startswith("CFR:"):
@@ -66,8 +67,8 @@ class FormatBrukerFixedChi(FormatBruker):
     def _detector(self):
         # goniometer angles in ANGLES are 2-theta, omega, phi, chi (FIXED)
         two_theta = float(self.header_dict["ANGLES"][0])
-        overload = 60000
-        underload = 0
+        max_trusted_value = 60000
+        min_trusted_value = 0
 
         fast = matrix.col((1, 0, 0))
         slow = matrix.col((0, 1, 0))
@@ -95,7 +96,7 @@ class FormatBrukerFixedChi(FormatBruker):
             slow.elems,
             pixel_size,
             image_size,
-            (underload, overload),
+            (min_trusted_value, max_trusted_value),
         )
 
     def _beam(self):

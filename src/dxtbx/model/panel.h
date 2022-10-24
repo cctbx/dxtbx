@@ -40,6 +40,8 @@ namespace dxtbx { namespace model {
   struct Projection2D {
     int4 rotation;
     int2 translation;
+    Projection2D(int4 rotation_, int2 translation_)
+        : rotation(rotation_), translation(translation_) {}
   };
 
   /**
@@ -170,7 +172,7 @@ namespace dxtbx { namespace model {
 
     /** Check the value is valid */
     bool is_value_in_trusted_range(double value) const {
-      return (trusted_range_[0] <= value && value < trusted_range_[1]);
+      return (trusted_range_[0] <= value && value <= trusted_range_[1]);
     }
 
     /** Check the coordinate is valid */
@@ -386,7 +388,7 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Apply a mask with the trusted range
+     * Apply a mask with the trusted range: [min_trusted_value, max_trusted_value]
      */
     template <typename T>
     void apply_trusted_range_mask(
@@ -397,12 +399,12 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT(data.accessor().all_eq(mask.accessor()));
       for (std::size_t i = 0; i < mask.size(); ++i) {
         mask[i] =
-          mask[i] && (trusted_range_[0] < data[i] && data[i] < trusted_range_[1]);
+          mask[i] && (trusted_range_[0] <= data[i] && data[i] <= trusted_range_[1]);
       }
     }
 
     /**
-     * Apply a mask with the trusted range
+     * Apply a mask with the trusted range: [min_trusted_value, max_trusted_value]
      */
     template <typename T>
     scitbx::af::versa<bool, scitbx::af::c_grid<2> > get_trusted_range_mask(
@@ -416,6 +418,10 @@ namespace dxtbx { namespace model {
 
     /** @returns True/False this is the same as the other */
     bool operator==(const Panel &other) const {
+      // projection_2d comparison needed here as it is defined in Panel
+      if (!has_same_projection_2d(other)) {
+        return false;
+      }
       return PanelData::operator==(other) && *convert_coord_ == *other.convert_coord_;
     }
 
@@ -426,6 +432,27 @@ namespace dxtbx { namespace model {
 
     void set_projection_2d(const Projection2D &projection_2d) {
       projection_2d_ = projection_2d;
+    }
+
+    void set_projection_2d(int4 rotation, int2 translation) {
+      projection_2d_ = Projection2D(rotation, translation);
+    }
+
+    bool has_same_projection_2d(const Panel &other) const {
+      // One panel has a projection and the other does not
+      if ((projection_2d_ && !other.projection_2d_)
+          || (!projection_2d_ && other.projection_2d_)) {
+        return false;
+      }
+      // If self has projection then other must have one
+      if (projection_2d_) {
+        Projection2D p2d_1 = projection_2d_.get();
+        Projection2D p2d_2 = other.projection_2d_.get();
+        return p2d_1.translation.const_ref().all_eq(p2d_2.translation.const_ref())
+               && p2d_1.rotation.const_ref().all_eq(p2d_2.rotation.const_ref());
+      }
+      // Both projections must be none
+      return true;
     }
 
     boost::optional<Projection2D> get_projection_2d() const {

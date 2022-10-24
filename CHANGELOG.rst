@@ -1,3 +1,139 @@
+DIALS 3.11.2 (2022-09-27)
+=========================
+
+Bugfixes
+--------
+
+- ``NXmx``: Cope more gracefully with scalar NXtransformations values. (`#546 <https://github.com/cctbx/dxtbx/issues/546>`_)
+- ``dxtbx.dlsnxs2cbf``: Fix distance and pixel size bugs. (`#548 <https://github.com/cctbx/dxtbx/issues/548>`_)
+- NXmx reading: Handle cases where the detector is read as between the sample and source. This is to compensate for an incorrect definition in the Dectris Eiger file writer. (`#550 <https://github.com/cctbx/dxtbx/issues/550>`_)
+
+
+Misc
+----
+
+- `#547 <https://github.com/cctbx/dxtbx/issues/547>`_
+
+
+DIALS 3.11.1 (2022-09-02)
+=========================
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Fix bug introduced by #572. (`#545 <https://github.com/cctbx/dxtbx/issues/545>`_)
+
+
+dxtbx 3.11.0 (2022-08-24)
+=========================
+
+Features
+--------
+
+- Replace use of legacy ``FormatNexusEiger`` with new ``FormatNXmx`` format class. (`#455 <https://github.com/cctbx/dxtbx/issues/455>`_)
+
+
+Bugfixes
+--------
+
+- DXTBX now uses the median oscillation width from across the entire scan. This resolved issues where the goniometer scan positions were read-back values instead of set-point values, and a slow rotation start across the first two images would cause the oscillation width for the whole scan to be calculated incorrectly. (`#526 <https://github.com/cctbx/dxtbx/issues/526>`_)
+- ``FormatNXmx``: Support NXmx files with one wavelength per image. (`#527 <https://github.com/cctbx/dxtbx/issues/527>`_)
+- ``ExperimentList.append()``: No longer O(N²) with experiment identifiers. (`#528 <https://github.com/cctbx/dxtbx/issues/528>`_)
+- ``FormatNXmx``: Ignore empty pixel masks, instead of printing a confusing error. (`#529 <https://github.com/cctbx/dxtbx/issues/529>`_)
+- Correct assumptions about interpreting multi-axis goniometer axes from full-CBF files. Previously, it was assumed the ``axis`` and ``diffrn_scan_axis`` categories listed axes in the same order, and that this matched a standard diffractometer axis order. The goniometer model is now build correctly, regardless of the order specified in the file. (`#539 <https://github.com/cctbx/dxtbx/issues/539>`_)
+
+
+Misc
+----
+
+- `#531 <https://github.com/cctbx/dxtbx/issues/531>`_, `#533 <https://github.com/cctbx/dxtbx/issues/533>`_
+
+
+DIALS 3.10.3 (2022-08-02)
+=========================
+
+Bugfixes
+--------
+
+- Fix ``mask_untrusted_circle()`` crash when untrusted circle extends outside detector. This affected ``dials.generate_mask``. (`#525 <https://github.com/cctbx/dxtbx/issues/525>`_)
+- ``FormatNXmx``: Allow empty ``saturation_value`` field when importing data. (`#534 <https://github.com/cctbx/dxtbx/issues/534>`_)
+
+
+DIALS 3.10.1 (2022-07-12)
+=========================
+
+Features
+--------
+
+- Updated bad pixel mask for DLS I23 PILATUS 12M for 2022 run 3 (`#530 <https://github.com/cctbx/dxtbx/issues/530>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.install_format``: Handle case on MacOS ``.pkg`` installations where URL-formats could not be installed. (`#524 <https://github.com/cctbx/dxtbx/issues/524>`_)
+
+
+dxtbx 3.10.0 (2022-06-09)
+=========================
+
+Features
+--------
+
+- Recognise `NXmx standard <https://manual.nexusformat.org/classes/applications/NXmx.html>`_ data from the Diamond Light Source `DIAD <https://www.diamond.ac.uk/Instruments/Imaging-and-Microscopy/DIAD.html>`_ beamline. (`#506 <https://github.com/cctbx/dxtbx/issues/506>`_)
+- When installed as a libtbx module, dxtbx will not install python packages into ``conda_base/``. (`#511 <https://github.com/cctbx/dxtbx/issues/511>`_)
+- Added ``flex_table.h`` and ``flex_table_suite.h`` objects from DIALS. These contain the C++ classes backing the ``dials.array_family.flex.reflection_table`` object, and allow a collection of ``array_family.flex`` arrays to be grouped together into a multi-columnar, row-addressable format. They are moved here to allow extension of the dxtbx models in this form. (`#521 <https://github.com/cctbx/dxtbx/issues/521>`_)
+
+
+Bugfixes
+--------
+
+- Fixed ``Panel.projection_2d`` not being serialized. (`#509 <https://github.com/cctbx/dxtbx/issues/509>`_)
+- ``dxtbx.dlsnxs2cbf``: Fix image oscillation for screening images (`#514 <https://github.com/cctbx/dxtbx/issues/514>`_)
+- Fix ``dxtbx.image_average`` for raster scans. (`#522 <https://github.com/cctbx/dxtbx/issues/522>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Remove disused ``FormatEigerStream`` format class. This was used internally at Diamond Light Source as an intermediate solution before implementing SWMR support. (`#499 <https://github.com/cctbx/dxtbx/issues/499>`_)
+
+
+Misc
+----
+
+- `#498 <https://github.com/cctbx/dxtbx/issues/498>`_, `#500 <https://github.com/cctbx/dxtbx/issues/500>`_, `#502 <https://github.com/cctbx/dxtbx/issues/502>`_, `#505 <https://github.com/cctbx/dxtbx/issues/505>`_, `#512 <https://github.com/cctbx/dxtbx/issues/512>`_, `#513 <https://github.com/cctbx/dxtbx/issues/513>`_, `#515 <https://github.com/cctbx/dxtbx/issues/515>`_, `#520 <https://github.com/cctbx/dxtbx/issues/520>`_
+
+
+dxtbx DIALS 3.9.2 (2022-05-09)
+==============================
+
+Bugfixes
+--------
+
+- ``FormatCBFFullPilatus``: Handle detector information better in cases of multiple or missing panels. (`#508 <https://github.com/cctbx/dxtbx/issues/508>`_)
+- Remove check for beam/normalization orthogonality in ``Beam.rotate_around_origin``. This could stop processing of older, incorrectly configured data. (`#510 <https://github.com/cctbx/dxtbx/issues/510>`_)
+- Correct a unicode error reading Bruker ``.sfrm`` files. With thanks to `Dennis Brookner <https://github.com/dennisbrookner>`_ for this change. (`#518 <https://github.com/cctbx/dxtbx/issues/518>`_)
+
+
+dxtbx 3.8.4 (2022-04-01)
+========================
+
+Bugfixes
+--------
+
+- ``FormatNXmxI19_2``:  Allow data from beamline I19-2 at Diamond Light Source to be processed with optional masking of the beamline's standard diamond anvil pressure cell with a 76° aperture. (`#481 <https://github.com/cctbx/dxtbx/issues/481>`_)
+
+
+dxtbx 3.9.1 (2022-03-31)
+========================
+
+Features
+--------
+
+- Windows support for the CMake build. (`#507 <https://github.com/cctbx/dxtbx/issues/507>`_)
+
+
 dxtbx 3.9.0 (2022-03-14)
 ========================
 

@@ -566,7 +566,10 @@ class BeamFactory:
         primary_key = "incident_wavelength"
         wavelength = self.obj.handle[primary_key]
         spectrum_wavelengths = wavelength
-        spectrum_weights = self.obj.handle.get(primary_key + "_weight")
+        spectrum_weights = self.obj.handle.get(primary_key + "_weights")
+        if spectrum_weights is None:
+            # Handle deprecation: https://github.com/nexusformat/definitions/issues/837
+            spectrum_weights = self.obj.handle.get(primary_key + "_weight")
 
         # If the wavelength array does not represent spectra, look for spectra
         # in the variant chain
@@ -576,7 +579,10 @@ class BeamFactory:
             if "variant" in variant_test.attrs:
                 variant_key = variant_test.attrs["variant"]
                 variant_wavelengths = self.obj.handle[variant_key]
-                variant_weights = self.obj.handle.get(variant_key + "_weight")
+                variant_weights = self.obj.handle.get(variant_key + "_weights")
+                if variant_weights is None:
+                    # Handle deprecation: https://github.com/nexusformat/definitions/issues/837
+                    variant_weights = self.obj.handle.get(variant_key + "_weight")
                 if variant_weights is None:
                     variant_test = variant_wavelengths  # Keep looking
                 else:
@@ -635,7 +641,7 @@ class BeamFactory:
         return self.model
 
 
-def get_change_of_basis(transformation):
+def get_change_of_basis(transformation, include_setting=True):
     """
     Get the 4x4 homogenous coordinate matrix for a given NXtransformation.
     """
@@ -645,7 +651,7 @@ def get_change_of_basis(transformation):
     axis_type = h5str(transformation.attrs["transformation_type"])
 
     vector = n2i_cob * col(transformation.attrs["vector"]).normalize()
-    setting = transformation[0]
+    setting = transformation[0] if include_setting else 0
     units = h5str(transformation.attrs["units"])
 
     if "offset" in transformation.attrs:
@@ -852,18 +858,19 @@ class DetectorFactoryFromGroup:
 
                 # Get the trusted range of pixel values - if missing use
                 # full range of signed 32 bit int
+                try:
+                    min_trusted_value = float(nx_detector.handle["underload_value"][()])
+                except KeyError:
+                    min_trusted_value = -0x7FFFFFFF
 
                 try:
-                    underload = float(nx_detector.handle["underload_value"][()])
+                    max_trusted_value = float(
+                        nx_detector.handle["saturation_value"][()]
+                    )
                 except KeyError:
-                    underload = -0x7FFFFFFF
+                    max_trusted_value = 0x7FFFFFFF
 
-                try:
-                    overload = float(nx_detector.handle["saturation_value"][()])
-                except KeyError:
-                    overload = 0x7FFFFFFF
-
-                trusted_range = underload, overload
+                trusted_range = min_trusted_value, max_trusted_value
 
                 fast_pixel_direction_handle = nx_detector_module.handle[
                     "fast_pixel_direction"
@@ -924,7 +931,11 @@ class DetectorFactoryFromGroup:
                 fast = matrix.col([-fast[0], fast[1], -fast[2]])
                 slow = slow_pixel_direction_handle.attrs["vector"]
                 slow = matrix.col([-slow[0], slow[1], -slow[2]])
-                parent, cob = get_cumulative_change_of_basis(depends_on)
+                cob = get_change_of_basis(
+                    fast_pixel_direction_handle, include_setting=False
+                ) * get_change_of_basis(
+                    slow_pixel_direction_handle, include_setting=False
+                )
                 origin = matrix.col((cob * matrix.col((0, 0, 0, 1)))[0:3])
 
                 p.set_local_frame(fast.elems, slow.elems, origin.elems)
@@ -995,16 +1006,21 @@ class DetectorFactory:
         detector_name = str(nx_detector.name)
 
         try:
-            underload = float(nx_detector["underload_value"][()])
+            # underload_value: The lowest value at which pixels for this detector would be reasonably be measured.
+            # https://manual.nexusformat.org/classes/applications/NXmx.html#nxmx-entry-instrument-detector-underload-value-field
+            min_trusted_value = float(nx_detector["underload_value"][()])
         except KeyError:
-            underload = -0x7FFFFFFF
+            min_trusted_value = -0x7FFFFFFF
 
         try:
-            overload = float(nx_detector["saturation_value"][()])
+            # saturation_value: The value at which the detector goes into saturation.
+            # Data above this value is known to be invalid.
+            # https://manual.nexusformat.org/classes/applications/NXmx.html#nxmx-entry-instrument-detector-saturation-value-field
+            max_trusted_value = float(nx_detector["saturation_value"][()])
         except KeyError:
-            overload = 0x7FFFFFFF
+            max_trusted_value = 0x7FFFFFFF
 
-        trusted_range = underload, overload
+        trusted_range = min_trusted_value, max_trusted_value
 
         # Get the detector thickness
         thickness = nx_detector["sensor_thickness"]

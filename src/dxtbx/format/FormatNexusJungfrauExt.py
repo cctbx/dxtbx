@@ -5,12 +5,13 @@ import sys
 import h5py
 import numpy as np
 
+from scitbx.array_family import flex
+
 try:
     from xfel.util.jungfrau import pad_stacked_format
 except ImportError:
     pass
 
-from dials.array_family import flex
 
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.format.nexus import h5str

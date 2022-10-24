@@ -89,7 +89,7 @@ class FormatHDF5SaclaRayonix(FormatHDF5, FormatStill):
             slow_direction="-y",
             pixel_size=(self.PIXEL_SIZE, self.PIXEL_SIZE),
             image_size=(self.RECONST_SIZE, self.RECONST_SIZE),
-            trusted_range=(-1, 65535),
+            trusted_range=(0, 65535),
             # px_mm = px_mm,
             mask=[],
         )

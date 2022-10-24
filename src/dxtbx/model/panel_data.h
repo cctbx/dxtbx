@@ -83,12 +83,18 @@ namespace dxtbx { namespace model {
       image_size_ = image_size;
     }
 
-    /** Get the trusted range */
+    /** Get the trusted range [p1, p2] where p1 is the minimum trusted
+     * value of the raw data array and p2 is the maximum trusted value
+     * of the raw data array
+     */
     tiny<double, 2> get_trusted_range() const {
       return trusted_range_;
     }
 
-    /** Set the trusted range */
+    /** Set the trusted range to values [p1, p2], where p1 is the minimum
+     * trusted value of the raw data array and p2 is the maximum trusted value
+     * of the raw data array
+     */
     void set_trusted_range(tiny<double, 2> trusted_range) {
       trusted_range_ = trusted_range;
     }

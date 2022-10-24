@@ -31,7 +31,7 @@ def test_spring8_ccp4_2018_zenodo_1443110_data03(dials_data):
     panel = detector[0]
     assert panel.get_pixel_size() == pytest.approx((0.075, 0.075))
     assert panel.get_image_size() == (4150, 4371)
-    assert panel.get_trusted_range() == (-1, 2.094707e06)
+    assert panel.get_trusted_range() == (0, 2.094707e06)
     assert panel.get_fast_axis() == (1, 0, 0)
     assert panel.get_slow_axis() == (0, -1, 0)
     assert panel.get_origin() == pytest.approx((-151.939, 169.629, -180), abs=1e-3)
