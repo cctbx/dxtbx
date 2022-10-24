@@ -1,1 +1,1 @@
-Remove unintended error message escalation, when passing multiple image ranges to import.
+Remove unintended error message escalation when passing multiple image ranges to import.
