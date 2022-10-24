@@ -995,6 +995,24 @@ class NXdetector_module(H5Mapping):
         """
         return NXtransformationsAxis(self._handle["slow_pixel_direction"])
 
+    @cached_property
+    def full_transformation(self) -> np.ndarray:
+        """Extract the homogenous transform representing this module position"""
+
+        fast_vec = self.fast_pixel_direction.vector
+        slow_vec = self.slow_pixel_direction.vector
+        norm_vec = np.cross(fast_vec, slow_vec)
+
+        fast_vec = np.array([*fast_vec, 0])
+        slow_vec = np.array([*slow_vec, 0])
+        norm_vec = np.array([*norm_vec, 0])
+
+        fast_off = self.fast_pixel_direction.offset.to("mm").magnitude
+        slow_off = self.slow_pixel_direction.offset.to("mm").magnitude
+        offset = np.array([*(fast_off + slow_off), 1])
+
+        return np.array([fast_vec, slow_vec, norm_vec, offset])
+
 
 class NXsource(H5Mapping):
     """The neutron or x-ray storage ring/facility."""

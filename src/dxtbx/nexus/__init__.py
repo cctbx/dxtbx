@@ -293,7 +293,7 @@ def get_dxtbx_detector(
                 if current:
                     grouped.append(current)
 
-                for transformation_group in grouped:
+                for transformation_group in grouped[:-1]:
                     name = transformation_group[-1].path
                     if pg is None:
                         pg = root
@@ -320,6 +320,7 @@ def get_dxtbx_detector(
                     pg.set_local_frame(fast, slow, origin)
                     assert name is not None
                     pg.set_name(name)
+                A = nxmx.get_cumulative_transformation(grouped[-1])
                 # assert pg is not None
         else:
             # Use a flat detector model
@@ -327,16 +328,10 @@ def get_dxtbx_detector(
 
         if isinstance(pg, dxtbx.model.DetectorNode):
             # Hierarchical detector model
-            fast_axis = MCSTAS_TO_IMGCIF @ module.fast_pixel_direction.vector
-            slow_axis = MCSTAS_TO_IMGCIF @ module.slow_pixel_direction.vector
-            origin = MCSTAS_TO_IMGCIF @ (
-                module.fast_pixel_direction.offset.to("mm").magnitude
-                if module.fast_pixel_direction.offset is not None
-                else np.array([0.0, 0.0, 0.0])
-                + module.slow_pixel_direction.offset.to("mm").magnitude
-                if module.slow_pixel_direction.offset is not None
-                else np.array([0.0, 0.0, 0.0])
-            )
+            transform = A @ module.full_transformation
+            fast_axis = MCSTAS_TO_IMGCIF @ (transform @ np.array([1, 0, 0, 0]))[0, :3]
+            slow_axis = MCSTAS_TO_IMGCIF @ (transform @ np.array([0, 1, 0, 0]))[0, :3]
+            origin = MCSTAS_TO_IMGCIF @ (transform @ np.array([0, 0, 0, 1]))[0, :3]
         else:
             # Flat detector model
 
