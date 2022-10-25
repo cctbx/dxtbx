@@ -279,8 +279,17 @@ def get_dxtbx_detector(
 
                 # Group any transformations together that share the same equipement_component
                 # to reduce the number of hierarchy levels
+
+                # Keep transformations without equipment_component set separate by using
+                # a different key
+                counter = 0
+
                 def equipment_component_key(dependency):
-                    return dependency.equipment_component
+                    if dependency.equipment_component:
+                        return dependency.equipment_component  # always a string
+                    else:
+                        counter += 1
+                        return counter
 
                 for _, transformation_group in groupby(
                     reversed_dependency_chain, key=equipment_component_key
