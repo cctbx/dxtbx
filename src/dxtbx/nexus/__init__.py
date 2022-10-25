@@ -14,6 +14,8 @@ import dxtbx.model
 from dxtbx import flumpy
 from dxtbx.nexus.nxmx import units
 
+from itertools import groupby
+
 from . import nxmx
 
 logger = logging.getLogger(__name__)
@@ -274,26 +276,16 @@ def get_dxtbx_detector(
                     nxmx.get_dependency_chain(module.fast_pixel_direction.depends_on)
                 )
                 pg: dxtbx.model.Detector | dxtbx.model.Panel | None = None
-                grouped = []
-                current = []
-                for transformation in reversed_dependency_chain:
-                    if current:
-                        if (
-                            transformation.equipment_component
-                            and current[-1].equipment_component
-                            and transformation.equipment_component
-                            == current[-1].equipment_component
-                        ):
-                            current.append(transformation)
-                        else:
-                            grouped.append(current)
-                            current = [transformation]
-                    else:
-                        current = [transformation]
-                if current:
-                    grouped.append(current)
 
-                for transformation_group in grouped:
+                # Group any transformations together that share the same equipement_component
+                # to reduce the number of hierarchy levels
+                def equipment_component_key(dependency):
+                    return dependency.equipment_component
+
+                for _, transformation_group in groupby(
+                    reversed_dependency_chain, key=equipment_component_key
+                ):
+                    transformation_group = list(transformation_group)
                     name = transformation_group[-1].path
                     if pg is None:
                         pg = root
