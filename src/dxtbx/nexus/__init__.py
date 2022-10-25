@@ -14,7 +14,7 @@ import dxtbx.model
 from dxtbx import flumpy
 from dxtbx.nexus.nxmx import units
 
-from itertools import groupby
+import itertools
 
 from . import nxmx
 
@@ -272,12 +272,16 @@ def get_dxtbx_detector(
         if len(nxdetector.modules) > 1:
             # Set up the detector hierarchy
             if module.fast_pixel_direction.depends_on is not None:
-                reversed_dependency_chain = reversed(
-                    nxmx.get_dependency_chain(module.fast_pixel_direction.depends_on)
+                reversed_dependency_chain = list(
+                    reversed(
+                        nxmx.get_dependency_chain(
+                            module.fast_pixel_direction.depends_on
+                        )
+                    )
                 )
                 pg: dxtbx.model.Detector | dxtbx.model.Panel | None = None
 
-                # Group any transformations together that share the same equipement_component
+                # Group any transformations together that share the same equipment_component
                 # to reduce the number of hierarchy levels
 
                 # Keep transformations without equipment_component set separate by using
@@ -291,7 +295,7 @@ def get_dxtbx_detector(
                         counter += 1
                         return counter
 
-                for _, transformation_group in groupby(
+                for _, transformation_group in itertools.groupby(
                     reversed_dependency_chain, key=equipment_component_key
                 ):
                     transformation_group = list(transformation_group)
