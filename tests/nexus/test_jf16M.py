@@ -4,7 +4,7 @@ import dxtbx
 from dxtbx.model.experiment_list import ExperimentList
 
 
-def test_jf16M(tmp_path, dials_data):
+def test_jf16M_matches_expected_hierarchy(dials_data):
     try:
         h5path = (
             dials_data("lysozyme_JF16M_4img", pathlib=True)
@@ -25,9 +25,9 @@ def test_jf16M(tmp_path, dials_data):
 
     d2 = expts[0].detector
 
-    # expt file imported using FormatNexus, but data file is imported using
-    # FormatNXmx. Panel group naming is different and hierarchy has different structure
-    assert not d1 == d2
+    def recursive_test(pg1, pg2):
+        assert pg1.is_similar_to(pg2)
+        for c1, c2 in zip(pg1, pg2):
+            recursive_test(c1, c2)
 
-    for p1, p2 in zip(d1, d2):
-        assert p1.is_similar_to(p2, ignore_trusted_range=True)
+    recursive_test(d1.hierarchy(), d2.hierarchy())

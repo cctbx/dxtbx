@@ -14,6 +14,8 @@ import dxtbx.model
 from dxtbx import flumpy
 from dxtbx.nexus.nxmx import units
 
+import itertools
+
 from . import nxmx
 
 logger = logging.getLogger(__name__)
@@ -270,22 +272,59 @@ def get_dxtbx_detector(
         if len(nxdetector.modules) > 1:
             # Set up the detector hierarchy
             if module.fast_pixel_direction.depends_on is not None:
-                reversed_dependency_chain = reversed(
-                    nxmx.get_dependency_chain(module.fast_pixel_direction.depends_on)
-                )
-                pg: dxtbx.model.Detector | dxtbx.model.Panel = root
-                for transformation in reversed_dependency_chain:
-                    assert isinstance(
-                        pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
+                reversed_dependency_chain = list(
+                    reversed(
+                        nxmx.get_dependency_chain(
+                            module.fast_pixel_direction.depends_on
+                        )
                     )
-                    name = transformation.path
-                    pg_names = [child.get_name() for child in pg]
-                    if name in pg_names:
-                        pg = pg[pg_names.index(name)]  # Getitem always returns panel
-                        continue
+                )
+                pg: dxtbx.model.Detector | dxtbx.model.Panel | None = None
+
+                # Verify that equipment_components in the dependency chain are
+                # 1) contiguous and 2) unique
+                found = []
+                for dependency in reversed_dependency_chain:
+                    if dependency.equipment_component:
+                        if dependency.equipment_component in found:
+                            assert dependency.equipment_component == found[-1]
+                        found.append(dependency.equipment_component)
+
+                # Group any transformations together that share the same equipment_component
+                # to reduce the number of hierarchy levels
+
+                # Keep transformations without equipment_component set separate by using
+                # a different key
+                counter = 0
+
+                def equipment_component_key(dependency):
+                    if dependency.equipment_component:
+                        return dependency.equipment_component  # always a string
                     else:
-                        pg = pg.add_group()
-                    A = transformation.matrix
+                        nonlocal counter
+                        counter += 1
+                        return counter
+
+                for _, transformation_group in itertools.groupby(
+                    reversed_dependency_chain, key=equipment_component_key
+                ):
+                    transformation_group = list(transformation_group)
+                    name = transformation_group[-1].path
+                    if pg is None:
+                        pg = root
+                    else:
+                        assert isinstance(
+                            pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
+                        )
+                        pg_names = [child.get_name() for child in pg]
+                        if name in pg_names:
+                            pg = pg[
+                                pg_names.index(name)
+                            ]  # Getitem always returns panel
+                            continue
+                        else:
+                            pg = pg.add_group()
+                    A = nxmx.get_cumulative_transformation(transformation_group)
                     origin = MCSTAS_TO_IMGCIF @ A[0, :3, 3]
                     fast = (
                         MCSTAS_TO_IMGCIF @ (A @ np.array((-1, 0, 0, 1)))[0, :3] - origin

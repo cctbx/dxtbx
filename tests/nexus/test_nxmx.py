@@ -240,8 +240,10 @@ def test_get_dependency_chain(nxmx_example):
     )
 
 
-@pytest.fixture
-def detector_depends_on_example():
+@pytest.fixture(
+    params=[True, False], ids=["equipment_component", "no equipment_component"]
+)
+def detector_depends_on_example(request):
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
         module = f.create_group("/entry/instrument/detector/module")
         module.attrs["NX_class"] = "NXdetector_module"
@@ -260,36 +262,72 @@ def detector_depends_on_example():
 
         module_offset = module.create_dataset("module_offset", data=0)
         module_offset.attrs["transformation_type"] = "translation"
-        module_offset.attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/transformations/det_z"
+        if request.param:
+            module_offset.attrs[
+                "depends_on"
+            ] = "/entry/instrument/detector/transformations/det_z_tune"
+        else:
+            module_offset.attrs[
+                "depends_on"
+            ] = "/entry/instrument/detector/transformations/det_z"
         module_offset.attrs["vector"] = np.array([1.0, 0.0, 0.0])
         module_offset.attrs["offset"] = np.array([0.155985, 0.166904, -0])
         module_offset.attrs["offset_units"] = "m"
         module_offset.attrs["units"] = "m"
 
         transformations = f.create_group("/entry/instrument/detector/transformations")
+        if request.param:
+            det_z_tune = transformations.create_dataset(
+                "det_z_tune", data=np.array([-0.5])
+            )
+            det_z_tune.attrs[
+                "depends_on"
+            ] = b"/entry/instrument/detector/transformations/det_z"
+            det_z_tune.attrs["transformation_type"] = b"translation"
+            det_z_tune.attrs["units"] = b"mm"
+            det_z_tune.attrs["vector"] = np.array([0.0, 0.0, 1.0])
+            det_z_tune.attrs["equipment_component"] = "detector_arm"
+
         det_z = transformations.create_dataset("det_z", data=np.array([289.3]))
         det_z.attrs["depends_on"] = b"."
         det_z.attrs["transformation_type"] = b"translation"
         det_z.attrs["units"] = b"mm"
         det_z.attrs["vector"] = np.array([0.0, 0.0, 1.0])
+        if request.param:
+            det_z.attrs["equipment_component"] = "detector_arm"
 
         yield f
 
 
 def test_get_dependency_chain_detector(detector_depends_on_example):
+    equipment_component = (
+        "equipment_component"
+        in detector_depends_on_example[
+            "/entry/instrument/detector/transformations/det_z"
+        ].attrs
+    )
     fast_pixel_direction = detector_depends_on_example[
         "/entry/instrument/detector/module/fast_pixel_direction"
     ]
     fast_axis = nxmx.NXtransformationsAxis(fast_pixel_direction)
     dependency_chain = nxmx.get_dependency_chain(fast_axis)
-    assert len(dependency_chain) == 3
-    assert [d.path for d in dependency_chain] == [
-        "/entry/instrument/detector/module/fast_pixel_direction",
-        "/entry/instrument/detector/module/module_offset",
-        "/entry/instrument/detector/transformations/det_z",
-    ]
+    if equipment_component:
+        assert len(dependency_chain) == 4
+        assert [d.path for d in dependency_chain] == [
+            "/entry/instrument/detector/module/fast_pixel_direction",
+            "/entry/instrument/detector/module/module_offset",
+            "/entry/instrument/detector/transformations/det_z_tune",
+            "/entry/instrument/detector/transformations/det_z",
+        ]
+        z = 288.8
+    else:
+        assert len(dependency_chain) == 3
+        assert [d.path for d in dependency_chain] == [
+            "/entry/instrument/detector/module/fast_pixel_direction",
+            "/entry/instrument/detector/module/module_offset",
+            "/entry/instrument/detector/transformations/det_z",
+        ]
+        z = 289.3
     A = nxmx.get_cumulative_transformation(dependency_chain)
     assert A.shape == (1, 4, 4)
     assert np.allclose(
@@ -298,7 +336,7 @@ def test_get_dependency_chain_detector(detector_depends_on_example):
             [
                 [1.0, 0.0, 0.0, 155.91],
                 [0.0, 1.0, 0.0, 166.904],
-                [0.0, 0.0, 1.0, 289.3],
+                [0.0, 0.0, 1.0, z],
                 [0.0, 0.0, 0.0, 1.0],
             ]
         ),

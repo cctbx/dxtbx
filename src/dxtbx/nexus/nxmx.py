@@ -392,6 +392,15 @@ class NXtransformationsAxis:
         return h5str(self._handle.attrs.get("transformation_type"))
 
     @cached_property
+    def equipment_component(self) -> str | None:
+        """An arbitrary identifier of a component of the equipment to which the
+        transformation belongs, such as ‘detector_arm’ or ‘detector_module’.
+        NXtransformations with the same equipment_component label form a logical
+        grouping which can be combined together into a single change-of-basis operation.
+        """
+        return h5str(self._handle.attrs.get("equipment_component"))
+
+    @cached_property
     def vector(self) -> NXNumberT:
         """Three values that define the axis for this transformation.
 
