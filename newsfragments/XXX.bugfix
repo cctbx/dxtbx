@@ -1,0 +1,1 @@
+Bugfixes for MPI run. Updated help message to identify the mpi option as a bool. Updated image_worker.__call__ to correctly count images. Changed how the iterable is split into smaller iterables for each rank. This allows the function to work when there are more ranks than iterables and to include the last n_ranks - 1 iterables.
