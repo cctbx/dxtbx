@@ -4,7 +4,7 @@ import dxtbx
 from dxtbx.model.experiment_list import ExperimentList
 
 
-def test_jf16M(tmp_path, dials_data):
+def test_jf16M_matches_expected_hierarchy(dials_data):
     try:
         h5path = (
             dials_data("lysozyme_JF16M_4img", pathlib=True)

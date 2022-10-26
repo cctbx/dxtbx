@@ -377,8 +377,10 @@ def test_get_dxtbx_detector_with_two_theta(detector_with_two_theta):
     assert panel.get_distance() == pytest.approx(120)
 
 
-@pytest.fixture
-def hierarchical_detector():
+@pytest.fixture(
+    params=[True, False], ids=["equipment_component", "no equipment_component"]
+)
+def hierarchical_detector(request):
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
         beam = f.create_group("/entry/instrument/beam")
         beam.attrs["NX_class"] = "NXbeam"
@@ -501,6 +503,8 @@ def hierarchical_detector():
         t.attrs["offset_units"] = b"mm"
         t.attrs["vector"] = np.array([0, 0, -1])
         t.attrs["units"] = b"degrees"
+        if request.param:
+            t.attrs["equipment_component"] = "detector_arm"
 
         t = transformations.create_dataset("AXIS_RAIL", data=97.83)
         t.attrs["depends_on"] = b"."
@@ -509,6 +513,8 @@ def hierarchical_detector():
         t.attrs["offset_units"] = b"mm"
         t.attrs["vector"] = np.array([0, 0, 1])
         t.attrs["units"] = b"mm"
+        if request.param:
+            t.attrs["equipment_component"] = "detector_arm"
 
         yield f
 
@@ -560,6 +566,24 @@ def test_get_dxtbx_detector_hierarchical(hierarchical_detector):
     assert detector[0].get_slow_axis() == slow_axis
     assert detector[0].get_local_slow_axis() == slow_axis
     assert detector[0].get_distance() == pytest.approx(97.536)
+
+    depth = 0
+    pg = detector.hierarchy()
+    while True:
+        depth += 1
+        if pg.is_panel():
+            break
+        else:
+            pg = pg[0]
+    if (
+        "equipment_component"
+        in hierarchical_detector[
+            "/entry/instrument/ELE_D0/transformations/AXIS_RAIL"
+        ].attrs
+    ):
+        assert depth == 5
+    else:
+        assert depth == 6
 
 
 @pytest.fixture
