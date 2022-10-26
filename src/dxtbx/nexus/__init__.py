@@ -281,6 +281,15 @@ def get_dxtbx_detector(
                 )
                 pg: dxtbx.model.Detector | dxtbx.model.Panel | None = None
 
+                # Verify that equipment_components in the dependency chain are
+                # 1) contiguous and 2) unique
+                found = []
+                for dependency in reversed_dependency_chain:
+                    if dependency.equipment_component:
+                        if dependency.equipment_component in found:
+                            assert dependency.equipment_component == found[-1]
+                        found.append(dependency.equipment_component)
+
                 # Group any transformations together that share the same equipment_component
                 # to reduce the number of hierarchy levels
 
