@@ -292,6 +292,7 @@ def get_dxtbx_detector(
                     if dependency.equipment_component:
                         return dependency.equipment_component  # always a string
                     else:
+                        nonlocal counter
                         counter += 1
                         return counter
 
