@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import logging
 from typing import Tuple, cast
 
@@ -13,8 +14,6 @@ from scitbx.array_family import flex
 import dxtbx.model
 from dxtbx import flumpy
 from dxtbx.nexus.nxmx import units
-
-import itertools
 
 from . import nxmx
 
