@@ -99,6 +99,11 @@ class FormatNXmxDLS(FormatNXmx):
                 self._legacy = nxentry.start_time.replace(
                     tzinfo=None
                 ) < datetime.datetime(2021, 9, 14, 15, 3, 0)
+            elif nxentry.start_time and "VMXM" in name.upper():
+                # don't have a time stamp for precisely when this happened to VMXm
+                self._legacy = nxentry.start_time.replace(
+                    tzinfo=None
+                ) < datetime.datetime(2022, 1, 1, 1, 0, 0)
             elif "VMXI" in name.upper():
                 # Until some point between July 2021 and  November 2021 the
                 # data_size recorded in the VMXi NeXus files were reversed
