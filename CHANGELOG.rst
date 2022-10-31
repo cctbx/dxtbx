@@ -1,3 +1,35 @@
+dxtbx 3.12.0 (2022-10-31)
+=========================
+
+Features
+--------
+
+- Improve XTC handling from LCLS. Includes better spectrum support, parallax for the ePix, binning for the Rayonix, and radial_averge fixes. (`#517 <https://github.com/cctbx/dxtbx/issues/517>`_)
+- Add spectrum support to FormatNXmx (`#538 <https://github.com/cctbx/dxtbx/issues/538>`_)
+- NXmx: Add support for [`@equipment_compenent`](https://manual.nexusformat.org/classes/base_classes/NXtransformations.html#nxtransformations-axisname-equipment-component-attribute) for forming logical groupings of transformations to reduce the number of levels in the detector hierarchy.  Note, expt files will not be backwards compatible for users of the JF16M detector at SwissFEL or the AGIPD detector at EuXFEL. (`#561 <https://github.com/cctbx/dxtbx/issues/561>`_)
+
+
+Bugfixes
+--------
+
+- ``trusted_range`` is now defined consistently as the _inclusive_ range between the minimum and maximum trusted values, i.e. valid pixels are those less than or equal to the maximum trusted value and greater than or equal to the minimum trusted value. (`#536 <https://github.com/cctbx/dxtbx/issues/536>`_)
+- Improved speed of reading many-panel Nexus images (`#565 <https://github.com/cctbx/dxtbx/issues/565>`_)
+- Remove unintended error message escalation when passing multiple image ranges to import. (`#567 <https://github.com/cctbx/dxtbx/issues/567>`_)
+- Added VMXm Eiger CdTe 9M to "legacy" list where the fast, slow dimensions are reversed (`#569 <https://github.com/cctbx/dxtbx/issues/569>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- The deprecated ``set_slow_fast_beam_centre_mm`` function has been removed. Please use ``set_fast_slow_beam_centre_mm`` instead. (`#544 <https://github.com/cctbx/dxtbx/issues/544>`_)
+
+
+Misc
+----
+
+- `#541 <https://github.com/cctbx/dxtbx/issues/541>`_, `#543 <https://github.com/cctbx/dxtbx/issues/543>`_, `#554 <https://github.com/cctbx/dxtbx/issues/554>`_, `#556 <https://github.com/cctbx/dxtbx/issues/556>`_, `#557 <https://github.com/cctbx/dxtbx/issues/557>`_, `#558 <https://github.com/cctbx/dxtbx/issues/558>`_, `#563 <https://github.com/cctbx/dxtbx/issues/563>`_
+
+
 DIALS 3.11.2 (2022-09-27)
 =========================
 
