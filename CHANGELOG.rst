@@ -5,17 +5,18 @@ Features
 --------
 
 - Improve XTC handling from LCLS. Includes better spectrum support, parallax for the ePix, binning for the Rayonix, and radial_averge fixes. (`#517 <https://github.com/cctbx/dxtbx/issues/517>`_)
-- Add spectrum support to FormatNXmx (`#538 <https://github.com/cctbx/dxtbx/issues/538>`_)
-- NXmx: Add support for [`@equipment_compenent`](https://manual.nexusformat.org/classes/base_classes/NXtransformations.html#nxtransformations-axisname-equipment-component-attribute) for forming logical groupings of transformations to reduce the number of levels in the detector hierarchy.  Note, expt files will not be backwards compatible for users of the JF16M detector at SwissFEL or the AGIPD detector at EuXFEL. (`#561 <https://github.com/cctbx/dxtbx/issues/561>`_)
+- Add spectrum support to FormatNXmx. (`#538 <https://github.com/cctbx/dxtbx/issues/538>`_)
+- NXmx: Add support for `@equipment_component <https://manual.nexusformat.org/classes/base_classes/NXtransformations.html#nxtransformations-axisname-equipment-component-attribute>`_ for forming logical groupings of transformations to reduce the number of levels in the detector hierarchy.  Note: ``.expt`` files will not be backwards compatible for users of the JF16M detector at SwissFEL, or the AGIPD detector at EuXFEL. (`#561 <https://github.com/cctbx/dxtbx/issues/561>`_)
 
 
 Bugfixes
 --------
 
 - ``trusted_range`` is now defined consistently as the _inclusive_ range between the minimum and maximum trusted values, i.e. valid pixels are those less than or equal to the maximum trusted value and greater than or equal to the minimum trusted value. (`#536 <https://github.com/cctbx/dxtbx/issues/536>`_)
-- Improved speed of reading many-panel Nexus images (`#565 <https://github.com/cctbx/dxtbx/issues/565>`_)
-- Remove unintended error message escalation when passing multiple image ranges to import. (`#567 <https://github.com/cctbx/dxtbx/issues/567>`_)
-- Added VMXm Eiger CdTe 9M to "legacy" list where the fast, slow dimensions are reversed (`#569 <https://github.com/cctbx/dxtbx/issues/569>`_)
+- Improved speed of reading many-panel Nexus images. (`#565 <https://github.com/cctbx/dxtbx/issues/565>`_)
+- Remove unintended error message escalation when passing multiple image ranges to import. 
+- Remove stray and unhelpful error message display when passing multiple image ranges to import. (`#567 <https://github.com/cctbx/dxtbx/issues/567>`_)
+- Added Diamonds VMXm Eiger CdTe 9M to "legacy" list where the fast, slow dimensions are reversed. (`#569 <https://github.com/cctbx/dxtbx/issues/569>`_)
 
 
 Deprecations and Removals
