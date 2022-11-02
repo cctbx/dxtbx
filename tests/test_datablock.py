@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-import json
 import os
 import pickle
 
 import pytest
-
-from dxtbx.datablock import DataBlockFactory
-from dxtbx.imageset import ImageSequence
 
 
 @pytest.fixture(scope="session")
@@ -58,102 +54,5 @@ def multiple_block_filenames(single_sequence_filenames, all_image_examples):
     return single_sequence_filenames + all_image_examples
 
 
-def encode_json_then_decode(obj, check_format=True):
-    string = json.dumps([db.to_dict() for db in obj], ensure_ascii=True)
-    return DataBlockFactory.from_json(string, check_format=check_format)
-
-
 def pickle_then_unpickle(obj):
     return pickle.loads(pickle.dumps(obj))
-
-
-def test_pickling(multiple_block_filenames):
-    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames)
-    blocks2 = pickle_then_unpickle(blocks1)
-    assert len(blocks2) == len(blocks1)
-    for b1, b2 in zip(blocks1, blocks2):
-        assert b1.format_class() == b2.format_class()
-        assert b1 == b2
-    assert blocks1 == blocks2
-
-
-def test_json(multiple_block_filenames):
-    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames)
-    blocks2 = encode_json_then_decode(blocks1)
-    assert len(blocks2) == len(blocks1)
-    for b1, b2 in zip(blocks1, blocks2):
-        assert b1.format_class() == b2.format_class()
-        assert b1 == b2
-    assert blocks1 == blocks2
-
-
-def test_json2(multiple_block_filenames):
-    blocks1 = DataBlockFactory.from_filenames(multiple_block_filenames)
-    blocks2 = encode_json_then_decode(blocks1, check_format=False)
-    assert len(blocks2) == len(blocks1)
-    for b1, b2 in zip(blocks1, blocks2):
-        for im1, im2 in zip(b1.extract_imagesets(), b2.extract_imagesets()):
-            assert len(im1) == len(im2)
-            if isinstance(im1, ImageSequence):
-                assert isinstance(im2, ImageSequence)
-                assert im1.get_beam() == im2.get_beam()
-                assert im1.get_detector() == im2.get_detector()
-                assert im1.get_goniometer() == im2.get_goniometer()
-                assert im1.get_scan() == im2.get_scan()
-            else:
-                assert not isinstance(im2, ImageSequence)
-                for i in range(len(im1)):
-                    assert im1.get_beam(i) == im2.get_beam(i)
-                    assert im1.get_detector(i) == im2.get_detector(i)
-
-
-def test_with_bad_external_lookup(centroid_test_data):
-    filename = os.path.join(centroid_test_data, "datablock_with_bad_lookup.json")
-    blocks = DataBlockFactory.from_json_file(filename, check_format=False)
-    assert len(blocks) == 1
-    imageset = blocks[0].extract_imagesets()[0]
-    assert imageset.external_lookup.mask.filename is not None
-    assert imageset.external_lookup.gain.filename is not None
-    assert imageset.external_lookup.pedestal.filename is not None
-    assert imageset.external_lookup.mask.data.empty()
-    assert imageset.external_lookup.gain.data.empty()
-    assert imageset.external_lookup.pedestal.data.empty()
-
-    blocks = encode_json_then_decode(blocks, check_format=False)
-    assert len(blocks) == 1
-    imageset = blocks[0].extract_imagesets()[0]
-    assert imageset.external_lookup.mask.filename is not None
-    assert imageset.external_lookup.gain.filename is not None
-    assert imageset.external_lookup.pedestal.filename is not None
-    assert imageset.external_lookup.mask.data.empty()
-    assert imageset.external_lookup.gain.data.empty()
-    assert imageset.external_lookup.pedestal.data.empty()
-
-
-def test_with_external_lookup(centroid_test_data):
-    filename = os.path.join(centroid_test_data, "datablock_with_lookup.json")
-    blocks = DataBlockFactory.from_json_file(filename)
-    assert len(blocks) == 1
-    imageset = blocks[0].extract_imagesets()[0]
-    assert not imageset.external_lookup.mask.data.empty()
-    assert not imageset.external_lookup.gain.data.empty()
-    assert not imageset.external_lookup.pedestal.data.empty()
-    assert imageset.external_lookup.mask.filename is not None
-    assert imageset.external_lookup.gain.filename is not None
-    assert imageset.external_lookup.pedestal.filename is not None
-    assert imageset.external_lookup.mask.data.tile(0).data().all_eq(True)
-    assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
-    assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
-
-    blocks = encode_json_then_decode(blocks)
-    assert len(blocks) == 1
-    imageset = blocks[0].extract_imagesets()[0]
-    assert not imageset.external_lookup.mask.data.empty()
-    assert not imageset.external_lookup.gain.data.empty()
-    assert not imageset.external_lookup.pedestal.data.empty()
-    assert imageset.external_lookup.mask.filename is not None
-    assert imageset.external_lookup.gain.filename is not None
-    assert imageset.external_lookup.pedestal.filename is not None
-    assert imageset.external_lookup.mask.data.tile(0).data().all_eq(True)
-    assert imageset.external_lookup.gain.data.tile(0).data().all_eq(1)
-    assert imageset.external_lookup.pedestal.data.tile(0).data().all_eq(0)
