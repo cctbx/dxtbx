@@ -707,44 +707,6 @@ class _experimentlist:
 
         return result
 
-    def to_datablocks(self):
-        """Return the experiment list as a datablock list.
-        This assumes that the experiment contains 1 datablock."""
-        # Datablock depends on model/__init__
-        from dxtbx.datablock import DataBlockFactory
-
-        # Convert the experiment list to dict
-        obj = self.to_dict()
-        # Convert the dictionary to a datablock dictionary
-        obj["__id__"] = "DataBlock"
-        for e in obj["experiment"]:
-            iid = e["imageset"]
-            imageset = obj["imageset"][iid]
-            if "beam" in e:
-                imageset["beam"] = e["beam"]
-            if "detector" in e:
-                imageset["detector"] = e["detector"]
-            if "goniometer" in e:
-                imageset["goniometer"] = e["goniometer"]
-            if "scan" in e:
-                imageset["scan"] = e["scan"]
-
-            if imageset["__id__"] in ("ImageSet", "ImageGrid"):
-                image_list = []
-                for file_index, filename in enumerate(imageset["images"]):
-                    image_dict = {
-                        "filename": filename,
-                        "image": file_index,
-                    }
-                    image_list.append(image_dict)
-                imageset["images"] = image_list
-
-        # Remove the experiments
-        del obj["experiment"]
-
-        # Create the datablock
-        return DataBlockFactory.from_dict([obj])
-
     def nullify_all_single_file_reader_format_instances(self):
         """
         Parallel reading of HDF5 from the same handle is not allowed. Python

@@ -5,6 +5,7 @@ import json
 import logging
 import os.path
 import pickle
+import sys
 import warnings
 
 import libtbx
@@ -30,6 +31,8 @@ class DataBlock:
     def __init__(self, imagesets=None):
         """Instantiate from a list of imagesets."""
 
+        raise RuntimeError("DataBlock class now removed")
+
         warnings.warn(
             "Datablocks are deprecated; please use ExperimentLists instead",
             UserWarning,
@@ -47,6 +50,9 @@ class DataBlock:
 
     def append(self, imageset):
         """Add an imageset to the block."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         if self._format_class is None:
             self._format_class = imageset.get_format_class()
         elif not self._format_class == imageset.get_format_class():
@@ -55,35 +61,59 @@ class DataBlock:
 
     def extend(self, datablock):
         """Add two datablocks."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         for iset in datablock:
             self.append(iset)
 
     def format_class(self):
         """Return the format class."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._format_class
 
     def extract_stills(self):
         """Extract all the still imagesets"""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return list(self.iter_stills())
 
     def extract_sequences(self):
         """Extract all the sequences from the block."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return list(self.iter_sequences())
 
     def extract_imagesets(self):
         """Extract all imagesets."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return list(self._imagesets)
 
     def num_images(self):
         """Get the number of images."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return sum(len(iset) for iset in self._imagesets)
 
     def __len__(self):
         """The number of image sets."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return len(self._imagesets)
 
     def __eq__(self, rhs):
         """Check if two blocks are the same."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return (
             self._format_class == rhs._format_class
             and self._imagesets == rhs._imagesets
@@ -91,20 +121,32 @@ class DataBlock:
 
     def __ne__(self, rhs):
         """Check if two blocks are not equal."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         return not self.__eq__(rhs)
 
     def __iter__(self):
         """Iterate through the imagesets."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         yield from self._imagesets
 
     def iter_sequences(self):
         """Iterate over sequence groups."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         for iset in self._imagesets:
             if isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
 
     def iter_stills(self):
         """Iterate over still groups."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         for iset in self._imagesets:
             if not isinstance(iset, dxtbx.imageset.ImageSequence):
                 yield iset
@@ -113,6 +155,9 @@ class DataBlock:
         """Return a list of unique beams, detectors, ... in order.
         Optionally filter out None values (unless they came in via
         an ImageSequence)."""
+
+        raise RuntimeError("DataBlock class now removed")
+
         items = {}
         for imageset in self._imagesets:
             getter_function = getattr(imageset, "get_" + item_name)
@@ -126,19 +171,33 @@ class DataBlock:
         return list(items)
 
     def unique_beams(self):
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._find_unique_items("beam")
 
     def unique_detectors(self):
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._find_unique_items("detector")
 
     def unique_goniometers(self):
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._find_unique_items("goniometer", filter_none=True)
 
     def unique_scans(self):
+
+        raise RuntimeError("DataBlock class now removed")
+
         return self._find_unique_items("scan", filter_none=True)
 
     def to_dict(self):
         """Convert the datablock to a dictionary"""
+
+        raise RuntimeError("DataBlock class now removed")
 
         def abspath_or_none(filename):
             if filename is None or filename == "":
@@ -666,6 +725,8 @@ class DataBlockFactory:
     ):
         """Try to load datablocks from any recognized format."""
 
+        raise RuntimeError("DataBlock class now removed")
+
         if unhandled is None:
             unhandled = []
         unhandled1 = []
@@ -703,6 +764,15 @@ class DataBlockFactory:
     ):
         """Create a list of data blocks from a list of directory or file names."""
         from dxtbx.model.experiment_list import ExperimentList, ExperimentListFactory
+
+        # commentary as part of remove-datablocks branch:
+        #
+        # one context where this method is used is in ... making an experiment...
+        # so we make an experiment list to make a data block to ... make an experiment
+        # list :thinking face:
+
+        sys.stdout.write("Calling DataBlockFactory.from_filenames()\n")
+        raise RuntimeError("DataBlock class now removed")
 
         expts = ExperimentListFactory.from_filenames(
             filenames,
