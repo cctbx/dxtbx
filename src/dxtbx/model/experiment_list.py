@@ -14,12 +14,7 @@ from typing import Any, Callable, Generator, Iterable
 import pkg_resources
 
 import dxtbx.datablock
-from dxtbx.datablock import (
-    BeamComparison,
-    DataBlockFactory,
-    DetectorComparison,
-    GoniometerComparison,
-)
+from dxtbx.datablock import BeamComparison, DetectorComparison, GoniometerComparison
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
@@ -727,22 +722,9 @@ class ExperimentListFactory:
             ExperimentList: The dictionary converted
         """
 
-        try:
-            experiments = ExperimentList()
-            for db in DataBlockFactory.from_dict(
-                obj, check_format=check_format, directory=directory
-            ):
-                experiments.extend(
-                    ExperimentListFactory.from_datablock_and_crystal(db, None)
-                )
-        except Exception:
-            experiments = None
-
-        # Decode the experiments from the dictionary
-        if experiments is None:
-            experiments = ExperimentListDict(
-                obj, check_format=check_format, directory=directory
-            ).decode()
+        experiments = ExperimentListDict(
+            obj, check_format=check_format, directory=directory
+        ).decode()
 
         # Check the list is consistent
         assert experiments.is_consistent()

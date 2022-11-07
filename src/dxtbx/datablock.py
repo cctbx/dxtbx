@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import json
 import logging
-import os.path
 
 import libtbx
 
 from dxtbx.format.Registry import get_format_class_for_file
-from dxtbx.serialize import load
 
 logger = logging.getLogger(__name__)
 
@@ -52,55 +50,6 @@ class FormatChecker:
                 logger.debug("Using %s for %s", fmt.__name__, filename)
         if group_fnames:
             yield group_format, group_fnames
-
-
-class DataBlockFactory:
-    """Class for creating DataBlock instances"""
-
-    @staticmethod
-    def from_json(string, check_format=True, directory=None):
-        """Decode a datablock from JSON string."""
-        return DataBlockFactory.from_dict(
-            json.loads(string),
-            check_format=check_format,
-            directory=directory,
-        )
-
-    @staticmethod
-    def from_json_file(filename, check_format=True):
-        """Decode a datablock from a JSON file."""
-        filename = os.path.abspath(filename)
-        directory = os.path.dirname(filename)
-        with open(filename) as infile:
-            return DataBlockFactory.from_json(
-                infile.read(), check_format=check_format, directory=directory
-            )
-
-    @staticmethod
-    def from_imageset_json_file(filename):
-        """Load a datablock from a sequence file."""
-        # Load the imageset and create a datablock from the filenames
-        imageset = load.imageset(filename)
-        return DataBlockFactory.from_imageset(imageset)
-
-    @staticmethod
-    def from_serialized_format(filename, check_format=True):
-        """Load a datablock from serialized formats."""
-
-        # First try as JSON format
-        try:
-            return DataBlockFactory.from_json_file(filename, check_format)
-        except Exception:
-            pass
-
-        # Now try as pickle format
-        try:
-            return DataBlockFactory.from_pickle_file(filename)
-        except Exception:
-            pass
-
-        # Now try as imageset json files
-        return DataBlockFactory.from_imageset_json_file(filename)
 
 
 class AutoEncoder(json.JSONEncoder):
