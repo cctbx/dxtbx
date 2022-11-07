@@ -685,36 +685,6 @@ class ExperimentListFactory:
         return experiments
 
     @staticmethod
-    def from_datablock_and_crystal(datablock, crystal, load_models=True):
-        """Load an experiment list from a datablock."""
-
-        # Initialise the experiment list
-        experiments = ExperimentList()
-
-        # If we have a list, loop through
-        if isinstance(datablock, list):
-            for db in datablock:
-                experiments.extend(
-                    ExperimentListFactory.from_datablock_and_crystal(
-                        db, crystal, load_models
-                    )
-                )
-            return experiments
-
-        # Add all the imagesets
-        for imageset in datablock.extract_imagesets():
-            experiments.extend(
-                ExperimentListFactory.from_imageset_and_crystal(
-                    imageset, crystal, load_models
-                )
-            )
-
-        # Check the list is consistent
-        assert experiments.is_consistent()
-
-        return experiments
-
-    @staticmethod
     def from_dict(obj, check_format=True, directory=None):
         """
         Load an experiment list from a dictionary.
