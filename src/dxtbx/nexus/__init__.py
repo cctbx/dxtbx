@@ -217,16 +217,13 @@ def get_dxtbx_scan(
             steps = nxmx.ureg.Quantity(0, "degree")
 
         step = np.median(steps).to("degree")
-        try:
-            if np.any(np.abs((steps - step) / step) >= 0.1):
-                logger.warning(
-                    "One or more recorded oscillation widths differ from the median "
-                    "by 10% or more.  The rotation axis of your goniometer may not "
-                    "have been scanning at a constant speed throughout the data "
-                    "collection."
-                )
-        except ZeroDivisionError:
-            pass
+        if np.any(np.abs(steps - step) > (0.1 * step)):
+            logger.warning(
+                "One or more recorded oscillation widths differ from the median "
+                "by more than 10%. The rotation axis of your goniometer may not "
+                "have been scanning at a constant speed throughout the data "
+                "collection."
+            )
 
         oscillation = (start.magnitude, step.magnitude)
 
