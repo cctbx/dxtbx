@@ -13,8 +13,13 @@ from typing import Any, Callable, Generator, Iterable
 
 import pkg_resources
 
-import dxtbx.datablock
-from dxtbx.datablock import BeamComparison, DetectorComparison, GoniometerComparison
+import dxtbx
+from dxtbx.datablock import (
+    BeamComparison,
+    DetectorComparison,
+    FormatChecker,
+    GoniometerComparison,
+)
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
@@ -524,7 +529,7 @@ class ExperimentListFactory:
 
         # Process each file given by this path list
         to_process = _openingpathiterator(filenames)
-        find_format = dxtbx.datablock.FormatChecker()
+        find_format = FormatChecker()
 
         format_groups = collections.defaultdict(list)
         if format_kwargs is None:
@@ -796,7 +801,7 @@ class ExperimentListFactory:
         assert len(templates) > 0
 
         experiments = ExperimentList()
-        find_format = dxtbx.datablock.FormatChecker()
+        find_format = FormatChecker()
 
         # For each template do an import
         for template in templates:
