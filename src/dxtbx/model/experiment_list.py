@@ -574,7 +574,7 @@ class ExperimentListFactory:
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
 
-        # Treat each format as a separate datablock
+        # Treat each format as a separate block of data
         for format_class, records in format_groups.items():
             if issubclass(format_class, FormatMultiImage):
                 for imageset in records:
@@ -857,7 +857,7 @@ class ExperimentListFactory:
 class ImageMetadataRecord:
     """Object to store metadata information.
 
-    This is used whilst building the datablocks.  The metadata for each
+    This is used whilst building the experiment lists. The metadata for each
     image can be read once, and then any grouping/deduplication can happen
     later, without re-opening the original file.
     """
