@@ -7,15 +7,17 @@ from matplotlib import pylab
 from scitbx.array_family import flex
 
 import dxtbx.util
-from dxtbx.datablock import DataBlockFactory
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def run(args=None):
     dxtbx.util.encode_output_as_utf8()
-    datablocks = DataBlockFactory.from_args(args or sys.argv[1:])
-    assert len(datablocks) == 1
-    detectors = datablocks[0].unique_detectors()
+    experiments = ExperimentListFactory.from_args(
+        args or sys.argv[1:], check_format=False
+    )
+    assert len(experiments) == 1
+    detectors = experiments.detectors()
     assert len(detectors) == 1
     detector = detectors[0]
     assert len(detector) == 1

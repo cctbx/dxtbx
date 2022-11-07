@@ -481,7 +481,9 @@ class ExperimentListFactory:
     """A class to help instantiate experiment lists."""
 
     @staticmethod
-    def from_args(args, unhandled=None):
+    def from_args(
+        args: list[str], unhandled: list[str] | None = None, check_format: bool = True
+    ) -> ExperimentList:
         """Try to load serialised experiments from any recognised format."""
 
         # Create a list for unhandled arguments
@@ -494,12 +496,15 @@ class ExperimentListFactory:
         for filename in args:
             try:
                 experiments.extend(
-                    ExperimentListFactory.from_serialized_format(filename)
+                    ExperimentListFactory.from_serialized_format(
+                        filename, check_format=check_format
+                    )
                 )
                 logger.debug(f"Loaded experiments from {filename}")
             except Exception as e:
                 logger.debug(f"Could not load experiments from {filename}: {e}")
                 unhandled.append(filename)
+                raise
 
         return experiments
 
