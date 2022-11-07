@@ -597,8 +597,7 @@ class ExperimentListFactory:
                 _convert_to_imagesets(records, format_class, format_kwargs)
             )
 
-            # Validate this datablock and store it
-            assert imagesets, "Datablock got no imagesets?"
+            assert imagesets, "Got no imagesets when constructing ExperimentList?"
             for imageset in imagesets:
                 experiments.extend(
                     ExperimentListFactory.from_imageset_and_crystal(
