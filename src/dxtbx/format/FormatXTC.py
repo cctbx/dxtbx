@@ -11,8 +11,7 @@ from scitbx.array_family import flex
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format, abstract
-from dxtbx.format.FormatMultiImage import Reader
-from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
+from dxtbx.format.FormatMultiImage import FormatMultiImage, Reader
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model import Spectrum
 from dxtbx.util.rotate_and_average import rotate_and_average
@@ -105,12 +104,13 @@ class XtcReader(Reader):
 
 
 @abstract
-class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
+class FormatXTC(FormatMultiImage, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
 
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
-        FormatMultiImageLazy.__init__(self, **kwargs)
+        self.lazy = kwargs.get("lazy", True)
+        FormatMultiImage.__init__(self, **kwargs)
         FormatStill.__init__(self, image_file, **kwargs)
         Format.__init__(self, image_file, **kwargs)
         self.current_index = None
@@ -244,7 +244,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                     self.run_mapping[run].append(event)
             total = 0
             remade_mapping = {}
-            for run in list(sorted(self.run_mapping)):
+            for run in sorted(self.run_mapping):
                 start = total
                 end = len(self.run_mapping[run]) + total
                 total += len(self.run_mapping[run])
