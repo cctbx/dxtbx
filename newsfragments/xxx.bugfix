@@ -1,0 +1,1 @@
+``FormatNXmxDLS`` no longer recognises electron diffraction images collected at eBIC, where ``entry/source/probe`` is set to ``"electron"``
