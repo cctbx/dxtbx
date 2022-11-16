@@ -52,6 +52,8 @@ class FormatNXmxDLS(FormatNXmx):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file) as handle:
+            if FormatNXmxDLS.get_source_probe(handle).lower() == "electron":
+                return False
             name = dxtbx.nexus.nxmx.h5str(FormatNXmxDLS.get_instrument_name(handle))
             if name and name.lower() in ("i03", "i04", "i24", "vmxi"):
                 return True

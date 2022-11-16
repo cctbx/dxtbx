@@ -145,6 +145,15 @@ class FormatNexus(FormatHDF5):
             name = None
         return nexus.h5str(name)
 
+    @staticmethod
+    def get_source_probe(handle) -> str | None:
+        try:
+            probe = handle["/entry/source/probe"][()]
+            probe = nexus.h5str(probe)
+        except KeyError:
+            probe = None
+        return probe
+
 
 class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
     @staticmethod
