@@ -1,0 +1,1 @@
+``FormatNXmxDLS`` no longer recognises electron diffraction images collected at eBIC that have been converted by ``nexgen``.
