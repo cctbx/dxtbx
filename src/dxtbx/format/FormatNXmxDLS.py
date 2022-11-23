@@ -55,6 +55,8 @@ class FormatNXmxDLS(FormatNXmx):
             name = dxtbx.nexus.nxmx.h5str(FormatNXmxDLS.get_instrument_name(handle))
             if name and name.lower() in ("i03", "i04", "i24", "vmxi"):
                 return True
+            if name and "ebic" in name.lower():
+                return False
             if name and name.upper().startswith(("DIAMOND BEAMLINE", "DLS")):
                 return True
         return False
