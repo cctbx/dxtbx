@@ -1,0 +1,1 @@
+Fallback on legacy FormatNexus to workaround issues reading datasets written by the Dectris filewriter with FormatNXmx(#582)
