@@ -8,7 +8,8 @@ from dxtbx.model import SimplePxMmStrategy
 
 
 class FormatNXmxED(FormatNXmx):
-    """Format class for 3DED/MicroED images that have been"""
+    """Format class for 3DED/MicroED images that have been converted to NXmx
+    by nexgen"""
 
     @staticmethod
     def understand(image_file):
