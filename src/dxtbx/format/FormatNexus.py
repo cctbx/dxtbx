@@ -6,7 +6,6 @@ import h5py
 
 from dxtbx.format import nexus
 from dxtbx.format.FormatHDF5 import FormatHDF5
-from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
 
 
@@ -146,7 +145,12 @@ class FormatNexus(FormatHDF5):
         return nexus.h5str(name)
 
 
-class FormatNexusStill(FormatMultiImageLazy, FormatNexus, FormatStill):
+class FormatNexusStill(FormatNexus, FormatStill):
+    def __init__(self, *args, **kwargs):
+        self.lazy = kwargs.get("lazy", True)
+        FormatNexus.__init__(self, *args, **kwargs)
+        FormatStill.__init__(self, *args, **kwargs)
+
     @staticmethod
     def understand(image_file):
         is_nexus_still = False
