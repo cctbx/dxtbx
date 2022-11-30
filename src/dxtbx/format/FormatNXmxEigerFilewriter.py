@@ -81,7 +81,7 @@ def get_raw_data(
             break
         index -= data.shape[0]
     if index >= data.shape[0]:
-        raise RuntimeError(f"Out of range index for raw data {index}")
+        raise IndexError(f"Out of range index for raw data {index}")
     all_data = []
     sliced_outer = data[index]
     for module_slices in get_detector_module_slices(nxdetector):
