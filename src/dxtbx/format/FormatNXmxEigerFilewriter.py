@@ -10,7 +10,7 @@ import dxtbx.nexus
 from dxtbx.format.FormatNXmx import FormatNXmx
 from dxtbx.nexus import _dataset_as_flex, get_detector_module_slices
 
-DATA_NNNNNN_RE = re.compile(r"data_\d{6}")
+DATA_FILE_RE = re.compile(r"data_\d{6}")
 
 
 class FormatNXmxEigerFilewriter(FormatNXmx):
@@ -75,7 +75,7 @@ def get_raw_data(
     write a virtual dataset, and instead we have to manually identify the correct
     data_nnnnnn sub-dataset for a given index.
     """
-    data_subsets = [v for k, v in sorted(nxdata.items()) if DATA_NNNNNN_RE.match(k)]
+    data_subsets = [v for k, v in sorted(nxdata.items()) if DATA_FILE_RE.match(k)]
     for data in data_subsets:
         if index < data.shape[0]:
             break
