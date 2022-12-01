@@ -44,10 +44,6 @@ class FormatNXmx(FormatNexus):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file) as handle:
-            if "/entry/instrument/detector/detectorSpecific/eiger_fw_version" in handle:
-                # Temporary workaround for issue reading files written by the
-                # Dectris filewriter, fall back on the legacy FormatNexus (#582)
-                return False
             return bool(
                 [
                     entry
