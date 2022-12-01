@@ -19,7 +19,7 @@ def test_DLS_I03_smargon(dials_data):
     imageset = expts[0].imageset
     assert imageset.get_format_class() == FormatCBFFullPilatusDLS6MSN126
     detector = imageset.get_detector()
-    assert detector[0].get_trusted_range() == (0, 91795)
+    assert detector[0].get_trusted_range() == (0, 91794)
     gonio = imageset.get_goniometer()
     assert list(gonio.get_angles()) == pytest.approx([45.0, 45.0, 45.0])
     assert list(gonio.get_axes().as_double()) == pytest.approx(
