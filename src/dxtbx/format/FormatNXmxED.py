@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import h5py
 
+from scitbx.array_family import flex
+
+import dxtbx.nexus
 from dxtbx.format import nexus
 from dxtbx.format.FormatNXmx import FormatNXmx
+from dxtbx.masking import mask_untrusted_circle, mask_untrusted_polygon
 from dxtbx.model import SimplePxMmStrategy
 
 
@@ -63,3 +67,46 @@ class FormatNXmxED(FormatNXmx):
         beam.set_polarization_fraction(0.5)
 
         return beam
+
+
+class FormatNXmxEDeBIC(FormatNXmxED):
+
+    """Set a mask specific for the SINGLA installed at eBIC"""
+
+    @staticmethod
+    def understand(image_file):
+        with h5py.File(image_file) as handle:
+            name = dxtbx.nexus.nxmx.h5str(FormatNXmxEDeBIC.get_instrument_name(handle))
+            if name and "ebic" in name.lower():
+                return True
+        return False
+
+    def _start(self):
+        super()._start()
+
+        self._extend_static_mask()
+
+    def _extend_static_mask(self):
+        """Extend the existing static mask to include the flange shadow."""
+
+        pixel_mask = self._static_mask[0]
+
+        # It is easier to calculate the inverted mask for the shadow of the vacuum flange
+        inverted_flange_mask = flex.bool(flex.grid(pixel_mask.all()), True)
+        for coord in [(201, 210), (202, 846), (836, 208), (838, 845)]:
+            mask_untrusted_circle(inverted_flange_mask, coord[0], coord[1], 194)
+        vertices = [
+            (7, 210),
+            (201, 16),
+            (836, 14),
+            (1028, 174),
+            (1028, 886),
+            (838, 1039),
+            (202, 1040),
+            (8, 836),
+        ]
+        polygon = flex.vec2_double(vertices)
+        mask_untrusted_polygon(inverted_flange_mask, polygon)
+
+        # Combine masks taking care of the inversion
+        self._static_mask = ((pixel_mask & ~inverted_flange_mask),)
