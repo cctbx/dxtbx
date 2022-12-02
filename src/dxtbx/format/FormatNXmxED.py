@@ -90,11 +90,11 @@ class FormatNXmxEDeBIC(FormatNXmxED):
         """Extend the existing static mask to include the flange shadow."""
 
         pixel_mask = self._static_mask[0]
-        flange_mask = flex.bool(flex.grid(pixel_mask.all()), True)
 
-        # Add mask for shadow of vacuum flange on detector
+        # It is easier to calculate the inverted mask for the shadow of the vacuum flange
+        inverted_flange_mask = flex.bool(flex.grid(pixel_mask.all()), True)
         for coord in [(201, 210), (202, 846), (836, 208), (838, 845)]:
-            mask_untrusted_circle(flange_mask, coord[0], coord[1], 194)
+            mask_untrusted_circle(inverted_flange_mask, coord[0], coord[1], 194)
         vertices = [
             (7, 210),
             (201, 16),
@@ -106,6 +106,7 @@ class FormatNXmxEDeBIC(FormatNXmxED):
             (8, 836),
         ]
         polygon = flex.vec2_double(vertices)
-        mask_untrusted_polygon(flange_mask, polygon)
+        mask_untrusted_polygon(inverted_flange_mask, polygon)
 
-        self._static_mask = ((pixel_mask & ~flange_mask),)
+        # Combine masks taking care of the inversion
+        self._static_mask = ((pixel_mask & ~inverted_flange_mask),)
