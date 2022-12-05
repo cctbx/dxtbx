@@ -217,18 +217,15 @@ def get_dxtbx_scan(
             steps = nxmx.ureg.Quantity(0, "degree")
 
         step = np.median(steps).to("degree")
-        try:
-            if np.any(np.abs((steps - step) / step) >= 0.1):
-                logger.warning(
-                    "One or more recorded oscillation widths differ from the median "
-                    "by 10% or more.  The rotation axis of your goniometer may not "
-                    "have been scanning at a constant speed throughout the data "
-                    "collection."
-                )
-        except ZeroDivisionError:
-            pass
+        if np.any(np.abs(steps - step) > (0.1 * step)):
+            logger.warning(
+                "One or more recorded oscillation widths differ from the median "
+                "by more than 10%. The rotation axis of your goniometer may not "
+                "have been scanning at a constant speed throughout the data "
+                "collection."
+            )
 
-        oscillation = (start.magnitude, step.magnitude)
+        oscillation = tuple(float(f) for f in (start.magnitude, step.magnitude))
 
     if nxdetector.frame_time is not None:
         frame_time = nxdetector.frame_time.to("seconds").magnitude
@@ -340,6 +337,11 @@ def get_dxtbx_detector(
             # Use a flat detector model
             pg = root
 
+        pixel_size = (
+            module.fast_pixel_direction[()].to("mm").magnitude.item(),
+            module.slow_pixel_direction[()].to("mm").magnitude.item(),
+        )
+
         if isinstance(pg, dxtbx.model.DetectorNode):
             # Hierarchical detector model
             fast_axis = MCSTAS_TO_IMGCIF @ module.fast_pixel_direction.vector
@@ -393,10 +395,17 @@ def get_dxtbx_detector(
             A = nxmx.get_cumulative_transformation(dependency_chain)
             origin = MCSTAS_TO_IMGCIF @ A[0, :3, 3]
 
-        pixel_size = (
-            module.fast_pixel_direction[()].to("mm").magnitude.item(),
-            module.slow_pixel_direction[()].to("mm").magnitude.item(),
-        )
+            if (
+                origin[0] == 0
+                and origin[1] == 0
+                and nxdetector.beam_center_x
+                and nxdetector.beam_center_y
+            ):
+                # fallback on the explicit beam center - this is needed for some older
+                # dectris eiger filewriter datasets
+                origin -= nxdetector.beam_center_x.magnitude * pixel_size[0] * fast_axis
+                origin -= nxdetector.beam_center_y.magnitude * pixel_size[1] * slow_axis
+
         # dxtbx requires image size in the order fast, slow - which is the reverse of what
         # is stored in module.data_size
         image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[::-1])))

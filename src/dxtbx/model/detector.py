@@ -774,9 +774,11 @@ class DetectorFactory:
         size = tuple(reversed(cbf_handle.get_image_size(0)))
 
         try:
-            underload = find_undefined_value(cbf_handle)
+            undefined_value = find_undefined_value(cbf_handle)
+            # In imgCIF overload means the pixel is saturated and hence untrusted
+            # https://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/Iarray_intensities.overload.html
             overload = cbf_handle.get_overload(0)
-            trusted_range = (underload, overload * dxtbx_overload_scale)
+            trusted_range = (undefined_value + 1, (overload - 1) * dxtbx_overload_scale)
         except Exception:
             trusted_range = (0.0, 1.0e6)
 
