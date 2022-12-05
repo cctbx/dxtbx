@@ -1,1 +1,0 @@
-NXmx: fallback on explicit beam_center_{x,y} if the x,y components of the detector origin are zero
