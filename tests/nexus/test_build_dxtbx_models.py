@@ -293,6 +293,18 @@ def test_get_dxtbx_detector(nxmx_example):
     assert px_mm.mu() == panel.get_mu() == pytest.approx(3.9217189904637366)
 
 
+def test_get_dxtbx_detector_beam_center_fallback(nxmx_example):
+    nxmx_example["/entry/instrument/detector/module/module_offset"].attrs[
+        "offset"
+    ] = np.array((0, 0, 0))
+    instrument = dxtbx.nexus.nxmx.NXmx(nxmx_example).entries[0].instruments[0]
+    wavelength = instrument.beams[0].incident_wavelength.to("angstrom").magnitude
+    detector = dxtbx.nexus.get_dxtbx_detector(instrument.detectors[0], wavelength)
+    assert detector[0].get_origin() == pytest.approx(
+        (-155.985, 166.904, -289.3), rel=1e-5
+    )
+
+
 @pytest.fixture
 def detector_with_two_theta():
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:

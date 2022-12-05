@@ -337,6 +337,11 @@ def get_dxtbx_detector(
             # Use a flat detector model
             pg = root
 
+        pixel_size = (
+            module.fast_pixel_direction[()].to("mm").magnitude.item(),
+            module.slow_pixel_direction[()].to("mm").magnitude.item(),
+        )
+
         if isinstance(pg, dxtbx.model.DetectorNode):
             # Hierarchical detector model
             fast_axis = MCSTAS_TO_IMGCIF @ module.fast_pixel_direction.vector
@@ -390,10 +395,17 @@ def get_dxtbx_detector(
             A = nxmx.get_cumulative_transformation(dependency_chain)
             origin = MCSTAS_TO_IMGCIF @ A[0, :3, 3]
 
-        pixel_size = (
-            module.fast_pixel_direction[()].to("mm").magnitude.item(),
-            module.slow_pixel_direction[()].to("mm").magnitude.item(),
-        )
+            if (
+                origin[0] == 0
+                and origin[1] == 0
+                and nxdetector.beam_center_x
+                and nxdetector.beam_center_y
+            ):
+                # fallback on the explicit beam center - this is needed for some older
+                # dectris eiger filewriter datasets
+                origin -= nxdetector.beam_center_x.magnitude * pixel_size[0] * fast_axis
+                origin -= nxdetector.beam_center_y.magnitude * pixel_size[1] * slow_axis
+
         # dxtbx requires image size in the order fast, slow - which is the reverse of what
         # is stored in module.data_size
         image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[::-1])))
