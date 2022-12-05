@@ -1,1 +1,0 @@
-``FormatCBFFull``: trusted range bug fix - use the minimum valid pixel value rather than the undefined value
