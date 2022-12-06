@@ -147,7 +147,7 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
         #    pixel_size[0] * 3 + (panel_size[0] - 2) * pixel_size[0],
         #    pixel_size[1] * 3 + (panel_size[1] - 2) * pixel_size[1],
         # )
-        trusted_range = (-1, 65535)
+        trusted_range = (0, 65535)
         thickness = 0.3  # assume 300 mu thick
 
         # Initialise detector frame

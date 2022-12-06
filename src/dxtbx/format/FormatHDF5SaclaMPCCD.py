@@ -13,7 +13,6 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatHDF5 import FormatHDF5
-from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.format.nexus import h5str
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
@@ -29,7 +28,7 @@ from dxtbx.model.detector import Detector
 # 180724: update 'understand' to exclude Rayonix data
 
 
-class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
+class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
     """
     Class to handle multi-event HDF5 files from MPCCD
     preprocessed by Cheetah SFX pipeline at SACLA.
@@ -58,6 +57,7 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
         self._raw_data = None
         self.index = index
         self.image_filename = image_file
+        self.lazy = kwargs.get("lazy", True)
         super().__init__(image_file, **kwargs)
 
         self.PIXEL_SIZE = 50 / 1000  # 50 um
@@ -189,7 +189,7 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
                 slow_direction="-y",
                 pixel_size=(self.PIXEL_SIZE, self.PIXEL_SIZE),
                 image_size=(self.RECONST_SIZE, self.RECONST_SIZE),
-                trusted_range=(-1, 65535),
+                trusted_range=(0, 65535),
                 mask=[],
             )  # TODO: add gaps
 
@@ -216,7 +216,7 @@ class FormatHDF5SaclaMPCCD(FormatMultiImageLazy, FormatHDF5, FormatStill):
             p.set_type("SENSOR_PAD")
             p.set_name("Panel%d" % i)
             p.set_image_size((512, 1024))
-            p.set_trusted_range((-1, 65535))
+            p.set_trusted_range((0, 65535))
             p.set_pixel_size((self.PIXEL_SIZE, self.PIXEL_SIZE))
             p.set_thickness(self.thickness)
             p.set_local_frame(fast.elems, slow.elems, origin.elems)

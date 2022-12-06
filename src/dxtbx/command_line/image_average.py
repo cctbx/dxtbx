@@ -79,7 +79,7 @@ class image_worker:
                 sum_img = list(copy.deepcopy(img))
                 ssq_img = [flex.pow2(p) for p in img]
                 sum_wavelength = wavelength
-
+                nmemb += 1
             else:
                 for n, image in enumerate(img):
                     sel = (image > max_img[n]).as_1d()
@@ -87,10 +87,10 @@ class image_worker:
 
                     sum_img[n] += image
                     ssq_img[n] += flex.pow2(image)
-                sum_distance += distance
-                sum_wavelength += wavelength
+                    sum_distance += distance
+                    sum_wavelength += wavelength
+                    nmemb += 1
 
-            nmemb += 1
         return nfail, nmemb, max_img, sum_distance, sum_img, ssq_img, sum_wavelength
 
 
@@ -242,7 +242,8 @@ def run(argv=None):
             type=bool,
             default=False,
             dest="mpi",
-            help="Set to enable MPI processing",
+            metavar="False",
+            help="Set to True enable MPI processing",
         )
     ).process(args=argv[1:])
 
@@ -256,6 +257,10 @@ def run(argv=None):
 
     experiments = ExperimentListFactory.from_filenames([paths[0]], load_models=False)
     if len(paths) == 1:
+        if len(experiments) == 1 and len(experiments[0].imageset) > 1:
+            experiments = ExperimentListFactory.from_stills_and_crystal(
+                experiments[0].imageset, None, load_models=False
+            )
         worker = multi_image_worker(command_line, paths[0], experiments)
         iterable = list(range(len(experiments)))
     else:
@@ -282,18 +287,38 @@ def run(argv=None):
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
         size = comm.Get_size()
+
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
-        iterable = [i for n, i in enumerate(iterable) if (n + rank) % size == 0]
-        (
-            r_nfail,
-            r_nmemb,
-            r_max_img,
-            r_sum_distance,
-            r_sum_img,
-            r_ssq_img,
-            r_sum_wavelength,
-        ) = worker(iterable)
+        iterable_rank = iterable[rank::size]
+        if len(iterable_rank) > 0:
+            # Only run the worker on non-empty ranks
+            (
+                r_nfail,
+                r_nmemb,
+                r_max_img,
+                r_sum_distance,
+                r_sum_img,
+                r_ssq_img,
+                r_sum_wavelength,
+            ) = worker(iterable_rank)
+            surplus_rank = False
+        else:
+            # else run on the first iterable and set the values to zero
+            (
+                r_nfail,
+                r_nmemb,
+                r_max_img,
+                r_sum_distance,
+                r_sum_img,
+                r_ssq_img,
+                r_sum_wavelength,
+            ) = worker([iterable[0]])
+            r_nfail = 0
+            r_nmemb = 0
+            r_sum_distance = 0
+            r_sum_wavelength = 0
+            surplus_rank = True
 
         nfail = np.array([0])
         nmemb = np.array([0])
@@ -311,7 +336,10 @@ def run(argv=None):
         def reduce_image(data, op=MPI.SUM):
             result = []
             for panel_data in data:
-                panel_data = panel_data.as_numpy_array()
+                if surplus_rank:
+                    panel_data = 0 * panel_data.as_numpy_array()
+                else:
+                    panel_data = panel_data.as_numpy_array()
                 reduced_data = np.zeros(panel_data.shape).astype(panel_data.dtype)
                 comm.Reduce(panel_data, reduced_data, op=op)
                 result.append(flex.double(reduced_data))
@@ -377,7 +405,6 @@ def run(argv=None):
     avg_img = tuple(s.as_double() / nmemb for s in sum_img)
     avg_distance = sum_distance / nmemb
     avg_wavelength = sum_wavelength / nmemb
-
     expt = experiments[0]
     expt.load_models()
     detector = expt.detector
@@ -397,7 +424,6 @@ def run(argv=None):
         for n, d in enumerate(detector):
             fast, slow = d.get_image_size()
             avg_img[n].resize(flex.grid(slow, fast))
-
         writer = FullCBFWriter(imageset=expt.imageset)
         cbf = writer.get_cbf_handle(header_only=True)
         writer.add_data_to_cbf(cbf, data=avg_img)
@@ -420,7 +446,6 @@ def run(argv=None):
             stddev_img.append(
                 ssq_img[n].as_double() - sum_img[n].as_double() * avg_img[n]
             )
-
             # Accumulating floating-point numbers introduces errors, which may
             # cause negative variances.  Since a two-pass approach is
             # unacceptable, the standard deviation is clamped at zero.

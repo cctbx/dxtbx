@@ -145,8 +145,8 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
             detector_origin = rotations[j] * detector_origin
             detector_origin = translations[j] + detector_origin
 
-        overload = int(float(self._header_dictionary["SATURATED_VALUE"]))
-        underload = -1
+        max_trusted_value = int(float(self._header_dictionary["SATURATED_VALUE"]))
+        min_trusted_value = 0
 
         # Unfortunately thickness and material are not stored in the header. Set
         # to sensible defaults.
@@ -164,7 +164,7 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
             detector_slow.elems,
             pixel_size,
             image_size,
-            (underload, overload),
+            (min_trusted_value, max_trusted_value),
             px_mm=ParallaxCorrectedPxMmStrategy(mu, t0),
             mu=mu,
         )

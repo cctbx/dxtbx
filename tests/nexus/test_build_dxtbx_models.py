@@ -3,7 +3,9 @@ from __future__ import annotations
 import h5py
 import numpy as np
 import pytest
+import scipy.stats as stats
 
+from cctbx import factor_ev_angstrom
 from scitbx.array_family import flex
 
 import dxtbx.model
@@ -154,7 +156,7 @@ def test_get_dxtbx_goniometer_grid_scan(nxsample_gridscan):
 
 def test_get_dxtbx_beam(nxmx_example):
     instrument = dxtbx.nexus.nxmx.NXmx(nxmx_example).entries[0].instruments[0]
-    beam = dxtbx.nexus.get_dxtbx_beam(instrument.beams[0])
+    beam = dxtbx.nexus.CachedWavelengthBeamFactory(instrument.beams[0]).make_beam()
     assert isinstance(beam, dxtbx.model.Beam)
     assert beam.get_wavelength() == 0.976223
     assert beam.get_sample_to_source_direction() == (0.0, 0.0, 1.0)
@@ -168,7 +170,80 @@ def test_get_dxtbx_beam_array_length_1():
         beam["incident_wavelength"].attrs["units"] = b"angstrom"
 
         nxbeam = dxtbx.nexus.nxmx.NXbeam(f["/entry/instrument/beam"])
-        assert dxtbx.nexus.get_dxtbx_beam(nxbeam).get_wavelength() == 0.987
+        beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        assert beam_factory.make_beam(index=0).get_wavelength() == 0.987
+
+
+def test_get_dxtbx_beam_array():
+    wavelengths = [0.9871, 0.9872, 0.9870]
+    with h5py.File(" ", mode="w", **pytest.h5_in_memory) as f:
+        beam = f.create_group("/entry/instrument/beam")
+        beam.attrs["NX_class"] = "NXbeam"
+        beam["incident_wavelength"] = np.array(wavelengths)
+        beam["incident_wavelength"].attrs["units"] = b"angstrom"
+
+        nxbeam = dxtbx.nexus.nxmx.NXbeam(f["/entry/instrument/beam"])
+        beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        for i, w in enumerate(wavelengths):
+            assert beam_factory.make_beam(index=i).get_wavelength() == w
+
+
+def test_get_dxtbx_spectrum():
+    # gaussian bandpass with 20eV std dev centered on 9500 eV
+    energy = 9500
+    channels = np.linspace(9400, 9600, 1000)
+    weights = stats.norm.pdf(channels, energy, 20)
+
+    with h5py.File(" ", mode="w", **pytest.h5_in_memory) as f:
+        beam = f.create_group("/entry/instrument/beam")
+        beam.attrs["NX_class"] = "NXbeam"
+        beam["incident_wavelength"] = factor_ev_angstrom / channels
+        beam["incident_wavelength"].attrs["units"] = b"angstrom"
+        beam["incident_wavelength_weights"] = weights
+
+        nxbeam = dxtbx.nexus.nxmx.NXbeam(f["/entry/instrument/beam"])
+        beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        assert (
+            pytest.approx(beam_factory.make_beam().get_wavelength())
+            == factor_ev_angstrom / energy
+        )
+        assert (
+            pytest.approx(beam_factory.make_spectrum().get_weighted_energy_eV())
+            == energy
+        )
+
+
+def test_get_dxtbx_spectrum_with_variants():
+    # drifting gaussian bandpass with 20eV std dev
+    energies = np.array([9500, 9520, 9510])
+    channels = np.linspace(9400, 9600, 1000)
+    weights = np.vstack([stats.norm.pdf(channels, e, 20) for e in energies])
+    # calibrated energies not necessarily matching the weighted mean of the spectra
+    calibrated_energies = np.array([e + 5 for e in energies])
+
+    with h5py.File(" ", mode="w", **pytest.h5_in_memory) as f:
+        beam = f.create_group("/entry/instrument/beam")
+        beam.attrs["NX_class"] = "NXbeam"
+        beam["incident_wavelength"] = factor_ev_angstrom / calibrated_energies
+        beam["incident_wavelength"].attrs["units"] = b"angstrom"
+        beam["incident_wavelength"].attrs["variant"] = b"incident_wavelength_1Dspectrum"
+        beam["incident_wavelength_1Dspectrum"] = factor_ev_angstrom / channels
+        beam["incident_wavelength_1Dspectrum"].attrs["units"] = b"angstrom"
+        beam["incident_wavelength_1Dspectrum_weights"] = weights
+
+        nxbeam = dxtbx.nexus.nxmx.NXbeam(f["/entry/instrument/beam"])
+        beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        for i, (calibrated_energy, energy) in enumerate(
+            zip(calibrated_energies, energies)
+        ):
+            assert (
+                pytest.approx(beam_factory.make_beam(i).get_wavelength())
+                == factor_ev_angstrom / calibrated_energy
+            )
+            assert (
+                pytest.approx(beam_factory.make_spectrum(i).get_weighted_energy_eV())
+                == energy
+            )
 
 
 def test_get_dxtbx_scan(nxmx_example):
@@ -177,8 +252,8 @@ def test_get_dxtbx_scan(nxmx_example):
     scan = dxtbx.nexus.get_dxtbx_scan(sample, instrument.detectors[0])
     assert scan.get_num_images() == 10
     assert scan.get_image_range() == (1, 10)
-    assert scan.get_oscillation() == (0.0, 0.1)
-    assert scan.get_oscillation_range() == (0.0, 1.0)
+    assert pytest.approx(scan.get_oscillation()) == (0.0, 0.1)
+    assert pytest.approx(scan.get_oscillation_range()) == (0.0, 1.0)
     assert list(scan.get_exposure_times()) == [0.1] * 10
 
 
@@ -195,9 +270,8 @@ def test_get_dxtbx_scan_grid_scan(nxsample_gridscan):
 
 def test_get_dxtbx_detector(nxmx_example):
     instrument = dxtbx.nexus.nxmx.NXmx(nxmx_example).entries[0].instruments[0]
-    detector = dxtbx.nexus.get_dxtbx_detector(
-        instrument.detectors[0], instrument.beams[0]
-    )
+    wavelength = instrument.beams[0].incident_wavelength.to("angstrom").magnitude
+    detector = dxtbx.nexus.get_dxtbx_detector(instrument.detectors[0], wavelength)
 
     assert isinstance(detector, dxtbx.model.Detector)
     assert len(detector) == 1
@@ -212,11 +286,23 @@ def test_get_dxtbx_detector(nxmx_example):
     assert panel.get_image_size_mm() == pytest.approx((311.09999999999997, 327.15))
     assert panel.get_name() == "/entry/instrument/detector/module"
     assert panel.get_normal() == (0.0, 0.0, -1.0)
-    assert panel.get_trusted_range() == (-1, 9266)
+    assert panel.get_trusted_range() == (0, 9266)
     assert panel.get_type() == "SENSOR_PAD"
     px_mm = panel.get_px_mm_strategy()
     assert px_mm.t0() == panel.get_thickness() == 0.45
     assert px_mm.mu() == panel.get_mu() == pytest.approx(3.9217189904637366)
+
+
+def test_get_dxtbx_detector_beam_center_fallback(nxmx_example):
+    nxmx_example["/entry/instrument/detector/module/module_offset"].attrs[
+        "offset"
+    ] = np.array((0, 0, 0))
+    instrument = dxtbx.nexus.nxmx.NXmx(nxmx_example).entries[0].instruments[0]
+    wavelength = instrument.beams[0].incident_wavelength.to("angstrom").magnitude
+    detector = dxtbx.nexus.get_dxtbx_detector(instrument.detectors[0], wavelength)
+    assert detector[0].get_origin() == pytest.approx(
+        (-155.985, 166.904, -289.3), rel=1e-5
+    )
 
 
 @pytest.fixture
@@ -287,9 +373,11 @@ def test_get_dxtbx_detector_with_two_theta(detector_with_two_theta):
     det = dxtbx.nexus.nxmx.NXdetector(
         detector_with_two_theta["/entry/instrument/detector"]
     )
-    beam = dxtbx.nexus.nxmx.NXbeam(detector_with_two_theta["/entry/instrument/beam"])
+    wavelength = detector_with_two_theta["/entry/instrument/beam/incident_wavelength"][
+        ()
+    ]
 
-    detector = dxtbx.nexus.get_dxtbx_detector(det, beam)
+    detector = dxtbx.nexus.get_dxtbx_detector(det, wavelength)
     panel = detector[0]
     assert panel.get_fast_axis() == (1.0, 0.0, 0.0)
     assert panel.get_slow_axis() == (0.0, -0.7071067811865475, -0.7071067811865476)
@@ -301,8 +389,10 @@ def test_get_dxtbx_detector_with_two_theta(detector_with_two_theta):
     assert panel.get_distance() == pytest.approx(120)
 
 
-@pytest.fixture
-def hierarchical_detector():
+@pytest.fixture(
+    params=[True, False], ids=["equipment_component", "no equipment_component"]
+)
+def hierarchical_detector(request):
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
         beam = f.create_group("/entry/instrument/beam")
         beam.attrs["NX_class"] = "NXbeam"
@@ -425,6 +515,8 @@ def hierarchical_detector():
         t.attrs["offset_units"] = b"mm"
         t.attrs["vector"] = np.array([0, 0, -1])
         t.attrs["units"] = b"degrees"
+        if request.param:
+            t.attrs["equipment_component"] = "detector_arm"
 
         t = transformations.create_dataset("AXIS_RAIL", data=97.83)
         t.attrs["depends_on"] = b"."
@@ -433,15 +525,17 @@ def hierarchical_detector():
         t.attrs["offset_units"] = b"mm"
         t.attrs["vector"] = np.array([0, 0, 1])
         t.attrs["units"] = b"mm"
+        if request.param:
+            t.attrs["equipment_component"] = "detector_arm"
 
         yield f
 
 
 def test_get_dxtbx_detector_hierarchical(hierarchical_detector):
     det = dxtbx.nexus.nxmx.NXdetector(hierarchical_detector["/entry/instrument/ELE_D0"])
-    beam = dxtbx.nexus.nxmx.NXbeam(hierarchical_detector["/entry/instrument/beam"])
+    wavelength = hierarchical_detector["/entry/instrument/beam/incident_wavelength"][()]
 
-    detector = dxtbx.nexus.get_dxtbx_detector(det, beam)
+    detector = dxtbx.nexus.get_dxtbx_detector(det, wavelength)
     assert len(detector) == 4
 
     assert detector[0].get_name() == "/entry/instrument/ELE_D0/ARRAY_D0Q0M0A0"
@@ -484,6 +578,24 @@ def test_get_dxtbx_detector_hierarchical(hierarchical_detector):
     assert detector[0].get_slow_axis() == slow_axis
     assert detector[0].get_local_slow_axis() == slow_axis
     assert detector[0].get_distance() == pytest.approx(97.536)
+
+    depth = 0
+    pg = detector.hierarchy()
+    while True:
+        depth += 1
+        if pg.is_panel():
+            break
+        else:
+            pg = pg[0]
+    if (
+        "equipment_component"
+        in hierarchical_detector[
+            "/entry/instrument/ELE_D0/transformations/AXIS_RAIL"
+        ].attrs
+    ):
+        assert depth == 5
+    else:
+        assert depth == 6
 
 
 @pytest.fixture

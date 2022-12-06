@@ -159,6 +159,8 @@ class FormatMultiImage(Format):
             cls._current_filename_ = None
             cls._current_instance_ = None
             format_instance = cls.get_instance(filenames[0], **format_kwargs)
+            if hasattr(format_instance, "lazy"):
+                lazy = format_instance.lazy
             if num_images is None and not lazy:
                 # As we now have the actual format class we can get the number
                 # of images from here. This saves having to create another

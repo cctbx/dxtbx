@@ -1213,9 +1213,9 @@ def _merge_scans(
                 else:
                     prev.scan.append(record.scan, scan_tolerance=scan_tolerance)
             except RuntimeError as e:
-                print(e)
                 logger.debug(
-                    "  Failed to merge record %s with previous - writing new scan"
+                    "  Failed to merge record %s with previous - writing new scan",
+                    str(e),
                 )
             else:
                 # If we appended, then we don't need to keep this record's scan

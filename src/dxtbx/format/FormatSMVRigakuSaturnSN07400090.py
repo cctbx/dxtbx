@@ -99,8 +99,8 @@ class FormatSMVRigakuSaturnSN07400090(FormatSMVRigakuSaturn):
             detector_origin = rotations[j] * detector_origin
             detector_origin = translations[j] + detector_origin
 
-        overload = int(self._header_dictionary["SATURATED_VALUE"])
-        underload = 0
+        max_trusted_value = int(self._header_dictionary["SATURATED_VALUE"])
+        min_trusted_value = 0
 
         return self._detector_factory.complex(
             "CCD",
@@ -109,7 +109,7 @@ class FormatSMVRigakuSaturnSN07400090(FormatSMVRigakuSaturn):
             detector_slow.elems,
             pixel_size,
             image_size,
-            (underload, overload),
+            (min_trusted_value, max_trusted_value),
             gain=10,
         )
 

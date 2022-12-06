@@ -72,9 +72,9 @@ def beam_diff(
     if abs(ad.angle(bd)) > direction_tolerance:
         text.append(" Direction: {}, {}".format(tuple(ad), tuple(bd)))
     if abs(an.angle(bn)) > polarization_normal_tolerance:
-        text.append(" Polarization Normal: {}, {}".format(tuple(an), tuple(bn)))
+        text.append(" Polarization normal: {}, {}".format(tuple(an), tuple(bn)))
     if abs(af - bf) > polarization_fraction_tolerance:
-        text.append(f" Polarization Fraction: {af}, {bf}")
+        text.append(f" Polarization fraction: {af}, {bf}")
     if len(text) > 0:
         text = ["Beam:"] + text
     return "\n".join(text)
@@ -89,7 +89,7 @@ def detector_diff(
 ) -> str:
     text = []
     if len(detector1) != len(detector2):
-        text.append("Num Panels: %d, %d" % (len(detector1), len(detector2)))
+        text.append("Num panels: %d, %d" % (len(detector1), len(detector2)))
     for i, (aa, bb) in enumerate(zip(detector1, detector2)):
         a_image_size = aa.get_image_size()
         b_image_size = bb.get_image_size()
@@ -109,7 +109,7 @@ def detector_diff(
         if not _all_approx_equal(a_pixel_size, b_pixel_size, 1e-7):
             temp_text.append(f"  Pixel size: {a_pixel_size}, {b_pixel_size}")
         if not _all_approx_equal(a_trusted_range, b_trusted_range, 1e-7):
-            temp_text.append(f"  Trusted Range: {a_trusted_range}, {b_trusted_range}")
+            temp_text.append(f"  Trusted range: {a_trusted_range}, {b_trusted_range}")
         if not _all_approx_equal(a_fast, b_fast, fast_axis_tolerance):
             temp_text.append(f"  Fast axis: {a_fast}, {b_fast}")
         if not _all_approx_equal(a_slow, b_slow, slow_axis_tolerance):
@@ -167,9 +167,9 @@ def scan_diff(scan1, scan2, scan_tolerance=0.03) -> str:
     if not (a_image_range[1] + 1 == b_image_range[0]):
         text.append(f" Incompatible image range: {a_image_range}, {b_image_range}")
     if abs(a_oscillation[1] - b_oscillation[1]) > eps:
-        text.append(f" Incompatible Oscillation: {a_oscillation}, {b_oscillation}")
+        text.append(f" Incompatible oscillation: {a_oscillation}, {b_oscillation}")
     if min(diff_2pi, diff_abs) > eps * scan1.get_num_images():
-        text.append(f" Incompatible Oscillation Range: {a_osc_range}, {b_osc_range}")
+        text.append(f" Incompatible oscillation range: {a_osc_range}, {b_osc_range}")
     if len(text) > 0:
         text = ["Scan:"] + text
     return "\n".join(text)

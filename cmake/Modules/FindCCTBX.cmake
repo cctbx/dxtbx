@@ -59,24 +59,48 @@ function(_cctbx_determine_libtbx_build_dir)
 
     if (NOT ${_LOAD_ENV_RESULT})
         # We found it via python import
-        message(DEBUG "Got libtbx build path: ${CCTBX_BUILD_DIR}")
         set(CCTBX_BUILD_DIR "${_LOAD_LIBTBX_BUILD_DIR}" CACHE FILEPATH "Location of CCTBX build directory")
+        message(DEBUG "Got libtbx build path: ${CCTBX_BUILD_DIR}")
         return()
     endif()
 
 endfunction()
 
-# Read details for a single module out of libtbx_env and other info
-function(_cctbx_read_module MODULE)
+function(_read_libtbx_env RESULT_VARIABLE)
     cmake_path(SET _read_env_script NORMALIZE "${CMAKE_CURRENT_LIST_DIR}/../read_env.py")
+    if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+        set(_read_env_is_windows "--windows")
+    endif()
+    # Get the system prefix from python
+    execute_process(COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.prefix)"
+                    RESULT_VARIABLE _SYS_PREFIX_RESULT
+                    OUTPUT_VARIABLE _SYS_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if (${_SYS_PREFIX_RESULT})
+        message(FATAL_ERROR "Failed to read sys.prefix out of configured python")
+    endif()
+    # Now, use this an read out the libtbx_env
     execute_process(
-        COMMAND ${Python_EXECUTABLE} "${_read_env_script}" "${CCTBX_BUILD_DIR}/libtbx_env"
+        COMMAND ${Python_EXECUTABLE}
+        "${_read_env_script}"
+        "${CCTBX_BUILD_DIR}/libtbx_env"
+        "--build-path"
+        "${CCTBX_BUILD_DIR}"
+        "--sys-prefix"
+        "${_SYS_PREFIX}"
+        ${_read_env_is_windows}
         OUTPUT_VARIABLE _env_json
         RESULT_VARIABLE _result)
     if (_result)
-        message(SEND_ERROR "Failed to read environment file: ${CCTBX_BUILD_DIR}/libtbx_env")
-        return()
+        message(FATAL_ERROR "Failed to read environment file: ${CCTBX_BUILD_DIR}/libtbx_env")
     endif()
+    set("${RESULT_VARIABLE}" "${_env_json}" PARENT_SCOPE)
+endfunction()
+
+# Read details for a single module out of libtbx_env and other info
+function(_cctbx_read_module MODULE)
+    # Read the libtbx environment file
+    _read_libtbx_env(_env_json)
     # We now have a json representation of libtbx_env - extract the entry for this modile
     string(JSON _module_json ERROR_VARIABLE _error GET "${_env_json}" module_dict ${MODULE})
     if (NOT _module_json)
@@ -136,19 +160,21 @@ function(_cctbx_read_module MODULE)
         foreach(_n RANGE ${_n_libs})
             string(JSON _name MEMBER "${_module_libs}" ${_n})
             string(JSON _libname GET "${_module_libs}" "${_name}")
+            set(lib_cache_var "_liblocation_CCTBX_${MODULE}_${_name}")
             # Find this library
-            find_library(_liblocation ${_libname} HINTS ${_lib_path})
+            find_library(${lib_cache_var} ${_libname} HINTS ${_lib_path})
+            message(DEBUG "Found ${lib_cache_var}='${${lib_cache_var}}'")
             if(_name STREQUAL base)
                 message(DEBUG "Module ${_target} has root library ${_libname}")
-                if (NOT _liblocation)
-                    message(WARNING "Libtbx module ${MODULE} has base library named lib${_libname} but cannot find it - the module may be misconfigured")
+                if (NOT ${lib_cache_var})
+                    message(WARNING "Libtbx module ${MODULE} has base library named ${_libname} but cannot find it - the module may be misconfigured")
                 else()
-                    target_link_libraries(${_target} INTERFACE ${_liblocation})
+                    target_link_libraries(${_target} INTERFACE ${${lib_cache_var}})
                 endif()
             else()
                 message(DEBUG "Extra library ${_target}::${_name} = ${_libname}")
                 add_library(${_target}::${_name} INTERFACE IMPORTED)
-                target_link_libraries(${_target}::${_name} INTERFACE ${_target} ${_libname})
+                target_link_libraries(${_target}::${_name} INTERFACE ${_target} ${${lib_cache_var}})
             endif()
         endforeach()
     endif()

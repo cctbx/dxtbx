@@ -41,7 +41,7 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
         )
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
         iset = format_class.get_imageset(
-            [filename], single_file_indices=indices, lazy=lazy
+            [filename], single_file_indices=indices, format_kwargs={"lazy": lazy}
         )
         assert obj.call_count == expected_call_count
         iset.reader().nullify_format_instance()
@@ -501,7 +501,7 @@ def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
 
-    iset = format_class.get_imageset([filename], lazy=lazy)
+    iset = format_class.get_imageset([filename], format_kwargs={"lazy": lazy})
 
     assert len(iset) == 4
     for i in range(len(iset)):
@@ -512,7 +512,9 @@ def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
         assert iset.get_goniometer(i) is None
         assert iset.get_scan(i) is None
 
-    iset = format_class.get_imageset([filename], single_file_indices=[1], lazy=lazy)
+    iset = format_class.get_imageset(
+        [filename], single_file_indices=[1], format_kwargs={"lazy": lazy}
+    )
     assert len(iset) == 1
 
     for i in range(len(iset)):

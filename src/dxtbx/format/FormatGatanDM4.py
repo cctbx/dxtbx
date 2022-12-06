@@ -331,7 +331,7 @@ class FormatGatanDM4(Format):
         # (probably) wrong.
         pixel_size = 0.015, 0.015
         image_size = self._image_size
-        trusted_range = (-1, 65535)
+        trusted_range = (0, 65535)
         distance = 2000
         beam_centre = [(p * i) / 2 for p, i in zip(pixel_size, image_size)]
         d = self._detector_factory.simple(
