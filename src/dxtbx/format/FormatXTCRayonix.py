@@ -70,7 +70,7 @@ class FormatXTCRayonix(FormatXTC):
             image_size=self._image_size,
             trusted_range=(
                 rayonix_tbx.rayonix_min_trusted_value,
-                rayonix_tbx.rayonix_saturated_value,
+                rayonix_tbx.rayonix_max_trusted_value,
             ),
             mask=[],
         )
