@@ -498,7 +498,7 @@ def _dataset_as_flex(
         np.float32,
     )
     if np.issubdtype(data_np.dtype, np.integer):
-        data_np = data_np.astype(np.int32, copy=False)
+        data_np = data_np.astype(np.intc, copy=False)
     elif data_np.dtype in np_float_types:
         data_np = data_np.astype(np.float32, copy=False)
     else:
