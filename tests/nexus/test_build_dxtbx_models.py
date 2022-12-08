@@ -674,16 +674,19 @@ def test_dataset_as_flex_int():
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
         g = f.create_group("/foo")
         g.create_dataset("int32", data=np.array([0, 1], dtype=np.int32))
-        g.create_dataset("intc", data=np.array([0, 1], dtype=np.intc))
-        g.create_dataset(
-            "int64", data=np.array([2**60, 2**58 + 1, 4], dtype=np.int64)
-        )
+        g.create_dataset("intc", data=np.array([1, 2], dtype=np.intc))
+        g.create_dataset("int64", data=np.array([2, 3], dtype=np.int64))
         for k in ("int32", "intc"):
             flex_a = dxtbx.nexus._dataset_as_flex(g[k], slices)
             assert isinstance(flex_a, flex.int)
             assert flex_a.all() == g[k].shape
+            assert list(flex_a) == list(g[k])
         with pytest.raises(TypeError, match="Unsupported dtype .*"):
             dxtbx.nexus._dataset_as_flex(g["int64"], slices)
+        flex_a = dxtbx.nexus._dataset_as_flex(g["int64"], slices, bit_depth=32)
+        assert isinstance(flex_a, flex.int)
+        assert flex_a.all() == g["int64"].shape
+        assert list(flex_a) == list(g["int64"])
 
 
 def test_dataset_as_flex_float():
@@ -696,6 +699,7 @@ def test_dataset_as_flex_float():
             flex_a = dxtbx.nexus._dataset_as_flex(d, slices)
             assert isinstance(flex_a, flex.float)
             assert flex_a.all() == d.shape
+            assert list(flex_a) == list(d)
 
 
 def test_dataset_as_flex_double():
@@ -712,6 +716,7 @@ def test_dataset_as_flex_double():
             flex_a = dxtbx.nexus._dataset_as_flex(d, slices)
             assert isinstance(flex_a, flex.double)
             assert flex_a.all() == d.shape
+            assert list(flex_a) == list(d)
 
 
 def test_dataset_as_flex_unsupported():
