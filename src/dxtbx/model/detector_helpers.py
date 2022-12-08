@@ -132,6 +132,14 @@ def find_undefined_value(cbf_handle):
     return cbf_handle.get_doublevalue()
 
 
+def find_underload_value(cbf_handle):
+    """Given a cbf handle, get the underload value."""
+
+    cbf_handle.find_category(b"array_intensities")
+    cbf_handle.find_column(b"underload")
+    return cbf_handle.get_doublevalue()
+
+
 def find_gain_value(cbf_handle):
     """Given a cbf handle, get the gain value."""
     try:
