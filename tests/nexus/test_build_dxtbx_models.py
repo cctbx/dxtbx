@@ -650,7 +650,8 @@ def nxdata_example():
         nxdata = f.create_group("/entry/data")
         nxdata.attrs["NX_class"] = "NXdata"
         nxdata.create_dataset(
-            "data", data=np.array([np.full((4362, 4148), i) for i in range(3)])
+            "data",
+            data=np.array([np.full((4362, 4148), i, dtype=np.int32) for i in range(3)]),
         )
         nxdata.attrs["signal"] = "/entry/data/data"
 
@@ -666,3 +667,57 @@ def test_get_raw_data_single_panel(nxdata_example):
         assert isinstance(raw_data[0], flex.int)
         assert raw_data[0].all() == (4362, 4148)
         assert raw_data[0].all_eq(i)
+
+
+def test_dataset_as_flex_int():
+    slices = ()
+    with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
+        g = f.create_group("/foo")
+        g.create_dataset("int32", data=np.array([0, 1], dtype=np.int32))
+        g.create_dataset("intc", data=np.array([0, 1], dtype=np.intc))
+        g.create_dataset(
+            "int64", data=np.array([2**60, 2**58 + 1, 4], dtype=np.int64)
+        )
+        for k in ("int32", "intc"):
+            flex_a = dxtbx.nexus._dataset_as_flex(g[k], slices)
+            assert isinstance(flex_a, flex.int)
+            assert flex_a.all() == g[k].shape
+        with pytest.raises(TypeError, match="Unsupported dtype .*"):
+            dxtbx.nexus._dataset_as_flex(g["int64"], slices)
+
+
+def test_dataset_as_flex_float():
+    slices = ()
+    np_float_types = (np.half, np.single, np.float16, np.float32)
+    with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
+        g = f.create_group("/foo")
+        for i, dtype in enumerate(np_float_types):
+            d = g.create_dataset(f"float-{i}", data=np.array([0, 1], dtype=dtype))
+            flex_a = dxtbx.nexus._dataset_as_flex(d, slices)
+            assert isinstance(flex_a, flex.float)
+            assert flex_a.all() == d.shape
+
+
+def test_dataset_as_flex_double():
+    slices = ()
+    np_double_types = (
+        np.float_,
+        np.double,
+        np.float64,
+    )
+    with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
+        g = f.create_group("/foo")
+        for i, dtype in enumerate(np_double_types):
+            d = g.create_dataset(f"double-{i}", data=np.array([0, 1], dtype=dtype))
+            flex_a = dxtbx.nexus._dataset_as_flex(d, slices)
+            assert isinstance(flex_a, flex.double)
+            assert flex_a.all() == d.shape
+
+
+def test_dataset_as_flex_unsupported():
+    slices = ()
+    with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
+        g = f.create_group("/foo")
+        d = g.create_dataset("bool", data=np.array([0, 1], dtype=np.bool))
+        with pytest.raises(TypeError, match="Unsupported dtype .*"):
+            dxtbx.nexus._dataset_as_flex(d, slices)

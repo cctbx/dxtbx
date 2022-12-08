@@ -493,19 +493,21 @@ def _dataset_as_flex(
     np_float_types = (
         np.half,
         np.single,
-        np.float_,
         np.float16,
-        np.float32,
     )
-    if np.issubdtype(data_np.dtype, np.integer):
+    if np.issubdtype(data_np.dtype, np.int64):
+        raise TypeError(f"Unsupported dtype {data_np.dtype}")
+    elif np.issubdtype(data_np.dtype, np.integer):
         data_np = data_np.astype(np.intc, copy=False)
-    elif data_np.dtype in np_float_types:
+    elif np.issubdtype(data_np.dtype, np.int32) or data_np.dtype in np_float_types:
         data_np = data_np.astype(np.float32, copy=False)
+    elif not np.issubdtype(data_np.dtype, np.floating):
+        raise TypeError(f"Unsupported dtype {data_np.dtype}")
     else:
         # assume double
-        assert np.issubdtype(data_np.dtype, np.floating)
         data_np = data_np.astype(np.float64, copy=False)
-    return flumpy.from_numpy(data_np)
+    data_flex = flumpy.from_numpy(data_np)
+    return data_flex
 
 
 def get_raw_data(
