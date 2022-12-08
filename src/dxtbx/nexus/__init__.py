@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
-from typing import Tuple, cast
+from typing import Optional, Tuple, cast
 
 import h5py
 import numpy as np
@@ -487,7 +487,9 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None
 
 
 def _dataset_as_flex(
-    data: h5py.Dataset, slices: tuple
+    data: h5py.Dataset,
+    slices: tuple,
+    bit_depth: Optional[int] = None,
 ) -> flex.float | flex.double | flex.int:
     data_np = np.ascontiguousarray(data[slices])
     np_float_types = (
@@ -496,7 +498,12 @@ def _dataset_as_flex(
         np.float16,
     )
     if np.issubdtype(data_np.dtype, np.int64):
-        raise TypeError(f"Unsupported dtype {data_np.dtype}")
+        if bit_depth and bit_depth <= 32:
+            # bit_depth promises that we can safely convert to
+            # a 32-bit int without corrupting the data
+            data_np = data_np.astype(np.intc, copy=False)
+        else:
+            raise TypeError(f"Unsupported dtype {data_np.dtype}")
     elif np.issubdtype(data_np.dtype, np.integer):
         data_np = data_np.astype(np.intc, copy=False)
     elif np.issubdtype(data_np.dtype, np.int32) or data_np.dtype in np_float_types:
@@ -511,7 +518,10 @@ def _dataset_as_flex(
 
 
 def get_raw_data(
-    nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int
+    nxdata: nxmx.NXdata,
+    nxdetector: nxmx.NXdetector,
+    index: int,
+    bit_depth: Optional[int] = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
@@ -530,6 +540,8 @@ def get_raw_data(
     all_data = []
     sliced_outer = data[index]
     for module_slices in get_detector_module_slices(nxdetector):
-        data_as_flex = _dataset_as_flex(sliced_outer, tuple(module_slices))
+        data_as_flex = _dataset_as_flex(
+            sliced_outer, tuple(module_slices), bit_depth=bit_depth
+        )
         all_data.append(data_as_flex)
     return tuple(all_data)

@@ -111,7 +111,9 @@ class FormatNXmx(FormatNexus):
         nxmx = self._get_nxmx(self._cached_file_handle)
         nxdata = nxmx.entries[0].data[0]
         nxdetector = nxmx.entries[0].instruments[0].detectors[0]
-        raw_data = dxtbx.nexus.get_raw_data(nxdata, nxdetector, index)
+        raw_data = dxtbx.nexus.get_raw_data(
+            nxdata, nxdetector, index, bit_depth=self._bit_depth_readout
+        )
         if self._bit_depth_readout:
             # if 32 bit then it is a signed int, I think if 8, 16 then it is
             # unsigned with the highest two values assigned as masking values
