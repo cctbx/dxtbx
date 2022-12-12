@@ -15,6 +15,11 @@ from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
 
+from dxtbx.model.detector_helpers import (
+    find_undefined_value,
+    find_underload_value,
+)
+
 
 class cbf_wrapper(pycbf.cbf_handle_struct):
     """Wrapper class that provides convenience functions for working with cbflib"""
@@ -127,17 +132,18 @@ class FormatCBFMultiTile(FormatCBFFull):
             size = tuple(reversed(cbf.get_image_size(0)))
 
             try:
-                cbf.find_category(b"array_intensities")
-                cbf.find_column(b"undefined_value")
-                cbf.select_row(i)
-                # undefined_value, interpreted as 1 less than the minimum acceptable value
-                underload = cbf.get_doublevalue()
-                overload = cbf.get_overload(i)
-                trusted_range = (underload + 1, overload)
-            except Exception as e:
-                if "CBF_NOTFOUND" not in str(e):
-                    raise
-                trusted_range = (0.0, 0.0)
+                underload = find_underload_value(cbf)
+            except Exception:
+                try:
+                    underload = find_undefined_value(cbf) + 1
+                except Exception:
+                    underload = 0
+            try:
+                overload = cbf.get_overload(i) - 1
+            except Exception:
+                overload = 1.0e6
+
+            trusted_range = (underload, overload)
 
             try:
                 cbf.find_column(b"gain")

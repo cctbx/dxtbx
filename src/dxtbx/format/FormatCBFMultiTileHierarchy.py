@@ -281,21 +281,26 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             p.set_local_frame(fast, slow, origin)
 
             try:
-                overload = cbf.get_overload(panel_number)
+                overload = cbf.get_overload(panel_number) - 1
                 cbf.find_category(b"array_intensities")
                 cbf.find_column(b"array_id")
                 if has_sections:
                     cbf.find_row(array_ids_detectororder[panel_number])
                 else:
                     cbf.find_row(panel_name)
-                cbf.find_column(b"undefined_value")
+                try:
+                    cbf.find_column(b"underload")
+                    offset = 0
+                except Exception:
+                    cbf.find_column(b"undefined_value")
+                    offset = 1
                 # undefined_value, interpreted as 1 less than the minimum acceptable value
-                underload = cbf.get_doublevalue()
-                trusted_range = (underload + 1, overload)
+                underload = cbf.get_doublevalue() + offset
+                trusted_range = (underload, overload)
             except Exception as e:
                 if "CBF_NOTFOUND" not in str(e):
                     raise
-                trusted_range = (0.0, 0.0)
+                trusted_range = (0.0, 1.0e6)
 
             try:
                 cbf.find_column(b"gain")
