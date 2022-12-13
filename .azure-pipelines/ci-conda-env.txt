@@ -17,6 +17,7 @@ conda-forge::jpeg
 conda-forge::matplotlib-base
 conda-forge::mrcfile
 conda-forge::numpy
+conda-forge::nxmx
 conda-forge::pillow>=5.4.1
 conda-forge::pint
 conda-forge::pip
