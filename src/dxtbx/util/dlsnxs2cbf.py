@@ -7,15 +7,15 @@ from pathlib import Path
 import h5py
 import hdf5plugin  # noqa; F401
 import numpy as np
+import nxmx
 import pint
 from tqdm import tqdm
 
 import dxtbx.model
-import dxtbx.nexus.nxmx
 from dxtbx.ext import compress
 
 
-def compute_cbf_header(nxmx: dxtbx.nexus.nxmx.NXmx, nn: int):
+def compute_cbf_header(nxmx: nxmx.NXmx, nn: int):
     nxentry = nxmx.entries[0]
     nxsample = nxentry.samples[0]
     nxinstrument = nxentry.instruments[0]
@@ -40,7 +40,7 @@ def compute_cbf_header(nxmx: dxtbx.nexus.nxmx.NXmx, nn: int):
     # the data) - 19 chars needed
     timestamp = nxentry.start_time
 
-    dependency_chain = dxtbx.nexus.nxmx.get_dependency_chain(nxsample.depends_on)
+    dependency_chain = nxmx.get_dependency_chain(nxsample.depends_on)
 
     result.append("###CBF: VERSION 1.5, CBFlib v0.7.8 - Eiger detectors")
     result.append("")
@@ -145,13 +145,13 @@ def make_cbf(
     with h5py.File(in_name) as f:
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        nxmx = dxtbx.nexus.nxmx.NXmx(f)
+        nxmx = nxmx.NXmx(f)
         nxsample = nxmx.entries[0].samples[0]
         nxinstrument = nxmx.entries[0].instruments[0]
         nxdetector = nxinstrument.detectors[0]
         nxdata = nxmx.entries[0].data[0]
 
-        dependency_chain = dxtbx.nexus.nxmx.get_dependency_chain(nxsample.depends_on)
+        dependency_chain = nxmx.get_dependency_chain(nxsample.depends_on)
         scan_axis = None
         for t in dependency_chain:
             # Find the first varying rotation axis

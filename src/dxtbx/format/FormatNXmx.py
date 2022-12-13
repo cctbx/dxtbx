@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import h5py
+import nxmx
 
 import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
@@ -47,9 +48,9 @@ class FormatNXmx(FormatNexus):
             return bool(
                 [
                     entry
-                    for entry in dxtbx.nexus.nxmx.find_class(handle, "NXentry")
+                    for entry in nxmx.find_class(handle, "NXentry")
                     if "definition" in entry
-                    and dxtbx.nexus.nxmx.h5str(entry["definition"][()]) == "NXmx"
+                    and nxmx.h5str(entry["definition"][()]) == "NXmx"
                 ]
             )
 
@@ -61,8 +62,8 @@ class FormatNXmx(FormatNexus):
         self._static_mask = None
 
         self._cached_file_handle = h5py.File(self._image_file, swmr=True)
-        nxmx = self._get_nxmx(self._cached_file_handle)
-        nxentry = nxmx.entries[0]
+        nxmx_obj = self._get_nxmx(self._cached_file_handle)
+        nxentry = nxmx_obj.entries[0]
         nxsample = nxentry.samples[0]
         nxinstrument = nxentry.instruments[0]
         nxdetector = nxinstrument.detectors[0]
@@ -85,7 +86,7 @@ class FormatNXmx(FormatNexus):
         if self._scan_model:
             self._num_images = len(self._scan_model)
         else:
-            nxdata = nxmx.entries[0].data[0]
+            nxdata = nxmx_obj.entries[0].data[0]
             if nxdata.signal:
                 data = nxdata[nxdata.signal]
             else:
@@ -93,7 +94,7 @@ class FormatNXmx(FormatNexus):
             self._num_images, *_ = data.shape
 
     def _get_nxmx(self, fh: h5py.File):
-        return dxtbx.nexus.nxmx.NXmx(fh)
+        return nxmx.NXmx(fh)
 
     def _beam(self, index: int | None = None) -> dxtbx.model.Beam:
         return self._beam_factory.make_beam(index=index or 0)
@@ -108,9 +109,9 @@ class FormatNXmx(FormatNexus):
         return self._static_mask
 
     def get_raw_data(self, index):
-        nxmx = self._get_nxmx(self._cached_file_handle)
-        nxdata = nxmx.entries[0].data[0]
-        nxdetector = nxmx.entries[0].instruments[0].detectors[0]
+        nxmx_obj = self._get_nxmx(self._cached_file_handle)
+        nxdata = nxmx_obj.entries[0].data[0]
+        nxdetector = nxmx_obj.entries[0].instruments[0].detectors[0]
         raw_data = dxtbx.nexus.get_raw_data(
             nxdata, nxdetector, index, bit_depth=self._bit_depth_readout
         )

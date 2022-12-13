@@ -3,10 +3,10 @@ from __future__ import annotations
 import re
 
 import h5py
+import nxmx
 
 from scitbx.array_family import flex
 
-import dxtbx.nexus
 from dxtbx.format.FormatNXmx import FormatNXmx
 from dxtbx.nexus import _dataset_as_flex, get_detector_module_slices
 
@@ -29,8 +29,8 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         super().__init__(image_file, **kwargs)
 
     def _get_nxmx(self, fh: h5py.File):
-        nxmx = dxtbx.nexus.nxmx.NXmx(fh)
-        nxentry = nxmx.entries[0]
+        nxmx_obj = nxmx.NXmx(fh)
+        nxentry = nxmx_obj.entries[0]
 
         nxdetector = nxentry.instruments[0].detectors[0]
         if nxdetector.underload_value is None:
@@ -41,12 +41,12 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         # values
         for module in nxdetector.modules:
             module.data_size = module.data_size[::-1]
-        return nxmx
+        return nxmx_obj
 
     def get_raw_data(self, index):
-        nxmx = self._get_nxmx(self._cached_file_handle)
-        nxdata = nxmx.entries[0].data[0]
-        nxdetector = nxmx.entries[0].instruments[0].detectors[0]
+        nxmx_obj = self._get_nxmx(self._cached_file_handle)
+        nxdata = nxmx_obj.entries[0].data[0]
+        nxdetector = nxmx_obj.entries[0].instruments[0].detectors[0]
         raw_data = get_raw_data(nxdata, nxdetector, index)
         if self._bit_depth_readout:
             # if 32 bit then it is a signed int, I think if 8, 16 then it is
@@ -63,7 +63,7 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
 
 
 def get_raw_data(
-    nxdata: dxtbx.nexus.nxmx.NXdata, nxdetector: dxtbx.nexus.nxmx.NXdetector, index: int
+    nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 

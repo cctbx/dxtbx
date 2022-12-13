@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import h5py
+import nxmx
 
 from scitbx.array_family import flex
 
-import dxtbx.nexus
 from dxtbx.format import nexus
 from dxtbx.format.FormatNXmx import FormatNXmx
 from dxtbx.masking import mask_untrusted_circle, mask_untrusted_polygon
@@ -76,7 +76,7 @@ class FormatNXmxEDeBIC(FormatNXmxED):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file) as handle:
-            name = dxtbx.nexus.nxmx.h5str(FormatNXmxEDeBIC.get_instrument_name(handle))
+            name = nxmx.h5str(FormatNXmxEDeBIC.get_instrument_name(handle))
             if name and "ebic" in name.lower():
                 return True
         return False
