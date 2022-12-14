@@ -132,18 +132,20 @@ class FormatCBFMultiTile(FormatCBFFull):
             size = tuple(reversed(cbf.get_image_size(0)))
 
             try:
-                underload = find_underload_value(cbf)
+                min_trusted_value = find_underload_value(cbf)
             except Exception:
                 try:
-                    underload = find_undefined_value(cbf) + 1
+                    # By convention, if underload is not set, then assume the minimum
+                    # trusted pixel is 1 more than the undefined pixel
+                    min_trusted_value = find_undefined_value(cbf) + 1
                 except Exception:
-                    underload = 0
+                    min_trusted_value = 0
             try:
-                overload = cbf.get_overload(i) - 1
+                max_trusted_value = cbf.get_overload(i) - 1
             except Exception:
-                overload = 1.0e6
+                max_trusted_value = 1.0e6
 
-            trusted_range = (underload, overload)
+            trusted_range = (min_trusted_value, max_trusted_value)
 
             try:
                 cbf.find_column(b"gain")

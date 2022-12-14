@@ -281,7 +281,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             p.set_local_frame(fast, slow, origin)
 
             try:
-                overload = cbf.get_overload(panel_number) - 1
+                max_trusted_value = cbf.get_overload(panel_number) - 1
                 cbf.find_category(b"array_intensities")
                 cbf.find_column(b"array_id")
                 if has_sections:
@@ -292,11 +292,12 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                     cbf.find_column(b"underload")
                     offset = 0
                 except Exception:
+                    # By convention, if underload is not set, then assume the minimum
+                    # trusted pixel is 1 more than the undefined pixel
                     cbf.find_column(b"undefined_value")
                     offset = 1
-                # undefined_value, interpreted as 1 less than the minimum acceptable value
-                underload = cbf.get_doublevalue() + offset
-                trusted_range = (underload, overload)
+                min_trusted_value = cbf.get_doublevalue() + offset
+                trusted_range = (min_trusted_value, max_trusted_value)
             except Exception as e:
                 if "CBF_NOTFOUND" not in str(e):
                     raise
