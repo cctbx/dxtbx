@@ -6,6 +6,7 @@ from typing import Optional, Tuple, cast
 
 import h5py
 import numpy as np
+import nxmx
 
 import cctbx
 from cctbx import eltbx
@@ -13,9 +14,6 @@ from scitbx.array_family import flex
 
 import dxtbx.model
 from dxtbx import flumpy
-from dxtbx.nexus.nxmx import units
-
-from . import nxmx
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +127,7 @@ class CachedWavelengthBeamFactory:
                 wavelength_value = wavelength[()]
             else:
                 wavelength_value = wavelength[index]
-            wavelength_units = units(wavelength)
+            wavelength_units = nxmx.units(wavelength)
             wavelength_value = float(
                 (wavelength_value * wavelength_units).to("angstrom").magnitude
             )
@@ -145,7 +143,7 @@ class CachedWavelengthBeamFactory:
             self.model = dxtbx.model.Beam()
             self.model.set_direction((0, 0, 1))
 
-            wavelength_units = units(spectrum_wavelengths)
+            wavelength_units = nxmx.units(spectrum_wavelengths)
 
             if len(spectrum_wavelengths.shape) > 1:
                 spectrum_wavelengths = spectrum_wavelengths[index]
