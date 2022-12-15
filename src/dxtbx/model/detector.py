@@ -775,21 +775,23 @@ class DetectorFactory:
         size = tuple(reversed(cbf_handle.get_image_size(0)))
 
         try:
-            underload = find_underload_value(cbf_handle)
+            min_trusted_value = find_underload_value(cbf_handle)
         except Exception:
             try:
-                underload = find_undefined_value(cbf_handle) + 1
+                # By convention, if underload is not set, then assume the minimum
+                # trusted pixel is 1 more than the undefined pixel
+                min_trusted_value = find_undefined_value(cbf_handle) + 1
             except Exception:
-                underload = 0
+                min_trusted_value = 0
 
         try:
             # In imgCIF overload means the pixel is saturated and hence untrusted
             # https://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/Iarray_intensities.overload.html
-            overload = (cbf_handle.get_overload(0) - 1) * dxtbx_overload_scale
+            max_trusted_value = (cbf_handle.get_overload(0) - 1) * dxtbx_overload_scale
         except Exception:
-            overload = 1.0e6
+            max_trusted_value = 1.0e6
 
-        trusted_range = (underload, overload)
+        trusted_range = (min_trusted_value, max_trusted_value)
 
         gain = find_gain_value(cbf_handle)
 
