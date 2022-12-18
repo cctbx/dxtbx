@@ -14,11 +14,7 @@ from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
-
-from dxtbx.model.detector_helpers import (
-    find_undefined_value,
-    find_underload_value,
-)
+from dxtbx.model.detector_helpers import find_undefined_value, find_underload_value
 
 
 class cbf_wrapper(pycbf.cbf_handle_struct):
