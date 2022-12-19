@@ -17,7 +17,6 @@
 #include <sstream>
 #include <scitbx/constants.h>
 #include <dxtbx/model/scan.h>
-#include <boost/operators.hpp>
 #include <dxtbx/model/boost_python/to_from_dict.h>
 
 namespace dxtbx { namespace model { namespace boost_python {
