@@ -11,7 +11,6 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/make_constructor.hpp>
-#include <boost/format.hpp>
 #include <string>
 #include <scitbx/constants.h>
 #include <dxtbx/model/scan_helpers.h>
