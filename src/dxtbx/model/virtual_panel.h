@@ -13,7 +13,6 @@
 
 #include <string>
 #include <iostream>
-#include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
 #include <scitbx/vec2.h>
 #include <scitbx/vec3.h>
