@@ -10,7 +10,6 @@
  */
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
-#include <boost/algorithm/string.hpp>
 #include <memory>
 #include <string>
 #include <sstream>
