@@ -11,7 +11,7 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <scitbx/constants.h>
@@ -134,7 +134,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   void export_goniometer() {
     class_<GoniometerBase>("GoniometerBase");
 
-    class_<Goniometer, boost::shared_ptr<Goniometer>, bases<GoniometerBase> >(
+    class_<Goniometer, std::shared_ptr<Goniometer>, bases<GoniometerBase> >(
       "Goniometer")
       .def(init<const Goniometer &>())
       .def(init<vec3<double> >((arg("rotation_axis"))))

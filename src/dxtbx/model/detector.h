@@ -11,6 +11,7 @@
 #ifndef DXTBX_MODEL_DETECTOR_H
 #define DXTBX_MODEL_DETECTOR_H
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <boost/ptr_container/ptr_vector.hpp>
@@ -21,8 +22,6 @@
 #include <scitbx/array_family/flex_types.h>
 #include <scitbx/array_family/tiny_types.h>
 #include <scitbx/array_family/shared.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <dxtbx/model/panel.h>
 #include <dxtbx/error.h>
@@ -472,13 +471,13 @@ namespace dxtbx { namespace model {
     /**
      * Initialise the detector
      */
-    Detector() : data_(boost::make_shared<DetectorData>(this)) {}
+    Detector() : data_(std::make_shared<DetectorData>(this)) {}
 
     /**
      * Copy another detector
      */
     Detector(const Detector &other)
-        : data_(boost::make_shared<DetectorData>(this, *(other.root()))) {
+        : data_(std::make_shared<DetectorData>(this, *(other.root()))) {
       // The initializer copies the main panel data; now do the rest
       copy_node_subtree(root(), other.root());
       // Validate that everything appears to have been copied
@@ -491,7 +490,7 @@ namespace dxtbx { namespace model {
     /**
      * Construct with a single panel
      */
-    Detector(const Panel &panel) : data_(boost::make_shared<DetectorData>(this)) {
+    Detector(const Panel &panel) : data_(std::make_shared<DetectorData>(this)) {
       add_panel(panel);
     }
 
@@ -776,7 +775,7 @@ namespace dxtbx { namespace model {
   protected:
     friend std::ostream &operator<<(std::ostream &os, const Detector &d);
 
-    boost::shared_ptr<DetectorData> data_;
+    std::shared_ptr<DetectorData> data_;
 
   private:
     /**

@@ -13,6 +13,7 @@
 #define DXTBX_IMAGESET_H
 
 #include <map>
+#include <memory>
 
 #include <boost/python.hpp>
 
@@ -48,7 +49,7 @@ namespace detail {
    * Raise exception if we can't dereference pointer
    */
   template <typename T>
-  T safe_dereference(boost::shared_ptr<T> ptr) {
+  T safe_dereference(std::shared_ptr<T> ptr) {
     T *item = ptr.get();
     DXTBX_ASSERT(item != NULL);
     return *item;
@@ -153,11 +154,11 @@ protected:
  */
 class ImageSetData {
 public:
-  typedef boost::shared_ptr<BeamBase> beam_ptr;
-  typedef boost::shared_ptr<Detector> detector_ptr;
-  typedef boost::shared_ptr<Goniometer> goniometer_ptr;
-  typedef boost::shared_ptr<Scan> scan_ptr;
-  typedef boost::shared_ptr<GoniometerShadowMasker> masker_ptr;
+  typedef std::shared_ptr<BeamBase> beam_ptr;
+  typedef std::shared_ptr<Detector> detector_ptr;
+  typedef std::shared_ptr<Goniometer> goniometer_ptr;
+  typedef std::shared_ptr<Scan> scan_ptr;
+  typedef std::shared_ptr<GoniometerShadowMasker> masker_ptr;
 
   ImageSetData() {}
 
@@ -516,7 +517,7 @@ protected:
   }
 
   boost::python::object reader_;
-  boost::shared_ptr<GoniometerShadowMasker> masker_;
+  std::shared_ptr<GoniometerShadowMasker> masker_;
   scitbx::af::shared<beam_ptr> beams_;
   scitbx::af::shared<detector_ptr> detectors_;
   scitbx::af::shared<goniometer_ptr> goniometers_;

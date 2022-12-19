@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <memory>
 #include <scitbx/vec3.h>
 #include <scitbx/vec2.h>
 #include <scitbx/constants.h>
@@ -197,7 +198,7 @@ namespace dxtbx { namespace model {
     virtual void reset_scan_points() = 0;
     // Returns a copy of the current crystal model transformed by the given
     // change of basis operator to the new basis.
-    virtual boost::shared_ptr<CrystalBase> change_basis(
+    virtual std::shared_ptr<CrystalBase> change_basis(
       cctbx::sgtbx::change_of_basis_op change_of_basis_op) const = 0;
     // Update crystal with parameters from another model
     virtual void update(const CrystalBase &other) = 0;
@@ -593,7 +594,7 @@ namespace dxtbx { namespace model {
      * @param change_of_basis_op The change of basis operator.
      * @returns The crystal model transformed to the new basis.
      */
-    virtual boost::shared_ptr<CrystalBase> change_basis(
+    virtual std::shared_ptr<CrystalBase> change_basis(
       cctbx::sgtbx::change_of_basis_op change_of_basis_op) const override {
       // cctbx change of basis matrices and those Giacovazzo are related by
       // inverse and transpose, i.e. Giacovazzo's "M" is related to the cctbx
@@ -612,8 +613,7 @@ namespace dxtbx { namespace model {
 
       mat3<double> M_inv = change_of_basis_op.c().r().transpose().as_double();
 
-      boost::shared_ptr<CrystalBase> other =
-        boost::shared_ptr<CrystalBase>(this->clone());
+      std::shared_ptr<CrystalBase> other = std::shared_ptr<CrystalBase>(this->clone());
       other->set_space_group(space_group_.change_basis(change_of_basis_op));
       other->set_A(get_A() * M_inv);
       if (get_num_scan_points() > 0) {
