@@ -22,7 +22,6 @@
 #include <scitbx/array_family/flex_types.h>
 #include <scitbx/array_family/tiny_types.h>
 #include <scitbx/array_family/shared.h>
-#include <boost/ptr_container/ptr_vector.hpp>
 #include <dxtbx/model/panel.h>
 #include <dxtbx/error.h>
 
