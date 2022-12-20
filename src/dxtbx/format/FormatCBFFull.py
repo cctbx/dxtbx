@@ -203,7 +203,7 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
             array_size = mid, fast
         elif dtype == b"signed 64-bit real IEEE":
             array_string = cbf.get_realarray_as_string()
-            self._raw_data = flex.double(np.fromstring(array_string, np.float))
+            self._raw_data = flex.double(np.fromstring(array_string, float))
             parameters = cbf.get_realarrayparameters_wdims_fs()
             slow, mid, fast = (parameters[7], parameters[6], parameters[5])
             assert slow == 1  # sections not supported

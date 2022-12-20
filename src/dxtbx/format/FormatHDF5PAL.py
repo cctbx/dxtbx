@@ -54,7 +54,7 @@ class FormatHDF5PAL(FormatHDF5):
         data = self._h5_handle[self._run]["scan_dat/raymx_data"][index]
         # return flex.int(int) # this crashes!
         # return flex.int(data.astype(np.int)) # this doesn't work! (data is read incorrectly)
-        return flex.double(data.astype(np.float))
+        return flex.double(data.astype(float))
 
     def get_num_images(self):
         return len(self._h5_handle[self._run]["scan_dat/N"][()])
