@@ -723,6 +723,6 @@ def test_dataset_as_flex_unsupported():
     slices = ()
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
         g = f.create_group("/foo")
-        d = g.create_dataset("bool", data=np.array([0, 1], dtype=np.bool))
+        d = g.create_dataset("bool", data=np.array([0, 1], dtype=bool))
         with pytest.raises(TypeError, match="Unsupported dtype .*"):
             dxtbx.nexus._dataset_as_flex(d, slices)
