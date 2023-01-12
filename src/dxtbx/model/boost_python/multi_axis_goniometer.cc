@@ -10,8 +10,7 @@
  */
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <dxtbx/model/goniometer.h>
@@ -108,12 +107,12 @@ namespace dxtbx { namespace model { namespace boost_python {
     return g;
   };
 
-  static boost::shared_ptr<MultiAxisGoniometer> make_multi_axis_goniometer(
+  static std::shared_ptr<MultiAxisGoniometer> make_multi_axis_goniometer(
     const scitbx::af::const_ref<vec3<double> > &axes,
     const scitbx::af::const_ref<double> &angles,
     const scitbx::af::const_ref<std::string> &names,
     std::size_t scan_axis) {
-    return boost::shared_ptr<MultiAxisGoniometer>(
+    return std::shared_ptr<MultiAxisGoniometer>(
       new MultiAxisGoniometer(axes, angles, names, scan_axis));
   }
 

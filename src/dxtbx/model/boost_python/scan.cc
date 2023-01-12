@@ -12,11 +12,11 @@
 #include <boost/python/def.hpp>
 #include <boost/python/make_constructor.hpp>
 #include <boost/python/slice.hpp>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <scitbx/constants.h>
 #include <dxtbx/model/scan.h>
-#include <boost/operators.hpp>
 #include <dxtbx/model/boost_python/to_from_dict.h>
 
 namespace dxtbx { namespace model { namespace boost_python {
@@ -377,7 +377,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     class_<ScanBase>("ScanBase");
 
     // Export Scan : ScanBase
-    class_<Scan, boost::shared_ptr<Scan>, bases<ScanBase> >("Scan")
+    class_<Scan, std::shared_ptr<Scan>, bases<ScanBase> >("Scan")
       .def(init<const Scan &>())
       .def("__init__",
            make_constructor(&make_scan,

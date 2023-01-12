@@ -11,6 +11,7 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost_adaptbx/optional_conversions.h>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <dxtbx/model/crystal.h>
@@ -510,10 +511,10 @@ namespace dxtbx { namespace model { namespace boost_python {
            (arg("domain_size_ang")))
       .def_pickle(MosaicCrystalSauter2014PickleSuite());
 
-    register_ptr_to_python<boost::shared_ptr<CrystalBase> >();
-    register_ptr_to_python<boost::shared_ptr<Crystal> >();
-    register_ptr_to_python<boost::shared_ptr<MosaicCrystalKabsch2010> >();
-    register_ptr_to_python<boost::shared_ptr<MosaicCrystalSauter2014> >();
+    register_ptr_to_python<std::shared_ptr<CrystalBase> >();
+    register_ptr_to_python<std::shared_ptr<Crystal> >();
+    register_ptr_to_python<std::shared_ptr<MosaicCrystalKabsch2010> >();
+    register_ptr_to_python<std::shared_ptr<MosaicCrystalSauter2014> >();
   }
 
 }}}  // namespace dxtbx::model::boost_python

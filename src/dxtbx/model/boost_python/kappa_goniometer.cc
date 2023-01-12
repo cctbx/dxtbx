@@ -11,7 +11,7 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <dxtbx/model/goniometer.h>
@@ -63,7 +63,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
   };
 
-  static boost::shared_ptr<KappaGoniometer> make_kappa_goniometer(
+  static std::shared_ptr<KappaGoniometer> make_kappa_goniometer(
     double alpha,
     double omega,
     double kappa,
@@ -94,7 +94,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       scan_axis = KappaGoniometer::NoAxis;
     }
 
-    return boost::shared_ptr<KappaGoniometer>(
+    return std::shared_ptr<KappaGoniometer>(
       new KappaGoniometer(alpha, omega, kappa, phi, direction, scan_axis));
   }
 
