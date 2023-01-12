@@ -69,15 +69,15 @@ def test_rotation_scan_i04(master_h5):
 @pytest.mark.parametrize(
     "master_h5",
     [
-        "/dls/i03/data/2019/cm23003-4/20190911/SmarGon/rotation_calibration4/th1_Oo_Cc_Pp_1_master.h5",
-        "/dls/i03/data/2019/cm23003-4/20190911/SmarGon/rotation_calibration4/th1_Oo_Cc_Pp_1.nxs",
+        "/dls/i04/data/2022/cm31106-5/20221118/SmarGon/rotation_calibration4/protK15_O45_C45_P45_1_master.h5",
+        "/dls/i04/data/2022/cm31106-5/20221118/SmarGon/rotation_calibration4/protK15_O45_C45_P45_1.nxs",
     ],
 )
 @pytest.mark.skipif(
-    not os.access("/dls/i03/data/2019/cm23003-4", os.R_OK),
+    not os.access("/dls/i04/data/2022/cm31106-5", os.R_OK),
     reason="Test images not available",
 )
-def test_rotation_scan_i03_2019_run_4(master_h5):
+def test_rotation_scan_i04_2022_run_5(master_h5):
     assert FormatNXmxDLS16M.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames(
@@ -89,7 +89,7 @@ def test_rotation_scan_i03_2019_run_4(master_h5):
     gonio = imageset.get_goniometer()
     assert list(gonio.get_angles()) == pytest.approx([45.0, 45.0, 45.0])
     assert list(gonio.get_axes().as_double()) == pytest.approx(
-        [1.0, -0.0025, 0.0056, -0.006, -0.0264, -0.9996, 1.0, 0.0, 0.0]
+        [1.0, -0.0037, 0.002, -0.0046, 0.0372, -0.9993, 1.0, 0.0, 0.0]
     )
     assert list(gonio.get_names()) == ["phi", "chi", "omega"]
     assert imageset.has_dynamic_mask()
@@ -97,7 +97,7 @@ def test_rotation_scan_i03_2019_run_4(master_h5):
     assert isinstance(masker, SmarGonShadowMasker)
     assert masker.get_mask(imageset.get_detector(), 0)[0].count(False) == 0
     masker.get_mask(imageset.get_detector(), 50)[0].count(False) == 486717
-    assert masker.get_mask(imageset.get_detector(), 100)[0].count(False) == 1092226
+    assert masker.get_mask(imageset.get_detector(), 100)[0].count(False) == 1110799
 
 
 @pytest.mark.parametrize(
