@@ -1,1 +1,1 @@
-``FullCBFWriter``: bug fix for setting underload/undefined values
+``FullCBFWriter``: Fix writing of the newly consistent trusted_range values.
