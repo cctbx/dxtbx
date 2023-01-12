@@ -207,13 +207,12 @@ class FullCBFWriter:
             # of 'overload' is in fact saturation - i.e. the max-trusted-value, while
             # the undefined_value is below the min-trusted-value.
             trusted_ranges = [panel.get_trusted_range() for panel in detector]
-            undef_overl = [(e[0] - 1, e[1]) for e in trusted_ranges]
             try:
                 add_frame_specific_cbf_tables(
                     cbf,
                     beam.get_wavelength(),
                     "unknown",
-                    undef_overl,
+                    trusted_ranges,
                     diffrn_id,
                     False,
                     gain=[panel.get_gain() for panel in detector],
@@ -225,7 +224,7 @@ class FullCBFWriter:
                     cbf,
                     beam.get_wavelength(),
                     "unknown",
-                    undef_overl,
+                    trusted_ranges,
                     diffrn_id,
                     False,
                     gain=[panel.get_gain() for panel in detector],
