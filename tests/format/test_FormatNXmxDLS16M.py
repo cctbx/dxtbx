@@ -24,11 +24,10 @@ pytest.importorskip("h5py")
         "/dls/i04/data/2021/cm28182-4/TestProteinaseK/protK3/protK3_1.nxs",
     ],
 )
-@pytest.mark.skipif(
-    not os.access("/dls/i04/data/2021/cm28182-3/TestProteinaseK/protK1", os.R_OK),
-    reason="Test images not available",
-)
 def test_rotation_scan_i04(master_h5):
+    if not os.access(master_h5, os.R_OK):
+        pytest.skip("Test images not available")
+
     assert FormatNXmxDLS16M.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames(
@@ -73,11 +72,10 @@ def test_rotation_scan_i04(master_h5):
         "/dls/i04/data/2022/cm31106-5/20221118/SmarGon/rotation_calibration4/protK15_O45_C45_P45_1.nxs",
     ],
 )
-@pytest.mark.skipif(
-    not os.access("/dls/i04/data/2022/cm31106-5", os.R_OK),
-    reason="Test images not available",
-)
 def test_rotation_scan_i04_2022_run_5(master_h5):
+    if not os.access(master_h5, os.R_OK):
+        pytest.skip("Test images not available")
+
     assert FormatNXmxDLS16M.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames(
@@ -107,11 +105,10 @@ def test_rotation_scan_i04_2022_run_5(master_h5):
         "/dls/i04/data/2020/cm26459-3/20200617/bs/lres_1.nxs",
     ],
 )
-@pytest.mark.skipif(
-    not os.access("/dls/i04/data/2020/cm26459-3/20200617/bs/", os.R_OK),
-    reason="Test images not available",
-)
 def test_masked_i04_32bit(master_h5):
+    if not os.access(master_h5, os.R_OK):
+        pytest.skip("Test images not available")
+
     assert FormatNXmxDLS16M.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])
@@ -126,11 +123,10 @@ def test_masked_i04_32bit(master_h5):
         "/dls/i03/data/2020/cm26458-3/20200617/test_1.nxs",
     ],
 )
-@pytest.mark.skipif(
-    not os.access("/dls/i03/data/2020/cm26458-3/20200617", os.R_OK),
-    reason="Test images not available",
-)
 def test_masked_i03_16bit(master_h5):
+    if not os.access(master_h5, os.R_OK):
+        pytest.skip("Test images not available")
+
     assert FormatNXmxDLS16M.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])
@@ -139,12 +135,11 @@ def test_masked_i03_16bit(master_h5):
     assert flex.max(imageset[0][0]) != 0xFFFF
 
 
-@pytest.mark.skipif(
-    not os.access("/dls/i04/data/2019/cm23004-1/20190109/Eiger", os.R_OK),
-    reason="Test images not available",
-)
 def test_grid_scan_i04():
     master_h5 = "/dls/i04/data/2019/cm23004-1/20190109/Eiger/grid/Thaum/Thau_5/Thau_5_1_master.h5"
+    if not os.access(master_h5, os.R_OK):
+        pytest.skip("Test images not available")
+
     assert FormatNXmxDLS16M.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])
