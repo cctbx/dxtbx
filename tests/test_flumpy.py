@@ -86,7 +86,7 @@ def test_numeric_1d(flex_numeric):
 
 def test_reverse_numeric_1d(flex_numeric):
     dtype = lookup_flex_type_to_numpy[flex_numeric.__name__]
-    npo = np.array([240, 259, 144, 187], dtype=dtype)
+    npo = np.array([240, 259, 144, 187]).astype(dtype)
     fo = flumpy.from_numpy(npo)
     assert isinstance(fo, flex_numeric)
     assert fo.all() == npo.shape
@@ -112,8 +112,8 @@ def test_numeric_2d(flex_numeric):
 def test_reverse_numeric_2d(flex_numeric):
     dtype = lookup_flex_type_to_numpy[flex_numeric.__name__]
     npo = np.array(
-        [[240, 259, 144, 187], [240, 259, 144, 187], [240, 259, 144, 187]], dtype=dtype
-    )
+        [[240, 259, 144, 187], [240, 259, 144, 187], [240, 259, 144, 187]]
+    ).astype(dtype)
     fo = flumpy.from_numpy(npo)
     assert isinstance(fo, flex_numeric)
     assert fo.all() == npo.shape
