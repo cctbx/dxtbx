@@ -12,7 +12,7 @@
 #define DXTBX_FORMAT_IMAGE_H
 
 #include <vector>
-
+#include <algorithm>
 #include <boost/variant.hpp>
 
 #include <dxtbx/error.h>
@@ -197,8 +197,12 @@ namespace dxtbx { namespace format {
           ArrayType data(
             v.tile(i).accessor(),
             scitbx::af::init_functor_null<typename ArrayType::value_type>());
-          std::uninitialized_copy(
-            v.tile(i).data().begin(), v.tile(i).data().end(), data.begin());
+          std::transform(v.tile(i).data().begin(),
+                         v.tile(i).data().end(),
+                         data.begin(),
+                         [](typename OtherImageType::data_type a) {
+                           return static_cast<typename ImageType::data_type>(a);
+                         });
           result.push_back(ImageTileType(data));
         }
         return result;
