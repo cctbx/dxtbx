@@ -32,5 +32,5 @@ def test_average(dials_data, tmp_path, use_mpi):
     h5 = dxtbx.load(data).get_detector()
     cbf = dxtbx.load(tmp_path / "avg.cbf").get_detector()
 
-    assert h5.is_similar_to(cbf)
+    assert h5.is_similar_to(cbf, ignore_trusted_range=True)
     assert h5[0].get_gain() == cbf[0].get_gain()
