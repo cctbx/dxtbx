@@ -129,6 +129,11 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         LIBPATH=env_etc.dxtbx_lib_paths + env_etc.dxtbx_hdf5_lib_paths,
     )
 
+    # Fix the build environment so that it doesn't break on modern C++
+    for path in list(env["CPPPATH"]):
+        if "msvc9.0_include" in path:
+            env["CPPPATH"].remove(path)
+
     if env_etc.clang_version:
         wd = ["-Wno-unused-function"]
         env.Append(CCFLAGS=wd)
