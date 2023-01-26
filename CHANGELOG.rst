@@ -1,3 +1,88 @@
+dxtbx 3.13.0 (2023-01-26)
+=========================
+
+Features
+--------
+
+- ``FormatNXmxED``: Format support for electron diffraction images converted to be compatible with NXmx by `nexgen <https://github.com/dials/nexgen>`_. (`#583 <https://github.com/cctbx/dxtbx/issues/583>`_)
+- ``FormatNXmxEDeBIC``: Including a mask specific for the SINGLA that is temporarily installed at eBIC, through to early 2023. (`#589 <https://github.com/cctbx/dxtbx/issues/589>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.image_average``: Fix a crash from using more processors than images when using MPI. (`#571 <https://github.com/cctbx/dxtbx/issues/571>`_)
+- ``dxtbx.plot_detector_models`` now works with newer versions of matplotlib. (`#574 <https://github.com/cctbx/dxtbx/issues/574>`_)
+- ``FormatNXmxDLS``: Don't process electron diffraction images collected at eBIC that have been converted by ``nexgen``. (`#579 <https://github.com/cctbx/dxtbx/issues/579>`_)
+- Correct maximum value of Rayonix trusted range. (`#590 <https://github.com/cctbx/dxtbx/issues/590>`_)
+- Read underload from CBF files. (`#592 <https://github.com/cctbx/dxtbx/issues/592>`_)
+- ``NXmx``: Ensure integer data types get converted to ``flex.int`` on all platforms. (`#594 <https://github.com/cctbx/dxtbx/issues/594>`_)
+- Fix trusted range in ``FormatCBFMultiTile`` and ``FormatCBFMultiTileHierarchy``. (`#595 <https://github.com/cctbx/dxtbx/issues/595>`_)
+- ``FullCBFWriter``: Fix writing of the newly consistent trusted_range values. (`#601 <https://github.com/cctbx/dxtbx/issues/601>`_)
+
+
+Misc
+----
+
+- `#578 <https://github.com/cctbx/dxtbx/issues/578>`_, `#591 <https://github.com/cctbx/dxtbx/issues/591>`_, `#597 <https://github.com/cctbx/dxtbx/issues/597>`_, `#598 <https://github.com/cctbx/dxtbx/issues/598>`_, `#599 <https://github.com/cctbx/dxtbx/issues/599>`_, `#600 <https://github.com/cctbx/dxtbx/issues/600>`_, `#602 <https://github.com/cctbx/dxtbx/issues/602>`_, `#603 <https://github.com/cctbx/dxtbx/issues/603>`_, `#605 <https://github.com/cctbx/dxtbx/issues/605>`_, `#606 <https://github.com/cctbx/dxtbx/issues/606>`_
+
+
+Dxtbx 3.13 (2023-01-12)
+=======================
+
+Features
+--------
+
+- ``FormatNXmxED``: Format support for electron diffraction images converted to be compatible with NXmx by `nexgen <https://github.com/dials/nexgen>`_. (`#583 <https://github.com/cctbx/dxtbx/issues/583>`_)
+- ``FormatNXmxEDeBIC``: Including a mask specific for the SINGLA that is temporarily installed at eBIC, through to early 2023. (`#589 <https://github.com/cctbx/dxtbx/issues/589>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.image_average``: Fix a crash from using more processors than images when using MPI. (`#571 <https://github.com/cctbx/dxtbx/issues/571>`_)
+- ``dxtbx.plot_detector_models`` now works with newer versions of matplotlib. (`#574 <https://github.com/cctbx/dxtbx/issues/574>`_)
+- ``FormatNXmxDLS``: Don't process electron diffraction images collected at eBIC that have been converted by ``nexgen``. (`#579 <https://github.com/cctbx/dxtbx/issues/579>`_)
+- Correct maximum value of Rayonix trusted range. (`#590 <https://github.com/cctbx/dxtbx/issues/590>`_)
+- Read underload from CBF files (`#592 <https://github.com/cctbx/dxtbx/issues/592>`_)
+- ``NXmx``: Ensure integer data types get converted to ``flex.int`` on all platforms. (`#594 <https://github.com/cctbx/dxtbx/issues/594>`_)
+- Fix trusted range in ``FormatCBFMultiTile`` and ``FormatCBFMultiTileHierarchy``. (`#595 <https://github.com/cctbx/dxtbx/issues/595>`_)
+
+
+Misc
+----
+
+- `#578 <https://github.com/cctbx/dxtbx/issues/578>`_, `#591 <https://github.com/cctbx/dxtbx/issues/591>`_, `#597 <https://github.com/cctbx/dxtbx/issues/597>`_, `#598 <https://github.com/cctbx/dxtbx/issues/598>`_, `#600 <https://github.com/cctbx/dxtbx/issues/600>`_
+
+
+Dxtbx 3.13 (2023-01-12)
+=======================
+
+Features
+--------
+
+- ``FormatNXmxED``: a new format class for electron diffraction images converted to be compatible with NXmx by nexgen (https://github.com/dials/nexgen) (`#583 <https://github.com/cctbx/dxtbx/issues/583>`_)
+- Add ``FormatNXmxEDeBIC``, which includes a mask specific for the SINGLA that is temporarily installed at eBIC, through to early 2023. (`#589 <https://github.com/cctbx/dxtbx/issues/589>`_)
+
+
+Bugfixes
+--------
+
+- dxtbx.image_average: fix a crash from using more processors than images when using MPI. (`#571 <https://github.com/cctbx/dxtbx/issues/571>`_)
+- Fix dxtbx.plot_detector_models for new versions of matplotlib (`#574 <https://github.com/cctbx/dxtbx/issues/574>`_)
+- ``FormatNXmxDLS`` no longer recognises electron diffraction images collected at eBIC that have been converted by ``nexgen``. (`#579 <https://github.com/cctbx/dxtbx/issues/579>`_)
+- Corrected maximum value of Rayonix trusted range. (`#590 <https://github.com/cctbx/dxtbx/issues/590>`_)
+- Read underload from CBF files (`#592 <https://github.com/cctbx/dxtbx/issues/592>`_)
+- ``NXmx``: Ensure integer data types get converted to ``flex.int``, i.e. ``int`` C-type, on all platforms (`#594 <https://github.com/cctbx/dxtbx/issues/594>`_)
+- Fix trusted range in FormatCBFMultiTile and FormatCBFMultiTileHierarchy. (`#595 <https://github.com/cctbx/dxtbx/issues/595>`_)
+
+
+Misc
+----
+
+- `#578 <https://github.com/cctbx/dxtbx/issues/578>`_, `#591 <https://github.com/cctbx/dxtbx/issues/591>`_, `#597 <https://github.com/cctbx/dxtbx/issues/597>`_, `#598 <https://github.com/cctbx/dxtbx/issues/598>`_, `#600 <https://github.com/cctbx/dxtbx/issues/600>`_
+
+
 DIALS 3.12.1 (2022-12-05)
 =========================
 
