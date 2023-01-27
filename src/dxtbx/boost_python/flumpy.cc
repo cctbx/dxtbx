@@ -425,6 +425,9 @@ py::object from_numpy(py::object array) {
     return numpy_to_array_family<af::versa<bool, af::flex_grid<>>>(np_array);
   } else if (dtype == 'i') {
     return numpy_to_array_family<af::versa<int, af::flex_grid<>>>(np_array);
+  } else if (dtype == 'l' && (sizeof(long) == sizeof(int))) {
+    // In cases where int and long are degenerate (windows), prefer int
+    return numpy_to_array_family<af::versa<int, af::flex_grid<>>>(np_array);
   } else if (dtype == 'l') {
     return numpy_to_array_family<af::versa<long, af::flex_grid<>>>(np_array);
   } else if (dtype == 'f') {
