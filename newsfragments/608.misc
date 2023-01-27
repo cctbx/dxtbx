@@ -1,0 +1,1 @@
+Fix NXmx tests attempting to read locked file, on Windows.
