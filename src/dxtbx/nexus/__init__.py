@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
-from typing import Optional, Tuple, cast, Literal
+from typing import Literal, Optional, Tuple, cast
 
 import h5py
 import numpy as np
@@ -510,7 +510,7 @@ def _dataset_as_flex(
     #
     # Unsafe conversions to 32-bit integer can occur for data types >4
     # bytes, but only if bit_depth is explicitly set to 32.
-    if np.issubtype(dtype, np.integer):
+    if np.issubdtype(dtype, np.integer):
         if (
             (np.issubdtype(dtype, np.signedinteger) and dtype.itemsize <= 4)
             or (np.issubdtype(dtype, np.unsignedinteger) and dtype.itemsize <= 2)
