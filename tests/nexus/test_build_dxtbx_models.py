@@ -680,7 +680,7 @@ def test_dataset_as_flex_int():
             assert isinstance(flex_a, flex.int)
             assert flex_a.all() == g[k].shape
             assert list(flex_a) == list(g[k])
-        with pytest.raises(TypeError, match="Unsupported dtype .*"):
+        with pytest.raises(TypeError, match="Unsupported integer dtype .*"):
             dxtbx.nexus._dataset_as_flex(g["int64"], slices)
         flex_a = dxtbx.nexus._dataset_as_flex(g["int64"], slices, bit_depth=32)
         assert isinstance(flex_a, flex.int)
