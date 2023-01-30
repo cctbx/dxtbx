@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
-from typing import Optional, Tuple, cast
+from typing import Literal, Optional, Tuple, cast
 
 import h5py
 import numpy as np
@@ -486,31 +486,50 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None
 
 def _dataset_as_flex(
     data: h5py.Dataset,
-    slices: tuple,
-    bit_depth: Optional[int] = None,
+    slices: tuple[slice, ...] | None,
+    bit_depth: Literal[32] | None = None,
 ) -> flex.float | flex.double | flex.int:
-    data_np = np.ascontiguousarray(data[slices])
-    np_float_types = (
-        np.half,
-        np.single,
-        np.float16,
-    )
-    if np.issubdtype(data_np.dtype, np.int64):
-        if bit_depth and bit_depth <= 32:
-            # bit_depth promises that we can safely convert to
-            # a 32-bit int without corrupting the data
-            data_np = data_np.astype(np.intc, copy=False)
+    """
+    Convert an HDF5 dataset to one of the expected flex types.
+
+    Args:
+        data: The HDF5 Dataset to convert
+        slices:
+            The Dataset will be sliced and made contiguous to this shape
+        bit_depth:
+            If set to 32, and the dataset is larger than 32-bit, then
+            the data will be coerced down to a 32-bit integer.
+    """
+    # Make a guaranteed-contiguous copy of the sliced data
+    data_np = np.ascontiguousarray(data[slices or ()])
+    dtype = data_np.dtype
+
+    # Handle integer conversion. Safe to convert if:
+    # - Is signed and <= 4 bytes
+    # - Is unsigned and <= 2 bytes
+    #
+    # Unsafe conversions to 32-bit integer can occur for data types >4
+    # bytes, but only if bit_depth is explicitly set to 32.
+    if np.issubdtype(dtype, np.integer):
+        if (
+            (np.issubdtype(dtype, np.signedinteger) and dtype.itemsize <= 4)
+            or (np.issubdtype(dtype, np.unsignedinteger) and dtype.itemsize <= 2)
+            or (dtype.itemsize > 4 and bit_depth == 32)
+        ):
+            data_np = data_np.astype(np.int32, copy=False)
         else:
-            raise TypeError(f"Unsupported dtype {data_np.dtype}")
-    elif np.issubdtype(data_np.dtype, np.integer):
-        data_np = data_np.astype(np.intc, copy=False)
-    elif np.issubdtype(data_np.dtype, np.int32) or data_np.dtype in np_float_types:
-        data_np = data_np.astype(np.float32, copy=False)
-    elif not np.issubdtype(data_np.dtype, np.floating):
-        raise TypeError(f"Unsupported dtype {data_np.dtype}")
+            raise TypeError(f"Unsupported integer dtype {data_np.dtype}")
+    elif np.issubdtype(dtype, np.floating):
+        if dtype.itemsize <= 4:
+            # Promote anything <= single precision up to single precision
+            data_np = data_np.astype(np.float32, copy=False)
+        else:
+            # Otherwise, everything else becomes double
+            data_np = data_np.astype(np.float64, copy=False)
     else:
-        # assume double
-        data_np = data_np.astype(np.float64, copy=False)
+        # Isn't a recognised integer or floating point type
+        raise TypeError(f"Unsupported dtype {data_np.dtype}")
+
     data_flex = flumpy.from_numpy(data_np)
     return data_flex
 

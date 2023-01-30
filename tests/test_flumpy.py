@@ -70,6 +70,9 @@ def flex_numeric(request):
     flex_typename = request.param
     if not hasattr(flex, flex_typename):
         pytest.skip(f"Type flex.{flex_typename} not available on this flex instance")
+    # Don't do long on windows, we prefer to get int
+    if flex_typename == "long" and np.dtype("l").itemsize == np.dtype("i").itemsize:
+        pytest.skip("On this platform, flex.long = flex.int so latter preferred")
     return getattr(flex, flex_typename)
 
 
@@ -350,3 +353,17 @@ def test_nonowning():
     assert f_a[2] == 9
     assert n_b[2] == 9
     assert f_c[1] == 9
+
+
+def test_int_long_degeneracy():
+    if np.dtype("l").itemsize != np.dtype("i").itemsize:
+        pytest.skip("Test only runs on platforms where int = long")
+    npo = np.array([240, 259, 144, 187]).astype("l")
+    fo = flumpy.from_numpy(npo)
+    assert isinstance(fo, flex.int)
+
+    assert fo.all() == npo.shape
+    assert all(fo[x] == npo[x] for x in range(4))
+    npo[0] = 42
+    assert all(fo[x] == npo[x] for x in range(4))
+    assert fo[0] == 42
