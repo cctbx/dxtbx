@@ -495,10 +495,12 @@ def _dataset_as_flex(
     Args:
         data: The HDF5 Dataset to convert
         slices:
-            The Dataset will be sliced and made contiguous to this shape
+            The Dataset will be sliced and made contiguous to this shape.
         bit_depth:
-            If set to 32, and the dataset is larger than 32-bit, then
-            the data will be coerced down to a 32-bit integer.
+            If set to 32, and the dataset in signed integer
+            representation requires more than 32-bit, then the data will
+            be converted to a signed 32-bit integer. Without this, such
+            attempted conversions will raise a TypeError.
     """
     # Make a guaranteed-contiguous copy of the sliced data
     data_np = np.ascontiguousarray(data[slices or ()])
@@ -508,13 +510,13 @@ def _dataset_as_flex(
     # - Is signed and <= 4 bytes
     # - Is unsigned and <= 2 bytes
     #
-    # Unsafe conversions to 32-bit integer can occur for data types >4
-    # bytes, but only if bit_depth is explicitly set to 32.
+    # Unsafe conversions to 32-bit integer can occur, but only if
+    # bit_depth is explicitly set to 32.
     if np.issubdtype(dtype, np.integer):
         if (
             (np.issubdtype(dtype, np.signedinteger) and dtype.itemsize <= 4)
             or (np.issubdtype(dtype, np.unsignedinteger) and dtype.itemsize <= 2)
-            or (dtype.itemsize > 4 and bit_depth == 32)
+            or bit_depth == 32
         ):
             data_np = data_np.astype(np.int32, copy=False)
         else:
