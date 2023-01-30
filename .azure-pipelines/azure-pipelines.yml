@@ -111,7 +111,7 @@ stages:
 
     - job: windows
       pool:
-        vmImage: windows-latest
+        vmImage: windows-2019
       strategy:
         matrix:
           python38:
