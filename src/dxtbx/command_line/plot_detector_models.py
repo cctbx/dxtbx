@@ -160,6 +160,7 @@ def run(args=None):
     colormap = plt.cm.gist_ncar
     colors = [colormap(i) for i in np.linspace(0, 0.9, len(files))]
     min_z = max_z = None
+    ax = None
     for file_name, color in zip(files, colors):
 
         # read the data and get the detector models
@@ -178,9 +179,9 @@ def run(args=None):
             detectors = detectors[0:1]
         for detector in detectors:
             # plot the hierarchy
-            if params.orthographic:
+            if ax is None and params.orthographic:
                 ax = fig.gca()
-            else:
+            elif ax is None:
                 ax = fig.add_subplot(projection="3d")
 
             if params.orthographic and params.project_onto == "image_plane":
