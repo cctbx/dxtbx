@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 import os
 import sys
 
@@ -67,6 +68,7 @@ class Arrow3D(FancyArrowPatch):
 def plot_group(
     g, color, ax, orthographic=False, show_origin_vectors=True, panel_numbers=True
 ):
+    panel_corners = []
     # recursively plot a detector group
     p = g.parent()
     if show_origin_vectors:
@@ -91,7 +93,11 @@ def plot_group(
     if g.is_group():
         for c in g:
             # plot all the children
-            plot_group(c, color, ax, orthographic, show_origin_vectors, panel_numbers)
+            panel_corners.append(
+                plot_group(
+                    c, color, ax, orthographic, show_origin_vectors, panel_numbers
+                )
+            )
     else:
         # plot the panel boundaries
         size = g.get_image_size()
@@ -103,6 +109,7 @@ def plot_group(
         v2 = p3 - p0
         vcen = ((v2 / 2) + (v1 / 2)) + p0
         z = list(zip(p0, p1, p2, p3, p0))
+        panel_corners.append((p0.elems, p1.elems, p2.elems, p3.elems))
 
         if orthographic:
             ax.plot(z[0], z[1], color=color)
@@ -116,6 +123,7 @@ def plot_group(
             if panel_numbers:
                 # Annotate with panel numbers
                 ax.text(vcen[0], vcen[1], vcen[2], "%d" % g.index())
+    return panel_corners
 
 
 def plot_image_plane_projection(detector, color, ax, panel_numbers=True):
@@ -187,7 +195,7 @@ def run(args=None):
             if params.orthographic and params.project_onto == "image_plane":
                 plot_image_plane_projection(detector, color, ax, params.panel_numbers)
             else:
-                plot_group(
+                panel_corners = plot_group(
                     detector.hierarchy(),
                     color,
                     ax,
@@ -197,7 +205,10 @@ def run(args=None):
                 )
 
                 if not params.orthographic:
-                    all_z = [p.get_origin()[2] for p in detector]
+                    all_z = [
+                        coord[2]
+                        for coord in itertools.chain.from_iterable(*panel_corners)
+                    ]
                     if min_z is None:
                         min_z = min(all_z)
                         max_z = max(all_z)
