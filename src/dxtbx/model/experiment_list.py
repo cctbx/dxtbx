@@ -3,6 +3,7 @@ from __future__ import annotations
 import collections
 import copy
 import errno
+import importlib.metadata
 import itertools
 import json
 import logging
@@ -10,8 +11,6 @@ import operator
 import os
 import pickle
 from typing import Any, Callable, Generator, Iterable
-
-import pkg_resources
 
 import dxtbx.datablock
 from dxtbx.datablock import (
@@ -467,7 +466,9 @@ class ExperimentListDict:
     @staticmethod
     def _scaling_model_from_dict(obj):
         """Get the scaling model from a dictionary."""
-        for entry_point in pkg_resources.iter_entry_points("dxtbx.scaling_model_ext"):
+        for entry_point in importlib.metadata.entry_points(
+            group="dxtbx.scaling_model_ext"
+        ):
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
 
