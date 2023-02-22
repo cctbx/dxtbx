@@ -1,0 +1,1 @@
+Ignore deprecated ``pkg_resources.declare_namespace`` warnings in pytest
