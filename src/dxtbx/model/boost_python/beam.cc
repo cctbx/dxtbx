@@ -10,6 +10,7 @@
  */
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <scitbx/constants.h>
@@ -265,7 +266,7 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("polarization_fraction_tolerance") = 1e-6));
 
     // Export Beam : BeamBase
-    class_<Beam, boost::shared_ptr<Beam>, bases<BeamBase> >("Beam")
+    class_<Beam, std::shared_ptr<Beam>, bases<BeamBase> >("Beam")
       .def(init<const Beam &>())
       .def(init<vec3<double>, double>((arg("direction"), arg("wavelength"))))
       .def(init<vec3<double> >((arg("s0"))))

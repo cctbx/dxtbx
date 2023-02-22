@@ -3,6 +3,7 @@
  */
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <dxtbx/model/spectrum.h>
@@ -61,7 +62,7 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_spectrum() {
     // Export Spectrum
-    class_<Spectrum, boost::shared_ptr<Spectrum> >("Spectrum")
+    class_<Spectrum, std::shared_ptr<Spectrum> >("Spectrum")
       .def(init<const Spectrum &>())
       .def(init<vecd, vecd>((arg("energies"), arg("weights"))))
       .def("get_energies_eV", &Spectrum::get_energies_eV)

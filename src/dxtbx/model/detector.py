@@ -12,6 +12,7 @@ from dxtbx.model.detector_helpers import (
     detector_helper_sensors,
     find_gain_value,
     find_undefined_value,
+    find_underload_value,
     set_detector_distance,
     set_fast_slow_beam_centre_mm,
     set_mosflm_beam_centre,
@@ -774,11 +775,23 @@ class DetectorFactory:
         size = tuple(reversed(cbf_handle.get_image_size(0)))
 
         try:
-            underload = find_undefined_value(cbf_handle)
-            overload = cbf_handle.get_overload(0)
-            trusted_range = (underload, overload * dxtbx_overload_scale)
+            min_trusted_value = find_underload_value(cbf_handle)
         except Exception:
-            trusted_range = (0.0, 1.0e6)
+            try:
+                # By convention, if underload is not set, then assume the minimum
+                # trusted pixel is 1 more than the undefined pixel
+                min_trusted_value = find_undefined_value(cbf_handle) + 1
+            except Exception:
+                min_trusted_value = 0
+
+        try:
+            # In imgCIF overload means the pixel is saturated and hence untrusted
+            # https://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/Iarray_intensities.overload.html
+            max_trusted_value = (cbf_handle.get_overload(0) - 1) * dxtbx_overload_scale
+        except Exception:
+            max_trusted_value = 1.0e6
+
+        trusted_range = (min_trusted_value, max_trusted_value)
 
         gain = find_gain_value(cbf_handle)
 

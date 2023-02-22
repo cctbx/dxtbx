@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import itertools
 import logging
-from typing import Tuple, cast
+from typing import Literal, Optional, Tuple, cast
 
 import h5py
 import numpy as np
+import nxmx
 
 import cctbx
 from cctbx import eltbx
@@ -12,9 +14,6 @@ from scitbx.array_family import flex
 
 import dxtbx.model
 from dxtbx import flumpy
-from dxtbx.nexus.nxmx import units
-
-from . import nxmx
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +127,7 @@ class CachedWavelengthBeamFactory:
                 wavelength_value = wavelength[()]
             else:
                 wavelength_value = wavelength[index]
-            wavelength_units = units(wavelength)
+            wavelength_units = nxmx.units(wavelength)
             wavelength_value = float(
                 (wavelength_value * wavelength_units).to("angstrom").magnitude
             )
@@ -144,7 +143,7 @@ class CachedWavelengthBeamFactory:
             self.model = dxtbx.model.Beam()
             self.model.set_direction((0, 0, 1))
 
-            wavelength_units = units(spectrum_wavelengths)
+            wavelength_units = nxmx.units(spectrum_wavelengths)
 
             if len(spectrum_wavelengths.shape) > 1:
                 spectrum_wavelengths = spectrum_wavelengths[index]
@@ -215,18 +214,15 @@ def get_dxtbx_scan(
             steps = nxmx.ureg.Quantity(0, "degree")
 
         step = np.median(steps).to("degree")
-        try:
-            if np.any(np.abs((steps - step) / step) >= 0.1):
-                logger.warning(
-                    "One or more recorded oscillation widths differ from the median "
-                    "by 10% or more.  The rotation axis of your goniometer may not "
-                    "have been scanning at a constant speed throughout the data "
-                    "collection."
-                )
-        except ZeroDivisionError:
-            pass
+        if np.any(np.abs(steps - step) > (0.1 * step)):
+            logger.warning(
+                "One or more recorded oscillation widths differ from the median "
+                "by more than 10%. The rotation axis of your goniometer may not "
+                "have been scanning at a constant speed throughout the data "
+                "collection."
+            )
 
-        oscillation = (start.magnitude, step.magnitude)
+        oscillation = tuple(float(f) for f in (start.magnitude, step.magnitude))
 
     if nxdetector.frame_time is not None:
         frame_time = nxdetector.frame_time.to("seconds").magnitude
@@ -270,22 +266,59 @@ def get_dxtbx_detector(
         if len(nxdetector.modules) > 1:
             # Set up the detector hierarchy
             if module.fast_pixel_direction.depends_on is not None:
-                reversed_dependency_chain = reversed(
-                    nxmx.get_dependency_chain(module.fast_pixel_direction.depends_on)
-                )
-                pg: dxtbx.model.Detector | dxtbx.model.Panel = root
-                for transformation in reversed_dependency_chain:
-                    assert isinstance(
-                        pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
+                reversed_dependency_chain = list(
+                    reversed(
+                        nxmx.get_dependency_chain(
+                            module.fast_pixel_direction.depends_on
+                        )
                     )
-                    name = transformation.path
-                    pg_names = [child.get_name() for child in pg]
-                    if name in pg_names:
-                        pg = pg[pg_names.index(name)]  # Getitem always returns panel
-                        continue
+                )
+                pg: dxtbx.model.Detector | dxtbx.model.Panel | None = None
+
+                # Verify that equipment_components in the dependency chain are
+                # 1) contiguous and 2) unique
+                found = []
+                for dependency in reversed_dependency_chain:
+                    if dependency.equipment_component:
+                        if dependency.equipment_component in found:
+                            assert dependency.equipment_component == found[-1]
+                        found.append(dependency.equipment_component)
+
+                # Group any transformations together that share the same equipment_component
+                # to reduce the number of hierarchy levels
+
+                # Keep transformations without equipment_component set separate by using
+                # a different key
+                counter = 0
+
+                def equipment_component_key(dependency):
+                    if dependency.equipment_component:
+                        return dependency.equipment_component  # always a string
                     else:
-                        pg = pg.add_group()
-                    A = transformation.matrix
+                        nonlocal counter
+                        counter += 1
+                        return counter
+
+                for _, transformation_group in itertools.groupby(
+                    reversed_dependency_chain, key=equipment_component_key
+                ):
+                    transformation_group = list(transformation_group)
+                    name = transformation_group[-1].path
+                    if pg is None:
+                        pg = root
+                    else:
+                        assert isinstance(
+                            pg, (dxtbx.model.Detector, dxtbx.model.DetectorNode)
+                        )
+                        pg_names = [child.get_name() for child in pg]
+                        if name in pg_names:
+                            pg = pg[
+                                pg_names.index(name)
+                            ]  # Getitem always returns panel
+                            continue
+                        else:
+                            pg = pg.add_group()
+                    A = nxmx.get_cumulative_transformation(transformation_group)
                     origin = MCSTAS_TO_IMGCIF @ A[0, :3, 3]
                     fast = (
                         MCSTAS_TO_IMGCIF @ (A @ np.array((-1, 0, 0, 1)))[0, :3] - origin
@@ -300,6 +333,11 @@ def get_dxtbx_detector(
         else:
             # Use a flat detector model
             pg = root
+
+        pixel_size = (
+            module.fast_pixel_direction[()].to("mm").magnitude.item(),
+            module.slow_pixel_direction[()].to("mm").magnitude.item(),
+        )
 
         if isinstance(pg, dxtbx.model.DetectorNode):
             # Hierarchical detector model
@@ -354,10 +392,17 @@ def get_dxtbx_detector(
             A = nxmx.get_cumulative_transformation(dependency_chain)
             origin = MCSTAS_TO_IMGCIF @ A[0, :3, 3]
 
-        pixel_size = (
-            module.fast_pixel_direction[()].to("mm").magnitude.item(),
-            module.slow_pixel_direction[()].to("mm").magnitude.item(),
-        )
+            if (
+                origin[0] == 0
+                and origin[1] == 0
+                and nxdetector.beam_center_x
+                and nxdetector.beam_center_y
+            ):
+                # fallback on the explicit beam center - this is needed for some older
+                # dectris eiger filewriter datasets
+                origin -= nxdetector.beam_center_x.magnitude * pixel_size[0] * fast_axis
+                origin -= nxdetector.beam_center_y.magnitude * pixel_size[1] * slow_axis
+
         # dxtbx requires image size in the order fast, slow - which is the reverse of what
         # is stored in module.data_size
         image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[::-1])))
@@ -440,29 +485,62 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None
 
 
 def _dataset_as_flex(
-    data: h5py.Dataset, slices: tuple
+    data: h5py.Dataset,
+    slices: tuple[slice, ...] | None,
+    bit_depth: Literal[32] | None = None,
 ) -> flex.float | flex.double | flex.int:
-    data_np = np.squeeze(data[slices], axis=0)
-    np_float_types = (
-        np.half,
-        np.single,
-        np.float_,
-        np.float16,
-        np.float32,
-    )
-    if np.issubdtype(data_np.dtype, np.integer):
-        data_np = data_np.astype(np.int32, copy=False)
-    elif data_np.dtype in np_float_types:
-        data_np = data_np.astype(np.float32, copy=False)
+    """
+    Convert an HDF5 dataset to one of the expected flex types.
+
+    Args:
+        data: The HDF5 Dataset to convert
+        slices:
+            The Dataset will be sliced and made contiguous to this shape.
+        bit_depth:
+            If set to 32, and the dataset in signed integer
+            representation requires more than 32-bit, then the data will
+            be converted to a signed 32-bit integer. Without this, such
+            attempted conversions will raise a TypeError.
+    """
+    # Make a guaranteed-contiguous copy of the sliced data
+    data_np = np.ascontiguousarray(data[slices or ()])
+    dtype = data_np.dtype
+
+    # Handle integer conversion. Safe to convert if:
+    # - Is signed and <= 4 bytes
+    # - Is unsigned and <= 2 bytes
+    #
+    # Unsafe conversions to 32-bit integer can occur, but only if
+    # bit_depth is explicitly set to 32.
+    if np.issubdtype(dtype, np.integer):
+        if (
+            (np.issubdtype(dtype, np.signedinteger) and dtype.itemsize <= 4)
+            or (np.issubdtype(dtype, np.unsignedinteger) and dtype.itemsize <= 2)
+            or bit_depth == 32
+        ):
+            data_np = data_np.astype(np.int32, copy=False)
+        else:
+            raise TypeError(f"Unsupported integer dtype {data_np.dtype}")
+    elif np.issubdtype(dtype, np.floating):
+        if dtype.itemsize <= 4:
+            # Promote anything <= single precision up to single precision
+            data_np = data_np.astype(np.float32, copy=False)
+        else:
+            # Otherwise, everything else becomes double
+            data_np = data_np.astype(np.float64, copy=False)
     else:
-        # assume double
-        assert np.issubdtype(data_np.dtype, np.floating)
-        data_np = data_np.astype(np.float64, copy=False)
-    return flumpy.from_numpy(data_np)
+        # Isn't a recognised integer or floating point type
+        raise TypeError(f"Unsupported dtype {data_np.dtype}")
+
+    data_flex = flumpy.from_numpy(data_np)
+    return data_flex
 
 
 def get_raw_data(
-    nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int
+    nxdata: nxmx.NXdata,
+    nxdetector: nxmx.NXdetector,
+    index: int,
+    bit_depth: Optional[int] = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
@@ -479,9 +557,10 @@ def get_raw_data(
     else:
         data = list(nxdata.values())[0]
     all_data = []
+    sliced_outer = data[index]
     for module_slices in get_detector_module_slices(nxdetector):
-        slices = [slice(index, index + 1, 1)]
-        slices.extend(module_slices)
-        data_as_flex = _dataset_as_flex(data, tuple(slices))
+        data_as_flex = _dataset_as_flex(
+            sliced_outer, tuple(module_slices), bit_depth=bit_depth
+        )
         all_data.append(data_as_flex)
     return tuple(all_data)

@@ -11,6 +11,7 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/slice.hpp>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <scitbx/constants.h>
@@ -47,15 +48,14 @@ namespace dxtbx { namespace model { namespace boost_python {
    * Return function pointers to overrides for different types
    */
   struct experiment_list_contains_pointers {
-    typedef bool (ExperimentList::*beam_type)(
-      const boost::shared_ptr<BeamBase> &) const;
+    typedef bool (ExperimentList::*beam_type)(const std::shared_ptr<BeamBase> &) const;
     typedef bool (ExperimentList::*detector_type)(
-      const boost::shared_ptr<Detector> &) const;
+      const std::shared_ptr<Detector> &) const;
     typedef bool (ExperimentList::*goniometer_type)(
-      const boost::shared_ptr<Goniometer> &) const;
-    typedef bool (ExperimentList::*scan_type)(const boost::shared_ptr<Scan> &) const;
+      const std::shared_ptr<Goniometer> &) const;
+    typedef bool (ExperimentList::*scan_type)(const std::shared_ptr<Scan> &) const;
     typedef bool (ExperimentList::*crystal_type)(
-      const boost::shared_ptr<CrystalBase> &) const;
+      const std::shared_ptr<CrystalBase> &) const;
     typedef bool (ExperimentList::*object_type)(boost::python::object) const;
 
     static beam_type beam() {
@@ -87,16 +87,16 @@ namespace dxtbx { namespace model { namespace boost_python {
    * Return function pointers to overrides for different types
    */
   struct experiment_list_replace_pointers {
-    typedef void (ExperimentList::*beam_type)(boost::shared_ptr<BeamBase>,
-                                              boost::shared_ptr<BeamBase>);
-    typedef void (ExperimentList::*detector_type)(boost::shared_ptr<Detector>,
-                                                  boost::shared_ptr<Detector>);
-    typedef void (ExperimentList::*goniometer_type)(boost::shared_ptr<Goniometer>,
-                                                    boost::shared_ptr<Goniometer>);
-    typedef void (ExperimentList::*scan_type)(boost::shared_ptr<Scan>,
-                                              boost::shared_ptr<Scan>);
-    typedef void (ExperimentList::*crystal_type)(boost::shared_ptr<CrystalBase>,
-                                                 boost::shared_ptr<CrystalBase>);
+    typedef void (ExperimentList::*beam_type)(std::shared_ptr<BeamBase>,
+                                              std::shared_ptr<BeamBase>);
+    typedef void (ExperimentList::*detector_type)(std::shared_ptr<Detector>,
+                                                  std::shared_ptr<Detector>);
+    typedef void (ExperimentList::*goniometer_type)(std::shared_ptr<Goniometer>,
+                                                    std::shared_ptr<Goniometer>);
+    typedef void (ExperimentList::*scan_type)(std::shared_ptr<Scan>,
+                                              std::shared_ptr<Scan>);
+    typedef void (ExperimentList::*crystal_type)(std::shared_ptr<CrystalBase>,
+                                                 std::shared_ptr<CrystalBase>);
     typedef void (ExperimentList::*object_type)(boost::python::object,
                                                 boost::python::object);
 
@@ -130,15 +130,15 @@ namespace dxtbx { namespace model { namespace boost_python {
    */
   struct experiment_list_indices_pointers {
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*beam_type)(
-      const boost::shared_ptr<BeamBase> &) const;
+      const std::shared_ptr<BeamBase> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*detector_type)(
-      const boost::shared_ptr<Detector> &) const;
+      const std::shared_ptr<Detector> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*goniometer_type)(
-      const boost::shared_ptr<Goniometer> &) const;
+      const std::shared_ptr<Goniometer> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*scan_type)(
-      const boost::shared_ptr<Scan> &) const;
+      const std::shared_ptr<Scan> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*crystal_type)(
-      const boost::shared_ptr<CrystalBase> &) const;
+      const std::shared_ptr<CrystalBase> &) const;
     typedef scitbx::af::shared<std::size_t> (ExperimentList::*object_type)(
       boost::python::object) const;
 
@@ -244,11 +244,11 @@ namespace dxtbx { namespace model { namespace boost_python {
            &ExperimentList::select_on_experiment_identifiers)
       .def("where",
            &ExperimentList::where,
-           (arg("beam") = boost::shared_ptr<BeamBase>(),
-            arg("detector") = boost::shared_ptr<Detector>(),
-            arg("goniometer") = boost::shared_ptr<Goniometer>(),
-            arg("scan") = boost::shared_ptr<Scan>(),
-            arg("crystal") = boost::shared_ptr<CrystalBase>(),
+           (arg("beam") = std::shared_ptr<BeamBase>(),
+            arg("detector") = std::shared_ptr<Detector>(),
+            arg("goniometer") = std::shared_ptr<Goniometer>(),
+            arg("scan") = std::shared_ptr<Scan>(),
+            arg("crystal") = std::shared_ptr<CrystalBase>(),
             arg("profile") = boost::python::object(),
             arg("imageset") = boost::python::object(),
             arg("scaling_model") = boost::python::object()))

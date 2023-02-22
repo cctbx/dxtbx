@@ -8,8 +8,8 @@ from typing import Union
 
 import h5py
 import numpy as np
+import nxmx
 
-import dxtbx.nexus
 from dxtbx.format.FormatNXmx import FormatNXmx
 
 
@@ -52,9 +52,11 @@ class FormatNXmxDLS(FormatNXmx):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file) as handle:
-            name = dxtbx.nexus.nxmx.h5str(FormatNXmxDLS.get_instrument_name(handle))
+            name = nxmx.h5str(FormatNXmxDLS.get_instrument_name(handle))
             if name and name.lower() in ("i03", "i04", "i24", "vmxi"):
                 return True
+            if name and "ebic" in name.lower():
+                return False
             if name and name.upper().startswith(("DIAMOND BEAMLINE", "DLS")):
                 return True
         return False
@@ -82,15 +84,15 @@ class FormatNXmxDLS(FormatNXmx):
         return find_meta_filename(self._image_file)
 
     def _get_nxmx(self, fh: h5py.File):
-        nxmx = dxtbx.nexus.nxmx.NXmx(fh)
-        nxentry = nxmx.entries[0]
+        nxmx_obj = nxmx.NXmx(fh)
+        nxentry = nxmx_obj.entries[0]
 
         nxdetector = nxentry.instruments[0].detectors[0]
         if nxdetector.underload_value is None:
             nxdetector.underload_value = 0
 
         if self._legacy is None:
-            name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(fh))
+            name = nxmx.h5str(FormatNXmx.get_instrument_name(fh))
             if nxentry.start_time and "I03" in name.upper():
                 self._legacy = nxentry.start_time.replace(
                     tzinfo=None
@@ -99,6 +101,11 @@ class FormatNXmxDLS(FormatNXmx):
                 self._legacy = nxentry.start_time.replace(
                     tzinfo=None
                 ) < datetime.datetime(2021, 9, 14, 15, 3, 0)
+            elif nxentry.start_time and "VMXM" in name.upper():
+                # don't have a time stamp for precisely when this happened to VMXm
+                self._legacy = nxentry.start_time.replace(
+                    tzinfo=None
+                ) < datetime.datetime(2022, 1, 1, 1, 0, 0)
             elif "VMXI" in name.upper():
                 # Until some point between July 2021 and  November 2021 the
                 # data_size recorded in the VMXi NeXus files were reversed
@@ -120,4 +127,4 @@ class FormatNXmxDLS(FormatNXmx):
                 # At some point the pixel mask was stored with the dimensions reversed -> ignore
                 # https://jira.diamond.ac.uk/browse/MXGDA-3675
                 nxdetector.pixel_mask = None
-        return nxmx
+        return nxmx_obj

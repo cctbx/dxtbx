@@ -10,6 +10,7 @@
  */
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
+#include <memory>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -105,27 +106,11 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   template <>
-  boost::python::dict to_dict<shared_ptr<PxMmStrategy> >(
-    const shared_ptr<PxMmStrategy> &obj) {
+  boost::python::dict to_dict<std::shared_ptr<PxMmStrategy> >(
+    const std::shared_ptr<PxMmStrategy> &obj) {
     boost::python::dict result;
     std::string name = obj->name();
     result["type"] = name;
-    /* if (name == "SimplePxMmStrategy") { */
-    /* } else if (name == "ParallaxCorrectedPxMmStrategy") { */
-    /*   boost::shared_ptr<ParallaxCorrectedPxMmStrategy> d = */
-    /*     boost::dynamic_pointer_cast<ParallaxCorrectedPxMmStrategy>(obj); */
-    /*   result["mu"] = d->mu(); */
-    /*   result["t0"] = d->t0(); */
-    /* } else if (name == "OffsetParallaxCorrectedPxMmStrategy") { */
-    /*   boost::shared_ptr<OffsetParallaxCorrectedPxMmStrategy> d = */
-    /*     boost::dynamic_pointer_cast<OffsetParallaxCorrectedPxMmStrategy>(obj); */
-    /*   result["mu"] = d->mu(); */
-    /*   result["t0"] = d->t0(); */
-    /*   result["dx"] = boost::python::list(d->dx()); */
-    /*   result["dy"] = boost::python::list(d->dy()); */
-    /* } else { */
-    /*   throw DXTBX_ERROR("Unknown PxMmStrategy"); */
-    /* } */
     return result;
   }
 
@@ -239,7 +224,7 @@ namespace dxtbx { namespace model { namespace boost_python {
         boost::python::extract<boost::python::dict>(obj["px_mm_strategy"]);
       std::string name = boost::python::extract<std::string>(st["type"]);
       if (name == "SimplePxMmStrategy") {
-        shared_ptr<PxMmStrategy> strategy(new SimplePxMmStrategy());
+        std::shared_ptr<PxMmStrategy> strategy(new SimplePxMmStrategy());
         result->set_px_mm_strategy(strategy);
       } else if (name == "ParallaxCorrectedPxMmStrategy") {
         double mu = result->get_mu();
@@ -251,11 +236,12 @@ namespace dxtbx { namespace model { namespace boost_python {
           result->set_thickness(t0);
         }
         if (mu > 0 && t0 > 0) {
-          shared_ptr<PxMmStrategy> strategy(new ParallaxCorrectedPxMmStrategy(mu, t0));
+          std::shared_ptr<PxMmStrategy> strategy(
+            new ParallaxCorrectedPxMmStrategy(mu, t0));
           result->set_px_mm_strategy(strategy);
         }
       } else if (name == "OffsetPxMmStrategy") {
-        shared_ptr<PxMmStrategy> strategy(new SimplePxMmStrategy());
+        std::shared_ptr<PxMmStrategy> strategy(new SimplePxMmStrategy());
         result->set_px_mm_strategy(strategy);
         // throw DXTBX_ERROR("The offset arrays need to be set for
         // OffsetParallaxCorrectedPxMmStrategy");
@@ -269,7 +255,8 @@ namespace dxtbx { namespace model { namespace boost_python {
           result->set_thickness(t0);
         }
         if (mu > 0 && t0 > 0) {
-          shared_ptr<PxMmStrategy> strategy(new ParallaxCorrectedPxMmStrategy(mu, t0));
+          std::shared_ptr<PxMmStrategy> strategy(
+            new ParallaxCorrectedPxMmStrategy(mu, t0));
           result->set_px_mm_strategy(strategy);
           // throw DXTBX_ERROR("The offset arrays need to be set for
           // OffsetParallaxCorrectedPxMmStrategy");
@@ -294,7 +281,7 @@ namespace dxtbx { namespace model { namespace boost_python {
         boost::python::extract<boost::python::dict>(obj["px_mm_strategy"]);
       std::string name = boost::python::extract<std::string>(st["type"]);
       if (name == "SimplePxMmStrategy") {
-        shared_ptr<PxMmStrategy> strategy(new SimplePxMmStrategy());
+        std::shared_ptr<PxMmStrategy> strategy(new SimplePxMmStrategy());
         result->set_px_mm_strategy(strategy);
       } else if (name == "ParallaxCorrectedPxMmStrategy") {
         double mu = result->get_mu();
@@ -306,11 +293,12 @@ namespace dxtbx { namespace model { namespace boost_python {
           result->set_thickness(t0);
         }
         if (mu > 0 && t0 > 0) {
-          shared_ptr<PxMmStrategy> strategy(new ParallaxCorrectedPxMmStrategy(mu, t0));
+          std::shared_ptr<PxMmStrategy> strategy(
+            new ParallaxCorrectedPxMmStrategy(mu, t0));
           result->set_px_mm_strategy(strategy);
         }
       } else if (name == "OffsetPxMmStrategy") {
-        shared_ptr<PxMmStrategy> strategy(new OffsetPxMmStrategy(dx, dy));
+        std::shared_ptr<PxMmStrategy> strategy(new OffsetPxMmStrategy(dx, dy));
         result->set_px_mm_strategy(strategy);
       } else if (name == "OffsetParallaxCorrectedPxMmStrategy") {
         double mu = result->get_mu();
@@ -322,7 +310,7 @@ namespace dxtbx { namespace model { namespace boost_python {
           result->set_thickness(t0);
         }
         if (mu > 0 && t0 > 0) {
-          shared_ptr<PxMmStrategy> strategy(
+          std::shared_ptr<PxMmStrategy> strategy(
             new OffsetParallaxCorrectedPxMmStrategy(mu, t0, dx, dy));
           result->set_px_mm_strategy(strategy);
         }
@@ -499,7 +487,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                 tiny<double, 2>,
                 double,
                 std::string,
-                shared_ptr<PxMmStrategy>,
+                std::shared_ptr<PxMmStrategy>,
                 double,
                 std::string>((arg("type"),
                               arg("name"),

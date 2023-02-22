@@ -2,7 +2,6 @@
 #define DXTBX_MASKING_GONIOMETER_SHADOW_MASKING_H
 
 #include <algorithm>
-#include <boost/foreach.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/geometries/adapted/boost_tuple.hpp>
@@ -174,7 +173,7 @@ namespace dxtbx { namespace masking {
         if (output.size()) {
           vec2<double> px = panel.get_pixel_size();
           polygon_t hull = output[0];
-          BOOST_FOREACH (point_t const &point, hull.outer()) {
+          for (point_t const &point : hull.outer()) {
             vec2<double> p(boost::geometry::get<0>(point) / px[0],
                            boost::geometry::get<1>(point) / px[1]);
             shadow_points.push_back(p);

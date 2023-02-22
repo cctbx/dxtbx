@@ -176,7 +176,7 @@ def run(args=None):
             if params.orthographic:
                 ax = fig.gca()
             else:
-                ax = fig.gca(projection="3d")
+                ax = fig.add_subplot(projection="3d")
 
             if params.orthographic and params.project_onto == "image_plane":
                 plot_image_plane_projection(detector, color, ax, params.panel_numbers)

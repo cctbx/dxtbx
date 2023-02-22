@@ -40,5 +40,6 @@ def test_Format_NXmx(nxmx_example_on_disk, instrument, format_class):
     with nxmx_example_on_disk as g:
         del g[name]
         g.create_dataset(name, data=instrument)
-        (experiment,) = ExperimentListFactory.from_filenames([g.filename])
-        assert experiment.imageset.get_format_class() == format_class
+        filename = g.filename
+    (experiment,) = ExperimentListFactory.from_filenames([filename])
+    assert experiment.imageset.get_format_class() == format_class

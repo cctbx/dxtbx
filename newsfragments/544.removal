@@ -1,1 +1,0 @@
-The deprecated ``set_slow_fast_beam_centre_mm`` function has been removed. Please use ``set_fast_slow_beam_centre_mm`` instead.

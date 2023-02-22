@@ -8,16 +8,17 @@ from dxtbx.format.FormatNXmxDLS import FormatNXmxDLS
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.model.goniometer import Goniometer
 
-pytestmark = pytest.mark.skipif(
-    not os.access("/dls/mx/data/mx21314/mx21314-27/VMXi-AB0816/well_7/images", os.R_OK),
-    reason="Test images not available",
-)
-
 pytest.importorskip("h5py")
 
+master_h5 = (
+    "/dls/mx/data/nt24686/nt24686-96/VMXi-AB5623/well_47/images/image_54771_master.h5"
+)
 
+
+@pytest.mark.skipif(
+    not os.access(master_h5, os.R_OK), reason="Test images not available"
+)
 def test_VMXi_rotation_scan():
-    master_h5 = "/dls/mx/data/nt24686/nt24686-96/VMXi-AB5623/well_47/images/image_54771_master.h5"
     assert FormatNXmxDLS.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])

@@ -24,11 +24,10 @@ pytest.importorskip("h5py")
         ),  # ROI mode
     ],
 )
-@pytest.mark.skipif(
-    not os.access("/dls/i03/data/2021/cm28170-2/TestProteinaseK/", os.R_OK),
-    reason="Test images not available",
-)
 def test_masked_i03(master_h5, masked_count):
+    if not os.access(master_h5, os.R_OK):
+        pytest.skip("Test images not available")
+
     assert FormatNXmxDLS16MI03.understand(master_h5)
     expts = ExperimentListFactory.from_filenames([master_h5])
     assert (

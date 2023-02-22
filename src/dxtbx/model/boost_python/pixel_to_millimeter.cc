@@ -8,6 +8,7 @@
  *  This code is distributed under the BSD license, a copy of which is
  *  included in the root directory of this package.
  */
+#include <memory>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <dxtbx/model/panel.h>
@@ -122,11 +123,11 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("dy", &OffsetParallaxCorrectedPxMmStrategy::dy)
       .def_pickle(OffsetParallaxCorrectedPxMmStrategyPickleSuite());
 
-    register_ptr_to_python<shared_ptr<PxMmStrategy> >();
-    register_ptr_to_python<shared_ptr<SimplePxMmStrategy> >();
-    register_ptr_to_python<shared_ptr<ParallaxCorrectedPxMmStrategy> >();
-    register_ptr_to_python<shared_ptr<OffsetPxMmStrategy> >();
-    register_ptr_to_python<shared_ptr<OffsetParallaxCorrectedPxMmStrategy> >();
+    register_ptr_to_python<std::shared_ptr<PxMmStrategy> >();
+    register_ptr_to_python<std::shared_ptr<SimplePxMmStrategy> >();
+    register_ptr_to_python<std::shared_ptr<ParallaxCorrectedPxMmStrategy> >();
+    register_ptr_to_python<std::shared_ptr<OffsetPxMmStrategy> >();
+    register_ptr_to_python<std::shared_ptr<OffsetParallaxCorrectedPxMmStrategy> >();
   }
 
 }}}  // namespace dxtbx::model::boost_python

@@ -11,9 +11,9 @@
 #ifndef DXTBX_MODEL_PANEL_H
 #define DXTBX_MODEL_PANEL_H
 
+#include <memory>
 #include <string>
 #include <iostream>
-#include <boost/shared_ptr.hpp>
 #include <scitbx/array_family/shared.h>
 #include <scitbx/array_family/versa.h>
 #include <scitbx/array_family/accessors/c_grid.h>
@@ -28,7 +28,6 @@
 
 namespace dxtbx { namespace model {
 
-  using boost::shared_ptr;
   using scitbx::af::double4;
   using scitbx::af::int2;
   using scitbx::af::int4;
@@ -97,7 +96,7 @@ namespace dxtbx { namespace model {
           tiny<double, 2> trusted_range,
           double thickness,
           std::string material,
-          shared_ptr<PxMmStrategy> convert_coord,
+          std::shared_ptr<PxMmStrategy> convert_coord,
           double mu,
           std::string identifier)
         : PanelData(type,
@@ -155,12 +154,12 @@ namespace dxtbx { namespace model {
     }
 
     /** Get the pixel to millimetre strategy */
-    shared_ptr<PxMmStrategy> get_px_mm_strategy() const {
+    std::shared_ptr<PxMmStrategy> get_px_mm_strategy() const {
       return convert_coord_;
     }
 
     /** Set the pixel to millimetre strategy */
-    void set_px_mm_strategy(shared_ptr<PxMmStrategy> strategy) {
+    void set_px_mm_strategy(std::shared_ptr<PxMmStrategy> strategy) {
       convert_coord_ = strategy;
     }
 
@@ -462,7 +461,7 @@ namespace dxtbx { namespace model {
   protected:
     double gain_;
     double pedestal_;
-    shared_ptr<PxMmStrategy> convert_coord_;
+    std::shared_ptr<PxMmStrategy> convert_coord_;
     std::string identifier_;
     boost::optional<Projection2D> projection_2d_;
   };

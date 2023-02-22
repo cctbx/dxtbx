@@ -1,3 +1,134 @@
+dxtbx 3.13.0 (2023-01-26)
+=========================
+
+Features
+--------
+
+- ``FormatNXmxED``: Format support for electron diffraction images converted to be compatible with NXmx by `nexgen <https://github.com/dials/nexgen>`_. (`#583 <https://github.com/cctbx/dxtbx/issues/583>`_)
+- ``FormatNXmxEDeBIC``: Including a mask specific for the SINGLA that is temporarily installed at eBIC, through to early 2023. (`#589 <https://github.com/cctbx/dxtbx/issues/589>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.image_average``: Fix a crash from using more processors than images when using MPI. (`#571 <https://github.com/cctbx/dxtbx/issues/571>`_)
+- ``dxtbx.plot_detector_models`` now works with newer versions of matplotlib. (`#574 <https://github.com/cctbx/dxtbx/issues/574>`_)
+- ``FormatNXmxDLS``: Don't process electron diffraction images collected at eBIC that have been converted by ``nexgen``. (`#579 <https://github.com/cctbx/dxtbx/issues/579>`_)
+- Correct maximum value of Rayonix trusted range. (`#590 <https://github.com/cctbx/dxtbx/issues/590>`_)
+- Read underload from CBF files. (`#592 <https://github.com/cctbx/dxtbx/issues/592>`_)
+- ``NXmx``: Ensure integer data types get converted to ``flex.int`` on all platforms. (`#594 <https://github.com/cctbx/dxtbx/issues/594>`_)
+- Fix trusted range in ``FormatCBFMultiTile`` and ``FormatCBFMultiTileHierarchy``. (`#595 <https://github.com/cctbx/dxtbx/issues/595>`_)
+- ``FullCBFWriter``: Fix writing of the newly consistent trusted_range values. (`#601 <https://github.com/cctbx/dxtbx/issues/601>`_)
+
+
+Misc
+----
+
+- `#578 <https://github.com/cctbx/dxtbx/issues/578>`_, `#591 <https://github.com/cctbx/dxtbx/issues/591>`_, `#597 <https://github.com/cctbx/dxtbx/issues/597>`_, `#598 <https://github.com/cctbx/dxtbx/issues/598>`_, `#599 <https://github.com/cctbx/dxtbx/issues/599>`_, `#600 <https://github.com/cctbx/dxtbx/issues/600>`_, `#602 <https://github.com/cctbx/dxtbx/issues/602>`_, `#603 <https://github.com/cctbx/dxtbx/issues/603>`_, `#605 <https://github.com/cctbx/dxtbx/issues/605>`_, `#606 <https://github.com/cctbx/dxtbx/issues/606>`_
+
+
+Dxtbx 3.13 (2023-01-12)
+=======================
+
+Features
+--------
+
+- ``FormatNXmxED``: Format support for electron diffraction images converted to be compatible with NXmx by `nexgen <https://github.com/dials/nexgen>`_. (`#583 <https://github.com/cctbx/dxtbx/issues/583>`_)
+- ``FormatNXmxEDeBIC``: Including a mask specific for the SINGLA that is temporarily installed at eBIC, through to early 2023. (`#589 <https://github.com/cctbx/dxtbx/issues/589>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.image_average``: Fix a crash from using more processors than images when using MPI. (`#571 <https://github.com/cctbx/dxtbx/issues/571>`_)
+- ``dxtbx.plot_detector_models`` now works with newer versions of matplotlib. (`#574 <https://github.com/cctbx/dxtbx/issues/574>`_)
+- ``FormatNXmxDLS``: Don't process electron diffraction images collected at eBIC that have been converted by ``nexgen``. (`#579 <https://github.com/cctbx/dxtbx/issues/579>`_)
+- Correct maximum value of Rayonix trusted range. (`#590 <https://github.com/cctbx/dxtbx/issues/590>`_)
+- Read underload from CBF files (`#592 <https://github.com/cctbx/dxtbx/issues/592>`_)
+- ``NXmx``: Ensure integer data types get converted to ``flex.int`` on all platforms. (`#594 <https://github.com/cctbx/dxtbx/issues/594>`_)
+- Fix trusted range in ``FormatCBFMultiTile`` and ``FormatCBFMultiTileHierarchy``. (`#595 <https://github.com/cctbx/dxtbx/issues/595>`_)
+
+
+Misc
+----
+
+- `#578 <https://github.com/cctbx/dxtbx/issues/578>`_, `#591 <https://github.com/cctbx/dxtbx/issues/591>`_, `#597 <https://github.com/cctbx/dxtbx/issues/597>`_, `#598 <https://github.com/cctbx/dxtbx/issues/598>`_, `#600 <https://github.com/cctbx/dxtbx/issues/600>`_
+
+
+Dxtbx 3.13 (2023-01-12)
+=======================
+
+Features
+--------
+
+- ``FormatNXmxED``: a new format class for electron diffraction images converted to be compatible with NXmx by nexgen (https://github.com/dials/nexgen) (`#583 <https://github.com/cctbx/dxtbx/issues/583>`_)
+- Add ``FormatNXmxEDeBIC``, which includes a mask specific for the SINGLA that is temporarily installed at eBIC, through to early 2023. (`#589 <https://github.com/cctbx/dxtbx/issues/589>`_)
+
+
+Bugfixes
+--------
+
+- dxtbx.image_average: fix a crash from using more processors than images when using MPI. (`#571 <https://github.com/cctbx/dxtbx/issues/571>`_)
+- Fix dxtbx.plot_detector_models for new versions of matplotlib (`#574 <https://github.com/cctbx/dxtbx/issues/574>`_)
+- ``FormatNXmxDLS`` no longer recognises electron diffraction images collected at eBIC that have been converted by ``nexgen``. (`#579 <https://github.com/cctbx/dxtbx/issues/579>`_)
+- Corrected maximum value of Rayonix trusted range. (`#590 <https://github.com/cctbx/dxtbx/issues/590>`_)
+- Read underload from CBF files (`#592 <https://github.com/cctbx/dxtbx/issues/592>`_)
+- ``NXmx``: Ensure integer data types get converted to ``flex.int``, i.e. ``int`` C-type, on all platforms (`#594 <https://github.com/cctbx/dxtbx/issues/594>`_)
+- Fix trusted range in FormatCBFMultiTile and FormatCBFMultiTileHierarchy. (`#595 <https://github.com/cctbx/dxtbx/issues/595>`_)
+
+
+Misc
+----
+
+- `#578 <https://github.com/cctbx/dxtbx/issues/578>`_, `#591 <https://github.com/cctbx/dxtbx/issues/591>`_, `#597 <https://github.com/cctbx/dxtbx/issues/597>`_, `#598 <https://github.com/cctbx/dxtbx/issues/598>`_, `#600 <https://github.com/cctbx/dxtbx/issues/600>`_
+
+
+DIALS 3.12.1 (2022-12-05)
+=========================
+
+Bugfixes
+--------
+
+- NXmx: eliminate potential divide-by-zero warning (`#572 <https://github.com/cctbx/dxtbx/issues/572>`_)
+- Fallback on legacy FormatNexus to workaround issues reading datasets written by the Dectris filewriter with FormatNXmx(#582) (`#584 <https://github.com/cctbx/dxtbx/issues/584>`_)
+- Fix support for datasets generated by the DECTRIS EIGER filewriter (`#586 <https://github.com/cctbx/dxtbx/issues/586>`_)
+- ``FormatCBFFull``: trusted range bug fix - use the minimum valid pixel value rather than the undefined value (`#587 <https://github.com/cctbx/dxtbx/issues/587>`_)
+- NXmx: fallback on explicit beam_center_{x,y} if the x,y components of the detector origin are zero (`#588 <https://github.com/cctbx/dxtbx/issues/588>`_)
+
+
+dxtbx 3.12.0 (2022-10-31)
+=========================
+
+Features
+--------
+
+- Improve XTC handling from LCLS. Includes better spectrum support, parallax for the ePix, binning for the Rayonix, and radial_averge fixes. (`#517 <https://github.com/cctbx/dxtbx/issues/517>`_)
+- Add spectrum support to FormatNXmx. (`#538 <https://github.com/cctbx/dxtbx/issues/538>`_)
+- NXmx: Add support for `@equipment_component <https://manual.nexusformat.org/classes/base_classes/NXtransformations.html#nxtransformations-axisname-equipment-component-attribute>`_ for forming logical groupings of transformations to reduce the number of levels in the detector hierarchy.  Note: ``.expt`` files will not be backwards compatible for users of the JF16M detector at SwissFEL, or the AGIPD detector at EuXFEL. (`#561 <https://github.com/cctbx/dxtbx/issues/561>`_)
+
+
+Bugfixes
+--------
+
+- ``trusted_range`` is now defined consistently as the _inclusive_ range between the minimum and maximum trusted values, i.e. valid pixels are those less than or equal to the maximum trusted value and greater than or equal to the minimum trusted value. (`#536 <https://github.com/cctbx/dxtbx/issues/536>`_)
+- Improved speed of reading many-panel Nexus images. (`#565 <https://github.com/cctbx/dxtbx/issues/565>`_)
+- Remove unintended error message escalation when passing multiple image ranges to import. 
+- Remove stray and unhelpful error message display when passing multiple image ranges to import. (`#567 <https://github.com/cctbx/dxtbx/issues/567>`_)
+- Added Diamonds VMXm Eiger CdTe 9M to "legacy" list where the fast, slow dimensions are reversed. (`#569 <https://github.com/cctbx/dxtbx/issues/569>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- The deprecated ``set_slow_fast_beam_centre_mm`` function has been removed. Please use ``set_fast_slow_beam_centre_mm`` instead. (`#544 <https://github.com/cctbx/dxtbx/issues/544>`_)
+
+
+Misc
+----
+
+- `#541 <https://github.com/cctbx/dxtbx/issues/541>`_, `#543 <https://github.com/cctbx/dxtbx/issues/543>`_, `#554 <https://github.com/cctbx/dxtbx/issues/554>`_, `#556 <https://github.com/cctbx/dxtbx/issues/556>`_, `#557 <https://github.com/cctbx/dxtbx/issues/557>`_, `#558 <https://github.com/cctbx/dxtbx/issues/558>`_, `#563 <https://github.com/cctbx/dxtbx/issues/563>`_
+
+
 DIALS 3.11.2 (2022-09-27)
 =========================
 

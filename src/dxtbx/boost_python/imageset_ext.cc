@@ -1,6 +1,6 @@
+#include <memory>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
-#include <boost/shared_ptr.hpp>
 #include "Python.h"
 
 #include <scitbx/array_family/shared.h>
@@ -50,10 +50,10 @@ namespace dxtbx { namespace boost_python {
   /**
    * A constructor for the imageset data class
    */
-  boost::shared_ptr<ImageSetData> make_imageset_data1(boost::python::object reader,
-                                                      boost::python::object masker) {
+  std::shared_ptr<ImageSetData> make_imageset_data1(boost::python::object reader,
+                                                    boost::python::object masker) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData> self(
+    std::shared_ptr<ImageSetData> self(
       new ImageSetData(reader, make_masker_pointer(masker)));
 
     // Return the imageset data
@@ -63,14 +63,14 @@ namespace dxtbx { namespace boost_python {
   /**
    * A constructor for the imageset data class
    */
-  boost::shared_ptr<ImageSetData> make_imageset_data2(boost::python::object reader,
-                                                      boost::python::object masker,
-                                                      std::string filename_template,
-                                                      std::string vendor,
-                                                      boost::python::dict params,
-                                                      boost::python::object format) {
+  std::shared_ptr<ImageSetData> make_imageset_data2(boost::python::object reader,
+                                                    boost::python::object masker,
+                                                    std::string filename_template,
+                                                    std::string vendor,
+                                                    boost::python::dict params,
+                                                    boost::python::object format) {
     // Create the pointer
-    boost::shared_ptr<ImageSetData> self(
+    std::shared_ptr<ImageSetData> self(
       new ImageSetData(reader, make_masker_pointer(masker)));
 
     // Set some stuff
@@ -114,13 +114,13 @@ namespace dxtbx { namespace boost_python {
   /**
    * A constructor for the imageset class
    */
-  boost::shared_ptr<ImageSet> make_imageset(const ImageSetData &data,
-                                            boost::python::object indices) {
+  std::shared_ptr<ImageSet> make_imageset(const ImageSetData &data,
+                                          boost::python::object indices) {
     if (indices == boost::python::object()) {
-      return boost::shared_ptr<ImageSet>(new ImageSet(data));
+      return std::shared_ptr<ImageSet>(new ImageSet(data));
     }
 
-    return boost::shared_ptr<ImageSet>(new ImageSet(
+    return std::shared_ptr<ImageSet>(new ImageSet(
       data, boost::python::extract<scitbx::af::const_ref<std::size_t> >(indices)()));
   }
 
@@ -132,32 +132,31 @@ namespace dxtbx { namespace boost_python {
       return boost::python::make_tuple(obj.reader(), obj.masker());
     }
 
-    static boost::shared_ptr<BeamBase> get_beam(const ImageSetData &self,
-                                                std::size_t i) {
+    static std::shared_ptr<BeamBase> get_beam(const ImageSetData &self, std::size_t i) {
       return self.get_beam(i);
     }
 
-    static boost::shared_ptr<Detector> get_detector(const ImageSetData &self,
-                                                    std::size_t i) {
+    static std::shared_ptr<Detector> get_detector(const ImageSetData &self,
+                                                  std::size_t i) {
       return self.get_detector(i);
     }
 
-    static boost::shared_ptr<Goniometer> get_goniometer(const ImageSetData &self,
-                                                        std::size_t i) {
+    static std::shared_ptr<Goniometer> get_goniometer(const ImageSetData &self,
+                                                      std::size_t i) {
       return self.get_goniometer(i);
     }
 
-    static boost::shared_ptr<Scan> get_scan(const ImageSetData &self, std::size_t i) {
+    static std::shared_ptr<Scan> get_scan(const ImageSetData &self, std::size_t i) {
       return self.get_scan(i);
     }
 
     template <typename Model, typename Func>
     static boost::python::tuple get_model_list(ImageSetData obj, Func get) {
       // Create a list of models and a list of indices
-      std::vector<boost::shared_ptr<Model> > model_list;
+      std::vector<std::shared_ptr<Model> > model_list;
       std::vector<std::size_t> index_list;
       for (std::size_t i = 0; i < obj.size(); ++i) {
-        boost::shared_ptr<Model> m = get(obj, i);
+        std::shared_ptr<Model> m = get(obj, i);
         std::size_t k = model_list.size();
         for (std::size_t j = 0; j < k; ++j) {
           if (m.get() == model_list[j].get()) {
@@ -227,11 +226,11 @@ namespace dxtbx { namespace boost_python {
         boost::python::extract<boost::python::list>(data[1])();
 
       // Convert to c++ vectors
-      std::vector<boost::shared_ptr<Model> > model_list;
+      std::vector<std::shared_ptr<Model> > model_list;
       std::vector<std::size_t> index_list;
       for (std::size_t i = 0; i < boost::python::len(models); ++i) {
         model_list.push_back(
-          boost::python::extract<boost::shared_ptr<Model> >(models[i])());
+          boost::python::extract<std::shared_ptr<Model> >(models[i])());
       }
       for (std::size_t i = 0; i < boost::python::len(indices); ++i) {
         index_list.push_back(boost::python::extract<std::size_t>(indices[i])());
@@ -497,18 +496,16 @@ namespace dxtbx { namespace boost_python {
         if (panel.get_px_mm_strategy()->name() == "ParallaxCorrectedPxMmStrategy"
             || panel.get_px_mm_strategy()->name()
                  == "OffsetParallaxCorrectedPxMmStrategy") {
-          boost::shared_ptr<OffsetParallaxCorrectedPxMmStrategy> strategy =
-            boost::make_shared<OffsetParallaxCorrectedPxMmStrategy>(
-              panel.get_mu(),
-              panel.get_thickness(),
-              dx.tile(i).data(),
-              dy.tile(i).data());
+          std::shared_ptr<OffsetParallaxCorrectedPxMmStrategy> strategy =
+            std::make_shared<OffsetParallaxCorrectedPxMmStrategy>(panel.get_mu(),
+                                                                  panel.get_thickness(),
+                                                                  dx.tile(i).data(),
+                                                                  dy.tile(i).data());
           panel.set_px_mm_strategy(strategy);
         } else if (panel.get_px_mm_strategy()->name() == "SimplePxMmStrategy"
                    || panel.get_px_mm_strategy()->name() == "OffsetPxMmStrategy") {
-          boost::shared_ptr<OffsetPxMmStrategy> strategy =
-            boost::make_shared<OffsetPxMmStrategy>(dx.tile(i).data(),
-                                                   dy.tile(i).data());
+          std::shared_ptr<OffsetPxMmStrategy> strategy =
+            std::make_shared<OffsetPxMmStrategy>(dx.tile(i).data(), dy.tile(i).data());
           panel.set_px_mm_strategy(strategy);
         }
       }
@@ -534,16 +531,16 @@ namespace dxtbx { namespace boost_python {
       if (panel.get_px_mm_strategy()->name() == "ParallaxCorrectedPxMmStrategy"
           || panel.get_px_mm_strategy()->name()
                == "OffsetParallaxCorrectedPxMmStrategy") {
-        boost::shared_ptr<OffsetParallaxCorrectedPxMmStrategy> strategy =
-          boost::make_shared<OffsetParallaxCorrectedPxMmStrategy>(panel.get_mu(),
-                                                                  panel.get_thickness(),
-                                                                  dx.tile(i).data(),
-                                                                  dy.tile(i).data());
+        std::shared_ptr<OffsetParallaxCorrectedPxMmStrategy> strategy =
+          std::make_shared<OffsetParallaxCorrectedPxMmStrategy>(panel.get_mu(),
+                                                                panel.get_thickness(),
+                                                                dx.tile(i).data(),
+                                                                dy.tile(i).data());
         panel.set_px_mm_strategy(strategy);
       } else if (panel.get_px_mm_strategy()->name() == "SimplePxMmStrategy"
                  || panel.get_px_mm_strategy()->name() == "OffsetPxMmStrategy") {
-        boost::shared_ptr<OffsetPxMmStrategy> strategy =
-          boost::make_shared<OffsetPxMmStrategy>(dx.tile(i).data(), dy.tile(i).data());
+        std::shared_ptr<OffsetPxMmStrategy> strategy =
+          std::make_shared<OffsetPxMmStrategy>(dx.tile(i).data(), dy.tile(i).data());
         panel.set_px_mm_strategy(strategy);
       }
     }
@@ -571,7 +568,7 @@ namespace dxtbx { namespace boost_python {
       .add_property("dy",
                     make_function(&ExternalLookup::dy, return_internal_reference<>()));
 
-    class_<ImageSetData, boost::shared_ptr<ImageSetData> >("ImageSetData", no_init)
+    class_<ImageSetData, std::shared_ptr<ImageSetData> >("ImageSetData", no_init)
       .def("__init__",
            make_constructor(&make_imageset_data1,
                             default_call_policies(),

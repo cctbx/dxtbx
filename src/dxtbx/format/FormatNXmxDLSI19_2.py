@@ -3,10 +3,10 @@ from __future__ import annotations
 import math
 
 import h5py
+import nxmx
 
 from libtbx import Auto
 
-import dxtbx.nexus.nxmx
 from dxtbx.format.FormatNXmx import FormatNXmx
 from dxtbx.format.FormatNXmxDLS import FormatNXmxDLS
 from dxtbx.masking import GoniometerMaskerFactory
@@ -24,7 +24,7 @@ class FormatNXmxDLSI19_2(FormatNXmxDLS):
     def understand(image_file):
         """This format class applies if the instrument name contains 'I19-2'."""
         with h5py.File(image_file, swmr=True) as handle:
-            name = dxtbx.nexus.nxmx.h5str(FormatNXmx.get_instrument_name(handle))
+            name = nxmx.h5str(FormatNXmx.get_instrument_name(handle))
         if name and "I19-2" in name:
             return True
         return False

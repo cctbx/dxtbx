@@ -11,6 +11,7 @@
 #ifndef DXTBX_MODEL_BOOST_PYTHON_PICKLE_SUITE_H
 #define DXTBX_MODEL_BOOST_PYTHON_PICKLE_SUITE_H
 
+#include <memory>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <dxtbx/model/beam.h>
@@ -149,7 +150,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       }
       if (data.has_key("px_mm_strategy")) {
         p.set_px_mm_strategy(
-          extract<shared_ptr<PxMmStrategy> >(data["px_mm_strategy"]));
+          extract<std::shared_ptr<PxMmStrategy> >(data["px_mm_strategy"]));
       }
       if (data.has_key("mask")) {
         scitbx::af::shared<int4> mask =

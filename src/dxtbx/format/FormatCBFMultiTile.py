@@ -14,6 +14,7 @@ from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
+from dxtbx.model.detector_helpers import find_undefined_value, find_underload_value
 
 
 class cbf_wrapper(pycbf.cbf_handle_struct):
@@ -127,17 +128,20 @@ class FormatCBFMultiTile(FormatCBFFull):
             size = tuple(reversed(cbf.get_image_size(0)))
 
             try:
-                cbf.find_category(b"array_intensities")
-                cbf.find_column(b"undefined_value")
-                cbf.select_row(i)
-                # undefined_value, interpreted as 1 less than the minimum acceptable value
-                underload = cbf.get_doublevalue()
-                overload = cbf.get_overload(i)
-                trusted_range = (underload + 1, overload)
-            except Exception as e:
-                if "CBF_NOTFOUND" not in str(e):
-                    raise
-                trusted_range = (0.0, 0.0)
+                min_trusted_value = find_underload_value(cbf)
+            except Exception:
+                try:
+                    # By convention, if underload is not set, then assume the minimum
+                    # trusted pixel is 1 more than the undefined pixel
+                    min_trusted_value = find_undefined_value(cbf) + 1
+                except Exception:
+                    min_trusted_value = 0
+            try:
+                max_trusted_value = cbf.get_overload(i) - 1
+            except Exception:
+                max_trusted_value = 1.0e6
+
+            trusted_range = (min_trusted_value, max_trusted_value)
 
             try:
                 cbf.find_column(b"gain")

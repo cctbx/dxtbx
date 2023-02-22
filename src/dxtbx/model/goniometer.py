@@ -441,9 +441,10 @@ class GoniometerFactory:
 
         # figure out the order of the axes from the depends_on values
         ordered_axes = []
-        axis = "."
-        while axis := dependants.get(axis):
+        axis = dependants.get(".")
+        while axis:
             ordered_axes.append(axis)
+            axis = dependants.get(axis)
 
         # multi-axis gonio requires axes in order as viewed from crystal to gonio base
         # i.e. the reverse of the order we have from cbf header

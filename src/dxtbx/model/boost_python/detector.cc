@@ -12,6 +12,7 @@
 #include <boost/python/def.hpp>
 #include <string>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <boost_adaptbx/std_pair_conversion.h>
 #include <scitbx/array_family/boost_python/flex_wrapper.h>
@@ -323,7 +324,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("children", iterator<Detector::Node, return_internal_reference<> >());
 
     // Export a Detector base class
-    class_<Detector, boost::shared_ptr<Detector> >("Detector")
+    class_<Detector, std::shared_ptr<Detector> >("Detector")
       .def(init<const Panel &>())
       .def("hierarchy",
            (Detector::node_pointer(Detector::*)()) & Detector::root,

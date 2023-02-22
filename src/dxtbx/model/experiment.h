@@ -13,7 +13,7 @@
 
 #include <iostream>
 #include <cmath>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <scitbx/vec3.h>
@@ -51,11 +51,11 @@ namespace dxtbx { namespace model {
     /**
      * Initialise the experiment with models
      */
-    Experiment(boost::shared_ptr<BeamBase> beam,
-               boost::shared_ptr<Detector> detector,
-               boost::shared_ptr<Goniometer> goniometer,
-               boost::shared_ptr<Scan> scan,
-               boost::shared_ptr<CrystalBase> crystal,
+    Experiment(std::shared_ptr<BeamBase> beam,
+               std::shared_ptr<Detector> detector,
+               std::shared_ptr<Goniometer> goniometer,
+               std::shared_ptr<Scan> scan,
+               std::shared_ptr<CrystalBase> crystal,
                boost::python::object profile,
                boost::python::object imageset,
                boost::python::object scaling_model,
@@ -73,35 +73,35 @@ namespace dxtbx { namespace model {
     /**
      * Check if the beam model is the same.
      */
-    bool contains(const boost::shared_ptr<BeamBase> &beam) const {
+    bool contains(const std::shared_ptr<BeamBase> &beam) const {
       return beam_ == beam;
     }
 
     /**
      * Check if the detector model is the same.
      */
-    bool contains(const boost::shared_ptr<Detector> &detector) const {
+    bool contains(const std::shared_ptr<Detector> &detector) const {
       return detector_ == detector;
     }
 
     /**
      * Check if the detector model is the same.
      */
-    bool contains(const boost::shared_ptr<Goniometer> &goniometer) const {
+    bool contains(const std::shared_ptr<Goniometer> &goniometer) const {
       return goniometer_ == goniometer;
     }
 
     /**
      * Check if the goniometer model is the same.
      */
-    bool contains(const boost::shared_ptr<Scan> &scan) const {
+    bool contains(const std::shared_ptr<Scan> &scan) const {
       return scan_ == scan;
     }
 
     /**
      * Check if the crystal model is the same.
      */
-    bool contains(const boost::shared_ptr<CrystalBase> &crystal) const {
+    bool contains(const std::shared_ptr<CrystalBase> &crystal) const {
       return crystal_ == crystal;
     }
 
@@ -109,11 +109,11 @@ namespace dxtbx { namespace model {
      * Check models are the same.
      */
     bool contains(boost::python::object obj) const {
-      boost::python::extract<boost::shared_ptr<BeamBase> > get_beam(obj);
-      boost::python::extract<boost::shared_ptr<Detector> > get_detector(obj);
-      boost::python::extract<boost::shared_ptr<Goniometer> > get_goniometer(obj);
-      boost::python::extract<boost::shared_ptr<Scan> > get_scan(obj);
-      boost::python::extract<boost::shared_ptr<CrystalBase> > get_crystal(obj);
+      boost::python::extract<std::shared_ptr<BeamBase> > get_beam(obj);
+      boost::python::extract<std::shared_ptr<Detector> > get_detector(obj);
+      boost::python::extract<std::shared_ptr<Goniometer> > get_goniometer(obj);
+      boost::python::extract<std::shared_ptr<Scan> > get_scan(obj);
+      boost::python::extract<std::shared_ptr<CrystalBase> > get_crystal(obj);
       if (get_beam.check()) {
         return contains(get_beam());
       } else if (get_detector.check()) {
@@ -163,70 +163,70 @@ namespace dxtbx { namespace model {
     /**
      * Set the beam model
      */
-    void set_beam(boost::shared_ptr<BeamBase> beam) {
+    void set_beam(std::shared_ptr<BeamBase> beam) {
       beam_ = beam;
     }
 
     /**
      * Get the beam model
      */
-    boost::shared_ptr<BeamBase> get_beam() const {
+    std::shared_ptr<BeamBase> get_beam() const {
       return beam_;
     }
 
     /**
      * Get the detector model
      */
-    void set_detector(boost::shared_ptr<Detector> detector) {
+    void set_detector(std::shared_ptr<Detector> detector) {
       detector_ = detector;
     }
 
     /**
      * Get the detector model
      */
-    boost::shared_ptr<Detector> get_detector() const {
+    std::shared_ptr<Detector> get_detector() const {
       return detector_;
     }
 
     /**
      * Get the goniometer model
      */
-    void set_goniometer(boost::shared_ptr<Goniometer> goniometer) {
+    void set_goniometer(std::shared_ptr<Goniometer> goniometer) {
       goniometer_ = goniometer;
     }
 
     /**
      * Get the goniometer model
      */
-    boost::shared_ptr<Goniometer> get_goniometer() const {
+    std::shared_ptr<Goniometer> get_goniometer() const {
       return goniometer_;
     }
 
     /**
      * Get the scan model
      */
-    void set_scan(boost::shared_ptr<Scan> scan) {
+    void set_scan(std::shared_ptr<Scan> scan) {
       scan_ = scan;
     }
 
     /**
      * Get the scan model
      */
-    boost::shared_ptr<Scan> get_scan() const {
+    std::shared_ptr<Scan> get_scan() const {
       return scan_;
     }
 
     /**
      * Get the crystal model
      */
-    void set_crystal(boost::shared_ptr<CrystalBase> crystal) {
+    void set_crystal(std::shared_ptr<CrystalBase> crystal) {
       crystal_ = crystal;
     }
 
     /**
      * Get the crystal model
      */
-    boost::shared_ptr<CrystalBase> get_crystal() const {
+    std::shared_ptr<CrystalBase> get_crystal() const {
       return crystal_;
     }
 
@@ -287,11 +287,11 @@ namespace dxtbx { namespace model {
     }
 
   protected:
-    boost::shared_ptr<BeamBase> beam_;
-    boost::shared_ptr<Detector> detector_;
-    boost::shared_ptr<Goniometer> goniometer_;
-    boost::shared_ptr<Scan> scan_;
-    boost::shared_ptr<CrystalBase> crystal_;
+    std::shared_ptr<BeamBase> beam_;
+    std::shared_ptr<Detector> detector_;
+    std::shared_ptr<Goniometer> goniometer_;
+    std::shared_ptr<Scan> scan_;
+    std::shared_ptr<CrystalBase> crystal_;
     boost::python::object profile_;
     boost::python::object imageset_;
     boost::python::object scaling_model_;
