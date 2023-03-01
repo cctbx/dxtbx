@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import itertools
 import os
 import sys
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -149,6 +149,14 @@ def plot_image_plane_projection(detector, color, ax, panel_numbers=True):
             ax.text(vcen[0], vcen[1], "%d" % panel.index())
 
 
+def flatten(xs):
+    for x in xs:
+        if isinstance(x, Sequence) and not isinstance(x, (str, bytes)):
+            yield from flatten(x)
+        else:
+            yield x
+
+
 def run(args=None):
     dxtbx.util.encode_output_as_utf8()
     args = args or sys.argv[1:]
@@ -205,10 +213,9 @@ def run(args=None):
                 )
 
                 if not params.orthographic:
-                    all_z = [
-                        coord[2]
-                        for coord in itertools.chain.from_iterable(*panel_corners)
-                    ]
+                    # flatten the nested list of panel coordinates and then select
+                    # all the z coordinates (i.e. every 3rd value)
+                    all_z = list(flatten(panel_corners))[2::3]
                     if min_z is None:
                         min_z = min(all_z)
                         max_z = max(all_z)
