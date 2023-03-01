@@ -404,9 +404,14 @@ def get_dxtbx_detector(
                 origin -= nxdetector.beam_center_y.magnitude * pixel_size[1] * slow_axis
 
         # dxtbx requires image size in the order fast, slow - which is the reverse of what
-        # is stored in module.data_size
-        image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[::-1])))
-        assert len(image_size) == 2
+        # is stored in module.data_size. Additionally, data_size can have more than 2
+        # dimensions, for multi-module detectors. So take the last two dimensions and reverse
+        # them.  Examples:
+        # [1,2,3,4][-1:-3:-1] --> [4, 3]
+        # [1,2,3][-1:-3:-1] --> [3, 2]
+        # [1,2][-1:-3:-1] --> [2, 1]
+        image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[-1:-3:-1])))
+        assert len(image_size) == 2, image_size
         underload = (
             float(nxdetector.underload_value)
             if nxdetector.underload_value is not None
@@ -562,5 +567,8 @@ def get_raw_data(
         data_as_flex = _dataset_as_flex(
             sliced_outer, tuple(module_slices), bit_depth=bit_depth
         )
+        data_as_flex.reshape(
+            flex.grid(data_as_flex.all()[-2:])
+        )  # handle 3 or 4 dimension arrays
         all_data.append(data_as_flex)
     return tuple(all_data)
