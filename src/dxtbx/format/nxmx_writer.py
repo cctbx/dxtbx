@@ -343,9 +343,19 @@ class NXmxWriter:
 
         return f
 
+    def append_all_frames(self, handle):
+        """
+        Given a h5py handle, append all the data. from the imagesets in the
+        original experiment list.
+        """
+        for imageset in self.experiments.imagesets():
+            for i in range(len(imageset)):
+                self.append_frame(handle, data=imageset[i])
+
     def append_frame(self, handle, index=None, data=None):
         """
-        Given a h5py handle, append the data
+        Given a h5py handle, append some data. Can specify either
+        the index into imageset zero, or the data itself.
         """
         if data is None:
             if index is None:
@@ -417,9 +427,7 @@ def run(args):
 
     writer = NXmxWriter(params, experiments)
     handle = writer.get_h5py_handle()
-    for imageset in experiments.imagesets():
-        for i in range(len(imageset)):
-            writer.append_frame(handle, data=imageset[i])
+    writer.append_all_frames(handle)
 
 
 if __name__ == "__main__":
