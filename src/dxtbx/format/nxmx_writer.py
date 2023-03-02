@@ -9,19 +9,74 @@ writer.write_nxmx("example.h5")
 from __future__ import annotations
 
 import datetime
+import h5py
+import numpy as np
 import os
 import sys
 
-import h5py
-import numpy as np
-
 from cctbx import factor_ev_angstrom
+from dials.util.options import ArgumentParser, flatten_experiments
+from dxtbx import flumpy
+from libtbx.phil import parse
+from scitbx import matrix
 from scitbx.array_family import flex
 from xfel.cftbx.detector.cspad_cbf_tbx import basis, angle_and_axis
-from scitbx import matrix
 
-from dxtbx import flumpy
+# TODO: mask_file
 
+phil_scope = parse(
+    """
+  output_file = None
+    .type = path
+    .help = output file path
+  wavelength = None
+    .type = float
+    .help = If not provided, use data from files provided.
+  mask_file = None
+    .type = str
+    .help = Path to file with external bad pixel mask.
+  trusted_range = None
+    .type = floats(size=2)
+    .help = Override the trusted range
+  nexus_details {
+    instrument_name = SwissFEL ARAMIS BEAMLINE ESB
+      .type = str
+      .help = Name of instrument
+    instrument_short_name = ESB
+      .type = str
+      .help = short name for instrument, perhaps the acronym
+    source_name = SwissFEL ARAMIS
+      .type = str
+      .help = Name of the neutron or x-ray storage ring/facility
+    source_short_name = SwissFEL ARAMIS
+      .type = str
+      .help = short name for source, perhaps the acronym
+    start_time = None
+      .type = str
+      .help = ISO 8601 time/date of the first data point collected in UTC, \
+              using the Z suffix to avoid confusion with local time
+    end_time = None
+      .type = str
+      .help = ISO 8601 time/date of the last data point collected in UTC, \
+              using the Z suffix to avoid confusion with local time. \
+              This field should only be filled when the value is accurately \
+              observed. If the data collection aborts or otherwise prevents \
+              accurate recording of the end_time, this field should be omitted
+    end_time_estimated = None
+      .type = str
+      .help = ISO 8601 time/date of the last data point collected in UTC, \
+              using the Z suffix to avoid confusion with local time. \
+              This field may be filled with a value estimated before an \
+              observed value is avilable.
+    sample_name = None
+      .type = str
+      .help = Descriptive name of sample
+    total_flux = None
+      .type = float
+      .help = flux incident on beam plane in photons per second
+  }
+"""
+)
 
 # Conversion from the imgCIF coordinate system conventionally used by dxtbx to
 # the McStas coordinate system as used by NeXus:
@@ -508,23 +563,17 @@ class NXmxWriter:
 
 
 def run(args):
-    from dials.util.options import ArgumentParser, flatten_experiments
-
-    # phil_scope = parse("""
-    # """)
-    from xfel.swissfel.jf16m_cxigeom2nexus import phil_scope
-
     parser = ArgumentParser(
         usage=None,
         sort_options=True,
         phil=phil_scope,
+        read_experiments=True,
         read_experiments_from_images=True,
         epilog=None,
     )
     params, options = parser.parse_args(args=args)
 
     experiments = flatten_experiments(params.input.experiments)
-    print(len(experiments))
 
     writer = NXmxWriter(params, experiments)
     handle = writer.get_h5py_handle()
