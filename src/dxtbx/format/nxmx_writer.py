@@ -15,6 +15,7 @@ import sys
 import h5py
 import numpy as np
 
+from cctbx import factor_ev_angstrom
 from scitbx.array_family import flex
 from xfel.cftbx.detector.cspad_cbf_tbx import basis, angle_and_axis
 from scitbx import matrix
@@ -214,29 +215,6 @@ class NXmxWriter:
             )
             beam["total_flux"].attrs["units"] = "Hz"
 
-        if self.params.wavelength:
-            beam.create_dataset(
-                "incident_wavelength", (1,), data=self.params.wavelength, dtype="f8"
-            )
-        else:
-            if len(self.experiments.beams()) > 1:
-                wavelengths = np.array(
-                    [beam.get_wavelength() for beam in self.experiments.beams()],
-                    dtype="f8",
-                )
-                beam.create_dataset(
-                    "incident_wavelength",
-                    wavelengths.shape,
-                    data=wavelengths,
-                    dtype=wavelengths.dtype,
-                )
-            else:
-                wavelength = self.experiments.beams()[0].get_wavelength()
-                beam.create_dataset(
-                    "incident_wavelength", (1,), data=wavelength, dtype="f8"
-                )
-        beam["incident_wavelength"].attrs["units"] = "angstrom"
-
         det_group = instrument.create_group("detector")
         det_group.attrs["NX_class"] = "NXdetector_group"
 
@@ -343,6 +321,129 @@ class NXmxWriter:
 
         return f
 
+    def add_all_beams(self, handle):
+        beams = self.experiments.beams()
+        spectra = []
+        for expt in self.experiments:
+            spectra.extend(
+                [
+                    expt.imageset.get_spectrum(i)
+                    for i in range(len(expt.imageset))
+                    if expt.imageset.get_spectrum(i)
+                ]
+            )
+        self.add_beams(handle, beams, spectra)
+
+    def add_beams(self, handle, beams=None, spectra=None):
+        if self.params.wavelength:
+            assert beams is None and spectra is None
+            handle.create_dataset(
+                "incident_wavelength", (1,), data=self.params.wavelength, dtype="f8"
+            )
+        else:
+            assert beams
+            if spectra:
+                assert len(beams) == len(spectra)
+                if len(beams) > 1:
+                    test = None
+                    for spectrum in spectra[1:]:
+                        if test:
+                            test &= (
+                                spectrum.get_energies_eV()
+                                == spectra[0].get_energies_eV()
+                            )
+                        else:
+                            test = (
+                                spectrum.get_energies_eV()
+                                == spectra[0].get_energies_eV()
+                            )
+                    matching_channels = test.count(False) == 0
+
+                    if matching_channels:
+                        spectra_x = (
+                            factor_ev_angstrom
+                            / spectra[0].get_energies_eV().as_numpy_array()
+                        )
+                    else:
+                        spectra_x = np.stack(
+                            [
+                                factor_ev_angstrom
+                                / s.get_energies_eV().as_numpy_array()
+                                for s in spectra
+                            ]
+                        )
+                    spectra_y = np.stack(
+                        [s.get_weights().as_numpy_array() for s in spectra]
+                    )
+                else:
+                    spectra_x = (
+                        factor_ev_angstrom
+                        / spectra[0].get_energies_eV().as_numpy_array()
+                    )
+                    spectra_y = spectra[0].get_weights().as_numpy_array()
+
+                matching_weighted_wavelengths = (
+                    spectra[0].get_weighted_wavelength() == beams[0].get_wavelength()
+                )
+                if matching_weighted_wavelengths:
+                    handle.create_dataset(
+                        "incident_wavelength",
+                        spectra_x.shape,
+                        data=spectra_x,
+                        dtype=spectra_x.dtype,
+                    )
+                    handle.create_dataset(
+                        "incident_wavelength_weights",
+                        spectra_y.shape,
+                        data=spectra_y,
+                        dtype=spectra_y.dtype,
+                    )
+                else:
+                    wavelengths = np.array(
+                        [beam.get_wavelength() for beam in self.experiments.beams()],
+                        dtype="f8",
+                    )
+                    handle.create_dataset(
+                        "incident_wavelength",
+                        wavelengths.shape,
+                        data=wavelengths,
+                        dtype=wavelengths.dtype,
+                    )
+                    handle.create_dataset(
+                        "incident_wavelength_1Dspectrum",
+                        spectra_x.shape,
+                        data=spectra_x,
+                        dtype=spectra_x.dtype,
+                    )
+                    handle.create_dataset(
+                        "incident_wavelength_1Dspectrum_weights",
+                        spectra_y.shape,
+                        data=spectra_y,
+                        dtype=spectra_y.dtype,
+                    )
+                    handle["incident_wavelength_1Dspectrum"].attrs["units"] = "angstrom"
+                    handle["incident_wavelength"].attrs[
+                        "variant"
+                    ] = "incident_wavelength_1Dspectrum"
+            else:
+                if len(beams) > 1:
+                    wavelengths = np.array(
+                        [beam.get_wavelength() for beam in self.experiments.beams()],
+                        dtype="f8",
+                    )
+                    handle.create_dataset(
+                        "incident_wavelength",
+                        wavelengths.shape,
+                        data=wavelengths,
+                        dtype=wavelengths.dtype,
+                    )
+                else:
+                    wavelength = self.experiments.beams()[0].get_wavelength()
+                    handle.create_dataset(
+                        "incident_wavelength", (1,), data=wavelength, dtype="f8"
+                    )
+        handle["incident_wavelength"].attrs["units"] = "angstrom"
+
     def append_all_frames(self, handle):
         """
         Given a h5py handle, append all the data. from the imagesets in the
@@ -427,6 +528,7 @@ def run(args):
 
     writer = NXmxWriter(params, experiments)
     handle = writer.get_h5py_handle()
+    writer.add_all_beams(handle["entry/instrument/beam"])
     writer.append_all_frames(handle)
 
 
