@@ -149,7 +149,10 @@ class _:
             format_instance = self.get_format_class().get_instance(
                 self.get_path(index), **kwargs
             )
-        return format_instance.get_spectrum(self.indices()[index])
+        try:
+            return format_instance.get_spectrum(self.indices()[index])
+        except TypeError:
+            return format_instance.get_spectrum()
 
     def params(self):
         """Get the parameters"""
