@@ -15,6 +15,7 @@
 #include <sstream>
 #include <dxtbx/model/goniometer.h>
 #include <dxtbx/model/multi_axis_goniometer.h>
+#include <dxtbx/model/boost_python/to_from_dict.h>
 
 namespace dxtbx { namespace model { namespace boost_python {
   namespace multi_axis_goniometer_detail {
@@ -61,6 +62,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       }
     };
   }  // namespace multi_axis_goniometer_detail
+  template <>
   boost::python::dict to_dict(const MultiAxisGoniometer &obj) {
     boost::python::dict result;
     result["axes"] = boost::python::list(obj.get_axes());
@@ -83,6 +85,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     return result;
   };
 
+  template <>
   MultiAxisGoniometer *from_dict(boost::python::dict obj) {
     scitbx::af::shared<vec3<double> > axes =
       boost::python::extract<scitbx::af::shared<vec3<double> > >(obj["axes"]);
@@ -119,6 +122,7 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_multi_axis_goniometer() {
     using namespace multi_axis_goniometer_detail;
+
     class_<MultiAxisGoniometer, bases<Goniometer> >("MultiAxisGoniometer")
       .def(
         init<const scitbx::af::const_ref<vec3<double> > &,
@@ -133,8 +137,10 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_names", &MultiAxisGoniometer::get_names)
       .def("get_scan_axis", &MultiAxisGoniometer::get_scan_axis)
       .def("__str__", &multi_axis_goniometer_to_string)
-      .def("to_dict", &to_dict)
-      .def("from_dict", &from_dict, return_value_policy<manage_new_object>())
+      .def("to_dict", &to_dict<MultiAxisGoniometer>)
+      .def("from_dict",
+           &from_dict<MultiAxisGoniometer>,
+           return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
       .def_pickle(MultiAxisGoniometerPickleSuite());
   }
