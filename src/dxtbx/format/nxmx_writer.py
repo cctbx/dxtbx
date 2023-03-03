@@ -18,6 +18,7 @@ from cctbx import factor_ev_angstrom
 from dials.util.options import ArgumentParser, flatten_experiments
 from dxtbx import flumpy
 from libtbx.phil import parse
+from libtbx.utils import Sorry
 from scitbx import matrix
 from scitbx.array_family import flex
 from xfel.cftbx.detector.cspad_cbf_tbx import basis, angle_and_axis
@@ -39,16 +40,21 @@ phil_scope = parse(
     .type = floats(size=2)
     .help = Override the trusted range
   nexus_details {
-    instrument_name = SwissFEL ARAMIS BEAMLINE ESB
+    instrument_name = None
       .type = str
-      .help = Name of instrument
-    instrument_short_name = ESB
+      .help = Name of instrument. Consistency with the controlled vocabulary beamline naming in \
+              https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_diffrn_source.pdbx_synchrotron_beamline.html \
+              and https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_diffrn_source.type.html \
+              is highly recommended.
+    instrument_short_name = None
       .type = str
       .help = short name for instrument, perhaps the acronym
-    source_name = SwissFEL ARAMIS
+    source_name = None
       .type = str
-      .help = Name of the neutron or x-ray storage ring/facility
-    source_short_name = SwissFEL ARAMIS
+      .help = Name of the neutron or x-ray storage ring/facility. Consistency with the naming in \
+              https://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v50.dic/Items/_diffrn_source.pdbx_synchrotron_site.html \
+              controlled vocabulary is highly recommended.
+    source_short_name = None
       .type = str
       .help = short name for source, perhaps the acronym
     start_time = None
@@ -91,6 +97,18 @@ class NXmxWriter:
     def __init__(self, params, experiments):
         self.experiments = experiments
         self.params = params
+
+    def validate(self):
+        if not self.params.nexus_details.instrument_name:
+            raise RuntimeError("instrument_name is required.")
+        if not self.params.nexus_details.source_name:
+            raise RuntimeError("source_name is required.")
+        if not self.params.nexus_details.start_time:
+            raise RuntimeError("start_time is required.")
+        if not self.params.nexus_details.end_time_estimated:
+            raise RuntimeError("end_time_estimated is required.")
+        if not self.params.nexus_details.sample_name:
+            raise RuntimeError("sample_name is required.")
 
     def get_metrology_dict(self, index=None):
         """Build a metrology dictionary.  This dictionary maps hierarchy keys to basis
@@ -254,14 +272,18 @@ class NXmxWriter:
         source = entry.create_group("source")
         source.attrs["NX_class"] = "NXsource"
         source["name"] = self.params.nexus_details.source_name
-        source["name"].attrs["short_name"] = self.params.nexus_details.source_short_name
+        if self.params.nexus_details.source_short_name:
+            source["name"].attrs[
+                "short_name"
+            ] = self.params.nexus_details.source_short_name
         # --> instrument
         instrument = entry.create_group("instrument")
         instrument.attrs["NX_class"] = "NXinstrument"
         instrument["name"] = self.params.nexus_details.instrument_name
-        instrument["name"].attrs[
-            "short_name"
-        ] = self.params.nexus_details.instrument_short_name
+        if self.params.nexus_details.instrument_short_name:
+            instrument["name"].attrs[
+                "short_name"
+            ] = self.params.nexus_details.instrument_short_name
         beam = instrument.create_group("beam")
         beam.attrs["NX_class"] = "NXbeam"
         if self.params.nexus_details.total_flux:
@@ -269,6 +291,7 @@ class NXmxWriter:
                 beam, "total_flux", "f", self.params.nexus_details.total_flux
             )
             beam["total_flux"].attrs["units"] = "Hz"
+            beam.attrs["flux"] = "total_flux"
 
         det_group = instrument.create_group("detector")
         det_group.attrs["NX_class"] = "NXdetector_group"
@@ -576,6 +599,12 @@ def run(args):
     experiments = flatten_experiments(params.input.experiments)
 
     writer = NXmxWriter(params, experiments)
+
+    try:
+        writer.validate()
+    except RuntimeError as e:
+        print("Missing information. Run with -c to see full parameter description")
+        raise Sorry(e)
     handle = writer.get_h5py_handle()
     writer.add_all_beams(handle["entry/instrument/beam"])
     writer.append_all_frames(handle)
