@@ -23,6 +23,15 @@ from scitbx import matrix
 from scitbx.array_family import flex
 from xfel.cftbx.detector.cspad_cbf_tbx import basis, angle_and_axis
 
+help_message = """
+Create a NeXus file from either an experiment list or a set of image files
+
+Uses NXmx as documented here:
+https://manual.nexusformat.org/classes/applications/NXmx.html
+and in Bernstein et. al. (2020):
+https://doi.org/10.1107/S2052252520008672
+"""
+
 # TODO: mask_file
 
 phil_scope = parse(
@@ -603,15 +612,16 @@ class NXmxWriter:
 
 
 def run(args):
+    usage = "dials.python nxmx_writer.py <experiments OR image files>"
     parser = ArgumentParser(
-        usage=None,
+        usage=usage,
         sort_options=True,
         phil=phil_scope,
         read_experiments=True,
         read_experiments_from_images=True,
-        epilog=None,
+        epilog=help_message,
     )
-    params, options = parser.parse_args(args=args)
+    params, options = parser.parse_args(args=args, show_diff_phil=True)
 
     experiments = flatten_experiments(params.input.experiments)
 
