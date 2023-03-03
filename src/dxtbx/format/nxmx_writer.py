@@ -108,23 +108,46 @@ IMGCIF_TO_MCSTAS = matrix.diag([-1, 1, -1])
 class NXmxWriter:
     """Class for writing NXmx NeXus files from any dxtbx-supported format class"""
 
-    def __init__(self, params, experiments):
-        self.experiments = experiments
+    def __init__(self, params, experiments=None, imageset=None):
         self.params = params
+        if experiments or imageset:
+            self.setup(experiments, imageset)
+
+    def setup(self, experiments=None, imageset=None):
+        assert [experiments, imageset].count(
+            None
+        ) == 1, "Supply either experiments or imagset, not both"
+        if experiments:
+            self.imagesets = experiments.imagesets()
+            assert len(experiments.detectors()) == 1, "Multiple detectors not supported"
+            self.detector = experiments.detectors()[0]
+            self.beams = experiments.beams()
+        else:
+            self.imagesets = [imageset]
+            self.detector = imageset.get_detector(0)
+            self.beams = [imageset.get_beam(i) for i in range(len(imageset))]
+
+    def __call__(self, experiments=None, imageset=None):
+        if experiments or imageset:
+            self.setup(experiments, imageset)
+        self.validate()
+        handle = self.get_h5py_handle()
+        self.add_all_beams(handle["entry/instrument/beam"])
+        self.append_all_frames(handle)
 
     def validate(self):
         if not self.params.nexus_details.instrument_name:
-            raise RuntimeError("instrument_name is required.")
+            raise ValueError("instrument_name is required.")
         if not self.params.nexus_details.source_name:
-            raise RuntimeError("source_name is required.")
+            raise ValueError("source_name is required.")
         if not self.params.nexus_details.start_time:
-            raise RuntimeError("start_time is required.")
+            raise ValueError("start_time is required.")
         if not self.params.nexus_details.end_time_estimated:
-            raise RuntimeError("end_time_estimated is required.")
+            raise ValueError("end_time_estimated is required.")
         if not self.params.nexus_details.sample_name:
-            raise RuntimeError("sample_name is required.")
+            raise ValueError("sample_name is required.")
 
-    def get_metrology_dict(self, index=None):
+    def get_metrology_dict(self):
         """Build a metrology dictionary.  This dictionary maps hierarchy keys to basis
         objects. A hierarchy key looks like this (0,1,2), where the entries are
         levels in a hierarchy and the numbers refer to a panel or group within that
@@ -139,12 +162,7 @@ class NXmxWriter:
                 childkey = tuple(list(key) + [i])
                 recursive_setup_dict(child, childkey)
 
-        if index is None:
-            detector = self.experiments.detectors()[0]
-        else:
-            detector = self.experiments.detectors()[index]
-
-        recursive_setup_dict(detector.hierarchy(), (0,))
+        recursive_setup_dict(self.detector.hierarchy(), (0,))
         return metro
 
     def _create_scalar(self, handle, path, dtype, value):
@@ -196,10 +214,7 @@ class NXmxWriter:
           --> sample
         """
         # set up the metrology dictionary to include axis names, pixel sizes, and so forth
-        assert (
-            len(self.experiments.detectors()) == 1
-        ), "Multiple detectors not supported"
-        detector = self.experiments.detectors()[0]
+        detector = self.detector
         metro = self.get_metrology_dict()
 
         def panel_group_from_key(key):
@@ -430,17 +445,16 @@ class NXmxWriter:
         return f
 
     def add_all_beams(self, handle):
-        beams = self.experiments.beams()
         spectra = []
-        for expt in self.experiments:
+        for imageset in self.imagesets:
             spectra.extend(
                 [
-                    expt.imageset.get_spectrum(i)
-                    for i in range(len(expt.imageset))
-                    if expt.imageset.get_spectrum(i)
+                    imageset.get_spectrum(i)
+                    for i in range(len(imageset))
+                    if imageset.get_spectrum(i)
                 ]
             )
-        self.add_beams(handle, beams, spectra)
+        self.add_beams(handle, self.beams, spectra)
 
     def add_beams(self, handle, beams=None, spectra=None):
         if self.params.wavelength:
@@ -508,7 +522,7 @@ class NXmxWriter:
                     )
                 else:
                     wavelengths = np.array(
-                        [beam.get_wavelength() for beam in self.experiments.beams()],
+                        [beam.get_wavelength() for beam in self.beams],
                         dtype="f8",
                     )
                     handle.create_dataset(
@@ -536,7 +550,7 @@ class NXmxWriter:
             else:
                 if len(beams) > 1:
                     wavelengths = np.array(
-                        [beam.get_wavelength() for beam in self.experiments.beams()],
+                        [beam.get_wavelength() for beam in self.beams],
                         dtype="f8",
                     )
                     handle.create_dataset(
@@ -546,7 +560,7 @@ class NXmxWriter:
                         dtype=wavelengths.dtype,
                     )
                 else:
-                    wavelength = self.experiments.beams()[0].get_wavelength()
+                    wavelength = self.beams[0].get_wavelength()
                     handle.create_dataset(
                         "incident_wavelength", (1,), data=wavelength, dtype="f8"
                     )
@@ -557,7 +571,7 @@ class NXmxWriter:
         Given a h5py handle, append all the data. from the imagesets in the
         original experiment list.
         """
-        for imageset in self.experiments.imagesets():
+        for imageset in self.imagesets:
             for i in range(len(imageset)):
                 self.append_frame(handle, data=imageset[i])
 
@@ -568,9 +582,9 @@ class NXmxWriter:
         """
         if data is None:
             if index is None:
-                data = self.experiments[0].imageset[0]
+                data = self.imagesets[0][0]
             else:
-                data = self.experiments[0].imageset[index]
+                data = self.imagesets[0][index]
         if not isinstance(data, tuple):
             data = (data,)
 
@@ -635,16 +649,11 @@ def run(args):
 
     experiments = flatten_experiments(params.input.experiments)
 
-    writer = NXmxWriter(params, experiments)
-
     try:
-        writer.validate()
-    except RuntimeError as e:
+        NXmxWriter(params)(experiments)
+    except ValueError as e:
         print("Missing information. Run with -c to see full parameter description")
         raise Sorry(e)
-    handle = writer.get_h5py_handle()
-    writer.add_all_beams(handle["entry/instrument/beam"])
-    writer.append_all_frames(handle)
 
 
 if __name__ == "__main__":
