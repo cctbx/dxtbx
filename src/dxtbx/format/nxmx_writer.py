@@ -17,6 +17,7 @@ import sys
 from cctbx import factor_ev_angstrom
 from dials.util.options import ArgumentParser, flatten_experiments
 from dxtbx import flumpy
+from libtbx import easy_pickle
 from libtbx.phil import parse
 from libtbx.utils import Sorry
 from scitbx import matrix
@@ -32,8 +33,6 @@ and in Bernstein et. al. (2020):
 https://doi.org/10.1107/S2052252520008672
 """
 
-# TODO: mask_file
-
 phil_scope = parse(
     """
   output_file = None
@@ -44,7 +43,7 @@ phil_scope = parse(
     .help = If not provided, use data from files provided.
   mask_file = None
     .type = str
-    .help = Path to file with external bad pixel mask.
+    .help = Path to file with bad pixel mask in DIALS mask format
   trusted_range = None
     .type = floats(size=2)
     .help = Override the trusted range
@@ -338,6 +337,17 @@ class NXmxWriter:
                 det, "frame_time", "f", self.params.nexus_details.frame_time
             )
             det["frame_time"].attrs["units"] = "us"
+
+        if self.params.mask_file is not None:
+            mask = easy_pickle.load(self.params.mask_file)
+            if len(mask) > 1:
+                mask = [flumpy.to_numpy(m) for m in mask]
+                mask = np.stack(mask)
+            else:
+                mask = flumpy.to_numpy(mask[0])
+            mask = (~mask).astype(np.int32)
+            det.create_dataset("pixel_mask", mask.shape, data=mask, dtype=mask.dtype)
+
         transformations = det.create_group("transformations")
         transformations.attrs["NX_class"] = "NXtransformations"
 
