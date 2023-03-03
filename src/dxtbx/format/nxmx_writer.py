@@ -74,6 +74,12 @@ phil_scope = parse(
               using the Z suffix to avoid confusion with local time. \
               This field may be filled with a value estimated before an \
               observed value is avilable.
+    count_time = None
+      .type = float
+      .help = Elapsed actual counting time
+    frame_time = None
+      .type = float
+      .help = This is time for each frame. This is exposure_time + readout time
     sample_name = None
       .type = str
       .help = Descriptive name of sample
@@ -312,12 +318,17 @@ class NXmxWriter:
         self._create_scalar(
             det, "sensor_thickness", "f", detector[0].get_thickness() * 1000
         )
-        self._create_scalar(det, "bit_depth_readout", "i", 16)  # XXX
-        self._create_scalar(det, "count_time", "f", 10)  # XXX
-        self._create_scalar(det, "frame_time", "f", 40)  # XXX
         det["sensor_thickness"].attrs["units"] = "microns"
-        det["count_time"].attrs["units"] = "us"
-        det["frame_time"].attrs["units"] = "us"
+        if self.params.nexus_details.count_time is not None:
+            self._create_scalar(
+                det, "count_time", "f", self.params.nexus_details.count_time
+            )
+            det["count_time"].attrs["units"] = "us"
+        if self.params.nexus_details.frame_time is not None:
+            self._create_scalar(
+                det, "frame_time", "f", self.params.nexus_details.frame_time
+            )
+            det["frame_time"].attrs["units"] = "us"
         transformations = det.create_group("transformations")
         transformations.attrs["NX_class"] = "NXtransformations"
 
@@ -561,6 +572,12 @@ class NXmxWriter:
                 raise TypeError("Ints or doubles are required")
         assert all(dataisint) or not any(dataisint), "Mix of ints and doubles found"
         dataisint = all(dataisint)
+
+        det = handle["entry/instrument/ELE_D0"]
+        if "bit_depth_readout" not in det:
+            self._create_scalar(
+                det, "bit_depth_readout", "i", panel_data.element_size() * 8
+            )
 
         entry = handle["entry"]
         if "data" in entry:
