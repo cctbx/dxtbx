@@ -38,7 +38,7 @@ steps:
     set -ux
     mkdir build
     cd build
-    cmake ../modules/dxtbx
+    cmake ../modules/dxtbx -DCMAKE_UNITY_BUILD=true
     cmake --build . --target install
     pip install ../modules/dxtbx
   displayName: Build dxtbx
