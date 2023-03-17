@@ -27,8 +27,10 @@ namespace dxtbx { namespace model {
 
   using dxtbx::af::flex_table;
   using dxtbx::af::flex_type_generator;
+  using scitbx::mat3;
   using scitbx::rad_as_deg;
   using scitbx::vec2;
+  using scitbx::vec3;
   using scitbx::af::int6;
   using scitbx::constants::pi;
 
@@ -328,7 +330,6 @@ namespace dxtbx { namespace model {
     }
 
     bool operator==(const Scan &rhs) const {
-      double eps = 1e-7;
       if (image_range_ != image_range_ || batch_offset_ != rhs.batch_offset_) {
         return false;
       }
@@ -574,14 +575,16 @@ namespace dxtbx { namespace model {
     DXTBX_ERROR("No summary found for " + (property_name));
   }
   /** Print Scan information */
-  inline std::ostream &operator<<(std::ostream &os, Scan &s) {
+  inline std::ostream &operator<<(std::ostream &os, const Scan &s) {
     os << "Scan:\n";
     os << "    number of images:   " << s.get_num_images() << "\n";
     os << "    image range:   " << s.get_image_range().const_ref() << "\n";
+    /*
     flex_table<property_types> properties = s.get_properties();
     for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
       add_property_summary(os, it->first, properties, s);
     }
+    */
     return os;
   }
 
