@@ -20,72 +20,73 @@
 #include <dxtbx/model/boost_python/to_from_dict.h>
 #include <dxtbx/array_family/flex_table.h>
 
-namespace dxtbx { namespace model { namespace boost_python {
+namespace dxtbx { namespace model {
+  namespace boost_python {
 
-  typedef flex_table::property_types property_types;
-  using namespace boost::python;
-  using scitbx::deg_as_rad;
-  using scitbx::rad_as_deg;
+    typedef flex_table::property_types property_types;
+    using namespace boost::python;
+    using scitbx::deg_as_rad;
+    using scitbx::rad_as_deg;
 
-  static vec2<double> rad_as_deg(vec2<double> angles) {
-    angles[0] = rad_as_deg(angles[0]);
-    angles[1] = rad_as_deg(angles[1]);
-    return angles;
-  }
+    static vec2<double> rad_as_deg(vec2<double> angles) {
+      angles[0] = rad_as_deg(angles[0]);
+      angles[1] = rad_as_deg(angles[1]);
+      return angles;
+    }
 
-  static vec2<double> deg_as_rad(vec2<double> angles) {
-    angles[0] = deg_as_rad(angles[0]);
-    angles[1] = deg_as_rad(angles[1]);
-    return angles;
-  }
+    static vec2<double> deg_as_rad(vec2<double> angles) {
+      angles[0] = deg_as_rad(angles[0]);
+      angles[1] = deg_as_rad(angles[1]);
+      return angles;
+    }
 
-  std::string scan_to_string(const Scan &scan) {
-    std::stringstream ss;
-    ss << scan;
-    return ss.str();
-  }
+    std::string scan_to_string(const Scan &scan) {
+      std::stringstream ss;
+      ss << scan;
+      return ss.str();
+    }
 
-  struct ScanPickleSuite : boost::python::pickle_suite {
-    typedef flex_table::const_iterator const_iterator;
+    struct ScanPickleSuite : boost::python::pickle_suite {
+      typedef flex_table::const_iterator const_iterator;
 
-    static boost::python::tuple getinitargs(const Scan &obj) {
-      return boost::python::make_tuple(obj.get_image_range(), obj.get_batch_offset(), );
+      static boost::python::tuple getinitargs(const Scan &obj) {
+        return boost::python::make_tuple(obj.get_image_range(), obj.get_batch_offset());
+      }
+      static boost::python::tuple getstate(const Scan &obj) {
+        flex_table<property_types> properties = obj.get_properties();
+        boost::python::dict properties_dict;
+        column_to_object_visitor visitor;
+        for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
+          properties_dict[it->first] = it->second.apply_visitor(visitor);
+        }
+
+        return boost::python::make_tuple(
+          properties.nrows(), properties.ncols(), properties_dict);
+      }
+
+      static void setstate(Scan &obj, boost::python::tuple state) {
+        DXTBX_ASSERT(boost::python::len(state) == 3);
+        std::size_t nrows = extract<std::size_t>(state[0]);
+        std::size_t ncols = extract<std::size_t>(state[1]);
+
+        boost::python::dict properties_dict = extract<dict>(state[2]);
+        DXTBX_ASSERT(len(properties_dict) == ncols);
+
+        boost::python::object items = list(properties_dict.items());
+        DXTBX_ASSERT(len(items) == ncols);
+
+        flex_table<property_types> properties(nrows);
+
+        for (std::size_t i = 0; i < ncols; ++i) {
+          boost::python::object item = items[i];
+          DXTBX_ASSERT(len(item[1]) == nrows);
+          std::string name = extract<std::string>(item[0]);
+          properties[name] = item[1];
+        }
+        DXTBX_ASSERT(properties.is_consistent());
+        obj.set_properties(properties);
+      }
     };
-
-    static boost::python::tuple getstate(const Scan &obj) {
-      flex_table<property_types> properties = obj.get_properties();
-      boost::python::dict properties_dict;
-      column_to_object_visitor visitor;
-      for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
-        properties_dict[it->first] = it->second.apply_visitor(visitor);
-      }
-
-      return boost::python::make_tuple(
-        properties.nrows(), properties.ncols(), properties_dict);
-    }
-
-    static void setstate(Scan &obj, boost::python::tuple state) {
-      DXTBX_ASSERT(boost::python::len(state) == 3);
-      std::size_t nrows = extract<std::size_t>(state[0]);
-      std::size_t ncols = extract<std::size_t>(state[1]);
-
-      boost::python::dict properties_dict = extract<dict>(state[2]);
-      DXTBX_ASSERT(len(properties_dict) == ncols);
-
-      boost::python::object items = list(properties_dict.items());
-      DXTBX_ASSERT(len(items) == ncols);
-
-      flex_table<property_types> properties(nrows);
-
-      for (std::size_t i = 0; i < ncols; ++i) {
-        boost::python::ggobject item = items[i];
-        DXTBX_ASSERT(len(item[1]) == nrows);
-        std::string name = extract<std::string>(item[0]);
-        properties[name] = item[1];
-      }
-      DIALS_ASSERT(properties.is_consistent());
-      obj.set_properties(properties);
-    }
 
     boost::python::dict MaptoPythonDict(ExpImgRangeMap map) {
       ExpImgRangeMap::iterator iter;
@@ -176,13 +177,6 @@ namespace dxtbx { namespace model { namespace boost_python {
 
     template <>
     Scan *from_dict<Scan>(boost::python::dict obj) {
-      /*
-      Finish from_dict
-      extract needs to know data type
-      --> make all types in flex_table float for now, or have types dict
-      to refer to
-      */
-
       vec2<int> ir = boost::python::extract<vec2<int> >(obj["image_range"]);
       int bo = boost::python::extract<int>(obj["batch_offset"]);
       DXTBX_ASSERT(ir[1] >= ir[0]);
@@ -260,8 +254,7 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   }
 
-  static Scan
-  scan_deepcopy(const Scan &scan, boost::python::object dict) {
+  static Scan scan_deepcopy(const Scan &scan, boost::python::object dict) {
     return Scan(scan);
   }
 
@@ -565,4 +558,5 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def_pickle(ScanPickleSuite());
   }
 
-}}}  // namespace dxtbx::model::boost_python
+}}
+}  // namespace dxtbx::model::boost_python
