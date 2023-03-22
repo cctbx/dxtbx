@@ -573,6 +573,46 @@ class NXmxWriter:
                     )
         handle["incident_wavelength"].attrs["units"] = "angstrom"
 
+    def add_beam_in_sequence(self, handle, beam, spectrum=None):
+        """
+        Alternate way to add beams, assuming adding them one at a time
+
+        For spectra, this usecase assumes only one set of energy channels and no variants
+        """
+        if spectrum:
+            spectrum_x = (
+                factor_ev_angstrom / spectrum.get_energies_eV().as_numpy_array()
+            )
+            spectrum_y = spectrum.get_weights().as_numpy_array()
+
+            if "incident_wavelength" in handle:
+                weights = handle["incident_wavelength_weights"]
+                weights.resize((weights.shape[0] + 1, *weights.shape[1:]), axis=0)
+            else:
+                handle.create_dataset(
+                    "incident_wavelength",
+                    spectrum_x.shape,
+                    data=spectrum_x,
+                    dtype=spectrum_x.dtype,
+                )
+                weights = handle.create_dataset(
+                    "incident_wavelength_weights",
+                    (1, len(spectrum_y)),
+                    maxshape=(None, len(spectrum_y)),
+                    dtype=spectrum_y.dtype,
+                )
+            weights[-1] = spectrum_y
+        else:
+            wavelength = beam.get_wavelength()
+            if "incident_wavelength" in handle:
+                dset = handle["incident_wavelength"]
+                dset.resize((dset.shape[0] + 1,), axis=0)
+            else:
+                dset = handle.create_dataset(
+                    "incident_wavelength", (1,), maxshape=(None,), dtype="f8"
+                )
+            dset[-1] = wavelength
+
     def append_all_frames(self, handle):
         """
         Given a h5py handle, append all the data. from the imagesets in the
