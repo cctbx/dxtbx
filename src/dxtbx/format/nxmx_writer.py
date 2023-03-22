@@ -47,6 +47,13 @@ phil_scope = parse(
   trusted_range = None
     .type = floats(size=2)
     .help = Override the trusted range
+  compression = gzip
+    .type = str
+    .help = Compression to apply to the data
+  dtype = None
+    .type = str
+    .help = Override the data type. If data is floats and an integer type is specified, \
+            the data is first rounded.
   nexus_details {
     instrument_name = None
       .type = str
@@ -606,6 +613,13 @@ class NXmxWriter:
         assert all(dataisint) or not any(dataisint), "Mix of ints and doubles found"
         dataisint = all(dataisint)
 
+        if self.params.dtype:
+            dtype = np.dtype(self.params.dtype)
+            if not dataisint and np.issubdtype(dtype, np.integer):
+                data = [p.iround() for p in data]
+        else:
+            dtype = int if dataisint else float
+
         det = handle["entry/instrument/ELE_D0"]
         if "bit_depth_readout" not in det:
             self._create_scalar(
@@ -624,7 +638,8 @@ class NXmxWriter:
                 "data",
                 (1, *shape),
                 maxshape=(None, *shape),
-                dtype=int if dataisint else float,
+                dtype=dtype,
+                compression=self.params.compression,
             )
 
         if len(data) > 1:
@@ -632,7 +647,7 @@ class NXmxWriter:
             data = np.stack(data)
         else:
             data = flumpy.to_numpy(data[0])
-        dset[-1:] = data
+        dset[-1:] = data.astype(dtype)
 
 
 def run(args):
