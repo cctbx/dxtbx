@@ -247,7 +247,10 @@ class NXmxWriter:
           --> sample
         """
         if not self.handle:
+            # setup was skipped, so not using imagesets/experiments
             self.construct_entry()
+            assert detector
+            self.detector = detector
         if not detector:
             detector = self.detector
 
@@ -597,7 +600,7 @@ class NXmxWriter:
 
             if "incident_wavelength" in handle:
                 weights = handle["incident_wavelength_weights"]
-                weights.resize((weights.shape[0] + 1, *weights.shape[1:]), axis=0)
+                weights.resize(weights.shape[0] + 1, axis=0)
             else:
                 handle.create_dataset(
                     "incident_wavelength",
@@ -616,7 +619,7 @@ class NXmxWriter:
             wavelength = beam.get_wavelength()
             if "incident_wavelength" in handle:
                 dset = handle["incident_wavelength"]
-                dset.resize((dset.shape[0] + 1,), axis=0)
+                dset.resize(dset.shape[0] + 1, axis=0)
             else:
                 dset = handle.create_dataset(
                     "incident_wavelength", (1,), maxshape=(None,), dtype="f8"
