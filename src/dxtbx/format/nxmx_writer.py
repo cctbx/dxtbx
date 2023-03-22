@@ -119,6 +119,7 @@ class NXmxWriter:
         self.params = params
         if experiments or imageset:
             self.setup(experiments, imageset)
+        self.handle = None
 
     def setup(self, experiments=None, imageset=None):
         assert [experiments, imageset].count(
@@ -133,7 +134,9 @@ class NXmxWriter:
             self.imagesets = [imageset]
             self.detector = imageset.get_detector(0)
             self.beams = [imageset.get_beam(i) for i in range(len(imageset))]
+        self.construct_entry()
 
+    def construct_entry(self):
         output_file_name = (
             self.params.output_file
             if self.params.output_file is not None
@@ -243,9 +246,12 @@ class NXmxWriter:
           --> instrument
           --> sample
         """
-        # set up the metrology dictionary to include axis names, pixel sizes, and so forth
+        if not self.handle:
+            self.construct_handle()
         if not detector:
             detector = self.detector
+
+        # set up the metrology dictionary to include axis names, pixel sizes, and so forth
         metro = self.get_metrology_dict()
 
         def panel_group_from_key(key):
