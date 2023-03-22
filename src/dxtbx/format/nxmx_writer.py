@@ -625,6 +625,7 @@ class NXmxWriter:
                     "incident_wavelength", (1,), maxshape=(None,), dtype="f8"
                 )
             dset[-1] = wavelength
+        handle["incident_wavelength"].attrs["units"] = "angstrom"
 
     def append_all_frames(self):
         """
