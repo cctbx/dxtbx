@@ -247,7 +247,7 @@ class NXmxWriter:
           --> sample
         """
         if not self.handle:
-            self.construct_handle()
+            self.construct_entry()
         if not detector:
             detector = self.detector
 
