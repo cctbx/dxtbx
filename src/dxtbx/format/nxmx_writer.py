@@ -134,13 +134,36 @@ class NXmxWriter:
             self.detector = imageset.get_detector(0)
             self.beams = [imageset.get_beam(i) for i in range(len(imageset))]
 
+        output_file_name = (
+            self.params.output_file
+            if self.params.output_file is not None
+            else "converted.h5"
+        )
+        self.handle = h5py.File(output_file_name, "w")
+        f = self.handle
+        f.attrs["NX_class"] = "NXroot"
+        f.attrs["file_name"] = os.path.basename(output_file_name)
+        f.attrs["file_time"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        f.attrs["HDF5_Version"] = h5py.version.hdf5_version
+        entry = f.create_group("entry")
+        entry.attrs["NX_class"] = "NXentry"
+        if self.params.nexus_details.start_time:
+            entry["start_time"] = self.params.nexus_details.start_time
+        if self.params.nexus_details.end_time:
+            entry["end_time"] = self.params.nexus_details.end_time
+        if self.params.nexus_details.end_time_estimated:
+            entry["end_time_estimated"] = self.params.nexus_details.end_time_estimated
+
+        # --> definition
+        self._create_scalar(entry, "definition", "S4", np.string_("NXmx"))
+
     def __call__(self, experiments=None, imageset=None):
         if experiments or imageset:
             self.setup(experiments, imageset)
         self.validate()
-        handle = self.get_h5py_handle()
-        self.add_all_beams(handle["entry/instrument/beam"])
-        self.append_all_frames(handle)
+        self.construct_detector()
+        self.add_all_beams()
+        self.append_all_frames()
 
     def validate(self):
         if not self.params.nexus_details.instrument_name:
@@ -210,7 +233,7 @@ class NXmxWriter:
             offset_units="mm",
         )
 
-    def get_h5py_handle(self):
+    def construct_detector(self):
         """
         Hierarchical structure of master nexus file. Format information available here
         http://download.nexusformat.org/sphinx/classes/base_classes/NXdetector_module.html#nxdetector-module
@@ -274,29 +297,9 @@ class NXmxWriter:
                     )
             return panel_id
 
+        f = self.handle
+        entry = f["entry"]
         recursive_setup_basis_dict((0,))
-
-        output_file_name = (
-            self.params.output_file
-            if self.params.output_file is not None
-            else "converted.h5"
-        )
-        f = h5py.File(output_file_name, "w")
-        f.attrs["NX_class"] = "NXroot"
-        f.attrs["file_name"] = os.path.basename(output_file_name)
-        f.attrs["file_time"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-        f.attrs["HDF5_Version"] = h5py.version.hdf5_version
-        entry = f.create_group("entry")
-        entry.attrs["NX_class"] = "NXentry"
-        if self.params.nexus_details.start_time:
-            entry["start_time"] = self.params.nexus_details.start_time
-        if self.params.nexus_details.end_time:
-            entry["end_time"] = self.params.nexus_details.end_time
-        if self.params.nexus_details.end_time_estimated:
-            entry["end_time_estimated"] = self.params.nexus_details.end_time_estimated
-
-        # --> definition
-        self._create_scalar(entry, "definition", "S4", np.string_("NXmx"))
 
         # --> sample
         sample = entry.create_group("sample")
@@ -449,9 +452,7 @@ class NXmxWriter:
                     offset_units="mm",
                 )
 
-        return f
-
-    def add_all_beams(self, handle):
+    def add_all_beams(self):
         spectra = []
         for imageset in self.imagesets:
             spectra.extend(
@@ -461,9 +462,10 @@ class NXmxWriter:
                     if imageset.get_spectrum(i)
                 ]
             )
-        self.add_beams(handle, self.beams, spectra)
+        self.add_beams(self.beams, spectra)
 
-    def add_beams(self, handle, beams=None, spectra=None):
+    def add_beams(self, beams=None, spectra=None):
+        handle = self.handle["entry/instrument/beam"]
         if self.params.wavelength:
             assert beams is None and spectra is None
             handle.create_dataset(
@@ -573,12 +575,13 @@ class NXmxWriter:
                     )
         handle["incident_wavelength"].attrs["units"] = "angstrom"
 
-    def add_beam_in_sequence(self, handle, beam, spectrum=None):
+    def add_beam_in_sequence(self, beam, spectrum=None):
         """
         Alternate way to add beams, assuming adding them one at a time
 
         For spectra, this usecase assumes only one set of energy channels and no variants
         """
+        handle = self.handle["entry/instrument/beam"]
         if spectrum:
             spectrum_x = (
                 factor_ev_angstrom / spectrum.get_energies_eV().as_numpy_array()
@@ -613,18 +616,18 @@ class NXmxWriter:
                 )
             dset[-1] = wavelength
 
-    def append_all_frames(self, handle):
+    def append_all_frames(self):
         """
         Given a h5py handle, append all the data. from the imagesets in the
         original experiment list.
         """
         for imageset in self.imagesets:
             for i in range(len(imageset)):
-                self.append_frame(handle, data=imageset[i])
+                self.append_frame(data=imageset[i])
 
-    def append_frame(self, handle, index=None, data=None):
+    def append_frame(self, index=None, data=None):
         """
-        Given a h5py handle, append some data. Can specify either
+        Append some data. Can specify either
         the index into imageset zero, or the data itself.
         """
         if data is None:
@@ -660,13 +663,13 @@ class NXmxWriter:
         else:
             dtype = int if dataisint else float
 
-        det = handle["entry/instrument/ELE_D0"]
+        det = self.handle["entry/instrument/ELE_D0"]
         if "bit_depth_readout" not in det:
             self._create_scalar(
                 det, "bit_depth_readout", "i", panel_data.element_size() * 8
             )
 
-        entry = handle["entry"]
+        entry = self.handle["entry"]
         if "data" in entry:
             data_group = entry["data"]
             dset = data_group["data"]
