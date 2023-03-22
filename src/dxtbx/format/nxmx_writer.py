@@ -233,7 +233,7 @@ class NXmxWriter:
             offset_units="mm",
         )
 
-    def construct_detector(self):
+    def construct_detector(self, detector=None):
         """
         Hierarchical structure of master nexus file. Format information available here
         http://download.nexusformat.org/sphinx/classes/base_classes/NXdetector_module.html#nxdetector-module
@@ -244,7 +244,8 @@ class NXmxWriter:
           --> sample
         """
         # set up the metrology dictionary to include axis names, pixel sizes, and so forth
-        detector = self.detector
+        if not detector:
+            detector = self.detector
         metro = self.get_metrology_dict()
 
         def panel_group_from_key(key):
