@@ -678,11 +678,6 @@ class NXmxWriter:
             dtype = int if dataisint else float
 
         det = self.handle["entry/instrument/ELE_D0"]
-        if "bit_depth_readout" not in det:
-            self._create_scalar(
-                det, "bit_depth_readout", "i", panel_data.element_size() * 8
-            )
-
         entry = self.handle["entry"]
         if "data" in entry:
             data_group = entry["data"]
@@ -705,6 +700,9 @@ class NXmxWriter:
         else:
             data = flumpy.to_numpy(data[0])
         dset[-1:] = data.astype(dtype)
+
+        if "bit_depth_readout" not in det:
+            self._create_scalar(det, "bit_depth_readout", "i", dset.dtype.itemsize * 8)
 
 
 def run(args):
