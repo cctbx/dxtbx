@@ -131,10 +131,21 @@ class NXmxWriter:
             assert len(experiments.detectors()) == 1, "Multiple detectors not supported"
             self.detector = experiments.detectors()[0]
             self.beams = experiments.beams()
+            assert len(experiments.scans()) <= 1
+            assert len(experiments.goniometers()) <= 1
+            self.scan = experiments[0].scan
+            self.goniometer = experiments[0].goniometer
+
+            if self.scan or self.goniometer:
+                assert self.scan and self.goniometer
+                assert len(experiments) == 1
         else:
             self.imagesets = [imageset]
             self.detector = imageset.get_detector(0)
             self.beams = [imageset.get_beam(i) for i in range(len(imageset))]
+
+            self.scan = imageset.get_scan(0)
+            self.goniometer = imageset.get_goniometer(0)
         self.construct_entry()
 
     def construct_entry(self):
@@ -161,6 +172,13 @@ class NXmxWriter:
         # --> definition
         self._create_scalar(entry, "definition", "S4", np.string_("NXmx"))
 
+        # --> sample
+        sample = self.handle["entry"].create_group("sample")
+        sample.attrs["NX_class"] = "NXsample"
+        if self.params.nexus_details.sample_name:
+            sample["name"] = self.params.nexus_details.sample_name
+        sample["depends_on"] = "."  # Will be overriden if a scan and gonio are added
+
     def __call__(self, experiments=None, imageset=None):
         if experiments or imageset:
             self.setup(experiments, imageset)
@@ -168,6 +186,7 @@ class NXmxWriter:
         self.construct_detector()
         self.add_all_beams()
         self.append_all_frames()
+        self.add_scan_and_gonio()
 
     def validate(self):
         if not self.params.nexus_details.instrument_name:
@@ -312,12 +331,6 @@ class NXmxWriter:
         entry = f["entry"]
         recursive_setup_basis_dict((0,))
 
-        # --> sample
-        sample = entry.create_group("sample")
-        sample.attrs["NX_class"] = "NXsample"
-        if self.params.nexus_details.sample_name:
-            sample["name"] = self.params.nexus_details.sample_name
-        sample["depends_on"] = "."  # This script does not support scans/gonios
         # --> source
         source = entry.create_group("source")
         source.attrs["NX_class"] = "NXsource"
@@ -704,6 +717,89 @@ class NXmxWriter:
 
         if "bit_depth_readout" not in det:
             self._create_scalar(det, "bit_depth_readout", "i", dset.dtype.itemsize * 8)
+
+    def add_scan_and_gonio(self, scan=None, gonio=None):
+        if scan is None or gonio is None:
+
+            assert scan is None and gonio is None
+            scan = self.scan
+            gonio = self.goniometer
+        if scan is None or gonio is None:
+            return
+
+        sample = self.handle["entry/sample"]
+        if "depends_on" in sample:
+            del sample["depends_on"]
+        multi_axis = hasattr(gonio, "get_axes")
+
+        if multi_axis:
+            root = gonio.get_names()[0]
+        else:
+            root = "omega"
+        sample["depends_on"] = "/entry/sample/transformations/%s" % (root)
+
+        transformations = sample.create_group("transformations")
+        transformations.attrs["NX_class"] = "NXtransformations"
+
+        def setup_axis(name, vector, main_axis=False):
+            if main_axis:
+                angles = np.array(
+                    [
+                        scan.get_angle_from_array_index(i)
+                        for i in range(*scan.get_array_range())
+                    ]
+                )
+            else:
+                angles = [0]
+            axis = transformations.create_dataset(name, data=angles)
+
+            if main_axis:
+                oscillation_angle = scan.get_oscillation()[1]
+                oscillation = np.array([oscillation_angle] * len(scan))
+                transformations.create_dataset(
+                    name + "_increment_set", data=oscillation
+                )
+
+                end = angles + oscillation
+                transformations.create_dataset(name + "_end", data=end)
+            axis.attrs["transformation_type"] = "rotation"
+            axis.attrs["units"] = "deg"
+            axis.attrs["vector"] = IMGCIF_TO_MCSTAS.as_numpy_array() @ np.array(vector)
+            return axis
+
+        if multi_axis:
+            for axis_number in range(len(gonio.get_axes())):
+                if axis_number == gonio.get_scan_axis():
+                    axis = setup_axis(
+                        gonio.get_names()[axis_number],
+                        gonio.get_axes()[axis_number],
+                        main_axis=True,
+                    )
+                else:
+                    axis = setup_axis(
+                        gonio.get_names()[axis_number],
+                        gonio.get_axes()[axis_number],
+                        main_axis=False,
+                    )
+
+                if axis_number == len(gonio.get_axes()) - 1:
+                    axis.attrs["depends_on"] = "."
+                else:
+                    axis.attrs["depends_on"] = "/entry/sample/transformations/%s" % (
+                        gonio.get_names()[axis_number + 1]
+                    )
+        else:
+            setup_axis("omega", gonio.get_rotation_axis(), main_axis=True)
+
+        assert len(set(scan.get_exposure_times())) == 1
+        if self.params.nexus_details.frame_time is None:
+            self._create_scalar(
+                self.handle["entry/instrument/detector"],
+                "frame_time",
+                "f",
+                scan.get_exposure_times()[0],
+            )
+            self.handle["entry/instrument/detector/frame_time"].attrs["units"] = "s"
 
 
 def run(args):
