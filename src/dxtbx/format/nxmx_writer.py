@@ -668,7 +668,10 @@ class NXmxWriter:
         dataisint = all(dataisint)
 
         if self.params.dtype:
-            dtype = np.dtype(self.params.dtype)
+            if self.params.dtype in ["int", "float"]:
+                dtype = int if self.params.dtype == "int" else float
+            else:
+                dtype = np.dtype(self.params.dtype)
             if not dataisint and np.issubdtype(dtype, np.integer):
                 data = [p.iround() for p in data]
         else:
