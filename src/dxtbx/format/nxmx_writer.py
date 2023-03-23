@@ -94,7 +94,8 @@ phil_scope = parse(
       .help = Elapsed actual counting time
     frame_time = None
       .type = float
-      .help = This is time for each frame. This is exposure_time + readout time
+      .help = This is time for each frame. This is exposure_time + readout time \
+              in seconds.
     sample_name = None
       .type = str
       .help = Descriptive name of sample
@@ -371,7 +372,7 @@ class NXmxWriter:
             self._create_scalar(
                 det, "frame_time", "f", self.params.nexus_details.frame_time
             )
-            det["frame_time"].attrs["units"] = "us"
+            det["frame_time"].attrs["units"] = "s"
 
         if self.params.mask_file is not None:
             mask = easy_pickle.load(self.params.mask_file)
