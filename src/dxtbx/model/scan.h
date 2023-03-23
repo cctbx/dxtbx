@@ -45,6 +45,7 @@ namespace dxtbx { namespace model {
                               vec3<double>,
                               mat3<double>,
                               int6>::type property_types;
+
   typedef dxtbx::af::flex_table<property_types>::const_iterator const_iterator;
 
   class ScanBase {};
@@ -143,7 +144,7 @@ namespace dxtbx { namespace model {
           batch_offset_(batch_offset) {
       DXTBX_ASSERT(num_images_ >= 0);
       DXTBX_ASSERT(properties_table.is_consistent());
-      DXTBX_ASSERT(properties_table.size() == num_images_);
+      DXTBX_ASSERT(properties_table.size() == num_images_ - 1);
       properties_ = properties_table;
     }
 
@@ -196,11 +197,25 @@ namespace dxtbx { namespace model {
       return batch_offset_;
     }
 
-    bool contains(std::string property_name) {
+    bool contains(std::string property_name) const {
       return properties_.contains(property_name);
     }
 
-    flex_table<property_types> get_properties() {
+    template <typename T>
+    scitbx::af::shared<T> get_property(
+      const flex_table<property_types>::key_type &key) const {
+      DXTBX_ASSERT(properties_.contains(key));
+      return properties_.get<T>(key);
+    }
+
+    template <typename T>
+    void set_property(const flex_table<property_types>::key_type &key,
+                      scitbx::af::shared<T> &value) {
+      DXTBX_ASSERT(value.size() == properties_.size());
+      properties_[key] = value;
+    }
+
+    flex_table<property_types> get_properties() const {
       return properties_;
     }
 
@@ -210,7 +225,7 @@ namespace dxtbx { namespace model {
       properties_ = new_table;
     }
 
-    bool is_still() {
+    bool is_still() const {
       if (!properties_.contains("oscillation")) {
         return false;
       }
@@ -551,7 +566,6 @@ namespace dxtbx { namespace model {
 
   /*
    * Summary for operator<<
-   */
   void add_property_summary(std::ostream &os,
                             const std::string property_name,
                             const flex_table<property_types> &properties,
@@ -574,6 +588,7 @@ namespace dxtbx { namespace model {
     }
     DXTBX_ERROR("No summary found for " + (property_name));
   }
+  */
   /** Print Scan information */
   inline std::ostream &operator<<(std::ostream &os, const Scan &s) {
     os << "Scan:\n";
