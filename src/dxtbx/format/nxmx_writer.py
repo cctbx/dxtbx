@@ -342,18 +342,18 @@ class NXmxWriter:
             beam["total_flux"].attrs["units"] = "Hz"
             beam.attrs["flux"] = "total_flux"
 
-        det_group = instrument.create_group("detector")
+        det_group = instrument.create_group("detector_group")
         det_group.attrs["NX_class"] = "NXdetector_group"
 
         det_group.create_dataset("group_index", data=list(range(1, 3)), dtype="i")
-        data = [np.string_("detector"), np.string_("ELE_D0")]
+        data = [np.string_("detector"), np.string_("detector")]
         det_group.create_dataset("group_names", (2,), data=data, dtype="S12")
         det_group.create_dataset("group_parent", (2,), data=[-1, 1], dtype="i")
         det_group.create_dataset("group_type", (2,), data=[1, 2], dtype="i")
-        det = instrument.create_group("ELE_D0")
+        det = instrument.create_group("detector")
         det.attrs["NX_class"] = "NXdetector"
         det["description"] = "Detector converted from DIALS models"
-        det["depends_on"] = "/entry/instrument/ELE_D0/transformations/AXIS_RAIL"
+        det["depends_on"] = "/entry/instrument/detector/transformations/AXIS_RAIL"
         det["gain_setting"] = "auto"
         assert len(set([p.get_material() for p in detector])) == 1
         assert len(set([p.get_thickness() for p in detector])) == 1
@@ -677,7 +677,7 @@ class NXmxWriter:
         else:
             dtype = int if dataisint else float
 
-        det = self.handle["entry/instrument/ELE_D0"]
+        det = self.handle["entry/instrument/detector"]
         entry = self.handle["entry"]
         if "data" in entry:
             data_group = entry["data"]
