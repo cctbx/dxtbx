@@ -12,7 +12,6 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <scitbx/array_family/flex_types.h>
-#include <scitbx/array_family/boost_python/ref_pickle_double_buffered.h>
 #include <scitbx/boost_python/slice.h>
 #include <scitbx/boost_python/utils.h>
 #include <dxtbx/array_family/flex_table.h>
