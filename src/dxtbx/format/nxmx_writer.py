@@ -292,24 +292,17 @@ class NXmxWriter:
             # Example for key (0,1,2). "L0M0_L1M1_L2M2", where L is level and M is module
             return "_".join(["L%dM%d" % (l, m) for l, m in enumerate(key)])
 
-        # set up the metrology dictionary to include axis names, pixel sizes, and so forth
-        panelkeys = []
-        panelnames = []
-
         def recursive_setup_basis_dict(key, parent_name="", panel_id=0):
-            # Set up CBF axis names, including equipment components and depends_on chains
+            # Set up NeXus axis names, including equipment components and depends_on chains
             basis = metro[key]
             node = panel_group_from_key(key)
             nodename = level_string(key)
             if basis.name:
-                dname = basis.name
+                dname = os.path.split(basis.name)[1]
             else:
                 basis.name = dname = "AXIS_" + nodename
 
             if node.is_panel():
-                panelname = "PANEL_%d" % panel_id
-                panelkeys.append(key)
-                panelnames.append(panelname)
                 panel_id += 1
 
             if len(key) == 1:
@@ -417,14 +410,20 @@ class NXmxWriter:
         # Create a series of axis describing frame shifts from each level of the detector to the next
         for key in sorted(metro):
             basis = metro[key]
-            self.add_frame_shift(transformations, basis)
-
             node = panel_group_from_key(key)
 
             if node.is_panel():
                 aname = level_string(key)
-                fast = IMGCIF_TO_MCSTAS * matrix.col((1.0, 0.0, 0.0))
-                slow = IMGCIF_TO_MCSTAS * matrix.col((0.0, 1.0, 0.0))
+                fast = (
+                    IMGCIF_TO_MCSTAS
+                    * basis.orientation.unit_quaternion_as_r3_rotation_matrix()
+                    * matrix.col((1.0, 0.0, 0.0))
+                )
+                slow = (
+                    IMGCIF_TO_MCSTAS
+                    * basis.orientation.unit_quaternion_as_r3_rotation_matrix()
+                    * matrix.col((0.0, 1.0, 0.0))
+                )
 
                 module = det.create_group(aname)
                 module.attrs["NX_class"] = "NXdetector_module"
@@ -455,11 +454,11 @@ class NXmxWriter:
                     node.get_pixel_size()[1],
                     depends_on=transformations.name
                     + "/"
-                    + os.path.basename(basis.name),
+                    + os.path.basename(basis.depends_on),
                     transformation_type="translation",
                     units="mm",
                     vector=fast,
-                    offset=(0.0, 0.0, 0.0),
+                    offset=IMGCIF_TO_MCSTAS * basis.translation,
                     offset_units="mm",
                 )
                 self.create_vector(
@@ -468,13 +467,15 @@ class NXmxWriter:
                     node.get_pixel_size()[0],
                     depends_on=transformations.name
                     + "/"
-                    + os.path.basename(basis.name),
+                    + os.path.basename(basis.depends_on),
                     transformation_type="translation",
                     units="mm",
                     vector=slow,
-                    offset=(0.0, 0.0, 0.0),
+                    offset=IMGCIF_TO_MCSTAS * basis.translation,
                     offset_units="mm",
                 )
+            else:
+                self.add_frame_shift(transformations, basis)
 
     def add_all_beams(self):
         spectra = []
