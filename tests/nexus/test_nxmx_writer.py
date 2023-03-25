@@ -5,6 +5,7 @@ import h5py
 from dxtbx.model.experiment_list import ExperimentListFactory
 from dxtbx.format.nxmx_writer import NXmxWriter, phil_scope
 from dxtbx.format.nexus import h5str
+from libtbx.test_utils import approx_equal
 from libtbx.phil import parse
 
 
@@ -39,7 +40,7 @@ def test_writer_jf16M(dials_data, tmpdir):
 
     NXmxWriter(params)(expts1)
 
-    expts2 = ExperimentListFactory.from_filenames([tmpdir / "4img.h5"])
+    expts2 = ExperimentListFactory.from_filenames([output_file])
 
     def recursive_test(pg1, pg2):
         assert pg1.is_similar_to(pg2)
@@ -48,6 +49,13 @@ def test_writer_jf16M(dials_data, tmpdir):
 
     for d1, d2 in zip(expts1.detectors(), expts2.detectors()):
         recursive_test(d1.hierarchy(), d2.hierarchy())
+
+    for b1, b2 in zip(expts1.beams(), expts2.beams()):
+        assert approx_equal(b1.get_wavelength(), b2.get_wavelength())
+        assert approx_equal(b2.get_s0(), b2.get_s0())
+
+    assert not (any(expts2.scans()))
+    assert not (any(expts2.goniometers()))
 
 
 def test_writer_x4wide(dials_data, tmpdir):
@@ -82,3 +90,14 @@ def test_writer_x4wide(dials_data, tmpdir):
 
     for d1, d2 in zip(expts1.detectors(), expts2.detectors()):
         recursive_test(d1.hierarchy(), d2.hierarchy())
+
+    for b1, b2 in zip(expts1.beams(), expts2.beams()):
+        assert approx_equal(b1.get_wavelength(), b2.get_wavelength())
+        assert approx_equal(b2.get_s0(), b2.get_s0())
+
+    for scan1, scan2 in zip(expts1.scans(), expts2.scans()):
+        assert approx_equal(scan1.get_array_range(), scan2.get_array_range())
+        assert approx_equal(scan1.get_oscillation(), scan2.get_oscillation())
+
+    for gonio1, gonio2 in zip(expts1.goniometers(), expts2.goniometers()):
+        assert approx_equal(gonio1.get_rotation_axis(), gonio2.get_rotation_axis())
