@@ -117,7 +117,7 @@ class ScanFactory:
         joint = t.copy() if t else {}
         joint.update(d)
 
-        if not isinstance(joint["exposure_time"], list):
+        if "properties" not in d and not isinstance(joint["exposure_time"], list):
             joint["exposure_time"] = [joint["exposure_time"]]
         joint.setdefault("batch_offset", 0)  # backwards compatibility 20180205
         joint.setdefault("valid_image_ranges", {})  # backwards compatibility 20181113
