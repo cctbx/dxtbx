@@ -22,6 +22,7 @@
 #include "scan_helpers.h"
 #include <dxtbx/array_family/flex_table.h>
 #include <dxtbx/array_family/flex_table_suite.h>
+#include <algorithm>
 
 namespace dxtbx { namespace model {
 
@@ -44,9 +45,9 @@ namespace dxtbx { namespace model {
                               vec2<double>,
                               vec3<double>,
                               mat3<double>,
-                              int6>::type property_types;
+                              int6>::type scan_property_types;
 
-  typedef dxtbx::af::flex_table<property_types>::const_iterator const_iterator;
+  typedef dxtbx::af::flex_table<scan_property_types>::const_iterator const_iterator;
 
   class ScanBase {};
 
@@ -56,7 +57,7 @@ namespace dxtbx { namespace model {
         : image_range_(0, 0),
           num_images_(1),
           batch_offset_(0),
-          properties_(flex_table<property_types>(1)) {}
+          properties_(flex_table<scan_property_types>(1)) {}
 
     /**
      * @param image_range The range of images covered by the scan
@@ -68,7 +69,7 @@ namespace dxtbx { namespace model {
           num_images_(1 + image_range_[1] - image_range_[0]),
           batch_offset_(batch_offset) {
       DXTBX_ASSERT(num_images_ >= 0);
-      properties_ = flex_table<property_types>(num_images_);
+      properties_ = flex_table<scan_property_types>(num_images_);
     }
 
     /**
@@ -84,9 +85,12 @@ namespace dxtbx { namespace model {
           num_images_(1 + image_range_[1] - image_range_[0]),
           batch_offset_(batch_offset) {
       DXTBX_ASSERT(num_images_ >= 0);
-      properties_ = flex_table<property_types>(num_images_);
-      properties_["exposure_times"] = scitbx::af::shared<double>(num_images_, 0.0);
-      properties_["epochs"] = scitbx::af::shared<double>(num_images_, 0.0);
+      properties_ = flex_table<scan_property_types>(num_images_);
+      scitbx::af::shared<double> exposure_times =
+        scitbx::af::shared<double>(num_images_, 0.0);
+      set_property("exposure_time", exposure_times.const_ref());
+      scitbx::af::shared<double> epochs = scitbx::af::shared<double>(num_images_, 0.0);
+      set_property("epochs", epochs.const_ref());
       set_oscillation(oscillation);
       DXTBX_ASSERT(properties_.is_consistent());
     }
@@ -111,7 +115,7 @@ namespace dxtbx { namespace model {
           batch_offset_(batch_offset) {
       DXTBX_ASSERT(num_images_ >= 0);
       DXTBX_ASSERT(oscillation[1] >= 0);
-      properties_ = flex_table<property_types>(num_images_);
+      properties_ = flex_table<scan_property_types>(num_images_);
 
       if (exposure_times.size() == 1 && num_images_ > 1) {
         // assume same exposure time for all images - there is
@@ -121,11 +125,11 @@ namespace dxtbx { namespace model {
         for (int j = 0; j < num_images_; j++) {
           expanded_exposure_times.push_back(exposure_times[0]);
         }
-        properties_["exposure_times"] = expanded_exposure_times;
+        set_property("exposure_time", expanded_exposure_times.const_ref());
       } else {
-        properties_["exposure_times"] = exposure_times;
+        set_property("exposure_time", exposure_times.const_ref());
       }
-      properties_["epochs"] = epochs;
+      set_property("epochs", epochs.const_ref());
       set_oscillation(oscillation);
       DXTBX_ASSERT(properties_.is_consistent());
     }
@@ -137,14 +141,14 @@ namespace dxtbx { namespace model {
      *                     unique batch numbers for multi-crystal datasets)
      */
     Scan(vec2<int> image_range,
-         flex_table<property_types> properties_table,
+         flex_table<scan_property_types> properties_table,
          int batch_offset = 0)
         : image_range_(image_range),
           num_images_(1 + image_range_[1] - image_range_[0]),
           batch_offset_(batch_offset) {
       DXTBX_ASSERT(num_images_ >= 0);
       DXTBX_ASSERT(properties_table.is_consistent());
-      DXTBX_ASSERT(properties_table.size() == num_images_ - 1);
+      DXTBX_ASSERT(properties_table.size() == num_images_);
       properties_ = properties_table;
     }
 
@@ -203,23 +207,23 @@ namespace dxtbx { namespace model {
 
     template <typename T>
     scitbx::af::shared<T> get_property(
-      const flex_table<property_types>::key_type &key) const {
+      const flex_table<scan_property_types>::key_type &key) const {
       DXTBX_ASSERT(properties_.contains(key));
       return properties_.get<T>(key);
     }
 
     template <typename T>
-    void set_property(const flex_table<property_types>::key_type &key,
-                      scitbx::af::shared<T> &value) {
+    void set_property(const typename flex_table<scan_property_types>::key_type &key,
+                      const scitbx::af::const_ref<T> &value) {
       DXTBX_ASSERT(value.size() == properties_.size());
-      properties_[key] = value;
+      dxtbx::af::flex_table_suite::setitem_column(properties_, key, value);
     }
 
-    flex_table<property_types> get_properties() const {
+    flex_table<scan_property_types> get_properties() const {
       return properties_;
     }
 
-    void set_properties(flex_table<property_types> new_table) {
+    void set_properties(flex_table<scan_property_types> new_table) {
       DXTBX_ASSERT(new_table.is_consistent());
       DXTBX_ASSERT(new_table.size() == num_images_);
       properties_ = new_table;
@@ -258,6 +262,16 @@ namespace dxtbx { namespace model {
     vec2<double> get_oscillation() const {
       DXTBX_ASSERT(properties_.contains("oscillation"));
       scitbx::af::shared<double> osc = properties_.get<double>("oscillation");
+
+      // Special case for Scans with single image
+      if (properties_.size() == 1) {
+        DXTBX_ASSERT(properties_.contains("oscillation_width"));
+        scitbx::af::shared<double> osc_width =
+          properties_.get<double>("oscillation_width");
+        return vec2<double>(osc[0], osc_width[0]);
+      }
+
+      DXTBX_ASSERT(properties_.size() > 1);
       return vec2<double>(osc[0], osc[1]);
     }
 
@@ -267,13 +281,22 @@ namespace dxtbx { namespace model {
       return vec2<double>(rad_as_deg(osc[0]), rad_as_deg(osc[1]));
     }
 
+    scitbx::af::shared<double> get_oscillation_arr_in_deg() const {
+      DXTBX_ASSERT(properties_.contains("oscillation"));
+      scitbx::af::shared<double> osc = properties_.get<double>("oscillation");
+      scitbx::af::shared<double> osc_in_deg;
+      osc_in_deg.resize(osc.size());
+      std::transform(osc.begin(), osc.end(), osc_in_deg.begin(), rad_as_deg);
+      return osc_in_deg;
+    }
+
     int get_num_images() const {
       return num_images_;
     }
 
     scitbx::af::shared<double> get_exposure_times() const {
-      DXTBX_ASSERT(properties_.contains("exposure_times"));
-      return properties_.get<double>("exposure_times");
+      DXTBX_ASSERT(properties_.contains("exposure_time"));
+      return properties_.get<double>("exposure_time");
     }
 
     scitbx::af::shared<double> get_epochs() const {
@@ -302,33 +325,38 @@ namespace dxtbx { namespace model {
       for (std::size_t i = 0; i < num_images_; ++i) {
         oscillation_arr[i] = oscillation[0] + oscillation[1] * i;
       }
-      properties_["oscillation"] = oscillation_arr;
+      set_property("oscillation", oscillation_arr.const_ref());
+
+      // Special case for Scan for one image
+      if (num_images_ == 1) {
+        scitbx::af::shared<double> oscillation_width_arr(num_images_);
+        oscillation_width_arr[0] = oscillation[1];
+        set_property("oscillation_width", oscillation_width_arr.const_ref());
+      }
     }
 
     void set_exposure_times(scitbx::af::shared<double> exposure_times) {
       DXTBX_ASSERT(exposure_times.size() == num_images_);
-      properties_["exposure_times"] = exposure_times;
+      set_property("exposure_time", exposure_times.const_ref());
       DXTBX_ASSERT(properties_.is_consistent());
     }
 
     void set_epochs(const scitbx::af::shared<double> &epochs) {
       DXTBX_ASSERT(epochs.size() == num_images_);
-      properties_["epochs"] = epochs;
+      set_property("epochs", epochs.const_ref());
       DXTBX_ASSERT(properties_.is_consistent());
     }
 
     /** Get the total oscillation range of the scan */
     vec2<double> get_oscillation_range() const {
-      DXTBX_ASSERT(properties_.contains("oscillation"));
-      scitbx::af::shared<double> osc = properties_.get<double>("oscillation");
-      return vec2<double>(osc[0], osc[num_images_ - 1]);
+      vec2<double> osc = get_oscillation();
+      return vec2<double>(osc[0], osc[0] + num_images_ * osc[1]);
     }
 
     /** Get the image angle and oscillation width as a tuple */
     vec2<double> get_image_oscillation(int index) const {
-      DXTBX_ASSERT(properties_.contains("oscillation"));
       DXTBX_ASSERT(image_range_[0] <= index && index <= image_range_[1]);
-      scitbx::af::shared<double> osc = properties_.get<double>("oscillation");
+      vec2<double> osc = get_oscillation();
       return vec2<double>(osc[0] + (index - image_range_[0]) * osc[1], osc[1]);
     }
 
@@ -339,9 +367,9 @@ namespace dxtbx { namespace model {
     }
 
     double get_image_exposure_time(int index) const {
-      DXTBX_ASSERT(properties_.contains("exposure_times"));
+      DXTBX_ASSERT(properties_.contains("exposure_time"));
       DXTBX_ASSERT(image_range_[0] <= index && index <= image_range_[1]);
-      return properties_.get<double>("exposure_times")[index - image_range_[0]];
+      return properties_.get<double>("exposure_time")[index - image_range_[0]];
     }
 
     bool operator==(const Scan &rhs) const {
@@ -389,30 +417,43 @@ namespace dxtbx { namespace model {
       using namespace dxtbx::af::flex_table_suite;
       DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
       DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
-      DXTBX_ASSERT(properties_.size() == rhs.properties_.size());
 
-      image_range_[1] = rhs.image_range_[1];
-      num_images_ = 1 + image_range_[1] - image_range_[0];
-
-      for (const_iterator it = properties_.begin(); it != properties_.end(); ++it) {
-        DXTBX_ASSERT(rhs.properties_.contains(it->first));
-      }
+      flex_table<scan_property_types> rhs_properties = rhs.get_properties();
 
       // Explicitly check oscillation
       if (properties_.contains("oscillation")) {
-        double eps =
-          scan_tolerance * std::abs(properties_.get<double>("oscillation")[1]);
+        double osc_width = get_oscillation()[1];
+        double eps = scan_tolerance * std::abs(osc_width);
+        double rhs_osc_width = rhs.get_oscillation()[1];
         DXTBX_ASSERT(eps > 0);
-        DXTBX_ASSERT(std::abs(get_oscillation()[1]) > min_oscillation_width_);
-        DXTBX_ASSERT(std::abs(get_oscillation()[1] - rhs.get_oscillation()[1]) < eps);
+        DXTBX_ASSERT(std::abs(osc_width) > min_oscillation_width_);
+        DXTBX_ASSERT(std::abs(osc_width - rhs_osc_width) < eps);
         // sometimes ticking through 0 the first difference is not helpful
         double diff_2pi = std::abs(mod_2pi(get_oscillation_range()[1])
                                    - mod_2pi(rhs.get_oscillation_range()[0]));
         double diff_abs =
           std::abs(get_oscillation_range()[1] - rhs.get_oscillation_range()[0]);
         DXTBX_ASSERT(std::min(diff_2pi, diff_abs) < eps * get_num_images());
+
+        /*
+        If either properties table contains oscillation_width, remove as this
+        is only needed for scans of one image
+        */
+        if (properties_.contains("oscillation_width")) {
+          delitem_column(properties_, "oscillation_width");
+        }
+        if (rhs_properties.contains("oscillation_width")) {
+          delitem_column(rhs_properties, "oscillation_width");
+        }
       }
-      extend(properties_, rhs.properties_);
+
+      image_range_[1] = rhs.image_range_[1];
+      num_images_ = 1 + image_range_[1] - image_range_[0];
+
+      for (const_iterator it = properties_.begin(); it != properties_.end(); ++it) {
+        DXTBX_ASSERT(rhs_properties.contains(it->first));
+      }
+      extend(properties_, rhs_properties);
     }
 
     /**
@@ -542,15 +583,37 @@ namespace dxtbx { namespace model {
 
     Scan operator[](int index) const {
       using namespace dxtbx::af::flex_table_suite;
-      // Check index
       DXTBX_ASSERT((index >= 0) && (index < get_num_images()));
-      int image_index = get_image_range()[0] + index;
 
-      // Return scan
+      int image_index = image_range_[0] + index;
+      flex_table<scan_property_types> properties_slice =
+        get_properties_slice(boost::python::slice(index, index + 1));
+
       return Scan(
-        vec2<int>(image_index, image_index),
-        getitem_slice(properties_, boost::python::slice(image_index, image_index + 1)),
-        get_batch_offset());
+        vec2<int>(image_index, image_index), properties_slice, get_batch_offset());
+    }
+
+    flex_table<scan_property_types> get_properties_slice(
+      boost::python::slice slice) const {
+      /*
+        Wrapper for slicing the properties table to account for oscillation
+        width being lost in the slice if a Scan with a single image
+      */
+
+      if (properties_.contains("oscillation")) {
+        double oscillation_width = get_oscillation()[1];
+        flex_table<scan_property_types> sliced_properties =
+          dxtbx::af::flex_table_suite::getitem_slice(properties_, slice);
+        if (sliced_properties.size() == 1) {
+          scitbx::af::shared<double> oscillation_width_arr(1);
+          oscillation_width_arr[0] = oscillation_width;
+          dxtbx::af::flex_table_suite::setitem_column(
+            sliced_properties, "oscillation_width", oscillation_width_arr.const_ref());
+          return sliced_properties;
+        }
+        return sliced_properties;
+      }
+      return dxtbx::af::flex_table_suite::getitem_slice(properties_, slice);
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Scan &s);
@@ -561,24 +624,24 @@ namespace dxtbx { namespace model {
     double min_oscillation_width_ = 1e-7;
     int num_images_;
     int batch_offset_;
-    flex_table<property_types> properties_;
+    flex_table<scan_property_types> properties_;
   };
 
   /*
    * Summary for operator<<
   void add_property_summary(std::ostream &os,
                             const std::string property_name,
-                            const flex_table<property_types> &properties,
+                            const flex_table<scan_property_types> &properties,
                             Scan &s) {
     if (property_name == "oscillation") {
       DXTBX_ASSERT(properties.contains("oscillation"));
       vec2<double> oscillation = s.get_oscillation_in_deg();
       os << "    oscillation:   " << oscillation.const_ref() << "\n";
       return;
-    } else if (property_name == "exposure_times") {
-      DXTBX_ASSERT(properties.contains("exposure_times"));
+    } else if (property_name == "exposure_time") {
+      DXTBX_ASSERT(properties.contains("exposure_time"));
       os << "    exposure time: "
-         << properties.get<double>("exposure_times").const_ref()[0] << "\n";
+         << properties.get<double>("exposure_time").const_ref()[0] << "\n";
       return;
     } else if (property_name == "epochs") {
       DXTBX_ASSERT(properties.contains("epochs"));
@@ -595,7 +658,7 @@ namespace dxtbx { namespace model {
     os << "    number of images:   " << s.get_num_images() << "\n";
     os << "    image range:   " << s.get_image_range().const_ref() << "\n";
     /*
-    flex_table<property_types> properties = s.get_properties();
+    flex_table<scan_property_types> properties = s.get_properties();
     for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
       add_property_summary(os, it->first, properties, s);
     }
