@@ -43,9 +43,7 @@ namespace dxtbx { namespace model {
                               double,
                               std::string,
                               vec2<double>,
-                              vec3<double>,
-                              mat3<double>,
-                              int6>::type scan_property_types;
+                              vec3<double> >::type scan_property_types;
 
   typedef dxtbx::af::flex_table<scan_property_types>::const_iterator const_iterator;
 
@@ -384,8 +382,18 @@ namespace dxtbx { namespace model {
         if (!rhs.properties_.contains(it->first)) {
           return false;
         }
-        // TODO explicit column comparison
       }
+
+      // Need to create copies to get around const requirements
+      flex_table<scan_property_types> table1 =
+        flex_table<scan_property_types>(properties_);
+      flex_table<scan_property_types> table2 =
+        flex_table<scan_property_types>(rhs.properties_);
+      bool same_columns = dxtbx::af::flex_table_suite::compare_columns(table1, table2);
+      if (!same_columns) {
+        return false;
+      }
+
       return true;
     }
 
@@ -629,6 +637,7 @@ namespace dxtbx { namespace model {
 
   /*
    * Summary for operator<<
+
   void add_property_summary(std::ostream &os,
                             const std::string property_name,
                             const flex_table<scan_property_types> &properties,
