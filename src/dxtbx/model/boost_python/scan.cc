@@ -63,9 +63,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       {"size_t", {}},
       {"string", {}},
       {"vec2<double>", {}},
-      {"vec3<double>", {}},
-      {"mat3<double>", {}},
-      {"int6", {}}};
+      {"vec3<double>", {}}};
 
     boost::python::list keys = properties_dict.keys();
     boost::python::list values = boost::python::list(properties_dict.values());
@@ -122,16 +120,6 @@ namespace dxtbx { namespace model { namespace boost_python {
                  != properties_map["vec3<double>"].end()) {
         properties[key] =
           boost::python::extract<scitbx::af::shared<vec3<double> > >(value);
-      } else if (std::find(properties_map["mat3<double>"].begin(),
-                           properties_map["mat3<double>"].end(),
-                           key)
-                 != properties_map["mat3<double>"].end()) {
-        properties[key] =
-          boost::python::extract<scitbx::af::shared<mat3<double> > >(value);
-      } else if (std::find(
-                   properties_map["int6"].begin(), properties_map["int6"].end(), key)
-                 != properties_map["int6"].end()) {
-        properties[key] = boost::python::extract<scitbx::af::shared<int6> >(value);
       } else {
         DXTBX_ERROR("Unknown column name " + key);
       }

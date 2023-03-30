@@ -328,6 +328,26 @@ namespace dxtbx { namespace af { namespace flex_table_suite {
     }
   };
 
+  template <typename T>
+  struct compare_column_visitor : public boost::static_visitor<bool> {
+    T &self;
+    typename T::key_type key;
+    compare_column_visitor(T &self_, typename T::key_type key_)
+        : self(self_), key(key_) {}
+
+    template <typename U>
+    bool operator()(const U &other_column) const {
+      U self_column = self[key];
+      DXTBX_ASSERT(self_column.size() == other_column.size());
+      for (std::size_t i = 0; i < self_column.size(); ++i) {
+        if (self_column[i] != other_column[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+  };
+
   /**
    * Initialise the column table from a list of (key, column) pairs
    * @param columns The list of columns
@@ -355,6 +375,21 @@ namespace dxtbx { namespace af { namespace flex_table_suite {
     typename T::mapped_type column = self[key].variant();
     column_to_object_visitor visitor;
     return column.apply_visitor(visitor);
+  }
+
+  template <typename T>
+  bool compare_columns(T &self, T &other) {
+    typedef typename T::const_iterator iterator;
+    DXTBX_ASSERT(self.nrows() == other.nrows());
+    bool same_column;
+    for (iterator it = other.begin(); it != other.end(); ++it) {
+      compare_column_visitor<T> visitor(self, it->first);
+      same_column = it->second.apply_visitor(visitor);
+      if (!same_column) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
