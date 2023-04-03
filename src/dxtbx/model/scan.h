@@ -204,8 +204,7 @@ namespace dxtbx { namespace model {
     }
 
     template <typename T>
-    scitbx::af::shared<T> get_property(
-      const flex_table<scan_property_types>::key_type &key) const {
+    scitbx::af::shared<T> get_property(const typename T::key_type &key) const {
       DXTBX_ASSERT(properties_.contains(key));
       return properties_.get<T>(key);
     }
@@ -624,6 +623,31 @@ namespace dxtbx { namespace model {
       return dxtbx::af::flex_table_suite::getitem_slice(properties_, slice);
     }
 
+    /*
+     * Summary for operator<<
+     */
+    void add_property_summary_to_stream(std::ostream &os,
+                                        const std::string property_name) const {
+      if (property_name == "oscillation") {
+        DXTBX_ASSERT(properties_.contains("oscillation"));
+        vec2<double> oscillation = get_oscillation_in_deg();
+        os << "    oscillation:   " << oscillation.const_ref() << "\n";
+
+      } else if (property_name == "exposure_time") {
+        DXTBX_ASSERT(properties_.contains("exposure_time"));
+        os << "    exposure time: "
+           << properties_.get<double>("exposure_time").const_ref()[0] << "\n";
+
+      } else if (property_name == "epochs") {
+        DXTBX_ASSERT(properties_.contains("epochs"));
+        os << "    init epoch: " << properties_.get<double>("epochs").const_ref()[0]
+           << "\n";
+
+      } else {
+        DXTBX_ERROR("No summary found for " + (property_name));
+      }
+    }
+
     friend std::ostream &operator<<(std::ostream &os, const Scan &s);
 
   private:
@@ -635,43 +659,15 @@ namespace dxtbx { namespace model {
     flex_table<scan_property_types> properties_;
   };
 
-  /*
-   * Summary for operator<<
-
-  void add_property_summary(std::ostream &os,
-                            const std::string property_name,
-                            const flex_table<scan_property_types> &properties,
-                            Scan &s) {
-    if (property_name == "oscillation") {
-      DXTBX_ASSERT(properties.contains("oscillation"));
-      vec2<double> oscillation = s.get_oscillation_in_deg();
-      os << "    oscillation:   " << oscillation.const_ref() << "\n";
-      return;
-    } else if (property_name == "exposure_time") {
-      DXTBX_ASSERT(properties.contains("exposure_time"));
-      os << "    exposure time: "
-         << properties.get<double>("exposure_time").const_ref()[0] << "\n";
-      return;
-    } else if (property_name == "epochs") {
-      DXTBX_ASSERT(properties.contains("epochs"));
-      os << "    init epoch: " << properties.get<double>("epochs").const_ref()[0]
-         << "\n";
-      return;
-    }
-    DXTBX_ERROR("No summary found for " + (property_name));
-  }
-  */
   /** Print Scan information */
   inline std::ostream &operator<<(std::ostream &os, const Scan &s) {
     os << "Scan:\n";
     os << "    number of images:   " << s.get_num_images() << "\n";
     os << "    image range:   " << s.get_image_range().const_ref() << "\n";
-    /*
     flex_table<scan_property_types> properties = s.get_properties();
     for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
-      add_property_summary(os, it->first, properties, s);
+      s.add_property_summary_to_stream(os, it->first);
     }
-    */
     return os;
   }
 
