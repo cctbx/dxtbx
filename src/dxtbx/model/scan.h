@@ -28,21 +28,20 @@ namespace dxtbx { namespace model {
 
   using dxtbx::af::flex_table;
   using dxtbx::af::flex_type_generator;
-  using scitbx::mat3;
   using scitbx::rad_as_deg;
   using scitbx::vec2;
   using scitbx::vec3;
-  using scitbx::af::int6;
   using scitbx::constants::pi;
 
   typedef std::map<std::string, scitbx::af::shared<vec2<int> > > ExpImgRangeMap;
 
   typedef flex_type_generator<bool,
                               int,
-                              std::size_t,
                               double,
                               std::string,
+                              vec2<int>,
                               vec2<double>,
+                              vec3<int>,
                               vec3<double> >::type scan_property_types;
 
   typedef dxtbx::af::flex_table<scan_property_types>::const_iterator const_iterator;
@@ -139,7 +138,7 @@ namespace dxtbx { namespace model {
      *                     unique batch numbers for multi-crystal datasets)
      */
     Scan(vec2<int> image_range,
-         flex_table<scan_property_types> properties_table,
+         flex_table<scan_property_types> &properties_table,
          int batch_offset = 0)
         : image_range_(image_range),
           num_images_(1 + image_range_[1] - image_range_[0]),
