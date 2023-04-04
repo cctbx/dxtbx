@@ -155,6 +155,11 @@ class ScanFactory:
         )
 
     @staticmethod
+    def make_scan_from_properties(image_range, properties, batch_offset=0, deg=True):
+
+        return Scan(tuple(map(int, image_range)), properties, batch_offset, deg)
+
+    @staticmethod
     def single_file(filename, exposure_times, osc_start, osc_width, epoch):
         """Construct an scan instance for a single image."""
         index = scan_helper_image_files.image_to_index(os.path.split(filename)[-1])
