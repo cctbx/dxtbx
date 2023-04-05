@@ -10,6 +10,7 @@ import time
 
 from iotbx.detectors.saturn import SaturnImage
 from scitbx import matrix
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
@@ -85,12 +86,58 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
         """Initialize the structure for the goniometer - this will need to
         correctly compose the axes given in the image header. In this case
         this is made rather straightforward as the image header has the
-        calculated rotation axis stored in it. We could work from the
+        calculated rotation axis stored in it. We work from the
         rest of the header and construct a goniometer model."""
 
-        axis = tuple(map(float, self._header_dictionary["ROTATION_VECTOR"].split()))
+        # Decide between single-axis and multi-axis
 
-        return self._goniometer_factory.known_axis(axis)
+        names = [
+            e.strip() for e in self._header_dictionary["CRYSTAL_GONIO_NAMES"].split()
+        ]
+
+        rot_axis = tuple(map(float, self._header_dictionary["ROTATION_VECTOR"].split()))
+
+        if len(names) == 1:
+            return self._goniometer_factory.known_axis(rot_axis)
+
+        # Multi-axis goniometer
+
+        values = [
+            float(e) for e in self._header_dictionary["CRYSTAL_GONIO_VALUES"].split()
+        ]
+        units = [
+            e.strip() for e in self._header_dictionary["CRYSTAL_GONIO_UNITS"].split()
+        ]
+        axis_elts = [
+            float(e) for e in self._header_dictionary["CRYSTAL_GONIO_VECTORS"].split()
+        ]
+        scan_axis = self._header_dictionary["ROTATION_AXIS_NAME"].strip()
+        axes = [matrix.col(axis_elts[3 * j : 3 * (j + 1)]) for j in range(len(units))]
+
+        # Take only elements that have corresponding units of 'deg' (which is
+        # probably all of them).
+        filt = [e == "deg" for e in units]
+        values = [e for e, f in zip(values, filt) if f]
+        names = [e for e, f in zip(names, filt) if f]
+        axes = [e for e, f in zip(axes, filt) if f]
+
+        # Multi-axis gonio requires axes in order as viewed from crystal to gonio
+        # base. Assume the SMV header records them in reverse order.
+
+        axes = flex.vec3_double(reversed(axes))
+        names = flex.std_string(reversed(names))
+        values = flex.double(reversed(values))
+        scan_axis = flex.first_index(names, scan_axis)
+        gonio = self._goniometer_factory.make_multi_axis_goniometer(
+            axes, values, names, scan_axis
+        )
+
+        # The calculated rotation axis is also recorded in the header. We
+        # use this to check that the goniometer is as expected
+        for e1, e2 in zip(rot_axis, gonio.get_rotation_axis()):
+            assert abs(e1 - e2) < 1e-6
+
+        return gonio
 
     def _detector(self):
         """Return a model for the detector, allowing for two-theta offsets
