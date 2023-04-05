@@ -266,7 +266,7 @@ namespace dxtbx { namespace model {
       }
 
       DXTBX_ASSERT(properties_.size() > 1);
-      return vec2<double>(osc[0], osc[1]);
+      return vec2<double>(osc[0], osc[1] - osc[0]);
     }
 
     vec2<double> get_oscillation_in_deg() const {
