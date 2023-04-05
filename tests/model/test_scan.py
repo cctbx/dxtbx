@@ -27,7 +27,7 @@ def test_scan_wrap_around_zero():
         assert s.get_oscillation()[1] == 1
         print(s.get_oscillation())
         s0 += s
-    assert s0.get_oscillation() == (350, 1)
+    assert s0.get_oscillation() == pytest.approx((350, 1))
     assert s0.get_image_range() == (350, 369)
 
 

@@ -26,6 +26,10 @@ namespace dxtbx { namespace model {
 
   /** Convert the angle mod 2PI */
   inline double mod_2pi(double angle) {
+    // round angle to 5 decimal places to avoid numerical imprecision
+    const double multiplier = std::pow(10.0, 5);
+    angle = std::ceil(angle * multiplier) / multiplier;
+
     return angle - two_pi * floor(angle / two_pi);
   }
 
