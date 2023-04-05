@@ -39,9 +39,7 @@ namespace dxtbx { namespace model {
                               int,
                               double,
                               std::string,
-                              vec2<int>,
                               vec2<double>,
-                              vec3<int>,
                               vec3<double> >::type scan_property_types;
 
   typedef dxtbx::af::flex_table<scan_property_types>::const_iterator const_iterator;

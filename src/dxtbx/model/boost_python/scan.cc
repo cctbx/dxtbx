@@ -99,9 +99,6 @@ namespace dxtbx { namespace model { namespace boost_python {
           if (element_type == "float") {
             properties[key] =
               boost::python::extract<scitbx::af::shared<vec2<double> > >(value);
-          } else if (element_type == "int") {
-            properties[key] =
-              boost::python::extract<scitbx::af::shared<vec2<int> > >(value);
           } else {
             throw DXTBX_ERROR("Unknown type for column name " + key);
           }
@@ -109,9 +106,6 @@ namespace dxtbx { namespace model { namespace boost_python {
           if (element_type == "float") {
             properties[key] =
               boost::python::extract<scitbx::af::shared<vec3<double> > >(value);
-          } else if (element_type == "int") {
-            properties[key] =
-              boost::python::extract<scitbx::af::shared<vec3<int> > >(value);
           } else {
             throw DXTBX_ERROR("Unknown type for column name " + key);
           }
@@ -157,7 +151,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       std::size_t ncols = extract<std::size_t>(state[1]);
       boost::python::dict properties_dict = extract<dict>(state[2]);
       DXTBX_ASSERT(len(properties_dict) == ncols);
-      obj.set_properties(extract_properties_table(properties_dict, nrows));
+      flex_table<scan_property_types> properties =
+        extract_properties_table(properties_dict, nrows);
+      obj.set_properties(properties);
     }
   };
 
@@ -428,6 +424,10 @@ namespace dxtbx { namespace model { namespace boost_python {
     return new Scan(image_range, properties, batch_offset);
   }
 
+  static Scan *make_scan_wo_properties(vec2<int> image_range, int batch_offset) {
+    return new Scan(image_range, batch_offset);
+  }
+
   static vec2<double> get_oscillation_range(const Scan &scan, bool deg) {
     vec2<double> range = scan.get_oscillation_range();
     return deg ? rad_as_deg(range) : range;
@@ -616,6 +616,10 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("properties"),
                              arg("batch_offset") = 0,
                              arg("deg") = true)))
+      .def("__init__",
+           make_constructor(&make_scan_wo_properties,
+                            default_call_policies(),
+                            (arg("image_range"), arg("batch_offset") = 0)))
       .def("get_image_range", &Scan::get_image_range)
       .def("get_valid_image_ranges", get_valid_image_ranges)
       .def("set_valid_image_ranges", set_valid_image_ranges)
@@ -679,14 +683,12 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_properties", &set_properties_table_from_dict, (arg("properties_dict")))
       .def("set_property", &set_scan_property<bool>, (arg("key"), arg("value")))
       .def("set_property", &set_scan_property<int>, (arg("key"), arg("value")))
-      .def("set_property", &set_scan_property<double>, (arg("key"), arg("value")))
       .def("set_property", &set_scan_property<std::string>, (arg("key"), arg("value")))
       .def(
         "set_property", &set_scan_property<vec2<double> >, (arg("key"), arg("value")))
       .def(
         "set_property", &set_scan_property<vec3<double> >, (arg("key"), arg("value")))
-      .def("set_property", &set_scan_property<vec2<int> >, (arg("key"), arg("value")))
-      .def("set_property", &set_scan_property<vec3<int> >, (arg("key"), arg("value")))
+      .def("set_property", &set_scan_property<double>, (arg("key"), arg("value")))
       .def(self == self)
       .def(self != self)
       .def(self < self)
