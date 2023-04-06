@@ -24,6 +24,7 @@
 #include <scitbx/vec2.h>
 #include <scitbx/vec3.h>
 #include <scitbx/mat3.h>
+#include <cctbx/miller.h>
 
 using boost::optional;
 using std::cout;
@@ -43,7 +44,8 @@ using grid = af::versa<T, af::flex_grid<>>;
     grid<long>, grid<int8_t>, grid<int16_t>, grid<int32_t>, grid<int64_t>,            \
     grid<float>, grid<double>, grid<scitbx::vec3<double>>, grid<scitbx::vec3<int>>,   \
     grid<scitbx::vec2<double>>, grid<scitbx::mat3<double>>,                           \
-    grid<af::tiny<std::size_t, 2>>, grid<std::complex<double>>
+    grid<af::tiny<std::size_t, 2>>, grid<std::complex<double>>,                       \
+    grid<cctbx::miller::index<int>>
 // Unwrapped, and possibly doesn't make sense:
 // void wrap_flex_std_string(); - differently sized per element
 // void wrap_flex_sym_mat3_double(); - nonlinear memory layout
@@ -76,6 +78,31 @@ py::buffer_info get_buffer_specific(grid<T> flex) {
 
 template <typename T>
 py::buffer_info get_buffer_specific(grid<scitbx::vec3<T>> flex) {
+  std::vector<size_t> dim_sizes;
+  for (auto size : flex.accessor().all()) {
+    dim_sizes.push_back(size);
+  }
+  dim_sizes.push_back(3);
+
+  std::vector<size_t> strides;
+  for (int i = 0; i < dim_sizes.size(); ++i) {
+    auto stride = sizeof(T);
+    for (int j = i + 1; j < dim_sizes.size(); ++j) {
+      stride *= dim_sizes[j];
+    }
+    strides.push_back(stride);
+  }
+
+  return py::buffer_info(&flex.front(),
+                         sizeof(T),
+                         py::format_descriptor<T>::format(),
+                         dim_sizes.size(),
+                         dim_sizes,
+                         strides);
+}
+
+template <typename T>
+py::buffer_info get_buffer_specific(grid<cctbx::miller::index<T>> flex) {
   std::vector<size_t> dim_sizes;
   for (auto size : flex.accessor().all()) {
     dim_sizes.push_back(size);
@@ -590,4 +617,5 @@ PYBIND11_MODULE(dxtbx_flumpy, m) {
   // Make sure that we have imported flex - cannot do boost::python conversions
   // otherwise
   pybind11::module::import("scitbx.array_family.flex");
+  pybind11::module::import("cctbx.array_family.flex");
 }

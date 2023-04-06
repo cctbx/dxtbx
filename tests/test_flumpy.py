@@ -5,7 +5,7 @@ import itertools
 import numpy as np
 import pytest
 
-import scitbx.array_family.flex as flex
+import cctbx.array_family.flex as flex
 
 import dxtbx.flumpy as flumpy
 
@@ -28,6 +28,7 @@ lookup_flex_type_to_numpy = {
     "vec3_int": "i",
     "vec2_double": "d",
     "tiny_size_t_2": "Q",
+    "miller_index": "i",
 }
 
 # On POSIX platforms, long and q are the same and numpy tends to give q's
@@ -174,7 +175,9 @@ def test_reverse_bool():
     assert fo.count(True) == npo.sum()
 
 
-@pytest.mark.parametrize("flex_vec", [flex.vec3_double, flex.vec3_int])
+@pytest.mark.parametrize(
+    "flex_vec", [flex.vec3_double, flex.vec3_int, flex.miller_index]
+)
 def test_vec3(flex_vec):
     basic_vector = [(i, i * 2, i * 3) for i in range(10)]
     fo = flex_vec(basic_vector)
@@ -186,7 +189,9 @@ def test_vec3(flex_vec):
     assert (as_np == fo).all()
 
 
-@pytest.mark.parametrize("flex_vec", [flex.vec3_double, flex.vec3_int])
+@pytest.mark.parametrize(
+    "flex_vec", [flex.vec3_double, flex.vec3_int, flex.miller_index]
+)
 def test_reverse_vec3(flex_vec):
     dtype = lookup_flex_type_to_numpy[flex_vec.__name__]
     no = np.zeros((5, 3), dtype=dtype)
