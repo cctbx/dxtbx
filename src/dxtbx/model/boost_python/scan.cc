@@ -681,6 +681,7 @@ namespace dxtbx { namespace model { namespace boost_python {
            (arg("key")))
       .def("get_properties", &get_properties_dict)
       .def("set_properties", &set_properties_table_from_dict, (arg("properties_dict")))
+      .def("set_property", &set_scan_property<double>, (arg("key"), arg("value")))
       .def("set_property", &set_scan_property<bool>, (arg("key"), arg("value")))
       .def("set_property", &set_scan_property<int>, (arg("key"), arg("value")))
       .def("set_property", &set_scan_property<std::string>, (arg("key"), arg("value")))
@@ -688,7 +689,6 @@ namespace dxtbx { namespace model { namespace boost_python {
         "set_property", &set_scan_property<vec2<double> >, (arg("key"), arg("value")))
       .def(
         "set_property", &set_scan_property<vec3<double> >, (arg("key"), arg("value")))
-      .def("set_property", &set_scan_property<double>, (arg("key"), arg("value")))
       .def(self == self)
       .def(self != self)
       .def(self < self)

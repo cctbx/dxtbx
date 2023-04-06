@@ -314,7 +314,6 @@ namespace dxtbx { namespace model {
     }
 
     void set_oscillation(vec2<double> oscillation) {
-      DXTBX_ASSERT(oscillation[1] >= 0.0);
       scitbx::af::shared<double> oscillation_arr(num_images_);
       for (std::size_t i = 0; i < num_images_; ++i) {
         oscillation_arr[i] = oscillation[0] + oscillation[1] * i;
