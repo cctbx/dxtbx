@@ -205,6 +205,15 @@ def test_reverse_vec3(flex_vec):
         flumpy.vec_from_numpy(no.reshape((1, 15)))
 
 
+@pytest.mark.parametrize("dtype", [np.int32, np.intc])
+def test_reverse_vec3_dtype(dtype):
+    no = np.zeros((5, 3), dtype=dtype)
+    fo = flumpy.vec_from_numpy(no)
+    assert fo.all() == (5,)
+    fo[0] = (1, 2, 3)
+    assert (no[0] == (1, 2, 3)).all()
+
+
 @pytest.mark.parametrize("dtype", [np.int32, np.intc, int])
 def test_reverse_miller_index(dtype):
     hkl = np.array([(1, 0, 0), (0, 1, 0), (0, 0, 1)], dtype=dtype)
