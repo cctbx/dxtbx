@@ -205,22 +205,24 @@ def test_reverse_vec3(flex_vec):
         flumpy.vec_from_numpy(no.reshape((1, 15)))
 
 
-def test_reverse_miller_index():
-    hkl = np.array([(1, 0, 0), (0, 1, 0), (0, 0, 1)], dtype=np.int32)
-    mi = flumpy.miller_index_from_numpy(hkl)
-    assert isinstance(mi, cctbx_flex.miller_index)
-    assert len(mi) == 3
-    for i in range(len(mi)):
-        assert (mi[i] == hkl[i]).all()
+@pytest.mark.parametrize("dtype", [np.int32, np.intc, int])
+def test_reverse_miller_index(dtype):
+    hkl = np.array([(1, 0, 0), (0, 1, 0), (0, 0, 1)], dtype=dtype)
+    if dtype is int and np.dtype("l").itemsize != np.dtype("i").itemsize:
+        with pytest.raises(ValueError):
+            flumpy.miller_index_from_numpy(hkl)
+    else:
+        mi = flumpy.miller_index_from_numpy(hkl)
+        assert isinstance(mi, cctbx_flex.miller_index)
+        assert len(mi) == 3
+        for i in range(len(mi)):
+            assert (mi[i] == hkl[i]).all()
 
-    with pytest.raises(ValueError):
-        flumpy.miller_index_from_numpy(hkl.reshape((1, 9)))
+        with pytest.raises(ValueError):
+            flumpy.miller_index_from_numpy(hkl.reshape((1, 9)))
 
-    with pytest.raises(ValueError):
-        flumpy.miller_index_from_numpy(hkl.astype(int))
-
-    with pytest.raises(ValueError):
-        flumpy.miller_index_from_numpy(hkl.astype(float))
+        with pytest.raises(ValueError):
+            flumpy.miller_index_from_numpy(hkl.astype(float))
 
 
 @pytest.mark.parametrize(
