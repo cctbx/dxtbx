@@ -635,6 +635,5 @@ PYBIND11_MODULE(dxtbx_flumpy, m) {
 
   // Make sure that we have imported flex - cannot do boost::python conversions
   // otherwise
-  pybind11::module::import("scitbx.array_family.flex");
   pybind11::module::import("cctbx.array_family.flex");
 }
