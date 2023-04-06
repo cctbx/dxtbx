@@ -17,6 +17,7 @@
 #include <scitbx/vec2.h>
 #include <scitbx/array_family/shared.h>
 #include <dxtbx/error.h>
+#include <iostream>
 
 namespace dxtbx { namespace model {
 
@@ -33,23 +34,62 @@ namespace dxtbx { namespace model {
    * Check if the angle is within the given range. The angular
    * range can be any two angles, plus or minus. The angle is to check can
    * also be any angle. The angle is considered within the range if the range
-   * spans more than 2PI degrees and the angle is within the two range angles
+   * spans more than 2PI degrees or the angle is within the two range angles
    * when mod 2PI.
    * @param range The angular range
    * @param angle The angle to check
    * @returns True/False the angle is within the range
    */
+
   inline bool is_angle_in_range(vec2<double> range, double angle) {
-    double diff_range0 = angle - range[0];
-    double diff_range1 = angle - range[1];
-    if (std::abs(diff_range0) < 2.0 * std::numeric_limits<double>::epsilon()) {
-      diff_range0 = 0.0;
+    auto sign_changed = [](double old_value, double new_value) {
+      if (old_value < 0 && new_value > 0) {
+        return true;
+      }
+      if (old_value > 0 && new_value < 0) {
+        return true;
+      }
+      return false;
+    };
+
+    // All angles in range mod_2pi
+    if (std::abs(range[1] - range[0]) >= two_pi) {
+      return true;
     }
-    double diff_angle_range0 = mod_2pi(diff_range0);
-    double diff_angle_range1 = mod_2pi(diff_range1);
-    return range[1] - range[0] >= two_pi || diff_angle_range1 >= diff_angle_range0
-           || std::abs(diff_angle_range1)
-                < 1.0 * std::numeric_limits<double>::epsilon();
+
+    double range_start;
+    double range_end;
+    double eps = std::numeric_limits<double>::epsilon();
+
+    // Account for range possibly being negative
+    range_start = std::min(range[0], range[1]);
+    range_end = std::max(range[0], range[1]);
+
+    // Simple case
+    if (angle >= range_start and angle <= range_end) {
+      return true;
+    }
+
+    // Case where angle and/or range is outside of 0,360
+    float angle_mod_2pi = mod_2pi(angle);
+    float range0_mod_2pi = mod_2pi(range[0]);
+    float range1_mod_2pi = mod_2pi(range[1]);
+
+    // If either range element is 0, and the other element has changed sign, set to 2pi
+    if (range[0] <= eps && range[0] >= -eps && sign_changed(range[1], range1_mod_2pi)) {
+      range0_mod_2pi = two_pi;
+    }
+    if (range[1] <= eps && range[1] >= -eps && sign_changed(range[0], range0_mod_2pi)) {
+      range1_mod_2pi = two_pi;
+    }
+
+    // Account for range originally being negative
+    range_start = std::min(range0_mod_2pi, range1_mod_2pi);
+    range_end = std::max(range0_mod_2pi, range1_mod_2pi);
+    if (angle_mod_2pi >= range_start and angle_mod_2pi <= range_end) {
+      return true;
+    }
+    return false;
   }
 
   /**
