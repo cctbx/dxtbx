@@ -576,7 +576,7 @@ py::object miller_index_from_numpy(py::array np_array) {
   }
 
   auto dtype = np_array.attr("dtype").attr("char").cast<char>();
-  if (dtype != 'i' or (dtype == 'l' && (sizeof(long) != sizeof(int)))) {
+  if ((dtype != 'i') || (dtype == 'l' && (sizeof(long) != sizeof(int)))) {
     throw std::invalid_argument(
       std::string("Only int32 or intc types are supported - cannot convert '")
       + std::to_string(dtype) + "'");
