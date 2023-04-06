@@ -17,7 +17,6 @@
 #include <scitbx/vec2.h>
 #include <scitbx/array_family/shared.h>
 #include <dxtbx/error.h>
-#include <iostream>
 
 namespace dxtbx { namespace model {
 
