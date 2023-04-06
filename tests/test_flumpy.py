@@ -204,6 +204,15 @@ def test_reverse_vec3(flex_vec):
         flumpy.vec_from_numpy(no.reshape((1, 15)))
 
 
+def test_reverse_miller_index():
+    hkl = np.array([(1, 0, 0), (0, 1, 0), (0, 0, 1)], dtype=np.int32)
+    mi = flumpy.miller_index_from_numpy(hkl)
+    assert isinstance(mi, flex.miller_index)
+    assert len(mi) == 3
+    for i in range(len(mi)):
+        assert (mi[i] == hkl[i]).all()
+
+
 @pytest.mark.parametrize("flex_vec", [flex.vec2_double, flex.tiny_size_t_2])
 def test_vec2(flex_vec):
     basic_vector = [(i, i * 2) for i in range(10)]

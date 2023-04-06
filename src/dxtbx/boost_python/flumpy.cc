@@ -567,6 +567,22 @@ py::object vecs_from_numpy(py::array np_array) {
     "Invalid input array: last numpy dimension must be 2 or 3 to convert to vector");
 }
 
+/// Decide which sized vector we want to convert to, and hand off to the
+/// specialization
+py::object miller_index_from_numpy(py::array np_array) {
+  // Check that this array is contiguous
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
+  }
+
+  if (np_array.shape(np_array.ndim() - 1) == 3) {
+    return vec_from_numpy<cctbx::miller::index>(np_array);
+  }
+  throw std::invalid_argument(
+    "Invalid input array: last numpy dimension must be 3 to convert to "
+    "cctbx::miller::index");
+}
+
 py::object mat3_from_numpy(py::array np_array) {
   // Check that this array is contiguous
   if (!is_array_c_contiguous(np_array)) {
@@ -613,6 +629,9 @@ PYBIND11_MODULE(dxtbx_flumpy, m) {
         &vecs_from_numpy,
         "Convert a numpy object to a flex.vec2 or .vec3, depending on input array");
   m.def("mat3_from_numpy", &mat3_from_numpy, "Convert a numpy object to a flex.mat3");
+  m.def("miller_index_from_numpy",
+        &miller_index_from_numpy,
+        "Convert a numpy object to a flex.miller_index");
 
   // Make sure that we have imported flex - cannot do boost::python conversions
   // otherwise
