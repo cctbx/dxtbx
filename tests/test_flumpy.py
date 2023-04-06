@@ -212,6 +212,15 @@ def test_reverse_miller_index():
     for i in range(len(mi)):
         assert (mi[i] == hkl[i]).all()
 
+    with pytest.raises(ValueError):
+        flumpy.miller_index_from_numpy(hkl.reshape((1, 9)))
+
+    with pytest.raises(ValueError):
+        flumpy.miller_index_from_numpy(hkl.astype(int))
+
+    with pytest.raises(ValueError):
+        flumpy.miller_index_from_numpy(hkl.astype(float))
+
 
 @pytest.mark.parametrize("flex_vec", [flex.vec2_double, flex.tiny_size_t_2])
 def test_vec2(flex_vec):

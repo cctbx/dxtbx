@@ -575,6 +575,13 @@ py::object miller_index_from_numpy(py::array np_array) {
     throw ERR_NON_CONTIGUOUS;
   }
 
+  auto dtype = np_array.attr("dtype").attr("char").cast<char>();
+  if (dtype != 'i') {
+    throw std::invalid_argument(
+      std::string("Only int32 type is supported - cannot convert '")
+      + std::to_string(dtype) + "'");
+  }
+
   if (np_array.shape(np_array.ndim() - 1) == 3) {
     return vec_from_numpy<cctbx::miller::index>(np_array);
   }
