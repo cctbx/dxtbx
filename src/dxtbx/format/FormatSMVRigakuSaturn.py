@@ -89,29 +89,15 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
         calculated rotation axis stored in it. We work from the
         rest of the header and construct a goniometer model."""
 
-        # Decide between single-axis and multi-axis
+        head_dict = self._header_dictionary
 
-        names = [
-            e.strip() for e in self._header_dictionary["CRYSTAL_GONIO_NAMES"].split()
-        ]
+        names = [e.strip() for e in head_dict["CRYSTAL_GONIO_NAMES"].split()]
+        values = [float(e) for e in head_dict["CRYSTAL_GONIO_VALUES"].split()]
+        units = [e.strip() for e in head_dict["CRYSTAL_GONIO_UNITS"].split()]
+        axis_elts = [float(e) for e in head_dict["CRYSTAL_GONIO_VECTORS"].split()]
 
-        rot_axis = tuple(map(float, self._header_dictionary["ROTATION_VECTOR"].split()))
-
-        if len(names) == 1:
-            return self._goniometer_factory.known_axis(rot_axis)
-
-        # Multi-axis goniometer
-
-        values = [
-            float(e) for e in self._header_dictionary["CRYSTAL_GONIO_VALUES"].split()
-        ]
-        units = [
-            e.strip() for e in self._header_dictionary["CRYSTAL_GONIO_UNITS"].split()
-        ]
-        axis_elts = [
-            float(e) for e in self._header_dictionary["CRYSTAL_GONIO_VECTORS"].split()
-        ]
-        scan_axis = self._header_dictionary["ROTATION_AXIS_NAME"].strip()
+        rot_axis = tuple(map(float, head_dict["ROTATION_VECTOR"].split()))
+        scan_axis = head_dict["ROTATION_AXIS_NAME"].strip()
         axes = [matrix.col(axis_elts[3 * j : 3 * (j + 1)]) for j in range(len(units))]
 
         # Take only elements that have corresponding units of 'deg' (which is
@@ -128,6 +114,7 @@ class FormatSMVRigakuSaturn(FormatSMVRigaku):
         names = flex.std_string(reversed(names))
         values = flex.double(reversed(values))
         scan_axis = flex.first_index(names, scan_axis)
+        assert scan_axis is not None
         gonio = self._goniometer_factory.make_multi_axis_goniometer(
             axes, values, names, scan_axis
         )
