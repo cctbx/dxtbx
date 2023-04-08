@@ -41,24 +41,22 @@ namespace dxtbx { namespace model {
    */
 
   inline bool is_angle_in_range(vec2<double> range, double angle) {
-    auto sign_changed = [](double old_value, double new_value) {
-      if (old_value < 0 && new_value > 0) {
-        return true;
-      }
-      if (old_value > 0 && new_value < 0) {
-        return true;
-      }
-      return false;
+    auto is_zero = [](double value, double eps) {
+      return value <= eps && value >= -eps;
     };
+
+    auto in_range = [](double value, double range_start, double range_end, double eps) {
+      return value >= range_start - eps && value <= range_end + eps;
+    };
+
+    double range_start;
+    double range_end;
+    double eps = 1e-7;
 
     // All angles in range mod_2pi
     if (std::abs(range[1] - range[0]) >= two_pi) {
       return true;
     }
-
-    double range_start;
-    double range_end;
-    double eps = std::numeric_limits<double>::epsilon();
 
     // Account for range possibly being negative
     range_start = std::min(range[0], range[1]);
@@ -69,25 +67,33 @@ namespace dxtbx { namespace model {
       return true;
     }
 
-    // Case where angle and/or range is outside of 0,360
-    float angle_mod_2pi = mod_2pi(angle);
-    float range0_mod_2pi = mod_2pi(range[0]);
-    float range1_mod_2pi = mod_2pi(range[1]);
+    // Case where angle and/or range is outside of 0,2pi
+    double angle_mod_2pi = mod_2pi(angle);
+    double range0_mod_2pi = mod_2pi(range[0]);
+    double range1_mod_2pi = mod_2pi(range[1]);
 
-    // If either range element is 0, and the other element has changed sign, set to 2pi
-    if (range[0] <= eps && range[0] >= -eps && sign_changed(range[1], range1_mod_2pi)) {
+    /*
+     * If either range element is 0, and the other element is -ve,
+     * set to 2pi.
+     * E.g. if original range (deg) = (0, -90)
+     * mod_2pi would give the range as (0, 270), but what we want
+     * is (360, 270)
+     */
+    if (is_zero(range[0], eps) && range[1] < 0) {
       range0_mod_2pi = two_pi;
     }
-    if (range[1] <= eps && range[1] >= -eps && sign_changed(range[0], range0_mod_2pi)) {
+    if (is_zero(range[1], eps) && range[0] < 0) {
       range1_mod_2pi = two_pi;
     }
 
-    // Account for range originally being negative
+    // Account for original direction possibly being negative
     range_start = std::min(range0_mod_2pi, range1_mod_2pi);
     range_end = std::max(range0_mod_2pi, range1_mod_2pi);
-    if (angle_mod_2pi >= range_start and angle_mod_2pi <= range_end) {
+
+    if (in_range(angle_mod_2pi, range_start, range_end, eps)) {
       return true;
     }
+
     return false;
   }
 

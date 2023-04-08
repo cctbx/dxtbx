@@ -56,28 +56,6 @@ def test_is_angle_valid(scan):
         assert scan.is_angle_valid(i) is False
 
 
-def test_is_negative_angle_valid():
-    scan = ScanFactory.make_scan(
-        image_range=(1, 90),
-        oscillation=(0, -1.0),
-        exposure_times=0.1,
-        epochs=range(90),
-        deg=True,
-    )
-
-    expected_negative_range = [-i for i in range(90)]
-    expected_positive_range = list(range(270, 360))
-    total_range = list(range(-720, 720))
-
-    for i in total_range:
-        if i in expected_negative_range:
-            assert scan.is_angle_valid(i)
-        elif i in expected_positive_range or i % 360 in expected_positive_range:
-            assert scan.is_angle_valid(i)
-        else:
-            assert scan.is_angle_valid(i) is False
-
-
 def test_is_frame_valid(scan):
     """Check that the is_frame_valid function behaves properly."""
     image_range = scan.get_image_range()

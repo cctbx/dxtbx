@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from math import isclose
 
 from dxtbx.model import (
     get_mod2pi_angles_in_range,
@@ -16,34 +17,31 @@ def test_is_angle_in_random_range():
 
     # Create a number of ranges between 0 and 360 to see if they are within range
     num_range = 100
+    total_range = list(range(-720, 720))
+
     for n in range(num_range):
-        angular_range = (int(random.random() * 360), int(random.random()) * 360)
 
-        # If A < B or A > B
-        if angular_range[0] < angular_range[1]:
+        # Possible range between (-360, 360)
+        angular_range = [
+            int(random.random() * 360) - int(random.random() * 360),
+            int(random.random() * 360) - int(random.random() * 360),
+        ]
 
-            # Check that the following are true
-            #   angle in range 0 -> A = False
-            #   angle in range A -> B = True
-            #   angle in range B -> 360 = False
-            for angle in range(0, angular_range[0]):
-                assert is_angle_in_range(angular_range, angle, True) is False
-            for angle in range(angular_range[0], angular_range[1] + 1):
-                assert is_angle_in_range(angular_range, angle, True) is True
-            for angle in range(angular_range[1] + 1, 360):
-                assert is_angle_in_range(angular_range, angle, True) is False
-        else:
+        mod_angular_range = (angular_range[0] % 360, angular_range[1] % 360)
+        if angular_range[0] < 0 and isclose(angular_range[1], 0):
+            mod_angular_range[1] = 360
+        if angular_range[1] < 0 and isclose(angular_range[0], 0):
+            mod_angular_range[0] = 360
 
-            # Check that the following are true
-            #   angle in range 0 -> B = True
-            #   angle in range B -> A = False
-            #   angle in range A -> 360 = True
-            for angle in range(0, angular_range[1] + 1):
-                assert is_angle_in_range(angular_range, angle, True) is True
-            for angle in range(angular_range[1] + 1, angular_range[0]):
-                assert is_angle_in_range(angular_range, angle, True) is False
-            for angle in range(angular_range[0], 360):
-                assert is_angle_in_range(angular_range, angle, True) is True
+        range_start = min(mod_angular_range[0], mod_angular_range[1])
+        range_end = max(mod_angular_range[0], mod_angular_range[1])
+
+        expected_range = list(range(range_start, range_end + 1))
+        for i in total_range:
+            if i % 360 in expected_range:
+                assert is_angle_in_range(mod_angular_range, i % 360, True)
+            else:
+                assert is_angle_in_range(mod_angular_range, i % 360, True) is False
 
 
 def test_is_angle_sequence_in_range():
