@@ -27,7 +27,7 @@ def test_is_angle_in_random_range():
             int(random.random() * 360) - int(random.random() * 360),
         ]
 
-        mod_angular_range = (angular_range[0] % 360, angular_range[1] % 360)
+        mod_angular_range = [angular_range[0] % 360, angular_range[1] % 360]
         if angular_range[0] < 0 and isclose(angular_range[1], 0):
             mod_angular_range[1] = 360
         if angular_range[1] < 0 and isclose(angular_range[0], 0):
