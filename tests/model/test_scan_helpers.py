@@ -37,6 +37,11 @@ def test_is_angle_in_random_range():
         range_end = max(mod_angular_range[0], mod_angular_range[1])
 
         expected_range = list(range(range_start, range_end + 1))
+
+        # Special case for 360, where 0 is also valid
+        if 360 in expected_range:
+            expected_range.append(0)
+
         for i in total_range:
             if i % 360 in expected_range:
                 assert is_angle_in_range(mod_angular_range, i % 360, True)

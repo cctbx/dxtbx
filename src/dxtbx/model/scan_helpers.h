@@ -41,8 +41,8 @@ namespace dxtbx { namespace model {
    */
 
   inline bool is_angle_in_range(vec2<double> range, double angle) {
-    auto is_zero = [](double value, double eps) {
-      return value <= eps && value >= -eps;
+    auto is_number = [](double value, double number, double eps) {
+      return std::abs(value - number) <= eps;
     };
 
     auto in_range = [](double value, double range_start, double range_end, double eps) {
@@ -78,11 +78,18 @@ namespace dxtbx { namespace model {
      * E.g. if original range (deg) = (0, -90)
      * mod_2pi would give the range as (0, 270), but what we want
      * is (360, 270)
+     * If range element is 2pi, keep this instead of setting to zero
+     * E.g. if range (deg) = (360, 150), the mod_2pi range should be (150, 360),
+     * not (0, 150)
      */
-    if (is_zero(range[0], eps) && range[1] < 0) {
+    if (is_number(range[0], 0.0, eps) && range[1] < 0) {
+      range0_mod_2pi = two_pi;
+    } else if (is_number(range[0], two_pi, eps)) {
       range0_mod_2pi = two_pi;
     }
-    if (is_zero(range[1], eps) && range[0] < 0) {
+    if (is_number(range[1], 0.0, eps) && range[0] < 0) {
+      range1_mod_2pi = two_pi;
+    } else if (is_number(range[1], two_pi, eps)) {
       range1_mod_2pi = two_pi;
     }
 
@@ -92,6 +99,12 @@ namespace dxtbx { namespace model {
 
     if (in_range(angle_mod_2pi, range_start, range_end, eps)) {
       return true;
+    }
+    // Special case for angle == 0.0, where two_pi should also be checked
+    if (is_number(angle_mod_2pi, 0.0, eps)) {
+      if (in_range(two_pi, range_start, range_end, eps)) {
+        return true;
+      }
     }
 
     return false;

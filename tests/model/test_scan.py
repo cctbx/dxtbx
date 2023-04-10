@@ -37,6 +37,7 @@ def test_is_angle_valid():
 
     expected_negative_range = [-i for i in range(91)]
     expected_positive_range = list(range(270, 360))
+    expected_positive_range.append(0)
     total_range = list(range(-720, 720))
 
     for i in total_range:
