@@ -597,7 +597,7 @@ namespace dxtbx { namespace model {
     }
 
     flex_table<scan_property_types> get_properties_slice(
-      boost::python::slice slice) const {
+      boost::python::slice const &slice) const {
       /*
         Wrapper for slicing the properties table to account for oscillation
         width being lost in the slice if a Scan with a single image

@@ -168,7 +168,8 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
         LIBS=env_etc.libs_python
         + env_etc.libm
         + env_etc.dxtbx_libs
-        + env_etc.dxtbx_hdf5_libs,
+        + env_etc.dxtbx_hdf5_libs
+        + env["LIBS"],
     )
 
     dxtbx_format_image_ext_sources = [

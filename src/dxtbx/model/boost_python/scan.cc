@@ -543,25 +543,14 @@ namespace dxtbx { namespace model { namespace boost_python {
     DXTBX_ASSERT(stop <= scan.get_num_images());
     DXTBX_ASSERT(start < stop);
 
-    // Create the new epoch array
+    flex_table<scan_property_types> properties = scan.get_properties_slice(index);
+
     int first_image_index = scan.get_image_range()[0] + start;
     int last_image_index = scan.get_image_range()[0] + stop - 1;
-    scitbx::af::shared<double> new_epochs(stop - start);
-    for (std::size_t i = 0; i < new_epochs.size(); ++i) {
-      new_epochs[i] = scan.get_image_epoch(first_image_index + i);
-    }
-
-    // Create the new epoch array
-    scitbx::af::shared<double> new_exposure_times(stop - start);
-    for (std::size_t i = 0; i < new_exposure_times.size(); ++i) {
-      new_exposure_times[i] = scan.get_image_exposure_time(first_image_index + i);
-    }
 
     // Create the new scan object
     return Scan(vec2<int>(first_image_index, last_image_index),
-                scan.get_image_oscillation(first_image_index),
-                new_exposure_times,
-                new_epochs,
+                properties,
                 scan.get_batch_offset());
   }
 
