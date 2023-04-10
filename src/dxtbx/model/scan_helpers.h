@@ -63,7 +63,7 @@ namespace dxtbx { namespace model {
     range_end = std::max(range[0], range[1]);
 
     // Simple case
-    if (angle >= range_start and angle <= range_end) {
+    if (angle >= range_start && angle <= range_end) {
       return true;
     }
 
