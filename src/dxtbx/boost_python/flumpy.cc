@@ -513,6 +513,11 @@ py::object from_numpy(py::object array) {
 /// More structured arrays need to be explicitly requested
 template <template <class> class VecType>
 py::object vec_from_numpy(py::array np_array) {
+  // Check that this array is contiguous
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
+  }
+
   static_assert(VecType<int>::fixed_size == 2 || VecType<int>::fixed_size == 3,
                 "Only vec2/vec3 supported");
   // Only accept arrays whose last dimension is the size of this object
@@ -522,6 +527,11 @@ py::object vec_from_numpy(py::array np_array) {
   }
 
   auto dtype = np_array.attr("dtype").attr("char").cast<char>();
+  // If we are on windows, where int and long are the same size - prefer 'i'.
+  // This is because flex arrays are only bound to 'int' on this platform.
+  if (dtype == 'l' && (sizeof(long) == sizeof(int))) {
+    dtype = 'i';
+  }
 
   std::string accepted_types = VecType<int>::fixed_size == 2 ? "dQ" : "di";
   if (accepted_types.find(dtype) == std::string::npos) {
@@ -553,11 +563,6 @@ py::object vec_from_numpy(py::array np_array) {
 /// Decide which sized vector we want to convert to, and hand off to the
 /// specialization
 py::object vecs_from_numpy(py::array np_array) {
-  // Check that this array is contiguous
-  if (!is_array_c_contiguous(np_array)) {
-    throw ERR_NON_CONTIGUOUS;
-  }
-
   if (np_array.shape(np_array.ndim() - 1) == 3) {
     return vec_from_numpy<scitbx::vec3>(np_array);
   } else if (np_array.shape(np_array.ndim() - 1) == 2) {
@@ -567,29 +572,17 @@ py::object vecs_from_numpy(py::array np_array) {
     "Invalid input array: last numpy dimension must be 2 or 3 to convert to vector");
 }
 
-/// Decide which sized vector we want to convert to, and hand off to the
-/// specialization
+/// Create a versa<miller_index> from numpy
 py::object miller_index_from_numpy(py::array np_array) {
-  // Check that this array is contiguous
-  if (!is_array_c_contiguous(np_array)) {
-    throw ERR_NON_CONTIGUOUS;
-  }
-
-  std::string accepted_types = "il";
+  // miller_index is ONLY bound as 'int', but on windows we accept the same-sized long
   auto dtype = np_array.attr("dtype").attr("char").cast<char>();
-  if ((dtype == 'l' && (sizeof(long) != sizeof(int)))
-      || accepted_types.find(dtype) == std::string::npos) {
+  std::string accepted_types = sizeof(long) == sizeof(int) ? "il" : "i";
+  if (accepted_types.find(dtype) == std::string::npos) {
     throw std::invalid_argument(
-      std::string("Only int32 or intc types are supported - cannot convert '")
+      std::string("miller_index only supports int32 or intc types - cannot convert '")
       + std::to_string(dtype) + "'");
   }
-
-  if (np_array.shape(np_array.ndim() - 1) == 3) {
-    return vec_from_numpy<cctbx::miller::index>(np_array);
-  }
-  throw std::invalid_argument(
-    "Invalid input array: last numpy dimension must be 3 to convert to "
-    "cctbx::miller::index");
+  return vec_from_numpy<cctbx::miller::index>(np_array);
 }
 
 py::object mat3_from_numpy(py::array np_array) {
