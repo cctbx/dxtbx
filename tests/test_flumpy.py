@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import cctbx.array_family.flex as cctbx_flex
-import scitbx.array_family.flex as scitbx_flex
+import scitbx.array_family.flex as flex
 
 import dxtbx.flumpy as flumpy
 
@@ -45,8 +45,8 @@ def test_basics():
         s = flumpy.Scuffer(1)
         memoryview(s)
 
-    i = scitbx_flex.int(10)
-    d = scitbx_flex.double(10)
+    i = flex.int(10)
+    d = flex.double(10)
 
     flumpy.Scuffer(d)
     flumpy.Scuffer(i)
@@ -70,12 +70,12 @@ def test_basics():
 )
 def flex_numeric(request):
     flex_typename = request.param
-    if not hasattr(scitbx_flex, flex_typename):
+    if not hasattr(flex, flex_typename):
         pytest.skip(f"Type flex.{flex_typename} not available on this flex instance")
     # Don't do long on windows, we prefer to get int
     if flex_typename == "long" and np.dtype("l").itemsize == np.dtype("i").itemsize:
         pytest.skip("On this platform, flex.long = flex.int so latter preferred")
-    return getattr(scitbx_flex, flex_typename)
+    return getattr(flex, flex_typename)
 
 
 def test_numeric_1d(flex_numeric):
@@ -102,7 +102,7 @@ def test_reverse_numeric_1d(flex_numeric):
 
 
 def test_numeric_2d(flex_numeric):
-    grid = scitbx_flex.grid(10, 10)
+    grid = flex.grid(10, 10)
     fo = flex_numeric(grid)
     as_np = flumpy.to_numpy(fo)
 
@@ -137,7 +137,7 @@ def test_reverse_numeric_2d(flex_numeric):
 
 def test_numeric_4d(flex_numeric):
     #  Check that we can think fourth-dimnesionally
-    grid = scitbx_flex.grid(1, 9, 8, 5)
+    grid = flex.grid(1, 9, 8, 5)
     fo = flex_numeric(grid)
     assert fo.nd() == 4
     as_np = flumpy.to_numpy(fo)
@@ -158,7 +158,7 @@ def test_reverse_numeric_4d(flex_numeric):
 
 
 def test_bool():
-    fo = scitbx_flex.bool(scitbx_flex.grid([5, 5, 5, 5, 5]))
+    fo = flex.bool(flex.grid([5, 5, 5, 5, 5]))
     for indices in itertools.product(*([range(5)] * 5)):
         fo[indices] = sum(indices) % 3 == 0 or sum(indices) % 5 == 0
     as_np = flumpy.to_numpy(fo)
@@ -177,7 +177,7 @@ def test_reverse_bool():
 
 
 @pytest.mark.parametrize(
-    "flex_vec", [scitbx_flex.vec3_double, scitbx_flex.vec3_int, cctbx_flex.miller_index]
+    "flex_vec", [flex.vec3_double, flex.vec3_int, cctbx_flex.miller_index]
 )
 def test_vec3(flex_vec):
     basic_vector = [(i, i * 2, i * 3) for i in range(10)]
@@ -191,7 +191,7 @@ def test_vec3(flex_vec):
 
 
 @pytest.mark.parametrize(
-    "flex_vec", [scitbx_flex.vec3_double, scitbx_flex.vec3_int, cctbx_flex.miller_index]
+    "flex_vec", [flex.vec3_double, flex.vec3_int, cctbx_flex.miller_index]
 )
 def test_reverse_vec3(flex_vec):
     dtype = lookup_flex_type_to_numpy[flex_vec.__name__]
@@ -234,9 +234,7 @@ def test_reverse_miller_index(dtype):
             flumpy.miller_index_from_numpy(hkl.astype(float))
 
 
-@pytest.mark.parametrize(
-    "flex_vec", [scitbx_flex.vec2_double, scitbx_flex.tiny_size_t_2]
-)
+@pytest.mark.parametrize("flex_vec", [flex.vec2_double, flex.tiny_size_t_2])
 def test_vec2(flex_vec):
     basic_vector = [(i, i * 2) for i in range(10)]
     fo = flex_vec(basic_vector)
@@ -248,9 +246,7 @@ def test_vec2(flex_vec):
     assert (as_np == fo).all()
 
 
-@pytest.mark.parametrize(
-    "flex_vec", [scitbx_flex.vec2_double, scitbx_flex.tiny_size_t_2]
-)
+@pytest.mark.parametrize("flex_vec", [flex.vec2_double, flex.tiny_size_t_2])
 def test_reverse_vec2(flex_vec):
     dtype = lookup_flex_type_to_numpy[flex_vec.__name__]
     no = np.zeros((5, 2), dtype=dtype)
@@ -261,7 +257,7 @@ def test_reverse_vec2(flex_vec):
 
 
 def test_mat3():
-    fo = scitbx_flex.mat3_double(10)
+    fo = flex.mat3_double(10)
     as_np = flumpy.to_numpy(fo)
     for i in range(10):
         fo[i] = [1, i, 0, 0, 1, 0, i, 0, 1]
@@ -288,7 +284,7 @@ def test_reverse_mat3():
 
 
 def test_complex():
-    fo = scitbx_flex.complex_double(10)
+    fo = flex.complex_double(10)
     as_np = flumpy.to_numpy(fo)
     fo[1] = 3j
     fo[4] = 1.3 + 3j
@@ -316,17 +312,17 @@ def test_already_numpy():
 
 
 def test_already_flex():
-    fo = scitbx_flex.int(10)
+    fo = flex.int(10)
     assert flumpy.from_numpy(fo) is fo
 
 
 def test_flex_loop_nesting():
-    fo = scitbx_flex.int(10)
+    fo = flex.int(10)
     npo = flumpy.to_numpy(fo)
     assert fo is flumpy.from_numpy(npo)
 
     # Now try vec
-    fo = scitbx_flex.complex_double(5)
+    fo = flex.complex_double(5)
     npo = flumpy.to_numpy(fo)
     assert flumpy.from_numpy(npo) is fo
 
@@ -336,16 +332,16 @@ def test_flex_looping_vecs():
     # We want to try and avoid recursive nesting, but don't want to
     # return the original object if attempting to miscast vec<->numeric
     # however.... this means lots of conditions to check, so ignore now
-    fo = scitbx_flex.vec3_double(5)
+    fo = flex.vec3_double(5)
     npo = flumpy.to_numpy(fo)
     assert flumpy.vec_from_numpy(npo) is fo
 
     # Don't be dumb when casting
-    flex_nonvec = scitbx_flex.double((9, 3))
+    flex_nonvec = flex.double((9, 3))
     assert not flumpy.vec_from_numpy(flumpy.to_numpy(flex_nonvec)) is flex_nonvec
 
     # mat3
-    fo = scitbx_flex.mat3_double(5)
+    fo = flex.mat3_double(5)
     npo = flumpy.to_numpy(fo)
     assert flumpy.mat3_from_numpy(npo) is fo
 
@@ -384,7 +380,7 @@ def test_noncontiguous():
 
 
 def test_nonowning():
-    f_a = scitbx_flex.double([0, 1, 2, 3, 4])
+    f_a = flex.double([0, 1, 2, 3, 4])
     n_b = flumpy.to_numpy(f_a)
     f_c = flumpy.from_numpy(n_b[1:])
     assert f_c[0] == 1
@@ -399,7 +395,7 @@ def test_int_long_degeneracy():
         pytest.skip("Test only runs on platforms where int = long")
     npo = np.array([240, 259, 144, 187]).astype("l")
     fo = flumpy.from_numpy(npo)
-    assert isinstance(fo, scitbx_flex.int)
+    assert isinstance(fo, flex.int)
 
     assert fo.all() == npo.shape
     assert all(fo[x] == npo[x] for x in range(4))
