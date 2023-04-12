@@ -1,1 +1,0 @@
-Flumpy: Prefer to return ``flex.int`` instead of ``flex.long`` when these are the same size. This solves ambiguous behaviour when reading images on Windows platforms.

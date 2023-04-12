@@ -1,3 +1,25 @@
+dxtbx 3.14.0 (2023-04-12)
+=========================
+
+Features
+--------
+
+- ``flumpy``: Add support for conversion of ``flex.miller_index`` arrays to/from numpy. (`#618 <https://github.com/cctbx/dxtbx/issues/618>`_)
+
+
+Bugfixes
+--------
+
+- Flumpy: Prefer returning ``flex.int`` instead of ``flex.long`` when they are the same size. This solves ambiguous behaviour when reading images on Windows platforms. (`#607 <https://github.com/cctbx/dxtbx/issues/607>`_)
+- ``dxtbx.plot_detector_models``: Fix display of multiple single-panel detector models. (`#610 <https://github.com/cctbx/dxtbx/issues/610>`_)
+
+
+Misc
+----
+
+- `#604 <https://github.com/cctbx/dxtbx/issues/604>`_, `#608 <https://github.com/cctbx/dxtbx/issues/608>`_, `#609 <https://github.com/cctbx/dxtbx/issues/609>`_, `#611 <https://github.com/cctbx/dxtbx/issues/611>`_, `#614 <https://github.com/cctbx/dxtbx/issues/614>`_
+
+
 dxtbx 3.13.0 (2023-01-26)
 =========================
 
