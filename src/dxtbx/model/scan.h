@@ -152,8 +152,10 @@ namespace dxtbx { namespace model {
         : image_range_(rhs.image_range_),
           valid_image_ranges_(rhs.valid_image_ranges_),
           num_images_(rhs.num_images_),
-          batch_offset_(rhs.batch_offset_),
-          properties_(rhs.properties_) {}
+          batch_offset_(rhs.batch_offset_) {
+      boost::python::dict d;
+      set_properties(dxtbx::af::flex_table_suite::deepcopy(rhs.properties_, d));
+    }
 
     virtual ~Scan() {}
 
@@ -225,14 +227,12 @@ namespace dxtbx { namespace model {
 
     bool is_still() const {
       if (!properties_.contains("oscillation")) {
-        return false;
+        return true;
       }
       if (properties_.size() == 0) {
-        return false;
+        return true;
       }
-
-      return std::abs(properties_.get<double>("oscillation")[1])
-             < min_oscillation_width_;
+      return std::abs(get_oscillation()[1]) < min_oscillation_width_;
     }
 
     int get_batch_for_image_index(int index) const {
@@ -306,6 +306,14 @@ namespace dxtbx { namespace model {
       image_range_ = image_range;
       num_images_ = 1 + image_range_[1] - image_range_[0];
       properties_.resize(num_images_);
+      if (properties_.contains("oscillation_width") && num_images_ > 1) {
+        scitbx::af::shared<double> osc_width =
+          properties_.get<double>("oscillation_width");
+
+        vec2<double> osc = vec2<double>(get_oscillation()[0], osc_width[0]);
+        set_oscillation(osc);
+        dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
+      }
       DXTBX_ASSERT(num_images_ > 0);
     }
 
@@ -417,14 +425,14 @@ namespace dxtbx { namespace model {
      */
 
     void append(const Scan &rhs, double scan_tolerance) {
-      using namespace dxtbx::af::flex_table_suite;
       DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
       DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
 
       flex_table<scan_property_types> rhs_properties = rhs.get_properties();
 
       // Explicitly check oscillation
-      if (properties_.contains("oscillation")) {
+      if (properties_.contains("oscillation") && !is_still()) {
+        DXTBX_ASSERT(!rhs.is_still());
         double osc_width = get_oscillation()[1];
         double eps = scan_tolerance * std::abs(osc_width);
         double rhs_osc_width = rhs.get_oscillation()[1];
@@ -443,10 +451,7 @@ namespace dxtbx { namespace model {
         is only needed for scans of one image
         */
         if (properties_.contains("oscillation_width")) {
-          delitem_column(properties_, "oscillation_width");
-        }
-        if (rhs_properties.contains("oscillation_width")) {
-          delitem_column(rhs_properties, "oscillation_width");
+          dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
         }
       }
 
@@ -456,7 +461,8 @@ namespace dxtbx { namespace model {
       for (const_iterator it = properties_.begin(); it != properties_.end(); ++it) {
         DXTBX_ASSERT(rhs_properties.contains(it->first));
       }
-      extend(properties_, rhs_properties);
+      dxtbx::af::flex_table_suite::extend(properties_, rhs_properties);
+      DXTBX_ASSERT(properties_.size() == num_images_);
     }
 
     /**

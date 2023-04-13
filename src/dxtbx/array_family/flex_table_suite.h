@@ -346,6 +346,18 @@ namespace dxtbx { namespace af { namespace flex_table_suite {
       }
       return true;
     }
+
+    bool operator()(const scitbx::af::shared<double> &other_column) const {
+      scitbx::af::shared<double> self_column = self[key];
+      double eps = 1e-7;
+      DXTBX_ASSERT(self_column.size() == other_column.size());
+      for (std::size_t i = 0; i < self_column.size(); ++i) {
+        if (std::abs(self_column[i] - other_column[i]) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
   };
 
   /**

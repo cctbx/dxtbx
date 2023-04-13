@@ -210,7 +210,7 @@ namespace dxtbx { namespace model { namespace boost_python {
           boost::python::tuple(obj.get_oscillation_arr_in_deg());
       } else {
         properties_dict[it->first] =
-          boost::python::tuple(it->second.apply_visitor(visitor));
+          boost::python::list(it->second.apply_visitor(visitor));
       }
     }
 
@@ -287,44 +287,33 @@ namespace dxtbx { namespace model { namespace boost_python {
     DXTBX_ASSERT(ir[1] >= ir[0]);
     std::size_t num_images = ir[1] - ir[0] + 1;
 
+    Scan *scan = new Scan(ir, bo);
     if (!obj.has_key("properties")) {
       /*
        * Legacy case with no properties table
        */
 
-      vec2<double> osc =
-        deg_as_rad(boost::python::extract<vec2<double> >(obj["oscillation"]));
-      Scan *scan = new Scan(
-        ir,
-        osc,
-        make_exposure_times(num_images,
-                            boost::python::extract<boost::python::list>(
-                              obj.get("exposure_time", boost::python::list()))),
-        make_epochs(num_images,
-                    boost::python::extract<boost::python::list>(
-                      obj.get("epochs", boost::python::list()))),
-        bo);
-      boost::python::dict rangemap =
-        boost::python::extract<boost::python::dict>(obj["valid_image_ranges"]);
-      boost::python::list keys = rangemap.keys();
-      boost::python::list values = rangemap.values();
-      for (int i = 0; i < len(keys); ++i) {
-        std::string key = boost::python::extract<std::string>(keys[i]);
-        scitbx::af::shared<vec2<int> > result;
-        int n_tuples = boost::python::len(values[i]);
-        for (int n = 0; n < n_tuples; ++n) {
-          result.push_back(boost::python::extract<vec2<int> >(values[i][n]));
-        }
-        scan->set_valid_image_ranges_array(key, result);
+      if (obj.has_key("oscillation")) {
+        vec2<double> osc =
+          deg_as_rad(boost::python::extract<vec2<double> >(obj["oscillation"]));
+        scan->set_oscillation(osc);
       }
-      return scan;
+      if (obj.has_key("exposure_time")) {
+        scan->set_exposure_times(
+          make_exposure_times(num_images,
+                              boost::python::extract<boost::python::list>(
+                                obj.get("exposure_time", boost::python::list()))));
+      }
+      if (obj.has_key("epochs")) {
+        scan->set_epochs(make_epochs(num_images,
+                                     boost::python::extract<boost::python::list>(
+                                       obj.get("epochs", boost::python::list()))));
+      }
+    } else {
+      boost::python::dict properties_dict =
+        boost::python::extract<boost::python::dict>(obj["properties"]);
+      scan->set_properties(extract_properties_table(properties_dict, num_images, true));
     }
-
-    Scan *scan = new Scan(ir, bo);
-
-    boost::python::dict properties_dict =
-      boost::python::extract<boost::python::dict>(obj["properties"]);
-    scan->set_properties(extract_properties_table(properties_dict, num_images, true));
 
     boost::python::dict rangemap =
       boost::python::extract<boost::python::dict>(obj["valid_image_ranges"]);
@@ -679,6 +668,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def(
         "set_property", &set_scan_property<vec3<double> >, (arg("key"), arg("value")))
       .def("set_property", &set_scan_property<double>, (arg("key"), arg("value")))
+      .def("has_property", &Scan::contains, (arg("key")))
       .def(self == self)
       .def(self != self)
       .def(self < self)
