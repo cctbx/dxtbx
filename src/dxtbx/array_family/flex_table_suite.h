@@ -358,6 +358,39 @@ namespace dxtbx { namespace af { namespace flex_table_suite {
       }
       return true;
     }
+
+    bool operator()(const scitbx::af::shared<vec2<double> > &other_column) const {
+      scitbx::af::shared<vec2<double> > self_column = self[key];
+      double eps = 1e-7;
+      DXTBX_ASSERT(self_column.size() == other_column.size());
+      for (std::size_t i = 0; i < self_column.size(); ++i) {
+        if (std::abs(self_column[i][0] - other_column[i][0]) > eps) {
+          return false;
+        }
+        if (std::abs(self_column[i][1] - other_column[i][1]) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    bool operator()(const scitbx::af::shared<vec3<double> > &other_column) const {
+      scitbx::af::shared<vec3<double> > self_column = self[key];
+      double eps = 1e-7;
+      DXTBX_ASSERT(self_column.size() == other_column.size());
+      for (std::size_t i = 0; i < self_column.size(); ++i) {
+        if (std::abs(self_column[i][0] - other_column[i][0]) > eps) {
+          return false;
+        }
+        if (std::abs(self_column[i][1] - other_column[i][1]) > eps) {
+          return false;
+        }
+        if (std::abs(self_column[i][2] - other_column[i][2]) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
   };
 
   /**

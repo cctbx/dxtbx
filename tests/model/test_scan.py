@@ -154,7 +154,7 @@ def test_set_get_properties():
         scan.set_property("test_vec2_double", test_vec2_double)
 
 
-def test_properties_pickle():
+def test_scan_properties_pickle():
     image_range = (1, 10)
     properties = {
         "test_int": tuple(range(10)),
@@ -181,7 +181,7 @@ def test_properties_pickle():
             assert result[key][i] == pytest.approx(value[i])
 
 
-def test_properties_to_dict():
+def test_scan_properties_to_dict():
     image_range = (1, 10)
     properties = {
         "test_int": tuple(range(10)),
@@ -244,3 +244,142 @@ def test_properties_to_dict():
         assert len(value) == len(result[key])
         for i in range(len(value)):
             assert result[key][i] == pytest.approx(value[i])
+
+
+def test_scan_properties_equivalence():
+
+    int_diff = 1
+    double_diff = 1e-6
+
+    image_range = (1, 10)
+    s1 = ScanFactory.make_scan_from_properties(image_range=image_range, properties={})
+    s2 = ScanFactory.make_scan_from_properties(image_range=image_range, properties={})
+
+    # Empty table
+
+    assert s1 == s2
+
+    # int columns
+
+    test_int = flex.int(10, 1)
+    test_int2 = flex.int(10, 1)
+    test_int2[0] += int_diff
+
+    s1.set_property("test_int", test_int)
+
+    assert s1 != s2
+
+    s2.set_property("test_int", test_int2)
+
+    assert s1 != s2
+
+    test_int2[0] -= int_diff
+
+    s2.set_property("test_int", test_int2)
+
+    assert s1 == s2
+
+    # double columns
+
+    test_double = flex.double(10, 1.0)
+    test_double2 = flex.double(10, 1.0)
+    test_double2[0] += double_diff
+
+    s1.set_property("test_double", test_double)
+
+    assert s1 != s2
+
+    s2.set_property("test_double", test_double2)
+
+    assert s1 != s2
+
+    test_double2[0] -= double_diff
+
+    s2.set_property("test_double", test_double2)
+
+    assert s1 == s2
+
+    # bool columns
+
+    test_bool = flex.bool(10, True)
+    test_bool2 = flex.bool(10, True)
+    test_bool2[0] = False
+
+    s1.set_property("test_bool", test_bool)
+
+    assert s1 != s2
+
+    s2.set_property("test_bool", test_bool2)
+
+    assert s1 != s2
+
+    test_bool2[0] = True
+
+    s2.set_property("test_bool", test_bool2)
+
+    assert s1 == s2
+
+    # string columns
+
+    test_string = flex.std_string(10, "Test")
+    test_string2 = flex.std_string(10, "Test")
+    test_string2[0] = "Test2"
+
+    s1.set_property("test_string", test_string)
+
+    assert s1 != s2
+
+    s2.set_property("test_string", test_string2)
+
+    assert s1 != s2
+
+    test_string2[0] = "Test"
+
+    s2.set_property("test_string", test_string2)
+
+    assert s1 == s2
+
+    #  vec3<double> columns
+
+    test_vec3_double = flex.vec3_double(10, (1.0, 1.0, 1.0))
+    test_vec3_double2 = flex.vec3_double(10, (1.0, 1.0, 1.0))
+    test_vec3_double2[0] = (1.0 + double_diff, 1.0 + double_diff, 1.0 + double_diff)
+
+    s1.set_property("test_vec3_double", test_vec3_double)
+
+    assert s1 != s2
+
+    s2.set_property("test_vec3_double", test_vec3_double2)
+
+    assert s1 != s2
+    vec = test_vec3_double2[0]
+    test_vec3_double2[0] = (
+        vec[0] - double_diff,
+        vec[1] - double_diff,
+        vec[2] - double_diff,
+    )
+
+    s2.set_property("test_vec3_double", test_vec3_double2)
+
+    assert s1 == s2
+
+    #  vec2<double> columns
+
+    test_vec2_double = flex.vec2_double(10, (2.0, 2.0))
+    test_vec2_double2 = flex.vec2_double(10, (2.0, 2.0))
+    test_vec2_double2[0] = (2.0 + double_diff, 2.0 + double_diff)
+
+    s1.set_property("test_vec2_double", test_vec2_double)
+
+    assert s1 != s2
+
+    s2.set_property("test_vec2_double", test_vec2_double2)
+
+    assert s1 != s2
+
+    vec = test_vec2_double2[0]
+    test_vec2_double2[0] = (vec[0] - double_diff, vec[1] - double_diff)
+
+    s2.set_property("test_vec2_double", test_vec2_double2)
+
+    assert s1 == s2
