@@ -63,9 +63,11 @@ namespace dxtbx { namespace model { namespace boost_python {
     bool convert_oscillation_to_rad = false) {
     boost::python::list keys = properties_dict.keys();
     boost::python::list values = boost::python::list(properties_dict.values());
+
     flex_table<scan_property_types> properties =
       flex_table<scan_property_types>(num_images);
 
+    // Extract each dictionary value based on Python type
     for (int i = 0; i < len(keys); ++i) {
       std::string key = boost::python::extract<std::string>(keys[i]);
       boost::python::object value = values[i];
@@ -79,6 +81,7 @@ namespace dxtbx { namespace model { namespace boost_python {
         scitbx::af::shared<double> osc_in_deg =
           boost::python::extract<scitbx::af::shared<double> >(value);
         properties[key] = deg_as_rad(osc_in_deg);
+
       } else if (obj_type == "int") {
         properties[key] = boost::python::extract<scitbx::af::shared<int> >(value);
       } else if (obj_type == "float") {
@@ -88,19 +91,20 @@ namespace dxtbx { namespace model { namespace boost_python {
       } else if (obj_type == "str") {
         properties[key] =
           boost::python::extract<scitbx::af::shared<std::string> >(value);
-      } else if (obj_type == "tuple") {
+
+      } else if (obj_type == "tuple") {  // vec2<double> or vec3<double>
         std::string element_type = boost::python::extract<std::string>(
           value[0][0].attr("__class__").attr("__name__"));
         int tuple_size = len(value[0]);
 
-        if (tuple_size == 2) {
+        if (tuple_size == 2) {  // vec2<double>
           if (element_type == "float") {
             properties[key] =
               boost::python::extract<scitbx::af::shared<vec2<double> > >(value);
           } else {
             throw DXTBX_ERROR("Unknown type for column name " + key);
           }
-        } else if (tuple_size == 3) {
+        } else if (tuple_size == 3) {  // vec3<double>
           if (element_type == "float") {
             properties[key] =
               boost::python::extract<scitbx::af::shared<vec3<double> > >(value);
@@ -149,6 +153,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       std::size_t ncols = boost::python::extract<std::size_t>(state[1]);
       boost::python::dict properties_dict =
         boost::python::extract<boost::python::dict>(state[2]);
+
       DXTBX_ASSERT(len(properties_dict) == ncols);
       flex_table<scan_property_types> properties =
         extract_properties_table(properties_dict, nrows);
@@ -184,8 +189,8 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   boost::python::dict get_properties_dict(const Scan &obj) {
     boost::python::dict properties_dict;
-
     flex_table<scan_property_types> properties = obj.get_properties();
+
     dxtbx::af::flex_table_suite::column_to_object_visitor visitor;
     for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
       properties_dict[it->first] =
@@ -203,8 +208,9 @@ namespace dxtbx { namespace model { namespace boost_python {
     flex_table<scan_property_types> properties = obj.get_properties();
     boost::python::dict properties_dict;
     dxtbx::af::flex_table_suite::column_to_object_visitor visitor;
+
     for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
-      if (it->first == "oscillation") {
+      if (it->first == "oscillation") {  // Handled explicitly due to unit conversion
         properties_dict[it->first] =
           boost::python::tuple(obj.get_oscillation_arr_in_deg());
       } else {
@@ -403,6 +409,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     int num_images = 1 + image_range[1] - image_range[0];
     flex_table<scan_property_types> properties =
       extract_properties_table(properties_dict, num_images);
+
     if (deg && properties.contains("oscillation")) {
       scitbx::af::shared<double> osc_in_deg = properties.get<double>("oscillation");
       scitbx::af::shared<double> osc = deg_as_rad(osc_in_deg);

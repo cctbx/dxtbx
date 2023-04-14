@@ -383,3 +383,30 @@ def test_scan_properties_equivalence():
     s2.set_property("test_vec2_double", test_vec2_double2)
 
     assert s1 == s2
+
+
+def test_print_scan():
+
+    image_range = (1, 10)
+    scan = ScanFactory.make_scan_from_properties(image_range=image_range, properties={})
+
+    expected_scan_string = (
+        "Scan:\n    number of images:   10\n    image range:   {1,10}\n"
+    )
+    assert scan.__str__() == expected_scan_string
+
+    scan.set_oscillation((0.0, 0.5))
+    expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    oscillation:   {0,0.5}\n"
+    assert scan.__str__() == expected_scan_string
+
+    scan.set_property("epochs", flex.double(10))
+    expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    init epoch: 0\n    oscillation:   {0,0.5}\n"
+    assert scan.__str__() == expected_scan_string
+
+    scan.set_property("exposure_time", flex.double(10))
+    expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    init epoch: 0\n    exposure time: 0\n    oscillation:   {0,0.5}\n"
+    assert scan.__str__() == expected_scan_string
+
+    scan.set_property("unknown_property", flex.double(10))
+    with pytest.raises(RuntimeError):
+        scan.__str__()
