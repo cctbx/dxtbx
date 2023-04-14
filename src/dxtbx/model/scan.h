@@ -597,7 +597,6 @@ namespace dxtbx { namespace model {
     }
 
     Scan operator[](int index) const {
-      using namespace dxtbx::af::flex_table_suite;
       DXTBX_ASSERT((index >= 0) && (index < get_num_images()));
 
       int image_index = image_range_[0] + index;

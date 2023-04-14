@@ -114,6 +114,14 @@ class ScanFactory:
         """
 
         def convert_oscillation_to_vec2(properties_dict):
+
+            """
+            If oscillation is in properties_dict,
+            shared<double> is converted to vec2<double> and
+            oscillation_width is removed (if present) to ensure
+            it is replaced correctly if updating t from d
+            """
+
             if "oscillation" not in properties_dict:
                 assert "oscillation_width" not in properties_dict
                 return properties_dict
@@ -135,6 +143,8 @@ class ScanFactory:
             return None
         joint = t.copy() if t else {}
 
+        # Accounting for legacy cases where t or d does not
+        # contain properties dict
         if "properties" in joint and "properties" in d:
             properties = t["properties"].copy()
             properties.update(d["properties"])
@@ -163,7 +173,6 @@ class ScanFactory:
         joint.setdefault("batch_offset", 0)  # backwards compatibility 20180205
         joint.setdefault("valid_image_ranges", {})  # backwards compatibility 20181113
 
-        # Create the model from the joint dictionary
         return Scan.from_dict(joint)
 
     @staticmethod
