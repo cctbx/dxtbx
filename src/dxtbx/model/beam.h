@@ -418,11 +418,11 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * @param unit_s0 The incident beam unit vector pointing sample to source
+     * @param direction The beam direction pointing source to sample
      */
-    PolyBeam(vec3<double> unit_s0) {
-      DXTBX_ASSERT(unit_s0.length() > 0);
-      direction_ = -unit_s0.normalize();
+    PolyBeam(vec3<double> direction) {
+      DXTBX_ASSERT(direction.length() > 0);
+      direction_ = direction.normalize();
       set_divergence(0.0);
       set_sigma_divergence(0.0);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
@@ -432,13 +432,13 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * @param unit_s0 The incident beam unit vector pointing sample to source
+     * @param direction The beam direction pointing source to sample
      * @param divergence The beam divergence
      * @param sigma_divergence The standard deviation of the beam divergence
      */
-    PolyBeam(vec3<double> unit_s0, double divergence, double sigma_divergence) {
-      DXTBX_ASSERT(unit_s0.length() > 0);
-      direction_ = -unit_s0.normalize();
+    PolyBeam(vec3<double> direction, double divergence, double sigma_divergence) {
+      DXTBX_ASSERT(direction.length() > 0);
+      direction_ = direction.normalize();
       set_divergence(divergence);
       set_sigma_divergence(sigma_divergence);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
@@ -448,7 +448,7 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * @param unit_s0 The incident beam unit vector pointing sample to source
+     * @param direction The beam direction pointing source to sample
      * @param divergence The beam divergence
      * @param sigma_divergence The standard deviation of the beam divergence
      * @param polarization_normal The polarization plane
@@ -456,15 +456,15 @@ namespace dxtbx { namespace model {
      * @param flux The beam flux
      * @param transmission The beam transmission
      */
-    PolyBeam(vec3<double> unit_s0,
+    PolyBeam(vec3<double> direction,
              double divergence,
              double sigma_divergence,
              vec3<double> polarization_normal,
              double polarization_fraction,
              double flux,
              double transmission) {
-      DXTBX_ASSERT(unit_s0.length() > 0);
-      direction_ = -unit_s0.normalize();
+      DXTBX_ASSERT(direction.length() > 0);
+      direction_ = direction.normalize();
       set_divergence(divergence);
       set_sigma_divergence(sigma_divergence);
       set_polarization_normal(polarization_normal);
