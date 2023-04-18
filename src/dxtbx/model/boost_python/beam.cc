@@ -182,6 +182,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<Beam>(const Beam &obj) {
     boost::python::dict result;
+    result["__id__"] = "monochromatic";
     result["direction"] = obj.get_sample_to_source_direction();
     result["wavelength"] = obj.get_wavelength();
     result["divergence"] = rad_as_deg(obj.get_divergence());
@@ -224,6 +225,12 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   // PolyBeam
+
+  std::string polybeam_to_string(const PolyBeam &beam) {
+    std::stringstream ss;
+    ss << beam;
+    return ss.str();
+  }
 
   struct PolyBeamPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const PolyBeam &obj) {
@@ -287,6 +294,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<PolyBeam>(const PolyBeam &obj) {
     boost::python::dict result;
+    result["__id__"] = "polychromatic";
     result["direction"] = obj.get_sample_to_source_direction();
     result["divergence"] = rad_as_deg(obj.get_divergence());
     result["sigma_divergence"] = rad_as_deg(obj.get_sigma_divergence());
@@ -417,7 +425,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("flux"),
                              arg("transmission"),
                              arg("deg") = true)))
-      .def("__str__", &beam_to_string)
+      .def("__str__", &polybeam_to_string)
       .def("to_dict", &to_dict<PolyBeam>)
       .def("from_dict", &from_dict<PolyBeam>, return_value_policy<manage_new_object>())
       .staticmethod("from_dict")

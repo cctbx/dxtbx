@@ -44,6 +44,7 @@ try:
         OffsetPxMmStrategy,
         Panel,
         ParallaxCorrectedPxMmStrategy,
+        PolyBeam,
         PxMmStrategy,
         Scan,
         ScanBase,
@@ -79,6 +80,7 @@ except ModuleNotFoundError:
         OffsetPxMmStrategy,
         Panel,
         ParallaxCorrectedPxMmStrategy,
+        PolyBeam,
         PxMmStrategy,
         Scan,
         ScanBase,
@@ -96,6 +98,7 @@ except ModuleNotFoundError:
 __all__ = (
     "Beam",
     "BeamBase",
+    "PolyBeam",
     "BeamFactory",
     "Crystal",
     "CrystalBase",
