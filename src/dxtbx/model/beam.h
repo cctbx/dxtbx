@@ -529,6 +529,17 @@ namespace dxtbx { namespace model {
     }
 
     bool is_similar_to(const BeamBase &rhs,
+                       double wavelength_tolerance,
+                       double direction_tolerance,
+                       double polarization_normal_tolerance,
+                       double polarization_fraction_tolerance) const {
+      return is_similar_to(rhs,
+                           direction_tolerance,
+                           polarization_normal_tolerance,
+                           polarization_fraction_tolerance);
+    }
+
+    bool is_similar_to(const BeamBase &rhs,
                        double direction_tolerance,
                        double polarization_normal_tolerance,
                        double polarization_fraction_tolerance) const {
