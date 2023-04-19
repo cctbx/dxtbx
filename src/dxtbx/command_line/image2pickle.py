@@ -18,7 +18,7 @@ from libtbx import easy_pickle
 from libtbx.utils import Usage
 import serialtbx.util
 from scitbx.array_family import flex
-from xfel.cxi.cspad_ana.cspad_tbx import dpack
+import serialtbx.detector.cspad
 
 import dxtbx.util
 
@@ -330,7 +330,7 @@ def save_image(
             print("Skipping %s, file exists" % imgpath)
             return
 
-    data = dpack(
+    data = serialtbx.detector.cspad.dpack(
         data=raw_data,
         distance=distance,
         pixel_size=pixel_size,
