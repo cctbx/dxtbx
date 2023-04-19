@@ -16,8 +16,9 @@ import numpy as np
 import libtbx.option_parser
 from libtbx import easy_pickle
 from libtbx.utils import Usage
+import serialtbx.util
 from scitbx.array_family import flex
-from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
+from xfel.cxi.cspad_ana.cspad_tbx import dpack
 
 import dxtbx.util
 
@@ -265,7 +266,7 @@ def run(args=None):
             timestamp = None
         else:
             msec, sec = math.modf(scan.get_epochs()[0])
-            timestamp = evt_timestamp((sec, msec))
+            timestamp = serialtbx.util.timestamp((sec, msec))
 
         if is_multi_image:
             for i in range(img.get_num_images()):

@@ -15,6 +15,7 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage, Reader
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model import Spectrum
 from dxtbx.util.rotate_and_average import rotate_and_average
+import serialtbx.util
 
 try:
     import psana
@@ -375,7 +376,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         sec = time[0]
         nsec = time[1]
 
-        return cspad_tbx.evt_timestamp((sec, nsec / 1e6))
+        return serialtbx.util.timestamp((sec, nsec / 1e6))
 
     def get_num_images(self):
         return self.n_images
