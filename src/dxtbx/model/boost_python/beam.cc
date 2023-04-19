@@ -42,7 +42,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                          obj.get_polarization_normal(),
                                          obj.get_polarization_fraction(),
                                          obj.get_flux(),
-                                         obj.get_transmission());
+                                         obj.get_transmission(),
+                                         obj.get_sample_to_source_distance_in_m());
       }
 
       static boost::python::tuple getstate(boost::python::object obj) {
@@ -133,6 +134,42 @@ namespace dxtbx { namespace model { namespace boost_python {
       return beam;
     }
 
+    static Beam *make_beam_w_sample_to_source_distance(
+      vec3<double> sample_to_source,
+      double wavelength,
+      double divergence,
+      double sigma_divergence,
+      vec3<double> polarization_normal,
+      double polarization_fraction,
+      double flux,
+      double transmission,
+      double sample_to_source_distance_in_m,
+      bool deg) {
+      Beam *beam = NULL;
+      if (deg) {
+        beam = new Beam(sample_to_source,
+                        wavelength,
+                        deg_as_rad(divergence),
+                        deg_as_rad(sigma_divergence),
+                        polarization_normal,
+                        polarization_fraction,
+                        flux,
+                        transmission,
+                        sample_to_source_distance_in_m);
+      } else {
+        beam = new Beam(sample_to_source,
+                        wavelength,
+                        divergence,
+                        sigma_divergence,
+                        polarization_normal,
+                        polarization_fraction,
+                        flux,
+                        transmission,
+                        sample_to_source_distance_in_m);
+      }
+      return beam;
+    }
+
     static double get_divergence(const Beam &beam, bool deg) {
       double divergence = beam.get_divergence();
       return deg ? rad_as_deg(divergence) : divergence;
@@ -191,6 +228,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
+    result["sample_to_source_distance_in_m"] = obj.get_sample_to_source_distance_in_m();
     if (obj.get_num_scan_points() > 0) {
       boost::python::list l;
       scitbx::af::shared<vec3<double> > s0_at_scan_points = obj.get_s0_at_scan_points();
@@ -221,6 +259,11 @@ namespace dxtbx { namespace model { namespace boost_python {
         boost::python::extract<boost::python::list>(obj["s0_at_scan_points"]);
       beam_detail::Beam_set_s0_at_scan_points_from_list(*b, s0_at_scan_points);
     }
+    if (obj.has_key("sample_to_source_distance_in_m")) {
+      double val =
+        boost::python::extract<double>(obj["sample_to_source_distance_in_m"]);
+      b->set_sample_to_source_distance_in_m(val);
+    }
     return b;
   }
 
@@ -240,7 +283,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_polarization_normal(),
                                        obj.get_polarization_fraction(),
                                        obj.get_flux(),
-                                       obj.get_transmission());
+                                       obj.get_transmission(),
+                                       obj.get_sample_to_source_distance_in_m());
     }
   };
 
@@ -262,6 +306,12 @@ namespace dxtbx { namespace model { namespace boost_python {
     return beam;
   }
 
+  static PolyBeam *make_polybeam_w_sample_to_source_distance(
+    vec3<double> direction,
+    double sample_to_source_distance_in_m) {
+    return new PolyBeam(direction, sample_to_source_distance_in_m);
+  }
+
   static PolyBeam *make_polybeam_w_all(vec3<double> direction,
                                        double divergence,
                                        double sigma_divergence,
@@ -269,6 +319,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        double polarization_fraction,
                                        double flux,
                                        double transmission,
+                                       double sample_to_source_distance_in_m,
                                        bool deg) {
     PolyBeam *beam = NULL;
     if (deg) {
@@ -278,7 +329,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                           polarization_normal,
                           polarization_fraction,
                           flux,
-                          transmission);
+                          transmission,
+                          sample_to_source_distance_in_m);
     } else {
       beam = new PolyBeam(direction,
                           divergence,
@@ -286,7 +338,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                           polarization_normal,
                           polarization_fraction,
                           flux,
-                          transmission);
+                          transmission,
+                          sample_to_source_distance_in_m);
     }
     return beam;
   }
@@ -302,6 +355,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
+    result["sample_to_source_distance_in_m"] = obj.get_sample_to_source_distance_in_m();
     return result;
   }
 
@@ -315,7 +369,8 @@ namespace dxtbx { namespace model { namespace boost_python {
         obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
       boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
       boost::python::extract<double>(obj.get("flux", 0)),
-      boost::python::extract<double>(obj.get("transmission", 1)));
+      boost::python::extract<double>(obj.get("transmission", 1)),
+      boost::python::extract<double>(obj.get("sample_to_source_distance_in_m", 0.)));
     return b;
   }
 
@@ -356,6 +411,11 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("rotate_around_origin",
            &rotate_around_origin,
            (arg("axis"), arg("angle"), arg("deg") = true))
+      .def("get_sample_to_source_distance_in_m",
+           &BeamBase::get_sample_to_source_distance_in_m)
+      .def("set_sample_to_source_distance_in_m",
+           &BeamBase::set_sample_to_source_distance_in_m,
+           (arg("sample_to_source_distance")))
       .def("__eq__", &BeamBase::operator==)
       .def("__ne__", &BeamBase::operator!=)
       .def("is_similar_to",
@@ -364,7 +424,12 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("wavelength_tolerance") = 1e-6,
             arg("direction_tolerance") = 1e-6,
             arg("polarization_normal_tolerance") = 1e-6,
-            arg("polarization_fraction_tolerance") = 1e-6));
+            arg("polarization_fraction_tolerance") = 1e-6,
+            arg("divergence") = 1e-6,
+            arg("sigma_divergence") = 1e-6,
+            arg("flux_tolerance") = 1e-6,
+            arg("transmission_tolerance") = 1e-6,
+            arg("sample_to_source_distance_tolerance") = 1e-6));
 
     // Export Beam : BeamBase
     class_<Beam, std::shared_ptr<Beam>, bases<BeamBase> >("Beam")
@@ -397,6 +462,19 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("flux"),
                              arg("transmission"),
                              arg("deg") = true)))
+      .def("__init__",
+           make_constructor(&make_beam_w_sample_to_source_distance,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("wavelength"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("polarization_normal"),
+                             arg("polarization_fraction"),
+                             arg("flux"),
+                             arg("transmission"),
+                             arg("sample_to_source_distance_in_m"),
+                             arg("deg") = true)))
       .def("__str__", &beam_to_string)
       .def("to_dict", &to_dict<Beam>)
       .def("from_dict", &from_dict<Beam>, return_value_policy<manage_new_object>())
@@ -407,6 +485,10 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def(
         "__init__",
         make_constructor(&make_polybeam, default_call_policies(), (arg("direction"))))
+      .def("__init__",
+           make_constructor(&make_polybeam_w_sample_to_source_distance,
+                            default_call_policies(),
+                            (arg("direction"), arg("sample_to_source_distance_in_m"))))
       .def("__init__",
            make_constructor(&make_polybeam_w_divergence,
                             default_call_policies(),
@@ -424,6 +506,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("polarization_fraction"),
                              arg("flux"),
                              arg("transmission"),
+                             arg("sample_to_source_distance_in_m"),
                              arg("deg") = true)))
       .def("__str__", &polybeam_to_string)
       .def("to_dict", &to_dict<PolyBeam>)
