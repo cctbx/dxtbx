@@ -8,7 +8,7 @@ from libtbx.test_utils import approx_equal
 from scitbx.array_family import flex
 from scitbx.math.superpose import least_squares_fit
 from scitbx.matrix import col
-from xfel.command_line.cspad_detector_congruence import iterate_detector_at_level
+from serialtbx.detector import iterate_detector_at_level
 
 import dials.util
 from dials.util.options import OptionParser
