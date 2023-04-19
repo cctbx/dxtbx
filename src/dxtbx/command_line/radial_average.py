@@ -16,7 +16,7 @@ from libtbx import easy_pickle
 from libtbx.utils import Sorry, Usage
 from scitbx.array_family import flex
 from scitbx.matrix import col
-from xfel import radial_average
+from dxtbx.ext import radial_average
 
 import dxtbx
 import dxtbx.util

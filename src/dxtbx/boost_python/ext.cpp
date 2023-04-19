@@ -2,6 +2,8 @@
 #include <boost/python/def.hpp>
 #include <scitbx/array_family/shared.h>
 #include <scitbx/array_family/flex_types.h>
+#include <scitbx/constants.h>
+#include <scitbx/vec2.h>
 #include <boost_adaptbx/python_streambuf.h>
 #include <cstdint>
 #include <cctype>
@@ -193,6 +195,41 @@ namespace dxtbx { namespace boost_python {
     return PyBytes_FromStringAndSize(&*packed.begin(), packed.size());
   }
 
+  double distance_between_points(scitbx::vec2<int> const& a, scitbx::vec2<int> const& b) {
+    return std::sqrt((std::pow(double(b[0]-a[0]),2)+std::pow(double(b[1]-a[1]),2)));
+  }
+
+  void radial_average(scitbx::af::versa<double, scitbx::af::flex_grid<> > & data,
+  scitbx::af::versa<bool, scitbx::af::flex_grid<> > & mask,
+  scitbx::vec2<int> const& beam_center,
+  scitbx::af::shared<double> sums,
+  scitbx::af::shared<double> sums_sq,
+  scitbx::af::shared<int> counts,
+  double pixel_size, double distance,
+  scitbx::vec2<int> const& upper_left,
+  scitbx::vec2<int> const& lower_right) {
+    std::size_t extent = sums.size();
+    double extent_in_mm = extent * pixel_size;
+    double extent_two_theta = std::atan(extent_in_mm/distance)*180/scitbx::constants::pi;
+
+    for(std::size_t y = upper_left[1]; y < lower_right[1]; y++) {
+      for(std::size_t x = upper_left[0]; x < lower_right[0]; x++) {
+        double val = data(x,y);
+        if(val > 0 && mask(x,y)) {
+          scitbx::vec2<int> point((int)x,(int)y);
+          double d_in_mm = distance_between_points(point,beam_center) * pixel_size;
+          double twotheta = std::atan(d_in_mm/distance)*180/scitbx::constants::pi;
+          std::size_t bin = (std::size_t)std::floor(twotheta*extent/extent_two_theta);
+          if (bin >= extent)
+            continue;
+          sums[bin] += val;
+          sums_sq[bin] += val*val;
+          counts[bin]++;
+        }
+      }
+    }
+  }
+
   void init_module() {
     using namespace boost::python;
     def("read_uint8", read_uint8, (arg("file"), arg("count")));
@@ -206,6 +243,11 @@ namespace dxtbx { namespace boost_python {
     def("is_big_endian", is_big_endian);
     def("uncompress", &uncompress, (arg_("packed"), arg_("slow"), arg_("fast")));
     def("compress", &compress);
+    def("radial_average", &radial_average,
+      (arg("data"), arg("beam_center"), arg("sums"), arg("sums_sq"), arg("counts"),
+       arg("pixel_size"), arg("distance"),
+       arg("upper_left"), arg("lower_right")))
+    ;
   }
 
   BOOST_PYTHON_MODULE(dxtbx_ext) {
