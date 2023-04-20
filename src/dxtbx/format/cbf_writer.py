@@ -15,9 +15,9 @@ import sys
 import pycbf
 
 from scitbx.array_family import flex
+from serialtbx.detector import basis
 from xfel.cftbx.detector.cspad_cbf_tbx import (
     add_frame_specific_cbf_tables,
-    basis,
     cbf_wrapper,
 )
 

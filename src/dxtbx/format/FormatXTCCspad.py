@@ -8,7 +8,7 @@ from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
-from xfel.cftbx.detector.cspad_cbf_tbx import read_slac_metrology
+from serialtbx.detector.cspad import read_slac_metrology
 from serialtbx.detector.xtc import env_distance
 import serialtbx.detector.cspad
 
