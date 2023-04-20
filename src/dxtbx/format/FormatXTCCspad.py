@@ -9,14 +9,14 @@ from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
 from xfel.cftbx.detector.cspad_cbf_tbx import read_slac_metrology
-from xfel.cxi.cspad_ana.cspad_tbx import env_distance
+from serialtbx.detector.xtc import env_distance
+import serialtbx.detector.cspad
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 try:
     from xfel.cftbx.detector import cspad_cbf_tbx
-    from xfel.cxi.cspad_ana import cspad_tbx
 except ImportError:
     # xfel not configured
     pass
@@ -201,8 +201,8 @@ class FormatXTCCspad(FormatXTC):
                     p.set_image_size(cspad_cbf_tbx.asic_dimension)
                     p.set_trusted_range(
                         (
-                            cspad_tbx.cspad_min_trusted_value,
-                            cspad_tbx.cspad_saturated_value,
+                            serialtbx.detector.cspad.cspad_min_trusted_value,
+                            serialtbx.detector.cspad.cspad_saturated_value,
                         )
                     )
                     p.set_name(val)
