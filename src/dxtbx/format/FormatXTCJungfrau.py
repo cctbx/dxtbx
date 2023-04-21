@@ -54,7 +54,7 @@ class FormatXTCJungfrau(FormatXTC):
         return any(["jungfrau" in src.lower() for src in params.detector_address])
 
     def get_raw_data(self, index=None):
-        from xfel.util import jungfrau
+        from serialtbx.detector.util import jungfrau
 
         if index is None:
             index = 0

@@ -7,10 +7,7 @@ import numpy as np
 
 from scitbx.array_family import flex
 
-try:
-    from xfel.util.jungfrau import pad_stacked_format
-except ImportError:
-    pass
+from serialtbx.detector.jungfrau import pad_stacked_format
 
 
 from dxtbx.format.FormatNexus import FormatNexus
