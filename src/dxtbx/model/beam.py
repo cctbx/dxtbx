@@ -62,7 +62,7 @@ beam_phil_scope = libtbx.phil.parse(
         .help = "Override the flux"
         .short_caption = "flux"
 
-    sample_to_source_distance_in_m = None
+    sample_to_source_distance = None
         .type = float
         .help = "Override the distance between sample and source (m)"
   }
@@ -112,10 +112,8 @@ class BeamFactory:
             beam.set_transmission(params.beam.transmission)
         if params.beam.flux is not None:
             beam.set_flux(params.beam.flux)
-        if params.beam.sample_to_source_distance_in_m is not None:
-            beam.set_sample_to_source_distance_in_m(
-                params.beam.sample_to_source_distance_in_m
-            )
+        if params.beam.sample_to_source_distance is not None:
+            beam.set_sample_to_source_distance(params.beam.sample_to_source_distance)
 
         return beam
 

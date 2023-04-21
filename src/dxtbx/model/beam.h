@@ -30,7 +30,7 @@ namespace dxtbx { namespace model {
     virtual ~BeamBase() {}
 
     virtual vec3<double> get_sample_to_source_direction() const = 0;
-    virtual double get_sample_to_source_distance_in_m() const = 0;
+    virtual double get_sample_to_source_distance() const = 0;
     virtual double get_wavelength() const = 0;
     virtual double get_divergence() const = 0;
     // Get the standard deviation of the beam divergence
@@ -60,8 +60,7 @@ namespace dxtbx { namespace model {
     virtual void set_transmission(double transmission) = 0;
     virtual void set_s0_at_scan_points(
       const scitbx::af::const_ref<vec3<double> > &s0) = 0;
-    virtual void set_sample_to_source_distance_in_m(
-      double sample_to_source_distance) = 0;
+    virtual void set_sample_to_source_distance(double sample_to_source_distance) = 0;
 
     virtual void reset_scan_points() = 0;
     virtual bool is_similar_to(const BeamBase &rhs,
@@ -91,7 +90,7 @@ namespace dxtbx { namespace model {
           polarization_fraction_(0.999),
           flux_(0),
           transmission_(1.0),
-          sample_to_source_distance_in_m_(0.) {}
+          sample_to_source_distance_(0.) {}
 
     /**
      * @param s0 The incident beam vector.
@@ -103,7 +102,7 @@ namespace dxtbx { namespace model {
           polarization_fraction_(0.999),
           flux_(0),
           transmission_(1.0),
-          sample_to_source_distance_in_m_(0.) {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(s0.length() > 0);
       wavelength_ = 1.0 / s0.length();
       direction_ = -s0.normalize();
@@ -121,7 +120,7 @@ namespace dxtbx { namespace model {
           polarization_fraction_(0.999),
           flux_(0),
           transmission_(1.0),
-          sample_to_source_distance_in_m_(0.) {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -138,7 +137,7 @@ namespace dxtbx { namespace model {
           polarization_fraction_(0.999),
           flux_(0),
           transmission_(1.0),
-          sample_to_source_distance_in_m_(0.) {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(s0.length() > 0);
       wavelength_ = 1.0 / s0.length();
       direction_ = -s0.normalize();
@@ -161,7 +160,7 @@ namespace dxtbx { namespace model {
           polarization_fraction_(0.999),
           flux_(0),
           transmission_(1.0),
-          sample_to_source_distance_in_m_(0.) {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -191,7 +190,7 @@ namespace dxtbx { namespace model {
           polarization_fraction_(polarization_fraction),
           flux_(flux),
           transmission_(transmission),
-          sample_to_source_distance_in_m_(0.) {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -205,7 +204,7 @@ namespace dxtbx { namespace model {
      * @param polarization_fraction The polarization fraction
      * @param flux The beam flux
      * @param transmission The beam transmission
-     * @param sample_to_source_distance_in_m
+     * @param sample_to_source_distance (mm)
      */
     Beam(vec3<double> direction,
          double wavelength,
@@ -215,7 +214,7 @@ namespace dxtbx { namespace model {
          double polarization_fraction,
          double flux,
          double transmission,
-         double sample_to_source_distance_in_m)
+         double sample_to_source_distance)
         : wavelength_(wavelength),
           divergence_(divergence),
           sigma_divergence_(sigma_divergence),
@@ -223,7 +222,7 @@ namespace dxtbx { namespace model {
           polarization_fraction_(polarization_fraction),
           flux_(flux),
           transmission_(transmission),
-          sample_to_source_distance_in_m_(sample_to_source_distance_in_m) {
+          sample_to_source_distance_(sample_to_source_distance) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -339,13 +338,15 @@ namespace dxtbx { namespace model {
       s0_at_scan_points_.clear();
     }
 
-    double get_sample_to_source_distance_in_m() const {
-      return sample_to_source_distance_in_m_;
+    /* Distance from sample to source in mm */
+    double get_sample_to_source_distance() const {
+      return sample_to_source_distance_;
     }
 
-    void set_sample_to_source_distance_in_m(double sample_to_source_distance) {
+    /* Distance from sample to source in mm */
+    void set_sample_to_source_distance(double sample_to_source_distance) {
       DXTBX_ASSERT(sample_to_source_distance >= 0.);
-      sample_to_source_distance_in_m_ = sample_to_source_distance;
+      sample_to_source_distance_ = sample_to_source_distance;
     }
 
     virtual bool operator==(const BeamBase &rhs) const {
@@ -382,8 +383,8 @@ namespace dxtbx { namespace model {
                   <= eps
              && std::abs(flux_ - rhs.get_flux()) <= eps
              && std::abs(transmission_ - rhs.get_transmission()) <= eps
-             && std::abs(sample_to_source_distance_in_m_
-                         - rhs.get_sample_to_source_distance_in_m())
+             && std::abs(sample_to_source_distance_
+                         - rhs.get_sample_to_source_distance())
                   <= eps;
     }
 
@@ -470,8 +471,8 @@ namespace dxtbx { namespace model {
              && std::abs(flux_ - rhs.get_flux()) <= flux_tolerance
              && std::abs(transmission_ - rhs.get_transmission())
                   <= transmission_tolerance
-             && std::abs(sample_to_source_distance_in_m_
-                         - rhs.get_sample_to_source_distance_in_m())
+             && std::abs(sample_to_source_distance_
+                         - rhs.get_sample_to_source_distance())
                   <= sample_to_source_tolerance;
     }
 
@@ -494,7 +495,7 @@ namespace dxtbx { namespace model {
     double polarization_fraction_;
     double flux_;
     double transmission_;
-    double sample_to_source_distance_in_m_;
+    double sample_to_source_distance_;
 
   private:
     double wavelength_;
@@ -514,8 +515,8 @@ namespace dxtbx { namespace model {
     os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
     os << "    flux: " << b.get_flux() << "\n";
     os << "    transmission: " << b.get_transmission() << "\n";
-    os << "    sample to source distance (m): "
-       << b.get_sample_to_source_distance_in_m() << "\n";
+    os << "    sample to source distance: " << b.get_sample_to_source_distance()
+       << "\n";
     return os;
   }
 
@@ -529,7 +530,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(0.999);
       set_flux(0);
       set_transmission(1.0);
-      set_sample_to_source_distance_in_m(0.0);
+      set_sample_to_source_distance(0.0);
     }
 
     /**
@@ -544,17 +545,17 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(0.999);
       set_flux(0);
       set_transmission(1.0);
-      set_sample_to_source_distance_in_m(0.0);
+      set_sample_to_source_distance(0.0);
     }
 
     /**
      * @param direction The beam direction pointing source to sample
-     * @param sample_to_source_distance_in_m The distance from sample to source (m)
+     * @param sample_to_source_distance (mm)
      */
-    PolyBeam(vec3<double> direction, double sample_to_source_distance_in_m) {
+    PolyBeam(vec3<double> direction, double sample_to_source_distance) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
-      set_sample_to_source_distance_in_m(sample_to_source_distance_in_m);
+      set_sample_to_source_distance(sample_to_source_distance);
       set_divergence(0.0);
       set_sigma_divergence(0.0);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
@@ -577,7 +578,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(0.999);
       set_flux(0);
       set_transmission(1.0);
-      set_sample_to_source_distance_in_m(0.0);
+      set_sample_to_source_distance(0.0);
     }
 
     /**
@@ -604,7 +605,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(polarization_fraction);
       set_flux(flux);
       set_transmission(transmission);
-      set_sample_to_source_distance_in_m(0.0);
+      set_sample_to_source_distance(0.0);
     }
 
     /**
@@ -615,7 +616,7 @@ namespace dxtbx { namespace model {
      * @param polarization_fraction The polarization fraction
      * @param flux The beam flux
      * @param transmission The beam transmission
-     * @param sample_to_source_distance (m)
+     * @param sample_to_source_distance (mm)
      */
     PolyBeam(vec3<double> direction,
              double divergence,
@@ -633,7 +634,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(polarization_fraction);
       set_flux(flux);
       set_transmission(transmission);
-      set_sample_to_source_distance_in_m(sample_to_source_distance);
+      set_sample_to_source_distance(sample_to_source_distance);
     }
 
     double get_wavelength() const {
@@ -691,8 +692,8 @@ namespace dxtbx { namespace model {
                   <= eps
              && std::abs(flux_ - rhs.get_flux()) <= eps
              && std::abs(transmission_ - rhs.get_transmission()) <= eps
-             && std::abs(sample_to_source_distance_in_m_
-                         - rhs.get_sample_to_source_distance_in_m())
+             && std::abs(sample_to_source_distance_
+                         - rhs.get_sample_to_source_distance())
                   <= eps;
     }
 
@@ -716,8 +717,8 @@ namespace dxtbx { namespace model {
              && std::abs(flux_ - rhs.get_flux()) <= flux_tolerance
              && std::abs(transmission_ - rhs.get_transmission())
                   <= transmission_tolerance
-             && std::abs(sample_to_source_distance_in_m_
-                         - rhs.get_sample_to_source_distance_in_m())
+             && std::abs(sample_to_source_distance_
+                         - rhs.get_sample_to_source_distance())
                   <= sample_to_source_tolerance;
     }
   };
@@ -734,8 +735,8 @@ namespace dxtbx { namespace model {
     os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
     os << "    flux: " << b.get_flux() << "\n";
     os << "    transmission: " << b.get_transmission() << "\n";
-    os << "    sample to source distance (m): "
-       << b.get_sample_to_source_distance_in_m() << "\n";
+    os << "    sample to source distance : " << b.get_sample_to_source_distance()
+       << "\n";
     return os;
   }
 

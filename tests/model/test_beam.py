@@ -266,5 +266,5 @@ def test_polybeam_str():
     beam = PolyBeam()
     assert (
         beam.__str__()
-        == "Beam:\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.999\n    flux: 0\n    transmission: 1\n    sample to source distance (m): 0\n"
+        == "Beam:\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.999\n    flux: 0\n    transmission: 1\n    sample to source distance : 0\n"
     )
