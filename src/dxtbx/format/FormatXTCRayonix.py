@@ -2,7 +2,18 @@ from __future__ import annotations
 
 import sys
 
-import psana
+try:
+    import psana
+except ImportError:
+    psana = None
+except TypeError:
+    # Check if SIT_* environment variables are set
+    import os
+
+    if os.environ.get("SIT_ROOT"):
+        # Variables are present, so must have been another error
+        raise
+    psana = None
 
 from libtbx.phil import parse
 from scitbx.array_family import flex

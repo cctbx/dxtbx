@@ -4,7 +4,17 @@ import os
 import sys
 
 import numpy as np
-import psana
+
+try:
+    import psana
+except ImportError:
+    psana = None
+except TypeError:
+    # Check if SIT_* environment variables are set
+    if os.environ.get("SIT_ROOT"):
+        # Variables are present, so must have been another error
+        raise
+    psana = None
 
 from cctbx import factor_kev_angstrom
 from cctbx.eltbx import attenuation_coefficient
