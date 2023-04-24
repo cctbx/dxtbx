@@ -23,7 +23,7 @@ class FormatCBFMiniEigerPetraP14(FormatCBFMiniEiger):
             if (
                 "# detector" in record.lower()
                 and "eiger" in record.lower()
-                and "E-32-0107" in record
+                and "E-32-0129" in record
             ):
                 return True
 
