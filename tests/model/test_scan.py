@@ -395,6 +395,8 @@ def test_print_scan():
     )
     assert scan.__str__() == expected_scan_string
 
+    # Properties with unique output
+
     scan.set_oscillation((0.0, 0.5))
     expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    oscillation:   {0,0.5}\n"
     assert scan.__str__() == expected_scan_string
@@ -407,6 +409,19 @@ def test_print_scan():
     expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    init epoch: 0\n    exposure time: 0\n    oscillation:   {0,0.5}\n"
     assert scan.__str__() == expected_scan_string
 
-    scan.set_property("unknown_property", flex.double(10))
-    with pytest.raises(RuntimeError):
-        scan.__str__()
+    # Generic properties
+
+    properties = {
+        "test_int": tuple(range(10)),
+        "test_float": tuple([float(i * 2) for i in range(10)]),
+        "test_bool": tuple([True for i in range(10)]),
+        "test_string": tuple([f"test_{i}" for i in range(10)]),
+        "test_vec3_double": tuple([(1.0, 1.0, 1.0) for i in range(10)]),
+        "test_vec2_double": tuple([(2.0, 2.0) for i in range(10)]),
+    }
+
+    scan = ScanFactory.make_scan_from_properties(
+        image_range=image_range, properties=properties
+    )
+    expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    test_bool:    1 - 1\n    test_float:    0 - 18\n    test_int:    0 - 9\n    test_string:    test_0 - test_9\n    test_vec2_double:    {2,2} - {2,2}\n    test_vec3_double:    {1,1,1} - {1,1,1}\n"
+    assert scan.__str__() == expected_scan_string
