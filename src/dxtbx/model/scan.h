@@ -658,11 +658,11 @@ namespace dxtbx { namespace model {
       } else if (it->first == "oscillation_width") {
         /*Handled in oscillation case*/
       } else if (it->first == "exposure_time") {
-        os << "    exposure time: "
+        os << "    exposure time:    "
            << properties.get<double>("exposure_time").const_ref()[0] << "\n";
 
       } else if (it->first == "epochs") {
-        os << "    init epoch: " << properties.get<double>("epochs").const_ref()[0]
+        os << "    epoch:    " << properties.get<double>("epochs").const_ref()[0]
            << "\n";
 
       } else {
