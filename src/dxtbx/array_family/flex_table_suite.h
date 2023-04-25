@@ -328,6 +328,15 @@ namespace dxtbx { namespace af { namespace flex_table_suite {
     }
   };
 
+  struct column_range_to_string_visitor : public boost::static_visitor<std::string> {
+    template <typename U>
+    std::string operator()(const U &column) const {
+      std::ostringstream os;
+      os << column[0] << " - " << column[column.size() - 1] << "\n";
+      return os.str();
+    }
+  };
+
   template <typename T>
   struct compare_column_visitor : public boost::static_visitor<bool> {
     T &self;

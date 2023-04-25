@@ -630,31 +630,6 @@ namespace dxtbx { namespace model {
       return dxtbx::af::flex_table_suite::getitem_slice(properties_, slice);
     }
 
-    /*
-     * Summary for operator<<
-     */
-    void add_property_summary_to_stream(std::ostream &os,
-                                        const std::string property_name) const {
-      if (property_name == "oscillation") {
-        DXTBX_ASSERT(properties_.contains("oscillation"));
-        vec2<double> oscillation = get_oscillation_in_deg();
-        os << "    oscillation:   " << oscillation.const_ref() << "\n";
-
-      } else if (property_name == "exposure_time") {
-        DXTBX_ASSERT(properties_.contains("exposure_time"));
-        os << "    exposure time: "
-           << properties_.get<double>("exposure_time").const_ref()[0] << "\n";
-
-      } else if (property_name == "epochs") {
-        DXTBX_ASSERT(properties_.contains("epochs"));
-        os << "    init epoch: " << properties_.get<double>("epochs").const_ref()[0]
-           << "\n";
-
-      } else {
-        throw DXTBX_ERROR("No summary found for " + (property_name));
-      }
-    }
-
     friend std::ostream &operator<<(std::ostream &os, const Scan &s);
 
   private:
@@ -672,8 +647,27 @@ namespace dxtbx { namespace model {
     os << "    number of images:   " << s.get_num_images() << "\n";
     os << "    image range:   " << s.get_image_range().const_ref() << "\n";
     flex_table<scan_property_types> properties = s.get_properties();
-    for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
-      s.add_property_summary_to_stream(os, it->first);
+    dxtbx::af::flex_table_suite::column_range_to_string_visitor visitor;
+    for (flex_table<scan_property_types>::const_iterator it = properties.begin();
+         it != properties.end();
+         ++it) {
+      if (it->first == "oscillation") {
+        vec2<double> oscillation = s.get_oscillation_in_deg();
+        os << "    oscillation:   " << oscillation.const_ref() << "\n";
+
+      } else if (it->first == "oscillation_width") {
+        /*Handled in oscillation case*/
+      } else if (it->first == "exposure_time") {
+        os << "    exposure time: "
+           << properties.get<double>("exposure_time").const_ref()[0] << "\n";
+
+      } else if (it->first == "epochs") {
+        os << "    init epoch: " << properties.get<double>("epochs").const_ref()[0]
+           << "\n";
+
+      } else {
+        os << "    " << it->first << ":    " << it->second.apply_visitor(visitor);
+      }
     }
     return os;
   }
