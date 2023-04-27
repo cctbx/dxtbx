@@ -459,6 +459,10 @@ namespace dxtbx { namespace model {
         if (properties_.contains("oscillation_width")) {
           dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
         }
+        if (rhs_properties.contains("oscillation_width")) {
+          dxtbx::af::flex_table_suite::delitem_column(rhs_properties,
+                                                      "oscillation_width");
+        }
       }
 
       image_range_[1] = rhs.image_range_[1];
