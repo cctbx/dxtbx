@@ -22,10 +22,8 @@ def test_scan_wrap_around_zero():
         for f, s, e in zip(filenames, starts, ends)
     ]
     s0 = scans[0]
-    print("s0", s0.get_oscillation())
     for s in scans[1:]:
         assert s.get_oscillation()[1] == 1
-        print(s.get_oscillation())
         s0 += s
     assert s0.get_oscillation() == pytest.approx((350, 1))
     assert s0.get_image_range() == (350, 369)
@@ -402,11 +400,11 @@ def test_print_scan():
     assert scan.__str__() == expected_scan_string
 
     scan.set_property("epochs", flex.double(10))
-    expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    init epoch: 0\n    oscillation:   {0,0.5}\n"
+    expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    epoch:    0\n    oscillation:   {0,0.5}\n"
     assert scan.__str__() == expected_scan_string
 
     scan.set_property("exposure_time", flex.double(10))
-    expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    init epoch: 0\n    exposure time: 0\n    oscillation:   {0,0.5}\n"
+    expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    epoch:    0\n    exposure time:    0\n    oscillation:   {0,0.5}\n"
     assert scan.__str__() == expected_scan_string
 
     # Generic properties

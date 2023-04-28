@@ -450,6 +450,7 @@ namespace dxtbx { namespace model {
                                    - mod_2pi(rhs.get_oscillation_range()[0]));
         double diff_abs =
           std::abs(get_oscillation_range()[1] - rhs.get_oscillation_range()[0]);
+
         DXTBX_ASSERT(std::min(diff_2pi, diff_abs) < eps * get_num_images());
 
         /*
@@ -460,6 +461,8 @@ namespace dxtbx { namespace model {
           dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
         }
         if (rhs_properties.contains("oscillation_width")) {
+          boost::python::dict d;
+          rhs_properties = dxtbx::af::flex_table_suite::deepcopy(rhs.properties_, d);
           dxtbx::af::flex_table_suite::delitem_column(rhs_properties,
                                                       "oscillation_width");
         }
