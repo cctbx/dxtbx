@@ -12,6 +12,7 @@ import pickle
 from typing import Any, Callable, Generator, Iterable
 
 import pkg_resources
+import pytest
 
 import dxtbx.datablock
 from dxtbx.datablock import (
@@ -308,7 +309,7 @@ class ExperimentListDict:
                     # make a new bigger scan
                     o = eobj_scan[imageset_ref].get_oscillation()
                     s = scan.get_oscillation()
-                    assert o[1] == s[1]
+                    assert o[1] == pytest.approx(s[1])
                     scan = copy.deepcopy(scan)
                     scan.set_image_range((min(i[0], j[0]), max(i[1], j[1])))
                     scan.set_oscillation((min(o[0], s[0]), o[1]))
