@@ -44,6 +44,7 @@ class FormatNXmx(FormatNexus):
 
     @staticmethod
     def understand(image_file):
+        return False
         with h5py.File(image_file) as handle:
             return bool(
                 [
@@ -65,7 +66,7 @@ class FormatNXmx(FormatNexus):
         nxmx_obj = self._get_nxmx(self._cached_file_handle)
         nxentry = nxmx_obj.entries[0]
         nxsample = nxentry.samples[0]
-        nxinstrument = nxentry.instruments[0]
+        self.nxinstrument = nxinstrument = nxentry.instruments[0]
         nxdetector = nxinstrument.detectors[0]
         nxbeam = nxinstrument.beams[0]
         self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
@@ -80,7 +81,6 @@ class FormatNXmx(FormatNexus):
             self._detector_model = inverted_distance_detector(self._detector_model)
 
         self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
-        self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
         self._bit_depth_readout = nxdetector.bit_depth_readout
 
         if self._scan_model:
@@ -106,7 +106,7 @@ class FormatNXmx(FormatNexus):
         return self._num_images
 
     def get_static_mask(self, index=None, goniometer=None):
-        return self._static_mask
+        return dxtbx.nexus.MaskFactory(self.nxinstrument.detectors, index).mask
 
     def get_raw_data(self, index):
         nxmx_obj = self._get_nxmx(self._cached_file_handle)
