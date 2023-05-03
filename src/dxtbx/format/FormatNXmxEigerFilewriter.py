@@ -47,7 +47,8 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         nxmx_obj = self._get_nxmx(self._cached_file_handle)
         nxdata = nxmx_obj.entries[0].data[0]
         nxdetector = nxmx_obj.entries[0].instruments[0].detectors[0]
-        raw_data = get_raw_data(nxdata, nxdetector, index)
+        bit_depth = nxdetector.bit_depth_image
+        raw_data = get_raw_data(nxdata, nxdetector, index, bit_depth)
         if self._bit_depth_readout:
             # if 32 bit then it is a signed int, I think if 8, 16 then it is
             # unsigned with the highest two values assigned as masking values
@@ -63,7 +64,7 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
 
 
 def get_raw_data(
-    nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int
+    nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int, bit_depth: int,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
@@ -85,6 +86,6 @@ def get_raw_data(
     all_data = []
     sliced_outer = data[index]
     for module_slices in get_detector_module_slices(nxdetector):
-        data_as_flex = _dataset_as_flex(sliced_outer, tuple(module_slices))
+        data_as_flex = _dataset_as_flex(sliced_outer, tuple(module_slices), bit_depth=bit_depth)
         all_data.append(data_as_flex)
     return tuple(all_data)
