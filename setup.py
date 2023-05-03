@@ -26,7 +26,7 @@ setup_kwargs = {
     "package_dir": {"": "src"},
     "package_data": {
         "": ["*"],
-        "dxtbx": ["boost_python/*", "example/*", "py.typed"],
+        "dxtbx": ["array_family/*", "boost_python/*", "example/*", "py.typed"],
         "dxtbx.format": ["boost_python/*"],
         "dxtbx.masking": ["boost_python/*"],
         "dxtbx.model": ["boost_python/*"],
