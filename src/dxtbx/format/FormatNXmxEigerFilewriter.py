@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from typing import Optional
 
 import h5py
 import nxmx
@@ -28,15 +29,20 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         """Initialise the image structure from the given file."""
         super().__init__(image_file, **kwargs)
 
+    def start(self):
+        super().start()
+        try:
+            # This is (currently) a DECTRIS-specific non-standard item that
+            # we will use in preference to bit_depth_readout (see below)
+            self._bit_depth_image = self._cached_file_handle[
+                "entry/instrument/detector/bit_depth_image"
+            ][()]
+        except KeyError:
+            self._bit_depth_image = None
+
     def _get_nxmx(self, fh: h5py.File):
         nxmx_obj = nxmx.NXmx(fh)
         nxentry = nxmx_obj.entries[0]
-
-        # possibly useful datum for later
-        try:
-            self._bit_depth_image = fh["entry/instrument/detector/bit_depth_image"][()]
-        except KeyError:
-            self._bit_depth_image = None
 
         nxdetector = nxentry.instruments[0].detectors[0]
         if nxdetector.underload_value is None:
@@ -54,17 +60,16 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         nxdata = nxmx_obj.entries[0].data[0]
         nxdetector = nxmx_obj.entries[0].instruments[0].detectors[0]
 
-        bit_depth = self._bit_depth_image
-
+        # Prefer bit_depth_image over bit_depth_readout since the former
+        # actually corresponds to the bit depth of the images as stored on
+        # disk. See also:
+        #   https://www.dectris.com/support/downloads/header-docs/nexus/
+        bit_depth = self._bit_depth_image or self._bit_depth_readout
         raw_data = get_raw_data(nxdata, nxdetector, index, bit_depth)
 
-        if self._bit_depth_readout:
-            # if 32 bit then it is a signed int, I think if 8, 16 then it is
-            # unsigned with the highest two values assigned as masking values
-            if self._bit_depth_readout == 32:
-                top = 2**31
-            else:
-                top = 2**self._bit_depth_readout
+        if bit_depth:
+            # Unsigned int with the highest two values assigned as masking values
+            top = 2**bit_depth
             for data in raw_data:
                 d1d = data.as_1d()
                 d1d.set_selected(d1d == top - 1, -1)
@@ -73,7 +78,10 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
 
 
 def get_raw_data(
-    nxdata: nxmx.NXdata, nxdetector: nxmx.NXdetector, index: int, bit_depth: int
+    nxdata: nxmx.NXdata,
+    nxdetector: nxmx.NXdetector,
+    index: int,
+    bit_depth: Optional[int] = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
@@ -95,6 +103,8 @@ def get_raw_data(
     all_data = []
     sliced_outer = data[index]
     for module_slices in get_detector_module_slices(nxdetector):
-        data_as_flex = _dataset_as_flex(sliced_outer, tuple(module_slices), bit_depth)
+        data_as_flex = _dataset_as_flex(
+            sliced_outer, tuple(module_slices), bit_depth=bit_depth
+        )
         all_data.append(data_as_flex)
     return tuple(all_data)
