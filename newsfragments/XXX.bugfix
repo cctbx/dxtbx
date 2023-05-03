@@ -1,0 +1,1 @@
+bugfix: read bit_depth_image from DECTRIS NXmx files rather than readout, since the on-disk format is most useful
