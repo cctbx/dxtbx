@@ -70,8 +70,12 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         raw_data = get_raw_data(nxdata, nxdetector, index, bit_depth)
 
         if bit_depth:
-            # Unsigned int with the highest two values assigned as masking values
-            top = 2**bit_depth
+            # if 32 bit then it is a signed int, I think if 8, 16 then it is
+            # unsigned with the highest two values assigned as masking values
+            if bit_depth == 32:
+                top = 2**31
+            else:
+                top = 2**bit_depth
             for data in raw_data:
                 d1d = data.as_1d()
                 d1d.set_selected(d1d == top - 1, -1)
