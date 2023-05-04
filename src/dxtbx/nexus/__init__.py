@@ -407,11 +407,10 @@ def get_dxtbx_detector(
         # is stored in module.data_size. Additionally, data_size can have more than 2
         # dimensions, for multi-module detectors. So take the last two dimensions and reverse
         # them.  Examples:
-        # [1,2,3,4][-1:-3:-1] --> [4, 3]
-        # [1,2,3][-1:-3:-1] --> [3, 2]
-        # [1,2][-1:-3:-1] --> [2, 1]
-        image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[-1:-3:-1])))
-        assert len(image_size) == 2, image_size
+        # [1,2,3,4] --> (4, 3)
+        # [1,2,3]   --> (3, 2)
+        # [1,2]     --> (2, 1)
+        image_size = (int(module.data_size[-1]), int(module.data_size[-2]))
         underload = (
             float(nxdetector.underload_value)
             if nxdetector.underload_value is not None
