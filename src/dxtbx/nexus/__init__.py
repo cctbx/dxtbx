@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
-from typing import Literal, Optional, Tuple, cast
+from typing import Literal, Optional
 
 import h5py
 import numpy as np
