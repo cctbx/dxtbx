@@ -626,6 +626,7 @@ def pixel_mask_example():
 def test_get_static_mask(pixel_mask_example):
     det = nxmx.NXdetector(pixel_mask_example["/entry/instrument/detector"])
     mask = dxtbx.nexus.get_static_mask(det)
+    assert False
     assert len(mask) == 1
     assert isinstance(mask[0], flex.bool)
     assert mask[0].all() == (4362, 4148)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import h5py
 import nxmx
 
+from dxtbx.format import nexus as format_nexus
 import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
 
@@ -44,7 +45,6 @@ class FormatNXmx(FormatNexus):
 
     @staticmethod
     def understand(image_file):
-        return False
         with h5py.File(image_file) as handle:
             return bool(
                 [
@@ -106,7 +106,7 @@ class FormatNXmx(FormatNexus):
         return self._num_images
 
     def get_static_mask(self, index=None, goniometer=None):
-        return dxtbx.nexus.MaskFactory(self.nxinstrument.detectors, index).mask
+        return format_nexus.MaskFactory(self.nxinstrument.detectors, index).mask
 
     def get_raw_data(self, index):
         nxmx_obj = self._get_nxmx(self._cached_file_handle)
