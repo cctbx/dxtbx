@@ -29,14 +29,16 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         """Initialise the image structure from the given file."""
         super().__init__(image_file, **kwargs)
 
-    def start(self):
-        super().start()
+    def _start(self):
+        super()._start()
         try:
             # This is (currently) a DECTRIS-specific non-standard item that
             # we will use in preference to bit_depth_readout (see below)
-            self._bit_depth_image = self._cached_file_handle[
-                "entry/instrument/detector/bit_depth_image"
-            ][()]
+            self._bit_depth_image = int(
+                self._cached_file_handle["entry/instrument/detector/bit_depth_image"][
+                    ()
+                ]
+            )
         except KeyError:
             self._bit_depth_image = None
 
