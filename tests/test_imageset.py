@@ -387,6 +387,11 @@ class TestImageSequence:
         with pytest.raises(RuntimeError):
             _ = sequence2[5]
 
+        # Check data access matches expected images from the slice
+        panel_data1 = sequence[3][0]
+        panel_data2 = sequence2[0][0]
+        assert panel_data1.all_eq(panel_data2)
+
         assert len(sequence2) == 4
         assert_can_get_detectorbase(sequence2, range(0, 4), 5)
         self.tst_get_models(sequence2, range(0, 4), 5)
