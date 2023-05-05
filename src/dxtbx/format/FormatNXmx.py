@@ -59,13 +59,12 @@ class FormatNXmx(FormatNexus):
         super().__init__(image_file, **kwargs)
 
     def _start(self):
-
         self._cached_file_handle = h5py.File(self._image_file, swmr=True)
         nxmx_obj = self._get_nxmx(self._cached_file_handle)
         nxentry = nxmx_obj.entries[0]
         nxsample = nxentry.samples[0]
         nxinstrument = nxentry.instruments[0]
-        nxdetector = nxinstrument.detectors[0]
+        self.nxdetector = nxdetector = nxinstrument.detectors[0]
         nxbeam = nxinstrument.beams[0]
         self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
         self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
@@ -104,7 +103,7 @@ class FormatNXmx(FormatNexus):
         return self._num_images
 
     def get_static_mask(self, index=None, goniometer=None):
-        return dxtbx.nexus.get_static_mask(nxdetector, index=index)
+        return dxtbx.nexus.get_static_mask(self.nxdetector, index=index)
 
     def get_raw_data(self, index):
         nxmx_obj = self._get_nxmx(self._cached_file_handle)

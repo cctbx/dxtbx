@@ -262,7 +262,6 @@ def get_dxtbx_detector(
         root = detector
 
     for module in nxdetector.modules:
-
         if len(nxdetector.modules) > 1:
             # Set up the detector hierarchy
             if module.fast_pixel_direction.depends_on is not None:
@@ -464,7 +463,9 @@ def get_detector_module_slices(
     )
 
 
-def get_static_mask(nxdetector: nxmx.NXdetector, index=None: int) -> tuple[flex.bool, ...] | None:
+def get_static_mask(
+    nxdetector: nxmx.NXdetector, index: int = None
+) -> tuple[flex.bool, ...] | None:
     """Return the static mask for an NXdetector.
 
     This will be a tuple of flex.bool, of length equal to the number of modules. The
