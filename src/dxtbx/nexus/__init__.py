@@ -472,10 +472,11 @@ def get_static_mask(
     result is intended to be compatible with the get_static_mask() method of dxtbx
     format classes.
     """
-    if index is None:
-        index = ()
     try:
-        pixel_mask = nxdetector.pixel_mask[index]
+        if index is None:
+            pixel_mask = nxdetector.pixel_mask
+        else:
+            pixel_mask = nxdetector.pixel_mask_single(index=index)
     except KeyError:
         return None
     if pixel_mask is None or not pixel_mask.size or pixel_mask.ndim != 2:
