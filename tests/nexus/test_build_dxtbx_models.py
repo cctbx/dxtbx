@@ -623,6 +623,36 @@ def pixel_mask_example():
         yield f
 
 
+@pytest.fixture
+def pixel_multi_mask_example():
+    with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
+        detector = f.create_group("/entry/instrument/detector")
+        detector.attrs["NX_class"] = "NXdetector"
+
+        module = detector.create_group("module")
+        module.attrs["NX_class"] = "NXdetector_module"
+        module.create_dataset("data_origin", data=np.array([0.0, 0.0]))
+        module.create_dataset("data_size", data=np.array([4362, 4148]))
+
+        nf = 1028  # module pixels fast
+        ns = 512  # module pixels slow
+        df = 12  # module gap fast
+        ds = 38  # module gap slow
+
+        mask0 = np.zeros((4362, 4148), dtype="i8")
+        for j in range(mask0.shape[1] // (nf + df)):
+            mask0[:, (j + 1) * nf + j * df : (j + 1) * (nf + df)] = 1
+        for i in range(mask0.shape[0] // (ns + ds)):
+            mask0[(i + 1) * ns + i * ds : (i + 1) * (ns + ds), :] = 1
+
+        mask1 = np.zeros((4362, 4148), dtype="i8")
+
+        multimask = np.array((mask0, mask1))
+
+        detector.create_dataset("pixel_mask", data=multimask)
+        yield f
+
+
 def test_get_static_mask(pixel_mask_example):
     det = nxmx.NXdetector(pixel_mask_example["/entry/instrument/detector"])
     mask = dxtbx.nexus.get_static_mask(det)
@@ -633,6 +663,23 @@ def test_get_static_mask(pixel_mask_example):
         mask[0].as_numpy_array()
         == (pixel_mask_example["/entry/instrument/detector/pixel_mask"][()] == 0)
     )
+
+
+def test_get_single_static_mask(pixel_multi_mask_example):
+    det = nxmx.NXdetector(pixel_multi_mask_example["/entry/instrument/detector"])
+    mask0 = dxtbx.nexus.get_static_mask(det, index=0)
+    assert len(mask0) == 1
+    assert isinstance(mask0[0], flex.bool)
+    assert mask0[0].all() == (4362, 4148)
+    assert np.all(
+        mask0[0].as_numpy_array()
+        == (pixel_multi_mask_example["/entry/instrument/detector/pixel_mask"][0] == 0)
+    )
+    mask1 = dxtbx.nexus.get_static_mask(det, index=1)
+    assert len(mask1) == 1
+    assert isinstance(mask1[0], flex.bool)
+    assert mask1[0].all() == (4362, 4148)
+    assert np.all(mask1[0].as_numpy_array())
 
 
 @pytest.fixture
