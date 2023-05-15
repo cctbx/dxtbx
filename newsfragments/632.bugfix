@@ -1,0 +1,1 @@
+Compatibility fix for the DECTRIS Eiger FileWriter. Recent FileWriter versions split bit depth metadata into two separate items, ``bit_depth_readout`` from the NXmx standard, and the new ``bit_depth_image`` field. This adds support for the latter, and now passes the metadata through into image conversion.
