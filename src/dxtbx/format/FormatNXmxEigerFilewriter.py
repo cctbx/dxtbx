@@ -34,7 +34,7 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
             # This is (currently) a DECTRIS-specific non-standard item that
             # we will use in preference to bit_depth_readout (see below)
             self._bit_depth_image = int(
-                self._cached_file_handle["entry/instrument/detector/bit_depth_image"][
+                self._cached_file_handle["/entry/instrument/detector/bit_depth_image"][
                     ()
                 ]
             )
