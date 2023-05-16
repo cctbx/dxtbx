@@ -1,3 +1,12 @@
+DIALS 3.14.2 (2023-05-16)
+=========================
+
+Bugfixes
+--------
+
+- Compatibility fix for the DECTRIS Eiger FileWriter. Recent FileWriter versions split bit depth metadata into two separate items, ``bit_depth_readout`` from the NXmx standard, and the new ``bit_depth_image`` field. This adds support for the latter, and now passes the metadata through into image conversion. (`#632 <https://github.com/cctbx/dxtbx/issues/632>`_)
+
+
 dxtbx 3.14.0 (2023-04-12)
 =========================
 
