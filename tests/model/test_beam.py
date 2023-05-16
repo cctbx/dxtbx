@@ -178,7 +178,7 @@ def test_beam_self_serialization():
     assert beam == BeamFactory.from_dict(beam.to_dict())
 
 
-def test_PolychromaticBeam_from_phil():
+def test_polychromatic_beam_from_phil():
     params = beam_phil_scope.fetch(
         parse(
             """
@@ -208,12 +208,12 @@ def test_PolychromaticBeam_from_phil():
     assert beam.get_flux() == pytest.approx(0.75)
 
 
-def test_PolychromaticBeam_from_dict():
+def test_polychromatic_beam_from_dict():
     beam = PolychromaticBeam()
     assert beam == BeamFactory.from_dict(beam.to_dict())
 
 
-def test_make_PolychromaticBeam():
+def test_make_polychromatic_beam():
 
     direction = (0.0, 0.0, 1.0)
     divergence = 0.2
@@ -223,7 +223,7 @@ def test_make_PolychromaticBeam():
     transmission = 0.5
     flux = 0.75
 
-    beam = BeamFactory.make_PolychromaticBeam(
+    beam = BeamFactory.make_polychromatic_beam(
         direction=direction,
         divergence=divergence,
         sigma_divergence=sigma_divergence,
@@ -242,7 +242,7 @@ def test_make_PolychromaticBeam():
     assert beam.get_flux() == pytest.approx(0.75)
 
 
-def test_PolychromaticBeam_wavelength_guards():
+def test_polychromatic_beam_wavelength_guards():
     beam = PolychromaticBeam()
     with pytest.raises(RuntimeError):
         _ = beam.get_wavelength()
@@ -262,7 +262,7 @@ def test_PolychromaticBeam_wavelength_guards():
         beam.set_s0((0.0, 0.0, 0.1))
 
 
-def test_PolychromaticBeam_str():
+def test_polychromatic_beam_str():
     beam = PolychromaticBeam()
     assert (
         beam.__str__()

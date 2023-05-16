@@ -169,12 +169,12 @@ class BeamFactory:
             return Beam(tuple(map(float, s0)))
 
     @staticmethod
-    def make_PolychromaticBeam(
+    def make_polychromatic_beam(
         direction: Vec3Float,
         divergence: float = 0.0,
         sigma_divergence: float = 0.0,
         polarization_normal: Vec3Float = (0.0, 1.0, 0.0),
-        polarization_fraction: float = 0.999,
+        polarization_fraction: float = 0.5,
         flux: float = 0.0,
         transmission: float = 1.0,
         deg: bool = True,

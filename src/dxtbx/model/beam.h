@@ -412,7 +412,7 @@ namespace dxtbx { namespace model {
       set_divergence(0.0);
       set_sigma_divergence(0.0);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.999);
+      set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
     }
@@ -426,7 +426,7 @@ namespace dxtbx { namespace model {
       set_divergence(0.0);
       set_sigma_divergence(0.0);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.999);
+      set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
     }
@@ -444,7 +444,7 @@ namespace dxtbx { namespace model {
       set_divergence(divergence);
       set_sigma_divergence(sigma_divergence);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.999);
+      set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
     }
