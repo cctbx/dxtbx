@@ -130,7 +130,7 @@ class BeamFactory:
         joint.update(dict)
 
         # Create the model from the joint dictionary
-        if "__id__" in joint and joint["__id__"] == "polychromatic":
+        if joint.get("__id__", "") == "polychromatic":
             return PolychromaticBeam.from_dict(joint)
         return Beam.from_dict(joint)
 
