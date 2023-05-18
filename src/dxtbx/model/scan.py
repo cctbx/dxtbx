@@ -119,13 +119,14 @@ class ScanFactory:
             If oscillation is in properties_dict,
             shared<double> is converted to vec2<double> and
             oscillation_width is removed (if present) to ensure
-            it is replaced correctly if updating t from d
+            it is replaced correctly if updating t dict from d dict
             """
 
             if "oscillation" not in properties_dict:
                 assert "oscillation_width" not in properties_dict
                 return properties_dict
             if "oscillation_width" in properties_dict:
+                assert "oscillation" in properties_dict
                 properties_dict["oscillation"] = (
                     properties_dict["oscillation"][0],
                     properties_dict["oscillation_width"][0],

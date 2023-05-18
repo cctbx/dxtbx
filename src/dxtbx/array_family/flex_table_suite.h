@@ -434,6 +434,7 @@ namespace dxtbx { namespace af { namespace flex_table_suite {
   template <typename T>
   bool compare_columns(T &self, T &other) {
     typedef typename T::const_iterator iterator;
+    // Implicitly assumed that self and other are the same size
     DXTBX_ASSERT(self.nrows() == other.nrows());
     bool same_column;
     for (iterator it = other.begin(); it != other.end(); ++it) {
