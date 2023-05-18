@@ -22,59 +22,217 @@
 #include <dxtbx/model/boost_python/pickle_suite.h>
 
 namespace dxtbx { namespace model { namespace boost_python {
+  namespace panel_detail {
+    using scitbx::deg_as_rad;
 
-  using scitbx::deg_as_rad;
+    std::string panel_to_string(const Panel &panel) {
+      std::stringstream ss;
+      ss << panel;
+      return ss.str();
+    }
 
-  std::string panel_to_string(const Panel &panel) {
-    std::stringstream ss;
-    ss << panel;
-    return ss.str();
-  }
+    static scitbx::af::shared<vec3<double> > get_lab_coord_multiple(
+      const Panel &panel,
+      scitbx::af::flex<vec2<double> >::type const &xy) {
+      scitbx::af::shared<vec3<double> > result((scitbx::af::reserve(xy.size())));
+      for (std::size_t i = 0; i < xy.size(); i++) {
+        result.push_back(panel.get_lab_coord(xy[i]));
+      }
+      return result;
+    }
 
-  static scitbx::af::shared<vec3<double> > get_lab_coord_multiple(
-    const Panel &panel,
-    scitbx::af::flex<vec2<double> >::type const &xy) {
-    scitbx::af::shared<vec3<double> > result((scitbx::af::reserve(xy.size())));
-    for (std::size_t i = 0; i < xy.size(); i++) {
-      result.push_back(panel.get_lab_coord(xy[i]));
+    static scitbx::af::shared<vec2<double> > pixel_to_millimeter_multiple(
+      const Panel &panel,
+      scitbx::af::flex<vec2<double> >::type const &xy) {
+      scitbx::af::shared<vec2<double> > result((scitbx::af::reserve(xy.size())));
+      for (std::size_t i = 0; i < xy.size(); i++) {
+        result.push_back(panel.pixel_to_millimeter(xy[i]));
+      }
+      return result;
+    }
+
+    static scitbx::af::shared<vec2<double> > millimeter_to_pixel_multiple(
+      const Panel &panel,
+      scitbx::af::flex<vec2<double> >::type const &xy) {
+      scitbx::af::shared<vec2<double> > result((scitbx::af::reserve(xy.size())));
+      for (std::size_t i = 0; i < xy.size(); i++) {
+        result.push_back(panel.millimeter_to_pixel(xy[i]));
+      }
+      return result;
+    }
+
+    static Panel panel_deepcopy(const Panel &panel, boost::python::object dict) {
+      return Panel(panel);
+    }
+
+    static bool panel_is(const Panel *lhs, const Panel *rhs) {
+      return lhs == rhs;
+    }
+
+    static void rotate_around_origin(Panel &panel,
+                                     vec3<double> axis,
+                                     double angle,
+                                     bool deg) {
+      double angle_rad = deg ? deg_as_rad(angle) : angle;
+      panel.rotate_around_origin(axis, angle_rad);
+    }
+
+    void set_projection_2d(Panel &obj, int4 rotation, int2 translation) {
+      const Projection2D projection_2d = Projection2D{rotation, translation};
+      obj.set_projection_2d(projection_2d);
+    }
+
+    boost::python::tuple projection_2d_to_tuple(const Panel &obj) {
+      boost::optional<Projection2D> panel_projection = obj.get_projection_2d();
+      if (panel_projection) {
+        Projection2D projection = static_cast<Projection2D>(*panel_projection);
+        return boost::python::make_tuple(projection.rotation, projection.translation);
+      } else {
+        return boost::python::make_tuple();
+      }
+    }
+
+    Panel *basic_panel_from_dict(boost::python::dict obj) {
+      Panel *result = new Panel();
+      if (obj.has_key("name")) {
+        result->set_name(boost::python::extract<std::string>(obj["name"]));
+      }
+      if (obj.has_key("type")) {
+        result->set_type(boost::python::extract<std::string>(obj["type"]));
+      }
+      if (obj.has_key("fast_axis") && obj.has_key("slow_axis")
+          && obj.has_key("origin")) {
+        result->set_local_frame(boost::python::extract<vec3<double> >(obj["fast_axis"]),
+                                boost::python::extract<vec3<double> >(obj["slow_axis"]),
+                                boost::python::extract<vec3<double> >(obj["origin"]));
+      }
+      if (obj.has_key("thickness")) {
+        result->set_thickness(boost::python::extract<double>(obj["thickness"]));
+      }
+      if (obj.has_key("material")) {
+        result->set_material(boost::python::extract<std::string>(obj["material"]));
+      }
+      if (obj.has_key("mu")) {
+        result->set_mu(boost::python::extract<double>(obj["mu"]));
+      }
+      if (obj.has_key("identifier")) {
+        result->set_identifier(boost::python::extract<std::string>(obj["identifier"]));
+      }
+      if (obj.has_key("mask")) {
+        scitbx::af::shared<int4> mask =
+          boost::python::extract<scitbx::af::shared<int4> >(
+            boost::python::extract<boost::python::list>(obj["mask"]));
+        result->set_mask(mask.const_ref());
+      }
+      if (obj.has_key("gain")) {
+        result->set_gain(boost::python::extract<double>(obj["gain"]));
+      }
+      if (obj.has_key("pedestal")) {
+        result->set_pedestal(boost::python::extract<double>(obj["pedestal"]));
+      }
+      if (obj.has_key("raw_image_offset")) {
+        result->set_raw_image_offset(
+          boost::python::extract<int2>(obj["raw_image_offset"]));
+      }
+      if (obj.has_key("image_size")) {
+        result->set_image_size(
+          boost::python::extract<tiny<std::size_t, 2> >(obj["image_size"]));
+      }
+      if (obj.has_key("pixel_size")) {
+        result->set_pixel_size(
+          boost::python::extract<tiny<double, 2> >(obj["pixel_size"]));
+      }
+      if (obj.has_key("trusted_range")) {
+        result->set_trusted_range(
+          boost::python::extract<tiny<double, 2> >(obj["trusted_range"]));
+      }
+      if (obj.has_key("projection_2d")) {
+        int4 rotation = boost::python::extract<int4>(obj["projection_2d"][0]);
+        int2 translation = boost::python::extract<int2>(obj["projection_2d"][1]);
+        const Projection2D projection_2d = Projection2D{rotation, translation};
+        result->set_projection_2d(projection_2d);
+      }
+      return result;
+    }
+
+    Panel *panel_from_dict_with_offset_wrapper(
+      boost::python::dict obj,
+      scitbx::af::versa<double, scitbx::af::flex_grid<> > dx,
+      scitbx::af::versa<double, scitbx::af::flex_grid<> > dy) {
+      DXTBX_ASSERT(dx.accessor().all().size() == 2);
+      DXTBX_ASSERT(dy.accessor().all().size() == 2);
+      DXTBX_ASSERT(dx.accessor().all().all_eq(dy.accessor().all()));
+
+      std::size_t ysize = dx.accessor().all()[0];
+      std::size_t xsize = dx.accessor().all()[1];
+
+      scitbx::af::c_grid<2> grid(ysize, xsize);
+      scitbx::af::versa<double, scitbx::af::c_grid<2> > dx2(dx.handle(), grid);
+      scitbx::af::versa<double, scitbx::af::c_grid<2> > dy2(dy.handle(), grid);
+
+      return panel_from_dict_with_offset(obj, dx2, dy2);
+    }
+
+    vec3<double> get_pixel_lab_coord(Panel &panel, tiny<double, 2> px) {
+      return panel.get_pixel_lab_coord(px);
+    }
+
+    vec2<double> pixel_to_millimeter(Panel &panel, vec2<double> px) {
+      return panel.pixel_to_millimeter(px);
+    }
+  }  // namespace panel_detail
+
+  Panel *panel_from_dict_with_offset(
+    boost::python::dict obj,
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
+    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy) {
+    Panel *result = panel_detail::basic_panel_from_dict(obj);
+    DXTBX_ASSERT(dx.accessor()[0] == result->get_image_size()[1]);
+    DXTBX_ASSERT(dx.accessor()[1] == result->get_image_size()[0]);
+    DXTBX_ASSERT(dx.accessor().all_eq(dy.accessor()));
+    if (obj.has_key("px_mm_strategy")) {
+      boost::python::dict st =
+        boost::python::extract<boost::python::dict>(obj["px_mm_strategy"]);
+      std::string name = boost::python::extract<std::string>(st["type"]);
+      if (name == "SimplePxMmStrategy") {
+        std::shared_ptr<PxMmStrategy> strategy(new SimplePxMmStrategy());
+        result->set_px_mm_strategy(strategy);
+      } else if (name == "ParallaxCorrectedPxMmStrategy") {
+        double mu = result->get_mu();
+        double t0 = result->get_thickness();
+        if (st.has_key("mu") && st.has_key("t0")) {
+          mu = boost::python::extract<double>(st["mu"]);
+          t0 = boost::python::extract<double>(st["t0"]);
+          result->set_mu(mu);
+          result->set_thickness(t0);
+        }
+        if (mu > 0 && t0 > 0) {
+          std::shared_ptr<PxMmStrategy> strategy(
+            new ParallaxCorrectedPxMmStrategy(mu, t0));
+          result->set_px_mm_strategy(strategy);
+        }
+      } else if (name == "OffsetPxMmStrategy") {
+        std::shared_ptr<PxMmStrategy> strategy(new OffsetPxMmStrategy(dx, dy));
+        result->set_px_mm_strategy(strategy);
+      } else if (name == "OffsetParallaxCorrectedPxMmStrategy") {
+        double mu = result->get_mu();
+        double t0 = result->get_thickness();
+        if (st.has_key("mu") && st.has_key("t0")) {
+          mu = boost::python::extract<double>(st["mu"]);
+          t0 = boost::python::extract<double>(st["t0"]);
+          result->set_mu(mu);
+          result->set_thickness(t0);
+        }
+        if (mu > 0 && t0 > 0) {
+          std::shared_ptr<PxMmStrategy> strategy(
+            new OffsetParallaxCorrectedPxMmStrategy(mu, t0, dx, dy));
+          result->set_px_mm_strategy(strategy);
+        }
+      } else {
+        DXTBX_ASSERT(false);
+      }
     }
     return result;
-  }
-
-  static scitbx::af::shared<vec2<double> > pixel_to_millimeter_multiple(
-    const Panel &panel,
-    scitbx::af::flex<vec2<double> >::type const &xy) {
-    scitbx::af::shared<vec2<double> > result((scitbx::af::reserve(xy.size())));
-    for (std::size_t i = 0; i < xy.size(); i++) {
-      result.push_back(panel.pixel_to_millimeter(xy[i]));
-    }
-    return result;
-  }
-
-  static scitbx::af::shared<vec2<double> > millimeter_to_pixel_multiple(
-    const Panel &panel,
-    scitbx::af::flex<vec2<double> >::type const &xy) {
-    scitbx::af::shared<vec2<double> > result((scitbx::af::reserve(xy.size())));
-    for (std::size_t i = 0; i < xy.size(); i++) {
-      result.push_back(panel.millimeter_to_pixel(xy[i]));
-    }
-    return result;
-  }
-
-  static Panel panel_deepcopy(const Panel &panel, boost::python::object dict) {
-    return Panel(panel);
-  }
-
-  static bool panel_is(const Panel *lhs, const Panel *rhs) {
-    return lhs == rhs;
-  }
-
-  static void rotate_around_origin(Panel &panel,
-                                   vec3<double> axis,
-                                   double angle,
-                                   bool deg) {
-    double angle_rad = deg ? deg_as_rad(angle) : angle;
-    panel.rotate_around_origin(axis, angle_rad);
   }
 
   template <>
@@ -113,22 +271,6 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["type"] = name;
     return result;
   }
-
-  void set_projection_2d(Panel &obj, int4 rotation, int2 translation) {
-    const Projection2D projection_2d = Projection2D{rotation, translation};
-    obj.set_projection_2d(projection_2d);
-  }
-
-  boost::python::tuple projection_2d_to_tuple(const Panel &obj) {
-    boost::optional<Projection2D> panel_projection = obj.get_projection_2d();
-    if (panel_projection) {
-      Projection2D projection = static_cast<Projection2D>(*panel_projection);
-      return boost::python::make_tuple(projection.rotation, projection.translation);
-    } else {
-      return boost::python::make_tuple();
-    }
-  }
-
   template <>
   boost::python::dict to_dict<Panel>(const Panel &obj) {
     boost::python::dict result;
@@ -150,75 +292,14 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["pedestal"] = obj.get_pedestal();
     result["px_mm_strategy"] = to_dict(obj.get_px_mm_strategy());
     if (obj.get_projection_2d()) {
-      result["projection_2d"] = projection_2d_to_tuple(obj);
-    }
-    return result;
-  }
-
-  Panel *basic_panel_from_dict(boost::python::dict obj) {
-    Panel *result = new Panel();
-    if (obj.has_key("name")) {
-      result->set_name(boost::python::extract<std::string>(obj["name"]));
-    }
-    if (obj.has_key("type")) {
-      result->set_type(boost::python::extract<std::string>(obj["type"]));
-    }
-    if (obj.has_key("fast_axis") && obj.has_key("slow_axis") && obj.has_key("origin")) {
-      result->set_local_frame(boost::python::extract<vec3<double> >(obj["fast_axis"]),
-                              boost::python::extract<vec3<double> >(obj["slow_axis"]),
-                              boost::python::extract<vec3<double> >(obj["origin"]));
-    }
-    if (obj.has_key("thickness")) {
-      result->set_thickness(boost::python::extract<double>(obj["thickness"]));
-    }
-    if (obj.has_key("material")) {
-      result->set_material(boost::python::extract<std::string>(obj["material"]));
-    }
-    if (obj.has_key("mu")) {
-      result->set_mu(boost::python::extract<double>(obj["mu"]));
-    }
-    if (obj.has_key("identifier")) {
-      result->set_identifier(boost::python::extract<std::string>(obj["identifier"]));
-    }
-    if (obj.has_key("mask")) {
-      scitbx::af::shared<int4> mask = boost::python::extract<scitbx::af::shared<int4> >(
-        boost::python::extract<boost::python::list>(obj["mask"]));
-      result->set_mask(mask.const_ref());
-    }
-    if (obj.has_key("gain")) {
-      result->set_gain(boost::python::extract<double>(obj["gain"]));
-    }
-    if (obj.has_key("pedestal")) {
-      result->set_pedestal(boost::python::extract<double>(obj["pedestal"]));
-    }
-    if (obj.has_key("raw_image_offset")) {
-      result->set_raw_image_offset(
-        boost::python::extract<int2>(obj["raw_image_offset"]));
-    }
-    if (obj.has_key("image_size")) {
-      result->set_image_size(
-        boost::python::extract<tiny<std::size_t, 2> >(obj["image_size"]));
-    }
-    if (obj.has_key("pixel_size")) {
-      result->set_pixel_size(
-        boost::python::extract<tiny<double, 2> >(obj["pixel_size"]));
-    }
-    if (obj.has_key("trusted_range")) {
-      result->set_trusted_range(
-        boost::python::extract<tiny<double, 2> >(obj["trusted_range"]));
-    }
-    if (obj.has_key("projection_2d")) {
-      int4 rotation = boost::python::extract<int4>(obj["projection_2d"][0]);
-      int2 translation = boost::python::extract<int2>(obj["projection_2d"][1]);
-      const Projection2D projection_2d = Projection2D{rotation, translation};
-      result->set_projection_2d(projection_2d);
+      result["projection_2d"] = panel_detail::projection_2d_to_tuple(obj);
     }
     return result;
   }
 
   template <>
   Panel *from_dict<Panel>(boost::python::dict obj) {
-    Panel *result = basic_panel_from_dict(obj);
+    Panel *result = panel_detail::basic_panel_from_dict(obj);
     if (obj.has_key("px_mm_strategy")) {
       boost::python::dict st =
         boost::python::extract<boost::python::dict>(obj["px_mm_strategy"]);
@@ -268,86 +349,8 @@ namespace dxtbx { namespace model { namespace boost_python {
     return result;
   }
 
-  Panel *panel_from_dict_with_offset(
-    boost::python::dict obj,
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy) {
-    Panel *result = basic_panel_from_dict(obj);
-    DXTBX_ASSERT(dx.accessor()[0] == result->get_image_size()[1]);
-    DXTBX_ASSERT(dx.accessor()[1] == result->get_image_size()[0]);
-    DXTBX_ASSERT(dx.accessor().all_eq(dy.accessor()));
-    if (obj.has_key("px_mm_strategy")) {
-      boost::python::dict st =
-        boost::python::extract<boost::python::dict>(obj["px_mm_strategy"]);
-      std::string name = boost::python::extract<std::string>(st["type"]);
-      if (name == "SimplePxMmStrategy") {
-        std::shared_ptr<PxMmStrategy> strategy(new SimplePxMmStrategy());
-        result->set_px_mm_strategy(strategy);
-      } else if (name == "ParallaxCorrectedPxMmStrategy") {
-        double mu = result->get_mu();
-        double t0 = result->get_thickness();
-        if (st.has_key("mu") && st.has_key("t0")) {
-          mu = boost::python::extract<double>(st["mu"]);
-          t0 = boost::python::extract<double>(st["t0"]);
-          result->set_mu(mu);
-          result->set_thickness(t0);
-        }
-        if (mu > 0 && t0 > 0) {
-          std::shared_ptr<PxMmStrategy> strategy(
-            new ParallaxCorrectedPxMmStrategy(mu, t0));
-          result->set_px_mm_strategy(strategy);
-        }
-      } else if (name == "OffsetPxMmStrategy") {
-        std::shared_ptr<PxMmStrategy> strategy(new OffsetPxMmStrategy(dx, dy));
-        result->set_px_mm_strategy(strategy);
-      } else if (name == "OffsetParallaxCorrectedPxMmStrategy") {
-        double mu = result->get_mu();
-        double t0 = result->get_thickness();
-        if (st.has_key("mu") && st.has_key("t0")) {
-          mu = boost::python::extract<double>(st["mu"]);
-          t0 = boost::python::extract<double>(st["t0"]);
-          result->set_mu(mu);
-          result->set_thickness(t0);
-        }
-        if (mu > 0 && t0 > 0) {
-          std::shared_ptr<PxMmStrategy> strategy(
-            new OffsetParallaxCorrectedPxMmStrategy(mu, t0, dx, dy));
-          result->set_px_mm_strategy(strategy);
-        }
-      } else {
-        DXTBX_ASSERT(false);
-      }
-    }
-    return result;
-  }
-
-  Panel *panel_from_dict_with_offset_wrapper(
-    boost::python::dict obj,
-    scitbx::af::versa<double, scitbx::af::flex_grid<> > dx,
-    scitbx::af::versa<double, scitbx::af::flex_grid<> > dy) {
-    DXTBX_ASSERT(dx.accessor().all().size() == 2);
-    DXTBX_ASSERT(dy.accessor().all().size() == 2);
-    DXTBX_ASSERT(dx.accessor().all().all_eq(dy.accessor().all()));
-
-    std::size_t ysize = dx.accessor().all()[0];
-    std::size_t xsize = dx.accessor().all()[1];
-
-    scitbx::af::c_grid<2> grid(ysize, xsize);
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx2(dx.handle(), grid);
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy2(dy.handle(), grid);
-
-    return panel_from_dict_with_offset(obj, dx2, dy2);
-  }
-
-  vec3<double> get_pixel_lab_coord(Panel &panel, tiny<double, 2> px) {
-    return panel.get_pixel_lab_coord(px);
-  }
-
-  vec2<double> pixel_to_millimeter(Panel &panel, vec2<double> px) {
-    return panel.pixel_to_millimeter(px);
-  }
-
   void export_panel() {
+    using namespace panel_detail;
     using namespace boost::python;
 
     class_<VirtualPanelFrame>("VirtualPanelFrame")

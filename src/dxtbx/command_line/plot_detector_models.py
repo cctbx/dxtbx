@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -66,6 +67,7 @@ class Arrow3D(FancyArrowPatch):
 def plot_group(
     g, color, ax, orthographic=False, show_origin_vectors=True, panel_numbers=True
 ):
+    panel_corners = []
     # recursively plot a detector group
     p = g.parent()
     if show_origin_vectors:
@@ -90,7 +92,11 @@ def plot_group(
     if g.is_group():
         for c in g:
             # plot all the children
-            plot_group(c, color, ax, orthographic, show_origin_vectors, panel_numbers)
+            panel_corners.append(
+                plot_group(
+                    c, color, ax, orthographic, show_origin_vectors, panel_numbers
+                )
+            )
     else:
         # plot the panel boundaries
         size = g.get_image_size()
@@ -102,6 +108,7 @@ def plot_group(
         v2 = p3 - p0
         vcen = ((v2 / 2) + (v1 / 2)) + p0
         z = list(zip(p0, p1, p2, p3, p0))
+        panel_corners.append((p0.elems, p1.elems, p2.elems, p3.elems))
 
         if orthographic:
             ax.plot(z[0], z[1], color=color)
@@ -115,6 +122,7 @@ def plot_group(
             if panel_numbers:
                 # Annotate with panel numbers
                 ax.text(vcen[0], vcen[1], vcen[2], "%d" % g.index())
+    return panel_corners
 
 
 def plot_image_plane_projection(detector, color, ax, panel_numbers=True):
@@ -140,6 +148,14 @@ def plot_image_plane_projection(detector, color, ax, panel_numbers=True):
             ax.text(vcen[0], vcen[1], "%d" % panel.index())
 
 
+def flatten(xs):
+    for x in xs:
+        if isinstance(x, Sequence) and not isinstance(x, (str, bytes)):
+            yield from flatten(x)
+        else:
+            yield x
+
+
 def run(args=None):
     dxtbx.util.encode_output_as_utf8()
     args = args or sys.argv[1:]
@@ -159,6 +175,7 @@ def run(args=None):
     colormap = plt.cm.gist_ncar
     colors = [colormap(i) for i in np.linspace(0, 0.9, len(files))]
     min_z = max_z = None
+    ax = None
     for file_name, color in zip(files, colors):
 
         # read the data and get the detector models
@@ -173,15 +190,15 @@ def run(args=None):
             detectors = detectors[0:1]
         for detector in detectors:
             # plot the hierarchy
-            if params.orthographic:
+            if ax is None and params.orthographic:
                 ax = fig.gca()
-            else:
+            elif ax is None:
                 ax = fig.add_subplot(projection="3d")
 
             if params.orthographic and params.project_onto == "image_plane":
                 plot_image_plane_projection(detector, color, ax, params.panel_numbers)
             else:
-                plot_group(
+                panel_corners = plot_group(
                     detector.hierarchy(),
                     color,
                     ax,
@@ -191,7 +208,9 @@ def run(args=None):
                 )
 
                 if not params.orthographic:
-                    all_z = [p.get_origin()[2] for p in detector]
+                    # flatten the nested list of panel coordinates and then select
+                    # all the z coordinates (i.e. every 3rd value)
+                    all_z = list(flatten(panel_corners))[2::3]
                     if min_z is None:
                         min_z = min(all_z)
                         max_z = max(all_z)
