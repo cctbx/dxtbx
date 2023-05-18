@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, Tuple, Union
+from typing import Tuple
 
 import pycbf
 
@@ -74,8 +74,8 @@ class BeamFactory:
     @staticmethod
     def from_phil(
         params: libtbx.phil.scope_extract,
-        reference: Union[Beam, PolychromaticBeam] = None,
-    ) -> Union[Beam, PolychromaticBeam]:
+        reference: Beam | PolychromaticBeam = None,
+    ) -> Beam | PolychromaticBeam:
         """
         Convert the phil parameters into a beam model
         """
@@ -115,7 +115,7 @@ class BeamFactory:
         return beam
 
     @staticmethod
-    def from_dict(dict: Dict, template: Dict = None) -> Union[Beam, PolychromaticBeam]:
+    def from_dict(dict: dict, template: dict = None) -> Beam | PolychromaticBeam:
         """Convert the dictionary to a beam model"""
 
         if template is not None:
@@ -143,7 +143,6 @@ class BeamFactory:
         divergence: float = None,
         sigma_divergence: float = None,
     ) -> Beam:
-
         if divergence is None or sigma_divergence is None:
             divergence = 0.0
             sigma_divergence = 0.0
@@ -179,7 +178,6 @@ class BeamFactory:
         transmission: float = 1.0,
         deg: bool = True,
     ) -> PolychromaticBeam:
-
         return PolychromaticBeam(
             tuple(map(float, direction)),
             float(divergence),
