@@ -2,6 +2,7 @@ import sys
 import os
 import libtbx.load_env
 from libtbx.env_config import get_boost_library_with_python_version
+from pathlib import Path
 
 try:
     # Check if we have a "modernized" pycbf
@@ -31,6 +32,7 @@ env_etc.dxtbx_common_includes = [
 
 Import("env_no_includes_boost_python_ext")
 env = env_no_includes_boost_python_ext.Clone()
+
 if libtbx.env.build_options.use_conda:
     boost_python = get_boost_library_with_python_version(
         "boost_python", env_etc.conda_libpath
@@ -51,7 +53,6 @@ env_etc.dxtbx_hdf5_libs = ["hdf5"]
 env_etc.dxtbx_hdf5_lib_paths = []
 
 if sys.platform == "win32" and env_etc.compiler == "win32_cl":
-
     if libtbx.env.build_options.use_conda:
         env_etc.dxtbx_hdf5_libs = ["hdf5"]
         env_etc.cppdefines = {"H5_BUILT_AS_DYNAMIC_LIB": 1}
@@ -116,6 +117,13 @@ else:
 if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
     Import("env_no_includes_boost_python_ext")
     env = env_no_includes_boost_python_ext.Clone()
+
+    # Don't surface warnings from system or cctbx_project headers
+    system_includes = [x for x in env_etc.conda_cpppath if x]
+    system_includes.append(str(Path(env_etc.scitbx_dist).parent))
+    env.Append(CXXFLAGS=[f"-isystem{x}" for x in system_includes])
+    env.Append(SHCXXFLAGS=[f"-isystem{x}" for x in system_includes])
+
     env_etc.enable_more_warnings(env=env)
     env_etc.include_registry.append(
         env=env,

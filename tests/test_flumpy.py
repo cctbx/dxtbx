@@ -5,6 +5,7 @@ import itertools
 import numpy as np
 import pytest
 
+import cctbx.array_family.flex as cctbx_flex
 import scitbx.array_family.flex as flex
 
 import dxtbx.flumpy as flumpy
@@ -28,6 +29,7 @@ lookup_flex_type_to_numpy = {
     "vec3_int": "i",
     "vec2_double": "d",
     "tiny_size_t_2": "Q",
+    "miller_index": "i",
 }
 
 # On POSIX platforms, long and q are the same and numpy tends to give q's
@@ -174,7 +176,9 @@ def test_reverse_bool():
     assert fo.count(True) == npo.sum()
 
 
-@pytest.mark.parametrize("flex_vec", [flex.vec3_double, flex.vec3_int])
+@pytest.mark.parametrize(
+    "flex_vec", [flex.vec3_double, flex.vec3_int, cctbx_flex.miller_index]
+)
 def test_vec3(flex_vec):
     basic_vector = [(i, i * 2, i * 3) for i in range(10)]
     fo = flex_vec(basic_vector)
@@ -186,7 +190,9 @@ def test_vec3(flex_vec):
     assert (as_np == fo).all()
 
 
-@pytest.mark.parametrize("flex_vec", [flex.vec3_double, flex.vec3_int])
+@pytest.mark.parametrize(
+    "flex_vec", [flex.vec3_double, flex.vec3_int, cctbx_flex.miller_index]
+)
 def test_reverse_vec3(flex_vec):
     dtype = lookup_flex_type_to_numpy[flex_vec.__name__]
     no = np.zeros((5, 3), dtype=dtype)
@@ -197,6 +203,35 @@ def test_reverse_vec3(flex_vec):
 
     with pytest.raises(ValueError):
         flumpy.vec_from_numpy(no.reshape((1, 15)))
+
+
+@pytest.mark.parametrize("dtype", [np.int32, np.intc])
+def test_reverse_vec3_dtype(dtype):
+    no = np.zeros((5, 3), dtype=dtype)
+    fo = flumpy.vec_from_numpy(no)
+    assert fo.all() == (5,)
+    fo[0] = (1, 2, 3)
+    assert (no[0] == (1, 2, 3)).all()
+
+
+@pytest.mark.parametrize("dtype", [np.int32, np.intc, int])
+def test_reverse_miller_index(dtype):
+    hkl = np.array([(1, 0, 0), (0, 1, 0), (0, 0, 1)], dtype=dtype)
+    if dtype is int and np.dtype("l").itemsize != np.dtype("i").itemsize:
+        with pytest.raises(ValueError):
+            flumpy.miller_index_from_numpy(hkl)
+    else:
+        mi = flumpy.miller_index_from_numpy(hkl)
+        assert isinstance(mi, cctbx_flex.miller_index)
+        assert len(mi) == 3
+        for i in range(len(mi)):
+            assert (mi[i] == hkl[i]).all()
+
+        with pytest.raises(ValueError):
+            flumpy.miller_index_from_numpy(hkl.reshape((1, 9)))
+
+        with pytest.raises(ValueError):
+            flumpy.miller_index_from_numpy(hkl.astype(float))
 
 
 @pytest.mark.parametrize("flex_vec", [flex.vec2_double, flex.tiny_size_t_2])

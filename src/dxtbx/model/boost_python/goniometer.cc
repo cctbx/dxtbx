@@ -19,78 +19,81 @@
 #include <dxtbx/model/multi_axis_goniometer.h>
 #include <dxtbx/model/boost_python/to_from_dict.h>
 
+using namespace boost::python;
+using scitbx::deg_as_rad;
+
 namespace dxtbx { namespace model { namespace boost_python {
+  namespace goniometer_detail {
 
-  using namespace boost::python;
-  using scitbx::deg_as_rad;
-
-  static void rotate_around_origin(Goniometer &goniometer,
-                                   vec3<double> axis,
-                                   double angle,
-                                   bool deg) {
-    double angle_rad = deg ? deg_as_rad(angle) : angle;
-    goniometer.rotate_around_origin(axis, angle_rad);
-  }
-
-  std::string goniometer_to_string(const Goniometer &goniometer) {
-    std::stringstream ss;
-    ss << goniometer;
-    return ss.str();
-  }
-
-  struct GoniometerPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(const Goniometer &obj) {
-      return boost::python::make_tuple(obj.get_rotation_axis_datum(),
-                                       obj.get_fixed_rotation(),
-                                       obj.get_setting_rotation());
+    static void rotate_around_origin(Goniometer &goniometer,
+                                     vec3<double> axis,
+                                     double angle,
+                                     bool deg) {
+      double angle_rad = deg ? deg_as_rad(angle) : angle;
+      goniometer.rotate_around_origin(axis, angle_rad);
     }
 
-    static boost::python::tuple getstate(boost::python::object obj) {
-      const Goniometer &goniometer = boost::python::extract<const Goniometer &>(obj)();
-      return boost::python::make_tuple(
-        obj.attr("__dict__"), goniometer.get_setting_rotation_at_scan_points());
+    std::string goniometer_to_string(const Goniometer &goniometer) {
+      std::stringstream ss;
+      ss << goniometer;
+      return ss.str();
     }
 
-    static void setstate(boost::python::object obj, boost::python::tuple state) {
-      Goniometer &goniometer = boost::python::extract<Goniometer &>(obj)();
-      DXTBX_ASSERT(boost::python::len(state) == 2);
+    struct GoniometerPickleSuite : boost::python::pickle_suite {
+      static boost::python::tuple getinitargs(const Goniometer &obj) {
+        return boost::python::make_tuple(obj.get_rotation_axis_datum(),
+                                         obj.get_fixed_rotation(),
+                                         obj.get_setting_rotation());
+      }
 
-      // restore the object's __dict__
-      boost::python::dict d =
-        boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
-      d.update(state[0]);
+      static boost::python::tuple getstate(boost::python::object obj) {
+        const Goniometer &goniometer =
+          boost::python::extract<const Goniometer &>(obj)();
+        return boost::python::make_tuple(
+          obj.attr("__dict__"), goniometer.get_setting_rotation_at_scan_points());
+      }
 
-      // restore the internal state of the C++ object
-      scitbx::af::const_ref<mat3<double> > S_list =
-        boost::python::extract<scitbx::af::const_ref<mat3<double> > >(state[1]);
-      goniometer.set_setting_rotation_at_scan_points(S_list);
+      static void setstate(boost::python::object obj, boost::python::tuple state) {
+        Goniometer &goniometer = boost::python::extract<Goniometer &>(obj)();
+        DXTBX_ASSERT(boost::python::len(state) == 2);
+
+        // restore the object's __dict__
+        boost::python::dict d =
+          boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
+        d.update(state[0]);
+
+        // restore the internal state of the C++ object
+        scitbx::af::const_ref<mat3<double> > S_list =
+          boost::python::extract<scitbx::af::const_ref<mat3<double> > >(state[1]);
+        goniometer.set_setting_rotation_at_scan_points(S_list);
+      }
+
+      static bool getstate_manages_dict() {
+        return true;
+      }
+    };
+
+    static void Goniometer_set_S_at_scan_points_from_tuple(Goniometer &goniometer,
+                                                           boost::python::tuple l) {
+      scitbx::af::shared<mat3<double> > S_list;
+      for (std::size_t i = 0; i < boost::python::len(l); ++i) {
+        mat3<double> S = boost::python::extract<mat3<double> >(l[i]);
+        S_list.push_back(S);
+      }
+      goniometer.set_setting_rotation_at_scan_points(S_list.const_ref());
     }
 
-    static bool getstate_manages_dict() {
-      return true;
+    static void Goniometer_set_S_at_scan_points_from_list(Goniometer &goniometer,
+                                                          boost::python::list l) {
+      scitbx::af::shared<mat3<double> > S_list;
+      for (std::size_t i = 0; i < boost::python::len(l); ++i) {
+        mat3<double> S = boost::python::extract<mat3<double> >(l[i]);
+        S_list.push_back(S);
+      }
+      goniometer.set_setting_rotation_at_scan_points(S_list.const_ref());
     }
-  };
 
-  static void Goniometer_set_S_at_scan_points_from_tuple(Goniometer &goniometer,
-                                                         boost::python::tuple l) {
-    scitbx::af::shared<mat3<double> > S_list;
-    for (std::size_t i = 0; i < boost::python::len(l); ++i) {
-      mat3<double> S = boost::python::extract<mat3<double> >(l[i]);
-      S_list.push_back(S);
-    }
-    goniometer.set_setting_rotation_at_scan_points(S_list.const_ref());
-  }
-
-  static void Goniometer_set_S_at_scan_points_from_list(Goniometer &goniometer,
-                                                        boost::python::list l) {
-    scitbx::af::shared<mat3<double> > S_list;
-    for (std::size_t i = 0; i < boost::python::len(l); ++i) {
-      mat3<double> S = boost::python::extract<mat3<double> >(l[i]);
-      S_list.push_back(S);
-    }
-    goniometer.set_setting_rotation_at_scan_points(S_list.const_ref());
-  }
-
+  }  // namespace goniometer_detail
   template <>
   boost::python::dict to_dict<Goniometer>(const Goniometer &obj) {
     boost::python::dict result;
@@ -125,12 +128,14 @@ namespace dxtbx { namespace model { namespace boost_python {
       boost::python::list S_at_scan_points =
         boost::python::extract<boost::python::list>(
           obj["setting_rotation_at_scan_points"]);
-      Goniometer_set_S_at_scan_points_from_list(*g, S_at_scan_points);
+      goniometer_detail::Goniometer_set_S_at_scan_points_from_list(*g,
+                                                                   S_at_scan_points);
     }
     return g;
   }
-
   void export_goniometer() {
+    using namespace goniometer_detail;
+
     class_<GoniometerBase>("GoniometerBase");
 
     class_<Goniometer, std::shared_ptr<Goniometer>, bases<GoniometerBase> >(

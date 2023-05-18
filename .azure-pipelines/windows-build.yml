@@ -51,7 +51,7 @@ steps:
 
     mkdir build
     cd build
-    cmake ../modules/dxtbx
+    cmake ../modules/dxtbx -DCMAKE_UNITY_BUILD=true
     if %errorlevel% neq 0 exit /b %errorlevel%
 
     cmake --build . --config Release

@@ -15,51 +15,54 @@
 #include <sstream>
 #include <dxtbx/model/goniometer.h>
 #include <dxtbx/model/multi_axis_goniometer.h>
+#include <dxtbx/model/boost_python/to_from_dict.h>
 
 namespace dxtbx { namespace model { namespace boost_python {
+  namespace multi_axis_goniometer_detail {
 
-  using namespace boost::python;
+    using namespace boost::python;
 
-  std::string multi_axis_goniometer_to_string(const MultiAxisGoniometer &goniometer) {
-    std::stringstream ss;
-    ss << goniometer;
-    return ss.str();
-  }
-
-  struct MultiAxisGoniometerPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(const MultiAxisGoniometer &obj) {
-      return boost::python::make_tuple(
-        obj.get_axes(), obj.get_angles(), obj.get_names(), obj.get_scan_axis());
+    std::string multi_axis_goniometer_to_string(const MultiAxisGoniometer &goniometer) {
+      std::stringstream ss;
+      ss << goniometer;
+      return ss.str();
     }
 
-    static boost::python::tuple getstate(boost::python::object obj) {
-      const MultiAxisGoniometer &goniometer =
-        boost::python::extract<const MultiAxisGoniometer &>(obj)();
-      return boost::python::make_tuple(
-        obj.attr("__dict__"), goniometer.get_setting_rotation_at_scan_points());
-    }
+    struct MultiAxisGoniometerPickleSuite : boost::python::pickle_suite {
+      static boost::python::tuple getinitargs(const MultiAxisGoniometer &obj) {
+        return boost::python::make_tuple(
+          obj.get_axes(), obj.get_angles(), obj.get_names(), obj.get_scan_axis());
+      }
 
-    static void setstate(boost::python::object obj, boost::python::tuple state) {
-      MultiAxisGoniometer &goniometer =
-        boost::python::extract<MultiAxisGoniometer &>(obj)();
-      DXTBX_ASSERT(boost::python::len(state) == 2);
+      static boost::python::tuple getstate(boost::python::object obj) {
+        const MultiAxisGoniometer &goniometer =
+          boost::python::extract<const MultiAxisGoniometer &>(obj)();
+        return boost::python::make_tuple(
+          obj.attr("__dict__"), goniometer.get_setting_rotation_at_scan_points());
+      }
 
-      // restore the object's __dict__
-      boost::python::dict d =
-        boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
-      d.update(state[0]);
+      static void setstate(boost::python::object obj, boost::python::tuple state) {
+        MultiAxisGoniometer &goniometer =
+          boost::python::extract<MultiAxisGoniometer &>(obj)();
+        DXTBX_ASSERT(boost::python::len(state) == 2);
 
-      // restore the internal state of the C++ object
-      scitbx::af::const_ref<mat3<double> > S_list =
-        boost::python::extract<scitbx::af::const_ref<mat3<double> > >(state[1]);
-      goniometer.set_setting_rotation_at_scan_points(S_list);
-    }
+        // restore the object's __dict__
+        boost::python::dict d =
+          boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
+        d.update(state[0]);
 
-    static bool getstate_manages_dict() {
-      return true;
-    }
-  };
+        // restore the internal state of the C++ object
+        scitbx::af::const_ref<mat3<double> > S_list =
+          boost::python::extract<scitbx::af::const_ref<mat3<double> > >(state[1]);
+        goniometer.set_setting_rotation_at_scan_points(S_list);
+      }
 
+      static bool getstate_manages_dict() {
+        return true;
+      }
+    };
+  }  // namespace multi_axis_goniometer_detail
+  template <>
   boost::python::dict to_dict(const MultiAxisGoniometer &obj) {
     boost::python::dict result;
     result["axes"] = boost::python::list(obj.get_axes());
@@ -82,6 +85,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     return result;
   };
 
+  template <>
   MultiAxisGoniometer *from_dict(boost::python::dict obj) {
     scitbx::af::shared<vec3<double> > axes =
       boost::python::extract<scitbx::af::shared<vec3<double> > >(obj["axes"]);
@@ -117,6 +121,8 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   void export_multi_axis_goniometer() {
+    using namespace multi_axis_goniometer_detail;
+
     class_<MultiAxisGoniometer, bases<Goniometer> >("MultiAxisGoniometer")
       .def(
         init<const scitbx::af::const_ref<vec3<double> > &,
@@ -131,8 +137,10 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_names", &MultiAxisGoniometer::get_names)
       .def("get_scan_axis", &MultiAxisGoniometer::get_scan_axis)
       .def("__str__", &multi_axis_goniometer_to_string)
-      .def("to_dict", &to_dict)
-      .def("from_dict", &from_dict, return_value_policy<manage_new_object>())
+      .def("to_dict", &to_dict<MultiAxisGoniometer>)
+      .def("from_dict",
+           &from_dict<MultiAxisGoniometer>,
+           return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
       .def_pickle(MultiAxisGoniometerPickleSuite());
   }
