@@ -18,7 +18,7 @@ from dxtbx.ext import (
 from dxtbx.format.FormatBruker import FormatBruker
 
 
-class FormatBrukerPhotonII(FormatBruker):
+class FormatBrukerPhoton(FormatBruker):
     @staticmethod
     def understand(image_file):
 
@@ -32,6 +32,7 @@ class FormatBrukerPhotonII(FormatBruker):
         dettype = header_dic.get("DETTYPE")
         if dettype is None:
             return False
+        # We support Photon-II and Photon-III detectors
         if not dettype.startswith("CMOS-PHOTONII"):
             return False
 
@@ -44,9 +45,9 @@ class FormatBrukerPhotonII(FormatBruker):
         except OSError:
             return False
 
-        self.header_dict = FormatBrukerPhotonII.parse_header(header_lines)
+        self.header_dict = FormatBrukerPhoton.parse_header(header_lines)
 
-        # The Photon II format can't currently use BrukerImage, see
+        # The Photon II/III format can't currently use BrukerImage, see
         # https://github.com/cctbx/cctbx_project/issues/65
         # from iotbx.detectors.bruker import BrukerImage
         # self.detectorbase = BrukerImage(self._image_file)
@@ -257,4 +258,4 @@ class FormatBrukerPhotonII(FormatBruker):
 
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
-        print(FormatBrukerPhotonII.understand(arg))
+        print(FormatBrukerPhoton.understand(arg))
