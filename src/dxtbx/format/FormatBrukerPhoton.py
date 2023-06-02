@@ -134,9 +134,15 @@ class FormatBrukerPhoton(FormatBruker):
         )
 
     def _beam(self):
+        """Assume home source, so make unpolarized beam"""
         wavelength = float(self.header_dict["WAVELEN"].split()[0])
 
-        return self._beam_factory.simple(wavelength)
+        return self._beam_factory.make_polarized_beam(
+            sample_to_source=(0.0, 0.0, 1.0),
+            wavelength=wavelength,
+            polarization=(0, 1, 0),
+            polarization_fraction=0.5,
+        )
 
     def _scan(self):
 
