@@ -74,24 +74,21 @@ class FormatBrukerPhoton(FormatBruker):
             axes, angles, names, scan_axis
         )
 
-    @staticmethod
-    def _estimate_gain(wavelength):
-        """Estimate the detector gain based on values provided by Bruker. Each ADU
-        corresponds to 36.6 electrons. The X-ray conversion results in deposited
-        charge according to the following table for typical home sources:
-
-        In (0.5136 A): 359.6893 e/X-ray
-        Ag (0.5609 A): 329.3748 e/X-ray
-        Mo (0.7107 A): 259.9139 e/X-ray
-        Ga (1.3414 A): 137.6781 e/X-ray
-        Cu (1.5418 A): 119.8156 e/X-ray
-
-        This fits the linear model (1/G) = -0.0000193358 + 0.1981607255 * wavelength
-        extremely well.
+    def _calculate_gain(self, wavelength):
+        """The CCDPARM header item contains 5 items:
+            1. readnoise
+            2. e/ADU
+            3. e/photon
+            4. bias
+            5. full scale
+        The gain in ADU/X-ray is given by (e/photon) / (e/ADU).
         """
-        inv_gain = -0.0000193358 + 0.1981607255 * wavelength
-        assert inv_gain > 0.1
-        return 1.0 / inv_gain
+        ccdparm = self.header_dict["CCDPARM"].split()
+        e_ADU = float(ccdparm[1])
+        e_photon = float(ccdparm[2])
+        if e_ADU == 0:
+            return 1.0
+        return e_photon / e_ADU
 
     def _detector(self):
         # goniometer angles in ANGLES are 2-theta, omega, phi, chi (FIXED)
@@ -124,7 +121,7 @@ class FormatBrukerPhoton(FormatBruker):
 
         # Not a CCD, but is an integrating detector. Photon II has a 90 um Gadox
         # scintillator.
-        gain = self._estimate_gain(float(self.header_dict["WAVELEN"].split()[0]))
+        gain = self._calculate_gain(float(self.header_dict["WAVELEN"].split()[0]))
         return self._detector_factory.complex(
             "CCD",
             origin.elems,
