@@ -407,7 +407,6 @@ def get_dxtbx_detector(
         # is stored in module.data_size. Additionally, data_size can have more than 2
         # dimensions, for multi-module detectors. So take the last two dimensions and reverse
         # them.  Examples:
-        # [1,2,3,4] --> (4, 3)
         # [1,2,3]   --> (3, 2)
         # [1,2]     --> (2, 1)
         image_size = (int(module.data_size[-1]), int(module.data_size[-2]))
