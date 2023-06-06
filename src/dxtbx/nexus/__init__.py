@@ -476,7 +476,7 @@ def get_static_mask(
         if index is None:
             pixel_mask = nxdetector.pixel_mask
         else:
-            pixel_mask = nxdetector.pixel_mask_single(index=index)
+            pixel_mask = nxdetector.pixel_mask[index]
     except KeyError:
         return None
     if pixel_mask is None or not pixel_mask.size or pixel_mask.ndim != 2:
