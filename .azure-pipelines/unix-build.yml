@@ -41,6 +41,7 @@ steps:
     cmake ../modules/dxtbx -DCMAKE_UNITY_BUILD=true
     cmake --build . --target install
     pip install ../modules/dxtbx
+    pip install git+https://github.com/dials/nxmx.git@f5e7e21bcbd6e7ec9882f6a035e3b347ec01f988
   displayName: Build dxtbx
   workingDirectory: $(Pipeline.Workspace)
 

@@ -61,6 +61,7 @@ steps:
     if %errorlevel% neq 0 exit /b %errorlevel%
 
     pip install ../modules/dxtbx
+    pip install git+https://github.com/dials/nxmx.git@f5e7e21bcbd6e7ec9882f6a035e3b347ec01f988
     if %errorlevel% neq 0 exit /b %errorlevel%
 
   displayName: Build dxtbx
