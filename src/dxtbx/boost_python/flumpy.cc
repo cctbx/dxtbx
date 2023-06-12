@@ -24,6 +24,7 @@
 #include <scitbx/vec2.h>
 #include <scitbx/vec3.h>
 #include <scitbx/mat3.h>
+#include <cctbx/miller.h>
 
 using boost::optional;
 using std::cout;
@@ -43,7 +44,8 @@ using grid = af::versa<T, af::flex_grid<>>;
     grid<long>, grid<int8_t>, grid<int16_t>, grid<int32_t>, grid<int64_t>,            \
     grid<float>, grid<double>, grid<scitbx::vec3<double>>, grid<scitbx::vec3<int>>,   \
     grid<scitbx::vec2<double>>, grid<scitbx::mat3<double>>,                           \
-    grid<af::tiny<std::size_t, 2>>, grid<std::complex<double>>
+    grid<af::tiny<std::size_t, 2>>, grid<std::complex<double>>,                       \
+    grid<cctbx::miller::index<int>>
 // Unwrapped, and possibly doesn't make sense:
 // void wrap_flex_std_string(); - differently sized per element
 // void wrap_flex_sym_mat3_double(); - nonlinear memory layout
@@ -76,6 +78,31 @@ py::buffer_info get_buffer_specific(grid<T> flex) {
 
 template <typename T>
 py::buffer_info get_buffer_specific(grid<scitbx::vec3<T>> flex) {
+  std::vector<size_t> dim_sizes;
+  for (auto size : flex.accessor().all()) {
+    dim_sizes.push_back(size);
+  }
+  dim_sizes.push_back(3);
+
+  std::vector<size_t> strides;
+  for (int i = 0; i < dim_sizes.size(); ++i) {
+    auto stride = sizeof(T);
+    for (int j = i + 1; j < dim_sizes.size(); ++j) {
+      stride *= dim_sizes[j];
+    }
+    strides.push_back(stride);
+  }
+
+  return py::buffer_info(&flex.front(),
+                         sizeof(T),
+                         py::format_descriptor<T>::format(),
+                         dim_sizes.size(),
+                         dim_sizes,
+                         strides);
+}
+
+template <typename T>
+py::buffer_info get_buffer_specific(grid<cctbx::miller::index<T>> flex) {
   std::vector<size_t> dim_sizes;
   for (auto size : flex.accessor().all()) {
     dim_sizes.push_back(size);
@@ -486,6 +513,11 @@ py::object from_numpy(py::object array) {
 /// More structured arrays need to be explicitly requested
 template <template <class> class VecType>
 py::object vec_from_numpy(py::array np_array) {
+  // Check that this array is contiguous
+  if (!is_array_c_contiguous(np_array)) {
+    throw ERR_NON_CONTIGUOUS;
+  }
+
   static_assert(VecType<int>::fixed_size == 2 || VecType<int>::fixed_size == 3,
                 "Only vec2/vec3 supported");
   // Only accept arrays whose last dimension is the size of this object
@@ -495,6 +527,11 @@ py::object vec_from_numpy(py::array np_array) {
   }
 
   auto dtype = np_array.attr("dtype").attr("char").cast<char>();
+  // If we are on windows, where int and long are the same size - prefer 'i'.
+  // This is because flex arrays are only bound to 'int' on this platform.
+  if (dtype == 'l' && (sizeof(long) == sizeof(int))) {
+    dtype = 'i';
+  }
 
   std::string accepted_types = VecType<int>::fixed_size == 2 ? "dQ" : "di";
   if (accepted_types.find(dtype) == std::string::npos) {
@@ -526,11 +563,6 @@ py::object vec_from_numpy(py::array np_array) {
 /// Decide which sized vector we want to convert to, and hand off to the
 /// specialization
 py::object vecs_from_numpy(py::array np_array) {
-  // Check that this array is contiguous
-  if (!is_array_c_contiguous(np_array)) {
-    throw ERR_NON_CONTIGUOUS;
-  }
-
   if (np_array.shape(np_array.ndim() - 1) == 3) {
     return vec_from_numpy<scitbx::vec3>(np_array);
   } else if (np_array.shape(np_array.ndim() - 1) == 2) {
@@ -538,6 +570,19 @@ py::object vecs_from_numpy(py::array np_array) {
   }
   throw std::invalid_argument(
     "Invalid input array: last numpy dimension must be 2 or 3 to convert to vector");
+}
+
+/// Create a versa<miller_index> from numpy
+py::object miller_index_from_numpy(py::array np_array) {
+  // miller_index is ONLY bound as 'int', but on windows we accept the same-sized long
+  auto dtype = np_array.attr("dtype").attr("char").cast<char>();
+  std::string accepted_types = sizeof(long) == sizeof(int) ? "il" : "i";
+  if (accepted_types.find(dtype) == std::string::npos) {
+    throw std::invalid_argument(
+      std::string("miller_index only supports int32 or intc types - cannot convert '")
+      + std::to_string(dtype) + "'");
+  }
+  return vec_from_numpy<cctbx::miller::index>(np_array);
 }
 
 py::object mat3_from_numpy(py::array np_array) {
@@ -586,8 +631,12 @@ PYBIND11_MODULE(dxtbx_flumpy, m) {
         &vecs_from_numpy,
         "Convert a numpy object to a flex.vec2 or .vec3, depending on input array");
   m.def("mat3_from_numpy", &mat3_from_numpy, "Convert a numpy object to a flex.mat3");
+  m.def("miller_index_from_numpy",
+        &miller_index_from_numpy,
+        "Convert a numpy object to a flex.miller_index");
 
   // Make sure that we have imported flex - cannot do boost::python conversions
   // otherwise
   pybind11::module::import("scitbx.array_family.flex");
+  pybind11::module::import("cctbx.array_family.flex");
 }
