@@ -1,1 +1,0 @@
-Use a wrapper for ref_pickle_double_buffered.h that correctly guards against multiple inclusion.
