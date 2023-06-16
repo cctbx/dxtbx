@@ -22,7 +22,6 @@ conda-forge::orderedset
 conda-forge::pillow>=5.4.1
 conda-forge::pint
 conda-forge::pip
-conda-forge::procrunner
 conda-forge::psutil
 conda-forge::pyrtf
 conda-forge::pybind11
