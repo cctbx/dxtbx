@@ -14,11 +14,11 @@ stages:
     steps:
       - checkout: none
 
-      # Use Python >=3.8 for syntax validation
+      # Use Python >=3.9 for syntax validation
       - task: UsePythonVersion@0
         displayName: Set up python
         inputs:
-          versionSpec: 3.8
+          versionSpec: 3.9
 
       # Run syntax validation on a shallow clone
       - bash: |
@@ -78,7 +78,7 @@ stages:
         vmImage: ubuntu-20.04
       timeoutInMinutes: 60
       variables:
-        PYTHON_VERSION: 3.8
+        PYTHON_VERSION: 3.9
       steps:
       - template: unix-build.yml
 
@@ -88,10 +88,10 @@ stages:
         vmImage: ubuntu-20.04
       strategy:
         matrix:
-          python38:
-            PYTHON_VERSION: 3.8
           python39:
             PYTHON_VERSION: 3.9
+          python311:
+            PYTHON_VERSION: 3.11
       timeoutInMinutes: 60
       steps:
       - template: unix-build.yml
@@ -101,10 +101,10 @@ stages:
         vmImage: macOS-latest
       strategy:
         matrix:
-          python38:
-            PYTHON_VERSION: 3.8
           python39:
             PYTHON_VERSION: 3.9
+          python311:
+            PYTHON_VERSION: 3.11
       timeoutInMinutes: 60
       steps:
       - template: unix-build.yml
@@ -114,8 +114,8 @@ stages:
         vmImage: windows-2019
       strategy:
         matrix:
-          python38:
-            PYTHON_VERSION: 3.8
+          python39:
+            PYTHON_VERSION: 3.9
       timeoutInMinutes: 20
       steps:
       - template: windows-build.yml
