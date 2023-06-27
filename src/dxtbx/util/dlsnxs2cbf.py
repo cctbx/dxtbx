@@ -12,11 +12,12 @@ import pint
 from tqdm import tqdm
 
 import dxtbx.model
+import dxtbx.nexus
 from dxtbx.ext import compress
 
 
-def compute_cbf_header(nxmx: nxmx.NXmx, nn: int):
-    nxentry = nxmx.entries[0]
+def compute_cbf_header(nxmx_obj: nxmx.NXmx, nn: int):
+    nxentry = nxmx_obj.entries[0]
     nxsample = nxentry.samples[0]
     nxinstrument = nxentry.instruments[0]
     nxdetector = nxinstrument.detectors[0]
@@ -145,11 +146,11 @@ def make_cbf(
     with h5py.File(in_name) as f:
         start_tag = binascii.unhexlify("0c1a04d5")
 
-        nxmx = nxmx.NXmx(f)
-        nxsample = nxmx.entries[0].samples[0]
-        nxinstrument = nxmx.entries[0].instruments[0]
+        nxmx_obj = nxmx.NXmx(f)
+        nxsample = nxmx_obj.entries[0].samples[0]
+        nxinstrument = nxmx_obj.entries[0].instruments[0]
         nxdetector = nxinstrument.detectors[0]
-        nxdata = nxmx.entries[0].data[0]
+        nxdata = nxmx_obj.entries[0].data[0]
 
         dependency_chain = nxmx.get_dependency_chain(nxsample.depends_on)
         scan_axis = None
@@ -183,7 +184,7 @@ def make_cbf(
 
         print(f"Writing images to {template}{'#' * num_digits}.cbf:")
         for j in tqdm(range(num_images), unit=" images"):
-            header = compute_cbf_header(nxmx, j)
+            header = compute_cbf_header(nxmx_obj, j)
             (data,) = dxtbx.nexus.get_raw_data(nxdata, nxdetector, j)
             if bit_depth_readout:
                 # if 32 bit then it is a signed int, I think if 8, 16 then it is
