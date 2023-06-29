@@ -98,6 +98,7 @@ def test_rotation_scan_i04_2022_run_5(master_h5):
     assert masker.get_mask(imageset.get_detector(), 100)[0].count(False) == 1110799
 
 
+@pytest.mark.skip(reason="Data erased from CM visit")
 @pytest.mark.parametrize(
     "master_h5",
     [
@@ -116,6 +117,7 @@ def test_masked_i04_32bit(master_h5):
     assert flex.max(imageset[0][0]) != 0x7FFFFFFF
 
 
+@pytest.mark.skip(reason="Data erased from CM visit")
 @pytest.mark.parametrize(
     "master_h5",
     [

@@ -1,3 +1,12 @@
+DIALS 3.15.1 (2023-06-29)
+=========================
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Fix import overwritten by local variable. (`#641 <https://github.com/cctbx/dxtbx/issues/641>`_)
+
+
 dxtbx 3.15.0 (2023-06-13)
 =========================
 
