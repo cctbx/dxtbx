@@ -322,7 +322,6 @@ class ExperimentListDict:
         # a sensible experiment.
         el = ExperimentList()
         for eobj in self._obj["experiment"]:
-
             # Get the models
             identifier = eobj.get("identifier", "")
             beam = self._lookup_model("beam", eobj)
@@ -466,9 +465,7 @@ class ExperimentListDict:
     @staticmethod
     def _scaling_model_from_dict(obj):
         """Get the scaling model from a dictionary."""
-        for entry_point in importlib.metadata.entry_points(
-            group="dxtbx.scaling_model_ext"
-        ):
+        for entry_point in importlib.metadata.entry_points()["dxtbx.scaling_model_ext"]:
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
 

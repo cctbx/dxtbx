@@ -16,7 +16,7 @@ class ProfileModelFactory:
         """
         if obj is None:
             return None
-        for entry_point in importlib.metadata.entry_points(group="dxtbx.profile_model"):
+        for entry_point in importlib.metadata.entry_points()["dxtbx.profile_model"]:
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
         logging.getLogger("dxtbx.model.profile").warn(
