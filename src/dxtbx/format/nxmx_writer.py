@@ -802,6 +802,22 @@ class NXmxWriter:
             )
             self.handle["entry/instrument/detector/frame_time"].attrs["units"] = "s"
 
+    def setup_multi_crystal(self, multi_crystal_group_name):
+        self.handle["entry/sample"].create_group(multi_crystal_group_name)
+
+    def add_crystal(self, multi_crystal_group_name, crystal):
+        from dials.utils.nexus import nx_mx
+
+        # Assume this is the next crystal in the list, added after the last image
+        # was added
+        n_images = self.handle["entry/data/data"].shape[0]
+        nx_mx.dump_crystal(
+            self.handle["entry/sample/" + multi_crystal_group_name],
+            crystal,
+            None,
+            "crystal%d" % (n_images - 1),
+        )
+
 
 def run(args):
     usage = "dials.python nxmx_writer.py <experiments OR image files>"
