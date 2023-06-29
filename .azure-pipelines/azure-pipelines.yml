@@ -116,6 +116,8 @@ stages:
         matrix:
           python39:
             PYTHON_VERSION: 3.9
+          python311:
+            PYTHON_VERSION: 3.11
       timeoutInMinutes: 20
       steps:
       - template: windows-build.yml
