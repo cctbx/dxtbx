@@ -44,6 +44,8 @@ class FormatROD(Format):
         with FormatROD.open_file(image_file, "rb") as f:
             hdr = f.read(256).decode("ascii")
         lines = hdr.splitlines()
+        if len(lines) < 2:
+            return False
 
         vers = lines[0].split()
         if len(vers) < 2 or vers[0] != "OD" or vers[1] != "SAPPHIRE":
