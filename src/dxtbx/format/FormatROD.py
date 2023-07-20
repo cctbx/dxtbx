@@ -1,9 +1,14 @@
-"""Support for the Rigaku Oxford Diffraction image format"""
+"""Support for the Rigaku Oxford Diffraction image format
+
+NB: Rigaku datasets may use a non-zero-padded image incremental serial number.
+At present, this is not compatible with assumptions in dxtbx. In order to
+import these datasets, the images should be renumbered first.
+
+See https://github.com/cctbx/dxtbx/issues/646 for details."""
 
 # Takanori Nakane took David Waterman's code to parse headers from
 #  https://github.com/cctbx/cctbx_project/commit/b95467f3b2a70a37eeb820ea294128a32551700c
 # and heavily modified it. The original commit in the cctbx_project repository is orphan now.
-
 from __future__ import annotations
 
 __author__ = "David Waterman, Takanori Nakane"
