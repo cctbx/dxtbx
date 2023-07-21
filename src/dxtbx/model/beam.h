@@ -24,6 +24,9 @@ namespace dxtbx { namespace model {
 
   using scitbx::vec3;
 
+  // probe type enumeration
+  enum probe { xray = 1, electron = 2, neutron = 3 };
+
   /** Base class for beam objects */
   class BeamBase {
   public:
@@ -385,6 +388,7 @@ namespace dxtbx { namespace model {
     double flux_;
     double transmission_;
     scitbx::af::shared<vec3<double> > s0_at_scan_points_;
+    probe probe_;
   };
 
   /** Print beam information */
