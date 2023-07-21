@@ -63,6 +63,7 @@ namespace dxtbx { namespace model {
     virtual void set_transmission(double transmission) = 0;
     virtual void set_s0_at_scan_points(
       const scitbx::af::const_ref<vec3<double> > &s0) = 0;
+    virtual void set_probe(Probe probe) = 0;
 
     virtual void reset_scan_points() = 0;
     virtual bool is_similar_to(const BeamBase &rhs,
@@ -296,6 +297,10 @@ namespace dxtbx { namespace model {
 
     Probe get_probe() const {
       return probe_;
+    }
+
+    void set_probe(Probe probe) {
+      probe_ = probe;
     }
 
     void reset_scan_points() {
