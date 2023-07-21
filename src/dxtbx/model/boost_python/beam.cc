@@ -17,6 +17,7 @@
 #include <dxtbx/model/beam.h>
 #include <dxtbx/model/boost_python/to_from_dict.h>
 #include <scitbx/array_family/boost_python/flex_wrapper.h>
+#include <boost/python/enum.hpp>
 
 namespace dxtbx { namespace model { namespace boost_python {
   namespace beam_detail {
@@ -223,6 +224,11 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_beam() {
     using namespace beam_detail;
+
+    enum_<Probe>("Probe")
+      .value("xray", xray)
+      .value("electron", electron)
+      .value("neutron", neutron);
 
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
       .def("get_sample_to_source_direction", &BeamBase::get_sample_to_source_direction)

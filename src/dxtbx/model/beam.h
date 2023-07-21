@@ -25,7 +25,7 @@ namespace dxtbx { namespace model {
   using scitbx::vec3;
 
   // probe type enumeration
-  enum probe { xray = 1, electron = 2, neutron = 3 };
+  enum Probe { xray = 1, electron = 2, neutron = 3 };
 
   /** Base class for beam objects */
   class BeamBase {
@@ -47,7 +47,7 @@ namespace dxtbx { namespace model {
     virtual std::size_t get_num_scan_points() const = 0;
     virtual scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const = 0;
     virtual vec3<double> get_s0_at_scan_point(std::size_t index) const = 0;
-    virtual probe get_probe() const = 0;
+    virtual Probe get_probe() const = 0;
 
     virtual void set_direction(vec3<double> direction) = 0;
     virtual void set_wavelength(double wavelength) = 0;
@@ -293,7 +293,7 @@ namespace dxtbx { namespace model {
       return s0_at_scan_points_[index];
     }
 
-    probe get_probe() const {
+    Probe get_probe() const {
       return probe_;
     }
 
@@ -393,7 +393,7 @@ namespace dxtbx { namespace model {
     double flux_;
     double transmission_;
     scitbx::af::shared<vec3<double> > s0_at_scan_points_;
-    probe probe_;
+    Probe probe_;
   };
 
   /** Print beam information */

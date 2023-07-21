@@ -7,9 +7,9 @@ import pycbf
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam
+    from ..dxtbx_model_ext import Beam, Probe
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam  # type: ignore
+    from dxtbx_model_ext import Beam, Probe  # type: ignore
 
 beam_phil_scope = libtbx.phil.parse(
     """
