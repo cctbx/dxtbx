@@ -260,6 +260,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_s0_at_scan_points", &Beam_set_s0_at_scan_points_from_list)
       .def("get_s0_at_scan_points", &BeamBase::get_s0_at_scan_points)
       .def("get_s0_at_scan_point", &BeamBase::get_s0_at_scan_point)
+      .def("get_probe", &BeamBase::get_probe)
       .def("reset_scan_points", &BeamBase::reset_scan_points)
       .def("rotate_around_origin",
            &rotate_around_origin,
