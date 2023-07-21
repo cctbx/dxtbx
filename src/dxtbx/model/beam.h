@@ -47,6 +47,7 @@ namespace dxtbx { namespace model {
     virtual std::size_t get_num_scan_points() const = 0;
     virtual scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const = 0;
     virtual vec3<double> get_s0_at_scan_point(std::size_t index) const = 0;
+    virtual probe get_probe() const = 0;
 
     virtual void set_direction(vec3<double> direction) = 0;
     virtual void set_wavelength(double wavelength) = 0;
@@ -290,6 +291,10 @@ namespace dxtbx { namespace model {
     vec3<double> get_s0_at_scan_point(std::size_t index) const {
       DXTBX_ASSERT(index < s0_at_scan_points_.size());
       return s0_at_scan_points_[index];
+    }
+
+    probe get_probe() const {
+      return probe_;
     }
 
     void reset_scan_points() {
