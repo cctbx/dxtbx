@@ -86,7 +86,8 @@ namespace dxtbx { namespace model {
           polarization_normal_(0.0, 1.0, 0.0),
           polarization_fraction_(0.999),
           flux_(0),
-          transmission_(1.0) {}
+          transmission_(1.0),
+          probe_(Probe::xray) {}
 
     /**
      * @param s0 The incident beam vector.
