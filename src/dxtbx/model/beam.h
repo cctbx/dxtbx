@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <string>
 #include <scitbx/vec3.h>
 #include <scitbx/array_family/shared.h>
 #include <scitbx/array_family/simple_io.h>
@@ -48,6 +49,7 @@ namespace dxtbx { namespace model {
     virtual scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const = 0;
     virtual vec3<double> get_s0_at_scan_point(std::size_t index) const = 0;
     virtual Probe get_probe() const = 0;
+    virtual std::string get_probe_name() const = 0;
 
     virtual void set_direction(vec3<double> direction) = 0;
     virtual void set_wavelength(double wavelength) = 0;
@@ -304,6 +306,21 @@ namespace dxtbx { namespace model {
       return probe_;
     }
 
+    std::string get_probe_name() const {
+      // Return a name that matches NeXus definitions from
+      // https://manual.nexusformat.org/classes/base_classes/NXsource.html
+      switch (probe_) {
+      case xray:
+        return std::string("x-ray");
+      case electron:
+        return std::string("electron");
+      case neutron:
+        return std::string("neutron");
+      default:
+        return std::string("unknown");
+      }
+    }
+
     void set_probe(Probe probe) {
       probe_ = probe;
     }
@@ -412,6 +429,7 @@ namespace dxtbx { namespace model {
   /** Print beam information */
   inline std::ostream &operator<<(std::ostream &os, const Beam &b) {
     os << "Beam:\n";
+    os << "    probe: " << b.get_probe_name() << "\n";
     os << "    wavelength: " << b.get_wavelength() << "\n";
     os << "    sample to source direction : "
        << b.get_sample_to_source_direction().const_ref() << "\n";
