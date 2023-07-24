@@ -153,6 +153,7 @@ class BeamFactory:
         sigma_divergence=None,
         flux=None,
         transmission=None,
+        probe=Probe.xray,
     ):
         assert polarization
         assert 0.0 <= polarization_fraction <= 1.0
@@ -177,6 +178,7 @@ class BeamFactory:
                 float(polarization_fraction),
                 float(flux),
                 float(transmission),
+                probe,
             )
         elif unit_s0:
             assert wavelength
@@ -189,17 +191,23 @@ class BeamFactory:
                 float(polarization_fraction),
                 float(flux),
                 float(transmission),
+                probe,
             )
         else:
             assert s0
+            sum_sq_s0 = s0[0] ** 2 + s0[1] ** 2 + s0[2] ** 2
+            assert sum_sq_s0 > 0
+            wavelength = 1.0 / math.sqrt(sum_sq_s0)
             return Beam(
                 tuple(map(float, s0)),
+                wavelength,
                 float(divergence),
                 float(sigma_divergence),
                 tuple(map(float, polarization)),
                 float(polarization_fraction),
                 float(flux),
                 float(transmission),
+                probe,
             )
 
     @staticmethod
