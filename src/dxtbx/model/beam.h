@@ -343,7 +343,8 @@ namespace dxtbx { namespace model {
                   angle_safe(polarization_normal_, rhs.get_polarization_normal()))
                   <= eps
              && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
-                  <= eps;
+                  <= eps
+             && (probe_ == rhs.get_probe());
     }
 
     bool is_similar_to(const BeamBase &rhs,
@@ -380,7 +381,8 @@ namespace dxtbx { namespace model {
                   angle_safe(polarization_normal_, rhs.get_polarization_normal()))
                   <= polarization_normal_tolerance
              && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
-                  <= polarization_fraction_tolerance;
+                  <= polarization_fraction_tolerance
+             && (probe_ == rhs.get_probe());
     }
 
     bool operator!=(const BeamBase &rhs) const {
