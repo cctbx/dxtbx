@@ -174,6 +174,7 @@ namespace dxtbx { namespace model {
      * @param polarization_fraction The polarization fraction
      * @param flux The beam flux
      * @param transmission The beam transmission
+     * @param probe The probe value
      */
     Beam(vec3<double> direction,
          double wavelength,
@@ -182,7 +183,8 @@ namespace dxtbx { namespace model {
          vec3<double> polarization_normal,
          double polarization_fraction,
          double flux,
-         double transmission)
+         double transmission,
+         Probe probe)
         : wavelength_(wavelength),
           divergence_(divergence),
           sigma_divergence_(sigma_divergence),
@@ -190,7 +192,7 @@ namespace dxtbx { namespace model {
           polarization_fraction_(polarization_fraction),
           flux_(flux),
           transmission_(transmission),
-          probe_(Probe::xray) {
+          probe_(probe) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }

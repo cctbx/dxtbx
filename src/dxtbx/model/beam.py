@@ -101,6 +101,10 @@ class BeamFactory:
         joint.update(d)
 
         # Create the model from the joint dictionary
+        if "probe" in joint:
+            joint["probe"] = Probe.values[joint["probe"]]
+        else:
+            joint["probe"] = Probe.xray
         return Beam.from_dict(joint)
 
     @staticmethod

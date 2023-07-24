@@ -41,7 +41,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                          obj.get_polarization_normal(),
                                          obj.get_polarization_fraction(),
                                          obj.get_flux(),
-                                         obj.get_transmission());
+                                         obj.get_transmission(),
+                                         obj.get_probe());
       }
 
       static boost::python::tuple getstate(boost::python::object obj) {
@@ -108,6 +109,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                  double polarization_fraction,
                                  double flux,
                                  double transmission,
+                                 Probe probe,
                                  bool deg) {
       Beam *beam = NULL;
       if (deg) {
@@ -118,7 +120,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                         polarization_normal,
                         polarization_fraction,
                         flux,
-                        transmission);
+                        transmission,
+                        probe);
       } else {
         beam = new Beam(sample_to_source,
                         wavelength,
@@ -127,7 +130,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                         polarization_normal,
                         polarization_fraction,
                         flux,
-                        transmission);
+                        transmission,
+                        probe);
       }
       return beam;
     }
@@ -189,6 +193,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
+    result["probe"] = obj.get_probe();
     if (obj.get_num_scan_points() > 0) {
       boost::python::list l;
       scitbx::af::shared<vec3<double> > s0_at_scan_points = obj.get_s0_at_scan_points();
@@ -213,7 +218,8 @@ namespace dxtbx { namespace model { namespace boost_python {
         obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
       boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
       boost::python::extract<double>(obj.get("flux", 0)),
-      boost::python::extract<double>(obj.get("transmission", 1)));
+      boost::python::extract<double>(obj.get("transmission", 1)),
+      boost::python::extract<Probe>(obj.get("probe", Probe::xray)));
     if (obj.has_key("s0_at_scan_points")) {
       boost::python::list s0_at_scan_points =
         boost::python::extract<boost::python::list>(obj["s0_at_scan_points"]);
@@ -307,6 +313,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("polarization_fraction"),
                              arg("flux"),
                              arg("transmission"),
+                             arg("probe") = Probe::xray,
                              arg("deg") = true)))
       .def("__str__", &beam_to_string)
       .def("to_dict", &to_dict<Beam>)
