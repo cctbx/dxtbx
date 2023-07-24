@@ -99,7 +99,8 @@ namespace dxtbx { namespace model {
           polarization_normal_(0.0, 1.0, 0.0),
           polarization_fraction_(0.999),
           flux_(0),
-          transmission_(1.0) {
+          transmission_(1.0),
+          probe_(Probe::xray) {
       DXTBX_ASSERT(s0.length() > 0);
       wavelength_ = 1.0 / s0.length();
       direction_ = -s0.normalize();
@@ -116,7 +117,8 @@ namespace dxtbx { namespace model {
           polarization_normal_(0.0, 1.0, 0.0),
           polarization_fraction_(0.999),
           flux_(0),
-          transmission_(1.0) {
+          transmission_(1.0),
+          probe_(Probe::xray) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -132,7 +134,8 @@ namespace dxtbx { namespace model {
           polarization_normal_(0.0, 1.0, 0.0),
           polarization_fraction_(0.999),
           flux_(0),
-          transmission_(1.0) {
+          transmission_(1.0),
+          probe_(Probe::xray) {
       DXTBX_ASSERT(s0.length() > 0);
       wavelength_ = 1.0 / s0.length();
       direction_ = -s0.normalize();
@@ -154,7 +157,8 @@ namespace dxtbx { namespace model {
           polarization_normal_(0.0, 1.0, 0.0),
           polarization_fraction_(0.999),
           flux_(0),
-          transmission_(1.0) {
+          transmission_(1.0),
+          probe_(Probe::xray) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -183,7 +187,8 @@ namespace dxtbx { namespace model {
           polarization_normal_(polarization_normal),
           polarization_fraction_(polarization_fraction),
           flux_(flux),
-          transmission_(transmission) {
+          transmission_(transmission),
+          probe_(Probe::xray) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
