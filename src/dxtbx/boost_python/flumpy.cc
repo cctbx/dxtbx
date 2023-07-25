@@ -520,6 +520,13 @@ py::object vec_from_numpy(py::array np_array) {
 
   static_assert(VecType<int>::fixed_size == 2 || VecType<int>::fixed_size == 3,
                 "Only vec2/vec3 supported");
+
+  // Only accept arrays that have a dimension higher than 1 - we want
+  // numpy.array([1,2,3]) to fail but numpy.array([[1,2,3]]) to work
+  if (np_array.ndim() == 1) {
+    throw std::invalid_argument("Array for conversion to vec must be multidimensional");
+  }
+
   // Only accept arrays whose last dimension is the size of this object
   if (np_array.shape(np_array.ndim() - 1) != VecType<int>::fixed_size) {
     throw std::invalid_argument("Input array last dimension is not size "
