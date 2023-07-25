@@ -136,7 +136,7 @@ def test_reverse_numeric_2d(flex_numeric):
 
 
 def test_numeric_4d(flex_numeric):
-    #  Check that we can think fourth-dimnesionally
+    # Check that we can think fourth-dimensionally
     grid = flex.grid(1, 9, 8, 5)
     fo = flex_numeric(grid)
     assert fo.nd() == 4
@@ -402,3 +402,11 @@ def test_int_long_degeneracy():
     npo[0] = 42
     assert all(fo[x] == npo[x] for x in range(4))
     assert fo[0] == 42
+
+
+def test_single_entry_vec_from_numpy():
+    with pytest.raises(ValueError):
+        flumpy.vec_from_numpy(np.array([2.0, 3.0, 4.0]))
+    ao = flumpy.vec_from_numpy(np.array([[2.0, 3.0, 4.0]]))
+    assert len(ao) == 1
+    assert ao[0] == pytest.approx([2.0, 3.0, 4.0])
