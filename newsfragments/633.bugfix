@@ -1,1 +1,1 @@
-Slicing of imageset objects is fixed so that the slice indices are 0-based, as is the data accessor.
+Slicing of imageset objects is now consistently 0-based, including for the sliced data accessor. Previously, the data accessor had to be accessed with the original index offsets.
