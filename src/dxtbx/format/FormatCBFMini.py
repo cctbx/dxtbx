@@ -8,6 +8,7 @@ pairs.
 from __future__ import annotations
 
 import binascii
+import datetime
 import os
 import pathlib
 import sys
@@ -72,6 +73,20 @@ class FormatCBFMini(FormatCBF):
 
         self._raw_data = None
         super().__init__(image_file, **kwargs)
+
+    @staticmethod
+    def _get_timestamp_from_raw_header(
+        header: str | list[str],
+    ) -> datetime.datetime | None:
+        """Given a raw header, or lines from, attempt to extract the timestamp field"""
+        if isinstance(header, str):
+            header = header.splitlines()
+        timestamp = None
+        for record in header:
+            if len(record[1:].split()) <= 2 and record.count(":") == 2:
+                timestamp = datetime.datetime.fromisoformat(record[1:].strip())
+                break
+        return timestamp
 
     def _start(self):
         """Open the image file, read the image header, copy it into a
