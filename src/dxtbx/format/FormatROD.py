@@ -45,9 +45,12 @@ class FormatROD(Format):
 
     @staticmethod
     def understand(image_file):
-
         with FormatROD.open_file(image_file, "rb") as f:
-            hdr = f.read(256).decode("ascii")
+            try:
+                hdr = f.read(256).decode("ascii")
+            except UnicodeDecodeError:
+                return False
+
         lines = hdr.splitlines()
         if len(lines) < 2:
             return False
