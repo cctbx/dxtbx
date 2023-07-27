@@ -1,0 +1,1 @@
+``dxtbx``: add support for Eiger 9M on ESRF ID23-2 with vertical goniometer (which is not written into the image header)
