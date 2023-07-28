@@ -1,8 +1,3 @@
-"""
-An implementation of the FormatCBFMiniEiger image reader for the Eiger2 16M
-detector at the CHESS ID7B2 beamline, which has an inverted goniometer axis.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -21,16 +16,12 @@ class FormatCBFMiniEigerChessID7B2(FormatCBFMiniEiger):
 
         header = FormatCBFMiniEiger.get_cbf_header(image_file)
         for record in header.split("\n"):
-            if "Detector: Dectris EIGER2 Si 16M, S/N E-32-0123" in record:
+            if "# Detector: Dectris EIGER2 Si 16M, S/N E-32-0123" in record:
                 return True
 
         return False
 
     def _goniometer(self):
-        """Return a model for a simple single-axis goniometer. This should
-        probably be checked against the image header, though for miniCBF
-        there are limited options for this."""
-
         return self._goniometer_factory.known_axis((-1, 0, 0))
 
 
