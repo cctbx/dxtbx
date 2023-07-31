@@ -193,6 +193,23 @@ namespace dxtbx { namespace boost_python {
     return PyBytes_FromStringAndSize(&*packed.begin(), packed.size());
   }
 
+  scitbx::af::flex_int uncompressTY6(const boost::python::object &data,
+                                     const boost::python::object &offsets,
+                                     const int &slow,
+                                     const int &fast) {
+    // Cannot I extract const char* directly?
+    std::string str_data = boost::python::extract<std::string>(data);
+    std::string str_offsets = boost::python::extract<std::string>(offsets);
+
+    scitbx::af::flex_int z((scitbx::af::flex_grid<>(slow, fast)),
+                           scitbx::af::init_functor_null<int>());
+
+    dxtbx::boost_python::TY6_decompress(
+      z.begin(), str_data.c_str(), str_offsets.c_str(), slow, fast);
+
+    return z;
+  }
+
   void init_module() {
     using namespace boost::python;
     def("read_uint8", read_uint8, (arg("file"), arg("count")));
@@ -206,6 +223,9 @@ namespace dxtbx { namespace boost_python {
     def("is_big_endian", is_big_endian);
     def("uncompress", &uncompress, (arg_("packed"), arg_("slow"), arg_("fast")));
     def("compress", &compress);
+    def("uncompressTY6",
+        &uncompressTY6,
+        (arg_("data"), arg_("offsets"), arg_("slow"), arg_("fast")));
   }
 
   BOOST_PYTHON_MODULE(dxtbx_ext) {

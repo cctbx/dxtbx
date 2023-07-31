@@ -25,6 +25,7 @@ import numpy as np
 from scitbx.array_family import flex
 from scitbx.math import r3_rotation_axis_and_angle_as_matrix
 
+from dxtbx.ext import uncompressTY6
 from dxtbx.format.Format import Format
 
 
@@ -154,7 +155,7 @@ class FormatROD(Format):
             f.seek(offset + general_nbytes + special_nbytes + 640)
             # detector rotation in degrees along e1, e2, e3
             detector_rotns = struct.unpack("<ddd", f.read(24))
-            # direct beam position when all angles are zero?
+            # direct beam position when all angles are zero (FIXME: not completely sure)
             origin_px_x, origin_px_y = struct.unpack("<dd", f.read(16))
             # alpha and beta are angles between KAPPA(=CHI) and THETA, and e3.
             angles_in_deg = struct.unpack(
@@ -337,7 +338,7 @@ class FormatROD(Format):
             (pixel_size_x, pixel_size_y),
             (self._txt_header["NX"], self._txt_header["NY"]),
             (0, self._bin_header["overflow_threshold"]),
-        )  # not sure about min
+        )
 
         return detector
 
@@ -361,10 +362,23 @@ class FormatROD(Format):
     def get_raw_data(self):
         comp = self._txt_header["compression"].strip()
         if comp.startswith("TY6"):
-            return self._get_raw_data_ty6()
+            return self._get_raw_data_ty6_native()
         else:
             raise NotImplementedError("Can't handle compression: {0}".format(comp))
 
+    def _get_raw_data_ty6_native(self):
+        offset = self._txt_header["NHEADER"]
+        nx = self._txt_header["NX"]
+        ny = self._txt_header["NY"]
+        with open(self._image_file, "rb") as f:
+            f.seek(offset)
+            lbytesincompressedfield = struct.unpack("<l", f.read(4))[0]
+            linedata = f.read(lbytesincompressedfield)
+            offsets = f.read(4 * ny)
+
+            return uncompressTY6(linedata, offsets, ny, nx)
+
+    # Python implementation
     def _get_raw_data_ty6(self):
         offset = self._txt_header["NHEADER"]
         nx = self._txt_header["NX"]
@@ -413,7 +427,6 @@ class FormatROD(Format):
             bittype = linedata[ipos]
             nbits = (bittype & 15, (bittype >> 4) & 15)
             ipos += 1
-            # ipos_bit = ipos * 8
 
             for i in range(2):
                 nbit = nbits[i]
