@@ -8,9 +8,9 @@ import pycbf
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam, Probe, PolychromaticBeam
+    from ..dxtbx_model_ext import Beam, PolychromaticBeam, Probe
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam, Probe, PolychromaticBeam  # type: ignore
+    from dxtbx_model_ext import Beam, PolychromaticBeam, Probe  # type: ignore
 
 Vec3Float = Tuple[float, float, float]
 
@@ -181,6 +181,7 @@ class BeamFactory:
         polarization_fraction: float = 0.5,
         flux: float = 0.0,
         transmission: float = 1.0,
+        probe=Probe.xray,
         deg: bool = True,
     ) -> PolychromaticBeam:
         return PolychromaticBeam(
@@ -191,6 +192,7 @@ class BeamFactory:
             float(polarization_fraction),
             float(flux),
             float(transmission),
+            probe,
             bool(deg),
         )
 
