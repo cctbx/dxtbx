@@ -247,7 +247,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_polarization_normal(),
                                        obj.get_polarization_fraction(),
                                        obj.get_flux(),
-                                       obj.get_transmission());
+                                       obj.get_transmission(),
+                                       obj.get_probe());
     }
   };
 
@@ -277,6 +278,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     double polarization_fraction,
     double flux,
     double transmission,
+    Probe probe,
     bool deg) {
     PolychromaticBeam *beam = NULL;
     if (deg) {
@@ -286,7 +288,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                    polarization_normal,
                                    polarization_fraction,
                                    flux,
-                                   transmission);
+                                   transmission,
+                                   probe);
     } else {
       beam = new PolychromaticBeam(direction,
                                    divergence,
@@ -294,7 +297,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                    polarization_normal,
                                    polarization_fraction,
                                    flux,
-                                   transmission);
+                                   transmission,
+                                   probe);
     }
     return beam;
   }
@@ -310,6 +314,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
+    result["probe"] = obj.get_probe();
     return result;
   }
 
@@ -323,7 +328,8 @@ namespace dxtbx { namespace model { namespace boost_python {
         obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
       boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
       boost::python::extract<double>(obj.get("flux", 0)),
-      boost::python::extract<double>(obj.get("transmission", 1)));
+      boost::python::extract<double>(obj.get("transmission", 1)),
+      boost::python::extract<Probe>(obj.get("probe", Probe::xray)));
     return b;
   }
 
@@ -442,6 +448,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("polarization_fraction"),
                              arg("flux"),
                              arg("transmission"),
+                             arg("probe") = Probe::xray,
                              arg("deg") = true)))
       .def("__str__", &PolychromaticBeam_to_string)
       .def("to_dict", &to_dict<PolychromaticBeam>)
