@@ -232,7 +232,7 @@ void dxtbx::boost_python::TY6_decompress(int *const ret,
       // - When nbit = 2, the pixel value is -1, 0, 1, 2
       // - When nbit = 3, the pixel value is -3, -2, 1, 0, 1, 2, 3, 4
       // - When nbit - 8, the pixel value is -127, -126, ...,
-      //   127 (== // SHORT_OVERFLOW_SIGNED), 128 (== LONG_OVERFLOW_SIGNED)
+      //   127 (== // SHORT_OVERFLOW), 128 (== LONG_OVERFLOW)
 
       // Load values
       for (int i = 0; i < 2; i++) {
