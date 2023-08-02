@@ -12,9 +12,7 @@ See https://github.com/cctbx/dxtbx/issues/646 for details."""
 from __future__ import annotations
 
 __author__ = "David Waterman, Takanori Nakane"
-__copyright__ = (
-    "Copyright 2018 United Kingdom Research and Innovation & 2022 Takanori Nakane"
-)
+__copyright__ = "Copyright 2018-2023 United Kingdom Research and Innovation & 2022-2023 Takanori Nakane"
 __license__ = "BSD 3-clause"
 
 import re
@@ -25,7 +23,7 @@ import numpy as np
 from scitbx.array_family import flex
 from scitbx.math import r3_rotation_axis_and_angle_as_matrix
 
-from dxtbx.ext import uncompressTY6
+from dxtbx.ext import uncompress_rod_TY6
 from dxtbx.format.Format import Format
 
 
@@ -376,7 +374,7 @@ class FormatROD(Format):
             linedata = f.read(lbytesincompressedfield)
             offsets = f.read(4 * ny)
 
-            return uncompressTY6(linedata, offsets, ny, nx)
+            return uncompress_rod_TY6(linedata, offsets, ny, nx)
 
     # Python implementation
     def _get_raw_data_ty6(self):
