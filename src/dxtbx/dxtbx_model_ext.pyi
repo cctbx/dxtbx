@@ -114,6 +114,35 @@ class Beam(BeamBase):
     def from_dict(data: Dict) -> Beam: ...
     def to_dict(self) -> Dict: ...
 
+class PolychromaticBeam(Beam):
+    @overload
+    def __init__(self, beam: PolychromaticBeam) -> None: ...
+    @overload
+    def __init__(self, direction: Vec3Float) -> None: ...
+    @overload
+    def __init__(
+        self,
+        direction: Vec3Float,
+        divergence: float,
+        sigma_divergence: float,
+        deg: bool = ...,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        direction: Vec3Float,
+        divergence: float,
+        sigma_divergence: float,
+        polarization_normal: Vec3Float,
+        polarization_fraction: float,
+        flux: float,
+        transmission: float,
+        deg: bool = ...,
+    ) -> None: ...
+    @staticmethod
+    def from_dict(data: Dict) -> PolychromaticBeam: ...
+    def to_dict(self) -> Dict: ...
+
 class CrystalBase:
     @property
     def num_scan_points(self) -> int: ...

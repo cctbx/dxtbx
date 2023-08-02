@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import math
+from typing import Tuple
 
 import pycbf
 
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam
+    from ..dxtbx_model_ext import Beam, PolychromaticBeam
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam  # type: ignore
+    from dxtbx_model_ext import Beam, PolychromaticBeam  # type: ignore
+
+Vec3Float = Tuple[float, float, float]
 
 beam_phil_scope = libtbx.phil.parse(
     """
@@ -17,6 +20,10 @@ beam_phil_scope = libtbx.phil.parse(
     .expert_level = 1
     .short_caption = "Beam overrides"
   {
+    type = *monochromatic polychromatic
+      .type = choice
+      .help = "Override the beam type"
+      .short_caption = "beam_type"
 
     wavelength = None
       .type = float
@@ -26,6 +33,14 @@ beam_phil_scope = libtbx.phil.parse(
       .type = floats(size=3)
       .help = "Override the sample to source direction"
       .short_caption = "Sample to source direction"
+
+    divergence = None
+        .type = float
+        .help = "Override the beam divergence"
+
+    sigma_divergence = None
+        .type = float
+        .help = "Override the beam sigma divergence"
 
     polarization_normal = None
       .type = floats(size=3)
@@ -57,62 +72,77 @@ class BeamFactory:
     will be used, otherwise simplified descriptions can be applied."""
 
     @staticmethod
-    def from_phil(params, reference=None):
+    def from_phil(
+        params: libtbx.phil.scope_extract,
+        reference: Beam | PolychromaticBeam = None,
+    ) -> Beam | PolychromaticBeam:
         """
         Convert the phil parameters into a beam model
-
         """
+
         # Check the input
         if reference is None:
-            beam = Beam()
+            beam = (
+                PolychromaticBeam() if params.beam.type == "polychromatic" else Beam()
+            )
         else:
             beam = reference
 
         # Set the parameters
-        if params.beam.wavelength is not None:
-            beam.set_wavelength(params.beam.wavelength)
-        elif reference is None:
-            raise RuntimeError("No wavelength set")
+        if params.beam.type == "monochromatic":
+            if params.beam.wavelength is not None:
+                beam.set_wavelength(params.beam.wavelength)
+            elif reference is None:
+                raise RuntimeError("No wavelength set")
         if params.beam.direction is not None:
             beam.set_direction(params.beam.direction)
         elif reference is None:
             raise RuntimeError("No beam direction set")
+
+        if params.beam.divergence is not None:
+            beam.set_divergence(params.beam.divergence)
+        if params.beam.sigma_divergence is not None:
+            beam.set_sigma_divergence(params.beam.sigma_divergence)
         if params.beam.polarization_normal is not None:
             beam.set_polarization_normal(params.beam.polarization_normal)
         if params.beam.polarization_fraction is not None:
             beam.set_polarization_fraction(params.beam.polarization_fraction)
+        if params.beam.transmission is not None:
+            beam.set_transmission(params.beam.transmission)
+        if params.beam.flux is not None:
+            beam.set_flux(params.beam.flux)
 
         return beam
 
     @staticmethod
-    def from_dict(d, t=None):
-        """Convert the dictionary to a beam model
+    def from_dict(dict: dict, template: dict = None) -> Beam | PolychromaticBeam:
+        """Convert the dictionary to a beam model"""
 
-        Params:
-            d The dictionary of parameters
-            t The template dictionary to use
+        if template is not None:
+            if "__id__" in dict and "__id__" in template:
+                assert (
+                    dict["__id__"] == template["__id__"]
+                ), "Beam and template dictionaries are not the same type."
 
-        Returns:
-            The beam model
-        """
-        if d is None and t is None:
+        if dict is None and template is None:
             return None
-        joint = t.copy() if t else {}
-        joint.update(d)
+        joint = template.copy() if template else {}
+        joint.update(dict)
 
         # Create the model from the joint dictionary
+        if joint.get("__id__") == "polychromatic":
+            return PolychromaticBeam.from_dict(joint)
         return Beam.from_dict(joint)
 
     @staticmethod
     def make_beam(
-        sample_to_source=None,
-        wavelength=None,
-        s0=None,
-        unit_s0=None,
-        divergence=None,
-        sigma_divergence=None,
-    ):
-
+        sample_to_source: Vec3Float = None,
+        wavelength: float = None,
+        s0: Vec3Float = None,
+        unit_s0: Vec3Float = None,
+        divergence: float = None,
+        sigma_divergence: float = None,
+    ) -> Beam:
         if divergence is None or sigma_divergence is None:
             divergence = 0.0
             sigma_divergence = 0.0
@@ -138,18 +168,40 @@ class BeamFactory:
             return Beam(tuple(map(float, s0)))
 
     @staticmethod
+    def make_polychromatic_beam(
+        direction: Vec3Float,
+        divergence: float = 0.0,
+        sigma_divergence: float = 0.0,
+        polarization_normal: Vec3Float = (0.0, 1.0, 0.0),
+        polarization_fraction: float = 0.5,
+        flux: float = 0.0,
+        transmission: float = 1.0,
+        deg: bool = True,
+    ) -> PolychromaticBeam:
+        return PolychromaticBeam(
+            tuple(map(float, direction)),
+            float(divergence),
+            float(sigma_divergence),
+            tuple(map(float, polarization_normal)),
+            float(polarization_fraction),
+            float(flux),
+            float(transmission),
+            bool(deg),
+        )
+
+    @staticmethod
     def make_polarized_beam(
-        sample_to_source=None,
-        wavelength=None,
-        s0=None,
-        unit_s0=None,
-        polarization=None,
-        polarization_fraction=None,
-        divergence=None,
-        sigma_divergence=None,
-        flux=None,
-        transmission=None,
-    ):
+        sample_to_source: Vec3Float = None,
+        wavelength: float = None,
+        s0: Vec3Float = None,
+        unit_s0: Vec3Float = None,
+        polarization: Vec3Float = None,
+        polarization_fraction: float = None,
+        divergence: float = None,
+        sigma_divergence: float = None,
+        flux: float = None,
+        transmission: float = None,
+    ) -> Beam:
         assert polarization
         assert 0.0 <= polarization_fraction <= 1.0
 
@@ -199,7 +251,7 @@ class BeamFactory:
             )
 
     @staticmethod
-    def simple(wavelength):
+    def simple(wavelength: float) -> Beam:
         """Construct a beam object on the principle that the beam is aligned
         with the +z axis, as is quite normal. Also assume the beam has
         polarization fraction 0.999 and is polarized in the x-z plane, unless
@@ -219,7 +271,7 @@ class BeamFactory:
             )
 
     @staticmethod
-    def simple_directional(sample_to_source, wavelength):
+    def simple_directional(sample_to_source: Vec3Float, wavelength: float) -> Beam:
         """Construct a beam with direction and wavelength."""
 
         if wavelength > 0.05:
@@ -236,8 +288,11 @@ class BeamFactory:
 
     @staticmethod
     def complex(
-        sample_to_source, polarization_fraction, polarization_plane_normal, wavelength
-    ):
+        sample_to_source: Vec3Float,
+        polarization_fraction: float,
+        polarization_plane_normal: Vec3Float,
+        wavelength: float,
+    ) -> Beam:
         """Full access to the constructor for cases where we do know everything
         that we need..."""
 
@@ -249,7 +304,7 @@ class BeamFactory:
         )
 
     @staticmethod
-    def imgCIF(cif_file):
+    def imgCIF(cif_file: str) -> Beam:
         """Initialize a detector model from an imgCIF file. N.B. the
         definition of the polarization plane is not completely helpful
         in this - it is the angle between the polarization plane and the
@@ -263,7 +318,7 @@ class BeamFactory:
         return result
 
     @staticmethod
-    def imgCIF_H(cbf_handle):
+    def imgCIF_H(cbf_handle: pycbf.cbf_handle_struct) -> Beam:
         """Initialize a detector model from an imgCIF file. N.B. the
         definition of the polarization plane is not completely helpful
         in this - it is the angle between the polarization plane and the
