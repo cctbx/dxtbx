@@ -170,9 +170,14 @@ inline uint32_t read_uint32_from_bytearray(const char *buf) {
   // For bit shift operations, we need unsigned values.
   // If `char` on the platform is signed, converting directly to "unsigned int" can
   // produce huge numbers because modulo 2^n is taken by the integral conversion
-  // rules. Thus, we have to explicitly cast to `unsigned char` first (but is the
-  // result valid in platforms that don't use two's complement?). Then the automatic
-  // integral promotion converts them to `int`.
+  // rules. Thus, we have to explicitly cast to `unsigned char` first.
+  // Then the automatic integral promotion converts them to `int`.
+  // Note that the unsigned to signed conversion is implementation-dependent
+  // and might not produce the intended result if two's complement is not used.
+  // Fortunately, DIALS targets only two's complement.
+  //    https://github.com/cctbx/dxtbx/issues/11#issuecomment-1657809645
+  // Moreover, C++20 standarized this:
+  //    https://stackoverflow.com/questions/54947427/going-from-signed-integers-to-unsigned-integers-and-vice-versa-in-c20
 
   return ((unsigned char)buf[0]) | (((unsigned char)buf[1]) << 8)
          | (((unsigned char)buf[2]) << 16) | (((unsigned char)buf[3]) << 24);
@@ -204,7 +209,8 @@ void dxtbx::boost_python::TY6_decompress(int *const ret,
 
     int firstpx = (unsigned char)buf_data[ipos++] - 127;
     if (firstpx == LONG_OVERFLOW) {
-      // FIXME: this is an unsigned to signed conversion and implementation dependent.
+      // See comments in read_uint32_from_bytearray() about
+      // the safety of the unsigned to signed conversion.
       firstpx = (signed int)read_uint32_from_bytearray(buf_data + ipos);
       ipos += 4;
     } else if (firstpx == SHORT_OVERFLOW) {
