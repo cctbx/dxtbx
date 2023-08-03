@@ -102,6 +102,18 @@ def test_from_phil():
     assert b3.get_polarization_fraction() == 0.5
     assert b3.get_polarization_normal() == (1.0, 0.0, 0.0)
 
+    params3 = beam_phil_scope.fetch(
+        parse(
+            """
+    beam {
+        probe = electron
+    }
+  """
+        )
+    ).extract()
+    b4 = BeamFactory.from_phil(params3, reference)
+    assert b4.get_probe() == Probe.electron
+
 
 def test_scan_varying():
     direction = matrix.col((0.013142, 0.002200, 1.450476))

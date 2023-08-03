@@ -196,7 +196,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
-    result["probe"] = obj.get_probe();
+    result["probe"] = obj.get_probe_name();
     if (obj.get_num_scan_points() > 0) {
       boost::python::list l;
       scitbx::af::shared<vec3<double> > s0_at_scan_points = obj.get_s0_at_scan_points();
@@ -222,7 +222,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
       boost::python::extract<double>(obj.get("flux", 0)),
       boost::python::extract<double>(obj.get("transmission", 1)),
-      boost::python::extract<Probe>(obj.get("probe", Probe::xray)));
+      Beam::get_probe_from_name(
+        boost::python::extract<std::string>(obj.get("probe", "x-ray"))));
     if (obj.has_key("s0_at_scan_points")) {
       boost::python::list s0_at_scan_points =
         boost::python::extract<boost::python::list>(obj["s0_at_scan_points"]);
@@ -314,7 +315,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
-    result["probe"] = obj.get_probe();
+    result["probe"] = obj.get_probe_name();
     return result;
   }
 
@@ -329,7 +330,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
       boost::python::extract<double>(obj.get("flux", 0)),
       boost::python::extract<double>(obj.get("transmission", 1)),
-      boost::python::extract<Probe>(obj.get("probe", Probe::xray)));
+      Beam::get_probe_from_name(
+        boost::python::extract<std::string>(obj.get("probe", "x-ray"))));
     return b;
   }
 
@@ -424,6 +426,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("to_dict", &to_dict<Beam>)
       .def("from_dict", &from_dict<Beam>, return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
+      .def("get_probe_from_name", &Beam::get_probe_from_name)
+      .staticmethod("get_probe_from_name")
       .def_pickle(BeamPickleSuite());
 
     class_<PolychromaticBeam, std::shared_ptr<PolychromaticBeam>, bases<Beam> >(

@@ -323,6 +323,22 @@ namespace dxtbx { namespace model {
       }
     }
 
+    static Probe get_probe_from_name(const std::string probe) {
+      // Return a Probe matched to NeXus definitions from
+      // https://manual.nexusformat.org/classes/base_classes/NXsource.html
+
+      if (probe == "x-ray") {
+        return Probe::xray;
+      } else if (probe == "electron") {
+        return Probe::electron;
+      } else if (probe == "neutron") {
+        return Probe::neutron;
+      }
+
+      DXTBX_ERROR("Unknown probe " + probe);
+      return Probe::xray;
+    }
+
     void set_probe(Probe probe) {
       probe_ = probe;
     }

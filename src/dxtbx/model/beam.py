@@ -25,6 +25,11 @@ beam_phil_scope = libtbx.phil.parse(
       .help = "Override the beam type"
       .short_caption = "beam_type"
 
+    probe = *x-ray electron neutron
+      .type = choice
+      .help = "Override the beam probe"
+      .short_caption = "beam_probe"
+
     wavelength = None
       .type = float
       .help = "Override the beam wavelength"
@@ -111,6 +116,7 @@ class BeamFactory:
             beam.set_transmission(params.beam.transmission)
         if params.beam.flux is not None:
             beam.set_flux(params.beam.flux)
+        beam.set_probe(Beam.get_probe_from_name(params.beam.probe))
 
         return beam
 
@@ -131,9 +137,9 @@ class BeamFactory:
 
         # Create the model from the joint dictionary
         if "probe" in joint:
-            joint["probe"] = Probe.values[joint["probe"]]
+            joint["probe"] = joint["probe"]
         else:
-            joint["probe"] = Probe.xray
+            joint["probe"] = Beam.get_probe_name(Probe.xray)
         if joint.get("__id__") == "polychromatic":
             return PolychromaticBeam.from_dict(joint)
 
