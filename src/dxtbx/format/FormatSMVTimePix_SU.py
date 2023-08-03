@@ -12,6 +12,7 @@ from iotbx.detectors import SMVImage
 from scitbx import matrix
 
 from dxtbx.format.FormatSMV import FormatSMV
+from dxtbx.model.beam import Probe
 from dxtbx.model.detector import Detector
 
 
@@ -76,6 +77,7 @@ class FormatSMVTimePix_SU(FormatSMV):
             wavelength=wavelength,
             polarization=(0, 1, 0),
             polarization_fraction=0.5,
+            probe=Probe.electron,
         )
 
     def _scan(self):
