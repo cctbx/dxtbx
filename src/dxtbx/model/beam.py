@@ -25,6 +25,11 @@ beam_phil_scope = libtbx.phil.parse(
       .help = "Override the beam type"
       .short_caption = "beam_type"
 
+    probe = *x-ray electron neutron
+      .type = choice
+      .help = "Override the beam probe"
+      .short_caption = "beam_probe"
+
     wavelength = None
       .type = float
       .help = "Override the beam wavelength"
@@ -74,7 +79,7 @@ class BeamFactory:
     @staticmethod
     def from_phil(
         params: libtbx.phil.scope_extract,
-        reference: Beam | PolychromaticBeam = None,
+        reference: Beam | PolychromaticBeam | None = None,
     ) -> Beam | PolychromaticBeam:
         """
         Convert the phil parameters into a beam model
@@ -111,6 +116,7 @@ class BeamFactory:
             beam.set_transmission(params.beam.transmission)
         if params.beam.flux is not None:
             beam.set_flux(params.beam.flux)
+        beam.set_probe(Beam.get_probe_from_name(params.beam.probe))
 
         return beam
 
@@ -130,10 +136,8 @@ class BeamFactory:
         joint.update(dict)
 
         # Create the model from the joint dictionary
-        if "probe" in joint:
-            joint["probe"] = Probe.values[joint["probe"]]
-        else:
-            joint["probe"] = Probe.xray
+        if "probe" not in joint:
+            joint["probe"] = "x-ray"
         if joint.get("__id__") == "polychromatic":
             return PolychromaticBeam.from_dict(joint)
 
@@ -181,7 +185,7 @@ class BeamFactory:
         polarization_fraction: float = 0.5,
         flux: float = 0.0,
         transmission: float = 1.0,
-        probe=Probe.xray,
+        probe: Probe = Probe.xray,
         deg: bool = True,
     ) -> PolychromaticBeam:
         return PolychromaticBeam(
@@ -208,7 +212,7 @@ class BeamFactory:
         sigma_divergence: float = None,
         flux: float = None,
         transmission: float = None,
-        probe=Probe.xray,
+        probe: Probe = Probe.xray,
     ) -> Beam:
         assert polarization
         assert 0.0 <= polarization_fraction <= 1.0

@@ -22,6 +22,8 @@ from scitbx.array_family import shared as flex_shared
 # Attempt to use the stub typing for flex-inheritance
 from scitbx.array_family.flex import FlexPlain
 
+from dxtbx_model_ext import Probe  # type: ignore
+
 # TypeVar for the set of Experiment models that can be joint-accepted
 # - profile, imageset and scalingmodel are handled as 'object'
 TExperimentModel = TypeVar(
@@ -113,6 +115,8 @@ class Beam(BeamBase):
     @staticmethod
     def from_dict(data: Dict) -> Beam: ...
     def to_dict(self) -> Dict: ...
+    @staticmethod
+    def get_probe_from_name(name: str) -> Probe: ...
 
 class PolychromaticBeam(Beam):
     @overload
