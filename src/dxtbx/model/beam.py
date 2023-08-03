@@ -79,7 +79,7 @@ class BeamFactory:
     @staticmethod
     def from_phil(
         params: libtbx.phil.scope_extract,
-        reference: Beam | PolychromaticBeam = None,
+        reference: Beam | PolychromaticBeam | None = None,
     ) -> Beam | PolychromaticBeam:
         """
         Convert the phil parameters into a beam model
@@ -136,10 +136,8 @@ class BeamFactory:
         joint.update(dict)
 
         # Create the model from the joint dictionary
-        if "probe" in joint:
-            joint["probe"] = joint["probe"]
-        else:
-            joint["probe"] = Beam.get_probe_name(Probe.xray)
+        if "probe" not in joint:
+            joint["probe"] = "x-ray"
         if joint.get("__id__") == "polychromatic":
             return PolychromaticBeam.from_dict(joint)
 
@@ -187,7 +185,7 @@ class BeamFactory:
         polarization_fraction: float = 0.5,
         flux: float = 0.0,
         transmission: float = 1.0,
-        probe=Probe.xray,
+        probe: Probe = Probe.xray,
         deg: bool = True,
     ) -> PolychromaticBeam:
         return PolychromaticBeam(
@@ -214,7 +212,7 @@ class BeamFactory:
         sigma_divergence: float = None,
         flux: float = None,
         transmission: float = None,
-        probe=Probe.xray,
+        probe: Probe = Probe.xray,
     ) -> Beam:
         assert polarization
         assert 0.0 <= polarization_fraction <= 1.0

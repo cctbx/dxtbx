@@ -432,6 +432,7 @@ namespace dxtbx { namespace model { namespace boost_python {
 
     class_<PolychromaticBeam, std::shared_ptr<PolychromaticBeam>, bases<Beam> >(
       "PolychromaticBeam")
+      .def(init<const PolychromaticBeam &>())
       .def("__init__",
            make_constructor(
              &make_PolychromaticBeam, default_call_policies(), (arg("direction"))))
