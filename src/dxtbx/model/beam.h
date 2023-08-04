@@ -336,7 +336,6 @@ namespace dxtbx { namespace model {
       }
 
       DXTBX_ERROR("Unknown probe " + probe);
-      return Probe::xray;
     }
 
     void set_probe(Probe probe) {
