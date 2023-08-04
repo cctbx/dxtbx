@@ -6,7 +6,7 @@ from libtbx.phil import parse
 from scitbx import matrix
 
 from dxtbx.model import Beam, PolychromaticBeam
-from dxtbx.model.beam import BeamFactory, beam_phil_scope
+from dxtbx.model.beam import BeamFactory, Probe, beam_phil_scope
 
 
 def test_setting_direction_and_wavelength():
@@ -101,6 +101,18 @@ def test_from_phil():
     b3 = BeamFactory.from_phil(params3, reference)
     assert b3.get_polarization_fraction() == 0.5
     assert b3.get_polarization_normal() == (1.0, 0.0, 0.0)
+
+    params3 = beam_phil_scope.fetch(
+        parse(
+            """
+    beam {
+        probe = electron
+    }
+  """
+        )
+    ).extract()
+    b4 = BeamFactory.from_phil(params3, reference)
+    assert b4.get_probe() == Probe.electron
 
 
 def test_scan_varying():
@@ -222,6 +234,7 @@ def test_make_polychromatic_beam():
     polarization_fraction = 0.65
     transmission = 0.5
     flux = 0.75
+    probe = Probe.neutron
 
     beam = BeamFactory.make_polychromatic_beam(
         direction=direction,
@@ -231,6 +244,7 @@ def test_make_polychromatic_beam():
         polarization_fraction=polarization_fraction,
         transmission=transmission,
         flux=flux,
+        probe=probe,
     )
 
     assert beam.get_sample_to_source_direction() == pytest.approx((0.0, 0.0, 1.0))
@@ -240,6 +254,7 @@ def test_make_polychromatic_beam():
     assert beam.get_polarization_fraction() == pytest.approx(0.65)
     assert beam.get_transmission() == pytest.approx(0.5)
     assert beam.get_flux() == pytest.approx(0.75)
+    assert beam.get_probe() == Probe.neutron
 
 
 def test_polychromatic_beam_wavelength_guards():
@@ -266,5 +281,5 @@ def test_polychromatic_beam_str():
     beam = PolychromaticBeam()
     assert (
         beam.__str__()
-        == "Beam:\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.5\n    flux: 0\n    transmission: 1\n"
+        == "Beam:\n    probe: x-ray\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.5\n    flux: 0\n    transmission: 1\n"
     )
