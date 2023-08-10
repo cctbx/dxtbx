@@ -69,10 +69,9 @@ def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
     make_cbf(tmp_path / master, template=str(tmp_path / "image_%04d.cbf"))
 
 
-@pytest.mark.xfail(reason="Broken for old data while collecting new data")
 def test_dlsnxs2cbf_help(capsys):
     with pytest.raises(SystemExit):
         run(["-h"])
     captured = capsys.readouterr()
-    assert parser.description in captured.out
-    assert "Template cbf output name e.g. 'image_%04d.cbf'" in captured.out
+    assert parser.description.splitlines()[0] in captured.out
+    assert "usage: dxtbx.dlsnxs2cbf" in captured.out

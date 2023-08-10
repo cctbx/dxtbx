@@ -5,11 +5,12 @@ import json
 import os
 import sys
 
+from orderedset import OrderedSet
+
 import boost_adaptbx.boost.python
 import cctbx.crystal
 import cctbx.sgtbx
 import cctbx.uctbx
-from libtbx.containers import OrderedSet
 from scitbx import matrix
 from scitbx.array_family import flex
 
@@ -44,6 +45,7 @@ try:
         OffsetPxMmStrategy,
         Panel,
         ParallaxCorrectedPxMmStrategy,
+        PolychromaticBeam,
         PxMmStrategy,
         Scan,
         ScanBase,
@@ -79,6 +81,7 @@ except ModuleNotFoundError:
         OffsetPxMmStrategy,
         Panel,
         ParallaxCorrectedPxMmStrategy,
+        PolychromaticBeam,
         PxMmStrategy,
         Scan,
         ScanBase,
@@ -96,6 +99,7 @@ except ModuleNotFoundError:
 __all__ = (
     "Beam",
     "BeamBase",
+    "PolychromaticBeam",
     "BeamFactory",
     "Crystal",
     "CrystalBase",
