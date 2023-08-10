@@ -8,6 +8,11 @@ from dxtbx.format.nexus import h5str
 from libtbx.test_utils import approx_equal
 from libtbx.phil import parse
 
+import pytest
+
+pytest.importorskip("dials")
+pytest.importorskip("xfel")
+
 
 def test_writer_jf16M(dials_data, tmpdir):
     h5path = (
