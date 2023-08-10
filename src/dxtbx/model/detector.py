@@ -583,7 +583,7 @@ class DetectorFactory:
         gain=None,
         pedestal=None,
         identifier="",
-    ):
+    ) -> Detector:
         """Ensure all types are correct before creating c++ detector class."""
 
         if px_mm is None:

@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from dxtbx.model import Detector
+
 
 @dataclass(frozen=True)
 class _Detector:
@@ -139,7 +141,7 @@ def sensor_active_areas(xdetector):
     return panels
 
 
-def determine_pilatus_mask(xdetector):
+def determine_pilatus_mask(xdetector: Detector):
     """Return an appropriate pixel mask for a Pilatus detector."""
 
     size = xdetector[0].get_image_size()

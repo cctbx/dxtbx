@@ -25,7 +25,7 @@ from dxtbx.ext import read_int32, uncompress
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
-from dxtbx.model import ParallaxCorrectedPxMmStrategy, SimplePxMmStrategy
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy, SimplePxMmStrategy
 
 dxtbx_overload_scale = float(os.getenv("DXTBX_OVERLOAD_SCALE", "1"))
 
@@ -114,7 +114,7 @@ class FormatCBFMini(FormatCBF):
             token, value = record.split(":")
             self._cif_header_dictionary[token.strip()] = value.strip()
 
-    def _detector(self):
+    def _detector(self) -> Detector:
         """Return a model for a simple detector, presuming no one has
         one of these on a two-theta stage. Assert that the beam centre is
         provided in the Mosflm coordinate frame."""
