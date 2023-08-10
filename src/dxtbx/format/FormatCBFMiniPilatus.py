@@ -185,7 +185,9 @@ class FormatCBFMiniPilatus(FormatCBFMini):
         osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
         osc_range = float(self._cif_header_dictionary["Angle_increment"].split()[0])
 
-        timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
+        timestamp: float | None = None
+        if "timestamp" in self._cif_header_dictionary:
+            timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
 
         return self._scan_factory.single_file(
             self._image_file, exposure_time, osc_start, osc_range, timestamp
