@@ -141,7 +141,7 @@ def sensor_active_areas(xdetector):
     return panels
 
 
-def determine_pilatus_mask(xdetector: Detector):
+def determine_pilatus_mask(xdetector: Detector) -> list[tuple[int, int, int, int]]:
     """Return an appropriate pixel mask for a Pilatus detector."""
 
     size = xdetector[0].get_image_size()

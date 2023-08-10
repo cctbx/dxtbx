@@ -7,7 +7,7 @@ import calendar
 import time
 
 
-def get_pilatus_timestamp(timestamp_string):
+def get_pilatus_timestamp(timestamp_string: str) -> float:
     if "." in timestamp_string:
         timestamp, milliseconds = timestamp_string.split(".")
     else:

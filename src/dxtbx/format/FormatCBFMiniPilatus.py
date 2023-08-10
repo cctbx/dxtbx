@@ -13,7 +13,7 @@ from dxtbx.format.FormatCBFMini import FormatCBFMini
 from dxtbx.format.FormatCBFMiniPilatusHelpers import get_pilatus_timestamp
 from dxtbx.format.FormatPilatusHelpers import _DetectorDatabase, determine_pilatus_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype as gv
-from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy, Scan
 
 
 class FormatCBFMiniPilatus(FormatCBFMini):
@@ -177,7 +177,7 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
         return d
 
-    def _scan(self):
+    def _scan(self) -> Scan:
         """Return the scan information for this image."""
 
         exposure_time = float(self._cif_header_dictionary["Exposure_period"].split()[0])

@@ -128,7 +128,7 @@ class ScanFactory:
     @staticmethod
     def make_scan(
         image_range, exposure_times, oscillation, epochs, batch_offset=0, deg=True
-    ):
+    ) -> Scan:
         if not isinstance(exposure_times, list):
             num_images = image_range[1] - image_range[0] + 1
             exposure_times = [exposure_times for i in range(num_images)]
@@ -155,7 +155,9 @@ class ScanFactory:
         )
 
     @staticmethod
-    def single_file(filename, exposure_times, osc_start, osc_width, epoch):
+    def single_file(
+        filename, exposure_times, osc_start, osc_width, epoch: float | None
+    ) -> Scan:
         """Construct an scan instance for a single image."""
         index = scan_helper_image_files.image_to_index(os.path.split(filename)[-1])
         if epoch is None:
