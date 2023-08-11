@@ -620,14 +620,14 @@ namespace dxtbx { namespace model {
      * @param transmission The beam transmission
      * @param sample_to_source_distance (mm)
      */
-    PolyBeam(vec3<double> direction,
-             double divergence,
-             double sigma_divergence,
-             vec3<double> polarization_normal,
-             double polarization_fraction,
-             double flux,
-             double transmission,
-             double sample_to_source_distance) {
+    PolychromaticBeam(vec3<double> direction,
+                      double divergence,
+                      double sigma_divergence,
+                      vec3<double> polarization_normal,
+                      double polarization_fraction,
+                      double flux,
+                      double transmission,
+                      double sample_to_source_distance) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
       set_divergence(divergence);
