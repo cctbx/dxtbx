@@ -17,6 +17,7 @@
 #include <dxtbx/model/beam.h>
 #include <dxtbx/model/boost_python/to_from_dict.h>
 #include <scitbx/array_family/boost_python/flex_wrapper.h>
+#include <boost/python/enum.hpp>
 
 namespace dxtbx { namespace model { namespace boost_python {
   namespace beam_detail {
@@ -24,6 +25,8 @@ namespace dxtbx { namespace model { namespace boost_python {
     using namespace boost::python;
     using scitbx::deg_as_rad;
     using scitbx::rad_as_deg;
+
+    // Beam
 
     std::string beam_to_string(const Beam &beam) {
       std::stringstream ss;
@@ -40,7 +43,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                          obj.get_polarization_normal(),
                                          obj.get_polarization_fraction(),
                                          obj.get_flux(),
-                                         obj.get_transmission());
+                                         obj.get_transmission(),
+                                         obj.get_probe());
       }
 
       static boost::python::tuple getstate(boost::python::object obj) {
@@ -107,6 +111,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                  double polarization_fraction,
                                  double flux,
                                  double transmission,
+                                 Probe probe,
                                  bool deg) {
       Beam *beam = NULL;
       if (deg) {
@@ -117,7 +122,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                         polarization_normal,
                         polarization_fraction,
                         flux,
-                        transmission);
+                        transmission,
+                        probe);
       } else {
         beam = new Beam(sample_to_source,
                         wavelength,
@@ -126,7 +132,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                         polarization_normal,
                         polarization_fraction,
                         flux,
-                        transmission);
+                        transmission,
+                        probe);
       }
       return beam;
     }
@@ -180,6 +187,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   boost::python::dict to_dict<Beam>(const Beam &obj) {
     boost::python::dict result;
+    result["__id__"] = "monochromatic";
     result["direction"] = obj.get_sample_to_source_direction();
     result["wavelength"] = obj.get_wavelength();
     result["divergence"] = rad_as_deg(obj.get_divergence());
@@ -188,6 +196,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
+    result["probe"] = obj.get_probe_name();
     if (obj.get_num_scan_points() > 0) {
       boost::python::list l;
       scitbx::af::shared<vec3<double> > s0_at_scan_points = obj.get_s0_at_scan_points();
@@ -212,7 +221,9 @@ namespace dxtbx { namespace model { namespace boost_python {
         obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
       boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
       boost::python::extract<double>(obj.get("flux", 0)),
-      boost::python::extract<double>(obj.get("transmission", 1)));
+      boost::python::extract<double>(obj.get("transmission", 1)),
+      Beam::get_probe_from_name(
+        boost::python::extract<std::string>(obj.get("probe", "x-ray"))));
     if (obj.has_key("s0_at_scan_points")) {
       boost::python::list s0_at_scan_points =
         boost::python::extract<boost::python::list>(obj["s0_at_scan_points"]);
@@ -221,8 +232,116 @@ namespace dxtbx { namespace model { namespace boost_python {
     return b;
   }
 
+  // PolychromaticBeam
+
+  std::string PolychromaticBeam_to_string(const PolychromaticBeam &beam) {
+    std::stringstream ss;
+    ss << beam;
+    return ss.str();
+  }
+
+  struct PolychromaticBeamPickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(const PolychromaticBeam &obj) {
+      return boost::python::make_tuple(obj.get_sample_to_source_direction(),
+                                       obj.get_divergence(),
+                                       obj.get_sigma_divergence(),
+                                       obj.get_polarization_normal(),
+                                       obj.get_polarization_fraction(),
+                                       obj.get_flux(),
+                                       obj.get_transmission(),
+                                       obj.get_probe());
+    }
+  };
+
+  static PolychromaticBeam *make_PolychromaticBeam(vec3<double> direction) {
+    return new PolychromaticBeam(direction);
+  }
+
+  static PolychromaticBeam *make_PolychromaticBeam_w_divergence(vec3<double> direction,
+                                                                double divergence,
+                                                                double sigma_divergence,
+                                                                bool deg) {
+    PolychromaticBeam *beam = NULL;
+    if (deg) {
+      beam = new PolychromaticBeam(
+        direction, deg_as_rad(divergence), deg_as_rad(sigma_divergence));
+    } else {
+      beam = new PolychromaticBeam(direction, divergence, sigma_divergence);
+    }
+    return beam;
+  }
+
+  static PolychromaticBeam *make_PolychromaticBeam_w_all(
+    vec3<double> direction,
+    double divergence,
+    double sigma_divergence,
+    vec3<double> polarization_normal,
+    double polarization_fraction,
+    double flux,
+    double transmission,
+    Probe probe,
+    bool deg) {
+    PolychromaticBeam *beam = NULL;
+    if (deg) {
+      beam = new PolychromaticBeam(direction,
+                                   deg_as_rad(divergence),
+                                   deg_as_rad(sigma_divergence),
+                                   polarization_normal,
+                                   polarization_fraction,
+                                   flux,
+                                   transmission,
+                                   probe);
+    } else {
+      beam = new PolychromaticBeam(direction,
+                                   divergence,
+                                   sigma_divergence,
+                                   polarization_normal,
+                                   polarization_fraction,
+                                   flux,
+                                   transmission,
+                                   probe);
+    }
+    return beam;
+  }
+
+  template <>
+  boost::python::dict to_dict<PolychromaticBeam>(const PolychromaticBeam &obj) {
+    boost::python::dict result;
+    result["__id__"] = "polychromatic";
+    result["direction"] = obj.get_sample_to_source_direction();
+    result["divergence"] = rad_as_deg(obj.get_divergence());
+    result["sigma_divergence"] = rad_as_deg(obj.get_sigma_divergence());
+    result["polarization_normal"] = obj.get_polarization_normal();
+    result["polarization_fraction"] = obj.get_polarization_fraction();
+    result["flux"] = obj.get_flux();
+    result["transmission"] = obj.get_transmission();
+    result["probe"] = obj.get_probe_name();
+    return result;
+  }
+
+  template <>
+  PolychromaticBeam *from_dict<PolychromaticBeam>(boost::python::dict obj) {
+    PolychromaticBeam *b = new PolychromaticBeam(
+      boost::python::extract<vec3<double> >(obj["direction"]),
+      deg_as_rad(boost::python::extract<double>(obj.get("divergence", 0.0))),
+      deg_as_rad(boost::python::extract<double>(obj.get("sigma_divergence", 0.0))),
+      boost::python::extract<vec3<double> >(
+        obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
+      boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
+      boost::python::extract<double>(obj.get("flux", 0)),
+      boost::python::extract<double>(obj.get("transmission", 1)),
+      Beam::get_probe_from_name(
+        boost::python::extract<std::string>(obj.get("probe", "x-ray"))));
+    return b;
+  }
+
   void export_beam() {
     using namespace beam_detail;
+
+    enum_<Probe>("Probe")
+      .value("xray", xray)
+      .value("electron", electron)
+      .value("neutron", neutron);
 
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
       .def("get_sample_to_source_direction", &BeamBase::get_sample_to_source_direction)
@@ -254,6 +373,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_s0_at_scan_points", &Beam_set_s0_at_scan_points_from_list)
       .def("get_s0_at_scan_points", &BeamBase::get_s0_at_scan_points)
       .def("get_s0_at_scan_point", &BeamBase::get_s0_at_scan_point)
+      .def("get_probe", &BeamBase::get_probe)
+      .def("get_probe_name", &BeamBase::get_probe_name)
+      .def("set_probe", &BeamBase::set_probe)
       .def("reset_scan_points", &BeamBase::reset_scan_points)
       .def("rotate_around_origin",
            &rotate_around_origin,
@@ -298,12 +420,48 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("polarization_fraction"),
                              arg("flux"),
                              arg("transmission"),
+                             arg("probe") = Probe::xray,
                              arg("deg") = true)))
       .def("__str__", &beam_to_string)
       .def("to_dict", &to_dict<Beam>)
       .def("from_dict", &from_dict<Beam>, return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
+      .def("get_probe_from_name", &Beam::get_probe_from_name)
+      .staticmethod("get_probe_from_name")
       .def_pickle(BeamPickleSuite());
+
+    class_<PolychromaticBeam, std::shared_ptr<PolychromaticBeam>, bases<Beam> >(
+      "PolychromaticBeam")
+      .def(init<const PolychromaticBeam &>())
+      .def("__init__",
+           make_constructor(
+             &make_PolychromaticBeam, default_call_policies(), (arg("direction"))))
+      .def("__init__",
+           make_constructor(&make_PolychromaticBeam_w_divergence,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("deg") = true)))
+      .def("__init__",
+           make_constructor(&make_PolychromaticBeam_w_all,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("polarization_normal"),
+                             arg("polarization_fraction"),
+                             arg("flux"),
+                             arg("transmission"),
+                             arg("probe") = Probe::xray,
+                             arg("deg") = true)))
+      .def("__str__", &PolychromaticBeam_to_string)
+      .def("to_dict", &to_dict<PolychromaticBeam>)
+      .def("from_dict",
+           &from_dict<PolychromaticBeam>,
+           return_value_policy<manage_new_object>())
+      .staticmethod("from_dict")
+      .def_pickle(PolychromaticBeamPickleSuite());
 
     scitbx::af::boost_python::flex_wrapper<Beam>::plain("flex_Beam");
   }

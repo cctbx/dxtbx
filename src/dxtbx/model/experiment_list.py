@@ -629,8 +629,7 @@ class ExperimentListFactory:
             # if imagesequence is still images, make one experiment for each
             # all referencing into the same image set
             if imageset.get_scan().is_still():
-                start, end = imageset.get_scan().get_array_range()
-                for j in range(start, end):
+                for j in range(len(imageset)):
                     subset = imageset[j : j + 1]
                     experiments.append(
                         Experiment(
