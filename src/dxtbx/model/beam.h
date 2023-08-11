@@ -552,7 +552,7 @@ namespace dxtbx { namespace model {
      * @param direction The beam direction pointing source to sample
      * @param sample_to_source_distance (mm)
      */
-    PolyBeam(vec3<double> direction, double sample_to_source_distance) {
+    PolychromaticBeam(vec3<double> direction, double sample_to_source_distance) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
       set_sample_to_source_distance(sample_to_source_distance);
