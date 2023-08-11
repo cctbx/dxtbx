@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 import glob
-import h5py
-from dxtbx.model.experiment_list import ExperimentListFactory
-from dxtbx.format.nxmx_writer import NXmxWriter, phil_scope
-from dxtbx.format.nexus import h5str
-from libtbx.test_utils import approx_equal
-from libtbx.phil import parse
 
+import h5py
 import pytest
+
+from libtbx.phil import parse
+from libtbx.test_utils import approx_equal
+
+from dxtbx.format.nexus import h5str
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 pytest.importorskip("dials")
 pytest.importorskip("xfel")
+
+from dxtbx.format.nxmx_writer import NXmxWriter, phil_scope
 
 
 def test_writer_jf16M(dials_data, tmpdir):
