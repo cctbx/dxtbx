@@ -304,7 +304,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     return beam;
   }
 
-  static PolyBeam *make_PolychromaticBeam_w_sample_to_source_distance(
+  static PolychromaticBeam *make_PolychromaticBeam_w_sample_to_source_distance(
     vec3<double> direction,
     double sample_to_source_distance) {
     return new PolychromaticBeam(direction, sample_to_source_distance);
