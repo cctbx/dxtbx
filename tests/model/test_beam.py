@@ -5,7 +5,7 @@ import pytest
 from libtbx.phil import parse
 from scitbx import matrix
 
-from dxtbx.model import Beam, PolyBeam
+from dxtbx.model import Beam, PolychromaticBeam
 from dxtbx.model.beam import BeamFactory, beam_phil_scope
 
 
@@ -178,7 +178,7 @@ def test_beam_self_serialization():
     assert beam == BeamFactory.from_dict(beam.to_dict())
 
 
-def test_polybeam_from_phil():
+def test_polychromatic_beam_from_phil():
     params = beam_phil_scope.fetch(
         parse(
             """
@@ -197,7 +197,7 @@ def test_polybeam_from_phil():
     ).extract()
 
     beam = BeamFactory.from_phil(params)
-    assert isinstance(beam, PolyBeam)
+    assert isinstance(beam, PolychromaticBeam)
 
     assert beam.get_sample_to_source_direction() == pytest.approx((0.0, 0.0, 1.0))
     assert beam.get_divergence() == pytest.approx(0.2)
@@ -208,13 +208,12 @@ def test_polybeam_from_phil():
     assert beam.get_flux() == pytest.approx(0.75)
 
 
-def test_polybeam_from_dict():
-    beam = PolyBeam()
+def test_polychromatic_beam_from_dict():
+    beam = PolychromaticBeam()
     assert beam == BeamFactory.from_dict(beam.to_dict())
 
 
-def test_make_polybeam():
-
+def test_make_polychromatic_beam():
     direction = (0.0, 0.0, 1.0)
     divergence = 0.2
     sigma_divergence = 0.3
@@ -223,7 +222,7 @@ def test_make_polybeam():
     transmission = 0.5
     flux = 0.75
 
-    beam = BeamFactory.make_polybeam(
+    beam = BeamFactory.make_polychromatic_beam(
         direction=direction,
         divergence=divergence,
         sigma_divergence=sigma_divergence,
@@ -242,8 +241,8 @@ def test_make_polybeam():
     assert beam.get_flux() == pytest.approx(0.75)
 
 
-def test_polybeam_wavelength_guards():
-    beam = PolyBeam()
+def test_polychromatic_beam_wavelength_guards():
+    beam = PolychromaticBeam()
     with pytest.raises(RuntimeError):
         _ = beam.get_wavelength()
     with pytest.raises(RuntimeError):
@@ -262,9 +261,9 @@ def test_polybeam_wavelength_guards():
         beam.set_s0((0.0, 0.0, 0.1))
 
 
-def test_polybeam_str():
-    beam = PolyBeam()
+def test_polychromatic_beam_str():
+    beam = PolychromaticBeam()
     assert (
         beam.__str__()
-        == "Beam:\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.999\n    flux: 0\n    transmission: 1\n    sample to source distance : 0\n"
+        == "Beam:\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.5\n    flux: 0\n    transmission: 1\n    sample to source distance : 0\n"
     )

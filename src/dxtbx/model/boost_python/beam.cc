@@ -265,16 +265,16 @@ namespace dxtbx { namespace model { namespace boost_python {
     return b;
   }
 
-  // PolyBeam
+  // PolychromaticBeam
 
-  std::string polybeam_to_string(const PolyBeam &beam) {
+  std::string PolychromaticBeam_to_string(const PolychromaticBeam &beam) {
     std::stringstream ss;
     ss << beam;
     return ss.str();
   }
 
-  struct PolyBeamPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(const PolyBeam &obj) {
+  struct PolychromaticBeamPickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(const PolychromaticBeam &obj) {
       return boost::python::make_tuple(obj.get_sample_to_source_direction(),
                                        obj.get_divergence(),
                                        obj.get_sigma_divergence(),
@@ -286,64 +286,64 @@ namespace dxtbx { namespace model { namespace boost_python {
     }
   };
 
-  static PolyBeam *make_polybeam(vec3<double> direction) {
-    return new PolyBeam(direction);
+  static PolychromaticBeam *make_PolychromaticBeam(vec3<double> direction) {
+    return new PolychromaticBeam(direction);
   }
 
-  static PolyBeam *make_polybeam_w_divergence(vec3<double> direction,
-                                              double divergence,
-                                              double sigma_divergence,
-                                              bool deg) {
-    PolyBeam *beam = NULL;
+  static PolychromaticBeam *make_PolychromaticBeam_w_divergence(vec3<double> direction,
+                                                                double divergence,
+                                                                double sigma_divergence,
+                                                                bool deg) {
+    PolychromaticBeam *beam = NULL;
     if (deg) {
-      beam =
-        new PolyBeam(direction, deg_as_rad(divergence), deg_as_rad(sigma_divergence));
+      beam = new PolychromaticBeam(
+        direction, deg_as_rad(divergence), deg_as_rad(sigma_divergence));
     } else {
-      beam = new PolyBeam(direction, divergence, sigma_divergence);
+      beam = new PolychromaticBeam(direction, divergence, sigma_divergence);
     }
     return beam;
   }
 
-  static PolyBeam *make_polybeam_w_sample_to_source_distance(
+  static PolyBeam *make_PolychromaticBeam_w_sample_to_source_distance(
     vec3<double> direction,
     double sample_to_source_distance) {
-    return new PolyBeam(direction, sample_to_source_distance);
+    return new PolychromaticBeam(direction, sample_to_source_distance);
   }
-
-  static PolyBeam *make_polybeam_w_all(vec3<double> direction,
-                                       double divergence,
-                                       double sigma_divergence,
-                                       vec3<double> polarization_normal,
-                                       double polarization_fraction,
-                                       double flux,
-                                       double transmission,
-                                       double sample_to_source_distance,
-                                       bool deg) {
-    PolyBeam *beam = NULL;
+  static PolychromaticBeam *make_PolychromaticBeam_w_all(
+    vec3<double> direction,
+    double divergence,
+    double sigma_divergence,
+    vec3<double> polarization_normal,
+    double polarization_fraction,
+    double flux,
+    double transmission,
+    double sample_to_source_distance,
+    bool deg) {
+    PolychromaticBeam *beam = NULL;
     if (deg) {
-      beam = new PolyBeam(direction,
-                          deg_as_rad(divergence),
-                          deg_as_rad(sigma_divergence),
-                          polarization_normal,
-                          polarization_fraction,
-                          flux,
-                          transmission,
-                          sample_to_source_distance);
+      beam = new PolychromaticBeam(direction,
+                                   deg_as_rad(divergence),
+                                   deg_as_rad(sigma_divergence),
+                                   polarization_normal,
+                                   polarization_fraction,
+                                   flux,
+                                   transmission,
+                                   sample_to_source_distance);
     } else {
-      beam = new PolyBeam(direction,
-                          divergence,
-                          sigma_divergence,
-                          polarization_normal,
-                          polarization_fraction,
-                          flux,
-                          transmission,
-                          sample_to_source_distance);
+      beam = new PolychromaticBeam(direction,
+                                   divergence,
+                                   sigma_divergence,
+                                   polarization_normal,
+                                   polarization_fraction,
+                                   flux,
+                                   transmission,
+                                   sample_to_source_distance);
     }
     return beam;
   }
 
   template <>
-  boost::python::dict to_dict<PolyBeam>(const PolyBeam &obj) {
+  boost::python::dict to_dict<PolychromaticBeam>(const PolychromaticBeam &obj) {
     boost::python::dict result;
     result["__id__"] = "polychromatic";
     result["direction"] = obj.get_sample_to_source_direction();
@@ -358,8 +358,8 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   template <>
-  PolyBeam *from_dict<PolyBeam>(boost::python::dict obj) {
-    PolyBeam *b = new PolyBeam(
+  PolychromaticBeam *from_dict<PolychromaticBeam>(boost::python::dict obj) {
+    PolychromaticBeam *b = new PolychromaticBeam(
       boost::python::extract<vec3<double> >(obj["direction"]),
       deg_as_rad(boost::python::extract<double>(obj.get("divergence", 0.0))),
       deg_as_rad(boost::python::extract<double>(obj.get("sigma_divergence", 0.0))),
@@ -478,23 +478,24 @@ namespace dxtbx { namespace model { namespace boost_python {
       .staticmethod("from_dict")
       .def_pickle(BeamPickleSuite());
 
-    class_<PolyBeam, std::shared_ptr<PolyBeam>, bases<Beam> >("PolyBeam")
-      .def(
-        "__init__",
-        make_constructor(&make_polybeam, default_call_policies(), (arg("direction"))))
+    class_<PolychromaticBeam, std::shared_ptr<PolychromaticBeam>, bases<Beam> >(
+      "PolychromaticBeam")
       .def("__init__",
-           make_constructor(&make_polybeam_w_sample_to_source_distance,
+           make_constructor(&make_PolychromaticBeam_w_sample_to_source_distance,
                             default_call_policies(),
                             (arg("direction"), arg("sample_to_source_distance"))))
       .def("__init__",
-           make_constructor(&make_polybeam_w_divergence,
+           make_constructor(
+             &make_PolychromaticBeam, default_call_policies(), (arg("direction"))))
+      .def("__init__",
+           make_constructor(&make_PolychromaticBeam_w_divergence,
                             default_call_policies(),
                             (arg("direction"),
                              arg("divergence"),
                              arg("sigma_divergence"),
                              arg("deg") = true)))
       .def("__init__",
-           make_constructor(&make_polybeam_w_all,
+           make_constructor(&make_PolychromaticBeam_w_all,
                             default_call_policies(),
                             (arg("direction"),
                              arg("divergence"),
@@ -505,11 +506,13 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("transmission"),
                              arg("sample_to_source_distance"),
                              arg("deg") = true)))
-      .def("__str__", &polybeam_to_string)
-      .def("to_dict", &to_dict<PolyBeam>)
-      .def("from_dict", &from_dict<PolyBeam>, return_value_policy<manage_new_object>())
+      .def("__str__", &PolychromaticBeam_to_string)
+      .def("to_dict", &to_dict<PolychromaticBeam>)
+      .def("from_dict",
+           &from_dict<PolychromaticBeam>,
+           return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
-      .def_pickle(PolyBeamPickleSuite());
+      .def_pickle(PolychromaticBeamPickleSuite());
 
     scitbx::af::boost_python::flex_wrapper<Beam>::plain("flex_Beam");
   }

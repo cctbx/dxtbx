@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, Tuple, Union
+from typing import Tuple
 
 import pycbf
 
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam, PolyBeam
+    from ..dxtbx_model_ext import Beam, PolychromaticBeam
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam, PolyBeam  # type: ignore
+    from dxtbx_model_ext import Beam, PolychromaticBeam  # type: ignore
 
 Vec3Float = Tuple[float, float, float]
 
@@ -77,15 +77,18 @@ class BeamFactory:
 
     @staticmethod
     def from_phil(
-        params: libtbx.phil.scope_extract, reference: Union[Beam, PolyBeam] = None
-    ) -> Union[Beam, PolyBeam]:
+        params: libtbx.phil.scope_extract,
+        reference: Beam | PolychromaticBeam = None,
+    ) -> Beam | PolychromaticBeam:
         """
         Convert the phil parameters into a beam model
         """
 
         # Check the input
         if reference is None:
-            beam = PolyBeam() if params.beam.type == "polychromatic" else Beam()
+            beam = (
+                PolychromaticBeam() if params.beam.type == "polychromatic" else Beam()
+            )
         else:
             beam = reference
 
@@ -118,7 +121,7 @@ class BeamFactory:
         return beam
 
     @staticmethod
-    def from_dict(dict: Dict, template: Dict = None) -> Union[Beam, PolyBeam]:
+    def from_dict(dict: dict, template: dict = None) -> Beam | PolychromaticBeam:
         """Convert the dictionary to a beam model"""
 
         if template is not None:
@@ -133,8 +136,8 @@ class BeamFactory:
         joint.update(dict)
 
         # Create the model from the joint dictionary
-        if "__id__" in joint and joint["__id__"] == "polychromatic":
-            return PolyBeam.from_dict(joint)
+        if joint.get("__id__") == "polychromatic":
+            return PolychromaticBeam.from_dict(joint)
         return Beam.from_dict(joint)
 
     @staticmethod
@@ -146,7 +149,6 @@ class BeamFactory:
         divergence: float = None,
         sigma_divergence: float = None,
     ) -> Beam:
-
         if divergence is None or sigma_divergence is None:
             divergence = 0.0
             sigma_divergence = 0.0
@@ -172,18 +174,17 @@ class BeamFactory:
             return Beam(tuple(map(float, s0)))
 
     @staticmethod
-    def make_polybeam(
+    def make_polychromatic_beam(
         direction: Vec3Float,
         divergence: float = 0.0,
         sigma_divergence: float = 0.0,
         polarization_normal: Vec3Float = (0.0, 1.0, 0.0),
-        polarization_fraction: float = 0.999,
+        polarization_fraction: float = 0.5,
         flux: float = 0.0,
         transmission: float = 1.0,
         deg: bool = True,
-    ) -> PolyBeam:
-
-        return PolyBeam(
+    ) -> PolychromaticBeam:
+        return PolychromaticBeam(
             tuple(map(float, direction)),
             float(divergence),
             float(sigma_divergence),

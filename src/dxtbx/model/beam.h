@@ -144,7 +144,7 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * @param direction The beam direction vector from source to sample
+     * @param direction The beam direction vector from sample to source
      * @param wavelength The wavelength of the beam
      * @param divergence The beam divergence
      * @param sigma_divergence The standard deviation of the beam divergence
@@ -166,7 +166,7 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * @param direction The beam direction vector from source to sample
+     * @param direction The beam direction vector from sample to source
      * @param wavelength The wavelength of the beam
      * @param divergence The beam divergence
      * @param sigma_divergence The standard deviation of the beam divergence
@@ -520,29 +520,29 @@ namespace dxtbx { namespace model {
     return os;
   }
 
-  class PolyBeam : public Beam {
+  class PolychromaticBeam : public Beam {
   public:
-    PolyBeam() {
+    PolychromaticBeam() {
       set_direction(vec3<double>(0.0, 0.0, 1.0));
       set_divergence(0.0);
       set_sigma_divergence(0.0);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.999);
+      set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
       set_sample_to_source_distance(0.0);
     }
 
     /**
-     * @param direction The beam direction pointing source to sample
+     * @param direction The beam direction pointing sample to source
      */
-    PolyBeam(vec3<double> direction) {
+    PolychromaticBeam(vec3<double> direction) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
       set_divergence(0.0);
       set_sigma_divergence(0.0);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.999);
+      set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
       set_sample_to_source_distance(0.0);
@@ -565,24 +565,26 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * @param direction The beam direction pointing source to sample
+     * @param direction The beam direction pointing sample to source
      * @param divergence The beam divergence
      * @param sigma_divergence The standard deviation of the beam divergence
      */
-    PolyBeam(vec3<double> direction, double divergence, double sigma_divergence) {
+    PolychromaticBeam(vec3<double> direction,
+                      double divergence,
+                      double sigma_divergence) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
       set_divergence(divergence);
       set_sigma_divergence(sigma_divergence);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.999);
+      set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
       set_sample_to_source_distance(0.0);
     }
 
     /**
-     * @param direction The beam direction pointing source to sample
+     * @param direction The beam direction pointing sample to source
      * @param divergence The beam divergence
      * @param sigma_divergence The standard deviation of the beam divergence
      * @param polarization_normal The polarization plane
@@ -590,13 +592,13 @@ namespace dxtbx { namespace model {
      * @param flux The beam flux
      * @param transmission The beam transmission
      */
-    PolyBeam(vec3<double> direction,
-             double divergence,
-             double sigma_divergence,
-             vec3<double> polarization_normal,
-             double polarization_fraction,
-             double flux,
-             double transmission) {
+    PolychromaticBeam(vec3<double> direction,
+                      double divergence,
+                      double sigma_divergence,
+                      vec3<double> polarization_normal,
+                      double polarization_fraction,
+                      double flux,
+                      double transmission) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
       set_divergence(divergence);
@@ -638,44 +640,44 @@ namespace dxtbx { namespace model {
     }
 
     double get_wavelength() const {
-      throw DXTBX_ERROR("PolyBeam has no fixed wavelength");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed wavelength");
       return -1.;
     }
 
     void set_wavelength(double wavelength) {
-      throw DXTBX_ERROR("PolyBeam has no fixed wavelength");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed wavelength");
     }
 
     vec3<double> get_s0() const {
-      throw DXTBX_ERROR("Polybeam has no fixed s0");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
       return vec3<double>(0., 0., 0.);
     }
 
     void set_s0(vec3<double> s0) {
-      throw DXTBX_ERROR("Polybeam has no fixed s0");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
     }
 
     std::size_t get_num_scan_points() const {
-      throw DXTBX_ERROR("Polybeam has no fixed s0");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
       return 1;
     }
 
     void set_s0_at_scan_points(const scitbx::af::const_ref<vec3<double> > &s0) {
-      throw DXTBX_ERROR("Polybeam has no fixed s0");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
     }
 
     scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const {
-      throw DXTBX_ERROR("Polybeam has no fixed s0");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
       return scitbx::af::shared<vec3<double> >(1, (0., 0., 0.));
     }
 
     vec3<double> get_s0_at_scan_point(std::size_t index) const {
-      throw DXTBX_ERROR("Polybeam has no fixed s0");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
       return vec3<double>(0., 0., 0.);
     }
 
     void reset_scan_points() {
-      throw DXTBX_ERROR("Polybeam has no fixed s0");
+      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
     }
 
     bool operator==(const BeamBase &rhs) const {
@@ -724,7 +726,7 @@ namespace dxtbx { namespace model {
   };
 
   /** Print beam information */
-  inline std::ostream &operator<<(std::ostream &os, const PolyBeam &b) {
+  inline std::ostream &operator<<(std::ostream &os, const PolychromaticBeam &b) {
     os << "Beam:\n";
     os << "    sample to source direction : "
        << b.get_sample_to_source_direction().const_ref() << "\n";
