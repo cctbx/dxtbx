@@ -8,9 +8,9 @@ import pycbf
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam, PolychromaticBeam
+    from ..dxtbx_model_ext import Beam, PolychromaticBeam, Probe
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam, PolychromaticBeam  # type: ignore
+    from dxtbx_model_ext import Beam, PolychromaticBeam, Probe  # type: ignore
 
 Vec3Float = Tuple[float, float, float]
 
@@ -24,6 +24,11 @@ beam_phil_scope = libtbx.phil.parse(
       .type = choice
       .help = "Override the beam type"
       .short_caption = "beam_type"
+
+    probe = *x-ray electron neutron
+      .type = choice
+      .help = "Override the beam probe"
+      .short_caption = "beam_probe"
 
     wavelength = None
       .type = float
@@ -78,7 +83,7 @@ class BeamFactory:
     @staticmethod
     def from_phil(
         params: libtbx.phil.scope_extract,
-        reference: Beam | PolychromaticBeam = None,
+        reference: Beam | PolychromaticBeam | None = None,
     ) -> Beam | PolychromaticBeam:
         """
         Convert the phil parameters into a beam model
@@ -117,6 +122,7 @@ class BeamFactory:
             beam.set_flux(params.beam.flux)
         if params.beam.sample_to_source_distance is not None:
             beam.set_sample_to_source_distance(params.beam.sample_to_source_distance)
+        beam.set_probe(Beam.get_probe_from_name(params.beam.probe))
 
         return beam
 
@@ -136,8 +142,11 @@ class BeamFactory:
         joint.update(dict)
 
         # Create the model from the joint dictionary
+        if "probe" not in joint:
+            joint["probe"] = "x-ray"
         if joint.get("__id__") == "polychromatic":
             return PolychromaticBeam.from_dict(joint)
+
         return Beam.from_dict(joint)
 
     @staticmethod
@@ -182,6 +191,7 @@ class BeamFactory:
         polarization_fraction: float = 0.5,
         flux: float = 0.0,
         transmission: float = 1.0,
+        probe: Probe = Probe.xray,
         deg: bool = True,
     ) -> PolychromaticBeam:
         return PolychromaticBeam(
@@ -192,6 +202,7 @@ class BeamFactory:
             float(polarization_fraction),
             float(flux),
             float(transmission),
+            probe,
             bool(deg),
         )
 
@@ -207,6 +218,7 @@ class BeamFactory:
         sigma_divergence: float = None,
         flux: float = None,
         transmission: float = None,
+        probe: Probe = Probe.xray,
     ) -> Beam:
         assert polarization
         assert 0.0 <= polarization_fraction <= 1.0
@@ -231,6 +243,7 @@ class BeamFactory:
                 float(polarization_fraction),
                 float(flux),
                 float(transmission),
+                probe,
             )
         elif unit_s0:
             assert wavelength
@@ -243,17 +256,23 @@ class BeamFactory:
                 float(polarization_fraction),
                 float(flux),
                 float(transmission),
+                probe,
             )
         else:
             assert s0
+            sum_sq_s0 = s0[0] ** 2 + s0[1] ** 2 + s0[2] ** 2
+            assert sum_sq_s0 > 0
+            wavelength = 1.0 / math.sqrt(sum_sq_s0)
             return Beam(
                 tuple(map(float, s0)),
+                wavelength,
                 float(divergence),
                 float(sigma_divergence),
                 tuple(map(float, polarization)),
                 float(polarization_fraction),
                 float(flux),
                 float(transmission),
+                probe,
             )
 
     @staticmethod

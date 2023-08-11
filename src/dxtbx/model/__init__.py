@@ -5,11 +5,12 @@ import json
 import os
 import sys
 
+from orderedset import OrderedSet
+
 import boost_adaptbx.boost.python
 import cctbx.crystal
 import cctbx.sgtbx
 import cctbx.uctbx
-from libtbx.containers import OrderedSet
 from scitbx import matrix
 from scitbx.array_family import flex
 

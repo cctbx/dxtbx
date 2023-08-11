@@ -309,6 +309,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     double sample_to_source_distance) {
     return new PolychromaticBeam(direction, sample_to_source_distance);
   }
+
   static PolychromaticBeam *make_PolychromaticBeam_w_all(
     vec3<double> direction,
     double divergence,
@@ -317,6 +318,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     double polarization_fraction,
     double flux,
     double transmission,
+    Probe probe,
     double sample_to_source_distance,
     bool deg) {
     PolychromaticBeam *beam = NULL;
@@ -328,6 +330,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                    polarization_fraction,
                                    flux,
                                    transmission,
+                                   probe,
                                    sample_to_source_distance);
     } else {
       beam = new PolychromaticBeam(direction,
@@ -337,6 +340,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                    polarization_fraction,
                                    flux,
                                    transmission,
+                                   probe,
                                    sample_to_source_distance);
     }
     return beam;

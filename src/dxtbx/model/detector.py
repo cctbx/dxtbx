@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from copy import deepcopy
 
 import pycbf
 
@@ -212,6 +213,42 @@ detector_phil_scope = libtbx.phil.parse(
 )
 
 
+def merge_panel_scope_extracts_by_id(panel_params):
+
+    id_to_params = {}
+    for (i, params) in enumerate(panel_params):
+        if params.id not in id_to_params:
+            id_to_params[params.id] = [
+                i,
+            ]
+        else:
+            id_to_params[params.id].append(i)
+
+    merged_params = []
+    for params_set in id_to_params.values():
+        params0 = deepcopy(panel_params[params_set[0]])
+        for i in params_set[1:]:
+            params1 = deepcopy(panel_params[i])
+            for key in params1.__dict__:
+                if (
+                    key.startswith("_")
+                    or key == "id"
+                    or params0.__dict__[key] == params1.__dict__[key]
+                ):
+                    continue
+                if (
+                    params0.__dict__[key] is not None
+                    and params1.__dict__[key] is not None
+                ):
+                    raise RuntimeError(
+                        f"Multiple definitions for {key} for panel id={params0.id}"
+                    )
+                if params0.__dict__[key] is None:
+                    params0.__dict__[key] = params1.__dict__[key]
+        merged_params.append(params0)
+    return merged_params
+
+
 class DetectorFactory:
     """A factory class for detector objects, which will encapsulate standard
     detector designs to make it a little easier to get started with these. In
@@ -229,7 +266,11 @@ class DetectorFactory:
 
         # Create a list of panels
         panel_list = {}
-        for panel_params in params.detector.panel:
+
+        # merge panel params by id first
+        merged = merge_panel_scope_extracts_by_id(params.detector.panel)
+
+        for panel_params in merged:
             panel = Panel()
             if panel_params.name is not None:
                 panel.set_name(panel_params.name)
@@ -335,8 +376,11 @@ class DetectorFactory:
         Overwrite from phil parameters
 
         """
+        # merge panel params by id first
+        merged = merge_panel_scope_extracts_by_id(params.detector.panel)
+
         # Override any panel parameters
-        for panel_params in params.detector.panel:
+        for panel_params in merged:
             panel = detector[panel_params.id]
             if panel_params.name is not None:
                 panel.set_name(panel_params.name)

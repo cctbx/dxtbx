@@ -1,3 +1,35 @@
+DIALS 3.15.1 (2023-06-29)
+=========================
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Fix import overwritten by local variable. (`#641 <https://github.com/cctbx/dxtbx/issues/641>`_)
+
+
+dxtbx 3.15.0 (2023-06-13)
+=========================
+
+Features
+--------
+
+- Support for Bruker Photon detectors has been extended to include Photon-III. (`#637 <https://github.com/cctbx/dxtbx/issues/637>`_)
+
+
+Bugfixes
+--------
+
+- Rigaku Saturn SMV images with multi-axis crystal goniometers are now handledi, instead of being silently ignored. With thanks to James Hester for this contribution. (`#617 <https://github.com/cctbx/dxtbx/issues/617>`_)
+- FormatCBFFull: If rotation angles are decreasing, then invert the rotation axis as well as the angles, to be consistent. (`#623 <https://github.com/cctbx/dxtbx/issues/623>`_)
+- Bugfix for CCTBX bootstrapped environments, without conda. (`#630 <https://github.com/cctbx/dxtbx/issues/630>`_)
+
+
+Misc
+----
+
+- `#625 <https://github.com/cctbx/dxtbx/issues/625>`_, `#636 <https://github.com/cctbx/dxtbx/issues/636>`_, `#639 <https://github.com/cctbx/dxtbx/issues/639>`_
+
+
 DIALS 3.14.2 (2023-05-16)
 =========================
 

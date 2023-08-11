@@ -847,7 +847,7 @@ def run():
         "--python",
         help="Install this minor version of Python (default: %(default)s)",
         default="3.9",
-        choices=("3.8", "3.9", "3.10"),
+        choices=("3.9", "3.10", "3.11"),
     )
     parser.add_argument(
         "--branch",
