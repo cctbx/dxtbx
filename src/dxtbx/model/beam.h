@@ -225,6 +225,7 @@ namespace dxtbx { namespace model {
      * @param polarization_fraction The polarization fraction
      * @param flux The beam flux
      * @param transmission The beam transmission
+     * @param probe The probe value
      * @param sample_to_source_distance (mm)
      */
     Beam(vec3<double> direction,
@@ -690,6 +691,7 @@ namespace dxtbx { namespace model {
      * @param polarization_fraction The polarization fraction
      * @param flux The beam flux
      * @param transmission The beam transmission
+     * @param probe The probe value
      * @param sample_to_source_distance (mm)
      */
     PolychromaticBeam(vec3<double> direction,

@@ -17,6 +17,7 @@
 #include <dxtbx/model/beam.h>
 #include <dxtbx/model/boost_python/to_from_dict.h>
 #include <scitbx/array_family/boost_python/flex_wrapper.h>
+#include <boost/python/enum.hpp>
 
 namespace dxtbx { namespace model { namespace boost_python {
   namespace beam_detail {
@@ -43,6 +44,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                          obj.get_polarization_fraction(),
                                          obj.get_flux(),
                                          obj.get_transmission(),
+                                         obj.get_probe()),
                                          obj.get_sample_to_source_distance());
       }
 
@@ -110,6 +112,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                  double polarization_fraction,
                                  double flux,
                                  double transmission,
+                                 Probe probe,
                                  bool deg) {
       Beam *beam = NULL;
       if (deg) {
@@ -120,7 +123,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                         polarization_normal,
                         polarization_fraction,
                         flux,
-                        transmission);
+                        transmission,
+                        probe);
       } else {
         beam = new Beam(sample_to_source,
                         wavelength,
@@ -129,7 +133,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                         polarization_normal,
                         polarization_fraction,
                         flux,
-                        transmission);
+                        transmission,
+                        probe);
       }
       return beam;
     }
@@ -142,6 +147,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                                        double polarization_fraction,
                                                        double flux,
                                                        double transmission,
+                                                       Probe probe,
                                                        double sample_to_source_distance,
                                                        bool deg) {
       Beam *beam = NULL;
@@ -154,6 +160,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                         polarization_fraction,
                         flux,
                         transmission,
+                        probe,
                         sample_to_source_distance);
       } else {
         beam = new Beam(sample_to_source,
@@ -164,6 +171,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                         polarization_fraction,
                         flux,
                         transmission,
+                        probe,
                         sample_to_source_distance);
       }
       return beam;
@@ -227,6 +235,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
+    result["probe"] = obj.get_probe_name();
     result["sample_to_source_distance"] = obj.get_sample_to_source_distance();
     if (obj.get_num_scan_points() > 0) {
       boost::python::list l;
@@ -252,7 +261,9 @@ namespace dxtbx { namespace model { namespace boost_python {
         obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
       boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
       boost::python::extract<double>(obj.get("flux", 0)),
-      boost::python::extract<double>(obj.get("transmission", 1)));
+      boost::python::extract<double>(obj.get("transmission", 1)),
+      Beam::get_probe_from_name(
+        boost::python::extract<std::string>(obj.get("probe", "x-ray"))));
     if (obj.has_key("s0_at_scan_points")) {
       boost::python::list s0_at_scan_points =
         boost::python::extract<boost::python::list>(obj["s0_at_scan_points"]);
@@ -282,6 +293,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_polarization_fraction(),
                                        obj.get_flux(),
                                        obj.get_transmission(),
+                                       obj.get_probe(),
                                        obj.get_sample_to_source_distance());
     }
   };
@@ -357,6 +369,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["polarization_fraction"] = obj.get_polarization_fraction();
     result["flux"] = obj.get_flux();
     result["transmission"] = obj.get_transmission();
+    result["probe"] = obj.get_probe_name();
     result["sample_to_source_distance"] = obj.get_sample_to_source_distance();
     return result;
   }
@@ -372,12 +385,19 @@ namespace dxtbx { namespace model { namespace boost_python {
       boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
       boost::python::extract<double>(obj.get("flux", 0)),
       boost::python::extract<double>(obj.get("transmission", 1)),
+      Beam::get_probe_from_name(
+        boost::python::extract<std::string>(obj.get("probe", "x-ray"))),
       boost::python::extract<double>(obj.get("sample_to_source_distance", 0.)));
     return b;
   }
 
   void export_beam() {
     using namespace beam_detail;
+
+    enum_<Probe>("Probe")
+      .value("xray", xray)
+      .value("electron", electron)
+      .value("neutron", neutron);
 
     class_<BeamBase, boost::noncopyable>("BeamBase", no_init)
       .def("get_sample_to_source_direction", &BeamBase::get_sample_to_source_direction)
@@ -409,6 +429,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("set_s0_at_scan_points", &Beam_set_s0_at_scan_points_from_list)
       .def("get_s0_at_scan_points", &BeamBase::get_s0_at_scan_points)
       .def("get_s0_at_scan_point", &BeamBase::get_s0_at_scan_point)
+      .def("get_probe", &BeamBase::get_probe)
+      .def("get_probe_name", &BeamBase::get_probe_name)
+      .def("set_probe", &BeamBase::set_probe)
       .def("reset_scan_points", &BeamBase::reset_scan_points)
       .def("rotate_around_origin",
            &rotate_around_origin,
@@ -462,6 +485,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("polarization_fraction"),
                              arg("flux"),
                              arg("transmission"),
+                             arg("probe") = Probe::xray,
                              arg("deg") = true)))
       .def("__init__",
            make_constructor(&make_beam_w_sample_to_source_distance,
@@ -474,16 +498,20 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("polarization_fraction"),
                              arg("flux"),
                              arg("transmission"),
+                             arg("probe") = Probe::xray,
                              arg("sample_to_source_distance"),
                              arg("deg") = true)))
       .def("__str__", &beam_to_string)
       .def("to_dict", &to_dict<Beam>)
       .def("from_dict", &from_dict<Beam>, return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
+      .def("get_probe_from_name", &Beam::get_probe_from_name)
+      .staticmethod("get_probe_from_name")
       .def_pickle(BeamPickleSuite());
 
     class_<PolychromaticBeam, std::shared_ptr<PolychromaticBeam>, bases<Beam> >(
       "PolychromaticBeam")
+      .def(init<const PolychromaticBeam &>())
       .def("__init__",
            make_constructor(&make_PolychromaticBeam_w_sample_to_source_distance,
                             default_call_policies(),
@@ -508,6 +536,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("polarization_fraction"),
                              arg("flux"),
                              arg("transmission"),
+                             arg("probe") = Probe::xray,
                              arg("sample_to_source_distance"),
                              arg("deg") = true)))
       .def("__str__", &PolychromaticBeam_to_string)
