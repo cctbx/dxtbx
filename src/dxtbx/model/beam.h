@@ -585,7 +585,6 @@ namespace dxtbx { namespace model {
        << "\n";
     return os;
   }
-
   class PolychromaticBeam : public Beam {
   public:
     PolychromaticBeam() {
@@ -596,6 +595,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
+      set_probe(Probe::xray);
       set_sample_to_source_distance(0.0);
     }
 
@@ -611,6 +611,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
+      set_probe(Probe::xray);
       set_sample_to_source_distance(0.0);
     }
 
@@ -628,6 +629,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(0.999);
       set_flux(0);
       set_transmission(1.0);
+      set_probe(Probe::xray);
     }
 
     /**
@@ -646,6 +648,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(0.5);
       set_flux(0);
       set_transmission(1.0);
+      set_probe(Probe::xray);
       set_sample_to_source_distance(0.0);
     }
 
@@ -657,6 +660,7 @@ namespace dxtbx { namespace model {
      * @param polarization_fraction The polarization fraction
      * @param flux The beam flux
      * @param transmission The beam transmission
+     * @param probe The probe value
      */
     PolychromaticBeam(vec3<double> direction,
                       double divergence,
@@ -664,7 +668,8 @@ namespace dxtbx { namespace model {
                       vec3<double> polarization_normal,
                       double polarization_fraction,
                       double flux,
-                      double transmission) {
+                      double transmission,
+                      Probe probe) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
       set_divergence(divergence);
@@ -673,6 +678,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(polarization_fraction);
       set_flux(flux);
       set_transmission(transmission);
+      set_probe(probe);
       set_sample_to_source_distance(0.0);
     }
 
@@ -693,6 +699,7 @@ namespace dxtbx { namespace model {
                       double polarization_fraction,
                       double flux,
                       double transmission,
+                      Probe probe,
                       double sample_to_source_distance) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
@@ -702,6 +709,7 @@ namespace dxtbx { namespace model {
       set_polarization_fraction(polarization_fraction);
       set_flux(flux);
       set_transmission(transmission);
+      set_probe(probe);
       set_sample_to_source_distance(sample_to_source_distance);
     }
 
@@ -762,11 +770,22 @@ namespace dxtbx { namespace model {
              && std::abs(transmission_ - rhs.get_transmission()) <= eps
              && std::abs(sample_to_source_distance_
                          - rhs.get_sample_to_source_distance())
-                  <= eps;
+                  <= eps
+             && (probe_ == rhs.get_probe());
     }
 
     bool is_similar_to(const BeamBase &rhs,
                        double wavelength_tolerance,
+                       double direction_tolerance,
+                       double polarization_normal_tolerance,
+                       double polarization_fraction_tolerance) const {
+      return is_similar_to(rhs,
+                           direction_tolerance,
+                           polarization_normal_tolerance,
+                           polarization_fraction_tolerance);
+    }
+
+    bool is_similar_to(const BeamBase &rhs,
                        double direction_tolerance,
                        double polarization_normal_tolerance,
                        double polarization_fraction_tolerance,
@@ -787,181 +806,7 @@ namespace dxtbx { namespace model {
                   <= transmission_tolerance
              && std::abs(sample_to_source_distance_
                          - rhs.get_sample_to_source_distance())
-                  <= sample_to_source_tolerance;
-    }
-  };
-
-  /** Print beam information */
-  inline std::ostream &operator<<(std::ostream &os, const PolychromaticBeam &b) {
-    os << "Beam:\n";
-    os << "    sample to source direction : "
-       << b.get_sample_to_source_direction().const_ref() << "\n";
-    os << "    divergence: " << b.get_divergence() << "\n";
-    os << "    sigma divergence: " << b.get_sigma_divergence() << "\n";
-    os << "    polarization normal: " << b.get_polarization_normal().const_ref()
-       << "\n";
-    os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
-    os << "    flux: " << b.get_flux() << "\n";
-    os << "    transmission: " << b.get_transmission() << "\n";
-    os << "    sample to source distance : " << b.get_sample_to_source_distance()
-       << "\n";
-    return os;
-  }
-
-  class PolychromaticBeam : public Beam {
-  public:
-    PolychromaticBeam() {
-      set_direction(vec3<double>(0.0, 0.0, 1.0));
-      set_divergence(0.0);
-      set_sigma_divergence(0.0);
-      set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.5);
-      set_flux(0);
-      set_transmission(1.0);
-      set_probe(Probe::xray);
-    }
-
-    /**
-     * @param direction The beam direction pointing sample to source
-     */
-    PolychromaticBeam(vec3<double> direction) {
-      DXTBX_ASSERT(direction.length() > 0);
-      direction_ = direction.normalize();
-      set_divergence(0.0);
-      set_sigma_divergence(0.0);
-      set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.5);
-      set_flux(0);
-      set_transmission(1.0);
-      set_probe(Probe::xray);
-    }
-
-    /**
-     * @param direction The beam direction pointing sample to source
-     * @param divergence The beam divergence
-     * @param sigma_divergence The standard deviation of the beam divergence
-     */
-    PolychromaticBeam(vec3<double> direction,
-                      double divergence,
-                      double sigma_divergence) {
-      DXTBX_ASSERT(direction.length() > 0);
-      direction_ = direction.normalize();
-      set_divergence(divergence);
-      set_sigma_divergence(sigma_divergence);
-      set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
-      set_polarization_fraction(0.5);
-      set_flux(0);
-      set_transmission(1.0);
-      set_probe(Probe::xray);
-    }
-
-    /**
-     * @param direction The beam direction pointing sample to source
-     * @param divergence The beam divergence
-     * @param sigma_divergence The standard deviation of the beam divergence
-     * @param polarization_normal The polarization plane
-     * @param polarization_fraction The polarization fraction
-     * @param flux The beam flux
-     * @param transmission The beam transmission
-     * @param probe The probe value
-     */
-    PolychromaticBeam(vec3<double> direction,
-                      double divergence,
-                      double sigma_divergence,
-                      vec3<double> polarization_normal,
-                      double polarization_fraction,
-                      double flux,
-                      double transmission,
-                      Probe probe) {
-      DXTBX_ASSERT(direction.length() > 0);
-      direction_ = direction.normalize();
-      set_divergence(divergence);
-      set_sigma_divergence(sigma_divergence);
-      set_polarization_normal(polarization_normal);
-      set_polarization_fraction(polarization_fraction);
-      set_flux(flux);
-      set_transmission(transmission);
-      set_probe(probe);
-    }
-
-    double get_wavelength() const {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed wavelength");
-      return -1.;
-    }
-
-    void set_wavelength(double wavelength) {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed wavelength");
-    }
-
-    vec3<double> get_s0() const {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
-      return vec3<double>(0., 0., 0.);
-    }
-
-    void set_s0(vec3<double> s0) {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
-    }
-
-    std::size_t get_num_scan_points() const {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
-      return 1;
-    }
-
-    void set_s0_at_scan_points(const scitbx::af::const_ref<vec3<double> > &s0) {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
-    }
-
-    scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
-      return scitbx::af::shared<vec3<double> >(1, (0., 0., 0.));
-    }
-
-    vec3<double> get_s0_at_scan_point(std::size_t index) const {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
-      return vec3<double>(0., 0., 0.);
-    }
-
-    void reset_scan_points() {
-      throw DXTBX_ERROR("PolychromaticBeam has no fixed s0");
-    }
-
-    bool operator==(const BeamBase &rhs) const {
-      double eps = 1.0e-6;
-
-      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
-               <= eps
-             && std::abs(divergence_ - rhs.get_divergence()) <= eps
-             && std::abs(sigma_divergence_ - rhs.get_sigma_divergence()) <= eps
-             && std::abs(
-                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
-                  <= eps
-             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
-                  <= eps
-             && (probe_ == rhs.get_probe());
-    }
-
-    bool is_similar_to(const BeamBase &rhs,
-                       double wavelength_tolerance,
-                       double direction_tolerance,
-                       double polarization_normal_tolerance,
-                       double polarization_fraction_tolerance) const {
-      return is_similar_to(rhs,
-                           direction_tolerance,
-                           polarization_normal_tolerance,
-                           polarization_fraction_tolerance);
-    }
-
-    bool is_similar_to(const BeamBase &rhs,
-                       double direction_tolerance,
-                       double polarization_normal_tolerance,
-                       double polarization_fraction_tolerance) const {
-      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
-               <= direction_tolerance
-             && std::abs(
-                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
-                  <= polarization_normal_tolerance
-             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
-                  <= polarization_fraction_tolerance
+                  <= sample_to_source_tolerance
              && (probe_ == rhs.get_probe());
     }
   };
@@ -979,9 +824,10 @@ namespace dxtbx { namespace model {
     os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
     os << "    flux: " << b.get_flux() << "\n";
     os << "    transmission: " << b.get_transmission() << "\n";
+    os << "    sample to source distance : " << b.get_sample_to_source_distance()
+       << "\n";
     return os;
   }
-
 }}  // namespace dxtbx::model
 
 #endif  // DXTBX_MODEL_BEAM_H
