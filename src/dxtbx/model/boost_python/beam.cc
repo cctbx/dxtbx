@@ -44,7 +44,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                          obj.get_polarization_fraction(),
                                          obj.get_flux(),
                                          obj.get_transmission(),
-                                         obj.get_probe()),
+                                         obj.get_probe(),
                                          obj.get_sample_to_source_distance());
       }
 

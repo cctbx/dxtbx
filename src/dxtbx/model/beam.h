@@ -98,8 +98,7 @@ namespace dxtbx { namespace model {
           flux_(0),
           transmission_(1.0),
           probe_(Probe::xray),
-          sample_to_source_distance_(0.),
-    {}
+          sample_to_source_distance_(0.) {}
 
     /**
      * @param s0 The incident beam vector.
@@ -112,8 +111,7 @@ namespace dxtbx { namespace model {
           flux_(0),
           transmission_(1.0),
           probe_(Probe::xray),
-          sample_to_source_distance_(0.),
-    {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(s0.length() > 0);
       wavelength_ = 1.0 / s0.length();
       direction_ = -s0.normalize();
@@ -132,8 +130,7 @@ namespace dxtbx { namespace model {
           flux_(0),
           transmission_(1.0),
           probe_(Probe::xray),
-          sample_to_source_distance_(0.),
-    {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -151,8 +148,7 @@ namespace dxtbx { namespace model {
           flux_(0),
           transmission_(1.0),
           probe_(Probe::xray),
-          sample_to_source_distance_(0.),
-    {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(s0.length() > 0);
       wavelength_ = 1.0 / s0.length();
       direction_ = -s0.normalize();
@@ -176,8 +172,7 @@ namespace dxtbx { namespace model {
           flux_(0),
           transmission_(1.0),
           probe_(Probe::xray),
-          sample_to_source_distance_(0.),
-    {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -210,8 +205,7 @@ namespace dxtbx { namespace model {
           flux_(flux),
           transmission_(transmission),
           probe_(probe),
-          sample_to_source_distance_(0.),
-    {
+          sample_to_source_distance_(0.) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
@@ -246,8 +240,7 @@ namespace dxtbx { namespace model {
           flux_(flux),
           transmission_(transmission),
           probe_(probe),
-          sample_to_source_distance_(sample_to_source_distance),
-    {
+          sample_to_source_distance_(sample_to_source_distance) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
     }
