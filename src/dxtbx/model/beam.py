@@ -69,7 +69,7 @@ beam_phil_scope = libtbx.phil.parse(
 
     sample_to_source_distance = None
         .type = float
-        .help = "Override the distance between sample and source (m)"
+        .help = "Override the distance between sample and source (mm)"
   }
 """
 )
