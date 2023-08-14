@@ -46,7 +46,6 @@ class FormatNXmxDLSI19_2(FormatNXmxDLS):
         except Exception:
             self._bit_depth_readout = 16
 
-
     def get_goniometer_shadow_masker(self, goniometer=None):
         """Apply the dynamic mask for a diamond anvil cell with a 76° aperture."""
         if goniometer is None:
