@@ -8,7 +8,7 @@ from build import build
 
 # Static version number which is updated by bump2version
 # Do not change this manually - use 'bump2version <major/minor/patch/release>'
-__version_tag__ = "3.16.dev"
+__version_tag__ = "3.17.dev"
 
 setup_kwargs = {
     "name": "dxtbx",
