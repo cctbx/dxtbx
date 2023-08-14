@@ -1,1 +1,0 @@
-Use Python built-in ``subprocess`` in place of external dependency ``procrunner`` for running CLI tests.

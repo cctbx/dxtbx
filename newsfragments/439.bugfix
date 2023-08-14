@@ -1,1 +1,0 @@
-``flumpy``: Fix case where incorrect ``flex.vec2``, ``flex.vec3`` could be generated.
