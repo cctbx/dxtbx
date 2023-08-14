@@ -192,6 +192,7 @@ class BeamFactory:
         flux: float = 0.0,
         transmission: float = 1.0,
         probe: Probe = Probe.xray,
+        sample_to_source_distance: float = 0.0,
         deg: bool = True,
     ) -> PolychromaticBeam:
         return PolychromaticBeam(
@@ -203,6 +204,7 @@ class BeamFactory:
             float(flux),
             float(transmission),
             probe,
+            float(sample_to_source_distance),
             bool(deg),
         )
 

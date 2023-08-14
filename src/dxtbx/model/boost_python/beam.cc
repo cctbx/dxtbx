@@ -499,7 +499,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("flux"),
                              arg("transmission"),
                              arg("probe") = Probe::xray,
-                             arg("sample_to_source_distance"),
+                             arg("sample_to_source_distance") = 0,
                              arg("deg") = true)))
       .def("__str__", &beam_to_string)
       .def("to_dict", &to_dict<Beam>)
@@ -537,7 +537,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("flux"),
                              arg("transmission"),
                              arg("probe") = Probe::xray,
-                             arg("sample_to_source_distance"),
+                             arg("sample_to_source_distance") = 0,
                              arg("deg") = true)))
       .def("__str__", &PolychromaticBeam_to_string)
       .def("to_dict", &to_dict<PolychromaticBeam>)

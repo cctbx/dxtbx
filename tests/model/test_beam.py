@@ -107,12 +107,14 @@ def test_from_phil():
             """
     beam {
         probe = electron
+        sample_to_source_distance = 4000
     }
   """
         )
     ).extract()
     b4 = BeamFactory.from_phil(params3, reference)
     assert b4.get_probe() == Probe.electron
+    assert b4.get_sample_to_source_distance() == pytest.approx(4000)
 
 
 def test_scan_varying():
@@ -203,6 +205,7 @@ def test_polychromatic_beam_from_phil():
       polarization_fraction = .65
       transmission = .5
       flux = .75
+      sample_to_source_distance = 5000
     }
     """
         )
@@ -218,6 +221,7 @@ def test_polychromatic_beam_from_phil():
     assert beam.get_polarization_fraction() == pytest.approx(0.65)
     assert beam.get_transmission() == pytest.approx(0.5)
     assert beam.get_flux() == pytest.approx(0.75)
+    assert beam.get_sample_to_source_distance() == pytest.approx(5000)
 
 
 def test_polychromatic_beam_from_dict():
@@ -235,6 +239,7 @@ def test_make_polychromatic_beam():
     transmission = 0.5
     flux = 0.75
     probe = Probe.neutron
+    sample_to_source_distance = 8500
 
     beam = BeamFactory.make_polychromatic_beam(
         direction=direction,
@@ -245,6 +250,7 @@ def test_make_polychromatic_beam():
         transmission=transmission,
         flux=flux,
         probe=probe,
+        sample_to_source_distance=sample_to_source_distance,
     )
 
     assert beam.get_sample_to_source_direction() == pytest.approx((0.0, 0.0, 1.0))
@@ -255,6 +261,7 @@ def test_make_polychromatic_beam():
     assert beam.get_transmission() == pytest.approx(0.5)
     assert beam.get_flux() == pytest.approx(0.75)
     assert beam.get_probe() == Probe.neutron
+    assert beam.get_sample_to_source_distance() == pytest.approx(8500.0)
 
 
 def test_polychromatic_beam_wavelength_guards():
