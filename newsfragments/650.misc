@@ -1,1 +1,0 @@
-Format classes are now tested against invalid binary data with dials-data, for when dials-regression is not present.
