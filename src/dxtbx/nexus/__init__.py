@@ -390,7 +390,18 @@ def get_dxtbx_detector(
                 module.fast_pixel_direction.depends_on
             )
             A = nxmx.get_cumulative_transformation(dependency_chain)
-            origin = MCSTAS_TO_IMGCIF @ A[0, :3, 3]
+
+            origin = MCSTAS_TO_IMGCIF @ (
+                (
+                    module.fast_pixel_direction.offset.to("mm").magnitude
+                    if module.fast_pixel_direction.offset is not None
+                    else np.array([0.0, 0.0, 0.0])
+                    + module.slow_pixel_direction.offset.to("mm").magnitude
+                    if module.slow_pixel_direction.offset is not None
+                    else np.array([0.0, 0.0, 0.0])
+                )
+                + A[0, :3, 3]
+            )
 
             if (
                 origin[0] == 0
