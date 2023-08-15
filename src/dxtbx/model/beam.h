@@ -319,7 +319,7 @@ namespace dxtbx { namespace model {
       case neutron:
         return std::string("neutron");
       default:
-        DXTBX_ERROR("Unknown probe type");
+        throw DXTBX_ERROR("Unknown probe type");
       }
     }
 
@@ -335,7 +335,7 @@ namespace dxtbx { namespace model {
         return Probe::neutron;
       }
 
-      DXTBX_ERROR("Unknown probe " + probe);
+      throw DXTBX_ERROR("Unknown probe " + probe);
     }
 
     void set_probe(Probe probe) {
