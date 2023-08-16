@@ -66,6 +66,10 @@ beam_phil_scope = libtbx.phil.parse(
         .type = float
         .help = "Override the flux"
         .short_caption = "flux"
+
+    sample_to_source_distance = None
+        .type = float
+        .help = "Override the distance between sample and source (mm)"
   }
 """
 )
@@ -116,6 +120,8 @@ class BeamFactory:
             beam.set_transmission(params.beam.transmission)
         if params.beam.flux is not None:
             beam.set_flux(params.beam.flux)
+        if params.beam.sample_to_source_distance is not None:
+            beam.set_sample_to_source_distance(params.beam.sample_to_source_distance)
         beam.set_probe(Beam.get_probe_from_name(params.beam.probe))
 
         return beam
@@ -186,6 +192,7 @@ class BeamFactory:
         flux: float = 0.0,
         transmission: float = 1.0,
         probe: Probe = Probe.xray,
+        sample_to_source_distance: float = 0.0,
         deg: bool = True,
     ) -> PolychromaticBeam:
         return PolychromaticBeam(
@@ -197,6 +204,7 @@ class BeamFactory:
             float(flux),
             float(transmission),
             probe,
+            float(sample_to_source_distance),
             bool(deg),
         )
 

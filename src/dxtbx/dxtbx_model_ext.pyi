@@ -57,6 +57,10 @@ class BeamBase:
         self, points: Union[Tuple[Vec3Float], List[Vec3Float]]
     ) -> None: ...
     def get_sample_to_source_direction(self) -> Vec3Float: ...
+    def get_sample_to_source_distance(self) -> float: ...
+    def set_sample_to_source_distance(
+        self, sample_to_source_distance: float
+    ) -> None: ...
     def get_sigma_divergence(self) -> float: ...
     def set_sigma_divergence(self, sigma_divergence: float) -> None: ...
     def get_transmission(self) -> float: ...
@@ -110,6 +114,22 @@ class Beam(BeamBase):
         polarization_fraction: float,
         flux: float,
         transmission: float,
+        probe: Probe = ...,
+        deg: bool = ...,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        direction: Vec3Float,
+        wavelength: float,
+        divergence: float,
+        sigma_divergence: float,
+        polarization_normal: Vec3Float,
+        polarization_fraction: float,
+        flux: float,
+        transmission: float,
+        probe: Probe = ...,
+        sample_to_source_distance: float = ...,
         deg: bool = ...,
     ) -> None: ...
     @staticmethod
@@ -141,6 +161,8 @@ class PolychromaticBeam(Beam):
         polarization_fraction: float,
         flux: float,
         transmission: float,
+        probe: Probe = ...,
+        sample_to_source_distance: float = ...,
         deg: bool = ...,
     ) -> None: ...
     @staticmethod
