@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 import logging
+import warnings
 
 from dxtbx.format.Registry import get_format_class_for_file
 
 logger = logging.getLogger(__name__)
+
+warnings.warn(
+    "dxtbx.datablock is deprecated; please import from dxtbx.experiment_list instead",
+    UserWarning,
+    stacklevel=2,
+)
 
 
 class FormatChecker:
