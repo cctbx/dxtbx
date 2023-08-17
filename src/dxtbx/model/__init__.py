@@ -21,7 +21,7 @@ from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
-from dxtbx.util import format_float_with_standard_uncertainty
+from dxtbx.util import AutoEncoder, format_float_with_standard_uncertainty
 
 try:
     from ..dxtbx_model_ext import (
@@ -729,7 +729,6 @@ class _experimentlist:
 
         # Split into separate files
         if filename is not None and split:
-
             # Get lists of models by filename
             basepath = os.path.splitext(filename)[0]
             ilist = [
@@ -803,9 +802,6 @@ class _experimentlist:
             )
         else:
             to_write = [(filename, dictionary)]
-
-        # Datablock depends on model/__init__
-        from dxtbx.datablock import AutoEncoder
 
         for fname, obj in to_write:
             if compact:

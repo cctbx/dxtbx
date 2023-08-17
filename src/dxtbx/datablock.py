@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import json
 import logging
-
-import libtbx
 
 from dxtbx.format.Registry import get_format_class_for_file
 
@@ -50,14 +47,6 @@ class FormatChecker:
                 logger.debug("Using %s for %s", fmt.__name__, filename)
         if group_fnames:
             yield group_format, group_fnames
-
-
-class AutoEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, libtbx.AutoType):
-            return "Auto"
-        # Let the base class default method raise the TypeError
-        return json.JSONEncoder.default(self, obj)
 
 
 class BeamComparison:
