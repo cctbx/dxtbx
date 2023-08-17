@@ -12,16 +12,11 @@ import os
 import pickle
 from typing import Any, Callable, Generator, Iterable
 
-import dxtbx.datablock
-from dxtbx.datablock import (
-    BeamComparison,
-    DataBlockFactory,
-    DetectorComparison,
-    GoniometerComparison,
-)
+import dxtbx
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
+from dxtbx.format.Registry import get_format_class_for_file
 from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet, ImageSetFactory
 from dxtbx.model import (
     BeamFactory,
@@ -62,6 +57,122 @@ class InvalidExperimentListError(RuntimeError):
     from representing a well-formed experiment list. This doesn't indicate e.g.
     some problem with the data or model consistency.
     """
+
+
+class FormatChecker:
+    """A helper class to speed up identifying the correct image format by first
+    trying the last format that was used."""
+
+    def __init__(self):
+        """Set the format class to none."""
+        self._format_class = None
+
+    def find_format(self, filename):
+        """Search the registry for the image format class.
+        Where possible use the last seen format class as a prioritisation hint.
+        """
+        if self._format_class:
+            self._format_class = get_format_class_for_file(
+                filename, format_hint=self._format_class.__name__
+            )
+        else:
+            self._format_class = get_format_class_for_file(filename)
+        if self._format_class:
+            logger.debug("Using %s for %s", self._format_class.__name__, filename)
+        else:
+            logger.debug("No format class found for %s", filename)
+        return self._format_class
+
+    def iter_groups(self, filenames):
+        group_format = None
+        group_fnames = []
+        for filename in filenames:
+            fmt = self.find_format(filename)
+            if fmt == group_format:
+                group_fnames.append(filename)
+            else:
+                if group_fnames:
+                    yield group_format, group_fnames
+                group_fnames = [filename]
+                group_format = fmt
+            if fmt is not None:
+                logger.debug("Using %s for %s", fmt.__name__, filename)
+        if group_fnames:
+            yield group_format, group_fnames
+
+
+class BeamComparison:
+    """A class to provide simple beam comparison"""
+
+    def __init__(
+        self,
+        wavelength_tolerance=1e-6,
+        direction_tolerance=1e-6,
+        polarization_normal_tolerance=1e-6,
+        polarization_fraction_tolerance=1e-6,
+    ):
+        self.wavelength_tolerance = wavelength_tolerance
+        self.direction_tolerance = direction_tolerance
+        self.polarization_normal_tolerance = polarization_normal_tolerance
+        self.polarization_fraction_tolerance = polarization_fraction_tolerance
+
+    def __call__(self, a, b):
+        if a is None and b is None:
+            return True
+        return a.is_similar_to(
+            b,
+            wavelength_tolerance=self.wavelength_tolerance,
+            direction_tolerance=self.direction_tolerance,
+            polarization_normal_tolerance=self.polarization_normal_tolerance,
+            polarization_fraction_tolerance=self.polarization_fraction_tolerance,
+        )
+
+
+class DetectorComparison:
+    """A class to provide simple detector comparison"""
+
+    def __init__(
+        self, fast_axis_tolerance=1e-6, slow_axis_tolerance=1e-6, origin_tolerance=1e-6
+    ):
+        self.fast_axis_tolerance = fast_axis_tolerance
+        self.slow_axis_tolerance = slow_axis_tolerance
+        self.origin_tolerance = origin_tolerance
+
+    def __call__(self, a, b):
+        if a is None and b is None:
+            return True
+        return a.is_similar_to(
+            b,
+            fast_axis_tolerance=self.fast_axis_tolerance,
+            slow_axis_tolerance=self.slow_axis_tolerance,
+            origin_tolerance=self.origin_tolerance,
+        )
+
+
+class GoniometerComparison:
+    """A class to provide simple goniometer comparison"""
+
+    def __init__(
+        self,
+        rotation_axis_tolerance=1e-6,
+        fixed_rotation_tolerance=1e-6,
+        setting_rotation_tolerance=1e-6,
+    ):
+        self.rotation_axis_tolerance = rotation_axis_tolerance
+        self.fixed_rotation_tolerance = fixed_rotation_tolerance
+        self.setting_rotation_tolerance = setting_rotation_tolerance
+
+    def __call__(self, a, b):
+        if a is None and b is None:
+            return True
+        elif a is None or b is None:
+            return False
+        return a.is_similar_to(
+            b,
+            rotation_axis_tolerance=self.rotation_axis_tolerance,
+            fixed_rotation_tolerance=self.fixed_rotation_tolerance,
+            setting_rotation_tolerance=self.setting_rotation_tolerance,
+        )
 
 
 class ExperimentListDict:
@@ -484,7 +595,9 @@ class ExperimentListFactory:
     """A class to help instantiate experiment lists."""
 
     @staticmethod
-    def from_args(args, unhandled=None):
+    def from_args(
+        args: list[str], unhandled: list[str] | None = None, check_format: bool = True
+    ) -> ExperimentList:
         """Try to load serialised experiments from any recognised format."""
 
         # Create a list for unhandled arguments
@@ -497,12 +610,15 @@ class ExperimentListFactory:
         for filename in args:
             try:
                 experiments.extend(
-                    ExperimentListFactory.from_serialized_format(filename)
+                    ExperimentListFactory.from_serialized_format(
+                        filename, check_format=check_format
+                    )
                 )
                 logger.debug(f"Loaded experiments from {filename}")
             except Exception as e:
                 logger.debug(f"Could not load experiments from {filename}: {e}")
                 unhandled.append(filename)
+                raise
 
         return experiments
 
@@ -522,7 +638,7 @@ class ExperimentListFactory:
 
         # Process each file given by this path list
         to_process = _openingpathiterator(filenames)
-        find_format = dxtbx.datablock.FormatChecker()
+        find_format = FormatChecker()
 
         format_groups = collections.defaultdict(list)
         if format_kwargs is None:
@@ -567,7 +683,7 @@ class ExperimentListFactory:
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
 
-        # Treat each format as a separate datablock
+        # Treat each format as a separate block of data
         for format_class, records in format_groups.items():
             if issubclass(format_class, FormatMultiImage):
                 for imageset in records:
@@ -590,8 +706,7 @@ class ExperimentListFactory:
                 _convert_to_imagesets(records, format_class, format_kwargs)
             )
 
-            # Validate this datablock and store it
-            assert imagesets, "Datablock got no imagesets?"
+            assert imagesets, "Got no imagesets when constructing ExperimentList?"
             for imageset in imagesets:
                 experiments.extend(
                     ExperimentListFactory.from_imageset_and_crystal(
@@ -678,36 +793,6 @@ class ExperimentListFactory:
         return experiments
 
     @staticmethod
-    def from_datablock_and_crystal(datablock, crystal, load_models=True):
-        """Load an experiment list from a datablock."""
-
-        # Initialise the experiment list
-        experiments = ExperimentList()
-
-        # If we have a list, loop through
-        if isinstance(datablock, list):
-            for db in datablock:
-                experiments.extend(
-                    ExperimentListFactory.from_datablock_and_crystal(
-                        db, crystal, load_models
-                    )
-                )
-            return experiments
-
-        # Add all the imagesets
-        for imageset in datablock.extract_imagesets():
-            experiments.extend(
-                ExperimentListFactory.from_imageset_and_crystal(
-                    imageset, crystal, load_models
-                )
-            )
-
-        # Check the list is consistent
-        assert experiments.is_consistent()
-
-        return experiments
-
-    @staticmethod
     def from_dict(obj, check_format=True, directory=None):
         """
         Load an experiment list from a dictionary.
@@ -724,22 +809,9 @@ class ExperimentListFactory:
             ExperimentList: The dictionary converted
         """
 
-        try:
-            experiments = ExperimentList()
-            for db in DataBlockFactory.from_dict(
-                obj, check_format=check_format, directory=directory
-            ):
-                experiments.extend(
-                    ExperimentListFactory.from_datablock_and_crystal(db, None)
-                )
-        except Exception:
-            experiments = None
-
-        # Decode the experiments from the dictionary
-        if experiments is None:
-            experiments = ExperimentListDict(
-                obj, check_format=check_format, directory=directory
-            ).decode()
+        experiments = ExperimentListDict(
+            obj, check_format=check_format, directory=directory
+        ).decode()
 
         # Check the list is consistent
         assert experiments.is_consistent()
@@ -806,7 +878,7 @@ class ExperimentListFactory:
         assert len(templates) > 0
 
         experiments = ExperimentList()
-        find_format = dxtbx.datablock.FormatChecker()
+        find_format = FormatChecker()
 
         # For each template do an import
         for template in templates:
@@ -893,7 +965,7 @@ class ExperimentListFactory:
 class ImageMetadataRecord:
     """Object to store metadata information.
 
-    This is used whilst building the datablocks.  The metadata for each
+    This is used whilst building the experiment lists. The metadata for each
     image can be read once, and then any grouping/deduplication can happen
     later, without re-opening the original file.
     """
