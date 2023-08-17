@@ -215,6 +215,16 @@ namespace dxtbx { namespace model {
     void set_property(const typename flex_table<scan_property_types>::key_type &key,
                       const scitbx::af::const_ref<T> &value) {
       DXTBX_ASSERT(value.size() == properties_.size());
+
+      // Special case for oscillation to ensure constant oscillation width
+      if (key == "oscillation") {
+        if (!std::is_same<T, double>::value) {
+          throw DXTBX_ERROR("Expected oscillation to have type double");
+        }
+        const scitbx::af::const_ref<double> &osc =
+          reinterpret_cast<const scitbx::af::const_ref<double> &>(value);
+        DXTBX_ASSERT(Scan::oscillation_arr_is_consistent(osc));
+      }
       dxtbx::af::flex_table_suite::setitem_column(properties_, key, value);
     }
 
@@ -225,6 +235,13 @@ namespace dxtbx { namespace model {
     void set_properties(flex_table<scan_property_types> new_table) {
       DXTBX_ASSERT(new_table.is_consistent());
       DXTBX_ASSERT(new_table.size() == num_images_);
+
+      // Special case for oscillation to ensure constant oscillation width
+      if (new_table.contains("oscillation")) {
+        scitbx::af::shared<double> osc = new_table.get<double>("oscillation");
+        DXTBX_ASSERT(Scan::oscillation_arr_is_consistent(osc));
+      }
+
       properties_ = new_table;
     }
 
@@ -284,6 +301,42 @@ namespace dxtbx { namespace model {
       osc_in_deg.resize(osc.size());
       std::transform(osc.begin(), osc.end(), osc_in_deg.begin(), rad_as_deg);
       return osc_in_deg;
+    }
+
+    static bool oscillation_arr_is_consistent(
+      const scitbx::af::shared<double> oscillation_arr) {
+      /*
+      Checks if oscillation_arr has a constant width
+      */
+
+      double eps = 1e-7;
+      DXTBX_ASSERT(oscillation_arr.size() > 1);
+      double expected_width = oscillation_arr[1] - oscillation_arr[0];
+      for (std::size_t i = 0; i < oscillation_arr.size() - 1; ++i) {
+        double width = oscillation_arr[i + 1] - oscillation_arr[i];
+        if (std::abs(expected_width - width) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    static bool oscillation_arr_is_consistent(
+      const scitbx::af::const_ref<double> oscillation_arr) {
+      /*
+      Checks if oscillation_arr has a constant width
+      */
+
+      double eps = 1e-7;
+      DXTBX_ASSERT(oscillation_arr.size() > 1);
+      double expected_width = oscillation_arr[1] - oscillation_arr[0];
+      for (std::size_t i = 0; i < oscillation_arr.size() - 1; ++i) {
+        double width = oscillation_arr[i + 1] - oscillation_arr[i];
+        if (std::abs(expected_width - width) > eps) {
+          return false;
+        }
+      }
+      return true;
     }
 
     int get_num_images() const {

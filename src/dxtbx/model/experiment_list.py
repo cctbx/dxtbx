@@ -11,6 +11,7 @@ import operator
 import os
 import pickle
 from typing import Any, Callable, Generator, Iterable
+
 import dxtbx
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
@@ -417,7 +418,7 @@ class ExperimentListDict:
                     # make a new bigger scan
                     o = eobj_scan[imageset_ref].get_oscillation()
                     s = scan.get_oscillation()
-                    assert o[1] == pytest.approx(s[1])
+                    assert abs(o[1] - (s[1])) < 1e-7
                     scan = copy.deepcopy(scan)
                     scan.set_image_range((min(i[0], j[0]), max(i[1], j[1])))
                     scan.set_oscillation((min(o[0], s[0]), o[1]))

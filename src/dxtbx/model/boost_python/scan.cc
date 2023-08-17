@@ -76,12 +76,15 @@ namespace dxtbx { namespace model { namespace boost_python {
         value[0].attr("__class__").attr("__name__"));
 
       // Handled explicitly as it is in deg when serialised but rad in code
-      if (key == "oscillation" && convert_oscillation_to_rad) {
+      if (key == "oscillation") {
         DXTBX_ASSERT(obj_type == "float");
-        scitbx::af::shared<double> osc_in_deg =
+        scitbx::af::shared<double> osc =
           boost::python::extract<scitbx::af::shared<double> >(value);
-        properties[key] = deg_as_rad(osc_in_deg);
+        DXTBX_ASSERT(Scan::oscillation_arr_is_consistent(osc));
 
+        if (convert_oscillation_to_rad) {
+          properties[key] = deg_as_rad(osc);
+        }
       } else if (obj_type == "int") {
         properties[key] = boost::python::extract<scitbx::af::shared<int> >(value);
       } else if (obj_type == "float") {

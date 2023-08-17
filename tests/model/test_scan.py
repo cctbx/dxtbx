@@ -383,6 +383,36 @@ def test_scan_properties_equivalence():
     assert s1 == s2
 
 
+def test_scan_constant_oscillation_width():
+
+    image_range = (1, 10)
+    scan = ScanFactory.make_scan_from_properties(image_range=image_range, properties={})
+
+    oscillation = flex.double(10, 1.0)
+    scan.set_property("oscillation", oscillation)
+    oscillation[3] = 2.0
+    with pytest.raises(RuntimeError):
+        scan.set_property("oscillation", oscillation)
+
+    oscillation = flex.double(10, 1.0)
+    properties = {"oscillation": oscillation}
+    scan.set_properties(properties)
+    properties["oscillation"][3] = 2.0
+    with pytest.raises(RuntimeError):
+        scan.set_properties(properties)
+
+    oscillation = flex.double(10, 1.0)
+    properties = {"oscillation": oscillation}
+    scan = ScanFactory.make_scan_from_properties(
+        image_range=image_range, properties=properties
+    )
+    properties["oscillation"][3] = 2.0
+    with pytest.raises(RuntimeError):
+        scan = ScanFactory.make_scan_from_properties(
+            image_range=image_range, properties=properties
+        )
+
+
 def test_print_scan():
 
     image_range = (1, 10)
