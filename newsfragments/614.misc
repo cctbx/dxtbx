@@ -1,1 +1,0 @@
-Tidy up dxtbx_model_ext namespacing, so that there are no name clashes when merged.

@@ -396,6 +396,7 @@ class GoniometerFactory:
         axis_vectors = {}
         angles = {}
         scan_axis = None
+        scan_axis_reversed = False
         cbf_handle.find_category(b"axis")
         for i in range(cbf_handle.count_rows()):
             cbf_handle.find_column(b"equipment")
@@ -431,6 +432,8 @@ class GoniometerFactory:
                         "More than one scan axis is defined: not currently supported."
                     )
                 scan_axis = axis_name
+                if increment < 0:
+                    scan_axis_reversed = True
             cbf_handle.next_row()
         if not len(axis_vectors) == len(angles):
             raise ValueError(
@@ -453,6 +456,11 @@ class GoniometerFactory:
         angles = flex.double(angles[axis] for axis in ordered_axes)
         # If no scan_axis, probably a still shot ⇒ scan axis arbitrary, set to 0.
         scan_axis = ordered_axes.index(scan_axis) if scan_axis else 0
+
+        # invert axis since the axis _values_ will be inverted in scan.py::imgCIF_H
+        if scan_axis_reversed:
+            a0, a1, a2 = axis_vectors[scan_axis]
+            axis_vectors[scan_axis] = (-a0, -a1, -a2)
 
         # construct a multi-axis goniometer
         gonio = GoniometerFactory.multi_axis(

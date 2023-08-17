@@ -2,7 +2,7 @@
 Convert a NXmx-format NeXus file to a set of CBF-format image files.
 
 Note that this tool does not produce full imgCIF-format files, only
-Dectris-style mini-CBF files consisting of a plain text simplified
+DECTRIS-style mini-CBF files consisting of a plain text simplified
 header and the binary compressed image data.  The simplified header
 does not contain a full description of the experiment geometry and some
 metadata, including the detector orientation, are unspecified.  As
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import dxtbx.util.dlsnxs2cbf
 
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser(description=__doc__, prog="dxtbx.dlsnxs2cbf")
 parser.add_argument(
     "nexus_file", metavar="nexus-file", help="Input NeXus file.", type=Path
 )

@@ -5,11 +5,12 @@ import json
 import os
 import sys
 
+from orderedset import OrderedSet
+
 import boost_adaptbx.boost.python
 import cctbx.crystal
 import cctbx.sgtbx
 import cctbx.uctbx
-from libtbx.containers import OrderedSet
 from scitbx import matrix
 from scitbx.array_family import flex
 
@@ -20,7 +21,7 @@ from dxtbx.model.detector import DetectorFactory
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
-from dxtbx.util import format_float_with_standard_uncertainty
+from dxtbx.util import AutoEncoder, format_float_with_standard_uncertainty
 
 try:
     from ..dxtbx_model_ext import (
@@ -44,6 +45,7 @@ try:
         OffsetPxMmStrategy,
         Panel,
         ParallaxCorrectedPxMmStrategy,
+        PolychromaticBeam,
         PxMmStrategy,
         Scan,
         ScanBase,
@@ -79,6 +81,7 @@ except ModuleNotFoundError:
         OffsetPxMmStrategy,
         Panel,
         ParallaxCorrectedPxMmStrategy,
+        PolychromaticBeam,
         PxMmStrategy,
         Scan,
         ScanBase,
@@ -96,6 +99,7 @@ except ModuleNotFoundError:
 __all__ = (
     "Beam",
     "BeamBase",
+    "PolychromaticBeam",
     "BeamFactory",
     "Crystal",
     "CrystalBase",
@@ -707,44 +711,6 @@ class _experimentlist:
 
         return result
 
-    def to_datablocks(self):
-        """Return the experiment list as a datablock list.
-        This assumes that the experiment contains 1 datablock."""
-        # Datablock depends on model/__init__
-        from dxtbx.datablock import DataBlockFactory
-
-        # Convert the experiment list to dict
-        obj = self.to_dict()
-        # Convert the dictionary to a datablock dictionary
-        obj["__id__"] = "DataBlock"
-        for e in obj["experiment"]:
-            iid = e["imageset"]
-            imageset = obj["imageset"][iid]
-            if "beam" in e:
-                imageset["beam"] = e["beam"]
-            if "detector" in e:
-                imageset["detector"] = e["detector"]
-            if "goniometer" in e:
-                imageset["goniometer"] = e["goniometer"]
-            if "scan" in e:
-                imageset["scan"] = e["scan"]
-
-            if imageset["__id__"] in ("ImageSet", "ImageGrid"):
-                image_list = []
-                for file_index, filename in enumerate(imageset["images"]):
-                    image_dict = {
-                        "filename": filename,
-                        "image": file_index,
-                    }
-                    image_list.append(image_dict)
-                imageset["images"] = image_list
-
-        # Remove the experiments
-        del obj["experiment"]
-
-        # Create the datablock
-        return DataBlockFactory.from_dict([obj])
-
     def nullify_all_single_file_reader_format_instances(self):
         """
         Parallel reading of HDF5 from the same handle is not allowed. Python
@@ -763,7 +729,6 @@ class _experimentlist:
 
         # Split into separate files
         if filename is not None and split:
-
             # Get lists of models by filename
             basepath = os.path.splitext(filename)[0]
             ilist = [
@@ -837,9 +802,6 @@ class _experimentlist:
             )
         else:
             to_write = [(filename, dictionary)]
-
-        # Datablock depends on model/__init__
-        from dxtbx.datablock import AutoEncoder
 
         for fname, obj in to_write:
             if compact:

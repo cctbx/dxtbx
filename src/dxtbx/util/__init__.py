@@ -1,9 +1,20 @@
 from __future__ import annotations
 
+import json
 import math
 import os
 import sys
 from urllib.parse import urlparse
+
+import libtbx
+
+
+class AutoEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, libtbx.AutoType):
+            return "Auto"
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
 
 
 def encode_output_as_utf8() -> None:

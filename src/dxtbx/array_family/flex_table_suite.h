@@ -19,6 +19,8 @@
 #include <scitbx/array_family/versa.h>
 #include <dxtbx/error.h>
 
+#include "ref_pickle_double_buffered.h"
+
 namespace dxtbx { namespace af { namespace flex_table_suite {
 
   using namespace boost::python;
