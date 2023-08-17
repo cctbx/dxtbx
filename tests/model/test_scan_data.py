@@ -104,12 +104,14 @@ def test_scan_360_append():
 
 def test_swap():
     scan1 = Scan((1, 20), (0.0, 1.0))
+    scan1_osc = scan1.get_oscillation()
     scan2 = Scan((40, 60), (10.0, 2.0))
+    scan2_osc = scan2.get_oscillation()
     scan1.swap(scan2)
     assert scan2.get_image_range() == (1, 20)
     assert scan1.get_image_range() == (40, 60)
-    assert scan2.get_oscillation() == pytest.approx((0.0, 1.0))
-    assert scan1.get_oscillation() == pytest.approx((10.0, 2.0))
+    assert scan2.get_oscillation() == scan1_osc
+    assert scan1.get_oscillation() == scan2_osc
 
 
 def test_valid_image_ranges():
