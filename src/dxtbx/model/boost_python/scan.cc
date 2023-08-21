@@ -80,10 +80,12 @@ namespace dxtbx { namespace model { namespace boost_python {
         DXTBX_ASSERT(obj_type == "float");
         scitbx::af::shared<double> osc =
           boost::python::extract<scitbx::af::shared<double> >(value);
-        DXTBX_ASSERT(Scan::oscillation_arr_is_consistent(osc));
+        DXTBX_ASSERT(Scan::oscillation_has_constant_width(osc));
 
         if (convert_oscillation_to_rad) {
           properties[key] = deg_as_rad(osc);
+        } else {
+          properties[key] = osc;
         }
       } else if (obj_type == "int") {
         properties[key] = boost::python::extract<scitbx::af::shared<int> >(value);

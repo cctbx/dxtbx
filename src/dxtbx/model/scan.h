@@ -216,14 +216,19 @@ namespace dxtbx { namespace model {
                       const scitbx::af::const_ref<T> &value) {
       DXTBX_ASSERT(value.size() == properties_.size());
 
-      // Special case for oscillation to ensure constant oscillation width
+      // Edge case for oscillation where checks are needed
       if (key == "oscillation") {
         if (!std::is_same<T, double>::value) {
           throw DXTBX_ERROR("Expected oscillation to have type double");
         }
         const scitbx::af::const_ref<double> &osc =
           reinterpret_cast<const scitbx::af::const_ref<double> &>(value);
-        DXTBX_ASSERT(Scan::oscillation_arr_is_consistent(osc));
+
+        if (osc.size() == 1) {
+          DXTBX_ASSERT(properties_.contains("oscillation_width"));
+        } else {
+          DXTBX_ASSERT(Scan::oscillation_has_constant_width(osc));
+        }
       }
       dxtbx::af::flex_table_suite::setitem_column(properties_, key, value);
     }
@@ -236,10 +241,10 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT(new_table.is_consistent());
       DXTBX_ASSERT(new_table.size() == num_images_);
 
-      // Special case for oscillation to ensure constant oscillation width
+      // Edge case for oscillation to ensure constant oscillation width
       if (new_table.contains("oscillation")) {
         scitbx::af::shared<double> osc = new_table.get<double>("oscillation");
-        DXTBX_ASSERT(Scan::oscillation_arr_is_consistent(osc));
+        DXTBX_ASSERT(Scan::oscillation_has_constant_width(osc));
       }
 
       properties_ = new_table;
@@ -277,7 +282,7 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT(properties_.contains("oscillation"));
       scitbx::af::shared<double> osc = properties_.get<double>("oscillation");
 
-      // Special case for Scans with single image
+      // Edge case for Scans with single image
       if (properties_.size() == 1) {
         DXTBX_ASSERT(properties_.contains("oscillation_width"));
         scitbx::af::shared<double> osc_width =
@@ -303,14 +308,14 @@ namespace dxtbx { namespace model {
       return osc_in_deg;
     }
 
-    static bool oscillation_arr_is_consistent(
+    static bool oscillation_has_constant_width(
       const scitbx::af::shared<double> oscillation_arr) {
-      /*
-      Checks if oscillation_arr has a constant width
-      */
+      DXTBX_ASSERT(oscillation_arr.size() > 0);
 
+      if (oscillation_arr.size() == 1) {
+        return true;
+      }
       double eps = 1e-7;
-      DXTBX_ASSERT(oscillation_arr.size() > 1);
       double expected_width = oscillation_arr[1] - oscillation_arr[0];
       for (std::size_t i = 0; i < oscillation_arr.size() - 1; ++i) {
         double width = oscillation_arr[i + 1] - oscillation_arr[i];
@@ -321,14 +326,14 @@ namespace dxtbx { namespace model {
       return true;
     }
 
-    static bool oscillation_arr_is_consistent(
+    static bool oscillation_has_constant_width(
       const scitbx::af::const_ref<double> oscillation_arr) {
-      /*
-      Checks if oscillation_arr has a constant width
-      */
+      DXTBX_ASSERT(oscillation_arr.size() > 0);
 
+      if (oscillation_arr.size() == 1) {
+        return true;
+      }
       double eps = 1e-7;
-      DXTBX_ASSERT(oscillation_arr.size() > 1);
       double expected_width = oscillation_arr[1] - oscillation_arr[0];
       for (std::size_t i = 0; i < oscillation_arr.size() - 1; ++i) {
         double width = oscillation_arr[i + 1] - oscillation_arr[i];
@@ -385,14 +390,14 @@ namespace dxtbx { namespace model {
       for (std::size_t i = 0; i < num_images_; ++i) {
         oscillation_arr[i] = oscillation[0] + oscillation[1] * i;
       }
-      set_property("oscillation", oscillation_arr.const_ref());
-
       // Edge case where the oscillation width needs to be stored
       if (num_images_ == 1) {
         scitbx::af::shared<double> oscillation_width_arr(num_images_);
         oscillation_width_arr[0] = oscillation[1];
         set_property("oscillation_width", oscillation_width_arr.const_ref());
       }
+
+      set_property("oscillation", oscillation_arr.const_ref());
     }
 
     void set_exposure_times(scitbx::af::shared<double> exposure_times) {
@@ -487,7 +492,9 @@ namespace dxtbx { namespace model {
       DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
       DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
 
-      flex_table<scan_property_types> rhs_properties = rhs.get_properties();
+      boost::python::dict d;
+      flex_table<scan_property_types> rhs_properties =
+        dxtbx::af::flex_table_suite::deepcopy(rhs.properties_, d);
 
       // Explicitly check oscillation
       if (properties_.contains("oscillation") && !is_still()) {
@@ -507,6 +514,19 @@ namespace dxtbx { namespace model {
         DXTBX_ASSERT(std::min(diff_2pi, diff_abs) < eps * get_num_images());
 
         /*
+        rhs oscillation arr updated before appending to reflect the larger
+        number of images of the appended Scan
+        */
+        const double rhs_osc_start = get_oscillation()[0] + num_images_ * osc_width;
+        scitbx::af::shared<double> rhs_osc_arr =
+          scitbx::af::shared<double>(rhs.num_images_, 0.0);
+        for (std::size_t i = 0; i < rhs_osc_arr.size(); ++i) {
+          rhs_osc_arr[i] = rhs_osc_start + i * osc_width;
+        }
+        dxtbx::af::flex_table_suite::setitem_column(
+          rhs_properties, "oscillation", rhs_osc_arr.const_ref());
+
+        /*
         If properties table contains oscillation_width, remove as this
         is only needed for scans where num_images_ == 1
         */
@@ -514,8 +534,6 @@ namespace dxtbx { namespace model {
           dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
         }
         if (rhs_properties.contains("oscillation_width")) {
-          boost::python::dict d;
-          rhs_properties = dxtbx::af::flex_table_suite::deepcopy(rhs.properties_, d);
           dxtbx::af::flex_table_suite::delitem_column(rhs_properties,
                                                       "oscillation_width");
         }
