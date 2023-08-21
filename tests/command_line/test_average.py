@@ -9,7 +9,7 @@ import dxtbx
 
 
 @pytest.mark.parametrize("use_mpi", [True, False])
-def test_average(dials_data, tmpdir, use_mpi):
+def test_average(dials_data, tmp_path, use_mpi):
     # Only allow MPI tests if we've got MPI capabilities
     if use_mpi:
         pytest.importorskip("mpi4py")
