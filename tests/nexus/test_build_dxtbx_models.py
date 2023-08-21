@@ -307,6 +307,109 @@ def test_get_dxtbx_detector_beam_center_fallback(nxmx_example):
 
 
 @pytest.fixture
+def detector_with_multiple_modules():
+
+    with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
+
+        detector = f.create_group("/entry/instrument/detector")
+        detector.attrs["NX_class"] = "NXdetector"
+        detector["beam_center_x"] = 2079.79727597266
+        detector["beam_center_y"] = 2225.38773853771
+        detector["count_time"] = 0.00285260857097799
+        detector["depends_on"] = "/entry/instrument/detector/transformations/det_z"
+        detector["description"] = "Eiger 16M"
+        detector["distance"] = 0.237015940260233
+        detector.create_dataset("data", data=np.zeros((100, 100)))
+        detector["sensor_material"] = "Silicon"
+        detector["sensor_thickness"] = 0.00045
+        detector["sensor_thickness"].attrs["units"] = b"m"
+        detector["x_pixel_size"] = 7.5e-05
+        detector["y_pixel_size"] = 7.5e-05
+        detector["underload_value"] = 0
+        detector["saturation_value"] = 9266
+        detector["frame_time"] = 0.1
+        detector["frame_time"].attrs["units"] = "s"
+        detector["bit_depth_readout"] = np.array(32)
+        mask = np.zeros((2, 100, 200), dtype="i8")
+        detector.create_dataset("pixel_mask", data=mask)
+
+        detector_transformations = detector.create_group("transformations")
+        detector_transformations.attrs["NX_class"] = "NXtransformations"
+        det_z = detector_transformations.create_dataset("det_z", data=np.array([289.3]))
+        det_z.attrs["depends_on"] = b"."
+        det_z.attrs["transformation_type"] = b"translation"
+        det_z.attrs["units"] = b"mm"
+        det_z.attrs["vector"] = np.array([0.0, 0.0, 1.0])
+
+        def make_module(name, depends_on, data_origin, fast_direction, slow_direction):
+            module = detector.create_group(name)
+            module.attrs["NX_class"] = "NXdetector_module"
+            module.create_dataset("data_size", data=np.array([1, 100, 200]))
+            module.create_dataset("data_origin", data=np.array(data_origin))
+            fast = module.create_dataset("fast_pixel_direction", data=0.075)
+            fast.attrs["transformation_type"] = "translation"
+            fast.attrs["depends_on"] = depends_on
+            fast.attrs["vector"] = np.array(fast_direction)
+            fast.attrs["units"] = "mm"
+            slow = module.create_dataset("slow_pixel_direction", data=0.075)
+            slow.attrs["transformation_type"] = "translation"
+            slow.attrs["depends_on"] = depends_on
+            slow.attrs["vector"] = np.array(slow_direction)
+            slow.attrs["units"] = "mm"
+
+        make_module(
+            name="m0",
+            depends_on="/entry/instrument/detector/transformations/det_z",
+            data_origin=[0, 0, 0],
+            fast_direction=[-0.999998, -0.001781, 0],
+            slow_direction=[-0.001781, 0.999998, 0],
+        )
+        make_module(
+            name="m1",
+            depends_on="/entry/instrument/detector/transformations/det_z",
+            data_origin=[1, 0, 0],
+            fast_direction=[-0.999998, -0.001781, 0],
+            slow_direction=[-0.001781, 0.999998, 0],
+        )
+
+        nxdata = f.create_group("/entry/data")
+        nxdata.attrs["NX_class"] = "NXdata"
+        nxdata.create_dataset(
+            "data",
+            data=np.array(
+                [np.full((2, 100, 200), i, dtype=np.int32) for i in range(3)]
+            ),
+        )
+        nxdata.attrs["signal"] = "/entry/data/data"
+
+        yield f
+
+
+def test_get_dxtbx_detector_with_multiple_modules(detector_with_multiple_modules):
+    det = nxmx.NXdetector(detector_with_multiple_modules["/entry/instrument/detector"])
+    wavelength = 1
+
+    detector = dxtbx.nexus.get_dxtbx_detector(det, wavelength)
+    assert len(detector) == 2
+    for panel in detector:
+        assert panel.get_image_size() == (200, 100)
+
+    nxdata = nxmx.NXdata(detector_with_multiple_modules["/entry/data"])
+    for i in range(3):
+        raw_data = dxtbx.nexus.get_raw_data(nxdata, det, i)
+        assert len(raw_data) == 2
+        for module_data in raw_data:
+            assert module_data.all() == (100, 200)
+            assert module_data.all_eq(i)
+
+    mask = dxtbx.nexus.get_static_mask(det)
+    assert len(mask) == 2
+    for module_mask in mask:
+        assert isinstance(module_mask, flex.bool)
+        assert module_mask.all() == (100, 200)
+
+
+@pytest.fixture
 def detector_with_two_theta():
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
         beam = f.create_group("/entry/instrument/beam")

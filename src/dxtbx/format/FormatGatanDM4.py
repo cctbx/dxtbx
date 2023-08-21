@@ -21,6 +21,7 @@ from dxtbx.ext import (
 )
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.model.beam import Probe
 
 
 def read_tag(f, byteorder):
@@ -358,6 +359,7 @@ class FormatGatanDM4(Format):
             wavelength=wavelength,
             polarization=(0, 1, 0),
             polarization_fraction=0.5,
+            probe=Probe.electron,
         )
 
     def _scan(self):

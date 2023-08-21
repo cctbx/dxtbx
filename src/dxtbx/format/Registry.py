@@ -5,11 +5,10 @@ of image formats.
 """
 from __future__ import annotations
 
+import importlib.metadata
 import os
 import typing
 from typing import Callable
-
-import pkg_resources
 
 from dxtbx.util import get_url_scheme
 
@@ -35,7 +34,7 @@ def get_format_class_index() -> dict[str, tuple[Callable[[], type[Format]], list
     """
     if not hasattr(get_format_class_index, "cache"):
         class_index = {}
-        for e in pkg_resources.iter_entry_points("dxtbx.format"):
+        for e in importlib.metadata.entry_points()["dxtbx.format"]:
             if ":" in e.name:
                 format_name, base_classes_str = e.name.split(":", 1)
                 base_classes = tuple(base_classes_str.split(","))

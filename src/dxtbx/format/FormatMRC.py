@@ -19,6 +19,7 @@ from scitbx.array_family import flex
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.model import ScanFactory
+from dxtbx.model.beam import Probe
 
 logger = logging.getLogger("dials")
 
@@ -226,6 +227,7 @@ class FormatMRC(Format):
             wavelength=wavelength,
             polarization=(0, 1, 0),
             polarization_fraction=0.5,
+            probe=Probe.electron,
         )
 
 

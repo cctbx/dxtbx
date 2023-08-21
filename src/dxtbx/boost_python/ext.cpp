@@ -230,6 +230,24 @@ namespace dxtbx { namespace boost_python {
     }
   }
 
+  // Python entry point to decompress Rigaku Oxford Diffractometer TY6 compression
+  scitbx::af::flex_int uncompress_rod_TY6(const boost::python::object &data,
+                                          const boost::python::object &offsets,
+                                          const int &slow,
+                                          const int &fast) {
+    // Cannot I extract const char* directly?
+    std::string str_data = boost::python::extract<std::string>(data);
+    std::string str_offsets = boost::python::extract<std::string>(offsets);
+
+    scitbx::af::flex_int z((scitbx::af::flex_grid<>(slow, fast)),
+                           scitbx::af::init_functor_null<int>());
+
+    dxtbx::boost_python::rod_TY6_decompress(
+      z.begin(), str_data.c_str(), str_offsets.c_str(), slow, fast);
+
+    return z;
+  }
+
   void init_module() {
     using namespace boost::python;
     def("read_uint8", read_uint8, (arg("file"), arg("count")));
@@ -248,6 +266,9 @@ namespace dxtbx { namespace boost_python {
        arg("pixel_size"), arg("distance"),
        arg("upper_left"), arg("lower_right")))
     ;
+    def("uncompress_rod_TY6",
+        &uncompress_rod_TY6,
+        (arg_("data"), arg_("offsets"), arg_("slow"), arg_("fast")));
   }
 
   BOOST_PYTHON_MODULE(dxtbx_ext) {

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-import procrunner
+import shutil
+import subprocess
+
 import pytest
 
 import dxtbx
@@ -19,16 +21,16 @@ def test_average(dials_data, tmpdir, use_mpi):
         command = "mpirun"
         mpargs = "-n 2 dxtbx.image_average --mpi=True".split()
     else:
-        command = "dxtbx.image_average"
+        command = shutil.which("dxtbx.image_average")
         mpargs = "-n 2".split()
-    result = procrunner.run(
+    result = subprocess.run(
         [command] + mpargs + "-v -a avg.cbf -s stddev.cbf -m max.cbf".split() + [data],
-        working_directory=tmpdir,
+        cwd=tmp_path,
     )
     assert not result.returncode and not result.stderr
 
     h5 = dxtbx.load(data).get_detector()
-    cbf = dxtbx.load(tmpdir.join("avg.cbf")).get_detector()
+    cbf = dxtbx.load(tmp_path / "avg.cbf").get_detector()
 
     assert h5.is_similar_to(cbf)
     assert h5[0].get_gain() == cbf[0].get_gain()
