@@ -59,9 +59,12 @@ class InvalidExperimentListError(RuntimeError):
     """
 
 
-scaling_model_entry_points = importlib.metadata.entry_points()[
-    "dxtbx.scaling_model_ext"
-]
+try:
+    scaling_model_entry_points = importlib.metadata.entry_points()[
+        "dxtbx.scaling_model_ext"
+    ]
+except KeyError:
+    scaling_model_entry_points = []
 
 
 class FormatChecker:

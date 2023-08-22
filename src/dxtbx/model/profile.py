@@ -3,7 +3,10 @@ from __future__ import annotations
 import importlib.metadata
 import logging
 
-profile_entry_points = importlib.metadata.entry_points()["dxtbx.profile_model"]
+try:
+    profile_entry_points = importlib.metadata.entry_points()["dxtbx.profile_model"]
+except KeyError:
+    profile_entry_points = []
 
 
 class ProfileModelFactory:
