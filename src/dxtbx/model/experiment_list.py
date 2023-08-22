@@ -59,6 +59,11 @@ class InvalidExperimentListError(RuntimeError):
     """
 
 
+scaling_model_entry_points = importlib.metadata.entry_points()[
+    "dxtbx.scaling_model_ext"
+]
+
+
 class FormatChecker:
     """A helper class to speed up identifying the correct image format by first
     trying the last format that was used."""
@@ -576,7 +581,7 @@ class ExperimentListDict:
     @staticmethod
     def _scaling_model_from_dict(obj):
         """Get the scaling model from a dictionary."""
-        for entry_point in importlib.metadata.entry_points()["dxtbx.scaling_model_ext"]:
+        for entry_point in scaling_model_entry_points:
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
 
