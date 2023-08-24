@@ -1,1 +1,1 @@
-Fix slowness of loading large experiment lists with profile/scaling models
+Fix performance regression loading large experiment lists containing profile/scaling models.
