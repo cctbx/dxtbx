@@ -1,3 +1,13 @@
+DIALS 3.16.1 (2023-09-05)
+=========================
+
+Bugfixes
+--------
+
+- Fix situation where a bad ``Beam.probe`` could cause undefined behaviour. (`#656 <https://github.com/cctbx/dxtbx/issues/656>`_)
+- Fix performance regression loading large experiment lists containing profile/scaling models. (`#658 <https://github.com/cctbx/dxtbx/issues/658>`_)
+
+
 dxtbx 3.16.0 (2023-08-14)
 =========================
 

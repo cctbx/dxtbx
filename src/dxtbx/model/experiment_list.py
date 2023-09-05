@@ -64,6 +64,14 @@ class InvalidExperimentListError(RuntimeError):
     """
 
 
+try:
+    scaling_model_entry_points = importlib.metadata.entry_points()[
+        "dxtbx.scaling_model_ext"
+    ]
+except KeyError:
+    scaling_model_entry_points = []
+
+
 class ExperimentListDict:
     """A helper class for serializing the experiment list to dictionary (needed
     to save the experiment list to JSON format."""
@@ -465,7 +473,7 @@ class ExperimentListDict:
     @staticmethod
     def _scaling_model_from_dict(obj):
         """Get the scaling model from a dictionary."""
-        for entry_point in importlib.metadata.entry_points()["dxtbx.scaling_model_ext"]:
+        for entry_point in scaling_model_entry_points:
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
 
