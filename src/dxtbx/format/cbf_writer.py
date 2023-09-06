@@ -470,9 +470,9 @@ class FullCBFWriter:
         """
         if data is None:
             if index is None:
-                data = self.imageset[0]
+                data = self.imageset.get_raw_data(0)
             else:
-                data = self.imageset[index]
+                data = self.imageset.get_raw_data(index)
         if not isinstance(data, tuple):
             data = (data,)
 
