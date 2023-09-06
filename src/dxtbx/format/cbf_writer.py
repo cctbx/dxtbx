@@ -539,7 +539,7 @@ class FullCBFWriter:
             if dataisint[i]:
                 elsize = 4
                 elsigned = 1
-
+                byteorder = byteorder.encode()
                 cbf.set_integerarray_wdims_fs(
                     pycbf.CBF_PACKED,
                     binary_id,
