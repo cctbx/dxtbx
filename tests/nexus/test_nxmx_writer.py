@@ -12,7 +12,6 @@ from dxtbx.format.nexus import h5str
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 pytest.importorskip("dials")
-pytest.importorskip("xfel")
 
 from dxtbx.format.nxmx_writer import NXmxWriter, phil_scope
 
