@@ -15,14 +15,21 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage, Reader
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model import Spectrum
 from dxtbx.util.rotate_and_average import rotate_and_average
+import serialtbx.util
+import serialtbx.detector.xtc
 
 try:
     import psana
-
-    from xfel.cxi.cspad_ana import cspad_tbx
 except ImportError:
     psana = None
-    cspad_tbx = None
+except TypeError:
+    # Check if SIT_* environment variables are set
+    import os
+
+    if os.environ.get("SIT_ROOT"):
+        # Variables are present, so must have been another error
+        raise
+    psana = None
 
 locator_str = """
   experiment = None
@@ -152,7 +159,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         If PSANA fails to read it, then input may not be an xtc/smd file. If success, then OK.
         If detector_address is not provided, a command line promp will try to get the address
         from the user"""
-        if not psana or not cspad_tbx:
+        if not psana:
             return False
         try:
             params = FormatXTC.params_from_phil(locator_scope, image_file)
@@ -375,7 +382,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         sec = time[0]
         nsec = time[1]
 
-        return cspad_tbx.evt_timestamp((sec, nsec / 1e6))
+        return serialtbx.util.timestamp((sec, nsec / 1e6))
 
     def get_num_images(self):
         return self.n_images
@@ -397,7 +404,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             if spectrum:
                 wavelength = spectrum.get_weighted_wavelength()
             else:
-                wavelength = cspad_tbx.evt_wavelength(
+                wavelength = serialtbx.detector.xtc.evt_wavelength(
                     evt, delta_k=self.params.wavelength_delta_k
                 )
             if wavelength is None:

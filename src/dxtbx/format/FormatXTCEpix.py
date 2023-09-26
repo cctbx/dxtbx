@@ -63,7 +63,7 @@ class FormatXTCEpix(FormatXTC):
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
 
-        from xfel.cftbx.detector.cspad_cbf_tbx import basis_from_geo
+        from serialtbx.detector.xtc import basis_from_geo
 
         run = self.get_run_from_index(index)
         if run.run() in self._cached_detector:

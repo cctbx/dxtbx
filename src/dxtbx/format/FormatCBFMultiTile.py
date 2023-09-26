@@ -9,12 +9,20 @@ import numpy
 import pycbf
 
 from scitbx.array_family import flex
+from scitbx import matrix
 
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model.detector import Detector
 from dxtbx.model.detector_helpers import find_undefined_value, find_underload_value
+
+
+def angle_and_axis(basis):
+    """Normalize a quaternion and return the angle and axis
+    @param params metrology object"""
+    q = matrix.col(basis.orientation).normalize()
+    return q.unit_quaternion_as_axis_and_angle(deg=True)
 
 
 class cbf_wrapper(pycbf.cbf_handle_struct):
@@ -55,6 +63,36 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
             if "CBF_NOTFOUND" in str(e):
                 return False
             raise e
+
+    def add_frame_shift(self, basis, axis_settings):
+        """Add an axis representing a frame shift (a rotation axis with an offset)"""
+        angle, axis = angle_and_axis(basis)
+
+        if angle == 0:
+            axis = (0, 0, 1)
+
+        if basis.include_translation:
+            translation = basis.translation
+        else:
+            translation = (0, 0, 0)
+
+        self.add_row(
+            [
+                basis.axis_name,
+                "rotation",
+                "detector",
+                basis.depends_on,
+                str(axis[0]),
+                str(axis[1]),
+                str(axis[2]),
+                str(translation[0]),
+                str(translation[1]),
+                str(translation[2]),
+                basis.equipment_component,
+            ]
+        )
+
+        axis_settings.append([basis.axis_name, "FRAME1", str(angle), "0"])
 
 
 class FormatCBFMultiTile(FormatCBFFull):

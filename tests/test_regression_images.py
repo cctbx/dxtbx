@@ -25,13 +25,6 @@ except ModuleNotFoundError:
     h5py = None
 
 try:
-    import xfel
-except ImportError:
-    # Although ModuleNotFoundError is correct, cctbx may raise an ImportError
-    # when the xfel extension module is not found.
-    xfel = None
-
-try:
     import cbflib_adaptbx
 
     # Check this isn't a namespace package
@@ -156,9 +149,6 @@ _files_with_detectorbase = sorted(
 @pytest.mark.regression
 @pytest.mark.parametrize("test_image", _files_with_detectorbase)
 def test_detectorbase(test_image, dials_regression):
-    if not xfel and test_image.startswith("LCLS"):
-        pytest.skip("could not import 'xfel'")
-
     if not h5py and test_image.endswith((".h5", ".nxs")):
         pytest.skip("could not import 'h5py'")
 
@@ -207,8 +197,6 @@ def test_detectorbase(test_image, dials_regression):
 @pytest.mark.parametrize("test_image", _files)
 def test_read_image(test_image, dials_regression):
     """Test that all the regression images can be read"""
-    if not xfel and test_image.startswith("LCLS"):
-        pytest.skip("could not import 'xfel'")
 
     if not h5py and test_image.endswith((".h5", ".nxs")):
         pytest.skip("could not import 'h5py'")

@@ -2,18 +2,25 @@ from __future__ import annotations
 
 import sys
 
-import psana
+try:
+    import psana
+except ImportError:
+    psana = None
+except TypeError:
+    # Check if SIT_* environment variables are set
+    import os
+
+    if os.environ.get("SIT_ROOT"):
+        # Variables are present, so must have been another error
+        raise
+    psana = None
 
 from libtbx.phil import parse
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 
-try:
-    from xfel.cxi.cspad_ana import rayonix_tbx
-except ImportError:
-    # xfel not configured
-    pass
+from serialtbx.detector import rayonix
 
 rayonix_locator_str = """
   rayonix {
@@ -36,8 +43,8 @@ class FormatXTCRayonix(FormatXTC):
         bin_size = rayonix_cfg.binning_f()
         if self.params.rayonix.bin_size is not None:
             assert bin_size == self.params.rayonix.bin_size
-        self._pixel_size = rayonix_tbx.get_rayonix_pixel_size(bin_size)
-        self._image_size = rayonix_tbx.get_rayonix_detector_dimensions(self._ds.env())
+        self._pixel_size = rayonix.get_rayonix_pixel_size(bin_size)
+        self._image_size = rayonix.get_rayonix_detector_dimensions(self._ds.env())
 
     @staticmethod
     def understand(image_file):
@@ -51,7 +58,7 @@ class FormatXTCRayonix(FormatXTC):
         if index is None:
             index = 0
         assert len(self.params.detector_address) == 1
-        data = rayonix_tbx.get_data_from_psana_event(
+        data = rayonix.get_data_from_psana_event(
             self._get_event(index), self.params.detector_address[0]
         )
         return flex.double(data)
@@ -69,8 +76,8 @@ class FormatXTCRayonix(FormatXTC):
             pixel_size=(self._pixel_size, self._pixel_size),
             image_size=self._image_size,
             trusted_range=(
-                rayonix_tbx.rayonix_min_trusted_value,
-                rayonix_tbx.rayonix_max_trusted_value,
+                rayonix.rayonix_min_trusted_value,
+                rayonix.rayonix_max_trusted_value,
             ),
             mask=[],
         )
