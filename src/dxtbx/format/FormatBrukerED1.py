@@ -14,6 +14,7 @@ from dxtbx.ext import (
     read_uint32_bs,
 )
 from dxtbx.format.FormatBruker import FormatBruker
+from dxtbx.model import SimplePxMmStrategy
 
 
 class FormatBrukerED1(FormatBruker):
@@ -35,7 +36,7 @@ class FormatBrukerED1(FormatBruker):
         if not ("EIGER" in dettype or "QUADRO" in dettype):
             return False
 
-        # ED-1 wavelength is fixed at 160 keV
+        # ED-1 energy is fixed at 160 keV
         wavelength = float(header_dic["WAVELEN"].split()[0])
         if round(wavelength, 3) != 0.029:
             return False
@@ -127,7 +128,7 @@ class FormatBrukerED1(FormatBruker):
         )
 
         gain = self._calculate_gain(float(self.header_dict["WAVELEN"].split()[0]))
-        return self._detector_factory.complex(
+        detector = self._detector_factory.complex(
             "PAD",
             origin.elems,
             fast.elems,
@@ -137,6 +138,18 @@ class FormatBrukerED1(FormatBruker):
             (min_trusted_value, full_scale),
             gain=gain,
         )
+
+        # Here we set specifics, notably gain=3 and parallax correction and
+        # QE correction are effectively disabled by setting the simple
+        # pixel-to-millimetre strategy and a very high mu value.
+        for panel in detector:
+            panel.set_gain(3)  # Not correct in CCDPARM, so override
+            panel.set_thickness(0.450)
+            panel.set_material("Si")
+            panel.set_px_mm_strategy(SimplePxMmStrategy())
+            panel.set_mu(1e10)
+
+        return detector
 
     def _beam(self):
         """Make unpolarized beam"""
