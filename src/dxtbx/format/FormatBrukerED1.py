@@ -107,9 +107,9 @@ class FormatBrukerED1(FormatBruker):
         min_trusted_value = 0
 
         fast = matrix.col((1, 0, 0))
-        slow = matrix.col((0, 1, 0))
+        slow = matrix.col((0, -1, 0))
         beam = matrix.col((0, 0, 1))
-        pixel_mm = 5.0 / float(self.header_dict["DETTYPE"].split()[1])
+        pixel_mm = 0.075
         beam_pixel = [float(bp) for bp in self.header_dict["CENTER"].split()[:-3:-1]]
         distance_mm = 10.0 * float(self.header_dict["DISTANC"].split()[1])
         origin = (
