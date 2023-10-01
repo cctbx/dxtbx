@@ -5,6 +5,8 @@ import sys
 import time
 
 import numpy as np
+import serialtbx.detector.xtc
+import serialtbx.util
 
 from libtbx.phil import parse
 from scitbx.array_family import flex
@@ -15,8 +17,6 @@ from dxtbx.format.FormatMultiImage import FormatMultiImage, Reader
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model import Spectrum
 from dxtbx.util.rotate_and_average import rotate_and_average
-import serialtbx.util
-import serialtbx.detector.xtc
 
 try:
     import psana

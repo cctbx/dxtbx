@@ -103,7 +103,6 @@ class FormatXTCJungfrau(FormatXTC):
 
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
-
         from serialtbx.detector.xtc import basis_from_geo
 
         run = self.get_run_from_index(index)

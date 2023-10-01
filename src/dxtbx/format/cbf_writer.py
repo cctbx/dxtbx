@@ -13,12 +13,12 @@ import os
 import sys
 
 import pycbf
-
-from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
-from scitbx.array_family import flex
 from serialtbx.detector import basis
 
+from scitbx.array_family import flex
+
 import dxtbx.format.Registry
+from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
 
 
 def add_frame_specific_cbf_tables(

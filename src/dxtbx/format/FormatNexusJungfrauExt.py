@@ -4,11 +4,9 @@ import sys
 
 import h5py
 import numpy as np
-
-from scitbx.array_family import flex
-
 from serialtbx.detector.jungfrau import pad_stacked_format
 
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.format.nexus import h5str

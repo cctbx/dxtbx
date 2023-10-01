@@ -15,12 +15,12 @@ except TypeError:
         raise
     psana = None
 
+from serialtbx.detector import rayonix
+
 from libtbx.phil import parse
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
-
-from serialtbx.detector import rayonix
 
 rayonix_locator_str = """
   rayonix {
