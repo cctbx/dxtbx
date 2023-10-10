@@ -8,8 +8,8 @@ import sys
 import numpy
 import pycbf
 
-from scitbx.array_family import flex
 from scitbx import matrix
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatCBF import FormatCBF
 from dxtbx.format.FormatCBFFull import FormatCBFFull

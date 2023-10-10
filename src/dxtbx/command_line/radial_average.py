@@ -16,10 +16,10 @@ from libtbx import easy_pickle
 from libtbx.utils import Sorry, Usage
 from scitbx.array_family import flex
 from scitbx.matrix import col
-from dxtbx.ext import radial_average
 
 import dxtbx
 import dxtbx.util
+from dxtbx.ext import radial_average
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 master_phil = iotbx.phil.parse(
