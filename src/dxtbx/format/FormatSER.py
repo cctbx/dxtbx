@@ -22,6 +22,7 @@ import dxtbx.ext
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.model.beam import Probe
 
 
 # The read_emi and _parseEntry_emi functions are taken from openNCEM project
@@ -334,6 +335,7 @@ class FormatSER(Format):
             wavelength=wavelength,
             polarization=(0, 1, 0),
             polarization_fraction=0.5,
+            probe=Probe.electron,
         )
 
     def _get_raw_data(self, index):

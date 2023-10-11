@@ -9,6 +9,7 @@ from dxtbx.format import nexus
 from dxtbx.format.FormatNXmx import FormatNXmx
 from dxtbx.masking import mask_untrusted_circle, mask_untrusted_polygon
 from dxtbx.model import SimplePxMmStrategy
+from dxtbx.model.beam import Probe
 
 
 class FormatNXmxED(FormatNXmx):
@@ -65,6 +66,7 @@ class FormatNXmxED(FormatNXmx):
 
         beam = super()._beam()
         beam.set_polarization_fraction(0.5)
+        beam.set_probe(Probe.electron)
 
         return beam
 
