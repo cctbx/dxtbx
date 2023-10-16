@@ -122,7 +122,8 @@ class BeamFactory:
             beam.set_flux(params.beam.flux)
         if params.beam.sample_to_source_distance is not None:
             beam.set_sample_to_source_distance(params.beam.sample_to_source_distance)
-        beam.set_probe(Beam.get_probe_from_name(params.beam.probe))
+        if params.beam.probe != "x-ray":
+            beam.set_probe(Beam.get_probe_from_name(params.beam.probe))
 
         return beam
 
