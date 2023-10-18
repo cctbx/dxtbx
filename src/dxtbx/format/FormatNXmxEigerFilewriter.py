@@ -52,8 +52,10 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         # data_size is reversed - we should probably be more specific in when
         # we do this, i.e. check data_size is in a list of known reversed
         # values
+        known_safe = [(1082,1035),]
         for module in nxdetector.modules:
-            module.data_size = module.data_size[::-1]
+            if not tuple(module.data_size) in known_safe:
+                module.data_size = module.data_size[::-1]
         return nxmx_obj
 
     def get_raw_data(self, index):
