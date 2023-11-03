@@ -1,0 +1,1 @@
+``dxtbx.plot_detector_models``: use noninteractive matpotlib backend if using the pdf_file option

@@ -6,7 +6,6 @@ import os
 import sys
 from collections.abc import Sequence
 
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.patches import FancyArrowPatch
@@ -170,6 +169,12 @@ def run(args=None):
             except Exception:
                 raise Sorry("Unrecognized argument %s" % arg)
     params = phil_scope.fetch(sources=user_phil).extract()
+    if params.pdf_file:
+        import matplotlib
+
+        matplotlib.use("Agg")
+
+    import matplotlib.pyplot as plt
 
     fig = plt.figure()
     colormap = plt.cm.gist_ncar
