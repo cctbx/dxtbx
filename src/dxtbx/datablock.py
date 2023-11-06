@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 
-from dxtbx.experiment_list import (
+from dxtbx.model.experiment_list import (
     BeamComparison,
     DetectorComparison,
     FormatChecker,
