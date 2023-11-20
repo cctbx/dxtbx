@@ -1,0 +1,1 @@
+Fix oscillation not being set correctly in ``Scan.set_image_range``.

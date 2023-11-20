@@ -365,19 +365,23 @@ namespace dxtbx { namespace model {
        */
       image_range_ = image_range;
       num_images_ = 1 + image_range_[1] - image_range_[0];
-      properties_.resize(num_images_);
 
-      // Edge case where num_images_ was 1 and has been increased
-      if (properties_.contains("oscillation_width") && num_images_ > 1) {
-        scitbx::af::shared<double> osc_width =
-          properties_.get<double>("oscillation_width");
-
-        vec2<double> osc = vec2<double>(get_oscillation()[0], osc_width[0]);
+      // Fix for dxtbx #497 for oscillation
+      if (properties_.contains("oscillation")) {
+        vec2<double> osc = get_oscillation();
+        properties_.resize(num_images_);
         set_oscillation(osc);
 
-        // oscillation_width only needed when num_images_ == 1
-        dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
+        // Edge case where num_images_ was 1 and has been increased
+        if (properties_.contains("oscillation_width") && num_images_ > 1) {
+          // oscillation_width only needed when num_images_ == 1
+          dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
+        }
+        DXTBX_ASSERT(num_images_ > 0);
+        return;
       }
+
+      properties_.resize(num_images_);
       DXTBX_ASSERT(num_images_ > 0);
     }
 
