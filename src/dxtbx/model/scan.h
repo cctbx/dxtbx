@@ -442,7 +442,7 @@ namespace dxtbx { namespace model {
     }
 
     bool operator==(const Scan &rhs) const {
-      if (image_range_ != image_range_ || batch_offset_ != rhs.batch_offset_) {
+      if (image_range_ != rhs.image_range_ || batch_offset_ != rhs.batch_offset_) {
         return false;
       }
 
