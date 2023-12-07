@@ -24,12 +24,9 @@ class FormatCBFMiniEigerQuadroED1(FormatCBFMiniEiger):
             if "# wavelength" in record:
                 try:
                     wl = float(record.split()[-2])
-                    print(wl)
                 except ValueError:
-                    print("poo")
                     return False
                 if round(wl, 3) != 0.029:
-                    print("bar")
                     return False
 
         # If we got this far, check also the mime header to ensure a 512*512 pixel image
