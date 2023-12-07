@@ -78,13 +78,14 @@ class FormatBrukerED1(FormatBruker):
         omega -= 180
         angles = flex.double((phi, chi, omega))
 
-        # The ED-1 has a single axis goniometer, but go through the multi-axis
-        # goniometer model to compose the axis
+        # The ED-1 has a single-axis goniometer, but go through the multi-axis
+        # goniometer model to compose the axis.
         g = self._goniometer_factory.make_multi_axis_goniometer(
             axes, angles, names, scan_axis
         )
 
-        return g
+        # It is preferable to return a single axis goniometer, as this can be
+        # further optimised by dials.find_rotation_axis
         return self._goniometer_factory.known_axis(g.get_rotation_axis())
 
     def _calculate_gain(self, wavelength):
