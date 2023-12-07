@@ -8,7 +8,7 @@ from dxtbx.model import SimplePxMmStrategy
 from dxtbx.model.beam import Probe
 
 
-class FormatCBFMiniEigerQuadro(FormatCBFMiniEiger):
+class FormatCBFMiniEigerQuadroED1(FormatCBFMiniEiger):
     @staticmethod
     def understand(image_file):
 
