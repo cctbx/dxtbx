@@ -15,6 +15,7 @@ from dxtbx.ext import (
 )
 from dxtbx.format.FormatBruker import FormatBruker
 from dxtbx.model import SimplePxMmStrategy
+from dxtbx.model.beam import Probe
 
 
 class FormatBrukerED1(FormatBruker):
@@ -69,16 +70,22 @@ class FormatBrukerED1(FormatBruker):
         names = flex.std_string(("PHI", "CHI", "OMEGA"))
         scan_axis = flex.first_index(names, scan_axis)
         if scan_axis is None:
-            scan_axis = "OMEGA"  # default
+            scan_axis = 2  # "OMEGA" default
 
-        # https://journals.iucr.org/d/issues/2014/10/00/dz5309/dz5309sup1.pdf
-        axes = flex.vec3_double(((0, -1, 0), (0, 0, 1), (0, 1, 0)))
+        # Axes here determined by trial and error to give the correct rotation
+        # axis for the ED-1 prototype, in which the CHI angle is 267°
+        axes = flex.vec3_double(((1, 0, 0), (0, 0, -1), (0, 1, 0)))
         omega -= 180
         angles = flex.double((phi, chi, omega))
 
-        return self._goniometer_factory.make_multi_axis_goniometer(
+        # The ED-1 has a single axis goniometer, but go through the multi-axis
+        # goniometer model to compose the axis
+        g = self._goniometer_factory.make_multi_axis_goniometer(
             axes, angles, names, scan_axis
         )
+
+        return g
+        return self._goniometer_factory.known_axis(g.get_rotation_axis())
 
     def _calculate_gain(self, wavelength):
         """The CCDPARM header item contains 5 items. For an X-ray detector
@@ -163,6 +170,7 @@ class FormatBrukerED1(FormatBruker):
             wavelength=wavelength,
             polarization=(0, 1, 0),
             polarization_fraction=0.5,
+            probe=Probe.electron,
         )
 
     def _scan(self):
