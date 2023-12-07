@@ -89,14 +89,18 @@ class FormatBrukerED1(FormatBruker):
             4. bias
             5. full scale
         and the gain in ADU/X-ray is given by (e/photon) / (e/ADU).
-        For the QUADRO, this ratio is 1/3 exactly. Is this correct?
+        For the ED-1 QUADRO, this should be 3.0 exactly, but some old files have
+        this inverted. In the case of exactly 1/3 gain, invert it back.
         """
         ccdparm = self.header_dict["CCDPARM"].split()
         e_ADU = float(ccdparm[1])
         e_photon = float(ccdparm[2])
         if e_ADU == 0:
             return 1.0
-        return e_photon / e_ADU
+        gain = e_photon / e_ADU
+        if gain == 1.0 / 3.0:
+            gain = 3.0
+        return
 
     def _detector(self):
         # goniometer angles in ANGLES are 2-theta, omega, phi, chi (FIXED)
@@ -139,11 +143,10 @@ class FormatBrukerED1(FormatBruker):
             gain=gain,
         )
 
-        # Here we set specifics, notably gain=3 and parallax correction and
+        # Here we set specifics, notably parallax correction and
         # QE correction are effectively disabled by setting the simple
         # pixel-to-millimetre strategy and a very high mu value.
         for panel in detector:
-            panel.set_gain(3)  # Not correct in CCDPARM, so override
             panel.set_thickness(0.450)
             panel.set_material("Si")
             panel.set_px_mm_strategy(SimplePxMmStrategy())
