@@ -108,7 +108,7 @@ class FormatBrukerED1(FormatBruker):
         gain = e_photon / e_ADU
         if gain == 1.0 / 3.0:
             gain = 3.0
-        return
+        return gain
 
     def _detector(self):
         # goniometer angles in ANGLES are 2-theta, omega, phi, chi (FIXED)
@@ -148,13 +148,13 @@ class FormatBrukerED1(FormatBruker):
             pixel_size,
             image_size,
             (min_trusted_value, full_scale),
-            gain=gain,
         )
 
         # Here we set specifics, notably parallax correction and
         # QE correction are effectively disabled by setting the simple
         # pixel-to-millimetre strategy and a very high mu value.
         for panel in detector:
+            panel.set_gain(gain)
             panel.set_thickness(0.450)
             panel.set_material("Si")
             panel.set_px_mm_strategy(SimplePxMmStrategy())
