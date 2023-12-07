@@ -20,51 +20,80 @@
 #include <scitbx/array_family/simple_tiny_io.h>
 #include <dxtbx/error.h>
 #include "scan_helpers.h"
+#include <dxtbx/array_family/flex_table.h>
+#include <dxtbx/array_family/flex_table_suite.h>
+#include <algorithm>
 
 namespace dxtbx { namespace model {
 
+  using dxtbx::af::flex_table;
+  using dxtbx::af::flex_type_generator;
   using scitbx::rad_as_deg;
   using scitbx::vec2;
+  using scitbx::vec3;
   using scitbx::constants::pi;
 
   typedef std::map<std::string, scitbx::af::shared<vec2<int> > > ExpImgRangeMap;
 
-  /** A scan base class */
+  typedef flex_type_generator<bool,
+                              int,
+                              double,
+                              std::string,
+                              vec2<double>,
+                              vec3<double> >::type scan_property_types;
+
+  typedef dxtbx::af::flex_table<scan_property_types>::const_iterator const_iterator;
+
   class ScanBase {};
 
-  /** A class to represent a scan */
   class Scan : public ScanBase {
   public:
-    /** The default constructor */
     Scan()
         : image_range_(0, 0),
-          oscillation_(0.0, 0.0),
           num_images_(1),
-          exposure_times_(1, 0.0),
-          epochs_(1, 0.0),
-          batch_offset_(0) {}
+          batch_offset_(0),
+          properties_(flex_table<scan_property_types>(1)) {}
 
     /**
-     * Initialise the class
+     * @param image_range The range of images covered by the scan
+     * @param batch_offset An offset to add to the image number (for tracking of
+     *                     unique batch numbers for multi-crystal datasets)
+     */
+    Scan(vec2<int> image_range, int batch_offset = 0)
+        : image_range_(image_range),
+          num_images_(1 + image_range_[1] - image_range_[0]),
+          batch_offset_(batch_offset) {
+      DXTBX_ASSERT(num_images_ >= 0);
+      properties_ = flex_table<scan_property_types>(num_images_);
+    }
+
+    /**
      * @param image_range The range of images covered by the scan
      * @param oscillation A tuple containing the start angle of the first image
      *                    and the oscillation range (the angular width) of each
      *                    frame
-     * @param batch_offset A offset to add to the image number (for tracking of
+     * @param batch_offset An offset to add to the image number (for tracking of
      *                     unique batch numbers for multi-crystal datasets)
      */
     Scan(vec2<int> image_range, vec2<double> oscillation, int batch_offset = 0)
         : image_range_(image_range),
-          oscillation_(oscillation),
           num_images_(1 + image_range_[1] - image_range_[0]),
-          batch_offset_(batch_offset),
-          exposure_times_(num_images_, 0.0),
-          epochs_(num_images_, 0.0) {
+          batch_offset_(batch_offset) {
       DXTBX_ASSERT(num_images_ >= 0);
+      properties_ = flex_table<scan_property_types>(num_images_);
+
+      scitbx::af::shared<double> exposure_times =
+        scitbx::af::shared<double>(num_images_, 0.0);
+      set_property("exposure_time", exposure_times.const_ref());
+
+      scitbx::af::shared<double> epochs = scitbx::af::shared<double>(num_images_, 0.0);
+      set_property("epochs", epochs.const_ref());
+
+      set_oscillation(oscillation);
+      DXTBX_ASSERT(properties_.is_consistent());
     }
 
     /**
-     * Initialise the class
      * @param image_range The range of images covered by the scan
      * @param oscillation A tuple containing the start angle of the first image
      *                    and the oscillation range (the angular width) of each
@@ -80,51 +109,64 @@ namespace dxtbx { namespace model {
          const scitbx::af::shared<double> &epochs,
          int batch_offset = 0)
         : image_range_(image_range),
-          oscillation_(oscillation),
           num_images_(1 + image_range_[1] - image_range_[0]),
-          batch_offset_(batch_offset),
-          exposure_times_(exposure_times),
-          epochs_(epochs) {
+          batch_offset_(batch_offset) {
       DXTBX_ASSERT(num_images_ >= 0);
-      if (exposure_times_.size() == 1 && num_images_ > 1) {
+      DXTBX_ASSERT(oscillation[1] >= 0);
+      properties_ = flex_table<scan_property_types>(num_images_);
+
+      if (exposure_times.size() == 1 && num_images_ > 1) {
         // assume same exposure time for all images - there is
         // probably a better way of coding this...
         scitbx::af::shared<double> expanded_exposure_times;
         expanded_exposure_times.reserve(num_images_);
         for (int j = 0; j < num_images_; j++) {
           expanded_exposure_times.push_back(exposure_times[0]);
-          exposure_times_ = expanded_exposure_times;
         }
+        set_property("exposure_time", expanded_exposure_times.const_ref());
+      } else {
+        set_property("exposure_time", exposure_times.const_ref());
       }
-      DXTBX_ASSERT(exposure_times_.size() == num_images_);
-      DXTBX_ASSERT(epochs_.size() == num_images_);
-      DXTBX_ASSERT(oscillation_[1] >= 0.0);
+      set_property("epochs", epochs.const_ref());
+      set_oscillation(oscillation);
+      DXTBX_ASSERT(properties_.is_consistent());
+    }
+
+    /**
+     * @param image_range The range of images covered by the scan
+     * @param properties_table Hash table of different properties for each image
+     * @param batch_offset A offset to add to the image number (for tracking of
+     *                     unique batch numbers for multi-crystal datasets)
+     */
+    Scan(vec2<int> image_range,
+         flex_table<scan_property_types> &properties_table,
+         int batch_offset = 0)
+        : image_range_(image_range),
+          num_images_(1 + image_range_[1] - image_range_[0]),
+          batch_offset_(batch_offset) {
+      DXTBX_ASSERT(num_images_ >= 0);
+      DXTBX_ASSERT(properties_table.is_consistent());
+      DXTBX_ASSERT(properties_table.size() == num_images_);
+      properties_ = properties_table;
     }
 
     /** Copy */
     Scan(const Scan &rhs)
         : image_range_(rhs.image_range_),
           valid_image_ranges_(rhs.valid_image_ranges_),
-          oscillation_(rhs.oscillation_),
           num_images_(rhs.num_images_),
-          batch_offset_(rhs.batch_offset_),
-          exposure_times_(scitbx::af::reserve(rhs.exposure_times_.size())),
-          epochs_(scitbx::af::reserve(rhs.epochs_.size())) {
-      std::copy(rhs.epochs_.begin(), rhs.epochs_.end(), std::back_inserter(epochs_));
-      std::copy(rhs.exposure_times_.begin(),
-                rhs.exposure_times_.end(),
-                std::back_inserter(exposure_times_));
+          batch_offset_(rhs.batch_offset_) {
+      boost::python::dict d;
+      set_properties(dxtbx::af::flex_table_suite::deepcopy(rhs.properties_, d));
     }
 
-    /** Virtual destructor */
     virtual ~Scan() {}
 
-    /** Get the image range */
     vec2<int> get_image_range() const {
       return image_range_;
     }
 
-    /** Get the map, not exported to python **/
+    /** Not exported to python **/
     ExpImgRangeMap get_valid_image_ranges_map() const {
       return valid_image_ranges_;
     }
@@ -155,144 +197,293 @@ namespace dxtbx { namespace model {
       valid_image_ranges_[i] = values;
     }
 
-    /** Get the batch offset */
     int get_batch_offset() const {
       return batch_offset_;
     }
 
-    /** Get the still flag */
-    bool is_still() const {
-      return std::abs(oscillation_[1]) < min_oscillation_width_;
+    bool contains(std::string property_name) const {
+      return properties_.contains(property_name);
     }
 
-    /** Get the batch number for a given image index */
+    template <typename T>
+    scitbx::af::shared<T> get_property(const typename T::key_type &key) const {
+      DXTBX_ASSERT(properties_.contains(key));
+      return properties_.get<T>(key);
+    }
+
+    template <typename T>
+    void set_property(const typename flex_table<scan_property_types>::key_type &key,
+                      const scitbx::af::const_ref<T> &value) {
+      DXTBX_ASSERT(value.size() == properties_.size());
+
+      // Edge case for oscillation where checks are needed
+      if (key == "oscillation") {
+        if (!std::is_same<T, double>::value) {
+          throw DXTBX_ERROR("Expected oscillation to have type double");
+        }
+        const scitbx::af::const_ref<double> &osc =
+          reinterpret_cast<const scitbx::af::const_ref<double> &>(value);
+
+        if (osc.size() == 1) {
+          DXTBX_ASSERT(properties_.contains("oscillation_width"));
+        } else {
+          DXTBX_ASSERT(Scan::oscillation_has_constant_width(osc));
+        }
+      }
+      dxtbx::af::flex_table_suite::setitem_column(properties_, key, value);
+    }
+
+    flex_table<scan_property_types> get_properties() const {
+      return properties_;
+    }
+
+    void set_properties(flex_table<scan_property_types> new_table) {
+      DXTBX_ASSERT(new_table.is_consistent());
+      DXTBX_ASSERT(new_table.size() == num_images_);
+
+      // Edge case for oscillation to ensure constant oscillation width
+      if (new_table.contains("oscillation")) {
+        scitbx::af::shared<double> osc = new_table.get<double>("oscillation");
+        DXTBX_ASSERT(Scan::oscillation_has_constant_width(osc));
+      }
+
+      properties_ = new_table;
+    }
+
+    bool is_still() const {
+      if (!properties_.contains("oscillation")) {
+        return true;
+      }
+      if (properties_.size() == 0) {
+        return true;
+      }
+      return std::abs(get_oscillation()[1]) < min_oscillation_width_;
+    }
+
     int get_batch_for_image_index(int index) const {
       return index + batch_offset_;
     }
 
-    /** Get the batch number for a given array index */
     int get_batch_for_array_index(int index) const {
       return index + batch_offset_ + 1;
     }
 
-    /** Get the batch range */
     vec2<int> get_batch_range() const {
       return vec2<int>(image_range_[0] + batch_offset_,
                        image_range_[1] + batch_offset_);
     }
 
-    /** Get the array range (zero based) */
+    /** (zero based) */
     vec2<int> get_array_range() const {
       return vec2<int>(image_range_[0] - 1, image_range_[1]);
     }
 
-    /** Get the oscillation */
     vec2<double> get_oscillation() const {
-      return oscillation_;
+      DXTBX_ASSERT(properties_.contains("oscillation"));
+      scitbx::af::shared<double> osc = properties_.get<double>("oscillation");
+
+      // Edge case for Scans with single image
+      if (properties_.size() == 1) {
+        DXTBX_ASSERT(properties_.contains("oscillation_width"));
+        scitbx::af::shared<double> osc_width =
+          properties_.get<double>("oscillation_width");
+        return vec2<double>(osc[0], osc_width[0]);
+      }
+
+      DXTBX_ASSERT(properties_.size() > 1);
+      return vec2<double>(osc[0], osc[1] - osc[0]);
     }
 
-    /** Get the number of images */
+    vec2<double> get_oscillation_in_deg() const {
+      vec2<double> osc = get_oscillation();
+      return vec2<double>(rad_as_deg(osc[0]), rad_as_deg(osc[1]));
+    }
+
+    scitbx::af::shared<double> get_oscillation_arr_in_deg() const {
+      DXTBX_ASSERT(properties_.contains("oscillation"));
+      scitbx::af::shared<double> osc = properties_.get<double>("oscillation");
+      scitbx::af::shared<double> osc_in_deg;
+      osc_in_deg.resize(osc.size());
+      std::transform(osc.begin(), osc.end(), osc_in_deg.begin(), rad_as_deg);
+      return osc_in_deg;
+    }
+
+    static bool oscillation_has_constant_width(
+      const scitbx::af::shared<double> oscillation_arr) {
+      DXTBX_ASSERT(oscillation_arr.size() > 0);
+
+      if (oscillation_arr.size() == 1) {
+        return true;
+      }
+      double eps = 1e-7;
+      double expected_width = oscillation_arr[1] - oscillation_arr[0];
+      for (std::size_t i = 0; i < oscillation_arr.size() - 1; ++i) {
+        double width = oscillation_arr[i + 1] - oscillation_arr[i];
+        if (std::abs(expected_width - width) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    static bool oscillation_has_constant_width(
+      const scitbx::af::const_ref<double> oscillation_arr) {
+      DXTBX_ASSERT(oscillation_arr.size() > 0);
+
+      if (oscillation_arr.size() == 1) {
+        return true;
+      }
+      double eps = 1e-7;
+      double expected_width = oscillation_arr[1] - oscillation_arr[0];
+      for (std::size_t i = 0; i < oscillation_arr.size() - 1; ++i) {
+        double width = oscillation_arr[i + 1] - oscillation_arr[i];
+        if (std::abs(expected_width - width) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     int get_num_images() const {
       return num_images_;
     }
 
-    /** Get the exposure time */
     scitbx::af::shared<double> get_exposure_times() const {
-      return exposure_times_;
+      DXTBX_ASSERT(properties_.contains("exposure_time"));
+      return properties_.get<double>("exposure_time");
     }
 
-    /** Get the image epochs */
     scitbx::af::shared<double> get_epochs() const {
-      return epochs_;
+      DXTBX_ASSERT(properties_.contains("epochs"));
+      return properties_.get<double>("epochs");
     }
 
-    /** Set the image range */
     void set_image_range(vec2<int> image_range) {
+      /*
+       * Known issue with this function
+       * https://github.com/cctbx/dxtbx/issues/497
+       */
       image_range_ = image_range;
       num_images_ = 1 + image_range_[1] - image_range_[0];
-      epochs_.resize(num_images_);
-      exposure_times_.resize(num_images_);
+
+      // Fix for dxtbx #497 for oscillation
+      if (properties_.contains("oscillation")) {
+        vec2<double> osc = get_oscillation();
+        properties_.resize(num_images_);
+        set_oscillation(osc);
+
+        // Edge case where num_images_ was 1 and has been increased
+        if (properties_.contains("oscillation_width") && num_images_ > 1) {
+          // oscillation_width only needed when num_images_ == 1
+          dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
+        }
+        DXTBX_ASSERT(num_images_ > 0);
+        return;
+      }
+
+      properties_.resize(num_images_);
       DXTBX_ASSERT(num_images_ > 0);
     }
 
-    /** Set the batch_offset */
     void set_batch_offset(int batch_offset) {
       batch_offset_ = batch_offset;
     }
 
-    /** Set the oscillation */
     void set_oscillation(vec2<double> oscillation) {
-      DXTBX_ASSERT(oscillation[1] >= 0.0);
-      oscillation_ = oscillation;
+      scitbx::af::shared<double> oscillation_arr(num_images_);
+      for (std::size_t i = 0; i < num_images_; ++i) {
+        oscillation_arr[i] = oscillation[0] + oscillation[1] * i;
+      }
+      // Edge case where the oscillation width needs to be stored
+      if (num_images_ == 1) {
+        scitbx::af::shared<double> oscillation_width_arr(num_images_);
+        oscillation_width_arr[0] = oscillation[1];
+        set_property("oscillation_width", oscillation_width_arr.const_ref());
+      }
+
+      set_property("oscillation", oscillation_arr.const_ref());
     }
 
-    /** Set the exposure time */
     void set_exposure_times(scitbx::af::shared<double> exposure_times) {
       DXTBX_ASSERT(exposure_times.size() == num_images_);
-      exposure_times_ = exposure_times;
+      set_property("exposure_time", exposure_times.const_ref());
+      DXTBX_ASSERT(properties_.is_consistent());
     }
 
-    /** Set the image epochs */
     void set_epochs(const scitbx::af::shared<double> &epochs) {
       DXTBX_ASSERT(epochs.size() == num_images_);
-      epochs_ = epochs;
+      set_property("epochs", epochs.const_ref());
+      DXTBX_ASSERT(properties_.is_consistent());
     }
 
     /** Get the total oscillation range of the scan */
     vec2<double> get_oscillation_range() const {
-      return vec2<double>(oscillation_[0],
-                          oscillation_[0] + num_images_ * oscillation_[1]);
+      vec2<double> osc = get_oscillation();
+      return vec2<double>(osc[0], osc[0] + num_images_ * osc[1]);
     }
 
     /** Get the image angle and oscillation width as a tuple */
     vec2<double> get_image_oscillation(int index) const {
-      return vec2<double>(oscillation_[0] + (index - image_range_[0]) * oscillation_[1],
-                          oscillation_[1]);
+      DXTBX_ASSERT(image_range_[0] <= index && index <= image_range_[1]);
+      vec2<double> osc = get_oscillation();
+      return vec2<double>(osc[0] + (index - image_range_[0]) * osc[1], osc[1]);
     }
 
-    /** Get the image epoch */
     double get_image_epoch(int index) const {
+      DXTBX_ASSERT(properties_.contains("epochs"));
       DXTBX_ASSERT(image_range_[0] <= index && index <= image_range_[1]);
-      return epochs_[index - image_range_[0]];
+      return properties_.get<double>("epochs")[index - image_range_[0]];
     }
 
     double get_image_exposure_time(int index) const {
+      DXTBX_ASSERT(properties_.contains("exposure_time"));
       DXTBX_ASSERT(image_range_[0] <= index && index <= image_range_[1]);
-      return exposure_times_[index - image_range_[0]];
+      return properties_.get<double>("exposure_time")[index - image_range_[0]];
     }
 
-    /** Check the scans are the same */
     bool operator==(const Scan &rhs) const {
-      double eps = 1e-7;
-      return image_range_ == rhs.image_range_ && batch_offset_ == rhs.batch_offset_
-             && std::abs(oscillation_[0] - rhs.oscillation_[0]) < eps
-             && std::abs(oscillation_[1] - rhs.oscillation_[1]) < eps
-             && exposure_times_.const_ref().all_approx_equal(
-               rhs.exposure_times_.const_ref(), eps)
-             && epochs_.const_ref().all_approx_equal(rhs.epochs_.const_ref(), eps);
+      if (image_range_ != rhs.image_range_ || batch_offset_ != rhs.batch_offset_) {
+        return false;
+      }
+
+      if (properties_.size() != rhs.properties_.size()) {
+        return false;
+      }
+      for (const_iterator it = properties_.begin(); it != properties_.end(); ++it) {
+        if (!rhs.properties_.contains(it->first)) {
+          return false;
+        }
+      }
+
+      // Need to create copies to get around const requirements
+      flex_table<scan_property_types> table1 =
+        flex_table<scan_property_types>(properties_);
+      flex_table<scan_property_types> table2 =
+        flex_table<scan_property_types>(rhs.properties_);
+      bool same_columns = dxtbx::af::flex_table_suite::compare_columns(table1, table2);
+      if (!same_columns) {
+        return false;
+      }
+
+      return true;
     }
 
-    /** Check the scans are not the same */
     bool operator!=(const Scan &scan) const {
       return !(*this == scan);
     }
 
-    /** Comparison operator */
     bool operator<(const Scan &scan) const {
       return image_range_[0] < scan.image_range_[0];
     }
 
-    /** Comparison operator */
     bool operator<=(const Scan &scan) const {
       return image_range_[0] <= scan.image_range_[0];
     }
 
-    /** Comparison operator */
     bool operator>(const Scan &scan) const {
       return image_range_[0] > scan.image_range_[0];
     }
 
-    /** Comparison operator */
     bool operator>=(const Scan &scan) const {
       return image_range_[0] >= scan.image_range_[0];
     }
@@ -302,48 +493,64 @@ namespace dxtbx { namespace model {
      */
 
     void append(const Scan &rhs, double scan_tolerance) {
-      DXTBX_ASSERT(is_still() == rhs.is_still());
-      if (is_still()) {
-        append_still(rhs);
-      } else {
-        append_rotation(rhs, scan_tolerance);
+      DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
+      DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
+
+      boost::python::dict d;
+      flex_table<scan_property_types> rhs_properties =
+        dxtbx::af::flex_table_suite::deepcopy(rhs.properties_, d);
+
+      // Explicitly check oscillation
+      if (properties_.contains("oscillation") && !is_still()) {
+        DXTBX_ASSERT(!rhs.is_still());
+        double osc_width = get_oscillation()[1];
+        double eps = scan_tolerance * std::abs(osc_width);
+        double rhs_osc_width = rhs.get_oscillation()[1];
+        DXTBX_ASSERT(eps > 0);
+        DXTBX_ASSERT(std::abs(osc_width) > min_oscillation_width_);
+        DXTBX_ASSERT(std::abs(osc_width - rhs_osc_width) < eps);
+        // sometimes ticking through 0 the first difference is not helpful
+        double diff_2pi = std::abs(mod_2pi(get_oscillation_range()[1])
+                                   - mod_2pi(rhs.get_oscillation_range()[0]));
+        double diff_abs =
+          std::abs(get_oscillation_range()[1] - rhs.get_oscillation_range()[0]);
+
+        DXTBX_ASSERT(std::min(diff_2pi, diff_abs) < eps * get_num_images());
+
+        /*
+        rhs oscillation arr updated before appending to reflect the larger
+        number of images of the appended Scan
+        */
+        const double rhs_osc_start = get_oscillation()[0] + num_images_ * osc_width;
+        scitbx::af::shared<double> rhs_osc_arr =
+          scitbx::af::shared<double>(rhs.num_images_, 0.0);
+        for (std::size_t i = 0; i < rhs_osc_arr.size(); ++i) {
+          rhs_osc_arr[i] = rhs_osc_start + i * osc_width;
+        }
+        dxtbx::af::flex_table_suite::setitem_column(
+          rhs_properties, "oscillation", rhs_osc_arr.const_ref());
+
+        /*
+        If properties table contains oscillation_width, remove as this
+        is only needed for scans where num_images_ == 1
+        */
+        if (properties_.contains("oscillation_width")) {
+          dxtbx::af::flex_table_suite::delitem_column(properties_, "oscillation_width");
+        }
+        if (rhs_properties.contains("oscillation_width")) {
+          dxtbx::af::flex_table_suite::delitem_column(rhs_properties,
+                                                      "oscillation_width");
+        }
       }
-    }
 
-    void append_still(const Scan &rhs) {
-      DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
-      DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
       image_range_[1] = rhs.image_range_[1];
       num_images_ = 1 + image_range_[1] - image_range_[0];
-      exposure_times_.reserve(exposure_times_.size() + exposure_times_.size());
-      epochs_.reserve(epochs_.size() + epochs_.size());
-      std::copy(rhs.exposure_times_.begin(),
-                rhs.exposure_times_.end(),
-                std::back_inserter(exposure_times_));
-      std::copy(rhs.epochs_.begin(), rhs.epochs_.end(), std::back_inserter(epochs_));
-    }
 
-    void append_rotation(const Scan &rhs, double scan_tolerance) {
-      double eps = scan_tolerance * std::abs(oscillation_[1]);
-      DXTBX_ASSERT(eps > 0);
-      DXTBX_ASSERT(std::abs(oscillation_[1]) > min_oscillation_width_);
-      DXTBX_ASSERT(image_range_[1] + 1 == rhs.image_range_[0]);
-      DXTBX_ASSERT(std::abs(oscillation_[1] - rhs.oscillation_[1]) < eps);
-      DXTBX_ASSERT(batch_offset_ == rhs.batch_offset_);
-      // sometimes ticking through 0 the first difference is not helpful
-      double diff_2pi = std::abs(mod_2pi(get_oscillation_range()[1])
-                                 - mod_2pi(rhs.get_oscillation_range()[0]));
-      double diff_abs =
-        std::abs(get_oscillation_range()[1] - rhs.get_oscillation_range()[0]);
-      DXTBX_ASSERT(std::min(diff_2pi, diff_abs) < eps * get_num_images());
-      image_range_[1] = rhs.image_range_[1];
-      num_images_ = 1 + image_range_[1] - image_range_[0];
-      exposure_times_.reserve(exposure_times_.size() + exposure_times_.size());
-      epochs_.reserve(epochs_.size() + epochs_.size());
-      std::copy(rhs.exposure_times_.begin(),
-                rhs.exposure_times_.end(),
-                std::back_inserter(exposure_times_));
-      std::copy(rhs.epochs_.begin(), rhs.epochs_.end(), std::back_inserter(epochs_));
+      for (const_iterator it = properties_.begin(); it != properties_.end(); ++it) {
+        DXTBX_ASSERT(rhs_properties.contains(it->first));
+      }
+      dxtbx::af::flex_table_suite::extend(properties_, rhs_properties);
+      DXTBX_ASSERT(properties_.size() == num_images_);
     }
 
     /**
@@ -373,18 +580,15 @@ namespace dxtbx { namespace model {
       return is_angle_in_range(get_oscillation_range(), angle);
     }
 
-    /** Check if the index is valid */
     bool is_image_index_valid(double index) const {
       return (image_range_[0] <= index && index <= image_range_[1]);
     }
 
-    /** Check if a given batch is valid */
     bool is_batch_valid(int batch) const {
       vec2<int> batch_range = get_batch_range();
       return (batch_range[0] <= batch && batch <= batch_range[1]);
     }
 
-    /** Check if the array index is valid */
     bool is_array_index_valid(double index) const {
       return is_image_index_valid(index + 1);
     }
@@ -395,7 +599,8 @@ namespace dxtbx { namespace model {
      * @returns The angle at the given frame
      */
     double get_angle_from_image_index(double index) const {
-      return oscillation_[0] + (index - image_range_[0]) * oscillation_[1];
+      vec2<double> oscillation = get_oscillation();
+      return oscillation[0] + (index - image_range_[0]) * oscillation[1];
     }
 
     /**
@@ -413,7 +618,8 @@ namespace dxtbx { namespace model {
      * @returns The frame at the given angle
      */
     double get_image_index_from_angle(double angle) const {
-      return image_range_[0] + (angle - oscillation_[0]) / oscillation_[1];
+      vec2<double> oscillation = get_oscillation();
+      return image_range_[0] + (angle - oscillation[0]) / oscillation[1];
     }
 
     /**
@@ -473,22 +679,37 @@ namespace dxtbx { namespace model {
     }
 
     Scan operator[](int index) const {
-      // Check index
       DXTBX_ASSERT((index >= 0) && (index < get_num_images()));
-      int image_index = get_image_range()[0] + index;
 
-      // Create the new epoch array
-      scitbx::af::shared<double> new_epochs(1);
-      new_epochs[0] = get_image_epoch(image_index);
-      scitbx::af::shared<double> new_exposure_times(1);
-      new_exposure_times[0] = get_image_exposure_time(image_index);
+      int image_index = image_range_[0] + index;
+      flex_table<scan_property_types> properties_slice =
+        get_properties_slice(boost::python::slice(index, index + 1));
 
-      // Return scan
-      return Scan(vec2<int>(image_index, image_index),
-                  get_image_oscillation(image_index),
-                  new_exposure_times,
-                  new_epochs,
-                  get_batch_offset());
+      return Scan(
+        vec2<int>(image_index, image_index), properties_slice, get_batch_offset());
+    }
+
+    flex_table<scan_property_types> get_properties_slice(
+      boost::python::slice const &slice) const {
+      /*
+        Wrapper for slicing the properties table to account for oscillation
+        width being lost in the slice if a Scan with a single image
+      */
+
+      if (properties_.contains("oscillation")) {
+        double oscillation_width = get_oscillation()[1];
+        flex_table<scan_property_types> sliced_properties =
+          dxtbx::af::flex_table_suite::getitem_slice(properties_, slice);
+        if (sliced_properties.size() == 1) {
+          scitbx::af::shared<double> oscillation_width_arr(1);
+          oscillation_width_arr[0] = oscillation_width;
+          dxtbx::af::flex_table_suite::setitem_column(
+            sliced_properties, "oscillation_width", oscillation_width_arr.const_ref());
+          return sliced_properties;
+        }
+        return sliced_properties;
+      }
+      return dxtbx::af::flex_table_suite::getitem_slice(properties_, slice);
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Scan &s);
@@ -496,26 +717,39 @@ namespace dxtbx { namespace model {
   private:
     vec2<int> image_range_;
     ExpImgRangeMap valid_image_ranges_; /** initialised as an empty map **/
-    vec2<double> oscillation_;
     double min_oscillation_width_ = 1e-7;
     int num_images_;
     int batch_offset_;
-    scitbx::af::shared<double> exposure_times_;
-    scitbx::af::shared<double> epochs_;
+    flex_table<scan_property_types> properties_;
   };
 
   /** Print Scan information */
   inline std::ostream &operator<<(std::ostream &os, const Scan &s) {
-    // Print oscillation as degrees!
-    vec2<double> oscillation = s.get_oscillation();
-    oscillation[0] = rad_as_deg(oscillation[0]);
-    oscillation[1] = rad_as_deg(oscillation[1]);
     os << "Scan:\n";
     os << "    number of images:   " << s.get_num_images() << "\n";
     os << "    image range:   " << s.get_image_range().const_ref() << "\n";
-    os << "    oscillation:   " << oscillation.const_ref() << "\n";
-    if (s.num_images_ > 0) {
-      os << "    exposure time: " << s.exposure_times_.const_ref()[0] << "\n";
+    flex_table<scan_property_types> properties = s.get_properties();
+    dxtbx::af::flex_table_suite::column_range_to_string_visitor visitor;
+    for (flex_table<scan_property_types>::const_iterator it = properties.begin();
+         it != properties.end();
+         ++it) {
+      if (it->first == "oscillation") {
+        vec2<double> oscillation = s.get_oscillation_in_deg();
+        os << "    oscillation:   " << oscillation.const_ref() << "\n";
+
+      } else if (it->first == "oscillation_width") {
+        /*Handled in oscillation case*/
+      } else if (it->first == "exposure_time") {
+        os << "    exposure time:    "
+           << properties.get<double>("exposure_time").const_ref()[0] << "\n";
+
+      } else if (it->first == "epochs") {
+        os << "    epoch:    " << properties.get<double>("epochs").const_ref()[0]
+           << "\n";
+
+      } else {
+        os << "    " << it->first << ":    " << it->second.apply_visitor(visitor);
+      }
     }
     return os;
   }

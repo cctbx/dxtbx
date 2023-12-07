@@ -1,3 +1,67 @@
+dxtbx 3.17.0 (2023-11-03)
+=========================
+
+Features
+--------
+
+- Add ``nxmx_writer``, a tool for converting any data dxtbx can read to NeXus data. (`#615 <https://github.com/cctbx/dxtbx/issues/615>`_)
+- Remove circular dependencies between dxtbx and ``cctbx.xfel``, by using the new ``serialtbx``. (`#627 <https://github.com/cctbx/dxtbx/issues/627>`_)
+- Set the beam probe to ``electron`` in both ``FormatNXmxED`` and ``FormatSER``. (`#661 <https://github.com/cctbx/dxtbx/issues/661>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.image_average``: Better handle detector gain and pixel data type. (`#660 <https://github.com/cctbx/dxtbx/issues/660>`_)
+- ``Beam.probe`` is no longer reset if any geometrical override is provided at import. (`#661 <https://github.com/cctbx/dxtbx/issues/661>`_)
+- Pilatus 4: Do not invert module size that is correctly written in master file. (`#663 <https://github.com/cctbx/dxtbx/issues/663>`_)
+- ``dxtbx.plot_detector_models``: Use noninteractive matpotlib backend, if using the ``pdf_file=`` option. (`#664 <https://github.com/cctbx/dxtbx/issues/664>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Legacy ``Datablock`` support has been removed, after being deprecated for several years. If you have any experiments that use these, they will need to be re-imported. (`#504 <https://github.com/cctbx/dxtbx/issues/504>`_)
+
+
+Misc
+----
+
+- `#622 <https://github.com/cctbx/dxtbx/issues/622>`_
+
+
+Dxtbx 3.17 (2023-11-03)
+=======================
+
+Features
+--------
+
+- Add nxmx_writer, a tool for converting any data dxtbx can read to NeXus data (`#615 <https://github.com/cctbx/dxtbx/issues/615>`_)
+- Remove circular dependencies between dxtbx and ``cctbx.xfel`` by using the new ``serialtbx``. (`#627 <https://github.com/cctbx/dxtbx/issues/627>`_)
+- Set the beam probe to ``electron`` in both ``FormatNXmxED`` and ``FormatSER``. (`#661 <https://github.com/cctbx/dxtbx/issues/661>`_)
+
+
+Bugfixes
+--------
+
+- Bugfix for dxtbx.image_average: handle detector gain and pixel data type better (`#660 <https://github.com/cctbx/dxtbx/issues/660>`_)
+- The beam probe is no longer reset if any geometrical override is provided at import. (`#661 <https://github.com/cctbx/dxtbx/issues/661>`_)
+- Pilatus 4: do not invert module size (is written correctly in master file) (`#663 <https://github.com/cctbx/dxtbx/issues/663>`_)
+- ``dxtbx.plot_detector_models``: use noninteractive matpotlib backend if using the pdf_file option (`#664 <https://github.com/cctbx/dxtbx/issues/664>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- dxtbx: remove legacy datablock object (obsolete for several years) (`#504 <https://github.com/cctbx/dxtbx/issues/504>`_)
+
+
+Misc
+----
+
+- `#622 <https://github.com/cctbx/dxtbx/issues/622>`_
+
+
 DIALS 3.16.1 (2023-09-05)
 =========================
 

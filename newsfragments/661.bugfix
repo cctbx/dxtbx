@@ -1,1 +1,0 @@
-The beam probe is no longer reset if any geometrical override is provided at import.
