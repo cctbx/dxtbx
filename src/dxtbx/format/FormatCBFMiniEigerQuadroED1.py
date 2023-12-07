@@ -131,7 +131,7 @@ class FormatCBFMiniEigerQuadroED1(FormatCBFMiniEiger):
             mask=[],
         )
 
-        # Here we set specifics, notably gain=3 and parallax correction and
+        # Here we set specifics, notably gain=3, also parallax correction and
         # QE correction are effectively disabled by setting the simple
         # pixel-to-millimetre strategy and a very high mu value.
         for panel in detector:
