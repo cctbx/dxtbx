@@ -54,7 +54,7 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         # values
         known_safe = [
             (1082, 1035),
-            (4371, 4150),
+            (4150, 4371),
         ]
         for module in nxdetector.modules:
             if not tuple(module.data_size) in known_safe:
