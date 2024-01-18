@@ -39,11 +39,19 @@ class FormatMRC(Format):
 
         with mrcfile.open(self._image_file, header_only=True) as mrc:
             h = mrc.header
-            xh = mrc.extended_header
+            try:
+                xh = mrc.indexed_extended_header
+            except AttributeError:
+                # mrcfile<1.5.0 does not have indexed_extended_header
+                xh = mrc.extended_header
 
         self._header_dictionary = self._unpack_header(h)
-        if len(xh) > 0:
-            self._extend_header(xh)
+        if len(xh) == int(h["nz"]):
+            try:
+                self._extend_header(xh)
+            except ValueError:
+                # Ignore problematic extended headers
+                pass
 
     @staticmethod
     def _unpack_header(header):
@@ -73,9 +81,11 @@ class FormatMRC(Format):
         self._header_dictionary["tilt_axis"] = xh["Tilt axis angle"][0]
         self._header_dictionary["pixelSpacing"] = xh["Pixel size X"][0]
         assert self._header_dictionary["pixelSpacing"] == xh["Pixel size Y"][0]
+        if self._header_dictionary["pixelSpacing"] == 0:
+            raise ValueError("Incorrect extended header")
         self._header_dictionary["acceleratingVoltage"] = xh["HT"][0]
         self._header_dictionary["camera"] = xh["Camera name"][0]
-        self._header_dictionary["binning"] = xh["Binning Width"][0]
+        self._header_dictionary["binning"] = max(xh["Binning Width"][0], 1)
         self._header_dictionary["noiseReduction"] = xh["Ceta noise reduction"][0]
         if b"Ceta" in self._header_dictionary["camera"]:
             # Does this ever differ from the Binning Width from the header?
