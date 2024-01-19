@@ -4,6 +4,7 @@ import re
 
 import h5py
 import nxmx
+from packaging import version
 
 from scitbx.array_family import flex
 
@@ -14,7 +15,6 @@ DATA_FILE_RE = re.compile(r"data_\d{6}")
 
 
 class FormatNXmxEigerFilewriter(FormatNXmx):
-
     _cached_file_handle = None
 
     @staticmethod
@@ -49,15 +49,14 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         if nxdetector.underload_value is None:
             nxdetector.underload_value = 0
 
-        # data_size is reversed - we should probably be more specific in when
-        # we do this, i.e. check data_size is in a list of known reversed
-        # values
-        known_safe = [
-            (1082, 1035),
-            (4150, 4371),
-        ]
-        for module in nxdetector.modules:
-            if not tuple(module.data_size) in known_safe:
+        # older firmware versions had the detector dimensions inverted
+        fw_version_string = (
+            fh["/entry/instrument/detector/detectorSpecific/eiger_fw_version"][()]
+            .decode()
+            .replace("release-", "")
+        )
+        if version.parse("2022.1.2") < version.parse(fw_version_string):
+            for module in nxdetector.modules:
                 module.data_size = module.data_size[::-1]
         return nxmx_obj
 
