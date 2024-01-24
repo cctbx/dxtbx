@@ -55,7 +55,7 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
             .decode()
             .replace("release-", "")
         )
-        if version.parse("2022.1.2") < version.parse(fw_version_string):
+        if version.parse("2022.1.2") > version.parse(fw_version_string):
             for module in nxdetector.modules:
                 module.data_size = module.data_size[::-1]
         return nxmx_obj
