@@ -11,7 +11,10 @@ import time
 from iotbx.detectors import SMVImage
 from scitbx import matrix
 
+from dials.array_family import flex
+
 from dxtbx.format.FormatSMV import FormatSMV
+from dxtbx.masking import mask_untrusted_rectangle
 from dxtbx.model.beam import Probe
 from dxtbx.model.detector import Detector
 
@@ -314,7 +317,9 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
 class FormatSMVTimePix_SU_516x516(FormatSMVTimePix_SU):
     """A class for reading SMV format images for the Timepix-based electron
     detector where the wider edge pixels have been split into three normal-sized
-    pixels. The whole 516*516 detector can then be described as a single panel"""
+    pixels. The whole 516*516 detector can then be described as a single panel.
+    We choose to mask out the edge pixels, as they do not correctly represent
+    reflection profiles."""
 
     @staticmethod
     def understand(image_file):
@@ -328,6 +333,15 @@ class FormatSMVTimePix_SU_516x516(FormatSMVTimePix_SU):
             return False
 
         return True
+
+    def get_static_mask(self):
+        """Return the static mask that excludes the central cross of pixels."""
+
+        mask = flex.bool(flex.grid((516, 516)), True)
+        mask_untrusted_rectangle(mask, 0, 516, 255, 261)
+        mask_untrusted_rectangle(mask, 255, 261, 0, 516)
+
+        return (mask,)
 
     def _goniometer(self):
         """Return a model for a simple single-axis goniometer. For this beamline
