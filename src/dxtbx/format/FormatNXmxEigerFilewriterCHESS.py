@@ -39,13 +39,11 @@ class FormatNXmxEigerFilewriterCHESS(FormatNXmxEigerFilewriter):
             .decode()
             .replace("release-", "")
         )
-        
-        #print(f'detected Eiger firmware version: {fw_version_string}')
+
         if version.parse(fw_version_string) < version.parse("2022.1.2"):
-            #print('swapping module size')
             for module in nxdetector.modules:
                 module.data_size = module.data_size[::-1]
         return nxmx_obj
-    
+
     def _goniometer(self):
         return self._goniometer_factory.known_axis((-1, 0, 0))
