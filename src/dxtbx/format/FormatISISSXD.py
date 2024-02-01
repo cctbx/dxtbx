@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from typing import List, Tuple
+
 import h5py
-from tying import List, Tuple
 
 import cctbx.array_family.flex as flex
 
