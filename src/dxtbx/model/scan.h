@@ -251,6 +251,9 @@ namespace dxtbx { namespace model {
     }
 
     bool is_still() const {
+      if (properties_.contains("time_of_flight")) {
+        return false;
+      }
       if (!properties_.contains("oscillation")) {
         return true;
       }
