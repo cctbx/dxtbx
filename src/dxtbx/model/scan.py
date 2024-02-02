@@ -113,32 +113,42 @@ class ScanFactory:
             The scan model
         """
 
-        def convert_oscillation_to_vec2(properties_dict):
+        def add_properties_table(scan_dict):
 
             """
-            If oscillation is in properties_dict,
-            shared<double> is converted to vec2<double> and
-            oscillation_width is removed (if present) to ensure
-            it is replaced correctly if updating t dict from d dict
+            Handles legacy case before Scan had a properties table.
+            Moves oscillation, epochs, and exposure times to a properties
+            table and adds this to scan_dict.
             """
 
-            if "oscillation" not in properties_dict:
-                assert "oscillation_width" not in properties_dict
-                return properties_dict
-            if "oscillation_width" in properties_dict:
-                assert "oscillation" in properties_dict
-                properties_dict["oscillation"] = (
-                    properties_dict["oscillation"][0],
-                    properties_dict["oscillation_width"][0],
-                )
-                del properties_dict["oscillation_width"]
-                return properties_dict
-            properties_dict["oscillation"] = (
-                properties_dict["oscillation"][0],
-                properties_dict["oscillation"][1] - properties_dict["oscillation"][0],
-            )
+            properties = {}
+            if scan_dict:
+                image_range = scan_dict["image_range"]
+                num_images = 1 + image_range[1] - image_range[0]
+                if "oscillation" in scan_dict:
+                    if num_images == 1:
+                        properties["oscillation_width"] = [scan_dict["oscillation"][1]]
+                        properties["oscillation"] = [scan_dict["oscillation"][0]]
 
-            return properties_dict
+                    else:
+                        osc = scan_dict["oscillation"]
+                        properties["oscillation"] = [
+                            osc[0] + osc[1] * i for i in range(num_images)
+                        ]
+                    del scan_dict["oscillation"]
+                if "exposure_time" in scan_dict:
+                    properties["exposure_time"] = scan_dict["exposure_time"]
+                    del scan_dict["exposure_time"]
+                if "epochs" in scan_dict:
+                    if len(scan_dict["epochs"]) != num_images:
+                        properties["epochs"] = [
+                            scan_dict["epochs"][0] for i in scan_dict["epochs"]
+                        ]
+                    else:
+                        properties["epochs"] = scan_dict["epochs"]
+                    del scan_dict["epochs"]
+            scan_dict["properties"] = properties
+            return scan_dict
 
         if d is None and t is None:
             return None
@@ -152,20 +162,17 @@ class ScanFactory:
             joint.update(d)
             joint["properties"] = properties
         elif "properties" in d:
+            joint = add_properties_table(joint)
             d_copy = d.copy()
-            d_copy["properties"] = convert_oscillation_to_vec2(
-                d_copy["properties"].copy()
-            )
-            joint.update(**d_copy["properties"])
+            joint["properties"].update(d_copy["properties"])
             del d_copy["properties"]
             joint.update(d_copy)
         elif "properties" in joint:
-            joint["properties"] = convert_oscillation_to_vec2(
-                joint["properties"].copy()
-            )
-            joint.update(**joint["properties"])
-            del joint["properties"]
-            joint.update(d)
+            d = add_properties_table(d)
+            d_copy = d.copy()
+            joint["properties"].update(d_copy["properties"])
+            del d_copy["properties"]
+            joint.update(d_copy)
         else:
             joint.update(d)
 

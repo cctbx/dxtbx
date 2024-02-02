@@ -471,3 +471,9 @@ def test_scan_is_still():
         (1, 10), properties={"other_property": list(range(10))}
     )
     assert scan.is_still()
+
+def test_scan_properties_from_dict():
+    image_range = (1, 10)
+    properties = {"test": list(range(10))}
+    scan = ScanFactory.make_scan_from_properties(image_range, properties)
+    assert scan == ScanFactory.from_dict(scan.to_dict())
