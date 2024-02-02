@@ -453,3 +453,10 @@ def test_print_scan():
     )
     expected_scan_string = "Scan:\n    number of images:   10\n    image range:   {1,10}\n    test_bool:    1 - 1\n    test_float:    0 - 18\n    test_int:    0 - 9\n    test_string:    test_0 - test_9\n    test_vec2_double:    {2,2} - {2,2}\n    test_vec3_double:    {1,1,1} - {1,1,1}\n"
     assert scan.__str__() == expected_scan_string
+
+
+def test_scan_properties_from_dict():
+    image_range = (1, 10)
+    properties = {"test": list(range(10))}
+    scan = ScanFactory.make_scan_from_properties(image_range, properties)
+    assert scan == ScanFactory.from_dict(scan.to_dict())
