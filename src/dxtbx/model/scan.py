@@ -113,7 +113,7 @@ class ScanFactory:
             The scan model
         """
 
-        def add_properties_table(scan_dict):
+        def add_properties_table(scan_dict, num_images):
 
             """
             Handles legacy case before Scan had a properties table.
@@ -123,8 +123,6 @@ class ScanFactory:
 
             properties = {}
             if scan_dict:
-                image_range = scan_dict["image_range"]
-                num_images = 1 + image_range[1] - image_range[0]
                 if "oscillation" in scan_dict:
                     if num_images == 1:
                         properties["oscillation_width"] = [scan_dict["oscillation"][1]]
@@ -133,22 +131,74 @@ class ScanFactory:
                     else:
                         osc = scan_dict["oscillation"]
                         properties["oscillation"] = [
-                            osc[0] + osc[1] * i for i in range(num_images)
+                            osc[0] + (osc[1] - osc[0]) * i for i in range(num_images)
                         ]
                     del scan_dict["oscillation"]
                 if "exposure_time" in scan_dict:
                     properties["exposure_time"] = scan_dict["exposure_time"]
                     del scan_dict["exposure_time"]
                 if "epochs" in scan_dict:
-                    if len(scan_dict["epochs"]) != num_images:
-                        properties["epochs"] = [
-                            scan_dict["epochs"][0] for i in scan_dict["epochs"]
-                        ]
-                    else:
-                        properties["epochs"] = scan_dict["epochs"]
+                    properties["epochs"] = scan_dict["epochs"]
                     del scan_dict["epochs"]
-            scan_dict["properties"] = properties
+            scan_dict["properties"] = make_properties_table_consistent(
+                properties, num_images
+            )
             return scan_dict
+
+        def make_properties_table_consistent(properties, num_images):
+
+            """
+            Handles legacy case before Scan had a properties table.
+            Ensures oscillation, epochs, and exposure times have the same length.
+            """
+
+            if not properties:
+                return properties
+
+            if "oscillation" in properties:
+                assert len(properties["oscillation"]) > 0
+
+                if num_images == 1 and "oscillation_width" not in properties:
+                    assert len(properties["oscillation"]) > 1
+                    properties["oscillation_width"] = [properties["oscillation"][1]]
+                    properties["oscillation"] = [properties["oscillation"][0]]
+                elif num_images > 1:
+                    osc_0 = properties["oscillation"][0]
+                    if "oscillation_width" in properties:
+                        osc_1 = properties["oscillation_width"][0]
+                        del properties["oscillation_width"]
+                    else:
+                        assert len(properties["oscillation"]) > 1
+                        osc_1 = (
+                            properties["oscillation"][1] - properties["oscillation"][0]
+                        )
+                    properties["oscillation"] = [
+                        osc_0 + osc_1 * i for i in range(num_images)
+                    ]
+
+            if "exposure_time" in properties:
+                assert len(properties["exposure_time"]) > 0
+
+                # Assume same exposure time for each image
+                properties["exposure_time"] = [
+                    properties["exposure_time"][0] for i in range(num_images)
+                ]
+
+            if "epochs" in properties:
+                assert len(properties["epochs"]) > 0
+                # If 1 epoch, assume increasing by epochs[0]
+                # Else assume increasing as epochs[1] - epochs[0]
+                if len(properties["epochs"]) == 1:
+                    properties["epochs"] = [
+                        properties["epochs"][0] + properties["epochs"][0] * i
+                        for i in range(num_images)
+                    ]
+                else:
+                    diff = properties["epochs"][1] - properties["epochs"][0]
+                    properties["epochs"] = [
+                        properties["epochs"][0] + i * diff for i in range(num_images)
+                    ]
+            return properties
 
         if d is None and t is None:
             return None
@@ -156,21 +206,33 @@ class ScanFactory:
 
         # Accounting for legacy cases where t or d does not
         # contain properties dict
+        num_images = None
+        if "image_range" in d:
+            num_images = 1 + d["image_range"][1] - d["image_range"][0]
+        elif "image_range" in joint:
+            num_images = 1 + joint["image_range"][1] - joint["image_range"][0]
+
         if "properties" in joint and "properties" in d:
             properties = t["properties"].copy()
             properties.update(d["properties"])
             joint.update(d)
             joint["properties"] = properties
         elif "properties" in d:
-            joint = add_properties_table(joint)
+            joint = add_properties_table(joint, num_images)
             d_copy = d.copy()
             joint["properties"].update(d_copy["properties"])
+            joint["properties"] = make_properties_table_consistent(
+                joint["properties"], num_images
+            )
             del d_copy["properties"]
             joint.update(d_copy)
         elif "properties" in joint:
-            d = add_properties_table(d)
+            d = add_properties_table(d, num_images)
             d_copy = d.copy()
             joint["properties"].update(d_copy["properties"])
+            joint["properties"] = make_properties_table_consistent(
+                joint["properties"], num_images
+            )
             del d_copy["properties"]
             joint.update(d_copy)
         else:
