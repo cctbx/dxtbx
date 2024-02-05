@@ -1,0 +1,6 @@
+Eiger support: following bug fix in DECTRIS file writer, invert the module 
+dimensions only for older firmware versions. See
+
+https://media.dectris.com/230203-Release_Notes-DECTRIS_EIGER2.pdf
+
+for reference (Corrected data size orientation)
