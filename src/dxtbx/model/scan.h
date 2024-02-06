@@ -112,7 +112,6 @@ namespace dxtbx { namespace model {
           num_images_(1 + image_range_[1] - image_range_[0]),
           batch_offset_(batch_offset) {
       DXTBX_ASSERT(num_images_ >= 0);
-      DXTBX_ASSERT(oscillation[1] >= 0);
       properties_ = flex_table<scan_property_types>(num_images_);
 
       if (exposure_times.size() == 1 && num_images_ > 1) {
