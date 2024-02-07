@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-import re
-
 import h5py
-import nxmx
-from packaging import version
 
 from dxtbx.format.FormatNXmxEigerFilewriter import FormatNXmxEigerFilewriter
 
