@@ -279,6 +279,7 @@ class FormatISISSXD(FormatHDF5):
             for panel in self._raw_data:
                 data = panel[:, :, index : index + 1]
                 data.reshape(flex.grid(panel.all()[0], panel.all()[1]))
+                data.matrix_transpose_in_place()
                 raw_data.append(data)
 
         else:
@@ -298,6 +299,7 @@ class FormatISISSXD(FormatHDF5):
                     ]
                 )
                 panel_data.reshape(flex.grid(panel_size[0], panel_size[1]))
+                panel_data.matrix_transpose_in_place()
                 raw_data.append(panel_data)
 
         return tuple(raw_data)
