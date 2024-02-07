@@ -54,3 +54,33 @@ class FormatNXmxDLSI19_2(FormatNXmxDLS):
         return GoniometerMaskerFactory.diamond_anvil_cell(
             goniometer, cone_opening_angle=math.radians(76)
         )
+
+    # workaround for negative rotation angles used in serial experiments
+    def _start(self):
+        self._static_mask = None
+
+        self._cached_file_handle = h5py.File(self._image_file, swmr=True)
+        nxmx_obj = self._get_nxmx(self._cached_file_handle)
+        nxentry = nxmx_obj.entries[0]
+        nxsample = nxentry.samples[0]
+        nxinstrument = nxentry.instruments[0]
+        nxdetector = nxinstrument.detectors[0]
+        nxbeam = nxinstrument.beams[0]
+        self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
+        self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
+        self._detector_model = dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)
+
+        self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
+        self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
+        self._bit_depth_readout = nxdetector.bit_depth_readout
+
+        if self._scan_model:
+            self._num_images = len(self._scan_model)
+        else:
+            nxdata = nxmx_obj.entries[0].data[0]
+            if nxdata.signal:
+                data = nxdata[nxdata.signal]
+            else:
+                data = list(nxdata.values())[0]
+            self._num_images, *_ = data.shape
