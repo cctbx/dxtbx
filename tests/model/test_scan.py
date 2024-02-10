@@ -460,3 +460,18 @@ def test_scan_properties_from_dict():
     properties = {"test": list(range(10))}
     scan = ScanFactory.make_scan_from_properties(image_range, properties)
     assert scan == ScanFactory.from_dict(scan.to_dict())
+
+    image_range = (1, 1)
+    properties = {"oscillation": [1.0], "oscillation_width": [0.5]}
+    scan = ScanFactory.make_scan_from_properties(image_range, properties)
+    assert scan == ScanFactory.from_dict(scan.to_dict())
+
+    scan = ScanFactory.from_dict(
+        {
+            "oscillation": [1.0, 0.5],
+            "image_range": [1, 1],
+            "exposure_time": [0.5],
+            "epochs": [1],
+        }
+    )
+    assert scan == ScanFactory.from_dict(scan.to_dict())
