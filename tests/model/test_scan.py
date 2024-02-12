@@ -455,6 +455,24 @@ def test_print_scan():
     assert scan.__str__() == expected_scan_string
 
 
+def test_scan_is_still():
+    scan = Scan()
+    assert scan.is_still()
+    scan = Scan((1, 1000), (0, 0.05))
+    assert not scan.is_still()
+    # Specifically test the bug from dxtbx#4 triggered by ending on 0°
+    scan = Scan((1, 1800), (-90, 0.05))
+    assert not scan.is_still()
+    scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"time_of_flight": list(range(10))}
+    )
+    assert not scan.is_still()
+    scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"other_property": list(range(10))}
+    )
+    assert scan.is_still()
+
+
 def test_scan_properties_from_dict():
     image_range = (1, 10)
     properties = {"test": list(range(10))}

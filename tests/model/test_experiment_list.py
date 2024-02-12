@@ -785,6 +785,14 @@ def test_experiment_is_still():
     # Specifically test the bug from dxtbx#4 triggered by ending on 0°
     experiment.scan = Scan((1, 1800), (-90, 0.05))
     assert not experiment.is_still()
+    experiment.scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"time_of_flight": list(range(10))}
+    )
+    assert not experiment.is_still()
+    experiment.scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"other_property": list(range(10))}
+    )
+    assert experiment.is_still()
 
 
 def check(el1, el2):
