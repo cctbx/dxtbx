@@ -155,6 +155,13 @@ class ScanFactory:
             if not properties:
                 return properties
 
+            property_length = len(next(iter(properties.values())))
+            all_same_length = all(
+                len(lst) == property_length for lst in properties.values()
+            )
+            if all_same_length and property_length == num_images:
+                return properties
+
             if "oscillation" in properties:
                 assert len(properties["oscillation"]) > 0
 
