@@ -214,7 +214,7 @@ def get_dxtbx_scan(
             steps = nxmx.ureg.Quantity(0, "degree")
 
         step = np.median(steps).to("degree")
-        if np.any(np.abs(steps - step) > (0.1 * step)):
+        if np.any(np.abs(steps - step) > abs(0.1 * step)):
             logger.warning(
                 "One or more recorded oscillation widths differ from the median "
                 "by more than 10%. The rotation axis of your goniometer may not "

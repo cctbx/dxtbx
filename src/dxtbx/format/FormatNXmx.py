@@ -93,6 +93,17 @@ class FormatNXmx(FormatNexus):
                 data = list(nxdata.values())[0]
             self._num_images, *_ = data.shape
 
+        # handle reversed rotation by inverting both the rotation angles
+        # and the rotation axis
+        if self._scan_model:
+            scan = self._scan_model
+            oscillation = scan.get_oscillation()
+
+            # FIXME this really should not be correct but it works in this one
+            # weird case
+            if oscillation[1] < 0:
+                self._scan_model.set_oscillation((-oscillation[0], -oscillation[1]))
+
     def _get_nxmx(self, fh: h5py.File):
         return nxmx.NXmx(fh)
 
