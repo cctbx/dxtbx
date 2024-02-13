@@ -103,7 +103,7 @@ class FormatNXmx(FormatNexus):
                 # invert the scan parameters so that the attitude of roation is positive
                 self._scan_model.set_oscillation((-oscillation[0], -oscillation[1]))
 
-                # invert the acis direction so that the universe is aligned
+                # invert the axis direction so that the universe is aligned
                 axes = self._goniometer_model.get_axes()
                 axis = self._goniometer_model.get_scan_axis()
                 axes[axis] = -1 * axes[axis][0], -1 * axes[axis][1], -1 * axes[axis][2]
