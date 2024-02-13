@@ -99,10 +99,15 @@ class FormatNXmx(FormatNexus):
             scan = self._scan_model
             oscillation = scan.get_oscillation()
 
-            # FIXME this really should not be correct but it works in this one
-            # weird case
             if oscillation[1] < 0:
+                # invert the scan parameters so that the attitude of roation is positive
                 self._scan_model.set_oscillation((-oscillation[0], -oscillation[1]))
+
+                # invert the axis direction so that the universe is aligned
+                axes = self._goniometer_model.get_axes()
+                axis = self._goniometer_model.get_scan_axis()
+                axes[axis] = -1 * axes[axis][0], -1 * axes[axis][1], -1 * axes[axis][2]
+                self._goniometer_model.set_axes(axes)
 
     def _get_nxmx(self, fh: h5py.File):
         return nxmx.NXmx(fh)
