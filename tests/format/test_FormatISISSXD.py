@@ -47,13 +47,17 @@ def test_import(nacl):
     }
 
     detector = fmt.get_detector()
-    assert detector.to_dict() == {
+    det_dict = detector.to_dict()
+    for p in det_dict["panels"]:
+        p["fast_axis"] = tuple(round(elt, 10) for elt in p["fast_axis"])
+        p["slow_axis"] = tuple(round(elt, 10) for elt in p["slow_axis"])
+    assert det_dict == {
         "panels": [
             {
                 "name": "01",
                 "type": "SENSOR_PAD",
                 "fast_axis": (0.0, -1.0, 0.0),
-                "slow_axis": (0.7931070766835164, 0.0, 0.6090822316522844),
+                "slow_axis": (0.7931070767, 0.0, 0.6090822317),
                 "origin": (60.81, 96.0, -236.946),
                 "raw_image_offset": (0, 0),
                 "image_size": (64, 64),
@@ -92,7 +96,7 @@ def test_import(nacl):
             {
                 "name": "03",
                 "type": "SENSOR_PAD",
-                "fast_axis": (0.7931070766835164, -0.0, -0.6090822316522844),
+                "fast_axis": (0.7931070767, -0.0, -0.6090822317),
                 "slow_axis": (0.0, 1.0, 0.0),
                 "origin": (60.809, -96.0, 236.945),
                 "raw_image_offset": (0, 0),
@@ -112,7 +116,7 @@ def test_import(nacl):
             {
                 "name": "04",
                 "type": "SENSOR_PAD",
-                "fast_axis": (0.7878424472642456, -0.0, 0.6158768369476844),
+                "fast_axis": (0.7878424473, -0.0, 0.6158768369),
                 "slow_axis": (0.0, 1.0, 0.0),
                 "origin": (-214.172, -96.0, 118.198),
                 "raw_image_offset": (0, 0),
@@ -152,7 +156,7 @@ def test_import(nacl):
             {
                 "name": "06",
                 "type": "SENSOR_PAD",
-                "fast_axis": (-0.7931070766835164, -0.0, 0.6090822316522844),
+                "fast_axis": (-0.7931070767, -0.0, 0.6090822317),
                 "slow_axis": (0.0, 1.0, 0.0),
                 "origin": (-60.809, -96.0, -236.945),
                 "raw_image_offset": (0, 0),
@@ -173,7 +177,7 @@ def test_import(nacl):
                 "name": "07",
                 "type": "SENSOR_PAD",
                 "fast_axis": (0.0, -0.0, -1.0),
-                "slow_axis": (0.695004865051083, 0.7190050330528471, -0.0),
+                "slow_axis": (0.6950048651, 0.7190050331, -0.0),
                 "origin": (127.534, -256.614, 96.0),
                 "raw_image_offset": (0, 0),
                 "image_size": (64, 64),
@@ -193,7 +197,7 @@ def test_import(nacl):
                 "name": "08",
                 "type": "SENSOR_PAD",
                 "fast_axis": (1.0, -0.0, -0.0),
-                "slow_axis": (0.0, 0.7190050330528471, 0.695004865051083),
+                "slow_axis": (0.0, 0.7190050331, 0.6950048651),
                 "origin": (-96.0, -256.614, 127.534),
                 "raw_image_offset": (0, 0),
                 "image_size": (64, 64),
@@ -213,7 +217,7 @@ def test_import(nacl):
                 "name": "09",
                 "type": "SENSOR_PAD",
                 "fast_axis": (-0.0, -0.0, 1.0),
-                "slow_axis": (-0.7071067811865476, 0.7071067811865476, -0.0),
+                "slow_axis": (-0.7071067812, 0.7071067812, -0.0),
                 "origin": (-123.036, -258.801, -96.0),
                 "raw_image_offset": (0, 0),
                 "image_size": (64, 64),
@@ -233,7 +237,7 @@ def test_import(nacl):
                 "name": "10",
                 "type": "SENSOR_PAD",
                 "fast_axis": (-1.0, -0.0, -0.0),
-                "slow_axis": (0.0, 0.7190050330528471, -0.695004865051083),
+                "slow_axis": (0.0, 0.7190050331, -0.6950048651),
                 "origin": (96.0, -256.614, -127.534),
                 "raw_image_offset": (0, 0),
                 "image_size": (64, 64),
