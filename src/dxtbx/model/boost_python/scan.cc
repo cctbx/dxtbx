@@ -76,7 +76,7 @@ namespace dxtbx { namespace model { namespace boost_python {
         value[0].attr("__class__").attr("__name__"));
 
       // Handled explicitly as it is in deg when serialised but rad in code
-      if (key == "oscillation") {
+      if (key == "oscillation" || key == "oscillation_width") {
         DXTBX_ASSERT(obj_type == "float");
         scitbx::af::shared<double> osc =
           boost::python::extract<scitbx::af::shared<double> >(value);
@@ -215,7 +215,14 @@ namespace dxtbx { namespace model { namespace boost_python {
     dxtbx::af::flex_table_suite::column_to_object_visitor visitor;
 
     for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
-      if (it->first == "oscillation") {  // Handled explicitly due to unit conversion
+      if (it->first
+          == "oscillation_width") {  // Handled explicitly due to unit conversion
+        vec2<double> osc_deg = obj.get_oscillation_in_deg();
+        boost::python::list lst = boost::python::list();
+        lst.append(osc_deg[1]);
+        properties_dict[it->first] = lst;
+      } else if (it->first
+                 == "oscillation") {  // Handled explicitly due to unit conversion
         properties_dict[it->first] =
           boost::python::tuple(obj.get_oscillation_arr_in_deg());
       } else {
