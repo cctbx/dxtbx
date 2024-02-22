@@ -1,3 +1,67 @@
+dxtbx 3.18.0 (2024-02-22)
+=========================
+
+Features
+--------
+
+- XTC Format has a new parameter, ``spectrum_required=``, to better handle spectra calibration for bad data. (`#674 <https://github.com/cctbx/dxtbx/issues/674>`_)
+- Add Bruker and miniCBF format readers for the ELDICO ED-1 electron diffractometer with DECTRIS QUADRO detector. (`#682 <https://github.com/cctbx/dxtbx/issues/682>`_)
+- ``FormatSMVTimePix_SU``: Always mask out the central cross of virtual pixels that have been reconstructed from wide edge pixels. (`#683 <https://github.com/cctbx/dxtbx/issues/683>`_)
+- Add format reader for ISIS SXD detector. (`#687 <https://github.com/cctbx/dxtbx/issues/687>`_)
+
+
+Bugfixes
+--------
+
+- Importing the (deprecated and removed) ``dxtbx.datablock`` module failed to display warning properly. (`#665 <https://github.com/cctbx/dxtbx/issues/665>`_)
+- Fix scan comparison for scan properties changes. (`#669 <https://github.com/cctbx/dxtbx/issues/669>`_)
+- Eiger support: Following bug fix in DECTRIS file writer, invert the module dimensions, but only for older firmware versions. (`#676 <https://github.com/cctbx/dxtbx/issues/676>`_)
+- ``FormatMRC``: Better handling of extended headers. (https://github.com/ccpem/mrcfile/issues/50), and extended headers are ignored if they contain junk values. (`#679 <https://github.com/cctbx/dxtbx/issues/679>`_)
+- Fixed `Scan.from_dict` bug where some properties were not correctly parsed. (`#688 <https://github.com/cctbx/dxtbx/issues/688>`_)
+- In DXTBX do not assert the rotation angles for images are positive, and invert
+  in import with an axis inversion if needed. (`#690 <https://github.com/cctbx/dxtbx/issues/690>`_)
+- Increase tolerance for a test comparison to avoid spurious failures. (`#696 <https://github.com/cctbx/dxtbx/issues/696>`_)
+- For ``dials.import``: use natural sorting on input data in preference to strict sorting (`#697 <https://github.com/cctbx/dxtbx/issues/697>`_)
+
+
+Misc
+----
+
+- `#620 <https://github.com/cctbx/dxtbx/issues/620>`_, `#667 <https://github.com/cctbx/dxtbx/issues/667>`_, `#670 <https://github.com/cctbx/dxtbx/issues/670>`_, `#689 <https://github.com/cctbx/dxtbx/issues/689>`_, `#691 <https://github.com/cctbx/dxtbx/issues/691>`_, `#694 <https://github.com/cctbx/dxtbx/issues/694>`_
+
+
+Dxtbx 3.18 (2024-02-22)
+=======================
+
+Features
+--------
+
+- Better handle spectra calibration for bad data in XTC format using new parameter: spectrum_required (`#674 <https://github.com/cctbx/dxtbx/issues/674>`_)
+- Add Bruker and miniCBF format readers for the ELDICO ED-1 electron diffractometer with DECTRIS QUADRO detector. (`#682 <https://github.com/cctbx/dxtbx/issues/682>`_)
+- ``FormatSMVTimePix_SU``: Always mask out the central cross of virtual pixels that have been reconstructed from wide edge pixels. (`#683 <https://github.com/cctbx/dxtbx/issues/683>`_)
+- Add format reader for ISIS SXD detector. (`#687 <https://github.com/cctbx/dxtbx/issues/687>`_)
+
+
+Bugfixes
+--------
+
+- Importing the (deprecated and removed) ``dxtbx.datablock`` module failed to display warning properly. (`#665 <https://github.com/cctbx/dxtbx/issues/665>`_)
+- Fix scan comparison for scan properties changes (`#669 <https://github.com/cctbx/dxtbx/issues/669>`_)
+- Eiger support: following bug fix in DECTRIS file writer, invert the module 
+  dimensions only for older firmware versions. See
+
+  https://media.dectris.com/230203-Release_Notes-DECTRIS_EIGER2.pdf
+
+  for reference (Corrected data size orientation) (`#676 <https://github.com/cctbx/dxtbx/issues/676>`_)
+- ``FormatMRC``: better handling of extended headers: padding is supported in mrcfile>=1.5.0 (https://github.com/ccpem/mrcfile/issues/50), and extended headers are ignored if they contain junk values. (`#679 <https://github.com/cctbx/dxtbx/issues/679>`_)
+
+
+Misc
+----
+
+- `#620 <https://github.com/cctbx/dxtbx/issues/620>`_, `#667 <https://github.com/cctbx/dxtbx/issues/667>`_, `#670 <https://github.com/cctbx/dxtbx/issues/670>`_, `#689 <https://github.com/cctbx/dxtbx/issues/689>`_, `#691 <https://github.com/cctbx/dxtbx/issues/691>`_
+
+
 dxtbx 3.17.0 (2023-11-03)
 =========================
 
