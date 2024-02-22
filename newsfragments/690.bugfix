@@ -1,0 +1,2 @@
+In DXTBX do not assert the rotation angles for images are positive, and invert
+in import with an axis inversion if needed.

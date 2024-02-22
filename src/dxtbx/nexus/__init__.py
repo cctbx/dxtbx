@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
-from typing import Literal, Optional, Tuple, cast
+from typing import Literal, Optional
 
 import h5py
 import numpy as np
@@ -214,7 +214,7 @@ def get_dxtbx_scan(
             steps = nxmx.ureg.Quantity(0, "degree")
 
         step = np.median(steps).to("degree")
-        if np.any(np.abs(steps - step) > (0.1 * step)):
+        if np.any(np.abs(steps - step) > abs(0.1 * step)):
             logger.warning(
                 "One or more recorded oscillation widths differ from the median "
                 "by more than 10%. The rotation axis of your goniometer may not "
@@ -389,7 +389,18 @@ def get_dxtbx_detector(
                 module.fast_pixel_direction.depends_on
             )
             A = nxmx.get_cumulative_transformation(dependency_chain)
-            origin = MCSTAS_TO_IMGCIF @ A[0, :3, 3]
+
+            origin = MCSTAS_TO_IMGCIF @ (
+                (
+                    module.fast_pixel_direction.offset.to("mm").magnitude
+                    if module.fast_pixel_direction.offset is not None
+                    else np.array([0.0, 0.0, 0.0])
+                    + module.slow_pixel_direction.offset.to("mm").magnitude
+                    if module.slow_pixel_direction.offset is not None
+                    else np.array([0.0, 0.0, 0.0])
+                )
+                + A[0, :3, 3]
+            )
 
             if (
                 origin[0] == 0
@@ -403,9 +414,12 @@ def get_dxtbx_detector(
                 origin -= nxdetector.beam_center_y.magnitude * pixel_size[1] * slow_axis
 
         # dxtbx requires image size in the order fast, slow - which is the reverse of what
-        # is stored in module.data_size
-        image_size = cast(Tuple[int, int], tuple(map(int, module.data_size[::-1])))
-        assert len(image_size) == 2
+        # is stored in module.data_size. Additionally, data_size can have more than 2
+        # dimensions, for multi-module detectors. So take the last two dimensions and reverse
+        # them.  Examples:
+        # [1,2,3]   --> (3, 2)
+        # [1,2]     --> (2, 1)
+        image_size = (int(module.data_size[-1]), int(module.data_size[-2]))
         underload = (
             float(nxdetector.underload_value)
             if nxdetector.underload_value is not None
@@ -479,13 +493,17 @@ def get_static_mask(
             pixel_mask = nxdetector.pixel_mask[index]
     except KeyError:
         return None
-    if pixel_mask is None or not pixel_mask.size or pixel_mask.ndim != 2:
+    if pixel_mask is None or not pixel_mask.size:
         return None
     all_slices = get_detector_module_slices(nxdetector)
-    return tuple(
-        flumpy.from_numpy(np.ascontiguousarray(pixel_mask[slices])) == 0
-        for slices in all_slices
-    )
+    all_mask_slices = []
+    for slices in all_slices:
+        mask_slice = flumpy.from_numpy(np.ascontiguousarray(pixel_mask[slices])) == 0
+        mask_slice.reshape(
+            flex.grid(mask_slice.all()[-2:])
+        )  # handle 3 or 4 dimension arrays
+        all_mask_slices.append(mask_slice)
+    return tuple(all_mask_slices)
 
 
 def _dataset_as_flex(
@@ -566,5 +584,8 @@ def get_raw_data(
         data_as_flex = _dataset_as_flex(
             sliced_outer, tuple(module_slices), bit_depth=bit_depth
         )
+        data_as_flex.reshape(
+            flex.grid(data_as_flex.all()[-2:])
+        )  # handle 3 or 4 dimension arrays
         all_data.append(data_as_flex)
     return tuple(all_data)

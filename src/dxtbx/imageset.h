@@ -41,6 +41,7 @@ using model::Goniometer;
 using model::Panel;
 using model::Scan;
 using scitbx::rad_as_deg;
+using scitbx::vec2;
 using scitbx::af::int2;
 
 namespace detail {

@@ -387,6 +387,11 @@ class TestImageSequence:
         with pytest.raises(RuntimeError):
             _ = sequence2[5]
 
+        # Check data access matches expected images from the slice
+        panel_data1 = sequence[3][0]
+        panel_data2 = sequence2[0][0]
+        assert panel_data1.all_eq(panel_data2)
+
         assert len(sequence2) == 4
         assert_can_get_detectorbase(sequence2, range(0, 4), 5)
         self.tst_get_models(sequence2, range(0, 4), 5)
@@ -396,11 +401,12 @@ class TestImageSequence:
         with pytest.raises(IndexError):
             _ = sequence[3:7:2]
 
+        # Batch offset should not affect slicing of imagesequence
         # Simulate a scan starting from image 0
         sequence_ = copy.deepcopy(sequence)
         sequence_.get_scan().set_batch_offset(-1)
         sequence3 = sequence_[3:7]
-        assert sequence3.get_array_range() == (4, 8)
+        assert sequence3.get_array_range() == (3, 7)
 
     @staticmethod
     def tst_paths(sequence, filenames1):

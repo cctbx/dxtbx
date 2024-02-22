@@ -11,6 +11,7 @@ dials = pytest.importorskip("dials")
 pytest.importorskip("h5py")
 
 
+@pytest.mark.skip(reason="Data erased from CM visit")
 @pytest.mark.parametrize(
     "master_h5,masked_count",
     [

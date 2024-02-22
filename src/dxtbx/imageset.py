@@ -149,7 +149,10 @@ class _:
             format_instance = self.get_format_class().get_instance(
                 self.get_path(index), **kwargs
             )
-        return format_instance.get_spectrum(self.indices()[index])
+        try:
+            return format_instance.get_spectrum(self.indices()[index])
+        except TypeError:
+            return format_instance.get_spectrum()
 
     def params(self):
         """Get the parameters"""
@@ -300,29 +303,12 @@ class _imagesequence:
         if not isinstance(item, slice):
             return self.get_corrected_data(item)
         else:
-            offset = self.get_scan().get_batch_offset()
             if item.step is not None:
                 raise IndexError("Sequences must be sequential")
 
-            # nasty workaround for https://github.com/dials/dials/issues/1153
-            # slices with -1 in them are meaningful :-/ so grab the original
-            # constructor arguments of the slice object.
-            # item.start and item.stop may have been compromised at this point.
-            if offset < 0:
-                start, stop, step = item.__reduce__()[1]
-                if start is None:
-                    start = 0
-                else:
-                    start -= offset
-                if stop is None:
-                    stop = len(self)
-                else:
-                    stop -= offset
-            else:
-                start = item.start or 0
-                stop = item.stop or (len(self) + offset)
-                start -= offset
-                stop -= offset
+            start = item.start or 0
+            stop = item.stop or len(self)
+
             if self.data().has_single_file_reader():
                 reader = self.reader().copy(self.reader().paths(), stop - start)
             else:

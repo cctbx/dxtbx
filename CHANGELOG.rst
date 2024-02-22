@@ -1,3 +1,148 @@
+dxtbx 3.17.0 (2023-11-03)
+=========================
+
+Features
+--------
+
+- Add ``nxmx_writer``, a tool for converting any data dxtbx can read to NeXus data. (`#615 <https://github.com/cctbx/dxtbx/issues/615>`_)
+- Remove circular dependencies between dxtbx and ``cctbx.xfel``, by using the new ``serialtbx``. (`#627 <https://github.com/cctbx/dxtbx/issues/627>`_)
+- Set the beam probe to ``electron`` in both ``FormatNXmxED`` and ``FormatSER``. (`#661 <https://github.com/cctbx/dxtbx/issues/661>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.image_average``: Better handle detector gain and pixel data type. (`#660 <https://github.com/cctbx/dxtbx/issues/660>`_)
+- ``Beam.probe`` is no longer reset if any geometrical override is provided at import. (`#661 <https://github.com/cctbx/dxtbx/issues/661>`_)
+- Pilatus 4: Do not invert module size that is correctly written in master file. (`#663 <https://github.com/cctbx/dxtbx/issues/663>`_)
+- ``dxtbx.plot_detector_models``: Use noninteractive matpotlib backend, if using the ``pdf_file=`` option. (`#664 <https://github.com/cctbx/dxtbx/issues/664>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Legacy ``Datablock`` support has been removed, after being deprecated for several years. If you have any experiments that use these, they will need to be re-imported. (`#504 <https://github.com/cctbx/dxtbx/issues/504>`_)
+
+
+Misc
+----
+
+- `#622 <https://github.com/cctbx/dxtbx/issues/622>`_
+
+
+Dxtbx 3.17 (2023-11-03)
+=======================
+
+Features
+--------
+
+- Add nxmx_writer, a tool for converting any data dxtbx can read to NeXus data (`#615 <https://github.com/cctbx/dxtbx/issues/615>`_)
+- Remove circular dependencies between dxtbx and ``cctbx.xfel`` by using the new ``serialtbx``. (`#627 <https://github.com/cctbx/dxtbx/issues/627>`_)
+- Set the beam probe to ``electron`` in both ``FormatNXmxED`` and ``FormatSER``. (`#661 <https://github.com/cctbx/dxtbx/issues/661>`_)
+
+
+Bugfixes
+--------
+
+- Bugfix for dxtbx.image_average: handle detector gain and pixel data type better (`#660 <https://github.com/cctbx/dxtbx/issues/660>`_)
+- The beam probe is no longer reset if any geometrical override is provided at import. (`#661 <https://github.com/cctbx/dxtbx/issues/661>`_)
+- Pilatus 4: do not invert module size (is written correctly in master file) (`#663 <https://github.com/cctbx/dxtbx/issues/663>`_)
+- ``dxtbx.plot_detector_models``: use noninteractive matpotlib backend if using the pdf_file option (`#664 <https://github.com/cctbx/dxtbx/issues/664>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- dxtbx: remove legacy datablock object (obsolete for several years) (`#504 <https://github.com/cctbx/dxtbx/issues/504>`_)
+
+
+Misc
+----
+
+- `#622 <https://github.com/cctbx/dxtbx/issues/622>`_
+
+
+DIALS 3.16.1 (2023-09-05)
+=========================
+
+Bugfixes
+--------
+
+- Fix situation where a bad ``Beam.probe`` could cause undefined behaviour. (`#656 <https://github.com/cctbx/dxtbx/issues/656>`_)
+- Fix performance regression loading large experiment lists containing profile/scaling models. (`#658 <https://github.com/cctbx/dxtbx/issues/658>`_)
+
+
+dxtbx 3.16.0 (2023-08-14)
+=========================
+
+Features
+--------
+
+- Add new Beam class ``dxtbx.model.PolychromaticBeam``, for polychromatic/multi-wavelength/wide bandpass experiments. (`#621 <https://github.com/cctbx/dxtbx/issues/621>`_)
+- Formats: Reflect move of Eiger detector from PETRA P14 to P13. (`#626 <https://github.com/cctbx/dxtbx/issues/626>`_)
+- The ``model.Beam`` object now has a ``probe`` value to keep track of the type of radiation. (`#647 <https://github.com/cctbx/dxtbx/issues/647>`_)
+- Formats: CBFMini support for the EIGER2 16M detector at CHESS beamline ID7B2, which has an inverted rotation axis. (`#649 <https://github.com/cctbx/dxtbx/issues/649>`_)
+- Formats: Support for Eiger 9M on ESRF ID23-2, which has an undeclared vertical goniometer. (`#651 <https://github.com/cctbx/dxtbx/issues/651>`_)
+- Formats: Partial support for the Rigaku Oxford Diffraction file format, including support for multi-axis goniometers and faster decompression. (`#645 <https://github.com/cctbx/dxtbx/issues/645>`_) (`#653 <https://github.com/cctbx/dxtbx/issues/653>`_)
+
+
+Bugfixes
+--------
+
+- Panel geometry definitions in PHIL are merged by panel id *before* constructing panels. (`#299 <https://github.com/cctbx/dxtbx/issues/299>`_)
+- ``flumpy``: Fix case where incorrect ``flex.vec2``, ``flex.vec3`` could be generated. (`#439 <https://github.com/cctbx/dxtbx/issues/439>`_)
+- NXmx files with multidimensional arrays (images, modules, or both) are now handled. (`#612 <https://github.com/cctbx/dxtbx/issues/612>`_)
+- Slicing of imageset objects is now consistently 0-based, including for the sliced data accessor. Previously, the data accessor had to be accessed with the original index offsets. (`#633 <https://github.com/cctbx/dxtbx/issues/633>`_)
+- Formats: Add fix for Eiger / NXmx data from DLS i19-2, to correctly assign the image bit depth. (`#652 <https://github.com/cctbx/dxtbx/issues/652>`_)
+
+
+Misc
+----
+
+- `#640 <https://github.com/cctbx/dxtbx/issues/640>`_, `#642 <https://github.com/cctbx/dxtbx/issues/642>`_, `#643 <https://github.com/cctbx/dxtbx/issues/643>`_, `#645 <https://github.com/cctbx/dxtbx/issues/645>`_, `#650 <https://github.com/cctbx/dxtbx/issues/650>`_, `#655 <https://github.com/cctbx/dxtbx/issues/655>`_
+
+
+DIALS 3.15.1 (2023-06-29)
+=========================
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Fix import overwritten by local variable. (`#641 <https://github.com/cctbx/dxtbx/issues/641>`_)
+
+
+dxtbx 3.15.0 (2023-06-13)
+=========================
+
+Features
+--------
+
+- Support for Bruker Photon detectors has been extended to include Photon-III. (`#637 <https://github.com/cctbx/dxtbx/issues/637>`_)
+
+
+Bugfixes
+--------
+
+- Rigaku Saturn SMV images with multi-axis crystal goniometers are now handledi, instead of being silently ignored. With thanks to James Hester for this contribution. (`#617 <https://github.com/cctbx/dxtbx/issues/617>`_)
+- FormatCBFFull: If rotation angles are decreasing, then invert the rotation axis as well as the angles, to be consistent. (`#623 <https://github.com/cctbx/dxtbx/issues/623>`_)
+- Bugfix for CCTBX bootstrapped environments, without conda. (`#630 <https://github.com/cctbx/dxtbx/issues/630>`_)
+
+
+Misc
+----
+
+- `#625 <https://github.com/cctbx/dxtbx/issues/625>`_, `#636 <https://github.com/cctbx/dxtbx/issues/636>`_, `#639 <https://github.com/cctbx/dxtbx/issues/639>`_
+
+
+DIALS 3.14.2 (2023-05-16)
+=========================
+
+Bugfixes
+--------
+
+- Compatibility fix for the DECTRIS Eiger FileWriter. Recent FileWriter versions split bit depth metadata into two separate items, ``bit_depth_readout`` from the NXmx standard, and the new ``bit_depth_image`` field. This adds support for the latter, and now passes the metadata through into image conversion. (`#632 <https://github.com/cctbx/dxtbx/issues/632>`_)
+
+
 dxtbx 3.14.0 (2023-04-12)
 =========================
 

@@ -112,17 +112,68 @@ class ScanFactory:
         Returns:
             The scan model
         """
+
+        def convert_oscillation_to_vec2(properties_dict):
+
+            """
+            If oscillation is in properties_dict,
+            shared<double> is converted to vec2<double> and
+            oscillation_width is removed (if present) to ensure
+            it is replaced correctly if updating t dict from d dict
+            """
+
+            if "oscillation" not in properties_dict:
+                assert "oscillation_width" not in properties_dict
+                return properties_dict
+            if "oscillation_width" in properties_dict:
+                assert "oscillation" in properties_dict
+                properties_dict["oscillation"] = (
+                    properties_dict["oscillation"][0],
+                    properties_dict["oscillation_width"][0],
+                )
+                del properties_dict["oscillation_width"]
+                return properties_dict
+            properties_dict["oscillation"] = (
+                properties_dict["oscillation"][0],
+                properties_dict["oscillation"][1] - properties_dict["oscillation"][0],
+            )
+
+            return properties_dict
+
         if d is None and t is None:
             return None
         joint = t.copy() if t else {}
-        joint.update(d)
 
-        if not isinstance(joint["exposure_time"], list):
+        # Accounting for legacy cases where t or d does not
+        # contain properties dict
+        if "properties" in joint and "properties" in d:
+            properties = t["properties"].copy()
+            properties.update(d["properties"])
+            joint.update(d)
+            joint["properties"] = properties
+        elif "properties" in d:
+            d_copy = d.copy()
+            d_copy["properties"] = convert_oscillation_to_vec2(
+                d_copy["properties"].copy()
+            )
+            joint.update(**d_copy["properties"])
+            del d_copy["properties"]
+            joint.update(d_copy)
+        elif "properties" in joint:
+            joint["properties"] = convert_oscillation_to_vec2(
+                joint["properties"].copy()
+            )
+            joint.update(**joint["properties"])
+            del joint["properties"]
+            joint.update(d)
+        else:
+            joint.update(d)
+
+        if "properties" not in d and not isinstance(joint["exposure_time"], list):
             joint["exposure_time"] = [joint["exposure_time"]]
         joint.setdefault("batch_offset", 0)  # backwards compatibility 20180205
         joint.setdefault("valid_image_ranges", {})  # backwards compatibility 20181113
 
-        # Create the model from the joint dictionary
         return Scan.from_dict(joint)
 
     @staticmethod
@@ -153,6 +204,11 @@ class ScanFactory:
             batch_offset,
             deg,
         )
+
+    @staticmethod
+    def make_scan_from_properties(image_range, properties, batch_offset=0, deg=True):
+
+        return Scan(tuple(map(int, image_range)), properties, batch_offset, deg)
 
     @staticmethod
     def single_file(filename, exposure_times, osc_start, osc_width, epoch):

@@ -12,13 +12,14 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <scitbx/array_family/flex_types.h>
-#include <scitbx/array_family/boost_python/ref_pickle_double_buffered.h>
 #include <scitbx/boost_python/slice.h>
 #include <scitbx/boost_python/utils.h>
 #include <dxtbx/array_family/flex_table.h>
 #include <scitbx/array_family/shared.h>
 #include <scitbx/array_family/versa.h>
 #include <dxtbx/error.h>
+
+#include "ref_pickle_double_buffered.h"
 
 namespace dxtbx { namespace af { namespace flex_table_suite {
 
@@ -329,6 +330,80 @@ namespace dxtbx { namespace af { namespace flex_table_suite {
     }
   };
 
+  struct column_range_to_string_visitor : public boost::static_visitor<std::string> {
+    template <typename U>
+    std::string operator()(const U &column) const {
+      std::ostringstream os;
+      os << column[0] << " - " << column[column.size() - 1] << "\n";
+      return os.str();
+    }
+  };
+
+  template <typename T>
+  struct compare_column_visitor : public boost::static_visitor<bool> {
+    T &self;
+    typename T::key_type key;
+    compare_column_visitor(T &self_, typename T::key_type key_)
+        : self(self_), key(key_) {}
+
+    template <typename U>
+    bool operator()(const U &other_column) const {
+      U self_column = self[key];
+      DXTBX_ASSERT(self_column.size() == other_column.size());
+      for (std::size_t i = 0; i < self_column.size(); ++i) {
+        if (self_column[i] != other_column[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    bool operator()(const scitbx::af::shared<double> &other_column) const {
+      scitbx::af::shared<double> self_column = self[key];
+      double eps = 1e-7;
+      DXTBX_ASSERT(self_column.size() == other_column.size());
+      for (std::size_t i = 0; i < self_column.size(); ++i) {
+        if (std::abs(self_column[i] - other_column[i]) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    bool operator()(const scitbx::af::shared<vec2<double> > &other_column) const {
+      scitbx::af::shared<vec2<double> > self_column = self[key];
+      double eps = 1e-7;
+      DXTBX_ASSERT(self_column.size() == other_column.size());
+      for (std::size_t i = 0; i < self_column.size(); ++i) {
+        if (std::abs(self_column[i][0] - other_column[i][0]) > eps) {
+          return false;
+        }
+        if (std::abs(self_column[i][1] - other_column[i][1]) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    bool operator()(const scitbx::af::shared<vec3<double> > &other_column) const {
+      scitbx::af::shared<vec3<double> > self_column = self[key];
+      double eps = 1e-7;
+      DXTBX_ASSERT(self_column.size() == other_column.size());
+      for (std::size_t i = 0; i < self_column.size(); ++i) {
+        if (std::abs(self_column[i][0] - other_column[i][0]) > eps) {
+          return false;
+        }
+        if (std::abs(self_column[i][1] - other_column[i][1]) > eps) {
+          return false;
+        }
+        if (std::abs(self_column[i][2] - other_column[i][2]) > eps) {
+          return false;
+        }
+      }
+      return true;
+    }
+  };
+
   /**
    * Initialise the column table from a list of (key, column) pairs
    * @param columns The list of columns
@@ -356,6 +431,22 @@ namespace dxtbx { namespace af { namespace flex_table_suite {
     typename T::mapped_type column = self[key].variant();
     column_to_object_visitor visitor;
     return column.apply_visitor(visitor);
+  }
+
+  template <typename T>
+  bool compare_columns(T &self, T &other) {
+    typedef typename T::const_iterator iterator;
+    // Implicitly assumed that self and other are the same size
+    DXTBX_ASSERT(self.nrows() == other.nrows());
+    bool same_column;
+    for (iterator it = other.begin(); it != other.end(); ++it) {
+      compare_column_visitor<T> visitor(self, it->first);
+      same_column = it->second.apply_visitor(visitor);
+      if (!same_column) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**

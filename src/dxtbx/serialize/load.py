@@ -24,22 +24,6 @@ def imageset(filename):
         return imageset_from_dict(json.load(infile), directory=directory)
 
 
-def datablock(filename, check_format=True):
-    """Load a given JSON or pickle file.
-
-    Params:
-      filename The input filename
-
-    Returns:
-      The datablock
-
-    """
-    # Resolve recursive import
-    from dxtbx.datablock import DataBlockFactory
-
-    return DataBlockFactory.from_serialized_format(filename, check_format=check_format)
-
-
 def crystal(infile):
     """Load the given JSON file.
 

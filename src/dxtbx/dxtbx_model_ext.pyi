@@ -22,6 +22,8 @@ from scitbx.array_family import shared as flex_shared
 # Attempt to use the stub typing for flex-inheritance
 from scitbx.array_family.flex import FlexPlain
 
+from dxtbx_model_ext import Probe  # type: ignore
+
 # TypeVar for the set of Experiment models that can be joint-accepted
 # - profile, imageset and scalingmodel are handled as 'object'
 TExperimentModel = TypeVar(
@@ -34,6 +36,14 @@ Vec6Float = Tuple[float, float, float, float, float, float]
 Vec9Float = Tuple[float, float, float, float, float, float, float, float, float]
 Vec2Int = Tuple[int, int]
 Vec4Int = Tuple[int, int, int, int]
+ScanPropertyTypes = Union[
+    flex.int,
+    flex.double,
+    flex.bool,
+    flex.std_string,
+    flex.vec2_double,
+    flex.vec3_double,
+]
 
 class BeamBase:
     @property
@@ -55,6 +65,10 @@ class BeamBase:
         self, points: Union[Tuple[Vec3Float], List[Vec3Float]]
     ) -> None: ...
     def get_sample_to_source_direction(self) -> Vec3Float: ...
+    def get_sample_to_source_distance(self) -> float: ...
+    def set_sample_to_source_distance(
+        self, sample_to_source_distance: float
+    ) -> None: ...
     def get_sigma_divergence(self) -> float: ...
     def set_sigma_divergence(self, sigma_divergence: float) -> None: ...
     def get_transmission(self) -> float: ...
@@ -108,10 +122,59 @@ class Beam(BeamBase):
         polarization_fraction: float,
         flux: float,
         transmission: float,
+        probe: Probe = ...,
+        deg: bool = ...,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        direction: Vec3Float,
+        wavelength: float,
+        divergence: float,
+        sigma_divergence: float,
+        polarization_normal: Vec3Float,
+        polarization_fraction: float,
+        flux: float,
+        transmission: float,
+        probe: Probe = ...,
+        sample_to_source_distance: float = ...,
         deg: bool = ...,
     ) -> None: ...
     @staticmethod
     def from_dict(data: Dict) -> Beam: ...
+    def to_dict(self) -> Dict: ...
+    @staticmethod
+    def get_probe_from_name(name: str) -> Probe: ...
+
+class PolychromaticBeam(Beam):
+    @overload
+    def __init__(self, beam: PolychromaticBeam) -> None: ...
+    @overload
+    def __init__(self, direction: Vec3Float) -> None: ...
+    @overload
+    def __init__(
+        self,
+        direction: Vec3Float,
+        divergence: float,
+        sigma_divergence: float,
+        deg: bool = ...,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        direction: Vec3Float,
+        divergence: float,
+        sigma_divergence: float,
+        polarization_normal: Vec3Float,
+        polarization_fraction: float,
+        flux: float,
+        transmission: float,
+        probe: Probe = ...,
+        sample_to_source_distance: float = ...,
+        deg: bool = ...,
+    ) -> None: ...
+    @staticmethod
+    def from_dict(data: Dict) -> PolychromaticBeam: ...
     def to_dict(self) -> Dict: ...
 
 class CrystalBase:
@@ -690,6 +753,14 @@ class Scan(ScanBase):
         batch_offset: int,
         deg: bool = ...,
     ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        image_range: Vec2Int,
+        properties_table: Dict,
+        batch_offset: int,
+        deg: bool = ...,
+    ) -> None: ...
     def append(self, other: Scan, scan_tolerance: float) -> None: ...
     @staticmethod
     def from_dict(data: Dict) -> Scan: ...
@@ -733,6 +804,22 @@ class Scan(ScanBase):
     def get_oscillation_range(self, deg: bool = ...) -> Vec2Float: ...
     def get_valid_image_ranges(self, i: str) -> List[Vec2Int]: ...
     def set_valid_image_ranges(self, i: str, ranges: List[Vec2Int]) -> None: ...
+    def get_properties(self) -> dict: ...
+    def set_properties(self, properties: dict) -> None: ...
+    def has_property(self, key: str) -> bool: ...
+    def get_property(self, key: str) -> ScanPropertyTypes: ...
+    @overload
+    def set_property(self, key: str, value: flex.double) -> None: ...
+    @overload
+    def set_property(self, key: str, value: flex.bool) -> None: ...
+    @overload
+    def set_property(self, key: str, value: flex.int) -> None: ...
+    @overload
+    def set_property(self, key: str, value: flex.std_string) -> None: ...
+    @overload
+    def set_property(self, key: str, value: flex.vec2_double) -> None: ...
+    @overload
+    def set_property(self, key: str, value: flex.vec3_double) -> None: ...
     @overload
     def is_angle_valid(self, angle: float, deg: bool = ...) -> bool: ...
     @overload

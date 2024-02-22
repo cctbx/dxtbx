@@ -11,7 +11,7 @@ Python_add_library( dxtbx_format_nexus_ext MODULE format/boost_python/nexus_ext.
 target_link_libraries( dxtbx_format_nexus_ext PRIVATE  Boost::python CCTBX::scitbx hdf5::hdf5 )
 
 Python_add_library( dxtbx_imageset_ext MODULE boost_python/imageset_ext.cc )
-target_link_libraries( dxtbx_imageset_ext PUBLIC Boost::python CCTBX::scitbx )
+target_link_libraries( dxtbx_imageset_ext PUBLIC Boost::python CCTBX::scitbx CCTBX::scitbx::boost_python )
 
 Python_add_library( dxtbx_format_image_ext
     MODULE

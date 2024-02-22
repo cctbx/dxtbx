@@ -3,23 +3,17 @@ from __future__ import annotations
 import sys
 
 import numpy as np
+import serialtbx.detector.cspad
+from serialtbx.detector import cspad
+from serialtbx.detector.xtc import env_distance
 
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
-from xfel.cftbx.detector.cspad_cbf_tbx import read_slac_metrology
-from xfel.cxi.cspad_ana.cspad_tbx import env_distance
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
-
-try:
-    from xfel.cftbx.detector import cspad_cbf_tbx
-    from xfel.cxi.cspad_ana import cspad_tbx
-except ImportError:
-    # xfel not configured
-    pass
 
 cspad_locator_str = """
   cspad {
@@ -92,7 +86,7 @@ class FormatXTCCspad(FormatXTC):
         run_number = event.run()
         run = self._psana_runs[run_number]
         det = self._get_psana_detector(run)
-        data = cspad_cbf_tbx.get_psana_corrected_data(
+        data = cspad.get_psana_corrected_data(
             det,
             event,
             use_default=self.params.cspad.use_psana_calib,
@@ -131,7 +125,7 @@ class FormatXTCCspad(FormatXTC):
         run = self.get_run_from_index(index)
         det = self._get_psana_detector(run)
         geom = det.pyda.geoaccess(run.run())
-        cob = read_slac_metrology(geometry=geom, include_asic_offset=True)
+        cob = cspad.read_slac_metrology(geometry=geom, include_asic_offset=True)
         distance = env_distance(
             self.params.detector_address[0], run.env(), self.params.cspad.detz_offset
         )
@@ -195,14 +189,12 @@ class FormatXTCCspad(FormatXTC):
                         - origin
                     )
                     p.set_local_frame(fast.elems, slow.elems, origin.elems)
-                    p.set_pixel_size(
-                        (cspad_cbf_tbx.pixel_size, cspad_cbf_tbx.pixel_size)
-                    )
-                    p.set_image_size(cspad_cbf_tbx.asic_dimension)
+                    p.set_pixel_size((cspad.pixel_size, cspad.pixel_size))
+                    p.set_image_size(cspad.asic_dimension)
                     p.set_trusted_range(
                         (
-                            cspad_tbx.cspad_min_trusted_value,
-                            cspad_tbx.cspad_saturated_value,
+                            serialtbx.detector.cspad.cspad_min_trusted_value,
+                            serialtbx.detector.cspad.cspad_saturated_value,
                         )
                     )
                     p.set_name(val)

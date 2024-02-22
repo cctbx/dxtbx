@@ -6,7 +6,6 @@ import os
 import sys
 from collections.abc import Sequence
 
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.patches import FancyArrowPatch
@@ -17,12 +16,11 @@ from libtbx.utils import Sorry
 from scitbx.matrix import col
 
 import dxtbx.util
-from dxtbx.datablock import DataBlockFactory
 from dxtbx.model.detector_helpers import get_detector_projection_2d_axes
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 usage = """Plot dxtbx detector models. Provide multiple json files if desired
-Example: dxtbx.plot_detector_models datablock1.json datablock2.json
+Example: dxtbx.plot_detector_models experiments1.json experiments2.json
 """
 
 
@@ -171,6 +169,12 @@ def run(args=None):
             except Exception:
                 raise Sorry("Unrecognized argument %s" % arg)
     params = phil_scope.fetch(sources=user_phil).extract()
+    if params.pdf_file:
+        import matplotlib
+
+        matplotlib.use("Agg")
+
+    import matplotlib.pyplot as plt
 
     fig = plt.figure()
     colormap = plt.cm.gist_ncar
@@ -181,16 +185,12 @@ def run(args=None):
 
         # read the data and get the detector models
         try:
-            datablocks = DataBlockFactory.from_json_file(file_name, check_format=False)
-            detectors = sum((db.unique_detectors() for db in datablocks), [])
-        except Exception:
-            try:
-                experiments = ExperimentListFactory.from_json_file(
-                    file_name, check_format=False
-                )
-            except ValueError:
-                experiments = ExperimentListFactory.from_filenames([file_name])
-            detectors = experiments.detectors()
+            experiments = ExperimentListFactory.from_json_file(
+                file_name, check_format=False
+            )
+        except ValueError:
+            experiments = ExperimentListFactory.from_filenames([file_name])
+        detectors = experiments.detectors()
         if not params.plot_all_detectors:
             detectors = detectors[0:1]
         for detector in detectors:
