@@ -12,6 +12,8 @@ import os
 import pickle
 from typing import Any, Callable, Generator, Iterable
 
+import natsort
+
 import dxtbx
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
@@ -1184,7 +1186,7 @@ def _openingpathiterator(pathnames: Iterable[str]):
     """
 
     # Store a tuple of (recurse, pathname) to track what was root level
-    paths = collections.deque((True, x) for x in sorted(pathnames))
+    paths = collections.deque((True, x) for x in natsort.natsorted(pathnames))
 
     while paths:
         # Get the next path from the queue
