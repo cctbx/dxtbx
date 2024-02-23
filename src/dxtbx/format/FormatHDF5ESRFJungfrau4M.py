@@ -25,9 +25,10 @@ class FormatHDF5ESRFJungfrau4M(FormatHDF5):
             if "instrument" not in h5_handle[key]:
                 return False
             # instrument name is of form jungfrau4m_rr[X]_smx where X is empty, 4 or another number
-            if not h5_handle[key]["instrument"].startswith("jungfrau4m_rr"):
+            instrument = list(h5_handle[key]["instrument"].keys())[0]
+            if not instrument.startswith("jungfrau4m_rr"):
                 return False
-            if not h5_handle[key]["instrument"].endswith("smx"):
+            if not instrument.endswith("smx"):
                 return False
         return True
 
@@ -36,62 +37,31 @@ class FormatHDF5ESRFJungfrau4M(FormatHDF5):
         image_file = self.get_image_file()
         self._h5_handle = h5py.File(image_file, "r")
         self.key = list(self._h5_handle.keys())[0]
-        self.n_images = self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-            "data"
-        ].shape[0]
-        self.adus_per_photon = self._h5_handle[self.key]["instrument"][
-            "jungfrau4m_rr_smx"
-        ]["detector_information"]["adus_per_photon"]
-        self.image_size = tuple(
-            self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"]["data"].shape[
-                1:
-            ]
-        )
-        wavelength = self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-            "beam"
-        ]["incident_wavelength"][()]
+        self.instrument_name = list(self._h5_handle[self.key]["instrument"].keys())[0]
+        instrument = self._h5_handle[self.key]["instrument"][self.instrument_name]
+        self.n_images = instrument["data"].shape[0]
+        self.adus_per_photon = instrument["detector_information"]["adus_per_photon"]
+        self.image_size = tuple(instrument["data"].shape[1:])
+        wavelength = instrument["beam"]["incident_wavelength"][()]
         x_pixel_size = (
-            self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-                "detector_information"
-            ]["x_pixel_size"][()]
-            * 1000
+            instrument["detector_information"]["x_pixel_size"][()] * 1000
         )  # convert m to mm
         y_pixel_size = (
-            self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-                "detector_information"
-            ]["y_pixel_size"][()]
-            * 1000
+            instrument["detector_information"]["y_pixel_size"][()] * 1000
         )  # convert m to mm
         distance = (
-            self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-                "detector_information"
-            ]["detector_distance"][()]
-            * 1000
+            instrument["detector_information"]["detector_distance"][()] * 1000
         )  # convert m to mm
-        beam_center_x = self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-            "detector_information"
-        ]["beam_center_x"][
-            ()
-        ]  # in px
-        beam_center_y = self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-            "detector_information"
-        ]["beam_center_y"][
-            ()
-        ]  # in px
+        beam_center_x = instrument["detector_information"]["beam_center_x"][()]  # in px
+        beam_center_y = instrument["detector_information"]["beam_center_y"][()]  # in px
 
         beam_center_x *= x_pixel_size
         beam_center_y *= y_pixel_size
         trusted_range = (
-            self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-                "detector_information"
-            ]["underload_value"][()],
-            self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-                "detector_information"
-            ]["saturation_value"][()],
+            instrument["detector_information"]["underload_value"][()],
+            instrument["detector_information"]["saturation_value"][()],
         )
-        exposure_time = self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
-            "acquisition"
-        ]["exposure_time"][()]
+        exposure_time = instrument["acquisition"]["exposure_time"][()]
 
         self._detector_model = self._detector_factory.simple(
             sensor="UNKNOWN",
@@ -147,7 +117,7 @@ class FormatHDF5ESRFJungfrau4M(FormatHDF5):
 
     def get_static_mask(self):
         if FormatHDF5ESRFJungfrau4M._cached_mask is None:
-            mask = self._h5_handle[self.key]["instrument"]["jungfrau4m_rr_smx"][
+            mask = self._h5_handle[self.key]["instrument"][self.instrument_name][
                 "detector_information"
             ]["pixel_mask"]
             mask = flumpy.from_numpy(mask[()])
