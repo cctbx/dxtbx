@@ -303,15 +303,34 @@ def set_detector_distance(detector, distance):
     """
     Set detector origin from distance along normal
     """
-    assert len(detector) == 1
-    normal = matrix.col(detector[0].get_normal())
-    origin = matrix.col(detector[0].get_origin())
-    d = origin.dot(normal)
-    x = origin - d * normal
-    origin = distance * normal + x
-    fast_axis = detector[0].get_fast_axis()
-    slow_axis = detector[0].get_slow_axis()
-    detector[0].set_frame(fast_axis, slow_axis, origin)
+    # If the detector has a hierarchy, just update the root note
+    try:
+        h = detector.hierarchy()
+        normal = matrix.col(h.get_normal())
+        origin = matrix.col(h.get_origin())
+        d = origin.dot(normal)
+        x = origin - d * normal
+        origin = distance * normal + x
+        fast_axis = h.get_fast_axis()
+        slow_axis = h.get_slow_axis()
+        h.set_frame(fast_axis, slow_axis, origin)
+    except AttributeError:
+        # Check all panels are at the same distance and share the same normal
+        dists = [p.get_distance() for p in detector]
+        norm_vecs = [p.get_normal() for p in detector]
+        assert all(v == norm_vecs[0] for v in norm_vecs[1:]) and all(
+            d == dists[0] for d in dists
+        )
+
+        for panel in detector:
+            normal = matrix.col(panel.get_normal())
+            origin = matrix.col(panel.get_origin())
+            d = origin.dot(normal)
+            x = origin - d * normal
+            origin = distance * normal + x
+            fast_axis = panel.get_fast_axis()
+            slow_axis = panel.get_slow_axis()
+            panel.set_frame(fast_axis, slow_axis, origin)
 
 
 def get_detector_projection_2d_axes(
