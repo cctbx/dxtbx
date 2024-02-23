@@ -18,10 +18,13 @@
 #include <scitbx/constants.h>
 #include <dxtbx/model/scan.h>
 #include <dxtbx/model/boost_python/to_from_dict.h>
+#include <dxtbx/array_family/flex_table.h>
+#include <dxtbx/array_family/flex_table_suite.h>
+#include <algorithm>
 
 namespace dxtbx { namespace model { namespace boost_python {
 
-  using namespace boost::python;
+  using dxtbx::model::scan_property_types;
   using scitbx::deg_as_rad;
   using scitbx::rad_as_deg;
 
@@ -37,19 +40,141 @@ namespace dxtbx { namespace model { namespace boost_python {
     return angles;
   }
 
+  static scitbx::af::shared<double> deg_as_rad(
+    scitbx::af::shared<double> angles_in_deg) {
+    scitbx::af::shared<double> angles_in_rad;
+    angles_in_rad.resize(angles_in_deg.size());
+    std::transform(angles_in_deg.begin(),
+                   angles_in_deg.end(),
+                   angles_in_rad.begin(),
+                   scitbx::deg_as_rad);
+    return angles_in_rad;
+  }
+
   std::string scan_to_string(const Scan &scan) {
     std::stringstream ss;
     ss << scan;
     return ss.str();
   }
 
+  flex_table<scan_property_types> extract_properties_table(
+    boost::python::dict properties_dict,
+    int num_images,
+    bool convert_oscillation_to_rad = false) {
+    boost::python::list keys = properties_dict.keys();
+    boost::python::list values = boost::python::list(properties_dict.values());
+
+    flex_table<scan_property_types> properties =
+      flex_table<scan_property_types>(num_images);
+
+    // Extract each dictionary value based on Python type
+    for (int i = 0; i < len(keys); ++i) {
+      std::string key = boost::python::extract<std::string>(keys[i]);
+      boost::python::object value = values[i];
+      DXTBX_ASSERT(len(value) == num_images);
+      std::string obj_type = boost::python::extract<std::string>(
+        value[0].attr("__class__").attr("__name__"));
+
+      // Handled explicitly as it is in deg when serialised but rad in code
+      if (key == "oscillation" || key == "oscillation_width") {
+        DXTBX_ASSERT(obj_type == "float");
+        scitbx::af::shared<double> osc =
+          boost::python::extract<scitbx::af::shared<double> >(value);
+        DXTBX_ASSERT(Scan::oscillation_has_constant_width(osc));
+
+        if (convert_oscillation_to_rad) {
+          properties[key] = deg_as_rad(osc);
+        } else {
+          properties[key] = osc;
+        }
+      } else if (obj_type == "int") {
+        properties[key] = boost::python::extract<scitbx::af::shared<int> >(value);
+      } else if (obj_type == "float") {
+        properties[key] = boost::python::extract<scitbx::af::shared<double> >(value);
+      } else if (obj_type == "bool") {
+        properties[key] = boost::python::extract<scitbx::af::shared<bool> >(value);
+      } else if (obj_type == "str") {
+        properties[key] =
+          boost::python::extract<scitbx::af::shared<std::string> >(value);
+
+      } else if (obj_type == "tuple") {  // vec2<double> or vec3<double>
+        std::string element_type = boost::python::extract<std::string>(
+          value[0][0].attr("__class__").attr("__name__"));
+        int tuple_size = len(value[0]);
+
+        if (tuple_size == 2) {  // vec2<double>
+          if (element_type == "float") {
+            properties[key] =
+              boost::python::extract<scitbx::af::shared<vec2<double> > >(value);
+          } else {
+            throw DXTBX_ERROR("Unknown type for column name " + key);
+          }
+        } else if (tuple_size == 3) {  // vec3<double>
+          if (element_type == "float") {
+            properties[key] =
+              boost::python::extract<scitbx::af::shared<vec3<double> > >(value);
+          } else {
+            throw DXTBX_ERROR("Unknown type for column name " + key);
+          }
+        } else {
+          throw DXTBX_ERROR("Unknown type for column name " + key);
+        }
+      } else {
+        throw DXTBX_ERROR("Unknown type for column name " + key);
+      }
+    }
+
+    return properties;
+  }
+
+  void set_properties_table_from_dict(Scan &obj, boost::python::dict properties_dict) {
+    int num_images = len(boost::python::list(properties_dict.values())[0]);
+    flex_table<scan_property_types> properties =
+      extract_properties_table(properties_dict, num_images);
+    obj.set_properties(properties);
+  }
+
   struct ScanPickleSuite : boost::python::pickle_suite {
+    typedef flex_table<scan_property_types>::const_iterator const_iterator;
+
     static boost::python::tuple getinitargs(const Scan &obj) {
-      return boost::python::make_tuple(obj.get_image_range(),
-                                       rad_as_deg(obj.get_oscillation()),
-                                       obj.get_exposure_times(),
-                                       obj.get_epochs(),
-                                       obj.get_batch_offset());
+      return boost::python::make_tuple(obj.get_image_range(), obj.get_batch_offset());
+    }
+    static boost::python::tuple getstate(const Scan &obj) {
+      flex_table<scan_property_types> properties = obj.get_properties();
+      boost::python::dict properties_dict;
+      dxtbx::af::flex_table_suite::column_to_object_visitor visitor;
+      for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
+        properties_dict[it->first] = it->second.apply_visitor(visitor);
+      }
+
+      return boost::python::make_tuple(
+        properties.nrows(), properties.ncols(), properties_dict);
+    }
+
+    static void setstate(Scan &obj, boost::python::tuple state) {
+      DXTBX_ASSERT(boost::python::len(state) == 3);
+      std::size_t nrows = boost::python::extract<std::size_t>(state[0]);
+      std::size_t ncols = boost::python::extract<std::size_t>(state[1]);
+      boost::python::dict properties_dict =
+        boost::python::extract<boost::python::dict>(state[2]);
+
+      DXTBX_ASSERT(len(properties_dict) == ncols);
+      flex_table<scan_property_types> properties =
+        extract_properties_table(properties_dict, nrows);
+      obj.set_properties(properties);
+    }
+  };
+
+  template <typename T>
+  struct scan_property_table_wrapper
+      : public dxtbx::af::flex_table_suite::flex_table_wrapper<T> {
+    typedef dxtbx::af::flex_table_suite::flex_table_wrapper<T> base_type;
+    typedef typename base_type::flex_table_type flex_table_type;
+    typedef typename base_type::class_type class_type;
+
+    static class_type wrap(const char *name) {
+      return base_type::wrap(name);
     }
   };
 
@@ -67,14 +192,47 @@ namespace dxtbx { namespace model { namespace boost_python {
     return dictionary;
   }
 
+  boost::python::dict get_properties_dict(const Scan &obj) {
+    boost::python::dict properties_dict;
+    flex_table<scan_property_types> properties = obj.get_properties();
+
+    dxtbx::af::flex_table_suite::column_to_object_visitor visitor;
+    for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
+      properties_dict[it->first] =
+        boost::python::tuple(it->second.apply_visitor(visitor));
+    }
+    return properties_dict;
+  }
+
   template <>
   boost::python::dict to_dict<Scan>(const Scan &obj) {
     boost::python::dict result;
     result["image_range"] = obj.get_image_range();
     result["batch_offset"] = obj.get_batch_offset();
-    result["oscillation"] = rad_as_deg(obj.get_oscillation());
-    result["exposure_time"] = boost::python::list(obj.get_exposure_times());
-    result["epochs"] = boost::python::list(obj.get_epochs());
+
+    flex_table<scan_property_types> properties = obj.get_properties();
+    boost::python::dict properties_dict;
+    dxtbx::af::flex_table_suite::column_to_object_visitor visitor;
+
+    for (const_iterator it = properties.begin(); it != properties.end(); ++it) {
+      if (it->first
+          == "oscillation_width") {  // Handled explicitly due to unit conversion
+        vec2<double> osc_deg = obj.get_oscillation_in_deg();
+        boost::python::list lst = boost::python::list();
+        lst.append(osc_deg[1]);
+        properties_dict[it->first] = lst;
+      } else if (it->first
+                 == "oscillation") {  // Handled explicitly due to unit conversion
+        properties_dict[it->first] =
+          boost::python::tuple(obj.get_oscillation_arr_in_deg());
+      } else {
+        properties_dict[it->first] =
+          boost::python::list(it->second.apply_visitor(visitor));
+      }
+    }
+
+    result["properties"] = properties_dict;
+
     boost::python::dict valid_image_ranges =
       MaptoPythonDict(obj.get_valid_image_ranges_map());
     result["valid_image_ranges"] = valid_image_ranges;
@@ -130,36 +288,61 @@ namespace dxtbx { namespace model { namespace boost_python {
     return result;
   }
 
+  scitbx::af::shared<double> make_oscillation_arr(std::size_t num_images,
+                                                  vec2<double> oscillation) {
+    scitbx::af::shared<double> oscillation_arr((scitbx::af::reserve(num_images)));
+    for (std::size_t i = 0; i < num_images; ++i) {
+      oscillation_arr.push_back(oscillation[0] + oscillation[1] * i);
+    }
+    return oscillation_arr;
+  }
+
   template <>
   Scan *from_dict<Scan>(boost::python::dict obj) {
     vec2<int> ir = boost::python::extract<vec2<int> >(obj["image_range"]);
     int bo = boost::python::extract<int>(obj["batch_offset"]);
-    vec2<double> osc =
-      deg_as_rad(boost::python::extract<vec2<double> >(obj["oscillation"]));
     DXTBX_ASSERT(ir[1] >= ir[0]);
-    std::size_t num = ir[1] - ir[0] + 1;
-    Scan *scan =
-      new Scan(ir,
-               osc,
-               make_exposure_times(num,
-                                   boost::python::extract<boost::python::list>(
-                                     obj.get("exposure_time", boost::python::list()))),
-               make_epochs(num,
-                           boost::python::extract<boost::python::list>(
-                             obj.get("epochs", boost::python::list()))),
-               bo);
+    std::size_t num_images = ir[1] - ir[0] + 1;
+
+    Scan *scan = new Scan(ir, bo);
+    if (!obj.has_key("properties")) {
+      /*
+       * Legacy case with no properties table
+       */
+
+      if (obj.has_key("oscillation")) {
+        vec2<double> osc =
+          deg_as_rad(boost::python::extract<vec2<double> >(obj["oscillation"]));
+        scan->set_oscillation(osc);
+      }
+      if (obj.has_key("exposure_time")) {
+        scan->set_exposure_times(
+          make_exposure_times(num_images,
+                              boost::python::extract<boost::python::list>(
+                                obj.get("exposure_time", boost::python::list()))));
+      }
+      if (obj.has_key("epochs")) {
+        scan->set_epochs(make_epochs(num_images,
+                                     boost::python::extract<boost::python::list>(
+                                       obj.get("epochs", boost::python::list()))));
+      }
+    } else {
+      boost::python::dict properties_dict =
+        boost::python::extract<boost::python::dict>(obj["properties"]);
+      scan->set_properties(extract_properties_table(properties_dict, num_images, true));
+    }
+
     boost::python::dict rangemap =
       boost::python::extract<boost::python::dict>(obj["valid_image_ranges"]);
-    boost::python::list keys = rangemap.keys();
-    boost::python::list values = rangemap.values();
-    for (int i = 0; i < len(keys); ++i) {
-      boost::python::extract<std::string> extracted_key(keys[i]);
+    boost::python::list valid_img_keys = rangemap.keys();
+    boost::python::list valid_img_values = rangemap.values();
+    for (int i = 0; i < len(valid_img_keys); ++i) {
+      std::string key = boost::python::extract<std::string>(valid_img_keys[i]);
       scitbx::af::shared<vec2<int> > result;
-      int n_tuples = boost::python::len(values[i]);
+      int n_tuples = boost::python::len(valid_img_values[i]);
       for (int n = 0; n < n_tuples; ++n) {
-        result.push_back(boost::python::extract<vec2<int> >(values[i][n]));
+        result.push_back(boost::python::extract<vec2<int> >(valid_img_values[i][n]));
       }
-      std::string key = extracted_key;
       scan->set_valid_image_ranges_array(key, result);
     }
     return scan;
@@ -179,7 +362,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     int n = boost::python::len(obj);
     scitbx::af::shared<vec2<int> > ranges;
     for (int k = 0; k < n; ++k) {
-      ranges.push_back(boost_python::extract<vec2<int> >(obj[k]));
+      ranges.push_back(boost::python::extract<vec2<int> >(obj[k]));
     }
     scan.set_valid_image_ranges_array(i, ranges);
   }
@@ -229,6 +412,27 @@ namespace dxtbx { namespace model { namespace boost_python {
       scan = new Scan(image_range, oscillation, exposure_times, epochs, batch_offset);
     }
     return scan;
+  }
+
+  static Scan *make_scan_w_properties(vec2<int> image_range,
+                                      boost::python::dict properties_dict,
+                                      int batch_offset,
+                                      bool deg) {
+    int num_images = 1 + image_range[1] - image_range[0];
+    flex_table<scan_property_types> properties =
+      extract_properties_table(properties_dict, num_images);
+
+    if (deg && properties.contains("oscillation")) {
+      scitbx::af::shared<double> osc_in_deg = properties.get<double>("oscillation");
+      scitbx::af::shared<double> osc = deg_as_rad(osc_in_deg);
+      dxtbx::af::flex_table_suite::setitem_column(
+        properties, "oscillation", osc.const_ref());
+    }
+    return new Scan(image_range, properties, batch_offset);
+  }
+
+  static Scan *make_scan_wo_properties(vec2<int> image_range, int batch_offset) {
+    return new Scan(image_range, batch_offset);
   }
 
   static vec2<double> get_oscillation_range(const Scan &scan, bool deg) {
@@ -322,23 +526,23 @@ namespace dxtbx { namespace model { namespace boost_python {
     return scan[index];
   }
 
-  static Scan getitem_slice(const Scan &scan, const slice index) {
+  static Scan getitem_slice(const Scan &scan, const boost::python::slice index) {
     // Ensure no step
-    DXTBX_ASSERT(index.step() == object());
+    DXTBX_ASSERT(index.step() == boost::python::object());
 
     // Get start index
     int start = 0, stop = 0;
-    if (index.start() == object()) {
+    if (index.start() == boost::python::object()) {
       start = 0;
     } else {
-      start = extract<int>(index.start());
+      start = boost::python::extract<int>(index.start());
     }
 
     // Get stop index
-    if (index.stop() == object()) {
+    if (index.stop() == boost::python::object()) {
       stop = scan.get_num_images();
     } else {
-      stop = extract<int>(index.stop());
+      stop = boost::python::extract<int>(index.stop());
     }
 
     // Check ranges
@@ -346,25 +550,14 @@ namespace dxtbx { namespace model { namespace boost_python {
     DXTBX_ASSERT(stop <= scan.get_num_images());
     DXTBX_ASSERT(start < stop);
 
-    // Create the new epoch array
+    flex_table<scan_property_types> properties = scan.get_properties_slice(index);
+
     int first_image_index = scan.get_image_range()[0] + start;
     int last_image_index = scan.get_image_range()[0] + stop - 1;
-    scitbx::af::shared<double> new_epochs(stop - start);
-    for (std::size_t i = 0; i < new_epochs.size(); ++i) {
-      new_epochs[i] = scan.get_image_epoch(first_image_index + i);
-    }
-
-    // Create the new epoch array
-    scitbx::af::shared<double> new_exposure_times(stop - start);
-    for (std::size_t i = 0; i < new_exposure_times.size(); ++i) {
-      new_exposure_times[i] = scan.get_image_exposure_time(first_image_index + i);
-    }
 
     // Create the new scan object
     return Scan(vec2<int>(first_image_index, last_image_index),
-                scan.get_image_oscillation(first_image_index),
-                new_exposure_times,
-                new_epochs,
+                properties,
                 scan.get_batch_offset());
   }
 
@@ -372,29 +565,63 @@ namespace dxtbx { namespace model { namespace boost_python {
     std::swap(lhs, rhs);
   }
 
+  template <typename T>
+  boost::python::object get_scan_property(const Scan &scan,
+                                          const typename T::key_type &key) {
+    DXTBX_ASSERT(scan.contains(key));
+    flex_table<scan_property_types> properties = scan.get_properties();
+    return dxtbx::af::flex_table_suite::getitem_column<T>(properties, key);
+  }
+
+  template <typename T>
+  void set_scan_property(Scan &scan,
+                         const std::string &key,
+                         const scitbx::af::shared<T> &value) {
+    scan.set_property(key, value.const_ref());
+  }
+
   void export_scan() {
+    scan_property_table_wrapper<flex_table<scan_property_types> >::wrap(
+      "scan_property_table");
+
     // Export ScanBase
-    class_<ScanBase>("ScanBase");
+    boost::python::class_<ScanBase>("ScanBase");
+
+    using boost::python::arg;
+    using boost::python::self;
 
     // Export Scan : ScanBase
-    class_<Scan, std::shared_ptr<Scan>, bases<ScanBase> >("Scan")
-      .def(init<const Scan &>())
+    boost::python::class_<Scan, std::shared_ptr<Scan>, boost::python::bases<ScanBase> >(
+      "Scan")
+      .def(boost::python::init<const Scan &>())
       .def("__init__",
-           make_constructor(&make_scan,
-                            default_call_policies(),
-                            (arg("image_range"),
-                             arg("oscillation"),
-                             arg("batch_offset") = 0,
-                             arg("deg") = true)))
+           boost::python::make_constructor(&make_scan,
+                                           boost::python::default_call_policies(),
+                                           (arg("image_range"),
+                                            arg("oscillation"),
+                                            arg("batch_offset") = 0,
+                                            arg("deg") = true)))
       .def("__init__",
-           make_constructor(&make_scan_w_epoch,
-                            default_call_policies(),
-                            (arg("image_range"),
-                             arg("oscillation"),
-                             arg("exposure_times"),
-                             arg("epochs"),
-                             arg("batch_offset") = 0,
-                             arg("deg") = true)))
+           boost::python::make_constructor(&make_scan_w_epoch,
+                                           boost::python::default_call_policies(),
+                                           (arg("image_range"),
+                                            arg("oscillation"),
+                                            arg("exposure_times"),
+                                            arg("epochs"),
+                                            arg("batch_offset") = 0,
+                                            arg("deg") = true)))
+      .def("__init__",
+           boost::python::make_constructor(&make_scan_w_properties,
+                                           boost::python::default_call_policies(),
+                                           (arg("image_range"),
+                                            arg("properties"),
+                                            arg("batch_offset") = 0,
+                                            arg("deg") = true)))
+      .def(
+        "__init__",
+        boost::python::make_constructor(&make_scan_wo_properties,
+                                        boost::python::default_call_policies(),
+                                        (arg("image_range"), arg("batch_offset") = 0)))
       .def("get_image_range", &Scan::get_image_range)
       .def("get_valid_image_ranges", get_valid_image_ranges)
       .def("set_valid_image_ranges", set_valid_image_ranges)
@@ -451,6 +678,21 @@ namespace dxtbx { namespace model { namespace boost_python {
            (arg("angle"), arg("deg") = true))
       .def("__getitem__", &getitem_single)
       .def("__getitem__", &getitem_slice)
+      .def("get_property",
+           &get_scan_property<flex_table<scan_property_types> >,
+           (arg("key")))
+      .def("get_properties", &get_properties_dict)
+      .def("set_properties", &set_properties_table_from_dict, (arg("properties_dict")))
+      .def("set_property", &set_scan_property<double>, (arg("key"), arg("value")))
+      .def("set_property", &set_scan_property<bool>, (arg("key"), arg("value")))
+      .def("set_property", &set_scan_property<int>, (arg("key"), arg("value")))
+      .def("set_property", &set_scan_property<std::string>, (arg("key"), arg("value")))
+      .def(
+        "set_property", &set_scan_property<vec2<double> >, (arg("key"), arg("value")))
+      .def(
+        "set_property", &set_scan_property<vec3<double> >, (arg("key"), arg("value")))
+      .def("set_property", &set_scan_property<double>, (arg("key"), arg("value")))
+      .def("has_property", &Scan::contains, (arg("key")))
       .def(self == self)
       .def(self != self)
       .def(self < self)
@@ -464,7 +706,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("__str__", &scan_to_string)
       .def("swap", &scan_swap)
       .def("to_dict", &to_dict<Scan>)
-      .def("from_dict", &from_dict<Scan>, return_value_policy<manage_new_object>())
+      .def("from_dict",
+           &from_dict<Scan>,
+           boost::python::return_value_policy<boost::python::manage_new_object>())
       .staticmethod("from_dict")
       .def_pickle(ScanPickleSuite());
   }

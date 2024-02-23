@@ -12,6 +12,8 @@ import os
 import pickle
 from typing import Any, Callable, Generator, Iterable
 
+import natsort
+
 import dxtbx
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
@@ -57,6 +59,14 @@ class InvalidExperimentListError(RuntimeError):
     from representing a well-formed experiment list. This doesn't indicate e.g.
     some problem with the data or model consistency.
     """
+
+
+try:
+    scaling_model_entry_points = importlib.metadata.entry_points()[
+        "dxtbx.scaling_model_ext"
+    ]
+except KeyError:
+    scaling_model_entry_points = []
 
 
 class FormatChecker:
@@ -418,7 +428,7 @@ class ExperimentListDict:
                     # make a new bigger scan
                     o = eobj_scan[imageset_ref].get_oscillation()
                     s = scan.get_oscillation()
-                    assert o[1] == s[1]
+                    assert abs(o[1] - (s[1])) < 1e-7
                     scan = copy.deepcopy(scan)
                     scan.set_image_range((min(i[0], j[0]), max(i[1], j[1])))
                     scan.set_oscillation((min(o[0], s[0]), o[1]))
@@ -576,7 +586,7 @@ class ExperimentListDict:
     @staticmethod
     def _scaling_model_from_dict(obj):
         """Get the scaling model from a dictionary."""
-        for entry_point in importlib.metadata.entry_points()["dxtbx.scaling_model_ext"]:
+        for entry_point in scaling_model_entry_points:
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
 
@@ -1176,7 +1186,7 @@ def _openingpathiterator(pathnames: Iterable[str]):
     """
 
     # Store a tuple of (recurse, pathname) to track what was root level
-    paths = collections.deque((True, x) for x in sorted(pathnames))
+    paths = collections.deque((True, x) for x in natsort.natsorted(pathnames))
 
     while paths:
         # Get the next path from the queue

@@ -12,12 +12,13 @@ import os
 import sys
 
 import numpy as np
+import serialtbx.detector.cspad
+import serialtbx.util
 
 import libtbx.option_parser
 from libtbx import easy_pickle
 from libtbx.utils import Usage
 from scitbx.array_family import flex
-from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
 
 import dxtbx.util
 
@@ -265,7 +266,7 @@ def run(args=None):
             timestamp = None
         else:
             msec, sec = math.modf(scan.get_epochs()[0])
-            timestamp = evt_timestamp((sec, msec))
+            timestamp = serialtbx.util.timestamp((sec, msec))
 
         if is_multi_image:
             for i in range(img.get_num_images()):
@@ -329,7 +330,7 @@ def save_image(
             print("Skipping %s, file exists" % imgpath)
             return
 
-    data = dpack(
+    data = serialtbx.detector.cspad.dpack(
         data=raw_data,
         distance=distance,
         pixel_size=pixel_size,

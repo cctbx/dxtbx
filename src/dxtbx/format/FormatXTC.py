@@ -5,6 +5,8 @@ import sys
 import time
 
 import numpy as np
+import serialtbx.detector.xtc
+import serialtbx.util
 
 from libtbx.phil import parse
 from scitbx.array_family import flex
@@ -18,11 +20,16 @@ from dxtbx.util.rotate_and_average import rotate_and_average
 
 try:
     import psana
-
-    from xfel.cxi.cspad_ana import cspad_tbx
 except ImportError:
     psana = None
-    cspad_tbx = None
+except TypeError:
+    # Check if SIT_* environment variables are set
+    import os
+
+    if os.environ.get("SIT_ROOT"):
+        # Variables are present, so must have been another error
+        raise
+    psana = None
 
 locator_str = """
   experiment = None
@@ -54,7 +61,13 @@ locator_str = """
     .help = Correction factor, needed during 2014
   wavelength_offset = None
     .type = float
-    .help = Optional constant shift to apply to each wavelength
+    .help = Optional constant shift to apply to each wavelength. Note, if \
+            spectrum_required = False and spectra calibration constants \
+            (spectrum_eV_per_pixel and spectrum_eV_offset) are provided, \
+            wavelength_offset can be used to apply a general correction \
+            for any events with a dropped spectrum. If the spectrum is \
+            present and calibration constants are provided, \
+            wavelength_offset is ignored.
   spectrum_address = FEE-SPEC0
     .type = str
     .help = Address for incident beam spectrometer
@@ -75,6 +88,10 @@ locator_str = """
   spectrum_pedestal = None
     .type = path
     .help = Path to pickled pedestal file to subtract from the pedestal
+  spectrum_required = False
+    .type = bool
+    .help = Raise an exception for any event where the spectrum is not \
+            available.
   filter {
     evr_address = evr1
       .type = str
@@ -106,7 +123,6 @@ class XtcReader(Reader):
 @abstract
 class FormatXTC(FormatMultiImage, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         self.lazy = kwargs.get("lazy", True)
@@ -152,7 +168,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         If PSANA fails to read it, then input may not be an xtc/smd file. If success, then OK.
         If detector_address is not provided, a command line promp will try to get the address
         from the user"""
-        if not psana or not cspad_tbx:
+        if not psana:
             return False
         try:
             params = FormatXTC.params_from_phil(locator_scope, image_file)
@@ -375,7 +391,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         sec = time[0]
         nsec = time[1]
 
-        return cspad_tbx.evt_timestamp((sec, nsec / 1e6))
+        return serialtbx.util.timestamp((sec, nsec / 1e6))
 
     def get_num_images(self):
         return self.n_images
@@ -397,14 +413,14 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             if spectrum:
                 wavelength = spectrum.get_weighted_wavelength()
             else:
-                wavelength = cspad_tbx.evt_wavelength(
+                wavelength = serialtbx.detector.xtc.evt_wavelength(
                     evt, delta_k=self.params.wavelength_delta_k
                 )
+                if self.params.wavelength_offset is not None:
+                    wavelength += self.params.wavelength_offset
             if wavelength is None:
                 self._beam_cache = None
             else:
-                if self.params.wavelength_offset is not None:
-                    wavelength += self.params.wavelength_offset
                 self._beam_cache = self._beam_factory.simple(wavelength)
             s, nsec = evt.get(psana.EventId).time()
             evttime = time.gmtime(s)
@@ -417,6 +433,14 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         return self._beam_cache
 
     def get_spectrum(self, index=None):
+        if index is None:
+            index = 0
+        spectrum = self._spectrum(index)
+        if not spectrum and self.params.spectrum_required:
+            raise RuntimeError("No spectrum in shot %d" % index)
+        return spectrum
+
+    def _spectrum(self, index=None):
         if index is None:
             index = 0
         if self.params.spectrum_eV_per_pixel is None:
@@ -460,7 +484,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             x = (
                 self.params.spectrum_eV_per_pixel * np.array(range(len(y)))
             ) + self.params.spectrum_eV_offset
-        return Spectrum(flex.double(x), flex.double(y))
+        try:
+            sp = Spectrum(flex.double(x), flex.double(y))
+        except RuntimeError:
+            return None
+        return sp
 
     def get_goniometer(self, index=None):
         return None

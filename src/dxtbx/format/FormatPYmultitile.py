@@ -5,13 +5,10 @@ import sys
 from calendar import timegm
 from time import strptime
 
+from serialtbx.detector.legacy_metrology.cspad_detector import CSPadDetector
+
 from iotbx.detectors.npy import image_dict_to_unicode
 from scitbx.matrix import col
-
-try:
-    from xfel.cftbx.detector.cspad_detector import CSPadDetector
-except ImportError:
-    CSPadDetector = None
 
 from dxtbx.format.FormatPY import FormatPY
 from dxtbx.model import Detector
@@ -20,8 +17,6 @@ from dxtbx.model import Detector
 class FormatPYmultitile(FormatPY):
     @staticmethod
     def understand(image_file):
-        if not CSPadDetector:
-            return False
         try:
             with FormatPYmultitile.open_file(image_file, "rb") as fh:
                 data = pickle.load(fh, encoding="bytes")
@@ -60,13 +55,14 @@ class FormatPYmultitile(FormatPY):
         ASIC:s are considered, since DXTBX metrology is not concerned
         with hierarchies.
 
-        Merged from xfel.cftbx.detector.cspad_detector.readHeader() and
-        xfel.cftbx.detector.metrology.metrology_as_dxtbx_vectors().
+        Merged from serialtbx.detector.legacy_metrology.cspad_detector.readHeader()
+        and serialtbx.detector.legacy_metrology.metrology.metrology_as_dxtbx_vectors().
         """
 
-        # XXX Introduces dependency on cctbx.xfel!  Should probably be
-        # merged into the code here!
-        from xfel.cftbx.detector.metrology import _transform, get_projection_matrix
+        from serialtbx.detector.legacy_metrology.metrology import (
+            _transform,
+            get_projection_matrix,
+        )
 
         # Apply the detector distance to the translation of the root
         # detector object.

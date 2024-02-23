@@ -14,6 +14,7 @@ import sys
 
 import h5py
 import numpy as np
+from serialtbx.detector import basis
 
 from cctbx import factor_ev_angstrom
 from libtbx import easy_pickle
@@ -21,11 +22,11 @@ from libtbx.phil import parse
 from libtbx.utils import Sorry
 from scitbx import matrix
 from scitbx.array_family import flex
-from xfel.cftbx.detector.cspad_cbf_tbx import angle_and_axis, basis
 
 from dials.util.options import ArgumentParser, flatten_experiments
 
 from dxtbx import flumpy
+from dxtbx.format.FormatCBFMultiTile import angle_and_axis
 
 help_message = """
 Create a NeXus file from either an experiment list or a set of image files
@@ -724,7 +725,6 @@ class NXmxWriter:
 
     def add_scan_and_gonio(self, scan=None, gonio=None):
         if scan is None or gonio is None:
-
             assert scan is None and gonio is None
             scan = self.scan
             gonio = self.goniometer

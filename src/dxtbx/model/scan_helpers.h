@@ -26,6 +26,10 @@ namespace dxtbx { namespace model {
 
   /** Convert the angle mod 2PI */
   inline double mod_2pi(double angle) {
+    // E.g. treat 359.9999999 as 360
+    if (std::abs(angle - two_pi) <= 1e-7) {
+      angle = two_pi;
+    }
     return angle - two_pi * floor(angle / two_pi);
   }
 
