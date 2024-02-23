@@ -24,7 +24,10 @@ class FormatHDF5ESRFJungfrau4M(FormatHDF5):
             key = list(h5_handle.keys())[0]
             if "instrument" not in h5_handle[key]:
                 return False
-            if "jungfrau4m_rr_smx" not in h5_handle[key]["instrument"]:
+            # instrument name is of form jungfrau4m_rr[X]_smx where X is empty, 4 or another number
+            if not h5_handle[key]["instrument"].startswith("jungfrau4m_rr"):
+                return False
+            if not h5_handle[key]["instrument"].endswith("smx"):
                 return False
         return True
 
@@ -119,10 +122,14 @@ class FormatHDF5ESRFJungfrau4M(FormatHDF5):
     def get_raw_data(self, index=None):
         if index is None:
             index = 0
-
+        # data can be int32 with adus_per_photon != 1.0 or float16 with adus_per_photon == 1.0
         data = (
-            self._h5_handle[self.key]["measurement"]["data"][index]
-            / self.adus_per_photon
+            (
+                self._h5_handle[self.key]["measurement"]["data"][index]
+                / self.adus_per_photon
+            )
+            if self.adus_per_photon != 1.0
+            else self._h5_handle[self.key]["measurement"]["data"][index]
         )
         return flex.double(data.astype(float))
 
