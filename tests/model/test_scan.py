@@ -472,6 +472,7 @@ def test_scan_is_still():
     )
     assert scan.is_still()
 
+
 def test_scan_properties_from_dict():
     image_range = (1, 10)
     properties = {"test": list(range(10))}
