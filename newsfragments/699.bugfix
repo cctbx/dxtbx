@@ -1,0 +1,1 @@
+Fix bug when setting the distance for single panel detectors that have a hierarchy.
