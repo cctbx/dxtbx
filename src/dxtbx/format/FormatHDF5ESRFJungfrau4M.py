@@ -87,6 +87,8 @@ class FormatHDF5ESRFJungfrau4M(FormatHDF5):
             oscillation=(0.0, 0.0),
             epochs=list(range(self.n_images)),
         )
+        # Add a placeholder goniometer model, which has no practical effect on processing as the oscillation is 0.
+        # Some dxtbx format logic assumes both or neither scan + goniometer are None for still images
         self._goniometer_model = self._goniometer_factory.known_axis((0, 1, 0))
 
     def get_raw_data(self, index=None):
