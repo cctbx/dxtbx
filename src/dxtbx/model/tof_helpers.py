@@ -26,8 +26,8 @@ def frame_to_tof_interpolator(frames: List[float], tof: List[float]) -> interp1d
     ToF can vary nonlinearly with frame number.
     A cubic spline is used to better account for these cases.
     """
-    assert min(frames) > 0
-    assert min(tof) > 0
+    assert min(frames) >= 0
+    assert min(tof) >= 0
     assert len(frames) == len(tof)
     assert all(i < j for i, j in zip(frames, frames[1:]))
     assert all(i < j for i, j in zip(tof, tof[1:]))
@@ -40,8 +40,8 @@ def tof_to_frame_interpolator(tof: List[float], frames: List[float]) -> interp1d
     ToF can vary nonlinearly with frame number.
     A cubic spline is used to better account for these cases.
     """
-    assert min(frames) > 0
-    assert min(tof) > 0
+    assert min(frames) >= 0
+    assert min(tof) >= 0
     assert len(frames) == len(tof)
     assert all(i < j for i, j in zip(frames, frames[1:]))
     assert all(i < j for i, j in zip(tof, tof[1:]))
