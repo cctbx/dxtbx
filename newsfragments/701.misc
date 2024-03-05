@@ -1,0 +1,1 @@
+Relax conditions when creating time of flight interpolators to allow time of flight frames to start from zero.
