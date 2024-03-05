@@ -28,6 +28,8 @@
 
 namespace dxtbx { namespace model {
 
+  enum ExperimentType { rotation = 1, still = 2, tof = 3 };
+
   /**
    * A class to represent what's in an experiment.
    *
@@ -128,9 +130,6 @@ namespace dxtbx { namespace model {
       return profile_ == obj || imageset_ == obj || scaling_model_ == obj;
     }
 
-    /**
-     * Compare this experiment with another
-     */
     bool operator==(const Experiment &other) const {
       return imageset_ == other.imageset_ && beam_ == other.beam_
              && detector_ == other.detector_ && goniometer_ == other.goniometer_
@@ -140,148 +139,104 @@ namespace dxtbx { namespace model {
     }
 
     /**
-     * Check that the experiment is consistent
-     */
-    bool is_consistent() const {
-      return true;  // FIXME
-    }
-
-    /**
      * Check if this experiment represents a still image
      */
-    bool is_still() const {
+    [[deprecated("use get_type()==ExperimentType.still instead")]] bool is_still()
+      const {
       return !goniometer_ || !scan_ || scan_->is_still();
     }
 
     /**
      * Check if this experiment represents swept rotation image(s)
      */
-    bool is_sequence() const {
+    [[deprecated("use get_type()==ExperimentType.rotation instead")]] bool is_sequence()
+      const {
       return !is_still();
     }
 
-    /**
-     * Set the beam model
-     */
+    ExperimentType get_type() {
+      if (scan_ && scan_->contains("time_of_flight")) {
+        return tof;
+      }
+      if (!goniometer_ || !scan_ || scan_->is_still()) {
+        return still;
+      } else {
+        return rotation;
+      }
+    }
+
+    bool is_consistent() const {
+      return true;  // FIXME
+    }
+
     void set_beam(std::shared_ptr<BeamBase> beam) {
       beam_ = beam;
     }
 
-    /**
-     * Get the beam model
-     */
     std::shared_ptr<BeamBase> get_beam() const {
       return beam_;
     }
 
-    /**
-     * Get the detector model
-     */
     void set_detector(std::shared_ptr<Detector> detector) {
       detector_ = detector;
     }
 
-    /**
-     * Get the detector model
-     */
     std::shared_ptr<Detector> get_detector() const {
       return detector_;
     }
 
-    /**
-     * Get the goniometer model
-     */
     void set_goniometer(std::shared_ptr<Goniometer> goniometer) {
       goniometer_ = goniometer;
     }
 
-    /**
-     * Get the goniometer model
-     */
     std::shared_ptr<Goniometer> get_goniometer() const {
       return goniometer_;
     }
 
-    /**
-     * Get the scan model
-     */
     void set_scan(std::shared_ptr<Scan> scan) {
       scan_ = scan;
     }
 
-    /**
-     * Get the scan model
-     */
     std::shared_ptr<Scan> get_scan() const {
       return scan_;
     }
 
-    /**
-     * Get the crystal model
-     */
     void set_crystal(std::shared_ptr<CrystalBase> crystal) {
       crystal_ = crystal;
     }
 
-    /**
-     * Get the crystal model
-     */
     std::shared_ptr<CrystalBase> get_crystal() const {
       return crystal_;
     }
 
-    /**
-     * Get the profile model
-     */
     void set_profile(boost::python::object profile) {
       profile_ = profile;
     }
 
-    /**
-     * Get the profile model
-     */
     boost::python::object get_profile() const {
       return profile_;
     }
 
-    /**
-     * Get the imageset model
-     */
     void set_imageset(boost::python::object imageset) {
       imageset_ = imageset;
     }
 
-    /**
-     * Get the imageset model
-     */
     boost::python::object get_imageset() const {
       return imageset_;
     }
 
-    /**
-     * Set the scaling model
-     */
     void set_scaling_model(boost::python::object scaling_model) {
       scaling_model_ = scaling_model;
     }
 
-    /**
-     * Get the scaling model
-     */
     boost::python::object get_scaling_model() const {
       return scaling_model_;
     }
 
-    /**
-     * Set the identifier
-     */
     void set_identifier(std::string identifier) {
       identifier_ = identifier;
     }
 
-    /**
-     * Get the identifier
-     */
     std::string get_identifier() const {
       return identifier_;
     }

@@ -23,6 +23,7 @@ from scitbx.array_family import shared as flex_shared
 from scitbx.array_family.flex import FlexPlain
 
 from dxtbx_model_ext import Probe  # type: ignore
+from dxtbx_model_ext import ExperimentType
 
 # TypeVar for the set of Experiment models that can be joint-accepted
 # - profile, imageset and scalingmodel are handled as 'object'
@@ -354,6 +355,7 @@ class Experiment:
     def is_sequence(self) -> bool: ...
     def is_still(self) -> bool: ...
     def __contains__(self, obj: TExperimentModel) -> bool: ...
+    def get_type(self) -> ExperimentType: ...
 
 class ExperimentList:
     @overload

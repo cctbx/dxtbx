@@ -5,6 +5,7 @@ import json
 import os
 import sys
 
+from deprecated import deprecated
 from orderedset import OrderedSet
 
 import boost_adaptbx.boost.python
@@ -33,6 +34,7 @@ try:
         DetectorNode,
         Experiment,
         ExperimentList,
+        ExperimentType,
         Goniometer,
         GoniometerBase,
         KappaDirection,
@@ -69,6 +71,7 @@ except ModuleNotFoundError:
         DetectorNode,
         Experiment,
         ExperimentList,
+        ExperimentType,
         Goniometer,
         GoniometerBase,
         KappaDirection,
@@ -599,11 +602,20 @@ class _experimentlist:
 
     def all_stills(self):
         """Check if all the experiments are stills"""
-        return all(exp.is_still() for exp in self)
+        return all(exp.get_type() == ExperimentType.still for exp in self)
 
+    @deprecated(reason="Use all_rotations() instead")
     def all_sequences(self):
         """Check if all the experiments are from sequences"""
-        return all(exp.is_sequence() for exp in self)
+        return all(exp.get_type() == ExperimentType.rotation for exp in self)
+
+    def all_rotations(self):
+        """Check if all the experiments are stills"""
+        return all(exp.get_type() == ExperimentType.rotation for exp in self)
+
+    def all_tof(self):
+        """Check if all the experiments are stills"""
+        return all(exp.get_type() == ExperimentType.tof for exp in self)
 
     def to_dict(self):
         """Serialize the experiment list to dictionary."""

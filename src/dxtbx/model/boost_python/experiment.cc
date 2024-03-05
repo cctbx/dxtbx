@@ -74,6 +74,11 @@ namespace dxtbx { namespace model { namespace boost_python {
   };
 
   void export_experiment() {
+    enum_<ExperimentType>("ExperimentType")
+      .value("still", still)
+      .value("rotation", rotation)
+      .value("tof", tof);
+
     class_<Experiment>("Experiment")
       .def(init<std::shared_ptr<BeamBase>,
                 std::shared_ptr<Detector>,
@@ -118,6 +123,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("is_sequence",
            &Experiment::is_sequence,
            "Check if this experiment represents swept rotation image(s)")
+      .def("get_type", &Experiment::get_type)
       .def_pickle(ExperimentPickleSuite());
   }
 
