@@ -53,8 +53,15 @@ class FormatMANDI(FormatHDF5):
     def is_mandi_file(image_file: str) -> bool:
         def get_name(image_file: str) -> str:
             with h5py.File(image_file, "r") as handle:
+                if len(handle) == 0:
+                    return ""
                 base_entry = list(handle.keys())[0]
-                return handle[f"{base_entry}/instrument/name"][0].decode()
+                if f"{base_entry}/instrument/name" not in handle:
+                    return ""
+                try:
+                    return handle[f"{base_entry}/instrument/name"][0].decode()
+                except (ValueError, IndexError):
+                    return ""
 
         return get_name(image_file) == "MANDI"
 
