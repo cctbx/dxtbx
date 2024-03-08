@@ -70,6 +70,10 @@ beam_phil_scope = libtbx.phil.parse(
     sample_to_source_distance = None
         .type = float
         .help = "Override the distance between sample and source (mm)"
+
+    wavelength_range = None
+        .type = floats(size=2)
+        .help = "Override the wavelength range for polychromatic beams (A)"
   }
 """
 )
@@ -124,7 +128,9 @@ class BeamFactory:
             beam.set_sample_to_source_distance(params.beam.sample_to_source_distance)
         if params.beam.probe != "x-ray":
             beam.set_probe(Beam.get_probe_from_name(params.beam.probe))
-
+        if params.beam.type == "polychromatic":
+            if params.beam.wavelength_range is not None:
+                beam.set_wavelength_range(params.beam.wavelength_range)
         return beam
 
     @staticmethod
@@ -195,6 +201,7 @@ class BeamFactory:
         probe: Probe = Probe.xray,
         sample_to_source_distance: float = 0.0,
         deg: bool = True,
+        wavelength_range: tuple[float, float] = (0.0, 0.0),
     ) -> PolychromaticBeam:
         return PolychromaticBeam(
             tuple(map(float, direction)),
@@ -207,6 +214,7 @@ class BeamFactory:
             probe,
             float(sample_to_source_distance),
             bool(deg),
+            tuple(map(float, wavelength_range)),
         )
 
     @staticmethod
