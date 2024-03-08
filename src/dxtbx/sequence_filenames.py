@@ -5,6 +5,8 @@ import re
 from collections import defaultdict
 from glob import glob
 
+import natsort
+
 
 def template_regex(filename):
     """Works out a template from a filename.
@@ -181,6 +183,9 @@ def replace_template_format_with_hash(match):
 
 def template_string_to_glob_expr(template):
     """Convert the template to a glob expression."""
+    if template.count("#") == 1:
+        # https://github.com/cctbx/dxtbx/issues/646
+        return template.replace("#", "*")
     return template.replace("#", "[0-9]")
 
 
@@ -191,7 +196,14 @@ def template_string_number_index(template):
 
 def locate_files_matching_template_string(template):
     """Return all files matching template."""
-    return glob(template_string_to_glob_expr(template))
+    matches = glob(template_string_to_glob_expr(template))
+    if template.count("#") != 1:
+        return matches
+    i0, i1 = template_string_number_index(template)
+    prefix = template[:i0]
+    suffix = template[i1:]
+    patt = re.compile(prefix + "([^0]*)([0-9]+)" + suffix)
+    return [m for m in matches if patt.match(m)]
 
 
 def template_image_range(template):
@@ -199,19 +211,19 @@ def template_image_range(template):
 
     # Find the files matching the template
     filenames = locate_files_matching_template_string(template)
-    filenames = sorted(filenames)
+    filenames = natsort.natsorted(filenames)
 
     # Check that the template matches some files
     if len(filenames) == 0:
         raise ValueError(f"Template {template} doesn't match any files.")
 
-    # Get the templete format
-    index = slice(*template_string_number_index(template))
-
     # Get the first and last indices
     if "#" in template:
-        first = int(filenames[0][index])
-        last = int(filenames[-1][index])
+        i0, i1 = template_string_number_index(template)
+        prefix = template[:i0]
+        suffix = template[i1:]
+        first = int(filenames[0].replace(prefix, "").replace(suffix, ""))
+        last = int(filenames[-1].replace(prefix, "").replace(suffix, ""))
     else:  # template is one file
         first, last = 0, 0
 

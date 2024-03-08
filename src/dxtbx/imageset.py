@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import natsort
+
 import boost_adaptbx.boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
@@ -55,7 +57,12 @@ def _expand_template(template: str, indices: Iterable[int]) -> list[str]:
     pfx = template.split("#")[0]
     sfx = template.split("#")[-1]
     count = template.count("#")
-    return [f"{pfx}{index:0{count}}{sfx}" for index in indices]
+    if count == 1:
+        # https://github.com/cctbx/dxtbx/issues/646
+        filenames = [f"{pfx}{index}{sfx}" for index in indices]
+    else:
+        filenames = [f"{pfx}{index:0{count}}{sfx}" for index in indices]
+    return natsort.natsorted(filenames)
 
 
 class MemReader:
@@ -486,7 +493,7 @@ class ImageSetFactory:
 
         # Get the template format
         if "#" in template:
-            filenames = sorted(_expand_template(template, indices))
+            filenames = _expand_template(template, indices)
         else:
             filenames = [template]
 
@@ -503,7 +510,7 @@ class ImageSetFactory:
 
         # Expand the template if necessary
         if "#" in template:
-            filenames = sorted(_expand_template(template, indices))
+            filenames = _expand_template(template, indices)
         else:
             filenames = [template]
 
@@ -564,7 +571,7 @@ class ImageSetFactory:
 
         # Get the template format
         if "#" in template:
-            filenames = sorted(_expand_template(template, indices))
+            filenames = _expand_template(template, indices)
         else:
             filenames = [template]
 
