@@ -22,6 +22,10 @@ class FormatHDF5ESRFJungfrau4M(FormatHDF5):
             if len(h5_handle) != 1:
                 return False
             key = list(h5_handle.keys())[0]
+            if not isinstance(
+                h5_handle[key], h5py.Group
+            ):  # check we're not trying to read a 'dataset' object
+                return False
             if "instrument" not in h5_handle[key]:
                 return False
             # instrument name is of form jungfrau4m_rr[X]_smx where X is empty, 4 or another number
