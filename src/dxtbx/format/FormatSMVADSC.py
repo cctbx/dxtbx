@@ -196,7 +196,7 @@ class FormatSMVADSC(FormatSMV):
 
     def _scan(self):
         """Return the scan information for this image."""
-        exposure_time = float(self._header_dictionary["TIME"])
+        exposure_time = float(self._header_dictionary.get("TIME", 0))
         epoch = None
 
         # PST, PDT timezones not recognised by default...
