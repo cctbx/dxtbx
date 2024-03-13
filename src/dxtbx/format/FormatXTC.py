@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import sys
 import time
+from itertools import groupby
 
 import numpy as np
 import serialtbx.detector.xtc
@@ -32,6 +33,9 @@ except TypeError:
     psana = None
 
 locator_str = """
+  hits_file = None
+    .type = str
+    .help = path to a file where each line is an index in the XTC stream of a crystal hit
   experiment = None
     .type = str
     .help = Experiment identifier, e.g. mfxo1916
@@ -147,6 +151,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None
+        self._load_hit_indices()
         self.populate_events()
 
         self._cached_psana_detectors = {}
@@ -161,6 +166,17 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             self._spectrum_pedestal = easy_pickle.load(self.params.spectrum_pedestal)
         else:
             self._spectrum_pedestal = None
+
+    def _load_hit_indices(self):
+        self._hit_inds = None
+        if self.params.hits_file is not None:
+            assert self.params.mode == "idx"
+            hits = np.loadtxt(self.params.hits_file, int)
+            hits = list(map(tuple, hits))
+            key = lambda x: x[0]
+            gb = groupby(sorted(hits, key=key), key=key)
+            # dictionary where key is run number, and vals are indices of hits
+            self._hit_inds = {r:[ind for _,ind in group] for r,group in gb}
 
     @staticmethod
     def understand(image_file):
@@ -231,6 +247,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         if self.params.mode == "idx":
             for run in self._psana_runs.values():
                 times = run.times()
+                if self._hit_inds is not None and run.run() in self._hit_inds:
+                    temp = []
+                    for i_hit in self._hit_inds[run.run()]:
+                        temp.append( times[i_hit] )
+                    times = tuple(temp)
                 if (
                     self.params.filter.required_present_codes
                     or self.params.filter.required_absent_codes
