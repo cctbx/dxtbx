@@ -31,7 +31,7 @@ class FormatSMVJHSim(FormatSMV):
 
         size, header = FormatSMV.get_smv_header(image_file)
 
-        if header.get("BEAMLINE") == "fake":
+        if header.get("BEAMLINE").lower() == "fake":
             return True
         else:
             return False
