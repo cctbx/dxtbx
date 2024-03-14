@@ -40,7 +40,8 @@ locator_str = """
     .type = str
     .help = Experiment identifier, e.g. mfxo1916
   run = None
-    .type = ints
+    .type = int
+    .multiple = True
     .help = Run number or a list of runs to process
   mode = idx
     .type = str
@@ -245,11 +246,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         self.run_mapping = {}
 
         if self.params.mode == "idx":
-            for run in self._psana_runs.values():
+            for run_num, run in self._psana_runs.items():
                 times = run.times()
-                if self._hit_inds is not None and run.run() in self._hit_inds:
+                if self._hit_inds is not None and run_num not in self._hit_inds:
+                    continue
+                if self._hit_inds is not None and run_num in self._hit_inds:
                     temp = []
-                    for i_hit in self._hit_inds[run.run()]:
+                    for i_hit in self._hit_inds[run_num]:
                         temp.append( times[i_hit] )
                     times = tuple(temp)
                 if (
@@ -257,11 +260,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                     or self.params.filter.required_absent_codes
                 ) and self.params.filter.pre_filter:
                     times = [t for t in times if self.filter_event(run.event(t))]
-                self.run_mapping[run.run()] = (
+
+                self.run_mapping[run_num] = (
                     len(self.times),
                     len(self.times) + len(times),
                     run,
                 )
+
                 self.times.extend(times)
             self.n_images = len(self.times)
 
