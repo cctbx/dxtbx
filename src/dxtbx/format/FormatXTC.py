@@ -35,7 +35,7 @@ except TypeError:
 locator_str = """
   hits_file = None
     .type = str
-    .help = path to a file where each line is an index in the XTC stream of a crystal hit
+    .help = path to a file where each line is 2 numbers separated by a space, a run index, and an event index in the XTC stream
   experiment = None
     .type = str
     .help = Experiment identifier, e.g. mfxo1916
