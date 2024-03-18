@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+
 import pytest
 
 from libtbx.phil import parse
@@ -290,3 +292,10 @@ def test_polychromatic_beam_str():
         beam.__str__()
         == "Beam:\n    probe: x-ray\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.5\n    flux: 0\n    transmission: 1\n    sample to source distance : 0\n"
     )
+
+
+def test_copy_beam():
+    beam = PolychromaticBeam()
+    assert beam == copy.deepcopy(beam)
+    beam = Beam()
+    assert beam == copy.deepcopy(beam)
