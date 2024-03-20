@@ -494,6 +494,7 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None
     all_slices = get_detector_module_slices(nxdetector)
     all_mask_slices = []
     for slices in all_slices:
+        slices = ()
         mask_slice = flumpy.from_numpy(np.ascontiguousarray(pixel_mask[slices])) == 0
         mask_slice.reshape(
             flex.grid(mask_slice.all()[-2:])
@@ -577,9 +578,7 @@ def get_raw_data(
     all_data = []
     sliced_outer = data[index]
     for module_slices in get_detector_module_slices(nxdetector):
-        data_as_flex = _dataset_as_flex(
-            sliced_outer, tuple(module_slices), bit_depth=bit_depth
-        )
+        data_as_flex = _dataset_as_flex(sliced_outer, None, bit_depth=bit_depth)
         data_as_flex.reshape(
             flex.grid(data_as_flex.all()[-2:])
         )  # handle 3 or 4 dimension arrays
