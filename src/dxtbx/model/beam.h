@@ -15,6 +15,7 @@
 #include <cmath>
 #include <string>
 #include <scitbx/vec3.h>
+#include <scitbx/vec2.h>
 #include <scitbx/array_family/shared.h>
 #include <scitbx/array_family/simple_io.h>
 #include <scitbx/array_family/simple_tiny_io.h>
@@ -23,6 +24,7 @@
 
 namespace dxtbx { namespace model {
 
+  using scitbx::vec2;
   using scitbx::vec3;
 
   // probe type enumeration
@@ -581,7 +583,7 @@ namespace dxtbx { namespace model {
   }
   class PolychromaticBeam : public Beam {
   public:
-    PolychromaticBeam() {
+    PolychromaticBeam() : wavelength_range_(vec2<double>(0.0, 0.0)) {
       set_direction(vec3<double>(0.0, 0.0, 1.0));
       set_divergence(0.0);
       set_sigma_divergence(0.0);
@@ -596,9 +598,10 @@ namespace dxtbx { namespace model {
     /**
      * @param direction The beam direction pointing sample to source
      */
-    PolychromaticBeam(vec3<double> direction) {
+    PolychromaticBeam(vec3<double> direction, vec2<double> wavelength_range) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
+      set_wavelength_range(wavelength_range);
       set_divergence(0.0);
       set_sigma_divergence(0.0);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
@@ -613,10 +616,13 @@ namespace dxtbx { namespace model {
      * @param direction The beam direction pointing source to sample
      * @param sample_to_source_distance (mm)
      */
-    PolychromaticBeam(vec3<double> direction, double sample_to_source_distance) {
+    PolychromaticBeam(vec3<double> direction,
+                      double sample_to_source_distance,
+                      vec2<double> wavelength_range) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
       set_sample_to_source_distance(sample_to_source_distance);
+      set_wavelength_range(wavelength_range);
       set_divergence(0.0);
       set_sigma_divergence(0.0);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
@@ -633,9 +639,11 @@ namespace dxtbx { namespace model {
      */
     PolychromaticBeam(vec3<double> direction,
                       double divergence,
-                      double sigma_divergence) {
+                      double sigma_divergence,
+                      vec2<double> wavelength_range) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
+      set_wavelength_range(wavelength_range);
       set_divergence(divergence);
       set_sigma_divergence(sigma_divergence);
       set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
@@ -663,9 +671,11 @@ namespace dxtbx { namespace model {
                       double polarization_fraction,
                       double flux,
                       double transmission,
-                      Probe probe) {
+                      Probe probe,
+                      vec2<double> wavelength_range) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
+      set_wavelength_range(wavelength_range);
       set_divergence(divergence);
       set_sigma_divergence(sigma_divergence);
       set_polarization_normal(polarization_normal);
@@ -695,9 +705,11 @@ namespace dxtbx { namespace model {
                       double flux,
                       double transmission,
                       Probe probe,
-                      double sample_to_source_distance) {
+                      double sample_to_source_distance,
+                      vec2<double> wavelength_range) {
       DXTBX_ASSERT(direction.length() > 0);
       direction_ = direction.normalize();
+      set_wavelength_range(wavelength_range);
       set_divergence(divergence);
       set_sigma_divergence(sigma_divergence);
       set_polarization_normal(polarization_normal);
@@ -715,6 +727,14 @@ namespace dxtbx { namespace model {
 
     void set_wavelength(double wavelength) {
       throw DXTBX_ERROR("PolychromaticBeam has no fixed wavelength");
+    }
+
+    vec2<double> get_wavelength_range() const {
+      return wavelength_range_;
+    }
+
+    void set_wavelength_range(vec2<double> wavelength_range) {
+      wavelength_range_ = wavelength_range;
     }
 
     vec3<double> get_s0() const {
@@ -752,6 +772,19 @@ namespace dxtbx { namespace model {
     bool operator==(const BeamBase &rhs) const {
       double eps = 1.0e-6;
 
+      const PolychromaticBeam *p = dynamic_cast<const PolychromaticBeam *>(&rhs);
+      if (!p) {
+        return false;
+      }
+
+      if (fabs(wavelength_range_[0] - p->wavelength_range_[0]) > eps) {
+        return false;
+      }
+
+      if (fabs(wavelength_range_[1] - p->wavelength_range_[1]) > eps) {
+        return false;
+      }
+
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
                <= eps
              && std::abs(divergence_ - rhs.get_divergence()) <= eps
@@ -788,7 +821,22 @@ namespace dxtbx { namespace model {
                        double sigma_divergence_tolerance = 1e-6,
                        double flux_tolerance = 1e-6,
                        double transmission_tolerance = 1e-6,
-                       double sample_to_source_tolerance = 1e-6) const {
+                       double sample_to_source_tolerance = 1e-6,
+                       double wavelength_range_tolerance = 1e-6) const {
+      const PolychromaticBeam *p = dynamic_cast<const PolychromaticBeam *>(&rhs);
+      if (!p) {
+        return false;
+      }
+
+      if (fabs(wavelength_range_[0] - p->wavelength_range_[0])
+          > wavelength_range_tolerance) {
+        return false;
+      }
+
+      if (fabs(wavelength_range_[1] - p->wavelength_range_[1])
+          > wavelength_range_tolerance) {
+        return false;
+      }
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
                <= direction_tolerance
              && std::abs(
@@ -804,6 +852,9 @@ namespace dxtbx { namespace model {
                   <= sample_to_source_tolerance
              && (probe_ == rhs.get_probe());
     }
+
+  protected:
+    vec2<double> wavelength_range_;
   };
 
   /** Print beam information */
@@ -821,6 +872,7 @@ namespace dxtbx { namespace model {
     os << "    transmission: " << b.get_transmission() << "\n";
     os << "    sample to source distance : " << b.get_sample_to_source_distance()
        << "\n";
+    os << "    wavelength range : " << b.get_wavelength_range() << "\n";
     return os;
   }
 }}  // namespace dxtbx::model

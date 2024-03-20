@@ -44,6 +44,7 @@ def test_import(nacl):
         "transmission": 1.0,
         "probe": "neutron",
         "sample_to_source_distance": 8300.0,
+        "wavelength_range": (0.2, 10.0),
     }
 
     detector = fmt.get_detector()

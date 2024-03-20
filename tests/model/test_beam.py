@@ -206,6 +206,7 @@ def test_polychromatic_beam_from_phil():
       transmission = .5
       flux = .75
       sample_to_source_distance = 5000
+      wavelength_range = (0.2, 10)
     }
     """
         )
@@ -222,6 +223,7 @@ def test_polychromatic_beam_from_phil():
     assert beam.get_transmission() == pytest.approx(0.5)
     assert beam.get_flux() == pytest.approx(0.75)
     assert beam.get_sample_to_source_distance() == pytest.approx(5000)
+    assert beam.get_wavelength_range() == pytest.approx((0.2, 10))
 
 
 def test_polychromatic_beam_from_dict():
@@ -240,6 +242,7 @@ def test_make_polychromatic_beam():
     flux = 0.75
     probe = Probe.neutron
     sample_to_source_distance = 8500
+    wavelength_range = (0.2, 10)
 
     beam = BeamFactory.make_polychromatic_beam(
         direction=direction,
@@ -251,6 +254,7 @@ def test_make_polychromatic_beam():
         flux=flux,
         probe=probe,
         sample_to_source_distance=sample_to_source_distance,
+        wavelength_range=wavelength_range,
     )
 
     assert beam.get_sample_to_source_direction() == pytest.approx((0.0, 0.0, 1.0))
@@ -262,6 +266,7 @@ def test_make_polychromatic_beam():
     assert beam.get_flux() == pytest.approx(0.75)
     assert beam.get_probe() == Probe.neutron
     assert beam.get_sample_to_source_distance() == pytest.approx(8500.0)
+    assert beam.get_wavelength_range() == pytest.approx((0.2, 10))
 
 
 def test_polychromatic_beam_wavelength_guards():
@@ -284,9 +289,44 @@ def test_polychromatic_beam_wavelength_guards():
         beam.set_s0((0.0, 0.0, 0.1))
 
 
+def test_polychromatic_beam_comparison():
+    beam1 = PolychromaticBeam()
+    beam1.set_wavelength_range((0.0, 1.0))
+    beam1.set_sample_to_source_distance(10)
+    beam1.set_direction((0.0, 0.0, 1.0))
+    beam2 = PolychromaticBeam()
+    beam2.set_wavelength_range((0.0, 1.0))
+    beam2.set_sample_to_source_distance(10)
+    beam2.set_direction((0.0, 0.0, 1.0))
+
+    assert beam1 == beam2
+    beam1.set_wavelength_range((0.0, 2.0))
+    assert beam1 != beam2
+    beam1.set_wavelength_range((0.0, 1.0))
+    assert beam1 == beam2
+
+    beam1.set_sample_to_source_distance(1.0)
+    assert beam1 != beam2
+    beam1.set_sample_to_source_distance(10)
+    assert beam1 == beam2
+
+    beam1.set_probe(Probe.neutron)
+    assert beam1 != beam2
+    beam1.set_probe(Probe.xray)
+    assert beam1 == beam2
+
+    beam1.set_direction((1.0, 0.0, 0.0))
+    assert beam1 != beam2
+    beam1.set_direction((0.0, 0.0, 1.0))
+    assert beam1 == beam2
+
+    beam3 = Beam()
+    assert beam1 != beam3
+
+
 def test_polychromatic_beam_str():
     beam = PolychromaticBeam()
     assert (
         beam.__str__()
-        == "Beam:\n    probe: x-ray\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.5\n    flux: 0\n    transmission: 1\n    sample to source distance : 0\n"
+        == "Beam:\n    probe: x-ray\n    sample to source direction : {0,0,1}\n    divergence: 0\n    sigma divergence: 0\n    polarization normal: {0,1,0}\n    polarization fraction: 0.5\n    flux: 0\n    transmission: 1\n    sample to source distance : 0\n    wavelength range : {0,0}\n"
     )

@@ -215,8 +215,12 @@ class FormatISISSXD(FormatHDF5):
     def get_beam(self, index: int = None) -> PolychromaticBeam:
         direction = self._get_sample_to_source_direction()
         distance = self._get_sample_to_source_distance()
+        wavelength_range = self._get_wavelength_range()
         return BeamFactory.make_polychromatic_beam(
-            direction=direction, sample_to_source_distance=distance, probe=Probe.neutron
+            direction=direction,
+            sample_to_source_distance=distance,
+            probe=Probe.neutron,
+            wavelength_range=wavelength_range,
         )
 
     def _get_sample_to_source_distance(self) -> float:
@@ -225,6 +229,10 @@ class FormatISISSXD(FormatHDF5):
 
     def _get_sample_to_source_direction(self) -> Tuple[float, float, float]:
         return (0, 0, -1)
+
+    def _get_wavelength_range(self) -> Tuple[float, float]:
+        # (A)
+        return (0.2, 10.0)
 
     def get_scan(self, index=None) -> Scan:
         image_range = (1, self.get_num_images())
