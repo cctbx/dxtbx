@@ -297,6 +297,19 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_sample_to_source_distance(),
                                        obj.get_wavelength_range());
     }
+    static boost::python::tuple getstate(boost::python::object obj) {
+      const PolychromaticBeam &beam =
+        boost::python::extract<const PolychromaticBeam &>(obj)();
+      return boost::python::make_tuple(obj.attr("__dict__"));
+    }
+
+    static void setstate(boost::python::object obj, boost::python::tuple state) {
+      PolychromaticBeam &beam = boost::python::extract<PolychromaticBeam &>(obj)();
+
+      boost::python::dict d =
+        boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
+      d.update(state[0]);
+    }
   };
 
   static PolychromaticBeam *make_PolychromaticBeam(vec3<double> direction,
