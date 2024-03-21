@@ -18,6 +18,19 @@ def test_wavelength_from_tof():
     assert wavelength == pytest.approx(0.7876056098518008)
 
 
+def test_tof_from_wavelength():
+    L0 = 8.3
+    L1 = 0.24062553870557318
+    wavelength = 0.8089606203802903
+    tof = tof_helpers.tof_from_wavelength(L0 + L1, wavelength)
+    assert tof == pytest.approx(0.0017464535727308615)
+
+    L1 = 0.23021894342637692
+    wavelength = 0.7876056098518008
+    tof = tof_helpers.tof_from_wavelength(L0 + L1, wavelength)
+    assert tof == pytest.approx(0.0016982786984656873)
+
+
 def test_frame_to_tof_interpolator():
     frames = [i + 1 for i in range(9)]
     tof = [
