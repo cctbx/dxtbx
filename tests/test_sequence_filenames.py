@@ -15,6 +15,7 @@ from dxtbx.sequence_filenames import template_regex
         ("foo_bar_002.img1000", "foo_bar_###.img1000", 2),
         ("foo_bar_00005.img", "foo_bar_#####.img", 5),
         ("image0010", "image####", 10),
+        ("foo_123_1_1.rodhypix", "foo_123_1_#.rodhypix", 1),  # Rigaku-style
     ],
 )
 def test_template_regex(filename, template, digits):
