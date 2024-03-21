@@ -295,6 +295,7 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_transmission(),
                                        obj.get_probe(),
                                        obj.get_sample_to_source_distance(),
+                                       true,
                                        obj.get_wavelength_range());
     }
     static boost::python::tuple getstate(boost::python::object obj) {
