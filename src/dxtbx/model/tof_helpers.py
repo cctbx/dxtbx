@@ -20,6 +20,19 @@ def wavelength_from_tof(
     return ((Planck * tof) / (m_n * distance)) * 10**10
 
 
+def tof_from_wavelength(
+    distance: float | flex.double, wavelength: float | flex.double
+) -> float | flex.double:
+    """
+    wavelength (A)
+    return (s)
+    """
+
+    wavelength = wavelength * 10**-10
+
+    return (wavelength * m_n * distance) / Planck
+
+
 def frame_to_tof_interpolator(frames: List[float], tof: List[float]) -> interp1d:
 
     """
