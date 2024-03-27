@@ -60,7 +60,8 @@ def _expand_template_to_sorted_filenames(
     sfx = template.split("#")[-1]
     count = template.count("#")
     if count == 1:
-        # https://github.com/cctbx/dxtbx/issues/646
+        # Special handling for a template with a single "#", which does not
+        # assume a zero-padded index.
         filenames = [f"{pfx}{index}{sfx}" for index in indices]
     else:
         filenames = [f"{pfx}{index:0{count}}{sfx}" for index in indices]
