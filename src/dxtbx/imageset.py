@@ -47,7 +47,9 @@ __all__ = (
 )
 
 
-def _expand_template(template: str, indices: Iterable[int]) -> list[str]:
+def _expand_template_to_sorted_filenames(
+    template: str, indices: Iterable[int]
+) -> list[str]:
     """Expand a template string to a list of filenames.
 
     Args:
@@ -456,7 +458,7 @@ class ImageSetFactory:
 
             # Set the image range
             indices = range(image_range[0], image_range[1] + 1)
-            filenames = _expand_template(template, indices)
+            filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             if "master" not in template:
                 raise ValueError("Invalid template")
@@ -493,7 +495,7 @@ class ImageSetFactory:
 
         # Get the template format
         if "#" in template:
-            filenames = _expand_template(template, indices)
+            filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             filenames = [template]
 
@@ -510,7 +512,7 @@ class ImageSetFactory:
 
         # Expand the template if necessary
         if "#" in template:
-            filenames = _expand_template(template, indices)
+            filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             filenames = [template]
 
@@ -571,7 +573,7 @@ class ImageSetFactory:
 
         # Get the template format
         if "#" in template:
-            filenames = _expand_template(template, indices)
+            filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             filenames = [template]
 
