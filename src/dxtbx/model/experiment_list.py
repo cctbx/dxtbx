@@ -693,9 +693,29 @@ class ExperimentListFactory:
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
 
+        all_tof = False
+        for format_class, records in format_groups.items():
+            for i in records:
+                scan = i.get_scan()
+                if scan is not None and scan.has_property("time_of_flight"):
+                    all_tof = True
+                elif all_tof:
+                    raise RuntimeError(
+                        "Cannot process mix of ToF and non ToF experiments"
+                    )
+
         # Treat each format as a separate block of data
         for format_class, records in format_groups.items():
             if issubclass(format_class, FormatMultiImage):
+
+                if all_tof:
+                    _merge_sequence_model_metadata(
+                        records,
+                        compare_beam=compare_beam,
+                        compare_detector=compare_detector,
+                        compare_goniometer=compare_goniometer,
+                    )
+
                 for imageset in records:
                     experiments.extend(
                         ExperimentListFactory.from_imageset_and_crystal(
@@ -1243,6 +1263,42 @@ def _merge_model_metadata(
             compare_detector=compare_detector,
             compare_goniometer=compare_goniometer,
         )
+
+
+def _merge_sequence_model_metadata(
+    records: Iterable[ImageSequence],
+    compare_beam: Callable | None = None,
+    compare_detector: Callable | None = None,
+    compare_goniometer: Callable | None = None,
+):
+    record_altered = False
+    for prev, record in _iterate_with_previous(records):
+        if prev is None:
+            continue
+
+        record_altered = False
+        record_beam = record.get_beam()
+        record_detector = record.get_detector()
+        record_goniometer = record.get_goniometer()
+        prev_beam = prev.get_beam()
+        prev_detector = prev.get_detector()
+        prev_goniometer = prev.get_goniometer()
+
+        if record_beam is not prev_beam and compare_beam(record_beam, prev_beam):
+            record.set_beam(prev_beam)
+            record_altered = True
+        if record_detector is not prev_detector and compare_detector(
+            record_detector, prev_detector
+        ):
+            record.set_detector(prev_detector)
+            record_altered = True
+        if record_goniometer is not prev_goniometer and compare_goniometer(
+            record_goniometer, prev_goniometer
+        ):
+            record.set_goniometer(prev_goniometer)
+            record_altered = True
+
+    return record_altered
 
 
 def _merge_scans(
