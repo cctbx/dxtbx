@@ -27,6 +27,15 @@ rayonix_locator_str = """
     bin_size = None
       .type = int
       .help = Detector binning mode
+    cent_px = None
+      .type = floats
+      .help = center coordinate in pixel units (fast-scan, slow-scan)
+    detz_encoder = detector_z
+      .type = str
+      .help = Name of the detector z encoder in the EPICS data (commonly detector_z or MFX:DET:MMS:04.RBV or CXI:DS1:MMS:06.RBV)
+    detz_offset = None
+      .type = float
+      .help = offset to add to the detector_z encoder value in order to produce the correct distance (units are millimeters)
   }
 """
 
@@ -43,8 +52,16 @@ class FormatXTCRayonix(FormatXTC):
         bin_size = rayonix_cfg.binning_f()
         if self.params.rayonix.bin_size is not None:
             assert bin_size == self.params.rayonix.bin_size
-        self._pixel_size = rayonix.get_rayonix_pixel_size(bin_size)
+        self._pixel_size = rayonix.get_rayonix_pixel_size(bin_size) # in mm
         self._image_size = rayonix.get_rayonix_detector_dimensions(self._ds.env())
+        self._detz_encoder = None
+        try:
+            self._detz_encoder = psana.Detector(self.params.rayonix.detz_encoder)
+        except: pass
+        self._distance_mm = 100
+        self._center_mm = 50,50
+        if self.params.rayonix.cent_px is not None:
+            self._center_mm = [x*self._pixel_size for x in self.params.rayonix.cent_px]
 
     @staticmethod
     def understand(image_file):
@@ -64,13 +81,15 @@ class FormatXTCRayonix(FormatXTC):
         return flex.double(data)
 
     def get_detector(self, index=None):
+        if self.params.rayonix.detz_offset is not None and self._detz_encoder is not None:
+            self._distance_mm = self._detz_encoder(self.current_event) + self.params.rayonix.detz_offset
         return self._detector()
 
     def _detector(self):
         return self._detector_factory.simple(
             sensor="UNKNOWN",
-            distance=100.0,
-            beam_centre=(50.0, 50.0),
+            distance=self._distance_mm,
+            beam_centre=self._center_mm,
             fast_direction="+x",
             slow_direction="-y",
             pixel_size=(self._pixel_size, self._pixel_size),
