@@ -52,7 +52,7 @@ class FormatXTCRayonix(FormatXTC):
         bin_size = rayonix_cfg.binning_f()
         if self.params.rayonix.bin_size is not None:
             assert bin_size == self.params.rayonix.bin_size
-        self._pixel_size = rayonix.get_rayonix_pixel_size(bin_size) # in mm
+        self._pixel_size = rayonix.get_rayonix_pixel_size(bin_size)  # in mm
         self._image_size = rayonix.get_rayonix_detector_dimensions(self._ds.env())
         self._detz_encoder = None
         try:
@@ -80,9 +80,16 @@ class FormatXTCRayonix(FormatXTC):
         return flex.double(data)
 
     def get_detector(self, index=None):
-        if self.params.rayonix.detz_offset is not None and self._detz_encoder is not None:
-            self._distance_mm = self._detz_encoder(self.current_event) + self.params.rayonix.detz_offset
-            assert self._distance_mm > 0, "something is wrong with encoder or detz_offset"
+        if (
+            self.params.rayonix.detz_offset is not None
+            and self._detz_encoder is not None
+        ):
+            self._distance_mm = (
+                self._detz_encoder(self.current_event) + self.params.rayonix.detz_offset
+            )
+            assert (
+                self._distance_mm > 0
+            ), "something is wrong with encoder or detz_offset"
         return self._detector()
 
     def _detector(self):
