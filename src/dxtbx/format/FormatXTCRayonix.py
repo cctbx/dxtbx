@@ -29,13 +29,13 @@ rayonix_locator_str = """
       .help = Detector binning mode
     cent_mm = [170.77,169]
       .type = floats
-      .help = center coordinate in millimeters (fast-scan, slow-scan). Default value callibrated April 2024, for Rayonix XFEL MX-340 which is 340 mm across
+      .help = center coordinate in millimeters (fast-scan, slow-scan). These values will drift, update them using calibration samples (SiBe). Default value callibrated April 2024, for Rayonix XFEL MX-340 which is 340 mm across.
     detz_encoder = detector_z
       .type = str
       .help = Name of the detector z encoder in the EPICS data (commonly detector_z or MFX:DET:MMS:04.RBV or CXI:DS1:MMS:06.RBV)
     detz_offset = -140.2
       .type = float
-      .help = offset to add to the detector_z encoder value in order to produce the correct distance (units are millimeters). Default value calibrated April 2024.
+      .help = offset to add to the detector_z encoder value in order to produce the correct distance (units are millimeters). This value will drift, update it with calibration samples (SiBe). Default value calibrated April 2024.
   }
 """
 
