@@ -27,6 +27,15 @@ rayonix_locator_str = """
     bin_size = None
       .type = int
       .help = Detector binning mode
+    cent_mm = [170.77,169]
+      .type = floats
+      .help = center coordinate in millimeters (fast-scan, slow-scan). Default value callibrated April 2024, for Rayonix XFEL MX-340 which is 340 mm across
+    detz_encoder = detector_z
+      .type = str
+      .help = Name of the detector z encoder in the EPICS data (commonly detector_z or MFX:DET:MMS:04.RBV or CXI:DS1:MMS:06.RBV)
+    detz_offset = -140.2
+      .type = float
+      .help = offset to add to the detector_z encoder value in order to produce the correct distance (units are millimeters). Default value calibrated April 2024.
   }
 """
 
@@ -43,8 +52,15 @@ class FormatXTCRayonix(FormatXTC):
         bin_size = rayonix_cfg.binning_f()
         if self.params.rayonix.bin_size is not None:
             assert bin_size == self.params.rayonix.bin_size
-        self._pixel_size = rayonix.get_rayonix_pixel_size(bin_size)
+        self._pixel_size = rayonix.get_rayonix_pixel_size(bin_size) # in mm
         self._image_size = rayonix.get_rayonix_detector_dimensions(self._ds.env())
+        self._detz_encoder = None
+        try:
+            self._detz_encoder = psana.Detector(self.params.rayonix.detz_encoder)
+        except KeyError:
+            pass
+        self._distance_mm = 100  # a default to fall back on
+        self._center_mm = self.params.rayonix.cent_mm
 
     @staticmethod
     def understand(image_file):
@@ -64,13 +80,16 @@ class FormatXTCRayonix(FormatXTC):
         return flex.double(data)
 
     def get_detector(self, index=None):
+        if self.params.rayonix.detz_offset is not None and self._detz_encoder is not None:
+            self._distance_mm = self._detz_encoder(self.current_event) + self.params.rayonix.detz_offset
+            assert self._distance_mm > 0, "something is wrong with encoder or detz_offset"
         return self._detector()
 
     def _detector(self):
         return self._detector_factory.simple(
             sensor="UNKNOWN",
-            distance=100.0,
-            beam_centre=(50.0, 50.0),
+            distance=self._distance_mm,
+            beam_centre=self.params.rayonix.cent_mm,
             fast_direction="+x",
             slow_direction="-y",
             pixel_size=(self._pixel_size, self._pixel_size),
