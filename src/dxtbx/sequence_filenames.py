@@ -199,11 +199,11 @@ def locate_files_matching_template_string(template):
     matches = glob(template_string_to_glob_expr(template))
     if template.count("#") != 1:
         return matches
+    matches = [os.path.split(p) for p in matches]
     i0, i1 = template_string_number_index(template)
-    prefix = template[:i0]
     suffix = template[i1:]
-    patt = re.compile(prefix + "([^0]*)([0-9]+)" + suffix)
-    return [m for m in matches if patt.match(m)]
+    patt = re.compile("([^0]*)([0-9]+)" + suffix)
+    return [os.path.join(*m) for m in matches if patt.match(m[1])]
 
 
 def template_image_range(template):
