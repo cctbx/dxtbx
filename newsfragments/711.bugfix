@@ -1,1 +1,0 @@
-Override `setstate` and `getstate` methods for `PolychromaticBeam` to fix error when using `copy.deepcopy`.

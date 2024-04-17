@@ -1,1 +1,0 @@
-Additional features for `FormatXTCRayonix`
