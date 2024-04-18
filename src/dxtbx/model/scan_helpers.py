@@ -14,10 +14,11 @@ patterns = [
     r"([0-9]{2,12})\.(.*)",
     r"(.*)\.([0-9]{2,12})_(.*)",
     r"(.*)\.([0-9]{2,12})(.*)",
+    r"(.*)\.([0-9]{1,12})([^0]*)_(.*)",
     r"(.*)\.([0-9]{1})(.*)",
 ]
 
-joiners = [".", "_", "", ""]
+joiners = [".", "_", "", "_", ""]
 
 compiled_patterns = [re.compile(pattern) for pattern in patterns]
 
@@ -38,6 +39,10 @@ def template_regex(filename):
             exten = "." + groups[0][::-1]
             digits = groups[1][::-1]
             prefix = groups[2][::-1] + joiners[j]
+        elif len(groups) == 4:
+            exten = "." + groups[0][::-1]
+            digits = groups[1][::-1]
+            prefix = groups[3][::-1] + joiners[j] + groups[2][::-1]
         else:
             exten = ""
             digits = groups[0][::-1]

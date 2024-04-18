@@ -915,8 +915,6 @@ class ExperimentListFactory:
                     f"Image file {filenames[0]} appears to be a '{type(format_class).__name__}', but this is an abstract Format"
                 )
             else:
-                index = slice(*template_string_number_index(template))
-
                 image_range = kwargs.get("image_range")
                 if image_range:
                     first, last = image_range
@@ -926,7 +924,13 @@ class ExperimentListFactory:
                 if not kwargs.get("allow_incomplete_sequences", False):
                     if "#" in template:
                         # Check all images in range are present - if allowed
-                        all_numbers = {int(f[index]) for f in filenames}
+                        i0, i1 = template_string_number_index(template)
+                        prefix = template[:i0]
+                        suffix = template[i1:]
+                        all_numbers = {
+                            int(f.replace(prefix, "").replace(suffix, ""))
+                            for f in filenames
+                        }
                         missing = set(range(first, last + 1)) - all_numbers
                         if missing:
                             raise ValueError(
