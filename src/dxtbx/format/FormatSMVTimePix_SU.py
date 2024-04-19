@@ -10,8 +10,7 @@ import time
 
 from iotbx.detectors import SMVImage
 from scitbx import matrix
-
-from dials.array_family import flex
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatSMV import FormatSMV
 from dxtbx.masking import mask_untrusted_rectangle
