@@ -29,7 +29,7 @@
 # available for linking with the target name ``CCTBX::cctbx::cctbx``.
 #
 # The database for recognising these shared library targets can be found
-# in ``module_libraries.json`` in the folder above this FindCCTBX module.
+# in ``module_info.json`` in the folder above this FindCCTBX module.
 
 # If python isn't already included, pull it in here
 if (NOT TARGET Python::Interpreter)
@@ -55,15 +55,29 @@ function(_cctbx_determine_libtbx_build_dir)
     execute_process(COMMAND ${Python_EXECUTABLE} -c "import libtbx.load_env; print(abs(libtbx.env.build_path))"
                     RESULT_VARIABLE _LOAD_ENV_RESULT
                     OUTPUT_VARIABLE _LOAD_LIBTBX_BUILD_DIR
-                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET)
 
     if (NOT ${_LOAD_ENV_RESULT})
         # We found it via python import
+        message(DEBUG "Got libtbx build path: ${_LOAD_LIBTBX_BUILD_DIR}")
         set(CCTBX_BUILD_DIR "${_LOAD_LIBTBX_BUILD_DIR}" CACHE FILEPATH "Location of CCTBX build directory")
-        message(DEBUG "Got libtbx build path: ${CCTBX_BUILD_DIR}")
         return()
     endif()
 
+    message(DEBUG "Could not find through direct python; looking for libtbx.python as last resort")
+    execute_process(COMMAND "libtbx.python" -c "import libtbx.load_env; print(abs(libtbx.env.build_path))"
+                    RESULT_VARIABLE _TBX_LOAD_ENV_RESULT
+                    OUTPUT_VARIABLE _TBX_LOAD_LIBTBX_BUILD_DIR
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET)
+
+    if (NOT ${_TBX_LOAD_ENV_RESULT})
+        # We found it via python import
+        message(DEBUG "Got libtbx build path: ${_TBX_LOAD_LIBTBX_BUILD_DIR}")
+        set(CCTBX_BUILD_DIR "${_TBX_LOAD_LIBTBX_BUILD_DIR}" CACHE FILEPATH "Location of CCTBX build directory")
+        return()
+    endif()
 endfunction()
 
 function(_read_libtbx_env RESULT_VARIABLE)
@@ -99,7 +113,6 @@ endfunction()
 
 # Read details for a single module out of libtbx_env and other info
 function(_cctbx_read_module MODULE)
-    # Read the libtbx environment file
     _read_libtbx_env(_env_json)
     # We now have a json representation of libtbx_env - extract the entry for this modile
     string(JSON _module_json ERROR_VARIABLE _error GET "${_env_json}" module_dict ${MODULE})
@@ -119,39 +132,80 @@ function(_cctbx_read_module MODULE)
     string(JSON _include_paths GET "${_env_json}" include_path)
     string(JSON _lib_path GET "${_env_json}" lib_path)
 
-    # Work out what paths need to be included for this module
+    # Read the metainfo database - we might have extra information we need to inject
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../module_info.json" _modules_db)
+    # Read a list of libraries that this module exports
+    string(JSON _module_libs     ERROR_VARIABLE _error GET "${_modules_db}" "libraries" "${MODULE}")
+    # Read the extra include paths for this module
+    string(JSON _module_includes_array ERROR_VARIABLE _error GET "${_modules_db}" "includes" "${MODULE}")
+    if (_module_includes_array)
+        # Convert this array to a CMake list
+        string(JSON _n_includes LENGTH "${_module_includes_array}")
+        math(EXPR _n_includes "${_n_includes} - 1")  # CMake RANGE is inclusive
+        foreach( _n RANGE "${_n_includes}")
+            string(JSON _include GET "${_module_includes_array}" "${_n}")
+            list(APPEND _module_includes "${_include}")
+        endforeach()
+    endif()
+
+    # Work out what dist paths need to be consulted for this module
     string(JSON _n_dist_paths LENGTH "${_module_json}" dist_paths)
-    math(EXPR _n_dist_paths "${_n_dist_paths} - 1")
-    # We need to account for:
-    # Algorithm: if folder has an include/ subdir:
-    #               use that
-    #            else:
-    #               use the path above
-    # - this accounts for most cases, and it seems unlikely that we will
-    #   be importing uniquely from modules that this doesn't cover. There
-    #   was an exhaustive mapping list in tbx2cmake but the new installed
-    #   layout confuses that somewhat.
+    math(EXPR _n_dist_paths "${_n_dist_paths} - 1")  # CMake RANGE is inclusive
+
+    # We need to work out include/ directories for this module.
+    #
+    # Algorithm: For every listed dist path:
+    #               if the module_info database contains an entry for this module:
+    #                   use those
+    #               else if folder has an include/ subdir:
+    #                   use that
+    #               else:
+    #                   use the parent of the dist path above
     foreach(_n RANGE "${_n_dist_paths}")
         string(JSON _dist_path GET "${_module_json}" dist_paths ${_n})
         if(NOT _dist_path)
             continue()
         endif()
-        list(APPEND _dist_paths "${_dist_path}/include")
-        if (EXISTS "${_dist_path}/include")
-            list(APPEND _include_paths "${_dist_path}/include")
+        list(APPEND _dist_paths "${_dist_path}")
+        # If we don't have a specific include-path override for this,
+        # then use the dist-paths as roots for the include paths
+        if (_module_includes)
+            # Try appending every includes dir
+            foreach(_include ${_module_includes})
+                # Build up a full path for this
+                string(FIND "${_include}" "#build/" _build_relative)
+                if ("${_build_relative}" EQUAL 0)
+                    string(SUBSTRING "${_include}" 7 -1 _include)
+                    # We use an include directory relative to the environment build/
+                    cmake_path(APPEND CCTBX_BUILD_DIR "${_include}" OUTPUT_VARIABLE _full_include)
+                else()
+                    cmake_path(APPEND _dist_path "${_include}" OUTPUT_VARIABLE _full_include)
+                endif()
+                cmake_path(ABSOLUTE_PATH _full_include NORMALIZE)
+                # We might have multiple dist paths. Only use include dirs that exist.
+                if(EXISTS "${_full_include}")
+                    list(APPEND _include_paths "${_full_include}")
+                endif()
+            endforeach()
         else()
-            cmake_path(GET _dist_path PARENT_PATH _result)
-            list(APPEND _include_paths "${_result}")
+            # We didn't have any specific override. If include/ exists
+            # then use that, otherwise use the module parent directory.
+            if (EXISTS "${_dist_path}/include")
+                list(APPEND _include_paths "${_dist_path}/include")
+            else()
+                cmake_path(GET _dist_path PARENT_PATH _result)
+                list(APPEND _include_paths "${_result}")
+            endif()
         endif()
     endforeach()
     list(REMOVE_DUPLICATES _include_paths)
     list(REMOVE_DUPLICATES _dist_paths)
-
     target_include_directories(${_target} INTERFACE ${_include_paths})
+    message(DEBUG "${MODULE} include directories: ${_include_paths}")
+    set(CCTBX_${MODULE}_DIST "${_dist_paths}" PARENT_SCOPE)
 
     # Find if this module has a "base" library, and any sub-libraries
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../module_libraries.json" _modules_libs)
-    string(JSON _module_libs GET "${_modules_libs}" "${MODULE}")
+    # string(JSON _modules_libs GET "${_modules_libs}" "libraries")
     if (_module_libs)
         # We have actual libraries to import as imported libraries
         # iterate over every key: value in the object
@@ -159,22 +213,35 @@ function(_cctbx_read_module MODULE)
         math(EXPR _n_libs "${_n_libs} - 1")
         foreach(_n RANGE ${_n_libs})
             string(JSON _name MEMBER "${_module_libs}" ${_n})
-            string(JSON _libname GET "${_module_libs}" "${_name}")
-            set(lib_cache_var "_liblocation_CCTBX_${MODULE}_${_name}")
-            # Find this library
-            find_library(${lib_cache_var} ${_libname} HINTS ${_lib_path})
-            message(DEBUG "Found ${lib_cache_var}='${${lib_cache_var}}'")
-            if(_name STREQUAL base)
-                message(DEBUG "Module ${_target} has root library ${_libname}")
-                if (NOT ${lib_cache_var})
-                    message(WARNING "Libtbx module ${MODULE} has base library named ${_libname} but cannot find it - the module may be misconfigured")
-                else()
-                    target_link_libraries(${_target} INTERFACE ${${lib_cache_var}})
+            string(JSON _libnames GET "${_module_libs}" "${_name}")
+            set(_lib_searchname "_lib_${MODULE}_${_name}")
+
+
+            # Find this library - or the first of a list of fallback options
+            foreach(_libname ${_libnames})
+                message(DEBUG "Processing ${_libname}")
+                set(lib_specific_name "_liblocation_CCTBX_${MODULE}_${_libname}")
+                find_library(${lib_specific_name} ${_libname} HINTS ${_lib_path})
+                if(${lib_specific_name})
+                    set(${_lib_searchname} "${${lib_specific_name}}")
+                    message(DEBUG "Found ${lib_specific_name}=${${lib_specific_name}}")
+                    break()
                 endif()
+                message(DEBUG "Didn't find lib${_libname} for ${MODULE}::${_name}")
+            endforeach()
+
+            if (NOT ${_lib_searchname})
+                # If this library isn't present, it might not be important - so warn only
+                message(WARNING "Libtbx module ${MODULE} has library named lib${_libname} but cannot find it - the module may be misconfigured")
             else()
-                message(DEBUG "Extra library ${_target}::${_name} = ${_libname}")
-                add_library(${_target}::${_name} INTERFACE IMPORTED)
-                target_link_libraries(${_target}::${_name} INTERFACE ${_target} ${${lib_cache_var}})
+                if(_name STREQUAL base)
+                    message(DEBUG "Module library ${_target} has root library at ${${_lib_searchname}}")
+                    target_link_libraries(${_target} INTERFACE "${${_lib_searchname}}")
+                else()
+                    message(DEBUG "Extra library ${_target}::${_name} = ${${_lib_searchname}}")
+                    add_library(${_target}::${_name} INTERFACE IMPORTED)
+                    target_link_libraries(${_target}::${_name} INTERFACE ${_target} "${${_lib_searchname}}")
+                endif()
             endif()
         endforeach()
     endif()
@@ -184,6 +251,8 @@ endfunction()
 if (NOT CCTBX_BUILD_DIR)
     _cctbx_determine_libtbx_build_dir()
 endif()
+# Make this absolute, in case it was specified as relative
+cmake_path(ABSOLUTE_PATH CCTBX_BUILD_DIR BASE_DIRECTORY "${CMAKE_BINARY_DIR}" NORMALIZE)
 
 if (CCTBX_BUILD_DIR)
     message(DEBUG "Using build dir ${CCTBX_BUILD_DIR}")
