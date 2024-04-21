@@ -177,7 +177,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             key = lambda x: x[0]
             gb = groupby(sorted(hits, key=key), key=key)
             # dictionary where key is run number, and vals are indices of hits
-            self._hit_inds = {r:[ind for _,ind in group] for r,group in gb}
+            self._hit_inds = {r: [ind for _, ind in group] for r, group in gb}
 
     @staticmethod
     def understand(image_file):
@@ -253,7 +253,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 if self._hit_inds is not None and run_num in self._hit_inds:
                     temp = []
                     for i_hit in self._hit_inds[run_num]:
-                        temp.append( times[i_hit] )
+                        temp.append(times[i_hit])
                     times = tuple(temp)
                 if (
                     self.params.filter.required_present_codes
