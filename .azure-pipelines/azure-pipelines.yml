@@ -103,7 +103,7 @@ stages:
         matrix:
           python39:
             PYTHON_VERSION: 3.9
-          python311:
+          python312:
             PYTHON_VERSION: 3.12
       timeoutInMinutes: 60
       steps:
@@ -116,7 +116,7 @@ stages:
         matrix:
           python39:
             PYTHON_VERSION: 3.9
-          python311:
+          python312:
             PYTHON_VERSION: 3.12
       timeoutInMinutes: 20
       steps:
