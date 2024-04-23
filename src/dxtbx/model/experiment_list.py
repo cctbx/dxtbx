@@ -10,6 +10,7 @@ import logging
 import operator
 import os
 import pickle
+import sys
 from typing import Any, Callable, Generator, Iterable
 
 import natsort
@@ -50,6 +51,16 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+# REMOVE and inline when Python 3.10 is minimum
+if sys.version_info < (3, 10):
+    scaling_model_entry_points = importlib.metadata.entry_points().get(
+        "dxtbx.scaling_model_ext", []
+    )
+else:
+    scaling_model_entry_points = importlib.metadata.entry_points(
+        group="dxtbx.scaling_model_ext"
+    )
+
 
 class InvalidExperimentListError(RuntimeError):
     """
@@ -59,14 +70,6 @@ class InvalidExperimentListError(RuntimeError):
     from representing a well-formed experiment list. This doesn't indicate e.g.
     some problem with the data or model consistency.
     """
-
-
-try:
-    scaling_model_entry_points = importlib.metadata.entry_points()[
-        "dxtbx.scaling_model_ext"
-    ]
-except KeyError:
-    scaling_model_entry_points = []
 
 
 class FormatChecker:
