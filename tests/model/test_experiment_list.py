@@ -21,6 +21,7 @@ from dxtbx.model import (
     Detector,
     Experiment,
     ExperimentList,
+    ExperimentType,
     Goniometer,
     Scan,
     ScanFactory,
@@ -773,26 +774,26 @@ def test_partial_missing_model_serialization():
     check(elist, elist_)
 
 
-def test_experiment_is_still():
+def test_experiment_type():
     experiment = Experiment()
-    assert experiment.is_still()
+    assert experiment.get_type() == ExperimentType.STILL
     experiment.goniometer = Goniometer()
-    assert experiment.is_still()
+    assert experiment.get_type() == ExperimentType.STILL
     experiment.scan = Scan()
-    assert experiment.is_still()
+    assert experiment.get_type() == ExperimentType.STILL
     experiment.scan = Scan((1, 1000), (0, 0.05))
-    assert not experiment.is_still()
+    assert experiment.get_type() == ExperimentType.ROTATION
     # Specifically test the bug from dxtbx#4 triggered by ending on 0°
     experiment.scan = Scan((1, 1800), (-90, 0.05))
-    assert not experiment.is_still()
+    assert experiment.get_type() == ExperimentType.ROTATION
     experiment.scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
-    assert not experiment.is_still()
+    assert experiment.get_type() == ExperimentType.TOF
     experiment.scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"other_property": list(range(10))}
     )
-    assert experiment.is_still()
+    assert experiment.get_type() == ExperimentType.STILL
 
 
 def check(el1, el2):
