@@ -28,7 +28,7 @@
 
 namespace dxtbx { namespace model {
 
-  enum ExperimentType { rotation = 1, still = 2, tof = 3 };
+  enum ExperimentType { ROTATION = 1, STILL = 2, TOF = 3 };
 
   /**
    * A class to represent what's in an experiment.
@@ -141,27 +141,25 @@ namespace dxtbx { namespace model {
     /**
      * Check if this experiment represents a still image
      */
-    [[deprecated("use get_type()==ExperimentType.still instead")]] bool is_still()
-      const {
-      return !goniometer_ || !scan_ || scan_->is_still();
+    bool is_still() const {
+      return get_type() == STILL;
     }
 
     /**
      * Check if this experiment represents swept rotation image(s)
      */
-    [[deprecated("use get_type()==ExperimentType.rotation instead")]] bool is_sequence()
-      const {
+    bool is_sequence() const {
       return !is_still();
     }
 
-    ExperimentType get_type() {
+    ExperimentType get_type() const {
       if (scan_ && scan_->contains("time_of_flight")) {
-        return tof;
+        return TOF;
       }
       if (!goniometer_ || !scan_ || scan_->is_still()) {
-        return still;
+        return STILL;
       } else {
-        return rotation;
+        return ROTATION;
       }
     }
 

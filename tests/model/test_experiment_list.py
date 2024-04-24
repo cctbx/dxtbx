@@ -776,24 +776,24 @@ def test_partial_missing_model_serialization():
 
 def test_experiment_type():
     experiment = Experiment()
-    assert experiment.get_type() == ExperimentType.still
+    assert experiment.get_type() == ExperimentType.STILL
     experiment.goniometer = Goniometer()
-    assert experiment.get_type() == ExperimentType.still
+    assert experiment.get_type() == ExperimentType.STILL
     experiment.scan = Scan()
-    assert experiment.get_type() == ExperimentType.still
+    assert experiment.get_type() == ExperimentType.STILL
     experiment.scan = Scan((1, 1000), (0, 0.05))
-    assert experiment.get_type() == ExperimentType.rotation
+    assert experiment.get_type() == ExperimentType.ROTATION
     # Specifically test the bug from dxtbx#4 triggered by ending on 0°
     experiment.scan = Scan((1, 1800), (-90, 0.05))
-    assert experiment.get_type() == ExperimentType.rotation
+    assert experiment.get_type() == ExperimentType.ROTATION
     experiment.scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
-    assert experiment.get_type() == ExperimentType.tof
+    assert experiment.get_type() == ExperimentType.TOF
     experiment.scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"other_property": list(range(10))}
     )
-    assert experiment.get_type() == ExperimentType.still
+    assert experiment.get_type() == ExperimentType.STILL
 
 
 def check(el1, el2):

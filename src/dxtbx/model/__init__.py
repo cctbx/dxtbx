@@ -4,7 +4,6 @@ import copy
 import json
 import os
 import sys
-import warnings
 
 from orderedset import OrderedSet
 
@@ -602,20 +601,19 @@ class _experimentlist:
 
     def all_stills(self):
         """Check if all the experiments are stills"""
-        return all(exp.get_type() == ExperimentType.still for exp in self)
+        return all(exp.get_type() == ExperimentType.STILL for exp in self)
 
     def all_sequences(self):
         """Check if all the experiments are from sequences"""
-        warnings.warn("all_sequences() is deprecated. Use all_rotations() instead")
-        return all(exp.get_type() == ExperimentType.rotation for exp in self)
+        return self.all_rotations()
 
     def all_rotations(self):
         """Check if all the experiments are stills"""
-        return all(exp.get_type() == ExperimentType.rotation for exp in self)
+        return all(exp.get_type() == ExperimentType.ROTATION for exp in self)
 
     def all_tof(self):
-        """Check if all the experiments are stills"""
-        return all(exp.get_type() == ExperimentType.tof for exp in self)
+        """Check if all the experiments are time-of-flight"""
+        return all(exp.get_type() == ExperimentType.TOF for exp in self)
 
     def to_dict(self):
         """Serialize the experiment list to dictionary."""

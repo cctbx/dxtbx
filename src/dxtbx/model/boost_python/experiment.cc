@@ -75,9 +75,9 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   void export_experiment() {
     enum_<ExperimentType>("ExperimentType")
-      .value("still", still)
-      .value("rotation", rotation)
-      .value("tof", tof);
+      .value("STILL", STILL)
+      .value("ROTATION", ROTATION)
+      .value("TOF", TOF);
 
     class_<Experiment>("Experiment")
       .def(init<std::shared_ptr<BeamBase>,
