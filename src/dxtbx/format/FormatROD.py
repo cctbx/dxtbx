@@ -25,6 +25,7 @@ from scitbx.math import r3_rotation_axis_and_angle_as_matrix
 
 from dxtbx.ext import uncompress_rod_TY6
 from dxtbx.format.Format import Format
+from dxtbx.model.beam import Probe
 
 
 class FormatROD(Format):
@@ -283,11 +284,19 @@ class FormatROD(Format):
         return Format.get_beam(self)
 
     def _beam(self):
+
+        wavelength = self._bin_header["alpha1_wavelength"]
+        if wavelength <= 0.05:
+            probe = Probe.electron
+        else:
+            probe = Probe.xray
+
         return self._beam_factory.make_polarized_beam(
             sample_to_source=(0.0, 0.0, 1.0),
-            wavelength=self._bin_header["alpha1_wavelength"],
+            wavelength=wavelength,
             polarization=(0, 1, 0),
             polarization_fraction=0.5,
+            probe=probe,
         )
 
     def get_detector(self, index=None):
