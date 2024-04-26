@@ -33,6 +33,7 @@ try:
         DetectorNode,
         Experiment,
         ExperimentList,
+        ExperimentType,
         Goniometer,
         GoniometerBase,
         KappaDirection,
@@ -69,6 +70,7 @@ except ModuleNotFoundError:
         DetectorNode,
         Experiment,
         ExperimentList,
+        ExperimentType,
         Goniometer,
         GoniometerBase,
         KappaDirection,
@@ -599,11 +601,19 @@ class _experimentlist:
 
     def all_stills(self):
         """Check if all the experiments are stills"""
-        return all(exp.is_still() for exp in self)
+        return all(exp.get_type() == ExperimentType.STILL for exp in self)
 
     def all_sequences(self):
         """Check if all the experiments are from sequences"""
-        return all(exp.is_sequence() for exp in self)
+        return self.all_rotations()
+
+    def all_rotations(self):
+        """Check if all the experiments are stills"""
+        return all(exp.get_type() == ExperimentType.ROTATION for exp in self)
+
+    def all_tof(self):
+        """Check if all the experiments are time-of-flight"""
+        return all(exp.get_type() == ExperimentType.TOF for exp in self)
 
     def to_dict(self):
         """Serialize the experiment list to dictionary."""

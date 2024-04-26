@@ -1,3 +1,42 @@
+dxtbx 3.19.0 (2024-04-17)
+=========================
+
+Features
+--------
+
+- Add format reader for Jungfrau4M serial images from beamline ID29 at ESRF. (`#659 <https://github.com/cctbx/dxtbx/issues/659>`_)
+- Better handle spectra calibration for bad data in XTC format using new parameter: ``spectrum_required=``. (`#674 <https://github.com/cctbx/dxtbx/issues/674>`_)
+- Add Bruker and miniCBF format readers for the ELDICO ED-1 electron diffractometer with DECTRIS QUADRO detector. (`#682 <https://github.com/cctbx/dxtbx/issues/682>`_)
+- ``FormatSMVTimePix_SU``: Always mask out the central cross of virtual pixels. (`#683 <https://github.com/cctbx/dxtbx/issues/683>`_)
+- Add format reader for ISIS SXD detector. (`#687 <https://github.com/cctbx/dxtbx/issues/687>`_)
+- Detector distance can now be manually overridden for multi-panel detectors. (`#698 <https://github.com/cctbx/dxtbx/issues/698>`_)
+- Add format reader to read time of flight Laue data from MANDI. (`#703 <https://github.com/cctbx/dxtbx/issues/703>`_)
+- Additional features for `FormatXTCRayonix` (`#723 <https://github.com/cctbx/dxtbx/issues/723>`_)
+
+
+Bugfixes
+--------
+
+- Importing the (deprecated and removed) ``dxtbx.datablock`` module failed to display warning properly. (`#665 <https://github.com/cctbx/dxtbx/issues/665>`_)
+- Fix scan comparison for scan properties changes (`#669 <https://github.com/cctbx/dxtbx/issues/669>`_)
+- Eiger Support: Invert the module dimensions, only for older firmware versions. See https://media.dectris.com/230203-Release_Notes-DECTRIS_EIGER2.pdf for reference. (`#676 <https://github.com/cctbx/dxtbx/issues/676>`_)
+- ``FormatMRC``: Better handling of extended headers. (https://github.com/ccpem/mrcfile/issues/50), and extended headers are ignored if they contain junk values. (`#679 <https://github.com/cctbx/dxtbx/issues/679>`_)
+- Fixed some properties not being correctly parsed in `Scan.from_dict`. (`#688 <https://github.com/cctbx/dxtbx/issues/688>`_)
+- Negative rotation angles are now allowed, the goniometer axis will be inverted if necessary. (`#690 <https://github.com/cctbx/dxtbx/issues/690>`_)
+- ``dials.import`` now uses natural sorting on input data, instead of strict sorting. (`#697 <https://github.com/cctbx/dxtbx/issues/697>`_)
+- Fix setting detector distance for single panel detectors that have a hierarchy. (`#699 <https://github.com/cctbx/dxtbx/issues/699>`_)
+- Better recognition for SMV images from MLFSOM and other simulators from James Holton. (`#708 <https://github.com/cctbx/dxtbx/issues/708>`_)
+- Fix error introduced in ``FormatSMVJHSim`` causing test failures. (`#710 <https://github.com/cctbx/dxtbx/issues/710>`_)
+- `PolychromaticBeam` can now be copied with `copy.deepcopy`. (`#711 <https://github.com/cctbx/dxtbx/issues/711>`_)
+- Add missing argument to `PolychromaticBeamPickleSuite.getinitargs`. (`#714 <https://github.com/cctbx/dxtbx/issues/714>`_)
+
+
+Misc
+----
+
+- `#620 <https://github.com/cctbx/dxtbx/issues/620>`_, `#667 <https://github.com/cctbx/dxtbx/issues/667>`_, `#670 <https://github.com/cctbx/dxtbx/issues/670>`_, `#689 <https://github.com/cctbx/dxtbx/issues/689>`_, `#691 <https://github.com/cctbx/dxtbx/issues/691>`_, `#694 <https://github.com/cctbx/dxtbx/issues/694>`_, `#696 <https://github.com/cctbx/dxtbx/issues/696>`_, `#701 <https://github.com/cctbx/dxtbx/issues/701>`_, `#704 <https://github.com/cctbx/dxtbx/issues/704>`_, `#707 <https://github.com/cctbx/dxtbx/issues/707>`_, `#713 <https://github.com/cctbx/dxtbx/issues/713>`_
+
+
 dxtbx 3.17.0 (2023-11-03)
 =========================
 

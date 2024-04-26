@@ -10,6 +10,7 @@ import logging
 import operator
 import os
 import pickle
+import sys
 from typing import Any, Callable, Generator, Iterable
 
 import natsort
@@ -50,6 +51,16 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+# REMOVE and inline when Python 3.10 is minimum
+if sys.version_info < (3, 10):
+    scaling_model_entry_points = importlib.metadata.entry_points().get(
+        "dxtbx.scaling_model_ext", []
+    )
+else:
+    scaling_model_entry_points = importlib.metadata.entry_points(
+        group="dxtbx.scaling_model_ext"
+    )
+
 
 class InvalidExperimentListError(RuntimeError):
     """
@@ -59,14 +70,6 @@ class InvalidExperimentListError(RuntimeError):
     from representing a well-formed experiment list. This doesn't indicate e.g.
     some problem with the data or model consistency.
     """
-
-
-try:
-    scaling_model_entry_points = importlib.metadata.entry_points()[
-        "dxtbx.scaling_model_ext"
-    ]
-except KeyError:
-    scaling_model_entry_points = []
 
 
 class FormatChecker:
@@ -935,8 +938,6 @@ class ExperimentListFactory:
                     f"Image file {filenames[0]} appears to be a '{type(format_class).__name__}', but this is an abstract Format"
                 )
             else:
-                index = slice(*template_string_number_index(template))
-
                 image_range = kwargs.get("image_range")
                 if image_range:
                     first, last = image_range
@@ -946,7 +947,13 @@ class ExperimentListFactory:
                 if not kwargs.get("allow_incomplete_sequences", False):
                     if "#" in template:
                         # Check all images in range are present - if allowed
-                        all_numbers = {int(f[index]) for f in filenames}
+                        i0, i1 = template_string_number_index(template)
+                        prefix = template[:i0]
+                        suffix = template[i1:]
+                        all_numbers = {
+                            int(f.replace(prefix, "").replace(suffix, ""))
+                            for f in filenames
+                        }
                         missing = set(range(first, last + 1)) - all_numbers
                         if missing:
                             raise ValueError(

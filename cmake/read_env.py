@@ -169,11 +169,6 @@ if __name__ == "__main__":
         # If this is an installed libtbx_env, then we have rules about rewriting it
         # this is... non-ideal, but since release libtbx_env files are broken on
         # windows, this is the best place to deal with it.
-        if sys.platform == "darwin":
-            print(
-                "Warning: Not properly handling python.app nuances for environment determination",
-                file=sys.stderr,
-            )
         new_prefix = absolute_path(args.sys_prefix.resolve())
         if args.windows:
             new_prefix = absolute_path(args.sys_prefix.resolve() / "library")

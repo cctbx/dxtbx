@@ -90,8 +90,8 @@ stages:
         matrix:
           python39:
             PYTHON_VERSION: 3.9
-          python311:
-            PYTHON_VERSION: 3.11
+          python312:
+            PYTHON_VERSION: 3.12
       timeoutInMinutes: 60
       steps:
       - template: unix-build.yml
@@ -103,8 +103,8 @@ stages:
         matrix:
           python39:
             PYTHON_VERSION: 3.9
-          python311:
-            PYTHON_VERSION: 3.11
+          python312:
+            PYTHON_VERSION: 3.12
       timeoutInMinutes: 60
       steps:
       - template: unix-build.yml
@@ -116,8 +116,8 @@ stages:
         matrix:
           python39:
             PYTHON_VERSION: 3.9
-          python311:
-            PYTHON_VERSION: 3.11
+          python312:
+            PYTHON_VERSION: 3.12
       timeoutInMinutes: 20
       steps:
       - template: windows-build.yml
