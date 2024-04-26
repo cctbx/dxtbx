@@ -699,13 +699,19 @@ class ExperimentListFactory:
         all_tof = False
         for format_class, records in format_groups.items():
             for i in records:
-                scan = i.get_scan()
-                if scan is not None and scan.has_property("time_of_flight"):
-                    all_tof = True
-                elif all_tof:
-                    raise RuntimeError(
-                        "Cannot process mix of ToF and non ToF experiments"
-                    )
+                try:  # records can be ImageMetadataRecord or ImageSequence
+                    scan = i.get_scan()
+                    if scan is not None and scan.has_property("time_of_flight"):
+                        all_tof = True
+                    elif all_tof:
+                        raise RuntimeError(
+                            "Cannot process mix of ToF and non ToF experiments"
+                        )
+                except AttributeError:
+                    if all_tof:
+                        raise RuntimeError(
+                            "Cannot process mix of ToF and non ToF experiments"
+                        )
 
         # Treat each format as a separate block of data
         for format_class, records in format_groups.items():
