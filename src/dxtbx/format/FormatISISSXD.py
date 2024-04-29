@@ -56,14 +56,20 @@ class FormatISISSXD(FormatHDF5):
         run_number = self.get_experiment_run_number()
         return f"{title} ({run_number})"
 
-    def get_goniometer(self, index: int = None) -> Goniometer:
+    def get_goniometer(self, idx: int = None) -> Goniometer:
         rotation_axis = (0.0, 1.0, 0.0)
         fixed_rotation = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
         goniometer = GoniometerFactory.make_goniometer(rotation_axis, fixed_rotation)
         try:
-            angle = float(self.get_experiment_title().split("w=")[1].split()[0])
-            if angle < 0:
-                angle *= -1
+            experiment_title = self.get_experiment_title()
+            if "w=" in experiment_title:
+                angle = float(experiment_title().split("w=")[1].split()[0])
+            elif "wccr" in experiment_title:
+                angle = float(experiment_title.split("wccr=")[1].split()[0])
+            elif "wtl" in experiment_title:
+                angle = float(experiment_title.split("wtl=")[1].split()[0])
+            else:
+                return goniometer
             goniometer.rotate_around_origin(rotation_axis, angle)
         except (ValueError, IndexError):
             pass
