@@ -1,0 +1,1 @@
+``FormatBrukerED1``: the gain is not well-known, so reset to 1.0 and allow the user to override at import.
