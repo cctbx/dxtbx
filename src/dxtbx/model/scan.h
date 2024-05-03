@@ -205,7 +205,8 @@ namespace dxtbx { namespace model {
     }
 
     template <typename T>
-    scitbx::af::shared<T> get_property(const typename T::key_type &key) const {
+    scitbx::af::shared<T> get_property(
+      const typename flex_table<scan_property_types>::key_type &key) const {
       DXTBX_ASSERT(properties_.contains(key));
       return properties_.get<T>(key);
     }
