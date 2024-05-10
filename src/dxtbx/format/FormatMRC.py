@@ -212,12 +212,28 @@ class FormatMRC(Format):
 
         # Beam centre not in the header - set to the image centre
         beam_centre = [(pixel_size * i) / 2 for i in image_size]
+
+        # As reported in https://doi.org/10.1016/j.str.2023.07.004
+        # and investigated further by @huwjenkins in
+        # https://github.com/huwjenkins/em_image_conversions/wiki/Y%E2%80%90axis-flips-in-conversion-to-MRC-using-EMAN2-and-IMOD
+        # different interpretations of the MRC format may lead to a flip in the
+        # Y-axis. Our understanding is that ThermoFisher (FEI) data always
+        # assumes the slow axis is -y, so viewed from the source to the image
+        # the origin is upper left. Most (all?) non-FEI data, e.g. images that
+        # have been converted by EMAN2 or IMOD, assume the slow axis is +y, and
+        # the origin is lower left. If we flip the slow axis, we need to invert
+        # the distance too.
+        slow_axis = "-y"
+        if not self._header_dictionary["exttyp"].startswith(b"FEI"):
+            distance = -1.0 * distance
+            slow_axis = "+y"
+
         detector = self._detector_factory.simple(
             "PAD",
             distance,
             beam_centre,
             "+x",
-            "-y",
+            slow_axis,
             (pixel_size, pixel_size),
             image_size,
             trusted_range,
