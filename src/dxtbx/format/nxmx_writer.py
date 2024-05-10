@@ -1,6 +1,4 @@
 """
-Note, scans and gonios not supported here. This writer essentially writes still images
-
 Example to write 10 cbfs to a single NXmx file:
 writer = NXmxWriter("*.cbf")
 writer.write_nxmx("example.h5")
