@@ -54,7 +54,6 @@ def find_meta_filename(master_like: Path) -> Path:
                     return kfile
         return None
 
-    master_like = Path(master_like)
     with h5py.File(master_like) as f:
         meta_filename = f.visit(_local_visit)
 
