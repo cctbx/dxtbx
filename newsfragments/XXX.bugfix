@@ -1,0 +1,1 @@
+Fix case where old I03 nexus data (pre-2020) would fail to process.
