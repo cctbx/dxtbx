@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import datetime
 from functools import cached_property
 from pathlib import Path
@@ -11,9 +12,21 @@ import nxmx
 from dxtbx.format.FormatNXmx import FormatNXmx
 
 
-def get_bit_depth_from_meta(meta_file_name):
+def get_bit_depth_from_meta(meta_file_name: Path) -> int:
     with h5py.File(meta_file_name) as f:
-        return int(f["/_dectris/bit_depth_image"][()])
+        with contextlib.suppress(KeyError):
+            return int(f["/_dectris/bit_depth_image"][()])
+
+        # This might be a very old meta file, that only had 'datatype'?
+        if "datatype" in f:
+            unique_vals = np.unique(f["datatype"])
+            if not len(unique_vals) == 1:
+                raise RuntimeError(
+                    f"Error: Could not determine bit depth from metafile {meta_file_name} (multiple bit depths)"
+                )
+            return np.dtype(unique_vals[0]).itemsize * 8
+
+    raise RuntimeError("Cannot determine metafile bit depth")
 
 
 def find_meta_filename(master_like: Path) -> Path:
