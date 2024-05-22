@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import datetime
-import os
 from functools import cached_property
 from pathlib import Path
-from typing import Union
 
 import h5py
 import numpy as np
@@ -18,31 +16,46 @@ def get_bit_depth_from_meta(meta_file_name):
         return int(f["/_dectris/bit_depth_image"][()])
 
 
-def find_meta_filename(master_like: Union[str, Path]) -> Union[str, Path]:
+def find_meta_filename(master_like: Path) -> Path:
     """
     Find the path to the '..._meta.h5' file in the same directory as the master file.
     Args:
         master_like:  File path of the master HDF5 file.
+
     Returns:
         File path of the HDF5 metadata '..._meta.h5' file.
+
+    Raises:
+        RuntimeError: If no meta-file was found.
     """
 
-    def _local_visit(name):
+    def _local_visit(name) -> Path | None:
         obj = f[name]
         if not hasattr(obj, "keys"):
             return None
         for k in obj.keys():
             kclass = obj.get(k, getlink=True, getclass=True)
             if kclass is h5py._hl.group.ExternalLink:
-                kfile = obj.get(k, getlink=True).filename
-                if kfile.split(".")[0].endswith("meta"):
+                kfile = master_like.parent / obj.get(k, getlink=True).filename
+                if kfile.stem.endswith("meta"):
                     return kfile
+        return None
 
-    master_dir = os.path.split(master_like)[0]
+    master_like = Path(master_like)
     with h5py.File(master_like) as f:
         meta_filename = f.visit(_local_visit)
 
-    return os.path.join(master_dir, meta_filename)
+    if meta_filename is None:
+        # Try a fallback of looking for a file named the same but "meta.h5"
+        look_for = master_like.with_name(
+            master_like.stem.removesuffix("_master") + "_meta.h5"
+        )
+        if look_for.is_file():
+            meta_filename = look_for
+        else:
+            raise RuntimeError(f"Could not find h5 meta file for {master_like}")
+
+    return meta_filename
 
 
 class FormatNXmxDLS(FormatNXmx):
@@ -76,11 +89,11 @@ class FormatNXmxDLS(FormatNXmx):
             # See https://jira.diamond.ac.uk/browse/MXGDA-3674
             try:
                 self._bit_depth_readout = get_bit_depth_from_meta(self._meta)
-            except Exception:
+            except RuntimeError:
                 self._bit_depth_readout = 16
 
     @cached_property
-    def _meta(self):
+    def _meta(self) -> Path:
         return find_meta_filename(self._image_file)
 
     def _get_nxmx(self, fh: h5py.File):
