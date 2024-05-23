@@ -1,3 +1,12 @@
+DIALS 3.19.1 (2024-05-23)
+=========================
+
+Bugfixes
+--------
+
+- Fix case where old I03 Eiger nexus data (pre-2020) would fail to process. (`#737 <https://github.com/cctbx/dxtbx/issues/737>`_)
+
+
 dxtbx 3.19.0 (2024-04-17)
 =========================
 
