@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime
+import logging
 from functools import cached_property
 from pathlib import Path
 
@@ -10,6 +11,8 @@ import numpy as np
 import nxmx
 
 from dxtbx.format.FormatNXmx import FormatNXmx
+
+logger = logging.getLogger(__name__)
 
 
 def get_bit_depth_from_meta(meta_file_name: Path) -> int:
@@ -103,6 +106,9 @@ class FormatNXmxDLS(FormatNXmx):
             try:
                 self._bit_depth_readout = get_bit_depth_from_meta(self._meta)
             except RuntimeError:
+                logger.warning(
+                    "Could not determine bit depth of legacy image data: Falling back to default of 16"
+                )
                 self._bit_depth_readout = 16
 
     @cached_property
