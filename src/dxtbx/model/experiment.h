@@ -157,10 +157,12 @@ namespace dxtbx { namespace model {
         return TOF;
       }
 
-      dxtbx::model::BeamBase &beam_base_ref = *beam_;
-      PolychromaticBeam *beam = dynamic_cast<PolychromaticBeam *>(&beam_base_ref);
-      if (beam != nullptr) {
-        return LAUE;
+      if (beam_) {
+        dxtbx::model::BeamBase &beam_base_ref = *beam_;
+        PolychromaticBeam *beam = dynamic_cast<PolychromaticBeam *>(&beam_base_ref);
+        if (beam != nullptr) {
+          return LAUE;
+        }
       }
 
       if (!goniometer_ || !scan_ || scan_->is_still()) {
