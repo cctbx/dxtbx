@@ -615,6 +615,10 @@ class _experimentlist:
         """Check if all the experiments are time-of-flight"""
         return all(exp.get_type() == ExperimentType.TOF for exp in self)
 
+    def all_laue(self):
+        """Check if all the experiments are Laue experiments"""
+        return all(exp.get_type() == ExperimentType.LAUE for exp in self)
+
     def to_dict(self):
         """Serialize the experiment list to dictionary."""
 

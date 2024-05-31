@@ -17,6 +17,7 @@ from dxtbx.format.Format import Format
 from dxtbx.imageset import ImageSetFactory
 from dxtbx.model import (
     Beam,
+    BeamFactory,
     Crystal,
     Detector,
     Experiment,
@@ -26,6 +27,11 @@ from dxtbx.model import (
     Scan,
     ScanFactory,
 )
+
+try:
+    from ..dxtbx_model_ext import Probe
+except ModuleNotFoundError:
+    from dxtbx_model_ext import Probe  # type: ignore
 from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactory
 
 
@@ -786,10 +792,22 @@ def test_experiment_type():
     # Specifically test the bug from dxtbx#4 triggered by ending on 0°
     experiment.scan = Scan((1, 1800), (-90, 0.05))
     assert experiment.get_type() == ExperimentType.ROTATION
+
+    experiment.beam = BeamFactory.make_polychromatic_beam(
+        direction=(0, 0, -1),
+        sample_to_source_distance=(100),
+        probe=Probe.xray,
+        wavelength_range=(1, 10),
+    )
+
+    assert experiment.get_type() == ExperimentType.LAUE
+
     experiment.scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
     assert experiment.get_type() == ExperimentType.TOF
+
+    experiment.beam = Beam()
     experiment.scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"other_property": list(range(10))}
     )
@@ -1184,3 +1202,73 @@ def test_from_templates(dials_data):
     assert len(expts) == 1
     assert expts[0].imageset.get_template() == str(template)
     assert len(expts[0].imageset) == 45
+
+
+def test_experiment_list_all():
+    experiments = ExperimentList()
+    for i in range(3):
+        experiments.append(Experiment())
+
+    assert experiments.all_stills()
+    experiments[0].goniometer = Goniometer()
+    assert experiments.all_stills()
+    experiments[1].goniometer = Goniometer()
+    experiments[2].goniometer = Goniometer()
+    assert experiments.all_stills()
+
+    experiments[0].beam = BeamFactory.make_polychromatic_beam(
+        direction=(0, 0, -1),
+        sample_to_source_distance=(100),
+        probe=Probe.xray,
+        wavelength_range=(1, 10),
+    )
+    assert not experiments.all_stills()
+    experiments[1].beam = BeamFactory.make_polychromatic_beam(
+        direction=(0, 0, -1),
+        sample_to_source_distance=(100),
+        probe=Probe.xray,
+        wavelength_range=(1, 10),
+    )
+    experiments[2].beam = BeamFactory.make_polychromatic_beam(
+        direction=(0, 0, -1),
+        sample_to_source_distance=(100),
+        probe=Probe.xray,
+        wavelength_range=(1, 10),
+    )
+    assert experiments.all_laue()
+
+    experiments[0].beam = Beam()
+    assert not experiments.all_laue()
+    experiments[1].beam = Beam()
+    experiments[2].beam = Beam()
+    assert experiments.all_stills()
+
+    experiments[0].scan = Scan((1, 1000), (0, 0.05))
+    assert not experiments.all_stills()
+    experiments[1].scan = Scan((1, 1000), (0, 0.05))
+    experiments[2].scan = Scan((1, 1000), (0, 0.05))
+    assert experiments.all_rotations()
+
+    experiments[0].scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"time_of_flight": list(range(10))}
+    )
+    assert not experiments.all_rotations()
+    experiments[1].scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"time_of_flight": list(range(10))}
+    )
+    experiments[2].scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"time_of_flight": list(range(10))}
+    )
+    assert experiments.all_tof()
+
+    experiments[0].scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"other_property": list(range(10))}
+    )
+    assert not experiments.all_tof()
+    experiments[1].scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"other_property": list(range(10))}
+    )
+    experiments[2].scan = ScanFactory.make_scan_from_properties(
+        (1, 10), properties={"other_property": list(range(10))}
+    )
+    assert experiments.all_stills()

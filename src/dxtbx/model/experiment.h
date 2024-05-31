@@ -28,7 +28,7 @@
 
 namespace dxtbx { namespace model {
 
-  enum ExperimentType { ROTATION = 1, STILL = 2, TOF = 3 };
+  enum ExperimentType { ROTATION = 1, STILL = 2, TOF = 3, LAUE = 4 };
 
   /**
    * A class to represent what's in an experiment.
@@ -156,6 +156,15 @@ namespace dxtbx { namespace model {
       if (scan_ && scan_->contains("time_of_flight")) {
         return TOF;
       }
+
+      if (beam_) {
+        dxtbx::model::BeamBase &beam_base_ref = *beam_;
+        PolychromaticBeam *beam = dynamic_cast<PolychromaticBeam *>(&beam_base_ref);
+        if (beam != nullptr) {
+          return LAUE;
+        }
+      }
+
       if (!goniometer_ || !scan_ || scan_->is_still()) {
         return STILL;
       } else {
