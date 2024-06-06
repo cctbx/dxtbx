@@ -3,14 +3,14 @@ from __future__ import annotations
 import sys
 
 import numpy as np
-import serialtbx.detector.cspad
-from serialtbx.detector import cspad
-from serialtbx.detector.xtc import env_distance
 
+import serialtbx.detector.cspad
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
+from serialtbx.detector import cspad
+from serialtbx.detector.xtc import env_distance
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy

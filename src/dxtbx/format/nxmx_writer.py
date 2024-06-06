@@ -12,7 +12,7 @@ import sys
 
 import h5py
 import numpy as np
-from serialtbx.detector import basis
+from dials.util.options import ArgumentParser, flatten_experiments
 
 from cctbx import factor_ev_angstrom
 from libtbx import easy_pickle
@@ -20,8 +20,7 @@ from libtbx.phil import parse
 from libtbx.utils import Sorry
 from scitbx import matrix
 from scitbx.array_family import flex
-
-from dials.util.options import ArgumentParser, flatten_experiments
+from serialtbx.detector import basis
 
 from dxtbx import flumpy
 from dxtbx.format.FormatCBFMultiTile import angle_and_axis

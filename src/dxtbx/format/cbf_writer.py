@@ -13,9 +13,9 @@ import os
 import sys
 
 import pycbf
-from serialtbx.detector import basis
 
 from scitbx.array_family import flex
+from serialtbx.detector import basis
 
 import dxtbx.format.Registry
 from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
