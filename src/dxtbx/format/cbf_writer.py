@@ -34,7 +34,8 @@ def add_frame_specific_cbf_tables(
     """Adds tables to cbf handle that won't already exsist if the cbf file is just a header
     @ param wavelength Wavelength in angstroms
     @ param timestamp String formatted timestamp for the image
-    @ param trusted_ranges Array of trusted range tuples (min, max), one for each element"""
+    @ param trusted_ranges Array of trusted range tuples (min, max), one for each element
+    """
 
     """Data items in the DIFFRN_RADIATION category describe
    the radiation used for measuring diffraction intensities,
@@ -70,11 +71,15 @@ def add_frame_specific_cbf_tables(
             diffrn_id,
             "INJECTION" if is_xfel else "unknown",
             "0",
-            "electrospray"
-            if is_xfel
-            else "unknown" "crystals injected by electrospray"
-            if is_xfel
-            else "unknown",
+            (
+                "electrospray"
+                if is_xfel
+                else (
+                    "unknown" "crystals injected by electrospray"
+                    if is_xfel
+                    else "unknown"
+                )
+            ),
         ]
     )
 

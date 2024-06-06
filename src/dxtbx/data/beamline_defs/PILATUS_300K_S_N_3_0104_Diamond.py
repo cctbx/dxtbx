@@ -45,9 +45,9 @@ class get_definition(dxtbx.data.beamline_defs.template):
         b[lookup("df.rad.mono")] = "Silicon 111"
         b[lookup("df.src.details")] = "Nowell et al. (2012)"
         b[lookup("df.src.type")] = "Diamond Light Source Beamline I19-2"
-        b[
-            lookup("references")
-        ] = "Nowell, H. et al. (2012) J. Synchrotron Rad. 19, 435-441."
+        b[lookup("references")] = (
+            "Nowell, H. et al. (2012) J. Synchrotron Rad. 19, 435-441."
+        )
         b[lookup("sw.collection")] = "GDA - generic data acquisition software"
 
         return b

@@ -3,7 +3,6 @@ Experimental format for TIA .ser files used by some FEI microscopes. See
 https://personal.ntu.edu.sg/cbb/info/TIAformat/index.html
 """
 
-
 from __future__ import annotations
 
 import os
@@ -123,9 +122,9 @@ def read_emi(filename):
     grp = root.find("ExperimentalDescription/Root")
 
     for elem in grp:
-        _emi[
-            "{} [{}]".format(elem.findtext("Label"), elem.findtext("Unit"))
-        ] = _parseEntry_emi(elem.findtext("Value"))
+        _emi["{} [{}]".format(elem.findtext("Label"), elem.findtext("Unit"))] = (
+            _parseEntry_emi(elem.findtext("Value"))
+        )
 
     # AcquireInfo
     grp = root.find("AcquireInfo")

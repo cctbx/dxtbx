@@ -1,6 +1,5 @@
 """Format object for XDS files"""
 
-
 from __future__ import annotations
 
 import sys

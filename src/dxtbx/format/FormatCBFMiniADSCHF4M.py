@@ -4,7 +4,6 @@ HF-4M SN H401 currently on APS sector 24 (NE-CAT).
 Located in dxtbx/format
 """
 
-
 from __future__ import annotations
 
 import binascii

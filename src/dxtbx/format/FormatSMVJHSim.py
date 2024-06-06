@@ -1,6 +1,5 @@
 """An implementation of the SMV image reader for JHSim images."""
 
-
 from __future__ import annotations
 
 import calendar

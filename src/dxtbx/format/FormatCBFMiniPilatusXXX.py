@@ -3,7 +3,6 @@ An implementation of the CBF image reader for Pilatus images, from the Pilatus
 6M SN 100 currently on Diamond I04.
 """
 
-
 from __future__ import annotations
 
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus

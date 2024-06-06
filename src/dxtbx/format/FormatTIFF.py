@@ -6,7 +6,6 @@ which really will acquire the full image including header information
 and generate the experimental model representations.
 """
 
-
 from __future__ import annotations
 
 from dxtbx import IncorrectFormatError

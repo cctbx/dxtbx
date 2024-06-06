@@ -36,7 +36,6 @@ To instantly drop the cache you can use
 Any further access attempts will then result in an exception.
 """
 
-
 from __future__ import annotations
 
 import io

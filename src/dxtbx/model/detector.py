@@ -216,7 +216,7 @@ detector_phil_scope = libtbx.phil.parse(
 def merge_panel_scope_extracts_by_id(panel_params):
 
     id_to_params = {}
-    for (i, params) in enumerate(panel_params):
+    for i, params in enumerate(panel_params):
         if params.id not in id_to_params:
             id_to_params[params.id] = [
                 i,

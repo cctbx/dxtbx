@@ -15,7 +15,6 @@ from dxtbx.model.scan import ScanFactory
 
 
 class FormatISISSXD(FormatHDF5):
-
     """
     Class to read image files from ISIS SXD
     (https://www.isis.stfc.ac.uk/Pages/sxd.aspx)
@@ -195,7 +194,6 @@ class FormatISISSXD(FormatHDF5):
         )
 
     def _get_panel_projections_2d(self) -> dict:
-
         """
         Returns a projection of the
         detector flattened around the bottom panel (11)

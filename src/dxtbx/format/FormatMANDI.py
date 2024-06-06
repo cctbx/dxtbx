@@ -20,7 +20,6 @@ from dxtbx.model.scan import Scan, ScanFactory
 
 
 class FormatMANDI(FormatHDF5):
-
     """
     Class to read NXTOFRAW from MaNDi
     (https://neutrons.ornl.gov/mandi)
@@ -404,7 +403,6 @@ class FormatMANDI(FormatHDF5):
         write_tof_bins: bool = True,
         nproc: int = 8,
     ) -> None:
-
         """
         Generates histogram spectra for a given detector and writes it to nxs_file
         """
@@ -460,7 +458,6 @@ class FormatMANDI(FormatHDF5):
         panel_name: str,
         nproc=8,
     ) -> np.array:
-
         """
         Generates histogram data for a given panel
         """
@@ -503,7 +500,6 @@ class FormatMANDI(FormatHDF5):
     def get_time_range_for_panel(
         nxs_file: h5py.File, panel_size: Tuple[float, float], panel_name: str
     ) -> Tuple[float, float]:
-
         """
         Returns the range of event times for a given panel
         """
@@ -542,7 +538,6 @@ class FormatMANDI(FormatHDF5):
     def get_time_range_for_dataset(
         nxs_file_path: str, panel_size: Tuple[int, int]
     ) -> Tuple[float, float]:
-
         """
         Iterates over num_panels to find the overall min/max tof event recorded
         """
@@ -583,7 +578,6 @@ class FormatMANDI(FormatHDF5):
         delta_tof: float = 50,
         padding: float = 100,
     ) -> np.ndarray:
-
         """
         delta_tof: float (usec)
         padding: float (usec)

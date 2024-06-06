@@ -1,6 +1,5 @@
 """An implementation of the SMV image reader for CMOS1 images, from ALS 4.2.2"""
 
-
 from __future__ import annotations
 
 import calendar
