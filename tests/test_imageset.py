@@ -76,7 +76,6 @@ def test_format(dials_regression, image):
 
 @pytest.fixture(scope="session")
 def image_examples(dials_data):
-
     return [
         str(dials_data("image_examples", pathlib=True) / e)
         for e in [

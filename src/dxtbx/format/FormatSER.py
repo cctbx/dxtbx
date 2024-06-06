@@ -389,7 +389,6 @@ class FormatSER(Format):
 class FormatSERimages(FormatSER):
     @staticmethod
     def understand(image_file):
-
         with FormatSER.open_file(image_file, "rb") as fh:
             fh.seek(18)
             nimages = struct.unpack("<I", fh.read(4))[0]
@@ -421,14 +420,12 @@ class FormatSERimages(FormatSER):
 class FormatSERstack(FormatMultiImage, FormatSER):
     @staticmethod
     def understand(image_file):
-
         with FormatSER.open_file(image_file, "rb") as fh:
             fh.seek(18)
             nimages = struct.unpack("<I", fh.read(4))[0]
         return nimages > 1
 
     def __init__(self, image_file, **kwargs):
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         FormatMultiImage.__init__(self, **kwargs)

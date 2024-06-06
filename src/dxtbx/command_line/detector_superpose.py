@@ -92,10 +92,9 @@ def run(args=None):
             "Reference detector must be at least %d panels long given the panel list"
             % (max_p_id + 1)
         )
-        assert max_p_id < len(
-            moving
-        ), "Moving detector must be at least %d panels long given the panel list" % (
-            max_p_id + 1
+        assert max_p_id < len(moving), (
+            "Moving detector must be at least %d panels long given the panel list"
+            % (max_p_id + 1)
         )
         panel_ids = params.panel_list
 

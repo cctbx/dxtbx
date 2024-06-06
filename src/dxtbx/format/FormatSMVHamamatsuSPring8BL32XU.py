@@ -8,7 +8,6 @@ from dxtbx.format.FormatSMVHamamatsu import FormatSMVHamamatsu
 class FormatSMVHamamatsuSPring8BL32XU(FormatSMVHamamatsu):
     @staticmethod
     def understand(image_file):
-
         size, header = FormatSMVHamamatsu.get_smv_header(image_file)
 
         wanted_header_items = ["DETECTOR_NAME"]
@@ -20,7 +19,6 @@ class FormatSMVHamamatsuSPring8BL32XU(FormatSMVHamamatsu):
         return header["DETECTOR_NAME"] == "Hamamatsu C10158DK"
 
     def _start(self):
-
         FormatSMVHamamatsu._start(self)
 
     def detectorbase_start(self):

@@ -75,7 +75,6 @@ class FormatISISSXD(FormatHDF5):
         return goniometer
 
     def get_detector(self, index: int = None) -> Detector:
-
         num_panels = self._get_num_panels()
         panel_names = self._get_panel_names()
         panel_type = self._get_panel_type()
@@ -282,7 +281,6 @@ class FormatISISSXD(FormatHDF5):
         self._raw_data = tuple(raw_data)
 
     def get_raw_data(self, index: int, use_loaded_data=True) -> Tuple[flex.int]:
-
         raw_data = []
 
         if use_loaded_data:

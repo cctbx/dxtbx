@@ -28,7 +28,6 @@ class FormatSMVTimePix_SU(FormatSMV):
 
     @staticmethod
     def understand(image_file):
-
         size, header = FormatSMV.get_smv_header(image_file)
 
         # only recognise TimePix_SU
@@ -119,7 +118,6 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
 
     @staticmethod
     def understand(image_file):
-
         size, header = FormatSMVTimePix_SU.get_smv_header(image_file)
 
         # check the pixel size is 55 microns
@@ -321,7 +319,6 @@ class FormatSMVTimePix_SU_516x516(FormatSMVTimePix_SU):
 
     @staticmethod
     def understand(image_file):
-
         size, header = FormatSMVTimePix_SU.get_smv_header(image_file)
 
         # check there are 516*516 pixels

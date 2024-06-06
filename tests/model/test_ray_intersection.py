@@ -176,7 +176,6 @@ def tst_fwd_rev_random(intersection, transform, panel):
     # Loop a number of times
     num = 1000
     for i in range(num):
-
         # Create a detector coordinate
         xy = matrix.col(random_xy())
 

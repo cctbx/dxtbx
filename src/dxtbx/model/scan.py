@@ -281,7 +281,6 @@ class ScanFactory:
 
     @staticmethod
     def make_scan_from_properties(image_range, properties, batch_offset=0, deg=True):
-
         return Scan(tuple(map(int, image_range)), properties, batch_offset, deg)
 
     @staticmethod

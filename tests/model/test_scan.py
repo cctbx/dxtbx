@@ -60,7 +60,6 @@ def test_make_scan_from_properties():
 
 
 def test_set_get_properties():
-
     image_range = (1, 10)
     scan = ScanFactory.make_scan_from_properties(image_range=image_range, properties={})
 
@@ -245,7 +244,6 @@ def test_scan_properties_to_dict():
 
 
 def test_scan_properties_equivalence():
-
     int_diff = 1
     double_diff = 1e-6
 
@@ -384,7 +382,6 @@ def test_scan_properties_equivalence():
 
 
 def test_scan_constant_oscillation_width():
-
     image_range = (1, 10)
     scan = ScanFactory.make_scan_from_properties(image_range=image_range, properties={})
 
@@ -414,7 +411,6 @@ def test_scan_constant_oscillation_width():
 
 
 def test_print_scan():
-
     image_range = (1, 10)
     scan = ScanFactory.make_scan_from_properties(image_range=image_range, properties={})
 

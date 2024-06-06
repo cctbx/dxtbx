@@ -11,7 +11,6 @@ from dxtbx.model.beam import Probe
 class FormatCBFMiniEigerQuadroED1(FormatCBFMiniEiger):
     @staticmethod
     def understand(image_file):
-
         header = FormatCBFMiniEiger.get_cbf_header(image_file)
 
         for record in header.split("\n"):

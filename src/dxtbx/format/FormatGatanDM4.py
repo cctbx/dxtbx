@@ -126,7 +126,6 @@ def search_tag_hierarchy(name, tag_list):
 def extract_image_data(image_file, offset, ntags, byteord):
     # read tags
     with FormatGatanDM4.open_file(image_file, "rb") as f:
-
         f.seek(offset)
 
         root = []
@@ -230,7 +229,6 @@ class FormatGatanDM4(Format):
 
     @staticmethod
     def understand(image_file):
-
         try:
             header = FormatGatanDM4._read_header(image_file)
         except struct.error:
@@ -255,7 +253,6 @@ class FormatGatanDM4(Format):
         hd = {}
 
         with FormatGatanDM4.open_file(image_file, "rb") as f:
-
             hd["version"] = struct.unpack(">I", f.read(4))[0]
 
             if hd["version"] == 3:
@@ -414,13 +411,11 @@ class FormatGatanDM4Images(FormatGatanDM4):
         return extract_num_images(image_file) == 1
 
     def __init__(self, image_file, **kwargs):
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         FormatGatanDM4.__init__(self, image_file, **kwargs)
 
     def get_raw_data(self):
-
         with FormatGatanDM4.open_file(self._image_file, "rb") as f:
             f.seek(self._data_offset)
             return self._read_raw_data(f)
@@ -432,14 +427,12 @@ class FormatGatanDM4Stack(FormatMultiImage, FormatGatanDM4):
         return extract_num_images(image_file) > 1
 
     def __init__(self, image_file, **kwargs):
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         FormatMultiImage.__init__(self, **kwargs)
         FormatGatanDM4.__init__(self, image_file, **kwargs)
 
     def get_raw_data(self, index):
-
         with FormatGatanDM4.open_file(self._image_file, "rb") as f:
             f.seek(self._data_offset)
 

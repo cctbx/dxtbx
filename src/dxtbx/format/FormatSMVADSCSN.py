@@ -74,7 +74,6 @@ class FormatSMVADSCSN(FormatSMVADSC):
         return super()._adsc_module_gain(model=model)
 
     def detectorbase_start(self):
-
         self.detectorbase = ADSCImage(self._image_file)
         self.detectorbase.open_file = self.open_file
         self.detectorbase.readHeader()

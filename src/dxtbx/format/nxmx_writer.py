@@ -331,17 +331,17 @@ class NXmxWriter:
         source.attrs["NX_class"] = "NXsource"
         source["name"] = self.params.nexus_details.source_name
         if self.params.nexus_details.source_short_name:
-            source["name"].attrs[
-                "short_name"
-            ] = self.params.nexus_details.source_short_name
+            source["name"].attrs["short_name"] = (
+                self.params.nexus_details.source_short_name
+            )
         # --> instrument
         instrument = entry.create_group("instrument")
         instrument.attrs["NX_class"] = "NXinstrument"
         instrument["name"] = self.params.nexus_details.instrument_name
         if self.params.nexus_details.instrument_short_name:
-            instrument["name"].attrs[
-                "short_name"
-            ] = self.params.nexus_details.instrument_short_name
+            instrument["name"].attrs["short_name"] = (
+                self.params.nexus_details.instrument_short_name
+            )
         beam = instrument.create_group("beam")
         beam.attrs["NX_class"] = "NXbeam"
         if self.params.nexus_details.total_flux:
@@ -580,9 +580,9 @@ class NXmxWriter:
                         dtype=spectra_y.dtype,
                     )
                     handle["incident_wavelength_1Dspectrum"].attrs["units"] = "angstrom"
-                    handle["incident_wavelength"].attrs[
-                        "variant"
-                    ] = "incident_wavelength_1Dspectrum"
+                    handle["incident_wavelength"].attrs["variant"] = (
+                        "incident_wavelength_1Dspectrum"
+                    )
             else:
                 if len(beams) > 1:
                     wavelengths = np.array(
@@ -787,8 +787,9 @@ class NXmxWriter:
                 if axis_number == len(gonio.get_axes()) - 1:
                     axis.attrs["depends_on"] = "."
                 else:
-                    axis.attrs["depends_on"] = "/entry/sample/transformations/%s" % (
-                        gonio.get_names()[axis_number + 1]
+                    axis.attrs["depends_on"] = (
+                        "/entry/sample/transformations/%s"
+                        % (gonio.get_names()[axis_number + 1])
                     )
         else:
             setup_axis("omega", gonio.get_rotation_axis(), main_axis=True)

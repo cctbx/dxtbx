@@ -37,7 +37,6 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
         )
 
     def _detector(self):
-
         max_trusted_value = 1e7
 
         if "_lower_" in self._image_file:
@@ -118,7 +117,6 @@ class FormatCBFMiniEigerPhotonFactory(FormatCBFMini):
         )
 
     def detectorbase_start(self):
-
         self.detectorbase = PilatusImage(self._image_file)
         self.detectorbase.readHeader()
 

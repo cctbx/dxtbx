@@ -98,7 +98,6 @@ def test_goniometer_with_scan_points():
     )
 
     for g1 in [simple_g, multi_ax_g]:
-
         S_static = matrix.sqr(g1.get_setting_rotation())
         g1.set_setting_rotation_at_scan_points([S_static] * 5)
         d = g1.to_dict()

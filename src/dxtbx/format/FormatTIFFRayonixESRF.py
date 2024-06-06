@@ -40,8 +40,11 @@ class FormatTIFFRayonixESRF(FormatTIFFRayonix):
         #     struct.unpack(format + "ii", bytes[offset + 772 : offset + 780])
         # )
 
-        header_beam_center = 0.001 * col(  # Rayonix says this should be pixels
-            struct.unpack(format + "ii", bytes[offset + 644 : offset + 652])
+        header_beam_center = (
+            0.001
+            * col(  # Rayonix says this should be pixels
+                struct.unpack(format + "ii", bytes[offset + 644 : offset + 652])
+            )
         )
 
         disagreement = header_beam_center[0] / detector_center_px[0]

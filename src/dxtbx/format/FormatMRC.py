@@ -70,7 +70,6 @@ class FormatMRC(Format):
         return hd
 
     def _extend_header(self, xh):
-
         # Extensions from FEI headers only
         if not self._header_dictionary["exttyp"].startswith(b"FEI"):
             return
@@ -271,7 +270,6 @@ class FormatMRCimages(FormatMRC):
         return ScanFactory.make_scan((index, index), exposure, oscillation, {index: 0})
 
     def get_raw_data(self):
-
         with mrcfile.open(self._image_file) as mrc:
             image = flex.double(mrc.data.astype("double"))
 
@@ -315,7 +313,6 @@ class FormatMRCstack(FormatMultiImage, FormatMRC):
         return Format.get_image_file(self)
 
     def get_raw_data(self, index):
-
         # Note MRC files use z, y, x ordering
         with mrcfile.mmap(self._image_file) as mrc:
             image = flex.double(mrc.data[index, ...].astype("double"))

@@ -33,7 +33,6 @@ class FormatBruker(Format):
         max_bytes = (max_bytes // 80) * 80
         with FormatBruker.open_file(image_path, "rb") as f:
             while True:
-
                 # read a line and look for HDRBLKS
                 line = f.read(80)
                 if not line:

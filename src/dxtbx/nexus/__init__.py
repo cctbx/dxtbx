@@ -262,7 +262,6 @@ def get_dxtbx_detector(
         root = detector
 
     for module in nxdetector.modules:
-
         if len(nxdetector.modules) > 1:
             # Set up the detector hierarchy
             if module.fast_pixel_direction.depends_on is not None:

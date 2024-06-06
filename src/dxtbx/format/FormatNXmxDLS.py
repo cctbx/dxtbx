@@ -75,7 +75,6 @@ def find_meta_filename(master_like: Path) -> Path:
 
 
 class FormatNXmxDLS(FormatNXmx):
-
     _cached_file_handle = None
 
     @staticmethod

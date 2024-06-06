@@ -77,7 +77,6 @@ class FormatXTCJungfrau(FormatXTC):
         data = data.astype(np.float64)
         self._raw_data = []
         for module_count, module in enumerate(d.hierarchy()):
-
             if (
                 self.params.jungfrau.use_big_pixels
                 and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None

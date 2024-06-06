@@ -11,7 +11,6 @@ from dxtbx.format.FormatBruker import FormatBruker
 class FormatBrukerFixedChi(FormatBruker):
     @staticmethod
     def understand(image_file):
-
         hdr = FormatBruker.read_header_lines(image_file)
         hdr_dic = FormatBruker.parse_header(hdr)
 
@@ -105,7 +104,6 @@ class FormatBrukerFixedChi(FormatBruker):
         return self._beam_factory.simple(wavelength)
 
     def _scan(self):
-
         start = float(self.header_dict["START"][0])
         incr = float(self.header_dict["INCREME"][0])
         if incr < 0:

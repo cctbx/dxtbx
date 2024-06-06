@@ -330,9 +330,9 @@ def construct_axes(nx_file, item, vector=None):
                 # XXX not sure how best to handle this, but probably a still so no scan axis
                 scan_axis = 0
             else:
-                assert (
-                    self._is_scan_axis.count(True) == 1
-                ), "Only one axis can be a scan axis: %s" % list(self._is_scan_axis)
+                assert self._is_scan_axis.count(True) == 1, (
+                    "Only one axis can be a scan axis: %s" % list(self._is_scan_axis)
+                )
                 scan_axis = flex.first_index(self._is_scan_axis, True)
 
             # Rotate 180 about up from McStas coordinate system
@@ -794,10 +794,13 @@ class DetectorFactoryFromGroup:
         expected_detectors = []
         root_name = None
         for i, parent_id in enumerate(group_parent):
-            assert parent_id in [
-                -1,
-                1,
-            ], "Hierarchy of detectors not supported. Hierarchy of module components within detector elements is supported"
+            assert (
+                parent_id
+                in [
+                    -1,
+                    1,
+                ]
+            ), "Hierarchy of detectors not supported. Hierarchy of module components within detector elements is supported"
 
             if parent_id == -1:
                 assert root_name is None, "Multiple roots not supported"
@@ -1466,7 +1469,7 @@ def detectorgroupdatafactory(obj, instrument):
                 if detector_name in mapping:
                     assert (
                         dataset_name not in mapping[detector_name]["dataset_names"]
-                    ), ("Dataset %s found in > 1 NXdetectors" % dataset_name)
+                    ), "Dataset %s found in > 1 NXdetectors" % dataset_name
                     mapping[detector_name]["dataset_names"].add(dataset_name)
                     mapping[detector_name]["datasets"].append(dataset)
                 else:

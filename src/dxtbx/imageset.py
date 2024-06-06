@@ -371,7 +371,6 @@ def _analyse_files(filenames):
     # Label each group as either an imageset or a sequence.
     file_groups = []
     for template, indices in filelist_per_imageset.items():
-
         # Check if this imageset is a sequence
         is_sequence = _is_imageset_a_sequence(template, indices)
 

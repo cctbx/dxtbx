@@ -308,9 +308,7 @@ def test_get_dxtbx_detector_beam_center_fallback(nxmx_example):
 
 @pytest.fixture
 def detector_with_multiple_modules():
-
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
-
         detector = f.create_group("/entry/instrument/detector")
         detector.attrs["NX_class"] = "NXdetector"
         detector["beam_center_x"] = 2079.79727597266

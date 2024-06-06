@@ -325,7 +325,6 @@ def test_get_detector_projection_2d_axes():
 
 
 def test_get_panel_projection_2d_from_axes(dials_data):
-
     # Get test data
     pytest.importorskip("h5py")
     filename = dials_data("image_examples", pathlib=True) / "dectris_eiger_master.h5"
@@ -365,7 +364,6 @@ def test_get_panel_projection_2d_from_axes(dials_data):
 
 
 def test_panel_get_projection_2d():
-
     detector = create_detector(offset=0)
     panel = detector[0]
 
@@ -387,7 +385,6 @@ def test_panel_get_projection_2d():
 
 
 def test_detector_has_projection_2d():
-
     # Valid rotation value
     rotation = (1, 0, 0, 1)
 
@@ -428,7 +425,6 @@ def test_detector_has_projection_2d():
 
 
 def test_pickle_suite():
-
     rotation = (1, 0, 0, 1)
 
     ## Test single panel detector without 2d projection

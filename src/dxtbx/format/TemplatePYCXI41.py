@@ -13,7 +13,6 @@ class FormatPYCXI41(FormatPYunspecified):
     """
 
     def _start(self):
-
         FormatPYunspecified.start_helper(
             self, version_token="distl.detector_format_version=CXI 4.1"
         )

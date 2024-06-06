@@ -434,9 +434,9 @@ class FullCBFWriter:
             node = panel_group_from_key(key)
 
             if node.is_panel():
-                axis_settings[-1][
-                    -2
-                ] = "0"  # Drop the setting change for leaves as it's encoded below
+                axis_settings[-1][-2] = (
+                    "0"  # Drop the setting change for leaves as it's encoded below
+                )
 
                 aname = level_string(key)
                 fast = [str(v) for v in node.get_local_fast_axis()]

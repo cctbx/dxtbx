@@ -401,7 +401,6 @@ def experiment_list():
 
 
 def test_experimentlist_factory_from_json(monkeypatch, dials_regression):
-
     # Get all the filenames
     filename1 = os.path.join(
         dials_regression, "experiment_test_data", "experiment_1.json"
