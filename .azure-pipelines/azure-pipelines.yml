@@ -38,7 +38,7 @@ stages:
           pip install ruff
           cd repository
           python .azure-pipelines/lint-validation.py
-        displayName: Flake8 validation
+        displayName: Ruff validation
 
       # Set up constants for further build steps
       - bash: |

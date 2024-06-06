@@ -96,7 +96,7 @@ message that the code in question is special and care should be taken.
 - **Please install the pre-commit hooks**. (`libtbx.precommit install` if using
   the libtbx ecosystem). These use the [pre-commit] library and ensure that
   various sanity checks are run before commit, including formatting, syntax
-  compatibility, basic flake8 checks, lack of conflict markers and file size
+  compatibility, basic Ruff checks, lack of conflict markers and file size
   limits. Basically, most of the essential rules will be checked automatically
   by this.
 - **We format python code with [black]**. This means that while writing code
@@ -106,13 +106,13 @@ message that the code in question is special and care should be taken.
   you can't, the whole codebase is auto-cleaned once a week. Most IDEs and
   editors have support for running formatters like black frequently or
   automatically.
-- **Avoid introducing new pre-commit flake8 warnings** - if you feel that it's
+- **Avoid introducing new pre-commit Ruff warnings** - if you feel that it's
   appropriate to violate a warning, mark it up explicitly with a [noqa]
   comment. Probably the most common cause of this are "F401 - module imported
   or unused", which happens when importing packages to collect into a single
   namespace for other imports (though declaring `__all__` avoids this issue).
   The pre-commit hooks will pick up the most important of these, but please try
-  to resolve any other valid warnings shown with a normal run of flake8. The
+  to resolve any other valid warnings shown with a normal run of Ruff. The
   configuration in the repository turns off any that disagree with black's
   interpretation of the rules or standard practice in our repositories.
 - **We format C++ code with [clang-format]**. We use a configuration for style
@@ -125,7 +125,7 @@ message that the code in question is special and care should be taken.
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [black]: https://github.com/python/black
 [clang-format]: https://clang.llvm.org/docs/ClangFormat.html
-[noqa]: http://flake8.pycqa.org/en/3.7.7/user/violations.html#in-line-ignoring-errors
+[noqa]: http://Ruff.pycqa.org/en/3.7.7/user/violations.html#in-line-ignoring-errors
 [PEP8]: https://www.python.org/dev/peps/pep-0008
 [Google-style]: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 [Zen of Python]: https://www.python.org/dev/peps/pep-0020/#the-zen-of-python
