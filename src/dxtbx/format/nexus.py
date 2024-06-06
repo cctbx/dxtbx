@@ -7,7 +7,7 @@ import os
 from typing import Iterable, Union
 
 import h5py
-import hdf5plugin  # noqa; F401
+import hdf5plugin  # noqa: F401
 import numpy
 
 import cctbx.uctbx

@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 
 import h5py
-import hdf5plugin  # noqa; F401
+import hdf5plugin  # noqa: F401
 import numpy as np
 import nxmx
 import pint
