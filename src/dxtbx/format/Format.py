@@ -148,7 +148,7 @@ class Format:
         # Don't allow abstract instantion
         # - except for Format, which is used as a placeholder in many
         # places (e.g. still, check_format=False) so needs to be allowed.
-        if self.is_abstract() and not type(self) is Format:
+        if self.is_abstract() and type(self) is not Format:
             raise TypeError(
                 f"Cannot instantiate: Format class '{type(self).__name__}' is marked abstract"
             )

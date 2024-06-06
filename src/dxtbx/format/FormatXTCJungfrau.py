@@ -61,7 +61,7 @@ class FormatXTCJungfrau(FormatXTC):
             params = FormatXTC.params_from_phil(jungfrau_locator_scope, image_file)
         except Exception:
             return False
-        return any(["jungfrau" in src.lower() for src in params.detector_address])
+        return any("jungfrau" in src.lower() for src in params.detector_address)
 
     def get_raw_data(self, index=None):
         from serialtbx.detector.util import jungfrau

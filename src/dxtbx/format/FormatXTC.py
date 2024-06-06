@@ -312,11 +312,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         codes = self._evr.eventCodes(evt)
 
         if self.params.filter.required_present_codes and not all(
-            [c in codes for c in self.params.filter.required_present_codes]
+            c in codes for c in self.params.filter.required_present_codes
         ):
             return False
         if self.params.filter.required_absent_codes and any(
-            [c in codes for c in self.params.filter.required_absent_codes]
+            c in codes for c in self.params.filter.required_absent_codes
         ):
             return False
         return True
