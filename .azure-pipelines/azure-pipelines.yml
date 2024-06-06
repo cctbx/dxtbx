@@ -35,9 +35,9 @@ stages:
 
       - bash: |
           set -eux
-          pip install flake8
+          pip install ruff
           cd repository
-          python .azure-pipelines/flake8-validation.py
+          python .azure-pipelines/lint-validation.py
         displayName: Flake8 validation
 
       # Set up constants for further build steps
