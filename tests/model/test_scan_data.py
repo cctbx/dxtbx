@@ -179,7 +179,6 @@ def test_from_phil():
 
 
 def test_scan_factory_from_dict(scan):
-
     empty_scan = Scan()
     empty_scan_from_dict = ScanFactory.from_dict(empty_scan.to_dict())
 

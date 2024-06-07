@@ -21,14 +21,12 @@ class ExternalLookup:
     def pedestal(self) -> Any: ...
 
 class ExternalLookupItemBool:
-
     data: Any
     filename: Any
     def __init__(self, *args, **kwargs) -> None: ...
     def __reduce__(self) -> Any: ...
 
 class ExternalLookupItemDouble:
-
     data: Any
     filename: Any
     def __init__(self, *args, **kwargs) -> None: ...

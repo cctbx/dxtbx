@@ -148,7 +148,7 @@ class Format:
         # Don't allow abstract instantion
         # - except for Format, which is used as a placeholder in many
         # places (e.g. still, check_format=False) so needs to be allowed.
-        if self.is_abstract() and not type(self) is Format:
+        if self.is_abstract() and type(self) is not Format:
             raise TypeError(
                 f"Cannot instantiate: Format class '{type(self).__name__}' is marked abstract"
             )
@@ -377,7 +377,6 @@ class Format:
 
         # Create an imageset or sequence
         if not is_sequence:
-
             # Create the imageset
             iset = ImageSet(
                 ImageSetData(
@@ -391,7 +390,6 @@ class Format:
 
             # If any are None then read from format
             if [beam, detector, goniometer, scan].count(None) != 0:
-
                 # Get list of models
                 beam = []
                 detector = []
@@ -412,7 +410,6 @@ class Format:
                 iset.set_scan(scan[i], i)
 
         else:
-
             # Get the template
             if template is None:
                 template = template_regex(filenames[0])[0]

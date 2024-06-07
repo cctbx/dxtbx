@@ -1,6 +1,5 @@
 """Set up for Soleil PX1, with full kappa goniometer"""
 
-
 from __future__ import annotations
 
 import sys

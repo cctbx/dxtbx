@@ -61,7 +61,7 @@ class FormatXTCJungfrau(FormatXTC):
             params = FormatXTC.params_from_phil(jungfrau_locator_scope, image_file)
         except Exception:
             return False
-        return any(["jungfrau" in src.lower() for src in params.detector_address])
+        return any("jungfrau" in src.lower() for src in params.detector_address)
 
     def get_raw_data(self, index=None):
         from serialtbx.detector.util import jungfrau
@@ -77,7 +77,6 @@ class FormatXTCJungfrau(FormatXTC):
         data = data.astype(np.float64)
         self._raw_data = []
         for module_count, module in enumerate(d.hierarchy()):
-
             if (
                 self.params.jungfrau.use_big_pixels
                 and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
@@ -103,6 +102,7 @@ class FormatXTCJungfrau(FormatXTC):
 
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
+
         from serialtbx.detector.xtc import basis_from_geo
 
         run = self.get_run_from_index(index)

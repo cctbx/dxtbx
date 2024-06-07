@@ -42,7 +42,6 @@ class crystal_model_old:
         mosaicity=None,
         deg=True,
     ):
-
         # Set the space group
         assert [space_group_symbol, space_group].count(None) == 1
         if space_group_symbol:
@@ -183,7 +182,6 @@ class crystal_model_old:
         self._B = matrix.sqr(self._uc.fractionalization_matrix()).transpose()
 
     def set_U(self, U):
-
         # check U is a rotation matrix.
         assert U.is_r3_rotation_matrix()
         self._U = U
@@ -198,7 +196,6 @@ class crystal_model_old:
         return self._B
 
     def set_B(self, B):
-
         # also set the unit cell
         co = crystal_orientation(B, True)
         self._uc = co.unit_cell()
@@ -220,7 +217,6 @@ class crystal_model_old:
         return self._cov_B
 
     def set_B_covariance(self, cov):
-
         cov = matrix.sqr(cov)
 
         # check cov is of the right size. No other checks made
@@ -231,7 +227,6 @@ class crystal_model_old:
         return
 
     def _calc_cell_parameter_sd(self):
-
         # self._cov_B is the covariance matrix of elements of the B matrix. We
         # need to construct the covariance matrix of elements of the
         # transpose of B. The vector of elements of B is related to the

@@ -1,6 +1,5 @@
 """An implementation of the CBF image reader for Pilatus images"""
 
-
 from __future__ import annotations
 
 import os

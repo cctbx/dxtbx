@@ -6,9 +6,9 @@ import time
 from itertools import groupby
 
 import numpy as np
+
 import serialtbx.detector.xtc
 import serialtbx.util
-
 from libtbx.phil import parse
 from scitbx.array_family import flex
 
@@ -174,7 +174,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             assert self.params.mode == "idx"
             hits = np.loadtxt(self.params.hits_file, int)
             hits = list(map(tuple, hits))
-            key = lambda x: x[0]
+            key = lambda x: x[0]  # noqa: E731
             gb = groupby(sorted(hits, key=key), key=key)
             # dictionary where key is run number, and vals are indices of hits
             self._hit_inds = {r: [ind for _, ind in group] for r, group in gb}
@@ -312,11 +312,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         codes = self._evr.eventCodes(evt)
 
         if self.params.filter.required_present_codes and not all(
-            [c in codes for c in self.params.filter.required_present_codes]
+            c in codes for c in self.params.filter.required_present_codes
         ):
             return False
         if self.params.filter.required_absent_codes and any(
-            [c in codes for c in self.params.filter.required_absent_codes]
+            c in codes for c in self.params.filter.required_absent_codes
         ):
             return False
         return True

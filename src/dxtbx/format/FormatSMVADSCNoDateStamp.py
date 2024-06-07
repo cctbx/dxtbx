@@ -13,7 +13,6 @@ class FormatSMVADSCNoDateStamp(FormatSMVADSC):
 
     @staticmethod
     def understand(image_file):
-
         # assert for this that the image file has to be a file not a URL
         if not os.path.exists(image_file):
             return False

@@ -21,7 +21,6 @@ from dxtbx.model.beam import Probe
 class FormatBrukerED1(FormatBruker):
     @staticmethod
     def understand(image_file):
-
         try:
             header_lines = FormatBruker.read_header_lines(image_file)
         except OSError:
@@ -45,7 +44,6 @@ class FormatBrukerED1(FormatBruker):
         return True
 
     def _start(self):
-
         try:
             header_lines = FormatBruker.read_header_lines(self._image_file)
         except OSError:
@@ -175,7 +173,6 @@ class FormatBrukerED1(FormatBruker):
         )
 
     def _scan(self):
-
         start = float(self.header_dict["START"].split()[0])
         incr = float(self.header_dict["INCREME"].split()[0])
         if incr < 0:

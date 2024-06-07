@@ -1,6 +1,5 @@
 """An implementation of the CBF image reader for Pilatus images, for the P12M-DLS"""
 
-
 from __future__ import annotations
 
 import binascii
@@ -58,7 +57,6 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
         super().__init__(image_file, **kwargs)
 
     def _detector(self):
-
         # module positions from detector blueprints - modelling at the moment as
         # 24 modules, each consisting of 5 sensors (the latter is ignored)
         x = matrix.col((-1, 0, 0))

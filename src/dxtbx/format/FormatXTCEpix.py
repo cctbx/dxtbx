@@ -30,7 +30,7 @@ class FormatXTCEpix(FormatXTC):
             params = FormatXTC.params_from_phil(epix_locator_scope, image_file)
         except Exception:
             return False
-        return any(["epix" in src.lower() for src in params.detector_address])
+        return any("epix" in src.lower() for src in params.detector_address)
 
     def get_raw_data(self, index=None):
         if index is None:
@@ -62,6 +62,7 @@ class FormatXTCEpix(FormatXTC):
 
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
+
         from serialtbx.detector.xtc import basis_from_geo
 
         run = self.get_run_from_index(index)

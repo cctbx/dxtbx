@@ -255,7 +255,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             self.set_index(index)
 
         if self._raw_data is None:
-
             if self.RECONST_MODE:
                 self._raw_data = flex.int(self.reconst_image())
 

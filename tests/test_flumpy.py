@@ -338,7 +338,7 @@ def test_flex_looping_vecs():
 
     # Don't be dumb when casting
     flex_nonvec = flex.double((9, 3))
-    assert not flumpy.vec_from_numpy(flumpy.to_numpy(flex_nonvec)) is flex_nonvec
+    assert flumpy.vec_from_numpy(flumpy.to_numpy(flex_nonvec)) is not flex_nonvec
 
     # mat3
     fo = flex.mat3_double(5)

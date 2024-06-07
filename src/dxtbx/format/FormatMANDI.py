@@ -20,7 +20,6 @@ from dxtbx.model.scan import Scan, ScanFactory
 
 
 class FormatMANDI(FormatHDF5):
-
     """
     Class to read NXTOFRAW from MaNDi
     (https://neutrons.ornl.gov/mandi)
@@ -66,7 +65,6 @@ class FormatMANDI(FormatHDF5):
         return get_name(image_file) == "MANDI"
 
     def get_raw_data(self, index: int) -> Tuple[flex.int]:
-
         raw_data = []
         panel_size = self._get_image_size()
         for panel_name in self._get_panel_names():
@@ -81,7 +79,6 @@ class FormatMANDI(FormatHDF5):
         return tuple(raw_data)
 
     def get_detector(self) -> Detector:
-
         num_panels = self._get_num_panels()
         panel_names = self._get_panel_names()
         panel_type = self._get_panel_type()
@@ -378,7 +375,6 @@ class FormatMANDI(FormatHDF5):
         panel_size: Tuple[int, int] = (256, 256),  # (px)
         nproc: int = 8,
     ) -> None:
-
         tof_bins = FormatMANDI.generate_tof_bins(
             nxs_file=nxs_file_path,
             panel_size=panel_size,
@@ -404,7 +400,6 @@ class FormatMANDI(FormatHDF5):
         write_tof_bins: bool = True,
         nproc: int = 8,
     ) -> None:
-
         """
         Generates histogram spectra for a given detector and writes it to nxs_file
         """
@@ -444,7 +439,7 @@ class FormatMANDI(FormatHDF5):
 
     @staticmethod
     def compute_event_histogram(
-        args: Tuple[int, np.array, np.array, np.array]
+        args: Tuple[int, np.array, np.array, np.array],
     ) -> np.array:
         pixel_idx, event_time_offset, corrected_event_id, tof_bins = args
         h, _ = np.histogram(
@@ -460,7 +455,6 @@ class FormatMANDI(FormatHDF5):
         panel_name: str,
         nproc=8,
     ) -> np.array:
-
         """
         Generates histogram data for a given panel
         """
@@ -503,7 +497,6 @@ class FormatMANDI(FormatHDF5):
     def get_time_range_for_panel(
         nxs_file: h5py.File, panel_size: Tuple[float, float], panel_name: str
     ) -> Tuple[float, float]:
-
         """
         Returns the range of event times for a given panel
         """
@@ -542,7 +535,6 @@ class FormatMANDI(FormatHDF5):
     def get_time_range_for_dataset(
         nxs_file_path: str, panel_size: Tuple[int, int]
     ) -> Tuple[float, float]:
-
         """
         Iterates over num_panels to find the overall min/max tof event recorded
         """
@@ -583,7 +575,6 @@ class FormatMANDI(FormatHDF5):
         delta_tof: float = 50,
         padding: float = 100,
     ) -> np.ndarray:
-
         """
         delta_tof: float (usec)
         padding: float (usec)

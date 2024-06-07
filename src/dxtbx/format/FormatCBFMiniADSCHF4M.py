@@ -4,7 +4,6 @@ HF-4M SN H401 currently on APS sector 24 (NE-CAT).
 Located in dxtbx/format
 """
 
-
 from __future__ import annotations
 
 import binascii
@@ -26,7 +25,6 @@ def get_adsc_timestamp(timestamp):
     timestamp = re.sub("_+", "_", timestamp)
 
     for format in ["%a_%b_%d_%H:%M:%S_%Y"]:
-
         try:
             struct_time = time.strptime(timestamp, format)
             return calendar.timegm(struct_time)
@@ -42,7 +40,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
 
     @staticmethod
     def understand(image_file):
-
         header = FormatCBFMini.get_cbf_header(image_file)
 
         for record in header.split("\n"):
@@ -152,7 +149,6 @@ class FormatCBFMiniADSCHF4M(FormatCBFMini):
         )
 
     def detectorbase_start(self):
-
         self.detectorbase = ADSCHF4MImage(self._image_file)
         self.detectorbase.readHeader()
 

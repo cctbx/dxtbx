@@ -114,7 +114,6 @@ class ScanFactory:
         """
 
         def add_properties_table(scan_dict, num_images):
-
             """
             Handles legacy case before Scan had a properties table.
             Moves oscillation, epochs, and exposure times to a properties
@@ -146,7 +145,6 @@ class ScanFactory:
             return scan_dict
 
         def make_properties_table_consistent(properties, num_images):
-
             """
             Handles legacy case before Scan had a properties table.
             Ensures oscillation, epochs, and exposure times have the same length.
@@ -283,7 +281,6 @@ class ScanFactory:
 
     @staticmethod
     def make_scan_from_properties(image_range, properties, batch_offset=0, deg=True):
-
         return Scan(tuple(map(int, image_range)), properties, batch_offset, deg)
 
     @staticmethod

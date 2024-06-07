@@ -140,7 +140,9 @@ def test_get_valid_D_matrix(detector):
     """Setup the hierarchy of frames and check it's all consistent."""
     # Set a valid frame for the top level detector
     detector.hierarchy().set_local_frame(
-        (1, 0, 0), (0, 1, 0), (0, 0, 100)  # Fast axis  # Slow axis
+        (1, 0, 0),
+        (0, 1, 0),
+        (0, 0, 100),  # Fast axis  # Slow axis
     )  # Origin
 
     # Check that all sub groups have the same frame and that we can get

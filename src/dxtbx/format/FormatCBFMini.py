@@ -4,7 +4,6 @@ this will read the header and populate a dictionary of the keyword / value
 pairs.
 """
 
-
 from __future__ import annotations
 
 import binascii

@@ -13,7 +13,7 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 pytest.importorskip("dials")
 
-from dxtbx.format.nxmx_writer import NXmxWriter, phil_scope
+from dxtbx.format.nxmx_writer import NXmxWriter, phil_scope  # noqa: E402
 
 
 def test_writer_jf16M(dials_data, tmpdir):

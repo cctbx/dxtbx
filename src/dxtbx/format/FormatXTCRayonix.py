@@ -15,10 +15,9 @@ except TypeError:
         raise
     psana = None
 
-from serialtbx.detector import rayonix
-
 from libtbx.phil import parse
 from scitbx.array_family import flex
+from serialtbx.detector import rayonix
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 
@@ -68,7 +67,7 @@ class FormatXTCRayonix(FormatXTC):
             params = FormatXTC.params_from_phil(rayonix_locator_scope, image_file)
         except Exception:
             return False
-        return any(["rayonix" in src.lower() for src in params.detector_address])
+        return any("rayonix" in src.lower() for src in params.detector_address)
 
     def get_raw_data(self, index=None):
         if index is None:

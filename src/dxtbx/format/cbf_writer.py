@@ -13,9 +13,9 @@ import os
 import sys
 
 import pycbf
-from serialtbx.detector import basis
 
 from scitbx.array_family import flex
+from serialtbx.detector import basis
 
 import dxtbx.format.Registry
 from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
@@ -34,7 +34,8 @@ def add_frame_specific_cbf_tables(
     """Adds tables to cbf handle that won't already exsist if the cbf file is just a header
     @ param wavelength Wavelength in angstroms
     @ param timestamp String formatted timestamp for the image
-    @ param trusted_ranges Array of trusted range tuples (min, max), one for each element"""
+    @ param trusted_ranges Array of trusted range tuples (min, max), one for each element
+    """
 
     """Data items in the DIFFRN_RADIATION category describe
    the radiation used for measuring diffraction intensities,
@@ -70,11 +71,15 @@ def add_frame_specific_cbf_tables(
             diffrn_id,
             "INJECTION" if is_xfel else "unknown",
             "0",
-            "electrospray"
-            if is_xfel
-            else "unknown" "crystals injected by electrospray"
-            if is_xfel
-            else "unknown",
+            (
+                "electrospray"
+                if is_xfel
+                else (
+                    "unknown" "crystals injected by electrospray"
+                    if is_xfel
+                    else "unknown"
+                )
+            ),
         ]
     )
 
@@ -429,9 +434,9 @@ class FullCBFWriter:
             node = panel_group_from_key(key)
 
             if node.is_panel():
-                axis_settings[-1][
-                    -2
-                ] = "0"  # Drop the setting change for leaves as it's encoded below
+                axis_settings[-1][-2] = (
+                    "0"  # Drop the setting change for leaves as it's encoded below
+                )
 
                 aname = level_string(key)
                 fast = [str(v) for v in node.get_local_fast_axis()]

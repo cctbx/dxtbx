@@ -1,6 +1,5 @@
 """Pilatus implementation of fullCBF format, for use with Dectris detectors."""
 
-
 from __future__ import annotations
 
 import binascii

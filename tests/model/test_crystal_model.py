@@ -548,7 +548,6 @@ def test_check_old_vs_new():
     "crystal_class", [Crystal, MosaicCrystalKabsch2010, MosaicCrystalSauter2014]
 )
 def test_set_scan_varying_B_covariance(crystal_class):
-
     xl = crystal_class(
         real_space_a=(10, 0, 0),
         real_space_b=(0, 11, 0),

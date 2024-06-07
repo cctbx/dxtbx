@@ -12,7 +12,7 @@ import sys
 
 import h5py
 import numpy as np
-from serialtbx.detector import basis
+from dials.util.options import ArgumentParser, flatten_experiments
 
 from cctbx import factor_ev_angstrom
 from libtbx import easy_pickle
@@ -20,8 +20,7 @@ from libtbx.phil import parse
 from libtbx.utils import Sorry
 from scitbx import matrix
 from scitbx.array_family import flex
-
-from dials.util.options import ArgumentParser, flatten_experiments
+from serialtbx.detector import basis
 
 from dxtbx import flumpy
 from dxtbx.format.FormatCBFMultiTile import angle_and_axis
@@ -331,17 +330,17 @@ class NXmxWriter:
         source.attrs["NX_class"] = "NXsource"
         source["name"] = self.params.nexus_details.source_name
         if self.params.nexus_details.source_short_name:
-            source["name"].attrs[
-                "short_name"
-            ] = self.params.nexus_details.source_short_name
+            source["name"].attrs["short_name"] = (
+                self.params.nexus_details.source_short_name
+            )
         # --> instrument
         instrument = entry.create_group("instrument")
         instrument.attrs["NX_class"] = "NXinstrument"
         instrument["name"] = self.params.nexus_details.instrument_name
         if self.params.nexus_details.instrument_short_name:
-            instrument["name"].attrs[
-                "short_name"
-            ] = self.params.nexus_details.instrument_short_name
+            instrument["name"].attrs["short_name"] = (
+                self.params.nexus_details.instrument_short_name
+            )
         beam = instrument.create_group("beam")
         beam.attrs["NX_class"] = "NXbeam"
         if self.params.nexus_details.total_flux:
@@ -364,8 +363,8 @@ class NXmxWriter:
         det["description"] = "Detector converted from DIALS models"
         det["depends_on"] = "/entry/instrument/detector/transformations/AXIS_RAIL"
         det["gain_setting"] = "auto"
-        assert len(set([p.get_material() for p in detector])) == 1
-        assert len(set([p.get_thickness() for p in detector])) == 1
+        assert len({p.get_material() for p in detector}) == 1
+        assert len({p.get_thickness() for p in detector}) == 1
         det["sensor_material"] = detector[0].get_material()
         self._create_scalar(
             det, "sensor_thickness", "f", detector[0].get_thickness() * 1000
@@ -396,7 +395,7 @@ class NXmxWriter:
         transformations.attrs["NX_class"] = "NXtransformations"
 
         if self.params.trusted_range is None:
-            assert len(set([p.get_trusted_range() for p in detector])) == 1
+            assert len({p.get_trusted_range() for p in detector}) == 1
             trusted_min, trusted_max = detector[0].get_trusted_range()
         else:
             trusted_min, trusted_max = self.params.trusted_range
@@ -580,9 +579,9 @@ class NXmxWriter:
                         dtype=spectra_y.dtype,
                     )
                     handle["incident_wavelength_1Dspectrum"].attrs["units"] = "angstrom"
-                    handle["incident_wavelength"].attrs[
-                        "variant"
-                    ] = "incident_wavelength_1Dspectrum"
+                    handle["incident_wavelength"].attrs["variant"] = (
+                        "incident_wavelength_1Dspectrum"
+                    )
             else:
                 if len(beams) > 1:
                     wavelengths = np.array(
@@ -667,7 +666,7 @@ class NXmxWriter:
             data = (data,)
 
         if len(data) > 1:
-            assert len(set([d.focus() for d in data])) == 1
+            assert len({d.focus() for d in data}) == 1
             shape = len(data), data[0].focus()[0], data[0].focus()[1]
         else:
             shape = data[0].focus()[0], data[0].focus()[1]
@@ -787,8 +786,9 @@ class NXmxWriter:
                 if axis_number == len(gonio.get_axes()) - 1:
                     axis.attrs["depends_on"] = "."
                 else:
-                    axis.attrs["depends_on"] = "/entry/sample/transformations/%s" % (
-                        gonio.get_names()[axis_number + 1]
+                    axis.attrs["depends_on"] = (
+                        "/entry/sample/transformations/%s"
+                        % (gonio.get_names()[axis_number + 1])
                     )
         else:
             setup_axis("omega", gonio.get_rotation_axis(), main_axis=True)

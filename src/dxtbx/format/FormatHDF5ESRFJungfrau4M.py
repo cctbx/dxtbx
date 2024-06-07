@@ -11,7 +11,6 @@ from dxtbx.format.FormatHDF5 import FormatHDF5
 
 
 class FormatHDF5ESRFJungfrau4M(FormatHDF5):
-
     # A class to understand still-shot images from ESRF collected on a Jungfrau 4M.
 
     _cached_mask = None

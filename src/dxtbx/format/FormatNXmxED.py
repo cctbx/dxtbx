@@ -72,7 +72,6 @@ class FormatNXmxED(FormatNXmx):
 
 
 class FormatNXmxEDeBIC(FormatNXmxED):
-
     """Set a mask specific for the SINGLA installed at eBIC"""
 
     @staticmethod

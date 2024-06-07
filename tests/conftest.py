@@ -78,9 +78,9 @@ def nxmx_example():
             "fast_pixel_direction", data=7.5e-5
         )
         fast_pixel_direction.attrs["transformation_type"] = "translation"
-        fast_pixel_direction.attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/module/module_offset"
+        fast_pixel_direction.attrs["depends_on"] = (
+            "/entry/instrument/detector/module/module_offset"
+        )
         fast_pixel_direction.attrs["vector"] = np.array([-1.0, 0.0, 0.0])
         fast_pixel_direction.attrs["offset"] = np.array([0.0, 0.0, 0.0])
         fast_pixel_direction.attrs["offset_units"] = b"m"
@@ -90,9 +90,9 @@ def nxmx_example():
             "slow_pixel_direction", data=7.5e-5
         )
         slow_pixel_direction.attrs["transformation_type"] = "translation"
-        slow_pixel_direction.attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/module/module_offset"
+        slow_pixel_direction.attrs["depends_on"] = (
+            "/entry/instrument/detector/module/module_offset"
+        )
         slow_pixel_direction.attrs["vector"] = np.array([0.0, -1.0, 0.0])
         slow_pixel_direction.attrs["offset"] = np.array([0.0, 0.0, 0.0])
         slow_pixel_direction.attrs["offset_units"] = b"m"

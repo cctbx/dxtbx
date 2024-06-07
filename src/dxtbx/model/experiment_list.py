@@ -716,7 +716,6 @@ class ExperimentListFactory:
         # Treat each format as a separate block of data
         for format_class, records in format_groups.items():
             if issubclass(format_class, FormatMultiImage):
-
                 if all_tof:
                     _merge_sequence_model_metadata(
                         records,

@@ -340,12 +340,12 @@ class _crystal:
         recalculated_unit_cell = self.get_recalculated_unit_cell()
         if recalculated_unit_cell is not None:
             xl_dict["recalculated_unit_cell"] = recalculated_unit_cell.parameters()
-            xl_dict[
-                "recalculated_cell_parameter_sd"
-            ] = self.get_recalculated_cell_parameter_sd()
-            xl_dict[
-                "recalculated_cell_volume_sd"
-            ] = self.get_recalculated_cell_volume_sd()
+            xl_dict["recalculated_cell_parameter_sd"] = (
+                self.get_recalculated_cell_parameter_sd()
+            )
+            xl_dict["recalculated_cell_volume_sd"] = (
+                self.get_recalculated_cell_volume_sd()
+            )
 
         return xl_dict
 

@@ -216,7 +216,6 @@ class to_xds:
         self.panel_normal = []
 
         for panel_id, panel in enumerate(self.get_detector()):
-
             f = Rd * matrix.col(panel.get_fast_axis())
             s = Rd * matrix.col(panel.get_slow_axis())
             n = f.cross(s)
@@ -389,7 +388,6 @@ class to_xds:
 
         if len(self.panel_x_axis) > 1:
             for panel_id, panel_x_axis in enumerate(self.panel_x_axis):
-
                 result.append("")
                 result.append("!")
                 result.append("! SEGMENT %d" % (panel_id + 1))

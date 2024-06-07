@@ -222,7 +222,6 @@ class FormatMultiImage(Format):
 
         # Create an imageset or sequence
         if not is_sequence:
-
             # Use imagesetlazy
             # Setup ImageSetLazy and just return it. No models are set.
             if lazy:
@@ -251,7 +250,6 @@ class FormatMultiImage(Format):
 
             # If any are None then read from format
             if not all((beam, detector, goniometer, scan)):
-
                 # Get list of models
                 num_images = format_instance.get_num_images()
                 beam = [None] * num_images
@@ -272,7 +270,6 @@ class FormatMultiImage(Format):
                 iset.set_scan(scan[index], i)
 
         else:
-
             # Get the template
             template = filenames[0]
 

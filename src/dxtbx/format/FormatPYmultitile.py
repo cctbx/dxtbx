@@ -5,10 +5,9 @@ import sys
 from calendar import timegm
 from time import strptime
 
-from serialtbx.detector.legacy_metrology.cspad_detector import CSPadDetector
-
 from iotbx.detectors.npy import image_dict_to_unicode
 from scitbx.matrix import col
+from serialtbx.detector.legacy_metrology.cspad_detector import CSPadDetector
 
 from dxtbx.format.FormatPY import FormatPY
 from dxtbx.model import Detector

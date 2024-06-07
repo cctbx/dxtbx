@@ -3,14 +3,14 @@ from __future__ import annotations
 import sys
 
 import numpy as np
-import serialtbx.detector.cspad
-from serialtbx.detector import cspad
-from serialtbx.detector.xtc import env_distance
 
+import serialtbx.detector.cspad
 from cctbx.eltbx import attenuation_coefficient
 from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
+from serialtbx.detector import cspad
+from serialtbx.detector.xtc import env_distance
 
 from dxtbx.format.FormatXTC import FormatXTC, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
@@ -90,9 +90,11 @@ class FormatXTCCspad(FormatXTC):
             det,
             event,
             use_default=self.params.cspad.use_psana_calib,
-            dark=self._pedestals[run_number]
-            if self.params.cspad.dark_correction
-            else False,
+            dark=(
+                self._pedestals[run_number]
+                if self.params.cspad.dark_correction
+                else False
+            ),
             common_mode=self.params.cspad.common_mode,
             apply_gain_mask=self.params.cspad.apply_gain_mask,
             gain_mask_value=None,

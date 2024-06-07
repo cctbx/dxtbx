@@ -234,7 +234,6 @@ def test_polychromatic_beam_from_dict():
 
 
 def test_make_polychromatic_beam():
-
     direction = (0.0, 0.0, 1.0)
     divergence = 0.2
     sigma_divergence = 0.3

@@ -262,7 +262,6 @@ def get_dxtbx_detector(
         root = detector
 
     for module in nxdetector.modules:
-
         if len(nxdetector.modules) > 1:
             # Set up the detector hierarchy
             if module.fast_pixel_direction.depends_on is not None:
@@ -346,10 +345,12 @@ def get_dxtbx_detector(
             origin = MCSTAS_TO_IMGCIF @ (
                 module.fast_pixel_direction.offset.to("mm").magnitude
                 if module.fast_pixel_direction.offset is not None
-                else np.array([0.0, 0.0, 0.0])
-                + module.slow_pixel_direction.offset.to("mm").magnitude
-                if module.slow_pixel_direction.offset is not None
-                else np.array([0.0, 0.0, 0.0])
+                else (
+                    np.array([0.0, 0.0, 0.0])
+                    + module.slow_pixel_direction.offset.to("mm").magnitude
+                    if module.slow_pixel_direction.offset is not None
+                    else np.array([0.0, 0.0, 0.0])
+                )
             )
         else:
             # Flat detector model
@@ -395,10 +396,12 @@ def get_dxtbx_detector(
                 (
                     module.fast_pixel_direction.offset.to("mm").magnitude
                     if module.fast_pixel_direction.offset is not None
-                    else np.array([0.0, 0.0, 0.0])
-                    + module.slow_pixel_direction.offset.to("mm").magnitude
-                    if module.slow_pixel_direction.offset is not None
-                    else np.array([0.0, 0.0, 0.0])
+                    else (
+                        np.array([0.0, 0.0, 0.0])
+                        + module.slow_pixel_direction.offset.to("mm").magnitude
+                        if module.slow_pixel_direction.offset is not None
+                        else np.array([0.0, 0.0, 0.0])
+                    )
                 )
                 + A[0, :3, 3]
             )

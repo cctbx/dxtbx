@@ -69,7 +69,6 @@ def _image2template_directory(filename):
     directory = os.path.dirname(filename)
 
     if not directory:
-
         # then it should be the current working directory
         directory = os.getcwd()
 

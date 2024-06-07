@@ -295,9 +295,9 @@ def test_get_dxtbx_detector(nxmx_example):
 
 
 def test_get_dxtbx_detector_beam_center_fallback(nxmx_example):
-    nxmx_example["/entry/instrument/detector/module/module_offset"].attrs[
-        "offset"
-    ] = np.array((0, 0, 0))
+    nxmx_example["/entry/instrument/detector/module/module_offset"].attrs["offset"] = (
+        np.array((0, 0, 0))
+    )
     instrument = nxmx.NXmx(nxmx_example).entries[0].instruments[0]
     wavelength = instrument.beams[0].incident_wavelength.to("angstrom").magnitude
     detector = dxtbx.nexus.get_dxtbx_detector(instrument.detectors[0], wavelength)
@@ -308,9 +308,7 @@ def test_get_dxtbx_detector_beam_center_fallback(nxmx_example):
 
 @pytest.fixture
 def detector_with_multiple_modules():
-
     with h5py.File(" ", "w", **pytest.h5_in_memory) as f:
-
         detector = f.create_group("/entry/instrument/detector")
         detector.attrs["NX_class"] = "NXdetector"
         detector["beam_center_x"] = 2079.79727597266
@@ -431,9 +429,9 @@ def detector_with_two_theta():
             "fast_pixel_direction", data=7.5e-5
         )
         fast_pixel_direction.attrs["transformation_type"] = "translation"
-        fast_pixel_direction.attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/module/module_offset"
+        fast_pixel_direction.attrs["depends_on"] = (
+            "/entry/instrument/detector/module/module_offset"
+        )
         fast_pixel_direction.attrs["vector"] = np.array([-1.0, 0.0, 0.0])
         fast_pixel_direction.attrs["units"] = "m"
 
@@ -441,25 +439,25 @@ def detector_with_two_theta():
             "slow_pixel_direction", data=7.5e-5
         )
         slow_pixel_direction.attrs["transformation_type"] = "translation"
-        slow_pixel_direction.attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/module/module_offset"
+        slow_pixel_direction.attrs["depends_on"] = (
+            "/entry/instrument/detector/module/module_offset"
+        )
         slow_pixel_direction.attrs["vector"] = np.array([0, -1.0, 0.0])
         slow_pixel_direction.attrs["units"] = "m"
 
         module_offset = module.create_dataset("module_offset", data=112.19250476301882)
         module_offset.attrs["transformation_type"] = "translation"
-        module_offset.attrs[
-            "depends_on"
-        ] = "/entry/instrument/detector/transformations/det_z"
+        module_offset.attrs["depends_on"] = (
+            "/entry/instrument/detector/transformations/det_z"
+        )
         module_offset.attrs["vector"] = np.array([0.72264186, 0.69122265, 0.0])
         module_offset.attrs["units"] = b"mm"
 
         transformations = detector.create_group("transformations")
         det_z = transformations.create_dataset("det_z", data=120.0)
-        det_z.attrs[
-            "depends_on"
-        ] = b"/entry/instrument/detector/transformations/two_theta"
+        det_z.attrs["depends_on"] = (
+            b"/entry/instrument/detector/transformations/two_theta"
+        )
         det_z.attrs["transformation_type"] = b"translation"
         det_z.attrs["units"] = b"mm"
         det_z.attrs["vector"] = np.array([0.0, 0.0, 1.0])

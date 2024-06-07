@@ -28,7 +28,6 @@ class FormatMultiImageLazy(FormatMultiImage):
         check_format=True,
         lazy=True,
     ):
-
         return super().get_imageset(
             filenames=filenames,
             beam=beam,

@@ -4,7 +4,6 @@ amongst others - this will read the header and construct the full model,
 but will allow for extension for specific implementations of CBF.
 """
 
-
 from __future__ import annotations
 
 import sys

@@ -122,9 +122,7 @@ def install_micromamba(python):
 There was a failure in constructing the conda environment.
 Attempt {retry} of 5 will start {retry} minute(s) from {t}.
 *******************************************************************************
-""".format(
-                    retry=retry, t=time.asctime()
-                )
+""".format(retry=retry, t=time.asctime())
             )
             time.sleep(retry * 60)
         else:
