@@ -1,1 +1,0 @@
-Raise an error if ``geometry.goniometer.axis=`` is set with a multi-axis goniometer. In that case ``geometry.goniometer.axes=`` must be set instead.

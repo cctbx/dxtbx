@@ -1,1 +1,0 @@
-Add `Experiment.get_type()` to replace `Experiment.is_still()/Experiment.is_sequence()`

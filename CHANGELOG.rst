@@ -1,3 +1,39 @@
+dxtbx 3.20.0 (2024-06-19)
+=========================
+
+Features
+--------
+
+- The template handling mechanism is extended so that a template with a
+  single ``#`` is expanded to match non-zero padded sequential numbers.
+  For example, ``image_#.cbf`` will match ``image_1.cbf``, ``image_2.cbf``,
+  ..., ``image_10.cbf`` and so on.
+
+  Using a single ``#`` to match up to 10 images _within_ a zero-padded
+  sequence continues to work as before. For example,
+  ``dials.import template=insulin_1_01#.img`` will match the files
+  ``insulin_1_010.img``, ``insulin_1_011.img``, ..., ``insulin_1_019.img``,
+  and no others. (`#705 <https://github.com/cctbx/dxtbx/issues/705>`_)
+- Allows stepping through XTC streams at specific indices provided by a text file. (`#709 <https://github.com/cctbx/dxtbx/issues/709>`_)
+- Compatibility with Python 3.12. (`#725 <https://github.com/cctbx/dxtbx/issues/725>`_)
+- Add ``dxtbx.any2nexus`` program, to convert any file dxtbx can read to a NeXus file. (`#735 <https://github.com/cctbx/dxtbx/issues/735>`_)
+
+
+Bugfixes
+--------
+
+- ``FormatROD``: set the beam probe to "electron" for 3D ED experiments. (`#728 <https://github.com/cctbx/dxtbx/issues/728>`_)
+- Raise an error if ``geometry.goniometer.axis=`` is set with a multi-axis goniometer. In that case ``geometry.goniometer.axes=`` must be set instead. (`#730 <https://github.com/cctbx/dxtbx/issues/730>`_)
+- Update goniometer for `FormatISISSXD` to allow for different ways the goniometer angle can be stored. (`#731 <https://github.com/cctbx/dxtbx/issues/731>`_)
+- Fix `Scan.get_property` key type. (`#734 <https://github.com/cctbx/dxtbx/issues/734>`_)
+
+
+Misc
+----
+
+- `#702 <https://github.com/cctbx/dxtbx/issues/702>`_, `#721 <https://github.com/cctbx/dxtbx/issues/721>`_, `#724 <https://github.com/cctbx/dxtbx/issues/724>`_, `#726 <https://github.com/cctbx/dxtbx/issues/726>`_, `#727 <https://github.com/cctbx/dxtbx/issues/727>`_, `#732 <https://github.com/cctbx/dxtbx/issues/732>`_, `#733 <https://github.com/cctbx/dxtbx/issues/733>`_, `#738 <https://github.com/cctbx/dxtbx/issues/738>`_
+
+
 DIALS 3.19.1 (2024-05-23)
 =========================
 
