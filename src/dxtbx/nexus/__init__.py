@@ -481,7 +481,9 @@ def get_detector_module_slices(
     )
 
 
-def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None:
+def get_static_mask(
+    nxdetector: nxmx.NXdetector, index: int = None
+) -> tuple[flex.bool, ...] | None:
     """Return the static mask for an NXdetector.
 
     This will be a tuple of flex.bool, of length equal to the number of modules. The
@@ -489,7 +491,10 @@ def get_static_mask(nxdetector: nxmx.NXdetector) -> tuple[flex.bool, ...] | None
     format classes.
     """
     try:
-        pixel_mask = nxdetector.pixel_mask
+        if index is None:
+            pixel_mask = nxdetector.pixel_mask
+        else:
+            pixel_mask = nxdetector.pixel_mask[index]
     except KeyError:
         return None
     if pixel_mask is None or not pixel_mask.size:
