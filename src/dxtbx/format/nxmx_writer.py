@@ -820,7 +820,7 @@ class NXmxWriter:
         )
 
 
-def run(args):
+def run(args: list[str] | None = None):
     usage = "dials.python nxmx_writer.py <experiments OR image files>"
     parser = ArgumentParser(
         usage=usage,

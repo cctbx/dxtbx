@@ -37,7 +37,10 @@ def get_entry_point(filename: Path, prefix: str, import_path: str) -> List[str]:
     tree = ast.parse(contents)
     # Find root functions named "run"
     has_run = any(
-        x for x in tree.body if isinstance(x, ast.FunctionDef) and x.name == "run"
+        x
+        for x in tree.body
+        if (isinstance(x, ast.FunctionDef) and x.name == "run")
+        or (isinstance(x, ast.ImportFrom) and "run" in [a.name for a in x.names])
     )
     if not has_run:
         return []
