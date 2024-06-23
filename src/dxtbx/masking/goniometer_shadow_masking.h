@@ -153,9 +153,9 @@ namespace dxtbx { namespace masking {
           }
         }
         if (!valid) {
-          std::cout << "Invalid polygon geometry (" << failure
-                    << "): " << boost::geometry::dsv(poly) << std::endl;
-          std::cout << boost::geometry::dsv(points) << std::endl;
+          // std::cout << "Invalid polygon geometry (" << failure
+          //           << "): " << boost::geometry::dsv(poly) << std::endl;
+          // std::cout << boost::geometry::dsv(points) << std::endl;
           result.push_back(shadow_points);
           continue;
         }
