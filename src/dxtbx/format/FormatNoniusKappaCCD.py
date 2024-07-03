@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import math
 import os
 import re
@@ -11,7 +10,7 @@ from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
 
 from dxtbx import IncorrectFormatError
-from dxtbx.ext import read_uint16_bs
+from dxtbx.ext import is_big_endian, read_uint16, read_uint16_bs
 from dxtbx.format.Format import Format
 
 MINIMUM_KEYS = [
@@ -37,9 +36,11 @@ class FormatNoniusKappaCCD(Format):
 
         hdr_lines = []
         end_of_headers = False
+        linect = 0
         with Format.open_file(image_path, "rb") as f:
             while not end_of_headers:
                 one_line = f.readline()
+                linect += 1
                 try:
                     one_line = one_line.decode("ASCII")
                 except UnicodeDecodeError:
@@ -50,10 +51,11 @@ class FormatNoniusKappaCCD(Format):
                 if not end_of_headers:
                     if one_line.strip() == "Binned mode":
                         one_line = "Mode = Binned"
-                    if "=" not in one_line:
+                    if "=" not in one_line and linect > 1:
                         end_of_headers = True
                     if not end_of_headers:
                         hdr_lines.append(one_line)
+
         return hdr_lines
 
     @staticmethod
@@ -90,6 +92,8 @@ class FormatNoniusKappaCCD(Format):
             return False
         if re.search("^Binned mode", tag, re.MULTILINE) is None:
             return False
+        if re.search("^Shutter = Closed", tag, re.MULTILINE) is not None:
+            return False  # ignore dark current measurement
         return True
 
     def __init__(self, image_file, **kwargs):
@@ -132,12 +136,13 @@ class FormatNoniusKappaCCD(Format):
         account for binning, which doubles the size. CHECK"""
 
         pix_fac = 0.001
-        # if self.headers["Mode"] == "Binned":
-        #    pix_fac = 0.002
+        if self.headers["Mode"] == "Binned":
+            pix_fac = 0.002
 
         pixel_size = [
             float(self.headers["pixel X-size (um)"]) * pix_fac,
-            float(self.headers["pixel Y-size (um)"]) * pix_fac,
+            # float(self.headers["pixel X-size (um)"]) * pix_fac   #For testing
+            float(self.headers["pixel Y-size (um)"]) * pix_fac,  # True
         ]
 
         image_size = [
@@ -145,17 +150,27 @@ class FormatNoniusKappaCCD(Format):
             float(self.headers["Y dimension"]),
         ]
 
-        self._detector_factory.two_theta(
+        beam_centre = (
+            image_size[0] * pixel_size[0] * 0.5,
+            image_size[1] * pixel_size[1] * 0.5,
+        )
+
+        gain = self.headers.get("Detector gain (ADU/count)", "1.0")
+        gain = float(gain)
+
+        return self._detector_factory.two_theta(
             sensor="CCD",
             distance=float(self.headers["Dx start"]),
-            beam_centre=[image_size[0] / 2.0, image_size[1] / 2],
+            beam_centre=beam_centre,
             fast_direction="+y",  # Increasing to the right
             slow_direction="+x",  # Down, same as rotation axis
-            two_theta_direction=[1, 0, 0],  # Same sense as omega and phi
+            two_theta_direction="+x",  # Same sense as omega and phi
             two_theta_angle=float(self.headers["Theta start"]) * 2.0,
             pixel_size=pixel_size,
             image_size=image_size,
+            gain=gain,
             identifier=self.headers["Detector ID"],
+            trusted_range=(0.0, 131070.0),  # May readout UInt16 twice
         )
 
     def _beam(self):
@@ -167,13 +182,13 @@ class FormatNoniusKappaCCD(Format):
         a1 = float(self.headers["Alpha1"])
         a2 = float(self.headers["Alpha2"])
         wt = float(self.headers["Alpha1/Alpha2 ratio"])
-        wavelength = wt * a1 + a2
+        wavelength = (wt * a1 + a2) / (wt + 1.0)
         direction = [0.0, 0.0, 1.0]  # imgCIF standard
         polarisation, pol_dir = self.get_beam_polarisation()
         return self._beam_factory.complex(
             sample_to_source=direction,
             wavelength=wavelength,
-            polarization=pol_dir,
+            polarization_plane_normal=pol_dir,
             polarization_fraction=polarisation,
         )
 
@@ -190,7 +205,7 @@ class FormatNoniusKappaCCD(Format):
         osc_range = float(self.headers["%s scan range" % rotax])
         exposure_time = float(self.headers["Exposure time"])
 
-        simpletime = self.header["Date"]
+        simpletime = self.headers["Date"]
         epoch = time.mktime(time.strptime(simpletime, "%a %m/%d/%y    %I:%M:%S %p"))
 
         return self._scan_factory.single_file(
@@ -209,7 +224,8 @@ class FormatNoniusKappaCCD(Format):
         elif self.headers["Target material"] == "AG":
             two_theta = 9.62  # Calculated
 
-        pol_frac = (1 + math.cos(two_theta * math.pi / 180) ** 2) / 2
+        # Check pol frac against Azaroff paper
+        pol_frac = 0.5 * (1 + math.cos(two_theta * math.pi / 180) ** 2) / 2
         pol_dir = [1.0, 0.0, 0.0]  # To be confirmed later.
         return pol_frac, pol_dir
 
@@ -224,36 +240,25 @@ class FormatNoniusKappaCCD(Format):
         # Now seek to beginning counting from the end
 
         with self.open_file(self._image_file, "rb") as infile:
-            try:
-                infile.seek(-expected_size, io.SEEK_END)
-            except Exception:
-                print(
-                    "Warning: Seeking from end not implemented for file %s"
-                    % self._image_file
-                )
-                if hasattr(infile, "measure_size"):
-                    fileSize = infile.measure_size()
-                elif hasattr(infile, "size"):
-                    fileSize = infile.size
-                elif hasattr(infile, "getSize"):
-                    fileSize = infile.getSize()
+            fileSize = os.stat(self._image_file)[6]
+            infile.seek(fileSize - expected_size, os.SEEK_SET)
+
+            # Read data into array. Data are little endian based on Fabio approach
+            # Data may be double-read, presumably in case some CCD bins had something
+            # left after the first read.
+
+            for i in range(nbReadOut):
+                if is_big_endian():
+                    raw_data = read_uint16_bs(streambuf(infile), dim1 * dim2)
                 else:
-                    print("Unable to guess the file-size of %s" % self._image_file)
-                    fileSize = os.stat(self._image_file)[6]
-                infile.seek(fileSize - expected_size - infile.tell(), 1)
+                    raw_data = read_uint16(streambuf(infile), dim1 * dim2)
 
-        # Read data into array. Data are little endian based on Fabio approach
-        # Data may be double-read, presumably in case some CCD bins had something
-        # left after the first read.
+                if i == 0:
+                    data = raw_data
+                else:
+                    data += raw_data
 
-        for i in range(nbReadOut):
-            raw_data = read_uint16_bs(streambuf(infile), dim1 * dim2)
-            if i == 0:
-                data = raw_data
-            else:
-                data += raw_data
-
-        data.reshape(flex.grid(dim2, dim1))  # Not sure about correct order of dims
+        data.reshape(flex.grid(dim2, dim1))  # These dims work out
         return data
 
 
