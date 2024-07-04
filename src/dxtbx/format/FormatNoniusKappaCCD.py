@@ -13,20 +13,9 @@ from dxtbx import IncorrectFormatError
 from dxtbx.ext import is_big_endian, read_uint16, read_uint16_bs
 from dxtbx.format.Format import Format
 
-MINIMUM_KEYS = [
-    # 'ByteOrder', Assume little by default
-    "Data type",
-    "X dimension",
-    "Y dimension",
-    "Number of readouts",
-]
-
 
 class FormatNoniusKappaCCD(Format):
-    """This format produced by 1990s era Nonius Kappa CCD instruments.
-    Consists of a header containing lines of the form XXX = YYY, followed by an image.
-    We reuse Fabio code.
-    """
+    """A class for reading files produced by 1990s era Nonius Kappa CCD instruments."""
 
     @staticmethod
     def read_header_lines(image_path):
@@ -78,7 +67,7 @@ class FormatNoniusKappaCCD(Format):
     @staticmethod
     def understand(image_file):
         """
-        Try to find some characteristic character sequences in the
+        Look for characteristic character sequences in the
         header.
         """
         try:
@@ -112,15 +101,7 @@ class FormatNoniusKappaCCD(Format):
         omega = float(self.headers["Omega start"])
         kappa = float(self.headers["Kappa start"])
         phi = float(self.headers["Phi start"])
-
-        # Kappa axis points into the kappa head as clockwise rotation when
-        # viewed from above. The datum position has the kappa head under
-        # the incoming beam. All primary axes rotate clockwise when viewed
-        # from above, so the kappa axis has positive x, z components,
-        # corresponding to "+z" when the calculation in in make_kappa_goniometer
-        # is reviewed.
-
-        direction = "+z"  #
+        direction = "-z"  #
 
         if "Phi scan range" in self.headers:
             scan_axis = "phi"
@@ -133,7 +114,7 @@ class FormatNoniusKappaCCD(Format):
 
     def _detector(self):
         """It appears that pixel size reported in the header does not
-        account for binning, which doubles the size. CHECK"""
+        account for binning, which doubles the size in both dimensions."""
 
         pix_fac = 0.001
         if self.headers["Mode"] == "Binned":
@@ -141,8 +122,7 @@ class FormatNoniusKappaCCD(Format):
 
         pixel_size = [
             float(self.headers["pixel X-size (um)"]) * pix_fac,
-            # float(self.headers["pixel X-size (um)"]) * pix_fac   #For testing
-            float(self.headers["pixel Y-size (um)"]) * pix_fac,  # True
+            float(self.headers["pixel Y-size (um)"]) * pix_fac,
         ]
 
         image_size = [
@@ -176,14 +156,13 @@ class FormatNoniusKappaCCD(Format):
     def _beam(self):
         """Return a simple model for a lab-based beam. As dxtbx
         has no laboratory target model, take the weighted values
-        of the alpha1/alpha2 wavelengths. Polarisation is that
-        obtained after single reflection from graphite 002
-        monochromator."""
+        of the alpha1/alpha2 wavelengths."""
+
         a1 = float(self.headers["Alpha1"])
         a2 = float(self.headers["Alpha2"])
         wt = float(self.headers["Alpha1/Alpha2 ratio"])
         wavelength = (wt * a1 + a2) / (wt + 1.0)
-        direction = [0.0, 0.0, 1.0]  # imgCIF standard
+        direction = [0.0, 0.0, 1.0]
         polarisation, pol_dir = self.get_beam_polarisation()
         return self._beam_factory.complex(
             sample_to_source=direction,
@@ -213,10 +192,10 @@ class FormatNoniusKappaCCD(Format):
         )
 
     def get_beam_polarisation(self):
-        """Polarisation for single reflection off graphite
-        002 monochromator. Hard-coded angles for MO and CU
-        targets
-        """
+        """Polarisation for single reflection off graphite 002
+        monochromator as per manual. Hard-coded angles for Mo, Cu and
+        Ag targets."""
+
         if self.headers["Target material"] == "MO":
             two_theta = 12.2  # From manual
         elif self.headers["Target material"] == "CU":
@@ -224,28 +203,31 @@ class FormatNoniusKappaCCD(Format):
         elif self.headers["Target material"] == "AG":
             two_theta = 9.62  # Calculated
 
-        # Check pol frac against Azaroff paper
-        pol_frac = 0.5 * (1 + math.cos(two_theta * math.pi / 180) ** 2) / 2
-        pol_dir = [1.0, 0.0, 0.0]  # To be confirmed later.
+        # Assume an ideally imperfect monochromator, with the axis
+        # of rotation of the monochromator in the horizontal direction
+        # in a laboratory setup.
+
+        pol_frac = 1.0 / (1 + math.cos(two_theta * math.pi / 180) ** 2)
+        pol_dir = [0.0, 1.0, 0.0]
         return pol_frac, pol_dir
 
     def get_raw_data(self):
-        # Compute image size: always little-endian UInt16 = 2 bytes
+        """Return raw data from a Nonius CCD frame."""
+
+        # Frame file contains a series of readouts, each pixel is
+        # an unsigned little-endian 16-bit integer
 
         dim1 = int(self.headers["X dimension"])
         dim2 = int(self.headers["Y dimension"])
         nbReadOut = int(self.headers["Number of readouts"])
         expected_size = dim1 * dim2 * 2 * nbReadOut
 
-        # Now seek to beginning counting from the end
+        # Not clear if the image offset is present in the header,
+        # therefore we seek from the end of the file.
 
         with self.open_file(self._image_file, "rb") as infile:
             fileSize = os.stat(self._image_file)[6]
             infile.seek(fileSize - expected_size, os.SEEK_SET)
-
-            # Read data into array. Data are little endian based on Fabio approach
-            # Data may be double-read, presumably in case some CCD bins had something
-            # left after the first read.
 
             for i in range(nbReadOut):
                 if is_big_endian():
@@ -258,7 +240,7 @@ class FormatNoniusKappaCCD(Format):
                 else:
                     data += raw_data
 
-        data.reshape(flex.grid(dim2, dim1))  # These dims work out
+        data.reshape(flex.grid(dim2, dim1))
         return data
 
 
