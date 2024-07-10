@@ -63,9 +63,12 @@ class FormatMRC(Format):
 
         # For image stacks, NX==MX etc. should always be true. Assert this
         # to ensure we fail on an MRC file of the wrong type.
-        assert hd["nx"] == hd["mx"]
-        assert hd["ny"] == hd["my"]
-        assert hd["nz"] == hd["mz"]
+        try:
+            assert hd["nx"] == hd["mx"]
+            assert hd["ny"] == hd["my"]
+            assert (hd["nz"] == hd["mz"]) or (hd["mz"] == 1)
+        except AssertionError:
+            raise ValueError("Unexpected data size values in the header")
 
         return hd
 
