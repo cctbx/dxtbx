@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import List, Tuple
 
 import h5py
+import numpy as np
 
 import cctbx.array_family.flex as flex
 
-from dxtbx import IncorrectFormatError
+from dxtbx import IncorrectFormatError, flumpy
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.model import Detector, Goniometer, Scan
 from dxtbx.model.beam import BeamFactory, PolychromaticBeam, Probe
@@ -43,6 +44,9 @@ class FormatISISSXD(FormatHDF5):
                 return ""
 
         return get_name(image_file) == "SXD"
+
+    def get_instrument_name(self) -> str:
+        return "SXD"
 
     def get_experiment_title(self) -> str:
         return self._nxs_file["raw_data_1"]["title"][0].decode()
@@ -313,3 +317,53 @@ class FormatISISSXD(FormatHDF5):
                 raw_data.append(panel_data)
 
         return tuple(raw_data)
+
+    def get_flattened_data(self, scale_data: bool = True) -> Tuple[flex.int]:
+        """
+        Image data summed along the time-of-flight direction
+        """
+
+        panel_size = self._get_image_size()
+        total_pixels = panel_size[0] * panel_size[1]
+        # Panel positions are offset by 4 in raw_data array
+        # See p24 of https://www.isis.stfc.ac.uk/Pages/sxd-user-guide6683.pdf
+        idx_offset = 4
+        max_val = None
+        num_tof_bins = len(self._get_time_of_flight())
+        raw_data = []
+        for panel_idx in range(self._get_num_panels()):
+            start_idx = (panel_idx * total_pixels) + (panel_idx * idx_offset)
+            end_idx = start_idx + total_pixels
+            panel_data = flex.int(
+                self._nxs_file["raw_data_1/detector_1/counts"][0, start_idx:end_idx, :]
+            )
+            panel_max_val = max(panel_data)
+            if max_val is None or max_val < panel_max_val:
+                max_val = panel_max_val
+            panel_data.reshape(flex.grid(panel_size[0], panel_size[1], num_tof_bins))
+            panel_data = np.sum(flumpy.to_numpy(panel_data).T, axis=2)
+            raw_data.append(panel_data)
+
+            if scale_data:
+                return tuple([(i / max_val).tolist() for i in raw_data])
+
+        return tuple([i.tolist() for i in raw_data])
+
+    def get_flattened_pixel_data(
+        self, panel_idx: int, x: int, y: int
+    ) -> Tuple[Tuple, Tuple]:
+        time_channels = self._get_time_of_flight()
+        panel_size = self._get_image_size()
+        height = panel_size[1]
+        total_pixels = panel_size[0] * panel_size[1]
+        # Panel positions are offset by 4 in raw_data array
+        # See p24 of https://www.isis.stfc.ac.uk/Pages/sxd-user-guide6683.pdf
+        idx_offset = 4
+        idx = (panel_idx * total_pixels) + (panel_idx * idx_offset) + y * height + x
+        return (
+            time_channels,
+            tuple(self._nxs_file["raw_data_1/detector_1/counts"][0, idx, :].tolist()),
+        )
+
+    def get_proton_charge(self):
+        return float(self._nxs_file["raw_data_1/proton_charge"][0])
