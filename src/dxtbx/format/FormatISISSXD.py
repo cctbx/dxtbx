@@ -7,7 +7,7 @@ import numpy as np
 
 import cctbx.array_family.flex as flex
 
-from dxtbx import IncorrectFormatError, flumpy
+from dxtbx import IncorrectFormatError
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.model import Detector, Goniometer, Scan
 from dxtbx.model.beam import BeamFactory, PolychromaticBeam, Probe
@@ -334,18 +334,22 @@ class FormatISISSXD(FormatHDF5):
         for panel_idx in range(self._get_num_panels()):
             start_idx = (panel_idx * total_pixels) + (panel_idx * idx_offset)
             end_idx = start_idx + total_pixels
-            panel_data = flex.int(
-                self._nxs_file["raw_data_1/detector_1/counts"][0, start_idx:end_idx, :]
-            )
-            panel_max_val = max(panel_data)
+            panel_data = self._nxs_file["raw_data_1/detector_1/counts"][
+                0, start_idx:end_idx, :
+            ]
+            panel_max_val = np.max(panel_data)
             if max_val is None or max_val < panel_max_val:
                 max_val = panel_max_val
-            panel_data.reshape(flex.grid(panel_size[0], panel_size[1], num_tof_bins))
-            panel_data = np.sum(flumpy.to_numpy(panel_data).T, axis=2)
+            panel_data = np.reshape(
+                panel_data, (panel_size[0], panel_size[1], num_tof_bins)
+            )
+            panel_data = np.flipud(np.sum(panel_data, axis=2))
+            if panel_idx == 0 and self._panel_0_flipped():
+                panel_data = np.flipud(panel_data)
             raw_data.append(panel_data)
 
-            if scale_data:
-                return tuple([(i / max_val).tolist() for i in raw_data])
+        if scale_data:
+            return tuple([(i / max_val).tolist() for i in raw_data])
 
         return tuple([i.tolist() for i in raw_data])
 
