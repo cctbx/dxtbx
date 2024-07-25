@@ -66,7 +66,7 @@ class FormatISISSXD(FormatHDF5):
         try:
             experiment_title = self.get_experiment_title()
             if "w=" in experiment_title:
-                angle = float(experiment_title().split("w=")[1].split()[0])
+                angle = float(experiment_title.split("w=")[1].split()[0])
             elif "wccr" in experiment_title:
                 angle = float(experiment_title.split("wccr=")[1].split()[0])
             elif "wtl" in experiment_title:
