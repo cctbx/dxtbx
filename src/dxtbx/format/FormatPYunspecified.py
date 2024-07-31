@@ -27,7 +27,7 @@ class FormatPYunspecified(FormatPY):
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
                 data = pickle.load(fh, encoding="bytes")
                 data = image_dict_to_unicode(data)
-        except OSError:
+        except (AttributeError, OSError):
             return False
 
         headers = set(data)
