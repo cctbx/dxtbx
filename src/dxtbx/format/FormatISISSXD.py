@@ -59,23 +59,26 @@ class FormatISISSXD(FormatHDF5):
         run_number = self.get_experiment_run_number()
         return f"{title} ({run_number})"
 
+    def get_goniometer_phi_angle(self) -> float:
+        try:
+            experiment_title = self.get_experiment_title()
+            if "w=" in experiment_title:
+                return float(experiment_title.split("w=")[1].split()[0])
+            elif "wccr" in experiment_title:
+                return float(experiment_title.split("wccr=")[1].split()[0])
+            elif "wtl" in experiment_title:
+                return float(experiment_title.split("wtl=")[1].split()[0])
+            else:
+                return 0
+        except (ValueError, IndexError):
+            return 0
+
     def get_goniometer(self, idx: int = None) -> Goniometer:
         rotation_axis = (0.0, 1.0, 0.0)
         fixed_rotation = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
         goniometer = GoniometerFactory.make_goniometer(rotation_axis, fixed_rotation)
-        try:
-            experiment_title = self.get_experiment_title()
-            if "w=" in experiment_title:
-                angle = float(experiment_title.split("w=")[1].split()[0])
-            elif "wccr" in experiment_title:
-                angle = float(experiment_title.split("wccr=")[1].split()[0])
-            elif "wtl" in experiment_title:
-                angle = float(experiment_title.split("wtl=")[1].split()[0])
-            else:
-                return goniometer
-            goniometer.rotate_around_origin(rotation_axis, angle)
-        except (ValueError, IndexError):
-            pass
+        angle = self.get_goniometer_phi_angle()
+        goniometer.rotate_around_origin(rotation_axis, angle)
         return goniometer
 
     def get_detector(self, index: int = None) -> Detector:
@@ -318,7 +321,9 @@ class FormatISISSXD(FormatHDF5):
 
         return tuple(raw_data)
 
-    def get_flattened_data(self, scale_data: bool = True) -> Tuple[flex.int]:
+    def get_flattened_data(
+        self, image_range: None | Tuple = None, scale_data: bool = True
+    ) -> Tuple[flex.int]:
         """
         Image data summed along the time-of-flight direction
         """
@@ -337,15 +342,27 @@ class FormatISISSXD(FormatHDF5):
             panel_data = self._nxs_file["raw_data_1/detector_1/counts"][
                 0, start_idx:end_idx, :
             ]
-            panel_max_val = np.max(panel_data)
-            if max_val is None or max_val < panel_max_val:
-                max_val = panel_max_val
             panel_data = np.reshape(
                 panel_data, (panel_size[0], panel_size[1], num_tof_bins)
             )
-            panel_data = np.flipud(np.sum(panel_data, axis=2))
+            if image_range is not None:
+                assert (
+                    len(image_range) == 2
+                ), "expected image_range to be only two values"
+                assert (
+                    image_range[0] >= 0 and image_range[0] < image_range[1]
+                ), "image_range[0] out of range"
+                assert image_range[1] <= num_tof_bins, "image_range[1] out of range"
+                panel_data = np.flipud(
+                    np.sum(panel_data[:, :, image_range[0] : image_range[1]], axis=2)
+                )
+            else:
+                panel_data = np.flipud(np.sum(panel_data, axis=2))
             if panel_idx == 0 and self._panel_0_flipped():
                 panel_data = np.flipud(panel_data)
+            panel_max_val = np.max(panel_data)
+            if max_val is None or max_val < panel_max_val:
+                max_val = panel_max_val
             raw_data.append(panel_data)
 
         if scale_data:
