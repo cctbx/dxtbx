@@ -16,7 +16,7 @@ conda-forge::hdf5
 conda-forge::matplotlib-base
 conda-forge::mrcfile
 conda-forge::natsort
-conda-forge::numpy
+conda-forge::numpy<2
 conda-forge::nxmx
 conda-forge::orderedset
 conda-forge::pillow>=5.4.1
