@@ -48,15 +48,15 @@ except ImportError:
 NXNode = Union[h5py.File, h5py.Group]
 
 
-def h5str(h5_value: str | numpy.string_ | bytes) -> str:
+def h5str(h5_value: str | numpy.bytes_ | bytes) -> str:
     """
     Convert a value returned an h5py attribute to str.
 
-    h5py can return either a bytes-like (numpy.string_) or str object
+    h5py can return either a bytes-like (numpy.bytes_) or str object
     for attribute values depending on whether the value was written as
     fixed or variable length. This function collapses the two to str.
     """
-    if isinstance(h5_value, (numpy.string_, bytes)):
+    if isinstance(h5_value, (numpy.bytes_, bytes)):
         return h5_value.decode("utf-8")
     return h5_value
 
