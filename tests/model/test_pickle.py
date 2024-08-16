@@ -1,6 +1,6 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
-import six.moves.cPickle as pickle
+import pickle
 
 from dxtbx.model import Beam, Detector, Goniometer, Panel, Scan
 

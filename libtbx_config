@@ -2,7 +2,7 @@
     "modules_required_for_use": ["iotbx"],
     "python_required": [
         "dials-data>=2.0.30",
-        "procrunner>=1.0.2",
+        "pint",
         "pytest>=4.5,<5.0",
     ],
 }

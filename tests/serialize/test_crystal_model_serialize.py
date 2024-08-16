@@ -1,9 +1,8 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
-from builtins import range
+import pickle
 
 import pytest
-import six.moves.cPickle as pickle
 
 from scitbx import matrix
 from scitbx.array_family import flex

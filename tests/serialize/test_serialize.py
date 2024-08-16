@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import pytest
 
@@ -98,7 +98,6 @@ def test_goniometer_with_scan_points():
     )
 
     for g1 in [simple_g, multi_ax_g]:
-
         S_static = matrix.sqr(g1.get_setting_rotation())
         g1.set_setting_rotation_at_scan_points([S_static] * 5)
         d = g1.to_dict()
@@ -124,9 +123,10 @@ def test_scan():
     d = s1.to_dict()
     s2 = ScanFactory.from_dict(d)
     assert d["image_range"] == (1, 3)
-    assert d["oscillation"] == (1.0, 0.2)
-    assert d["exposure_time"] == [0.1, 0.1, 0.1]
-    assert d["epochs"] == [0.1, 0.2, 0.3]
+    osc = d["properties"]["oscillation"]
+    assert (osc[0], osc[1] - osc[0]) == pytest.approx((1.0, 0.2))
+    assert d["properties"]["exposure_time"] == pytest.approx([0.1, 0.1, 0.1])
+    assert d["properties"]["epochs"] == pytest.approx([0.1, 0.2, 0.3])
     assert d["batch_offset"] == 0
     assert s1 == s2
 
@@ -134,9 +134,9 @@ def test_scan():
     d2 = {"exposure_time": [0.2, 0.2, 0.2]}
     s3 = ScanFactory.from_dict(d2, d)
     assert s3.get_image_range() == (1, 3)
-    assert s3.get_oscillation() == (1.0, 0.2)
-    assert list(s3.get_exposure_times()) == [0.2, 0.2, 0.2]
-    assert list(s3.get_epochs()) == [0.1, 0.2, 0.3]
+    assert s3.get_oscillation() == pytest.approx((1.0, 0.2))
+    assert list(s3.get_exposure_times()) == pytest.approx([0.2, 0.2, 0.2])
+    assert list(s3.get_epochs()) == pytest.approx([0.1, 0.2, 0.3])
     assert s2 != s3
 
     # Test with a partial epoch

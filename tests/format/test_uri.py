@@ -2,6 +2,8 @@
 Testing URI-passing in the Format class hierarchy
 """
 
+from __future__ import annotations
+
 from typing import Type
 from unittest.mock import Mock
 

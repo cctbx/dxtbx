@@ -1,7 +1,6 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import random
-from builtins import range
 
 from dxtbx.model import (
     get_mod2pi_angles_in_range,
@@ -22,7 +21,6 @@ def test_is_angle_in_random_range():
 
         # If A < B or A > B
         if angular_range[0] < angular_range[1]:
-
             # Check that the following are true
             #   angle in range 0 -> A = False
             #   angle in range A -> B = True
@@ -34,7 +32,6 @@ def test_is_angle_in_random_range():
             for angle in range(angular_range[1] + 1, 360):
                 assert is_angle_in_range(angular_range, angle, True) is False
         else:
-
             # Check that the following are true
             #   angle in range 0 -> B = True
             #   angle in range B -> A = False

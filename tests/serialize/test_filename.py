@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 from dxtbx.serialize.filename import resolve_path

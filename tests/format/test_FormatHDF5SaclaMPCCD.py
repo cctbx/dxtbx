@@ -1,7 +1,8 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
+
+import pickle
 
 import pytest
-import six.moves.cPickle as pickle
 
 from scitbx.array_family import flex
 
@@ -15,7 +16,8 @@ pytest.importorskip("h5py")
 
 def test_static_mask(dials_data):
     master_h5 = (
-        dials_data("image_examples").join("SACLA-MPCCD-Phase3-21528-5images.h5").strpath
+        dials_data("image_examples", pathlib=True)
+        / "SACLA-MPCCD-Phase3-21528-5images.h5"
     )
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
 
@@ -34,7 +36,8 @@ def test_static_mask(dials_data):
 
 def test_MPCCD_Phase3_21528(dials_data):
     master_h5 = (
-        dials_data("image_examples").join("SACLA-MPCCD-Phase3-21528-5images.h5").strpath
+        dials_data("image_examples", pathlib=True)
+        / "SACLA-MPCCD-Phase3-21528-5images.h5"
     )
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
     expts = ExperimentListFactory.from_filenames([master_h5])
@@ -48,7 +51,7 @@ def test_MPCCD_Phase3_21528(dials_data):
     panel = detector[0]
     assert panel.get_pixel_size() == pytest.approx((0.05, 0.05))
     assert panel.get_image_size() == (512, 1024)
-    assert panel.get_trusted_range() == (-1.0, 65535.0)
+    assert panel.get_trusted_range() == (0, 65535)
     assert panel.get_fast_axis() == pytest.approx(
         (-0.0026929852392799875, -0.9999963739086762, 0.0)
     )
@@ -79,9 +82,8 @@ def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
             monkeypatch.delenv("MPCCD_RECONST_MODE", raising=False)
 
         master_h5 = (
-            dials_data("image_examples")
-            .join("SACLA-MPCCD-Phase3-21528-5images.h5")
-            .strpath
+            dials_data("image_examples", pathlib=True)
+            / "SACLA-MPCCD-Phase3-21528-5images.h5"
         )
         expts = ExperimentListFactory.from_filenames([master_h5])
         imageset = expts[0].imageset
@@ -106,7 +108,8 @@ def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
 
 def test_combine_with_user_static_mask(dials_data, tmpdir):
     master_h5 = (
-        dials_data("image_examples").join("SACLA-MPCCD-Phase3-21528-5images.h5").strpath
+        dials_data("image_examples", pathlib=True)
+        / "SACLA-MPCCD-Phase3-21528-5images.h5"
     )
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
 
@@ -151,7 +154,7 @@ def test_HDF5_format_caching(dials_data, clear_cache):
     xfail: see https://github.com/cctbx/dxtbx/issues/245
     """
     img_file = "SACLA-MPCCD-Phase3-21528-5images.h5"
-    master_h5 = dials_data("image_examples").join(img_file).strpath
+    master_h5 = dials_data("image_examples", pathlib=True) / img_file
 
     expts1 = ExperimentListFactory.from_filenames([master_h5])
     expts1[0].imageset.get_mask(0)

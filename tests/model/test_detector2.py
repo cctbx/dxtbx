@@ -1,10 +1,10 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
+import pickle
 from copy import deepcopy
 from math import sqrt
 
 import pytest
-import six.moves.cPickle as pickle
 
 from libtbx.phil import parse
 from scitbx import matrix
@@ -140,7 +140,9 @@ def test_get_valid_D_matrix(detector):
     """Setup the hierarchy of frames and check it's all consistent."""
     # Set a valid frame for the top level detector
     detector.hierarchy().set_local_frame(
-        (1, 0, 0), (0, 1, 0), (0, 0, 100)  # Fast axis  # Slow axis
+        (1, 0, 0),
+        (0, 1, 0),
+        (0, 0, 100),  # Fast axis  # Slow axis
     )  # Origin
 
     # Check that all sub groups have the same frame and that we can get
@@ -196,10 +198,10 @@ def test_get_valid_D_matrix(detector):
     # Test the panel coordinate systems
 
     eps = 1e-7
-    p1_d0 = matrix.col((10.0 + sqrt(5.0 ** 2 / 2), 10.0 + sqrt(5.0 ** 2 / 2), 110))
-    p2_d0 = matrix.col((10.0 - sqrt(5.0 ** 2 / 2), 10.0 + sqrt(5.0 ** 2 / 2), 90))
-    p3_d0 = matrix.col((20.0 + sqrt(5.0 ** 2 / 2), 20.0 + sqrt(5.0 ** 2 / 2), 90))
-    p4_d0 = matrix.col((20.0 + sqrt(5.0 ** 2 / 2), 20.0 - sqrt(5.0 ** 2 / 2), 110))
+    p1_d0 = matrix.col((10.0 + sqrt(5.0**2 / 2), 10.0 + sqrt(5.0**2 / 2), 110))
+    p2_d0 = matrix.col((10.0 - sqrt(5.0**2 / 2), 10.0 + sqrt(5.0**2 / 2), 90))
+    p3_d0 = matrix.col((20.0 + sqrt(5.0**2 / 2), 20.0 + sqrt(5.0**2 / 2), 90))
+    p4_d0 = matrix.col((20.0 + sqrt(5.0**2 / 2), 20.0 - sqrt(5.0**2 / 2), 110))
     p1_d1 = matrix.col((1, 0, 0))
     p2_d1 = matrix.col((0, 1, 0))
     p3_d1 = matrix.col((0, -1, 0))

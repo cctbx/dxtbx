@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import os
 
@@ -33,7 +33,7 @@ def test_biomax_vertical_goniometer_at_diamond(tmpdir):
 
 
 def test_semi_synthetic_dectris_eiger_nearly_nexus(dials_data, tmpdir):
-    master_h5 = dials_data("image_examples").join("dectris_eiger_master.h5").strpath
+    master_h5 = dials_data("image_examples", pathlib=True) / "dectris_eiger_master.h5"
 
     if not os.access(master_h5, os.R_OK):
         pytest.skip("Test images not available")
@@ -56,7 +56,7 @@ def test_semi_synthetic_dectris_eiger_nearly_nexus(dials_data, tmpdir):
     panel = detector[0]
     assert panel.get_pixel_size() == pytest.approx((0.075, 0.075))
     assert panel.get_image_size() == (3110, 3269)
-    assert panel.get_trusted_range() == (-1, 12440)
+    assert panel.get_trusted_range() == (0, 12440)
     assert panel.get_fast_axis() == (1, 0, 0)
     assert panel.get_slow_axis() == (0, -1, 0)
     assert panel.get_thickness() == pytest.approx(0.45)

@@ -3,6 +3,8 @@
 # write and run pytest tests, and an overview of the available features.
 #
 
+from __future__ import annotations
+
 import os
 import socket
 
@@ -14,6 +16,10 @@ collect_ignore = []
 def dials_regression_path():
     """Return the absolute path to the dials_regression module as a string.
     This function is used directly by tests/test_regression_images.py"""
+
+    if "DIALS_REGRESSION" in os.environ:
+        return os.environ["DIALS_REGRESSION"]
+
     try:
         import dials_regression as dr
 
@@ -64,11 +70,3 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "regression" in item.keywords:
                 item.add_marker(skip_regression)
-
-
-@pytest.fixture
-def run_in_tmpdir(tmpdir):
-    """Shortcut to create a temporary directory and then run the test inside
-    this directory."""
-    tmpdir.chdir()
-    return tmpdir

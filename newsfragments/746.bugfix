@@ -1,0 +1,1 @@
+``FormatSMVRigakuSaturnNoTS``: Fix a bug in reading the image pedestal from headers.

@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import os
 
@@ -21,4 +21,4 @@ def test_static_mask(dials_regression):
         assert imageset.get_format_class() == FormatPYunspecifiedStill
         mask = imageset.get_mask(0)
         assert len(mask) == 1
-        assert mask[0].count(False) == 867109
+        assert mask[0].count(False) == 866781

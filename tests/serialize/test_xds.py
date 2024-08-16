@@ -1,6 +1,5 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
-import glob
 import os
 
 from libtbx.test_utils import approx_equal
@@ -12,14 +11,11 @@ from dxtbx.serialize import xds
 
 
 def test_to_xds(dials_data, tmpdir):
-    tmpdir.chdir()
-    template = dials_data("centroid_test_data").join("centroid_00*.cbf").strpath
-    file_names = glob.glob(template)
-    sequence = ImageSetFactory.new(file_names)[0]
+    file_names = dials_data("centroid_test_data", pathlib=True).glob("centroid_00*.cbf")
+    sequence = ImageSetFactory.new(list(file_names))[0]
     to_xds = xds.to_xds(sequence)
     s1 = to_xds.XDS_INP()
-    expected_f = (
-        """\
+    expected_f = """\
 DETECTOR=PILATUS MINIMUM_VALID_PIXEL_VALUE=0 OVERLOAD=495976
 SENSOR_THICKNESS= 0.320
 !SENSOR_MATERIAL / THICKNESS Si 0.320
@@ -55,9 +51,7 @@ UNTRUSTED_RECTANGLE= 0 2464 2103 2121
 UNTRUSTED_RECTANGLE= 0 2464 2315 2333
 DATA_RANGE= 1 9
 JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
-"""
-        % dials_data("centroid_test_data").join("centroid_????.cbf").strpath
-    )
+""" % (dials_data("centroid_test_data", pathlib=True) / "centroid_????.cbf")
 
     # universe changed once, so be flexible
     expected = [expected_f % a for a in ["3.960382", "3.960386"]]
@@ -68,10 +62,10 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
     real_space_c = (-22.673623, -1.486119, 35.793463)
     s2 = to_xds.xparm_xds(real_space_a, real_space_b, real_space_c, space_group=1)
     # run coordinate frame converter on xparm.xds as a sanity check
-    with open("xparm.xds", mode="wb") as fh:
+    with open(tmpdir / "xparm.xds", mode="wb") as fh:
         fh.write(s2.encode("ASCII"))
 
-    converter = coordinate_frame_helpers.import_xds_xparm("xparm.xds")
+    converter = coordinate_frame_helpers.import_xds_xparm(tmpdir / "xparm.xds")
     detector = sequence.get_detector()
     goniometer = sequence.get_goniometer()
     beam = sequence.get_beam()
@@ -88,7 +82,6 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
 
 
 def test_to_xds_multi_panel_i23(dials_regression, tmpdir, mocker):
-    tmpdir.chdir()
     file_name = os.path.join(
         dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
     )
@@ -131,8 +124,8 @@ SEGMENT_ORGX= 1075.00 SEGMENT_ORGY= 4973.67""",
 
 
 def test_vmxi_thaumatin(dials_data):
-    master_h5 = dials_data("vmxi_thaumatin") / "image_15799_master.h5"
-    expts = ExperimentListFactory.from_filenames([master_h5.strpath])
+    master_h5 = dials_data("vmxi_thaumatin", pathlib=True) / "image_15799_master.h5"
+    expts = ExperimentListFactory.from_filenames([master_h5])
     to_xds = xds.to_xds(expts[0].imageset)
     s = to_xds.XDS_INP()
     assert "DETECTOR=EIGER" in s

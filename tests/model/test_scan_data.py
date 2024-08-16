@@ -1,7 +1,6 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import copy
-from builtins import range
 
 import pytest
 
@@ -105,12 +104,14 @@ def test_scan_360_append():
 
 def test_swap():
     scan1 = Scan((1, 20), (0.0, 1.0))
+    scan1_osc = scan1.get_oscillation()
     scan2 = Scan((40, 60), (10.0, 2.0))
+    scan2_osc = scan2.get_oscillation()
     scan1.swap(scan2)
     assert scan2.get_image_range() == (1, 20)
     assert scan1.get_image_range() == (40, 60)
-    assert scan2.get_oscillation() == (0.0, 1.0)
-    assert scan1.get_oscillation() == (10.0, 2.0)
+    assert scan2.get_oscillation() == scan1_osc
+    assert scan1.get_oscillation() == scan2_osc
 
 
 def test_valid_image_ranges():
@@ -145,7 +146,7 @@ def test_from_phil():
 
     assert s1.get_num_images() == 10
     assert s1.get_image_range() == (1, 10)
-    assert s1.get_oscillation() == (-4, 0.1)
+    assert s1.get_oscillation() == pytest.approx((-4, 0.1))
     assert s1.get_batch_offset() == 0
     assert s1.get_batch_range() == s1.get_image_range()
     for i in range(s1.get_image_range()[0], s1.get_image_range()[1] + 1):
@@ -168,10 +169,21 @@ def test_from_phil():
     s2 = ScanFactory.from_phil(params, s1)
     assert s2.get_num_images() == 20
     assert s2.get_image_range() == (1, 20)
-    assert s2.get_oscillation() == (20, 0.01)
+    assert s2.get_oscillation() == pytest.approx((20, 0.01))
     assert s2.get_batch_offset() == 10
     assert s2.get_batch_range() == (11, 30)
     ir1, ir2 = s2.get_image_range()
     for i in range(ir1, ir2):
         assert s2.get_batch_for_image_index(i) == i + s2.get_batch_offset()
         assert s2.is_batch_valid(s2.get_batch_for_image_index(i))
+
+
+def test_scan_factory_from_dict(scan):
+    empty_scan = Scan()
+    empty_scan_from_dict = ScanFactory.from_dict(empty_scan.to_dict())
+
+    assert empty_scan_from_dict == empty_scan
+
+    scan_from_dict = ScanFactory.from_dict(scan.to_dict())
+
+    assert scan_from_dict == scan

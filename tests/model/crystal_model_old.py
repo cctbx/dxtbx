@@ -1,10 +1,8 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import sys
-from builtins import range
+from io import StringIO
 from math import pi, sqrt
-
-from six.moves import StringIO
 
 from cctbx.crystal_orientation import crystal_orientation
 from cctbx.sgtbx import space_group as SG
@@ -15,7 +13,7 @@ from scitbx.math import angle_derivative_wrt_vectors
 from scitbx.math.lefebvre import matrix_inverse_error_propagation
 
 
-class crystal_model_old(object):
+class crystal_model_old:
     """Simple model for the crystal lattice geometry and symmetry
 
     A crystal is initialised from the elements of its real space axes
@@ -44,7 +42,6 @@ class crystal_model_old(object):
         mosaicity=None,
         deg=True,
     ):
-
         # Set the space group
         assert [space_group_symbol, space_group].count(None) == 1
         if space_group_symbol:
@@ -185,7 +182,6 @@ class crystal_model_old(object):
         self._B = matrix.sqr(self._uc.fractionalization_matrix()).transpose()
 
     def set_U(self, U):
-
         # check U is a rotation matrix.
         assert U.is_r3_rotation_matrix()
         self._U = U
@@ -200,7 +196,6 @@ class crystal_model_old(object):
         return self._B
 
     def set_B(self, B):
-
         # also set the unit cell
         co = crystal_orientation(B, True)
         self._uc = co.unit_cell()
@@ -222,7 +217,6 @@ class crystal_model_old(object):
         return self._cov_B
 
     def set_B_covariance(self, cov):
-
         cov = matrix.sqr(cov)
 
         # check cov is of the right size. No other checks made
@@ -233,7 +227,6 @@ class crystal_model_old(object):
         return
 
     def _calc_cell_parameter_sd(self):
-
         # self._cov_B is the covariance matrix of elements of the B matrix. We
         # need to construct the covariance matrix of elements of the
         # transpose of B. The vector of elements of B is related to the

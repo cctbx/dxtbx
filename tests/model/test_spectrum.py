@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import math
 import random
@@ -41,7 +41,6 @@ def test_spectrum_bandwidth():
 
 
 def test_spectrum_weighted_mean_variance():
-
     p = 11900.0
     h = 10000.0
     w = 5.0

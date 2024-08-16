@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import pytest
 
@@ -11,9 +11,11 @@ from dxtbx.model.goniometer import Goniometer
 
 def test_spring8_ccp4_2018_zenodo_1443110_data03(dials_data):
     master_h5 = (
-        dials_data("spring8_ccp4_2018")
-        .join("ccp4school2018_bl41xu", "05", "data03", "data03_master.h5")
-        .strpath
+        dials_data("spring8_ccp4_2018", pathlib=True)
+        / "ccp4school2018_bl41xu"
+        / "05"
+        / "data03"
+        / "data03_master.h5"
     )
     assert FormatHDF5EigerNearlyNexusSPring8.understand(master_h5)
 
@@ -29,7 +31,7 @@ def test_spring8_ccp4_2018_zenodo_1443110_data03(dials_data):
     panel = detector[0]
     assert panel.get_pixel_size() == pytest.approx((0.075, 0.075))
     assert panel.get_image_size() == (4150, 4371)
-    assert panel.get_trusted_range() == (-1, 2.094707e06)
+    assert panel.get_trusted_range() == (0, 2.094707e06)
     assert panel.get_fast_axis() == (1, 0, 0)
     assert panel.get_slow_axis() == (0, -1, 0)
     assert panel.get_origin() == pytest.approx((-151.939, 169.629, -180), abs=1e-3)

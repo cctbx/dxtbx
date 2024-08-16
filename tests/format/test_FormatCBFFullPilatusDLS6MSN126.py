@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import pytest
 
@@ -8,7 +8,9 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def test_DLS_I03_smargon(dials_data):
-    filename = dials_data("image_examples").join("DLS_I03_smargon_0001.cbf.gz").strpath
+    filename = (
+        dials_data("image_examples", pathlib=True) / "DLS_I03_smargon_0001.cbf.gz"
+    )
     assert FormatCBFFullPilatusDLS6MSN126.understand(filename)
     expts = ExperimentListFactory.from_filenames(
         [filename], format_kwargs={"dynamic_shadowing": True}
@@ -16,6 +18,8 @@ def test_DLS_I03_smargon(dials_data):
     assert len(expts) == 1
     imageset = expts[0].imageset
     assert imageset.get_format_class() == FormatCBFFullPilatusDLS6MSN126
+    detector = imageset.get_detector()
+    assert detector[0].get_trusted_range() == (0, 91794)
     gonio = imageset.get_goniometer()
     assert list(gonio.get_angles()) == pytest.approx([45.0, 45.0, 45.0])
     assert list(gonio.get_axes().as_double()) == pytest.approx(

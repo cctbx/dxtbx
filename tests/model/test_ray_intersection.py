@@ -1,7 +1,6 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import random
-from builtins import range
 
 import pytest
 
@@ -177,7 +176,6 @@ def tst_fwd_rev_random(intersection, transform, panel):
     # Loop a number of times
     num = 1000
     for i in range(num):
-
         # Create a detector coordinate
         xy = matrix.col(random_xy())
 
