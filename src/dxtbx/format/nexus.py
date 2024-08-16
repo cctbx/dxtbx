@@ -78,7 +78,7 @@ def dataset_as_flex(dataset, selection):
         if dataset.dtype in [
             numpy.half,
             numpy.single,
-            numpy.float_,
+            numpy.float64,
             numpy.float16,
             numpy.float32,
         ]:
