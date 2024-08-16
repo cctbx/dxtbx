@@ -75,6 +75,13 @@ if(HAS_VISIBILITY)
     target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)
 endif()
 
+# pybind11 causes a bounds checking warning on recent compilers
+check_cxx_compiler_flag("-Wno-array-bounds" HAS_BOUNDS_WARNING)
+check_cxx_compiler_flag("-Wno-stringop-overread" HAS_OVERREAD_WARNING)
+if(HAS_BOUNDS_WARNING AND HAS_OVERREAD_WARNING)
+    target_compile_options(dxtbx_flumpy PRIVATE -Wno-array-bounds -Wno-stringop-overread)
+endif()
+
 install(
     TARGETS
         dxtbx_ext
