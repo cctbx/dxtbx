@@ -1,2 +1,1 @@
-``FormatCBFMini``: when parsing header lines for a timestamp, avoid clashes with Windows paths.
-
+``FormatCBFMini``: When parsing header lines for a timestamp, avoid clashes with Windows paths.
