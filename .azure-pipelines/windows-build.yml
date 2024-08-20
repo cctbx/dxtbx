@@ -24,10 +24,11 @@ steps:
     set -eux
     # Remove compilers from conda-env, as prebuilt cctbx appears to use
     # the system configured compilers and so the conda-forge settings conflict
-    grep -v compiler modules/dxtbx/.azure-pipelines/ci-conda-env.txt > ci-conda-env.txt
-    echo pycbf >> ci-conda-env.txt
-    echo cmake >> ci-conda-env.txt
-    mv ci-conda-env.txt modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    python3 .azure-pipelines/parse_dependency_selectors.py dependencies.yaml --prebuilt-cctbx | grep -v compiler > modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    printf "conda-forge::pytest-azurepipelines" >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    printf "conda-forge::pytest-cov" >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    printf "conda-forge::pytest-forked" >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    printf "conda-forge::pytest-timeout" >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
 
     python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --clean --python $(PYTHON_VERSION)
 

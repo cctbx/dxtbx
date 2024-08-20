@@ -17,7 +17,11 @@ steps:
 # Extract the dials-data version so we can correctly cache regression data.
 - bash: |
     set -eux
-    echo pycbf >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    python3 .azure-pipelines/parse_dependency_selectors.py dependencies.yaml --prebuilt-cctbx > .azure-pipelines/ci-conda-env.txt
+    printf "conda-forge::pytest-azurepipelines" >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    printf "conda-forge::pytest-cov" >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    printf "conda-forge::pytest-forked" >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    printf "conda-forge::pytest-timeout" >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
     python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --clean --python $(PYTHON_VERSION)
 
     set +ux
