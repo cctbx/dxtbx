@@ -1,3 +1,27 @@
+dxtbx 3.21.0 (2024-08-20)
+=========================
+
+Features
+--------
+
+- Add Nonius KappaCCD format. (`#741 <https://github.com/cctbx/dxtbx/issues/741>`_)
+
+
+Bugfixes
+--------
+
+- ``FormatMRC``: Relax restrictive check on the overloaded MZ header value, which caused failures to read files where MZ == 1. (`#740 <https://github.com/cctbx/dxtbx/issues/740>`_)
+- ``FormatCBFMini``: When parsing header lines for a timestamp, avoid clashes with Windows paths. (`#742 <https://github.com/cctbx/dxtbx/issues/742>`_)
+- ``FormatPy``: Add fix for pickle files. (`#744 <https://github.com/cctbx/dxtbx/issues/744>`_)
+- ``FormatSMVRigakuSaturnNoTS``: Fix a bug in reading the image pedestal from headers. (`#746 <https://github.com/cctbx/dxtbx/issues/746>`_)
+
+
+Misc
+----
+
+- `#739 <https://github.com/cctbx/dxtbx/issues/739>`_, `#743 <https://github.com/cctbx/dxtbx/issues/743>`_, `#748 <https://github.com/cctbx/dxtbx/issues/748>`_, `#749 <https://github.com/cctbx/dxtbx/issues/749>`_, `#750 <https://github.com/cctbx/dxtbx/issues/750>`_
+
+
 dxtbx 3.20.0 (2024-06-19)
 =========================
 

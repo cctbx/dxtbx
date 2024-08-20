@@ -1,1 +1,0 @@
-Add Nonius KappaCCD format.
