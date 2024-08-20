@@ -24,7 +24,7 @@ steps:
     set -eux
     # Remove compilers from conda-env, as prebuilt cctbx appears to use
     # the system configured compilers and so the conda-forge settings conflict
-    python3 .azure-pipelines/parse_dependencies.py \
+    python3 modules/dxtbx/.azure-pipelines/parse_dependencies.py \
       modules/dxtbx/dependencies.yaml \
       modules/dxtbx/.azure-pipelines/ci-dependencies.yaml \
       --prebuilt-cctbx \
