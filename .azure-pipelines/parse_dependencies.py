@@ -270,12 +270,6 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    # parser.add_argument(
-    #     "kind",
-    #     choices=["bootstrap", "conda-build"],
-    #     help="Choose the target for handling dependency lists",
-    #     metavar="KIND",
-    # )
     parser.add_argument(
         "--conda-build",
         help="Generate structured conda-build-style output",
