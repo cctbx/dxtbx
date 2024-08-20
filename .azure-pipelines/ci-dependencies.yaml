@@ -4,3 +4,4 @@ test:
   - pytest-cov
   - pytest-forked
   - pytest-timeout
+  - conda  # This adds easy activation scripts
