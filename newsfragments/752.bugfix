@@ -1,1 +1,1 @@
-+ repair the panel shuffling bug in FullCBFWriter
+Stop ``dxtbx.image_average`` shuffling panel positions for segmented detectors.
