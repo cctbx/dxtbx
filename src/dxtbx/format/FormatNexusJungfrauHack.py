@@ -106,11 +106,11 @@ class FormatNexusJungfrauHack(FormatNexus):
         detector_material = clean_string(str(material))
         material = {
             "Si": "Si",
-            np.string_("Si"): "Si",
-            np.string_("Silicon"): "Si",
-            np.string_("Sillicon"): "Si",
-            np.string_("CdTe"): "CdTe",
-            np.string_("GaAs"): "GaAs",
+            np.bytes_("Si"): "Si",
+            np.bytes_("Silicon"): "Si",
+            np.bytes_("Sillicon"): "Si",
+            np.bytes_("CdTe"): "CdTe",
+            np.bytes_("GaAs"): "GaAs",
         }.get(detector_material)
         if not material:
             raise RuntimeError("Unknown material: %s" % detector_material)

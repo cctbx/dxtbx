@@ -27,9 +27,7 @@ def nxmx_example():
 
         instrument = entry.create_group("instrument")
         instrument.attrs["NX_class"] = "NXinstrument"
-        name = instrument.create_dataset(
-            "name", data=np.string_("DIAMOND BEAMLINE I03")
-        )
+        name = instrument.create_dataset("name", data=np.bytes_("DIAMOND BEAMLINE I03"))
         name.attrs["short_name"] = "I03"
 
         beam = instrument.create_group("beam")

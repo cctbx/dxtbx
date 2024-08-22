@@ -805,7 +805,7 @@ def test_dataset_as_flex_float():
 def test_dataset_as_flex_double():
     slices = ()
     np_double_types = (
-        np.float_,
+        np.float64,
         np.double,
         np.float64,
     )
