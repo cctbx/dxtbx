@@ -215,6 +215,7 @@ class FullCBFWriter:
         detector_axes_names = []  # save these for later
         panelkeys = []
         panelnames = []
+        panelindices = []
 
         def recursive_setup_basis_dict(key, parent_name="", panel_id=0):
             # Set up CBF axis names, including equipment components and depends_on chains
@@ -230,6 +231,8 @@ class FullCBFWriter:
                 panelname = "PANEL_%d" % panel_id
                 panelkeys.append(key)
                 panelnames.append(panelname)
+                dxtbx_panel_index = list(detector).index(node)
+                panelindices.append(dxtbx_panel_index)
                 panel_id += 1
 
             if len(key) == 1:
@@ -253,6 +256,11 @@ class FullCBFWriter:
             return panel_id
 
         recursive_setup_basis_dict((0,))
+        # The order `recursive_setup_basis_dict` visits panels does not necessarily match
+        # the order returned by dxtbx's `get_detector` and `get_raw_data`.
+        # See https://github.com/cctbx/dxtbx/issues/745.
+        self.panelindices = panelindices  # needed in add_data_to_cbf
+        sorted_panels = [detector[i] for i in panelindices]
 
         if index is None:
             cbf_root = self.imageset.paths()[0]
@@ -327,7 +335,7 @@ class FullCBFWriter:
             # defined as [min-trusted-value, max-trusted-value]. The CBF definition
             # of 'overload' is in fact saturation - i.e. the max-trusted-value, while
             # the undefined_value is below the min-trusted-value.
-            trusted_ranges = [panel.get_trusted_range() for panel in detector]
+            trusted_ranges = [panel.get_trusted_range() for panel in sorted_panels]
             try:
                 add_frame_specific_cbf_tables(
                     cbf,
@@ -336,7 +344,7 @@ class FullCBFWriter:
                     trusted_ranges,
                     diffrn_id,
                     False,
-                    gain=[panel.get_gain() for panel in detector],
+                    gain=[panel.get_gain() for panel in sorted_panels],
                     flux=beam.get_flux(),
                 )
             except TypeError:
@@ -348,7 +356,7 @@ class FullCBFWriter:
                     trusted_ranges,
                     diffrn_id,
                     False,
-                    gain=[panel.get_gain() for panel in detector],
+                    gain=[panel.get_gain() for panel in sorted_panels],
                 )
 
         """Data items in the AXIS category record the information required
@@ -596,6 +604,7 @@ class FullCBFWriter:
                 data = self.imageset.get_raw_data(index)
         if not isinstance(data, tuple):
             data = (data,)
+        data = tuple([data[i] for i in self.panelindices])
 
         array_names = []
         cbf.find_category(b"diffrn_data_frame")
