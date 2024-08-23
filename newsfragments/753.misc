@@ -1,0 +1,1 @@
+Define dxtbx-only dependencies explicitly, and categorised by purpose, for CI (for now). This will allow us to be smarter about what dependencies are installed where.

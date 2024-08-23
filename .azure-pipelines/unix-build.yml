@@ -17,7 +17,11 @@ steps:
 # Extract the dials-data version so we can correctly cache regression data.
 - bash: |
     set -eux
-    echo pycbf >> modules/dxtbx/.azure-pipelines/ci-conda-env.txt
+    python3 modules/dxtbx/.azure-pipelines/parse_dependencies.py \
+      modules/dxtbx/dependencies.yaml \
+      modules/dxtbx/.azure-pipelines/ci-dependencies.yaml \
+      --prebuilt-cctbx \
+      > modules/dxtbx/.azure-pipelines/ci-conda-env.txt
     python3 modules/dxtbx/.azure-pipelines/bootstrap.py base --clean --python $(PYTHON_VERSION)
 
     set +ux

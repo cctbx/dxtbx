@@ -1,0 +1,7 @@
+# Extra dependendencies used in addition for this CI testing
+test:
+  - pytest-azurepipelines
+  - pytest-cov
+  - pytest-forked
+  - pytest-timeout
+  - conda  # This adds easy activation scripts
