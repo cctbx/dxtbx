@@ -1,3 +1,12 @@
+DIALS 3.21.1 (2024-08-23)
+=========================
+
+Bugfixes
+--------
+
+- Stop ``dxtbx.image_average`` shuffling panel positions for segmented detectors. (`#752 <https://github.com/cctbx/dxtbx/issues/752>`_)
+
+
 dxtbx 3.21.0 (2024-08-20)
 =========================
 
