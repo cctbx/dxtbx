@@ -1,6 +1,7 @@
 #include "compression.h"
 #include "dxtbx/error.h"
 #include <assert.h>
+#include <cstdint>
 
 typedef union {
   char b[2];
