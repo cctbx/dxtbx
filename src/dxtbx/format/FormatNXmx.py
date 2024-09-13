@@ -72,7 +72,9 @@ class FormatNXmx(FormatNexus):
         self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
         self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
         wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
-        self._detector_model = dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength, nxdata)
+        self._detector_model = dxtbx.nexus.get_dxtbx_detector(
+            nxdetector, wavelength, nxdata
+        )
 
         # if the detector is between the sample and the source, and perpendicular
         # to the beam, then invert the distance vector, as this is probably wrong

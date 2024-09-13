@@ -463,7 +463,7 @@ def get_dxtbx_detector(
         p.set_px_mm_strategy(px_mm)
 
         if nxdata.data_scale_factor and not nxdata.data_scale_factor.shape:
-            p.set_gain(1/nxdata.data_scale_factor)
+            p.set_gain(1 / nxdata.data_scale_factor)
 
     return detector
 
