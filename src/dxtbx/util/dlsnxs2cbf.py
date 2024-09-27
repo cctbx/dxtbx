@@ -185,7 +185,7 @@ def make_cbf(
         print(f"Writing images to {template}{'#' * num_digits}.cbf:")
         for j in tqdm(range(num_images), unit=" images"):
             header = compute_cbf_header(nxmx_obj, j)
-            (data,) = dxtbx.nexus.get_raw_data(nxdata, nxdetector, j)
+            (data,) = dxtbx.nexus.get_raw_data(nxdata, nxdetector, j, bit_depth_readout)
             if bit_depth_readout:
                 # if 32 bit then it is a signed int, I think if 8, 16 then it is
                 # unsigned with the highest two values assigned as masking values
