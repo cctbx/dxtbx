@@ -1,0 +1,3 @@
+Ensure that data processing auxililary files (mask, gain, pedestal, and
+dx and dy maps) are loaded whenever available. This fixes
+https://github.com/dials/dials/issues/2744
