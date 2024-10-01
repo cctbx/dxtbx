@@ -334,6 +334,14 @@ class ExperimentListDict:
         dx_filename, dx = self._load_pickle_path(imageset_data, "dx")
         dy_filename, dy = self._load_pickle_path(imageset_data, "dy")
 
+        # If dx, dy maps are expected then they must be loaded even when
+        # self._check_format == False, because they affect the operation of
+        # programs (dials.index, dials.refine) that do not need the image data.
+        if (dx_filename or dy_filename) and not all((dx, dx)):
+            raise RuntimeError(
+                f"dx ({dx_filename}) and dy ({dy_filename}) maps are expected"
+            )
+
         if imageset_data["__id__"] == "ImageSet":
             imageset = self._make_stills(imageset_data, format_kwargs=format_kwargs)
         elif imageset_data["__id__"] == "ImageGrid":
