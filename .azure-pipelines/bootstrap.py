@@ -43,13 +43,13 @@ def install_micromamba(python):
     """Download and install Micromamba"""
     if sys.platform.startswith("linux"):
         member = "bin/micromamba"
-        url = "https://micromamba.snakepit.net/api/micromamba/linux-64/latest"
+        url = "https://micro.mamba.pm/api/micromamba/linux-64/1.5.10"
     elif sys.platform == "darwin":
         member = "bin/micromamba"
-        url = "https://micromamba.snakepit.net/api/micromamba/osx-64/latest"
+        url = "https://micro.mamba.pm/api/micromamba/osx-64/1.5.10"
     elif os.name == "nt":
         member = "Library/bin/micromamba.exe"
-        url = "https://micromamba.snakepit.net/api/micromamba/win-64/latest"
+        url = "https://micro.mamba.pm/api/micromamba/win-64/1.5.10"
     else:
         raise NotImplementedError(f"Unsupported platform {os.name} / {sys.platform}")
     mamba_prefix = os.path.realpath("micromamba")
