@@ -619,6 +619,16 @@ class _experimentlist:
         """Check if all the experiments are Laue experiments"""
         return all(exp.get_type() == ExperimentType.LAUE for exp in self)
 
+    def all_same_type(self):
+        """Check if all experiments are the same type"""
+        if len(self) <= 1:
+            return True
+        expt_type = self[0].get_type()
+        for i in range(1, len(self)):
+            if self[i].get_type() != expt_type:
+                return False
+        return True
+
     def to_dict(self):
         """Serialize the experiment list to dictionary."""
 

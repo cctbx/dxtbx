@@ -1205,15 +1205,19 @@ def test_from_templates(dials_data):
 
 def test_experiment_list_all():
     experiments = ExperimentList()
+    assert experiments.all_same_type()
     for i in range(3):
         experiments.append(Experiment())
 
     assert experiments.all_stills()
+    assert experiments.all_same_type()
     experiments[0].goniometer = Goniometer()
     assert experiments.all_stills()
+    assert experiments.all_same_type()
     experiments[1].goniometer = Goniometer()
     experiments[2].goniometer = Goniometer()
     assert experiments.all_stills()
+    assert experiments.all_same_type()
 
     experiments[0].beam = BeamFactory.make_polychromatic_beam(
         direction=(0, 0, -1),
@@ -1222,6 +1226,7 @@ def test_experiment_list_all():
         wavelength_range=(1, 10),
     )
     assert not experiments.all_stills()
+    assert not experiments.all_same_type()
     experiments[1].beam = BeamFactory.make_polychromatic_beam(
         direction=(0, 0, -1),
         sample_to_source_distance=(100),
@@ -1235,23 +1240,29 @@ def test_experiment_list_all():
         wavelength_range=(1, 10),
     )
     assert experiments.all_laue()
+    assert experiments.all_same_type()
 
     experiments[0].beam = Beam()
     assert not experiments.all_laue()
+    assert not experiments.all_same_type()
     experiments[1].beam = Beam()
     experiments[2].beam = Beam()
     assert experiments.all_stills()
+    assert experiments.all_same_type()
 
     experiments[0].scan = Scan((1, 1000), (0, 0.05))
     assert not experiments.all_stills()
+    assert not experiments.all_same_type()
     experiments[1].scan = Scan((1, 1000), (0, 0.05))
     experiments[2].scan = Scan((1, 1000), (0, 0.05))
     assert experiments.all_rotations()
+    assert experiments.all_same_type()
 
     experiments[0].scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
     assert not experiments.all_rotations()
+    assert not experiments.all_same_type()
     experiments[1].scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
@@ -1259,11 +1270,13 @@ def test_experiment_list_all():
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
     assert experiments.all_tof()
+    assert experiments.all_same_type()
 
     experiments[0].scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"other_property": list(range(10))}
     )
     assert not experiments.all_tof()
+    assert not experiments.all_same_type()
     experiments[1].scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"other_property": list(range(10))}
     )
@@ -1271,3 +1284,4 @@ def test_experiment_list_all():
         (1, 10), properties={"other_property": list(range(10))}
     )
     assert experiments.all_stills()
+    assert experiments.all_same_type()
