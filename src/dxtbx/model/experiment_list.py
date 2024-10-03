@@ -870,9 +870,14 @@ class ExperimentListFactory:
         """Load an experiment list from a json file."""
         filename = os.path.abspath(filename)
         directory = os.path.dirname(filename)
-        with open(filename) as infile:
-            return ExperimentListFactory.from_json(
-                infile.read(), check_format=check_format, directory=directory
+        try:
+            with open(filename) as infile:
+                return ExperimentListFactory.from_json(
+                    infile.read(), check_format=check_format, directory=directory
+                )
+        except UnicodeDecodeError:
+            raise InvalidExperimentListError(
+                f"Cannot interpret {filename} as an ExperimentList"
             )
 
     @staticmethod
