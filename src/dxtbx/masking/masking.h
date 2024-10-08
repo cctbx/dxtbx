@@ -119,7 +119,7 @@ namespace dxtbx { namespace masking {
    */
   void mask_untrusted_polygon(scitbx::af::ref<bool, scitbx::af::c_grid<2> > mask,
                               const scitbx::af::const_ref<vec2<double> > &polygon) {
-    DXTBX_ASSERT(polygon.size() > 3);
+    DXTBX_ASSERT(polygon.size() >= 3);
     std::size_t height = mask.accessor()[0];
     std::size_t width = mask.accessor()[1];
     int x0 = (int)std::floor(polygon[0][0]);
