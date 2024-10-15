@@ -6,7 +6,7 @@ import dxtbx
 def test_mpccd_nexus_gain(dials_data):
     """
     Tests SACLA MPCCD image from CXI.DB 221
-    Includs parameter data_scale_factor, which accounts for a gain of 10
+    Includes parameter data_scale_factor, which accounts for a gain of 10
     """
 
     try:
