@@ -3,4 +3,4 @@ test:
   - pytest-cov
   - pytest-forked
   - pytest-timeout
-  - pytest-markdown
+  - pytest-md
