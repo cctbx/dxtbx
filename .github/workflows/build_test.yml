@@ -48,7 +48,8 @@ jobs:
           cmake ../dxtbx -DCMAKE_UNITY_BUILD=true
           cmake --build . --config Release
           cmake --install . --config Release
-          pip install ../dxtbx
+          which pip3
+          pip3 install ../dxtbx
           cd ..
           rm -rf ./build
       - name: Prepare for cache restoration
