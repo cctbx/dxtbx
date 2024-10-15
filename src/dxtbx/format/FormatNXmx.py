@@ -68,10 +68,13 @@ class FormatNXmx(FormatNexus):
         nxinstrument = nxentry.instruments[0]
         nxdetector = nxinstrument.detectors[0]
         nxbeam = nxinstrument.beams[0]
+        nxdata = nxmx_obj.entries[0].data[0]
         self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
         self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
         wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
-        self._detector_model = dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)
+        self._detector_model = dxtbx.nexus.get_dxtbx_detector(
+            nxdetector, wavelength, nxdata
+        )
 
         # if the detector is between the sample and the source, and perpendicular
         # to the beam, then invert the distance vector, as this is probably wrong
@@ -86,7 +89,6 @@ class FormatNXmx(FormatNexus):
         if self._scan_model:
             self._num_images = len(self._scan_model)
         else:
-            nxdata = nxmx_obj.entries[0].data[0]
             if nxdata.signal:
                 data = nxdata[nxdata.signal]
             else:
