@@ -45,7 +45,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ../dxtbx -DCMAKE_UNITY_BUILD=true
+          cmake ../dxtbx -DCMAKE_UNITY_BUILD=true -DPython_ROOT_DIR="${CONDA_PREFIX}"
           cmake --build . --config Release
           cmake --install . --config Release
           which pip3
