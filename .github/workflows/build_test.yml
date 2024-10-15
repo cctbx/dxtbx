@@ -34,6 +34,7 @@ jobs:
         with:
           environment-file: ci-conda-env.txt
           environment-name: conda_base
+          init-shell: bash
       - if: runner.os != 'Windows'
         run: echo "CMAKE_GENERATOR=Ninja" >> $GITHUB_ENV
       - name: Build
