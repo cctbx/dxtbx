@@ -14,6 +14,10 @@ jobs:
         os: [ubuntu, macOS, windows]
         python: ["3.9", "3.12"]
     runs-on: ${{ matrix.os }}-latest
+    # Micromamba needs a login shell to activate
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -23,7 +27,6 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Prepare Base Environment
-        shell: bash
         run: |
           python3 dxtbx/.github/parse_dependencies.py \
               dxtbx/dependencies.yaml \
@@ -38,7 +41,6 @@ jobs:
       - if: runner.os != 'Windows'
         run: echo "CMAKE_GENERATOR=Ninja" >> $GITHUB_ENV
       - name: Build
-        shell: bash
         run: |
           mkdir build
           cd build
@@ -49,7 +51,6 @@ jobs:
           cd ..
           rm -rf ./build
       - name: Prepare for cache restoration
-        shell: bash
         run: |
           set -x
           find . -name "dials.data*"
