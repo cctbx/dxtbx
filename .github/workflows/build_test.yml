@@ -33,6 +33,7 @@ jobs:
               dxtbx/.github/ci-dependencies.yaml \
               --prebuilt-cctbx \
             > ci-conda-env.txt
+          echo "python=${{ matrix.python }}" >> ci-conda-env.txt
       - uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: ci-conda-env.txt
