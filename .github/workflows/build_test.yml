@@ -33,6 +33,7 @@ jobs:
       - uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: ci-conda-env.txt
+          environment-name: conda_base
       - if: runner.os != 'Windows'
         run: echo "CMAKE_GENERATOR=Ninja" >> $GITHUB_ENV
       - name: Build
