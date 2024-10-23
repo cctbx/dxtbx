@@ -11,7 +11,13 @@ from libtbx.test_utils import approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.model import Beam, Detector, Panel, ParallaxCorrectedPxMmStrategy
+from dxtbx.model import (
+    Beam,
+    BeamFactory,
+    Detector,
+    Panel,
+    ParallaxCorrectedPxMmStrategy,
+)
 from dxtbx.model.detector_helpers import (
     get_detector_projection_2d_axes,
     get_panel_projection_2d_from_axes,
@@ -452,3 +458,26 @@ def test_pickle_suite():
 
     detector2 = pickle.loads(pickle.dumps(detector))
     assert detector == detector2
+
+
+def test_detector_resolution():
+    detector = create_detector(0)
+    beam = BeamFactory.make_beam((0, 0, -1), wavelength=0.8)
+    pbeam = BeamFactory.make_polychromatic_beam((0, 0, -1), wavelength_range=(0.8, 2.0))
+    dmin1 = detector[0].get_resolution_at_pixel(beam.get_s0(), (1, 1))
+    dmin2 = detector[0].get_resolution_at_pixel(beam, (1, 1))
+    dmin3 = detector[0].get_resolution_at_pixel(pbeam, (1, 1))
+    assert dmin1 == pytest.approx(dmin2)
+    assert dmin1 == pytest.approx(dmin3)
+
+    dmin1 = detector[0].get_max_resolution_at_corners(beam.get_s0())
+    dmin2 = detector[0].get_max_resolution_at_corners(beam)
+    dmin3 = detector[0].get_max_resolution_at_corners(pbeam)
+    assert dmin1 == pytest.approx(dmin2)
+    assert dmin1 == pytest.approx(dmin3)
+
+    dmin1 = detector[0].get_max_resolution_ellipse(beam.get_s0())
+    dmin2 = detector[0].get_max_resolution_ellipse(beam)
+    dmin3 = detector[0].get_max_resolution_ellipse(pbeam)
+    assert dmin1 == pytest.approx(dmin2)
+    assert dmin1 == pytest.approx(dmin3)
