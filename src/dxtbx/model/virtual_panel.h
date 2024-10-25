@@ -25,9 +25,12 @@
 #include <dxtbx/model/pixel_to_millimeter.h>
 #include <dxtbx/model/model_helpers.h>
 #include <dxtbx/error.h>
+#include <dxtbx/model/beam.h>
 
 namespace dxtbx { namespace model {
 
+  using dxtbx::model::Beam;
+  using dxtbx::model::PolychromaticBeam;
   using scitbx::mat3;
   using scitbx::vec2;
   using scitbx::vec3;
