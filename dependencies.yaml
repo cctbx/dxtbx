@@ -51,6 +51,7 @@ build:
   - {{ compiler('cxx') }} # [not bootstrap]
   - {{ stdlib('c') }} # [not bootstrap]
   - cxx-compiler # [bootstrap]
+  - hatchling
 
 host:
   - cctbx-base # [prebuilt_cctbx and bootstrap]
