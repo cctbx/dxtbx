@@ -1,3 +1,55 @@
+dxtbx 3.22.0 (2024-10-15)
+=========================
+
+Features
+--------
+
+- Add format class to read data from the NMX ESS detector. (`#764 <https://github.com/cctbx/dxtbx/issues/764>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Add work around for issues with data recorded at 32-bit. (`#759 <https://github.com/cctbx/dxtbx/issues/759>`_)
+- Auxiliary data processing files (mask, gain, pedestal, and dx and dy maps) will now always be loaded when available. (`#760 <https://github.com/cctbx/dxtbx/issues/760>`_)
+- Allow triangles in polygon masking. (`#761 <https://github.com/cctbx/dxtbx/issues/761>`_)
+- Refactor panel positions of FormatISISSXD to account for differences in panel positions, depending on the date of data collection. (`#762 <https://github.com/cctbx/dxtbx/issues/762>`_)
+- Raise a more suitable error message when failing to load an experiment list. (`#763 <https://github.com/cctbx/dxtbx/issues/763>`_)
+
+
+Misc
+----
+
+- `#753 <https://github.com/cctbx/dxtbx/issues/753>`_, `#754 <https://github.com/cctbx/dxtbx/issues/754>`_, `#755 <https://github.com/cctbx/dxtbx/issues/755>`_, `#758 <https://github.com/cctbx/dxtbx/issues/758>`_
+
+
+Dxtbx 3.22.0 (2024-10-15)
+=========================
+
+Features
+--------
+
+- Add format class to read data from the NMX ESS detector. (`#764 <https://github.com/cctbx/dxtbx/issues/764>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: add bit_depth_image explicitly to work around issues with data recorded at 32 bit (`#759 <https://github.com/cctbx/dxtbx/issues/759>`_)
+- Ensure that data processing auxililary files (mask, gain, pedestal, and
+  dx and dy maps) are loaded whenever available. This fixes
+  https://github.com/dials/dials/issues/2744 (`#760 <https://github.com/cctbx/dxtbx/issues/760>`_)
+- + allow triangles in polygon masking (`#761 <https://github.com/cctbx/dxtbx/issues/761>`_)
+- Refactor panel positions of FormatISISSXD to account for differences in panel positions depending on the date of data collection. (`#762 <https://github.com/cctbx/dxtbx/issues/762>`_)
+- Raise a more suitable error message when failing to load an experiment list. (`#763 <https://github.com/cctbx/dxtbx/issues/763>`_)
+
+
+Misc
+----
+
+- `#753 <https://github.com/cctbx/dxtbx/issues/753>`_, `#754 <https://github.com/cctbx/dxtbx/issues/754>`_, `#755 <https://github.com/cctbx/dxtbx/issues/755>`_, `#758 <https://github.com/cctbx/dxtbx/issues/758>`_
+
+
 DIALS 3.21.1 (2024-08-23)
 =========================
 

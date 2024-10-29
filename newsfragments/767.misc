@@ -1,0 +1,1 @@
+Add overloads for panel resolution methods to use beam objects instead of s0 directly.
