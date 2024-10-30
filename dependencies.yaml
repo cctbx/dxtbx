@@ -74,7 +74,7 @@ run:
   - mrcfile
   - natsort
   - {{ pin_compatible('numpy') }} # [not bootstrap]
-  - nxmx
+  - nxmx >=0.0.4
   - orderedset
   - pint
   - pycbf # [prebuilt_cctbx]
