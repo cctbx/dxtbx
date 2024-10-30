@@ -245,7 +245,7 @@ def get_dxtbx_scan(
 def get_dxtbx_detector(
     nxdetector: nxmx.NXdetector,
     wavelength: float,
-    nxdata: nxmx.NXdata = None,
+    nxdata: nxmx.NXdata | None = None,
 ) -> dxtbx.model.Detector:
     """Generate a dxtbx detector model from an NXdetector and NXbeam.
 
