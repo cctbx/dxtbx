@@ -14,6 +14,7 @@ import sys
 from typing import Any, Callable, Generator, Iterable
 
 import natsort
+from tqdm import tqdm
 
 import dxtbx
 from dxtbx.format.Format import Format
@@ -671,7 +672,13 @@ class ExperimentListFactory:
         format_groups = collections.defaultdict(list)
         if format_kwargs is None:
             format_kwargs = {}
-        for filename in to_process:
+
+        if os.isatty and len(filenames) > 1:
+            filename_iter = tqdm(to_process, total=len(filenames))
+        else:
+            filename_iter = to_process
+
+        for filename in filename_iter:
             # We now have a file, pre-opened by Format.open_file (therefore
             # cached). Determine its type, and prepare to put into a group
             format_class = find_format.find_format(filename)
