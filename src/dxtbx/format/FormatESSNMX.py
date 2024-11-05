@@ -36,7 +36,7 @@ class FormatESSNMX(FormatHDF5):
     def understand(image_file: str) -> bool:
         try:
             return FormatESSNMX.is_nmx_file(image_file)
-        except (IOError, KeyError):
+        except (OSError, KeyError):
             return False
 
     @staticmethod
@@ -45,7 +45,7 @@ class FormatESSNMX(FormatHDF5):
             try:
                 with h5py.File(image_file, "r") as handle:
                     return handle["NMX_data"].attrs["name"]
-            except (IOError, KeyError, AttributeError):
+            except (OSError, KeyError, AttributeError):
                 return ""
 
         return get_name(image_file) == "NMX"

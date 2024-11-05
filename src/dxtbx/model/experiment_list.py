@@ -11,7 +11,8 @@ import operator
 import os
 import pickle
 import sys
-from typing import Any, Callable, Generator, Iterable
+from collections.abc import Generator, Iterable
+from typing import Any, Callable
 
 import natsort
 
@@ -197,9 +198,7 @@ class ExperimentListDict:
         # Basic check: This is a dict-like object. This can happen if e.g. we
         # were passed a DataBlock list instead of an ExperimentList dictionary
         if isinstance(obj, list) or not hasattr(obj, "get"):
-            raise InvalidExperimentListError(
-                "Expected dictionary, not {}".format(type(obj))
-            )
+            raise InvalidExperimentListError(f"Expected dictionary, not {type(obj)}")
 
         self._obj = copy.deepcopy(obj)
         self._check_format = check_format

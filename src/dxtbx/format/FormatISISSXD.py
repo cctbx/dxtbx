@@ -32,7 +32,7 @@ class FormatISISSXD(FormatHDF5):
     def understand(image_file: str) -> bool:
         try:
             return FormatISISSXD.is_isissxd_file(image_file)
-        except (IOError, KeyError):
+        except (OSError, KeyError):
             return False
 
     @staticmethod

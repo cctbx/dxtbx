@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Iterator, Sequence
 from enum import Enum
 from typing import (
     Any,
     Dict,
-    Iterator,
     List,
     Optional,
-    Sequence,
     Tuple,
     TypeVar,
     Union,

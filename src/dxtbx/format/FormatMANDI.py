@@ -45,7 +45,7 @@ class FormatMANDI(FormatHDF5):
     def understand(image_file: str) -> bool:
         try:
             return FormatMANDI.is_mandi_file(image_file)
-        except IOError:
+        except OSError:
             return False
 
     @staticmethod
