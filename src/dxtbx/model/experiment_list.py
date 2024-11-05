@@ -11,8 +11,8 @@ import operator
 import os
 import pickle
 import sys
-from collections.abc import Generator, Iterable
-from typing import Any, Callable
+from collections.abc import Callable, Generator, Iterable
+from typing import Any
 
 import natsort
 

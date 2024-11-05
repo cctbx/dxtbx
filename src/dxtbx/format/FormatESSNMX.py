@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Tuple
 
 import h5py
 import numpy as np
@@ -72,7 +71,7 @@ class FormatESSNMX(FormatHDF5):
 
     def get_raw_data(
         self, index: int, use_loaded_data: bool = False
-    ) -> Tuple[flex.int]:
+    ) -> tuple[flex.int]:
         raw_data = []
         image_size = self._get_image_size()
         total_pixels = image_size[0] * image_size[1]
@@ -96,11 +95,11 @@ class FormatESSNMX(FormatHDF5):
 
         return tuple(raw_data)
 
-    def _get_time_channel_bins(self) -> List[float]:
+    def _get_time_channel_bins(self) -> list[float]:
         # (usec)
         return self._nxs_file["NMX_data"]["detector_1"]["t_bin"][:] * 10**6
 
-    def _get_time_of_flight(self) -> List[float]:
+    def _get_time_of_flight(self) -> list[float]:
         # (usec)
         bins = self._get_time_channel_bins()
         return [float((bins[i] + bins[i + 1]) * 0.5) for i in range(len(bins) - 1)]
@@ -142,7 +141,7 @@ class FormatESSNMX(FormatHDF5):
     def _get_num_panels(self) -> int:
         return self._nxs_file["NMX_data/instrument"].attrs["nr_detector"]
 
-    def _get_panel_names(self) -> List[str]:
+    def _get_panel_names(self) -> list[str]:
         return [
             "%02d" % (i + 1)
             for i in range(self._nxs_file["NMX_data/instrument"].attrs["nr_detector"])
@@ -151,29 +150,29 @@ class FormatESSNMX(FormatHDF5):
     def _get_panel_type(self) -> str:
         return "SENSOR_PAD"
 
-    def _get_image_size(self) -> Tuple[int, int]:
+    def _get_image_size(self) -> tuple[int, int]:
         # (px)
         return (1280, 1280)
 
-    def _get_panel_trusted_range(self) -> Tuple[int, int]:
+    def _get_panel_trusted_range(self) -> tuple[int, int]:
         # 4 * 1280**2 plus buffer
         return (-1, 7000000)
 
-    def _get_pixel_size(self) -> Tuple[float, float]:
+    def _get_pixel_size(self) -> tuple[float, float]:
         # (mm)
         return (0.4, 0.4)
 
-    def _get_panel_fast_axes(self) -> Tuple[Tuple[float, float, float]]:
+    def _get_panel_fast_axes(self) -> tuple[tuple[float, float, float]]:
         return ((1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.0, -1.0))
 
-    def _get_panel_slow_axes(self) -> Tuple[Tuple[float, float, float]]:
+    def _get_panel_slow_axes(self) -> tuple[tuple[float, float, float]]:
         return ((0.0, 1.0, 0.0), (0.0, 1.0, 0.0), (0.0, 1.0, 0.0))
 
-    def _get_panel_origins(self) -> Tuple[Tuple[float, float, float]]:
+    def _get_panel_origins(self) -> tuple[tuple[float, float, float]]:
         # (mm)
         return ((-250, -250.0, -292.0), (290, -250.0, -250), (-290, -250.0, 250.0))
 
-    def _get_panel_projections_2d(self) -> dict[int : Tuple[Tuple, Tuple]]:
+    def _get_panel_projections_2d(self) -> dict[int : tuple[tuple, tuple]]:
         p_w, p_h = self._get_image_size()
         p_w += 10
         p_h += 10
@@ -196,10 +195,10 @@ class FormatESSNMX(FormatHDF5):
             wavelength_range=wavelength_range,
         )
 
-    def _get_sample_to_source_direction(self) -> Tuple[float, float, float]:
+    def _get_sample_to_source_direction(self) -> tuple[float, float, float]:
         return (0, 0, 1)
 
-    def _get_wavelength_range(self) -> Tuple[float, float]:
+    def _get_wavelength_range(self) -> tuple[float, float]:
         # (A)
         return (1.8, 2.55)
 
@@ -230,7 +229,7 @@ class FormatESSNMX(FormatHDF5):
             goniometer.rotate_around_origin(axes[idx], -angle)
         return goniometer
 
-    def get_goniometer_orientations(self) -> Tuple[float, float, float]:
+    def get_goniometer_orientations(self) -> tuple[float, float, float]:
         # Angles in deg along x, y, z
         return self._nxs_file["NMX_data/crystal_orientation"][...]
 
@@ -242,8 +241,8 @@ class FormatESSNMX(FormatHDF5):
         )
 
     def get_flattened_data(
-        self, image_range: None | Tuple = None, scale_data: bool = True
-    ) -> Tuple[flex.int]:
+        self, image_range: None | tuple = None, scale_data: bool = True
+    ) -> tuple[flex.int]:
         """
         Image data summed along the time-of-flight direction
         """
@@ -286,7 +285,7 @@ class FormatESSNMX(FormatHDF5):
 
     def get_flattened_pixel_data(
         self, panel_idx: int, x: int, y: int
-    ) -> Tuple[Tuple, Tuple]:
+    ) -> tuple[tuple, tuple]:
         time_channels = self._get_time_of_flight()
         panel_size = self._get_image_size()
         height = panel_size[1]

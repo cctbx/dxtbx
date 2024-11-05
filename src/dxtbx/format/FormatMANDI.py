@@ -3,7 +3,6 @@ from __future__ import annotations
 from multiprocessing import Pool, cpu_count
 from os.path import join
 from sys import argv
-from typing import List, Tuple
 
 import h5py
 import numpy as np
@@ -64,7 +63,7 @@ class FormatMANDI(FormatHDF5):
 
         return get_name(image_file) == "MANDI"
 
-    def get_raw_data(self, index: int) -> Tuple[flex.int]:
+    def get_raw_data(self, index: int) -> tuple[flex.int]:
         raw_data = []
         panel_size = self._get_image_size()
         for panel_name in self._get_panel_names():
@@ -109,11 +108,11 @@ class FormatMANDI(FormatHDF5):
 
         return detector
 
-    def _get_time_channel_bins(self) -> List[float]:
+    def _get_time_channel_bins(self) -> list[float]:
         # (usec)
         return self.nxs_file[self._base_entry]["time_of_flight"][:]
 
-    def _get_time_of_flight(self) -> List[float]:
+    def _get_time_of_flight(self) -> list[float]:
         # (usec)
         bins = self._get_time_channel_bins()
         return tuple([float(bins[i] + bins[i + 1]) * 0.5 for i in range(len(bins) - 1)])
@@ -122,13 +121,13 @@ class FormatMANDI(FormatHDF5):
         # (mm)
         return 30000
 
-    def _get_sample_to_source_direction(self) -> Tuple[float, float, float]:
+    def _get_sample_to_source_direction(self) -> tuple[float, float, float]:
         return (0, 0, -1)
 
     def _get_num_panels(self) -> int:
         return 40
 
-    def _get_panel_names(self) -> Tuple[str]:
+    def _get_panel_names(self) -> tuple[str]:
         return (
             "bank1",
             "bank2",
@@ -175,10 +174,10 @@ class FormatMANDI(FormatHDF5):
     def _get_panel_gain(self) -> float:
         return 1.0
 
-    def _get_panel_trusted_range(self) -> Tuple[int, int]:
+    def _get_panel_trusted_range(self) -> tuple[int, int]:
         return (-1, 100000)
 
-    def _get_panel_origins(self) -> Tuple[Tuple[float, float, float], ...]:
+    def _get_panel_origins(self) -> tuple[tuple[float, float, float], ...]:
         return (
             (71.59649688799595, -407.9875271017446, 91.63277006330976),
             (247.78726107849047, -370.86794223009696, 93.05022800601382),
@@ -222,7 +221,7 @@ class FormatMANDI(FormatHDF5):
             (-259.44611581654755, 152.81413474372576, 357.96944889204525),
         )
 
-    def _get_panel_fast_axes(self) -> Tuple[Tuple[float, float, float], ...]:
+    def _get_panel_fast_axes(self) -> tuple[tuple[float, float, float], ...]:
         return (
             (-0.9999583639962794, 0.004549995022478471, 0.007909982249012876),
             (-0.9270112280582247, -0.36646049406596276, 0.07973010311615258),
@@ -266,7 +265,7 @@ class FormatMANDI(FormatHDF5):
             (-0.3374699569875644, 0.606049917647629, -0.720289889870817),
         )
 
-    def _get_panel_slow_axes(self) -> Tuple[Tuple[float, float, float], ...]:
+    def _get_panel_slow_axes(self) -> tuple[tuple[float, float, float], ...]:
         return (
             (0.009080058381285394, 0.4099593618136086, 0.9120585914299427),
             (-0.07844604621503816, 0.39736287118342395, 0.914302448010555),
@@ -345,10 +344,10 @@ class FormatMANDI(FormatHDF5):
         goniometer.rotate_around_origin(rotation_axis_omega, omega)
         return goniometer
 
-    def _get_image_size(self) -> Tuple[int, int]:
+    def _get_image_size(self) -> tuple[int, int]:
         return (256, 256)
 
-    def _get_pixel_size(self) -> Tuple[float, float]:
+    def _get_pixel_size(self) -> tuple[float, float]:
         return (0.618, 0.618)
 
     def _get_panel_type(self) -> str:
@@ -372,7 +371,7 @@ class FormatMANDI(FormatHDF5):
         write_tof_bins: bool = True,
         delta_tof: float = 5,  # (usec)
         tof_padding: float = 100,  # (usec)
-        panel_size: Tuple[int, int] = (256, 256),  # (px)
+        panel_size: tuple[int, int] = (256, 256),  # (px)
         nproc: int = 8,
     ) -> None:
         tof_bins = FormatMANDI.generate_tof_bins(
@@ -394,7 +393,7 @@ class FormatMANDI(FormatHDF5):
     def write_histogram_data(
         nxs_file_path: str,
         tof_bins: np.array,
-        panel_size: Tuple[int, int],
+        panel_size: tuple[int, int],
         remove_event_data: bool,
         spectra_output_name: str = "spectra",
         write_tof_bins: bool = True,
@@ -439,7 +438,7 @@ class FormatMANDI(FormatHDF5):
 
     @staticmethod
     def compute_event_histogram(
-        args: Tuple[int, np.array, np.array, np.array],
+        args: tuple[int, np.array, np.array, np.array],
     ) -> np.array:
         pixel_idx, event_time_offset, corrected_event_id, tof_bins = args
         h, _ = np.histogram(
@@ -451,7 +450,7 @@ class FormatMANDI(FormatHDF5):
     def generate_histogram_data_for_panel(
         nxs_file: h5py.File,
         tof_bins: np.array,
-        panel_size: Tuple[int, int],
+        panel_size: tuple[int, int],
         panel_name: str,
         nproc=8,
     ) -> np.array:
@@ -495,8 +494,8 @@ class FormatMANDI(FormatHDF5):
 
     @staticmethod
     def get_time_range_for_panel(
-        nxs_file: h5py.File, panel_size: Tuple[float, float], panel_name: str
-    ) -> Tuple[float, float]:
+        nxs_file: h5py.File, panel_size: tuple[float, float], panel_name: str
+    ) -> tuple[float, float]:
         """
         Returns the range of event times for a given panel
         """
@@ -533,8 +532,8 @@ class FormatMANDI(FormatHDF5):
 
     @staticmethod
     def get_time_range_for_dataset(
-        nxs_file_path: str, panel_size: Tuple[int, int]
-    ) -> Tuple[float, float]:
+        nxs_file_path: str, panel_size: tuple[int, int]
+    ) -> tuple[float, float]:
         """
         Iterates over num_panels to find the overall min/max tof event recorded
         """
@@ -571,7 +570,7 @@ class FormatMANDI(FormatHDF5):
     @staticmethod
     def generate_tof_bins(
         nxs_file: str,
-        panel_size: Tuple[float, float],
+        panel_size: tuple[float, float],
         delta_tof: float = 50,
         padding: float = 100,
     ) -> np.ndarray:
@@ -590,7 +589,7 @@ class FormatMANDI(FormatHDF5):
         return np.linspace(min_tof, max_tof, num_bins)
 
     @staticmethod
-    def get_panel_names(nxs_file: h5py.File) -> List[str]:
+    def get_panel_names(nxs_file: h5py.File) -> list[str]:
         raw_names = [i for i in nxs_file[list(nxs_file.keys())[0]] if "bank" in i]
         names = []
         for name in raw_names:
