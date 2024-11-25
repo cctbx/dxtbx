@@ -676,8 +676,8 @@ class ExperimentListFactory:
         if format_kwargs is None:
             format_kwargs = {}
 
-        if os.isatty and len(filenames) > 1:
-            filename_iter = tqdm(to_process, total=len(filenames), file=sys.stdout)
+        if os.isatty and len(filenames) > 1 and "DIALS_NOBANNER" not in os.environ:
+            filename_iter = tqdm(to_process, total=len(filenames))
         else:
             filename_iter = to_process
 
