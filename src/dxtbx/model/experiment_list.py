@@ -666,7 +666,7 @@ class ExperimentListFactory:
         experiments = ExperimentList()
 
         # Cast filenames to a list from whatever iterator they are
-        filename = list(filenames)
+        filenames = list(filenames)
 
         # Process each file given by this path list
         to_process = _openingpathiterator(filenames)
