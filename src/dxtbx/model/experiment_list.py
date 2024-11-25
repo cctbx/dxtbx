@@ -677,7 +677,7 @@ class ExperimentListFactory:
             format_kwargs = {}
 
         if os.isatty and len(filenames) > 1:
-            filename_iter = tqdm(to_process, total=len(filenames))
+            filename_iter = tqdm(to_process, total=len(filenames), file=sys.stdout)
         else:
             filename_iter = to_process
 
