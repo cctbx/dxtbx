@@ -665,6 +665,9 @@ class ExperimentListFactory:
         """Create a list of data blocks from a list of directory or file names."""
         experiments = ExperimentList()
 
+        # Cast filenames to a list from whatever iterator they are
+        filename = list(filenames)
+
         # Process each file given by this path list
         to_process = _openingpathiterator(filenames)
         find_format = FormatChecker()
