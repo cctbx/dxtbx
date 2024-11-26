@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Tuple
-
 import h5py
 import numpy as np
 
@@ -32,7 +30,7 @@ class FormatISISSXD(FormatHDF5):
     def understand(image_file: str) -> bool:
         try:
             return FormatISISSXD.is_isissxd_file(image_file)
-        except (IOError, KeyError):
+        except (OSError, KeyError):
             return False
 
     @staticmethod
@@ -112,30 +110,30 @@ class FormatISISSXD(FormatHDF5):
 
         return detector
 
-    def _get_pixel_size(self) -> Tuple[float, float]:
+    def _get_pixel_size(self) -> tuple[float, float]:
         # (mm)
         return (3.0, 3.0)
 
-    def _get_image_size(self) -> Tuple[int, int]:
+    def _get_image_size(self) -> tuple[int, int]:
         # (px)
         return (64, 64)
 
     def _get_num_panels(self) -> int:
         return 11
 
-    def _get_panel_names(self) -> List[str]:
+    def _get_panel_names(self) -> list[str]:
         return ["%02d" % (i + 1) for i in range(11)]
 
     def _get_panel_gain(self):
         return 1.0
 
-    def _get_panel_trusted_range(self) -> Tuple[int, int]:
+    def _get_panel_trusted_range(self) -> tuple[int, int]:
         return (-1, 100000)
 
     def _get_panel_type(self) -> str:
         return "SENSOR_PAD"
 
-    def _get_panel_origins(self) -> Tuple[Tuple[float, float, float]]:
+    def _get_panel_origins(self) -> tuple[tuple[float, float, float]]:
         # (mm)
 
         start_date = self.get_start_date()
@@ -194,7 +192,7 @@ class FormatISISSXD(FormatHDF5):
             return True
         return False
 
-    def _get_panel_slow_axes(self) -> Tuple[Tuple[float, float, float]]:
+    def _get_panel_slow_axes(self) -> tuple[tuple[float, float, float]]:
         start_date = self.get_start_date()
         assert start_date is not None
         year, _, _ = start_date.split("-")
@@ -243,7 +241,7 @@ class FormatISISSXD(FormatHDF5):
                 (-0.0, 0.0, -1.0),
             )
 
-    def _get_panel_fast_axes(self) -> Tuple[Tuple[float, float, float]]:
+    def _get_panel_fast_axes(self) -> tuple[tuple[float, float, float]]:
         start_date = self.get_start_date()
         assert start_date is not None
         year, _, _ = start_date.split("-")
@@ -331,10 +329,10 @@ class FormatISISSXD(FormatHDF5):
         # (mm)
         return 8300.0
 
-    def _get_sample_to_source_direction(self) -> Tuple[float, float, float]:
+    def _get_sample_to_source_direction(self) -> tuple[float, float, float]:
         return (0, 0, -1)
 
-    def _get_wavelength_range(self) -> Tuple[float, float]:
+    def _get_wavelength_range(self) -> tuple[float, float]:
         # (A)
         return (0.2, 10.0)
 
@@ -345,13 +343,13 @@ class FormatISISSXD(FormatHDF5):
             image_range=image_range, properties=properties
         )
 
-    def _get_time_channel_bins(self) -> List[float]:
+    def _get_time_channel_bins(self) -> list[float]:
         # (usec)
         return self._nxs_file["raw_data_1"]["instrument"]["dae"]["time_channels_1"][
             "time_of_flight"
         ][:]
 
-    def _get_time_of_flight(self) -> Tuple[float]:
+    def _get_time_of_flight(self) -> tuple[float]:
         # (usec)
         bins = self._get_time_channel_bins()
         return tuple(
@@ -381,7 +379,7 @@ class FormatISISSXD(FormatHDF5):
             raw_data.append(panel_data)
         self._raw_data = tuple(raw_data)
 
-    def get_raw_data(self, index: int, use_loaded_data=True) -> Tuple[flex.int]:
+    def get_raw_data(self, index: int, use_loaded_data=True) -> tuple[flex.int]:
         raw_data = []
 
         if use_loaded_data:
@@ -416,8 +414,8 @@ class FormatISISSXD(FormatHDF5):
         return tuple(raw_data)
 
     def get_flattened_data(
-        self, image_range: None | Tuple = None, scale_data: bool = True
-    ) -> Tuple[flex.int]:
+        self, image_range: None | tuple = None, scale_data: bool = True
+    ) -> tuple[flex.int]:
         """
         Image data summed along the time-of-flight direction
         """
@@ -466,7 +464,7 @@ class FormatISISSXD(FormatHDF5):
 
     def get_flattened_pixel_data(
         self, panel_idx: int, x: int, y: int
-    ) -> Tuple[Tuple, Tuple]:
+    ) -> tuple[tuple, tuple]:
         time_channels = self._get_time_of_flight()
         panel_size = self._get_image_size()
         height = panel_size[1]

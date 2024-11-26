@@ -361,9 +361,7 @@ class FormatSER(Format):
             elif d["DataType"] == 1:
                 read_pixel = dxtbx.ext.read_uint8
             else:
-                raise RuntimeError(
-                    "Image {} data is of an unsupported type".format(index + 1)
-                )
+                raise RuntimeError(f"Image {index + 1} data is of an unsupported type")
 
             d["ArraySizeX"] = struct.unpack("<I", f.read(4))[0]
             d["ArraySizeY"] = struct.unpack("<I", f.read(4))[0]
@@ -372,13 +370,9 @@ class FormatSER(Format):
 
         # Check image size is as expected (same as the first image)
         if d["ArraySizeX"] != self._header_dictionary["ArraySizeX"]:
-            raise RuntimeError(
-                "Image {} has an unexpected array size in X".format(index + 1)
-            )
+            raise RuntimeError(f"Image {index + 1} has an unexpected array size in X")
         if d["ArraySizeY"] != self._header_dictionary["ArraySizeY"]:
-            raise RuntimeError(
-                "Image {} has an unexpected array size in Y".format(index + 1)
-            )
+            raise RuntimeError(f"Image {index + 1} has an unexpected array size in Y")
 
         image_size = (d["ArraySizeX"], d["ArraySizeY"])
         raw_data.reshape(flex.grid(image_size[1], image_size[0]))

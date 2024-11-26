@@ -4,7 +4,8 @@ import collections
 import itertools
 import math
 import os
-from typing import Iterable, Union
+from collections.abc import Iterable
+from typing import Union
 
 import h5py
 import hdf5plugin  # noqa: F401

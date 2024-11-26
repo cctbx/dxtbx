@@ -565,7 +565,7 @@ def get_raw_data(
     nxdata: nxmx.NXdata,
     nxdetector: nxmx.NXdetector,
     index: int,
-    bit_depth: Optional[int] = None,
+    bit_depth: int | None = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 

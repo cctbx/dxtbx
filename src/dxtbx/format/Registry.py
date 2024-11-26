@@ -10,7 +10,7 @@ import importlib.metadata
 import os
 import sys
 import typing
-from typing import Callable
+from collections.abc import Callable
 
 from dxtbx.util import get_url_scheme
 
