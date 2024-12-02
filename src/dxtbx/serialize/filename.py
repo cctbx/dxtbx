@@ -14,11 +14,15 @@ def resolve_path(path, directory=None):
       directory (Optional[str]): The local path to resolve relative links
 
     Returns:
-        str: The absolute path to the file to read
+        str: The absolute path to the file to read if accessible, otherwise
+        return the original path as provided
     """
     if not path:
         return ""
-    path = os.path.expanduser(os.path.expandvars(path))
-    if directory and not os.path.isabs(path):
-        path = os.path.join(directory, path)
-    return os.path.abspath(path)
+    trial_path = os.path.expanduser(os.path.expandvars(path))
+    if directory and not os.path.isabs(trial_path):
+        trial_path = os.path.join(directory, trial_path)
+    if os.path.exists(trial_path):
+        return os.path.abspath(trial_path)
+    else:
+        return path
