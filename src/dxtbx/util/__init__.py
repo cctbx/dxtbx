@@ -81,11 +81,7 @@ def show_mask_info(expt_list):
         print("---- ----")
         print(d)
         for j, _m in enumerate(m):
-            print(
-                "Module {} has {} masked pixels of {}".format(
-                    j, _m.count(False), _m.size()
-                )
-            )
+            print(f"Module {j} has {_m.count(False)} masked pixels of {_m.size()}")
 
 
 def get_url_scheme(url) -> str:

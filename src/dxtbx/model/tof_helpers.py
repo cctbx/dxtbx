@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List
-
 from scipy.constants import Planck, m_n
 from scipy.interpolate import interp1d
 
@@ -33,7 +31,7 @@ def tof_from_wavelength(
     return (wavelength * m_n * distance) / Planck
 
 
-def frame_to_tof_interpolator(frames: List[float], tof: List[float]) -> interp1d:
+def frame_to_tof_interpolator(frames: list[float], tof: list[float]) -> interp1d:
     """
     ToF can vary nonlinearly with frame number.
     A cubic spline is used to better account for these cases.
@@ -46,7 +44,7 @@ def frame_to_tof_interpolator(frames: List[float], tof: List[float]) -> interp1d
     return interp1d(frames, tof, kind="cubic")
 
 
-def tof_to_frame_interpolator(tof: List[float], frames: List[float]) -> interp1d:
+def tof_to_frame_interpolator(tof: list[float], frames: list[float]) -> interp1d:
     """
     ToF can vary nonlinearly with frame number.
     A cubic spline is used to better account for these cases.

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-from typing import Tuple
 
 import pycbf
 
@@ -12,7 +11,7 @@ try:
 except ModuleNotFoundError:
     from dxtbx_model_ext import Beam, PolychromaticBeam, Probe  # type: ignore
 
-Vec3Float = Tuple[float, float, float]
+Vec3Float = tuple[float, float, float]
 
 beam_phil_scope = libtbx.phil.parse(
     """

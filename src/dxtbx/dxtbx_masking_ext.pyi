@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Tuple
+from typing import Any
 
 from scitbx.array_family import flex
 
@@ -31,7 +31,7 @@ class GoniometerShadowMasker:
     def project_extrema(
         self, detector: Detector, scan_angle: float
     ) -> flex.vec2_double: ...
-    def get_mask(self, detector: Detector, scan_angle: float) -> Tuple[flex.bool]: ...
+    def get_mask(self, detector: Detector, scan_angle: float) -> tuple[flex.bool]: ...
 
 class SmarGonShadowMasker(GoniometerShadowMasker):
     def __init__(self, goniometer: MultiAxisGoniometer) -> None: ...

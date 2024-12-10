@@ -45,9 +45,9 @@ class FormatSMVADSCSNAPSID19(FormatSMVADSCSN):
             s for s in self._header_dictionary if s.endswith("_SPATIAL_BEAM_POSITION")
         ][0]
 
-        beam_x, beam_y = [
+        beam_x, beam_y = (
             float(f) * pixel_size for f in self._header_dictionary[key].split()
-        ]
+        )
 
         return self._detector_factory.simple(
             "CCD",

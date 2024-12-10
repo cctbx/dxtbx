@@ -4,7 +4,6 @@ Testing URI-passing in the Format class hierarchy
 
 from __future__ import annotations
 
-from typing import Type
 from unittest.mock import Mock
 
 import pytest
@@ -22,7 +21,7 @@ def registry(monkeypatch):
     _temporary_formats = {}
     _original_get_format_class_for = Registry.get_format_class_for
 
-    def _get_format_class_for(format_class_name: str) -> Type[Format]:
+    def _get_format_class_for(format_class_name: str) -> type[Format]:
         """Intercept fetching format classes"""
         if format_class_name in _temporary_formats:
             return _temporary_formats[format_class_name]

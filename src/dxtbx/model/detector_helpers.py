@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 import math
 from operator import itemgetter
-from typing import TYPE_CHECKING, Tuple, cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -19,8 +19,8 @@ try:
 except ImportError:
     sklearn = None
 
-Float2 = Tuple[float, float]
-Float4 = Tuple[float, float, float, float]
+Float2 = tuple[float, float]
+Float4 = tuple[float, float, float, float]
 
 
 def read_xds_xparm(xds_xparm_file):

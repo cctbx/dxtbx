@@ -995,7 +995,7 @@ def test_path_iterator(monkeypatch):
         if name in ("a", "b", os.path.join("dir", "c"), os.path.join("dir", "d"), "e"):
             return mock.Mock()
         elif name.startswith("dir"):
-            err = IOError()
+            err = OSError()
             err.errno = errno.EISDIR
             # raise IOError(errno=errno.EISDIR)
             raise err
