@@ -1,0 +1,1 @@
+Do not try to resolve file paths if they are not accessible.
