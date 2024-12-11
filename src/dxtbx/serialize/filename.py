@@ -21,8 +21,8 @@ def resolve_path(path, directory=None):
         return ""
     trial_path = os.path.expanduser(os.path.expandvars(path))
     if directory and not os.path.isabs(trial_path):
-        trial_path = os.path.join(directory, trial_path)
+        trial_path = os.path.abspath(os.path.join(directory, trial_path))
     if os.path.exists(trial_path):
-        return os.path.abspath(trial_path)
+        return trial_path
     else:
         return path
