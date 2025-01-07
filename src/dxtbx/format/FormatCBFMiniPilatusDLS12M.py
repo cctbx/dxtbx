@@ -65,7 +65,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
 
         beam_xy = self._cif_header_dictionary["Beam_xy"]
         beam_xy = beam_xy.replace("(", "").replace(")", "").replace(",", "").split()[:2]
-        obs_beam_x, obs_beam_y = [float(f) for f in beam_xy]
+        obs_beam_x, obs_beam_y = (float(f) for f in beam_xy)
 
         ideal_beam_x = 1075
         ideal_beam_y = 2594

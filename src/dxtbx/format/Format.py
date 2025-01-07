@@ -12,8 +12,9 @@ from __future__ import annotations
 import bz2
 import functools
 import os
+from collections.abc import Callable
 from io import IOBase
-from typing import Callable, ClassVar
+from typing import ClassVar
 
 import libtbx
 

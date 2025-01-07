@@ -222,9 +222,7 @@ class FormatBrukerED1(FormatBruker):
         elif npixelb[0] == 2:
             read_data = read_2b
         else:
-            raise IncorrectFormatError(
-                "{} bytes per pixel is not supported".format(npixelb[0])
-            )
+            raise IncorrectFormatError(f"{npixelb[0]} bytes per pixel is not supported")
 
         nrows = int(self.header_dict["NROWS"].split()[0])
         ncols = int(self.header_dict["NCOLS"].split()[0])
@@ -234,9 +232,9 @@ class FormatBrukerED1(FormatBruker):
         image_size = (nrows, ncols)
         raw_data.reshape(flex.grid(*image_size))
 
-        (num_underflows, num_2b_overflows, num_4b_overflows) = [
+        (num_underflows, num_2b_overflows, num_4b_overflows) = (
             int(e) for e in self.header_dict["NOVERFL"].split()
-        ]
+        )
 
         # read underflows
         if num_underflows > 0:
