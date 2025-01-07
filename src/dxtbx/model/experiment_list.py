@@ -15,6 +15,7 @@ from collections.abc import Callable, Generator, Iterable
 from typing import Any
 
 import natsort
+from tqdm import tqdm
 
 import dxtbx
 from dxtbx.format.Format import Format
@@ -663,6 +664,9 @@ class ExperimentListFactory:
         """Create a list of data blocks from a list of directory or file names."""
         experiments = ExperimentList()
 
+        # Cast filenames to a list from whatever iterator they are
+        filenames = list(filenames)
+
         # Process each file given by this path list
         to_process = _openingpathiterator(filenames)
         find_format = FormatChecker()
@@ -670,7 +674,13 @@ class ExperimentListFactory:
         format_groups = collections.defaultdict(list)
         if format_kwargs is None:
             format_kwargs = {}
-        for filename in to_process:
+
+        if os.isatty and len(filenames) > 1 and "DIALS_NOBANNER" not in os.environ:
+            filename_iter = tqdm(to_process, total=len(filenames), file=sys.stdout)
+        else:
+            filename_iter = to_process
+
+        for filename in filename_iter:
             # We now have a file, pre-opened by Format.open_file (therefore
             # cached). Determine its type, and prepare to put into a group
             format_class = find_format.find_format(filename)
