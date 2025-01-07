@@ -25,7 +25,7 @@ def test_invalid_cache(monkeypatch):
     mocklazy.return_value.open.assert_called()
 
     # Now, pass the cache an opener that fails
-    badfile = Mock(side_effect=IOError("Testing bad file"))
+    badfile = Mock(side_effect=OSError("Testing bad file"))
     with pytest.raises(IOError):
         cache.check("not_working", badfile)
 

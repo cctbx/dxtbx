@@ -364,7 +364,7 @@ class FormatROD(Format):
         if comp.startswith("TY6"):
             return self._get_raw_data_ty6_native()
         else:
-            raise NotImplementedError("Can't handle compression: {0}".format(comp))
+            raise NotImplementedError(f"Can't handle compression: {comp}")
 
     def _get_raw_data_ty6_native(self):
         offset = self._txt_header["NHEADER"]
