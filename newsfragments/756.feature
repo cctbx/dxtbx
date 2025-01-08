@@ -1,1 +1,1 @@
-Add support for reading the detector gain for nexus files
+Nexus support: Handle reading new scale_factor fields (used for detector gain).

@@ -1,2 +1,1 @@
-``dials.import``: add a progress bar for the import process, particularly
-useful when importing thousands of files
+``dials.import``: Add a progress bar, so that it doesn't look like progress has stopped with large collections of images.
