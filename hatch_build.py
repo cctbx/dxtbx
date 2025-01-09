@@ -53,7 +53,7 @@ def get_entry_point(
     return [(f"{prefix}.{filename.stem}", f"{import_path}.{filename.stem}:run")]
 
 
-def enumerate_format_classes(path: Path) -> list[tuple(str, str)]:
+def enumerate_format_classes(path: Path) -> list[tuple[str, str]]:
     """Find all Format*.py files and contained Format classes in a path"""
     format_classes = []
     for filename in path.glob("Format*.py"):
