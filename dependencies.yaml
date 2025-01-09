@@ -86,7 +86,7 @@ run:
 test:
   - dials-data
   - pip
-  - pytest
+  - pytest >6
   - pytest-mock
   - pytest-nunit # [win]
   - pytest-xdist
