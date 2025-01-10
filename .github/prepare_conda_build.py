@@ -37,8 +37,16 @@ def _run_parser(*args):
         *args,
     ]
     cmd = [str(x) for x in cmd]
-    print(" + " + shlex.join(cmd))
-    proc = subprocess.run(cmd, capture_output=True, check=True, text=True)
+    try:
+        proc = subprocess.run(
+            cmd, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as p:
+        print("Error getting dependencies " + " ".join(args) + ":")
+        print(" + " + shlex.join(cmd))
+        print(p.stdout)
+        sys.exit(1)
+
     return proc.stdout
 
 
