@@ -45,9 +45,7 @@ class IncorrectFormatError(RuntimeError):
     """
 
     def __init__(self, format_instance, filename):
-        super().__init__(
-            "Could not open {} as {}".format(filename, str(format_instance))
-        )
+        super().__init__(f"Could not open {filename} as {str(format_instance)}")
         self.args = (format_instance, filename)
 
 
