@@ -218,7 +218,7 @@ class FormatESSNMX(FormatHDF5):
         )
 
     def _get_sample_to_source_direction(self) -> Tuple[float, float, float]:
-        return (0, 0, 1)
+        return (0, 0, -1)
 
     def _get_wavelength_range(self) -> Tuple[float, float]:
         # (A)
