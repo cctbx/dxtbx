@@ -73,6 +73,10 @@ locator_str = """
             for any events with a dropped spectrum. If the spectrum is \
             present and calibration constants are provided, \
             wavelength_offset is ignored.
+  wavelength_fallback = None
+    .type = float
+    .help = If the wavelength cannot be found from the XTC stream, fall \
+            back to using this value instead
   spectrum_address = FEE-SPEC0
     .type = str
     .help = Address for incident beam spectrometer
@@ -417,7 +421,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         sec = time[0]
         nsec = time[1]
 
-        return serialtbx.util.timestamp((sec, nsec / 1e6))
+        return serialtbx.util.time.timestamp((sec, nsec / 1e6))
 
     def get_num_images(self):
         return self.n_images
@@ -442,6 +446,8 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 wavelength = serialtbx.detector.xtc.evt_wavelength(
                     evt, delta_k=self.params.wavelength_delta_k
                 )
+                if wavelength is None or wavelength <= 0:
+                    wavelength = self.params.wavelength_fallback
                 if self.params.wavelength_offset is not None:
                     wavelength += self.params.wavelength_offset
             if wavelength is None:
