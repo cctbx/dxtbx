@@ -45,7 +45,7 @@ def _read_obj(obj, prev=None):
         return obj
 
 
-class prop_object(object):
+class prop_object:
     """Object that can convert itself to a dictionary"""
 
     def to_dict(self):
@@ -63,13 +63,13 @@ def pathed_prop_object(path):
     return _pathed_prop_object
 
 
-class relocatable_path(object):
+class relocatable_path:
     def __repr__(self):
         _all_relocatable_paths.add(self)
         return os.path.normpath(os.path.join(str(self._anchor), self.relocatable))
 
 
-class absolute_path(object):
+class absolute_path:
     def __init__(self, path):
         # This init not used by unpickle - only for rewriting in here
         self._path = str(path)
@@ -169,11 +169,6 @@ if __name__ == "__main__":
         # If this is an installed libtbx_env, then we have rules about rewriting it
         # this is... non-ideal, but since release libtbx_env files are broken on
         # windows, this is the best place to deal with it.
-        if sys.platform == "darwin":
-            print(
-                "Warning: Not properly handling python.app nuances for environment determination",
-                file=sys.stderr,
-            )
         new_prefix = absolute_path(args.sys_prefix.resolve())
         if args.windows:
             new_prefix = absolute_path(args.sys_prefix.resolve() / "library")

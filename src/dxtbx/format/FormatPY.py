@@ -1,6 +1,5 @@
 """Implementation of a base class to read a pickled Python dictionary."""
 
-
 from __future__ import annotations
 
 import pickle

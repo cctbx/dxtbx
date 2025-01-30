@@ -8,7 +8,6 @@ from dxtbx.format.FormatSMVADSC import FormatSMVADSC
 class FormatSMVHamamatsu(FormatSMVADSC):
     @staticmethod
     def understand(image_file):
-
         size, header = FormatSMVHamamatsu.get_smv_header(image_file)
 
         wanted_header_items = ["DETECTOR_NAME"]

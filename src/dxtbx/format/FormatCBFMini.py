@@ -4,7 +4,6 @@ this will read the header and populate a dictionary of the keyword / value
 pairs.
 """
 
-
 from __future__ import annotations
 
 import binascii
@@ -83,7 +82,11 @@ class FormatCBFMini(FormatCBF):
             header = header.splitlines()
         timestamp = None
         for record in header:
-            if len(record[1:].split()) <= 2 and record.count(":") == 2:
+            if (
+                len(record[1:].split()) <= 2
+                and record.count(":") == 2
+                and "Image_path" not in record
+            ):
                 timestamp = datetime.datetime.fromisoformat(record[1:].strip())
                 break
         return timestamp
@@ -101,7 +104,11 @@ class FormatCBFMini(FormatCBF):
             if record[:1] != "#":
                 continue
 
-            if len(record[1:].split()) <= 2 and record.count(":") == 2:
+            if (
+                len(record[1:].split()) <= 2
+                and record.count(":") == 2
+                and "Image_path" not in record
+            ):
                 self._cif_header_dictionary["timestamp"] = record[1:].strip()
                 continue
 

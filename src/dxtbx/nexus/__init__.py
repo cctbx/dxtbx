@@ -245,6 +245,7 @@ def get_dxtbx_scan(
 def get_dxtbx_detector(
     nxdetector: nxmx.NXdetector,
     wavelength: float,
+    nxdata: nxmx.NXdata | None = None,
 ) -> dxtbx.model.Detector:
     """Generate a dxtbx detector model from an NXdetector and NXbeam.
 
@@ -262,7 +263,6 @@ def get_dxtbx_detector(
         root = detector
 
     for module in nxdetector.modules:
-
         if len(nxdetector.modules) > 1:
             # Set up the detector hierarchy
             if module.fast_pixel_direction.depends_on is not None:
@@ -346,10 +346,12 @@ def get_dxtbx_detector(
             origin = MCSTAS_TO_IMGCIF @ (
                 module.fast_pixel_direction.offset.to("mm").magnitude
                 if module.fast_pixel_direction.offset is not None
-                else np.array([0.0, 0.0, 0.0])
-                + module.slow_pixel_direction.offset.to("mm").magnitude
-                if module.slow_pixel_direction.offset is not None
-                else np.array([0.0, 0.0, 0.0])
+                else (
+                    np.array([0.0, 0.0, 0.0])
+                    + module.slow_pixel_direction.offset.to("mm").magnitude
+                    if module.slow_pixel_direction.offset is not None
+                    else np.array([0.0, 0.0, 0.0])
+                )
             )
         else:
             # Flat detector model
@@ -395,10 +397,12 @@ def get_dxtbx_detector(
                 (
                     module.fast_pixel_direction.offset.to("mm").magnitude
                     if module.fast_pixel_direction.offset is not None
-                    else np.array([0.0, 0.0, 0.0])
-                    + module.slow_pixel_direction.offset.to("mm").magnitude
-                    if module.slow_pixel_direction.offset is not None
-                    else np.array([0.0, 0.0, 0.0])
+                    else (
+                        np.array([0.0, 0.0, 0.0])
+                        + module.slow_pixel_direction.offset.to("mm").magnitude
+                        if module.slow_pixel_direction.offset is not None
+                        else np.array([0.0, 0.0, 0.0])
+                    )
                 )
                 + A[0, :3, 3]
             )
@@ -457,6 +461,9 @@ def get_dxtbx_detector(
         p.set_material(material)
         p.set_mu(mu)
         p.set_px_mm_strategy(px_mm)
+
+        if nxdata and nxdata.data_scale_factor and not nxdata.data_scale_factor.shape:
+            p.set_gain(1 / nxdata.data_scale_factor)
 
     return detector
 
@@ -558,7 +565,7 @@ def get_raw_data(
     nxdata: nxmx.NXdata,
     nxdetector: nxmx.NXdetector,
     index: int,
-    bit_depth: Optional[int] = None,
+    bit_depth: int | None = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 

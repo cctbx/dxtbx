@@ -11,7 +11,6 @@ from dxtbx.model.beam import Probe
 class FormatCBFMiniEigerQuadroED1(FormatCBFMiniEiger):
     @staticmethod
     def understand(image_file):
-
         header = FormatCBFMiniEiger.get_cbf_header(image_file)
 
         for record in header.split("\n"):
@@ -131,11 +130,12 @@ class FormatCBFMiniEigerQuadroED1(FormatCBFMiniEiger):
             mask=[],
         )
 
-        # Here we set specifics, notably gain=3, also parallax correction and
+        # Here we set specifics: parallax correction and
         # QE correction are effectively disabled by setting the simple
-        # pixel-to-millimetre strategy and a very high mu value.
+        # pixel-to-millimetre strategy and a very high mu value. Gain is not
+        # precisely known. We think it might be around 1.7, but here will leave
+        # as 1.0 and expect the user to override at import.
         for panel in detector:
-            panel.set_gain(3)
             panel.set_thickness(thickness)
             panel.set_material(material)
             panel.set_identifier(identifier)

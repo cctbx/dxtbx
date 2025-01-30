@@ -5,7 +5,6 @@ an example XDS.INP file. This should illustrate the usage of the dxtbx
 classes.
 """
 
-
 from __future__ import annotations
 
 import math
@@ -57,7 +56,6 @@ class to_xds:
         return self._scan
 
     def XDS(self):
-
         sensor = self.get_detector().get_type()
         fast, slow = map(int, self.get_detector().get_image_size())
         f, s = self.get_detector().get_pixel_size()

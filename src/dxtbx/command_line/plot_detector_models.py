@@ -125,7 +125,6 @@ def plot_group(
 
 
 def plot_image_plane_projection(detector, color, ax, panel_numbers=True):
-
     origin_2d, fast_2d, slow_2d = get_detector_projection_2d_axes(detector)
 
     for panel, origin, fast, slow in zip(detector, origin_2d, fast_2d, slow_2d):
@@ -182,7 +181,6 @@ def run(args=None):
     min_z = max_z = None
     ax = None
     for file_name, color in zip(files, colors):
-
         # read the data and get the detector models
         try:
             experiments = ExperimentListFactory.from_json_file(

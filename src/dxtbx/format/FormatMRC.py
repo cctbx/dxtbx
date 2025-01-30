@@ -2,7 +2,6 @@
 standard used in electron microscopy
 (http://www.ccpem.ac.uk/mrc_format/mrc2014.php)"""
 
-
 from __future__ import annotations
 
 import logging
@@ -64,14 +63,16 @@ class FormatMRC(Format):
 
         # For image stacks, NX==MX etc. should always be true. Assert this
         # to ensure we fail on an MRC file of the wrong type.
-        assert hd["nx"] == hd["mx"]
-        assert hd["ny"] == hd["my"]
-        assert hd["nz"] == hd["mz"]
+        try:
+            assert hd["nx"] == hd["mx"]
+            assert hd["ny"] == hd["my"]
+            assert (hd["nz"] == hd["mz"]) or (hd["mz"] == 1)
+        except AssertionError:
+            raise ValueError("Unexpected data size values in the header")
 
         return hd
 
     def _extend_header(self, xh):
-
         # Extensions from FEI headers only
         if not self._header_dictionary["exttyp"].startswith(b"FEI"):
             return
@@ -272,7 +273,6 @@ class FormatMRCimages(FormatMRC):
         return ScanFactory.make_scan((index, index), exposure, oscillation, {index: 0})
 
     def get_raw_data(self):
-
         with mrcfile.open(self._image_file) as mrc:
             image = flex.double(mrc.data.astype("double"))
 
@@ -316,7 +316,6 @@ class FormatMRCstack(FormatMultiImage, FormatMRC):
         return Format.get_image_file(self)
 
     def get_raw_data(self, index):
-
         # Note MRC files use z, y, x ordering
         with mrcfile.mmap(self._image_file) as mrc:
             image = flex.double(mrc.data[index, ...].astype("double"))

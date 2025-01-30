@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import importlib.metadata
 import logging
+import sys
 
-try:
-    profile_entry_points = importlib.metadata.entry_points()["dxtbx.profile_model"]
-except KeyError:
-    profile_entry_points = []
+# REMOVE and inline when Python 3.10 is minimum
+if sys.version_info < (3, 10):
+    profile_entry_points = importlib.metadata.entry_points().get(
+        "dxtbx.profile_model", []
+    )
+else:
+    profile_entry_points = importlib.metadata.entry_points(group="dxtbx.profile_model")
 
 
 class ProfileModelFactory:

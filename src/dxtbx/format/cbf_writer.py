@@ -13,9 +13,9 @@ import os
 import sys
 
 import pycbf
-from serialtbx.detector import basis
 
 from scitbx.array_family import flex
+from serialtbx.detector import basis
 
 import dxtbx.format.Registry
 from dxtbx.format.FormatCBFMultiTile import cbf_wrapper
@@ -34,7 +34,8 @@ def add_frame_specific_cbf_tables(
     """Adds tables to cbf handle that won't already exsist if the cbf file is just a header
     @ param wavelength Wavelength in angstroms
     @ param timestamp String formatted timestamp for the image
-    @ param trusted_ranges Array of trusted range tuples (min, max), one for each element"""
+    @ param trusted_ranges Array of trusted range tuples (min, max), one for each element
+    """
 
     """Data items in the DIFFRN_RADIATION category describe
    the radiation used for measuring diffraction intensities,
@@ -70,11 +71,15 @@ def add_frame_specific_cbf_tables(
             diffrn_id,
             "INJECTION" if is_xfel else "unknown",
             "0",
-            "electrospray"
-            if is_xfel
-            else "unknown" "crystals injected by electrospray"
-            if is_xfel
-            else "unknown",
+            (
+                "electrospray"
+                if is_xfel
+                else (
+                    "unknown" "crystals injected by electrospray"
+                    if is_xfel
+                    else "unknown"
+                )
+            ),
         ]
     )
 
@@ -210,6 +215,7 @@ class FullCBFWriter:
         detector_axes_names = []  # save these for later
         panelkeys = []
         panelnames = []
+        panelindices = []
 
         def recursive_setup_basis_dict(key, parent_name="", panel_id=0):
             # Set up CBF axis names, including equipment components and depends_on chains
@@ -225,6 +231,8 @@ class FullCBFWriter:
                 panelname = "PANEL_%d" % panel_id
                 panelkeys.append(key)
                 panelnames.append(panelname)
+                dxtbx_panel_index = list(detector).index(node)
+                panelindices.append(dxtbx_panel_index)
                 panel_id += 1
 
             if len(key) == 1:
@@ -248,6 +256,11 @@ class FullCBFWriter:
             return panel_id
 
         recursive_setup_basis_dict((0,))
+        # The order `recursive_setup_basis_dict` visits panels does not necessarily match
+        # the order returned by dxtbx's `get_detector` and `get_raw_data`.
+        # See https://github.com/cctbx/dxtbx/issues/745.
+        self.panelindices = panelindices  # needed in add_data_to_cbf
+        sorted_panels = [detector[i] for i in panelindices]
 
         if index is None:
             cbf_root = self.imageset.paths()[0]
@@ -322,7 +335,7 @@ class FullCBFWriter:
             # defined as [min-trusted-value, max-trusted-value]. The CBF definition
             # of 'overload' is in fact saturation - i.e. the max-trusted-value, while
             # the undefined_value is below the min-trusted-value.
-            trusted_ranges = [panel.get_trusted_range() for panel in detector]
+            trusted_ranges = [panel.get_trusted_range() for panel in sorted_panels]
             try:
                 add_frame_specific_cbf_tables(
                     cbf,
@@ -331,7 +344,7 @@ class FullCBFWriter:
                     trusted_ranges,
                     diffrn_id,
                     False,
-                    gain=[panel.get_gain() for panel in detector],
+                    gain=[panel.get_gain() for panel in sorted_panels],
                     flux=beam.get_flux(),
                 )
             except TypeError:
@@ -343,7 +356,7 @@ class FullCBFWriter:
                     trusted_ranges,
                     diffrn_id,
                     False,
-                    gain=[panel.get_gain() for panel in detector],
+                    gain=[panel.get_gain() for panel in sorted_panels],
                 )
 
         """Data items in the AXIS category record the information required
@@ -429,9 +442,9 @@ class FullCBFWriter:
             node = panel_group_from_key(key)
 
             if node.is_panel():
-                axis_settings[-1][
-                    -2
-                ] = "0"  # Drop the setting change for leaves as it's encoded below
+                axis_settings[-1][-2] = (
+                    "0"  # Drop the setting change for leaves as it's encoded below
+                )
 
                 aname = level_string(key)
                 fast = [str(v) for v in node.get_local_fast_axis()]
@@ -591,6 +604,7 @@ class FullCBFWriter:
                 data = self.imageset.get_raw_data(index)
         if not isinstance(data, tuple):
             data = (data,)
+        data = tuple([data[i] for i in self.panelindices])
 
         array_names = []
         cbf.find_category(b"diffrn_data_frame")

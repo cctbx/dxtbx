@@ -294,32 +294,55 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_flux(),
                                        obj.get_transmission(),
                                        obj.get_probe(),
-                                       obj.get_sample_to_source_distance());
+                                       obj.get_sample_to_source_distance(),
+                                       true,
+                                       obj.get_wavelength_range());
+    }
+    static boost::python::tuple getstate(boost::python::object obj) {
+      const PolychromaticBeam &beam =
+        boost::python::extract<const PolychromaticBeam &>(obj)();
+      return boost::python::make_tuple(obj.attr("__dict__"));
+    }
+
+    static void setstate(boost::python::object obj, boost::python::tuple state) {
+      PolychromaticBeam &beam = boost::python::extract<PolychromaticBeam &>(obj)();
+
+      boost::python::dict d =
+        boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
+      d.update(state[0]);
     }
   };
 
-  static PolychromaticBeam *make_PolychromaticBeam(vec3<double> direction) {
-    return new PolychromaticBeam(direction);
+  static PolychromaticBeam *make_PolychromaticBeam(vec3<double> direction,
+                                                   vec2<double> wavelength_range) {
+    return new PolychromaticBeam(direction, wavelength_range);
   }
 
-  static PolychromaticBeam *make_PolychromaticBeam_w_divergence(vec3<double> direction,
-                                                                double divergence,
-                                                                double sigma_divergence,
-                                                                bool deg) {
+  static PolychromaticBeam *make_PolychromaticBeam_w_divergence(
+    vec3<double> direction,
+    double divergence,
+    double sigma_divergence,
+    bool deg,
+    vec2<double> wavelength_range) {
     PolychromaticBeam *beam = NULL;
     if (deg) {
-      beam = new PolychromaticBeam(
-        direction, deg_as_rad(divergence), deg_as_rad(sigma_divergence));
+      beam = new PolychromaticBeam(direction,
+                                   deg_as_rad(divergence),
+                                   deg_as_rad(sigma_divergence),
+                                   wavelength_range);
     } else {
-      beam = new PolychromaticBeam(direction, divergence, sigma_divergence);
+      beam = new PolychromaticBeam(
+        direction, divergence, sigma_divergence, wavelength_range);
     }
     return beam;
   }
 
   static PolychromaticBeam *make_PolychromaticBeam_w_sample_to_source_distance(
     vec3<double> direction,
-    double sample_to_source_distance) {
-    return new PolychromaticBeam(direction, sample_to_source_distance);
+    double sample_to_source_distance,
+    vec2<double> wavelength_range) {
+    return new PolychromaticBeam(
+      direction, sample_to_source_distance, wavelength_range);
   }
 
   static PolychromaticBeam *make_PolychromaticBeam_w_all(
@@ -332,7 +355,8 @@ namespace dxtbx { namespace model { namespace boost_python {
     double transmission,
     Probe probe,
     double sample_to_source_distance,
-    bool deg) {
+    bool deg,
+    vec2<double> wavelength_range) {
     PolychromaticBeam *beam = NULL;
     if (deg) {
       beam = new PolychromaticBeam(direction,
@@ -343,7 +367,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                    flux,
                                    transmission,
                                    probe,
-                                   sample_to_source_distance);
+                                   sample_to_source_distance,
+                                   wavelength_range);
     } else {
       beam = new PolychromaticBeam(direction,
                                    divergence,
@@ -353,7 +378,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                    flux,
                                    transmission,
                                    probe,
-                                   sample_to_source_distance);
+                                   sample_to_source_distance,
+                                   wavelength_range);
     }
     return beam;
   }
@@ -371,6 +397,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     result["transmission"] = obj.get_transmission();
     result["probe"] = obj.get_probe_name();
     result["sample_to_source_distance"] = obj.get_sample_to_source_distance();
+    result["wavelength_range"] = obj.get_wavelength_range();
     return result;
   }
 
@@ -387,7 +414,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       boost::python::extract<double>(obj.get("transmission", 1)),
       Beam::get_probe_from_name(
         boost::python::extract<std::string>(obj.get("probe", "x-ray"))),
-      boost::python::extract<double>(obj.get("sample_to_source_distance", 0.)));
+      boost::python::extract<double>(obj.get("sample_to_source_distance", 0.)),
+      boost::python::extract<vec2<double> >(
+        obj.get("wavelength_range", vec2<double>(0, 0))));
     return b;
   }
 
@@ -525,7 +554,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                             (arg("direction"),
                              arg("divergence"),
                              arg("sigma_divergence"),
-                             arg("deg") = true)))
+                             arg("deg") = true,
+                             arg("wavelength_range") = vec2<double>(0, 0))))
       .def("__init__",
            make_constructor(&make_PolychromaticBeam_w_all,
                             default_call_policies(),
@@ -538,7 +568,10 @@ namespace dxtbx { namespace model { namespace boost_python {
                              arg("transmission"),
                              arg("probe") = Probe::xray,
                              arg("sample_to_source_distance") = 0,
-                             arg("deg") = true)))
+                             arg("deg") = true,
+                             arg("wavelength_range") = vec2<double>(0, 0))))
+      .def("get_wavelength_range", &PolychromaticBeam::get_wavelength_range)
+      .def("set_wavelength_range", &PolychromaticBeam::set_wavelength_range)
       .def("__str__", &PolychromaticBeam_to_string)
       .def("to_dict", &to_dict<PolychromaticBeam>)
       .def("from_dict",

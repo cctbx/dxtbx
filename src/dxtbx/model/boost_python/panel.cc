@@ -349,6 +349,28 @@ namespace dxtbx { namespace model { namespace boost_python {
     return result;
   }
 
+  // Overloads for resolution methods
+  double (Panel::*get_resolution_at_pixel_s0)(vec3<double>, vec2<double>) const =
+    &Panel::get_resolution_at_pixel;
+  double (Panel::*get_resolution_at_pixel_beam)(Beam, vec2<double>) const =
+    &Panel::get_resolution_at_pixel;
+  double (Panel::*get_resolution_at_pixel_pbeam)(PolychromaticBeam, vec2<double>)
+    const = &Panel::get_resolution_at_pixel;
+
+  double (Panel::*get_max_resolution_at_corners_s0)(vec3<double>) const =
+    &Panel::get_max_resolution_at_corners;
+  double (Panel::*get_max_resolution_at_corners_beam)(Beam) const =
+    &Panel::get_max_resolution_at_corners;
+  double (Panel::*get_max_resolution_at_corners_pbeam)(PolychromaticBeam) const =
+    &Panel::get_max_resolution_at_corners;
+
+  double (Panel::*get_max_resolution_ellipse_s0)(vec3<double>) const =
+    &Panel::get_max_resolution_ellipse;
+  double (Panel::*get_max_resolution_ellipse_beam)(Beam) const =
+    &Panel::get_max_resolution_ellipse;
+  double (Panel::*get_max_resolution_ellipse_pbeam)(PolychromaticBeam) const =
+    &Panel::get_max_resolution_ellipse;
+
   void export_panel() {
     using namespace panel_detail;
     using namespace boost::python;
@@ -530,9 +552,15 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_two_theta_at_pixel", &Panel::get_two_theta_at_pixel)
       .def("get_two_theta_array", &Panel::get_two_theta_array)
       .def("get_cos2_two_theta_array", &Panel::get_cos2_two_theta_array)
-      .def("get_resolution_at_pixel", &Panel::get_resolution_at_pixel)
-      .def("get_max_resolution_at_corners", &Panel::get_max_resolution_at_corners)
-      .def("get_max_resolution_ellipse", &Panel::get_max_resolution_ellipse)
+      .def("get_resolution_at_pixel", get_resolution_at_pixel_s0)
+      .def("get_resolution_at_pixel", get_resolution_at_pixel_beam)
+      .def("get_resolution_at_pixel", get_resolution_at_pixel_pbeam)
+      .def("get_max_resolution_at_corners", get_max_resolution_at_corners_s0)
+      .def("get_max_resolution_at_corners", get_max_resolution_at_corners_beam)
+      .def("get_max_resolution_at_corners", get_max_resolution_at_corners_pbeam)
+      .def("get_max_resolution_ellipse", get_max_resolution_ellipse_s0)
+      .def("get_max_resolution_ellipse", get_max_resolution_ellipse_beam)
+      .def("get_max_resolution_ellipse", get_max_resolution_ellipse_pbeam)
       .def("__deepcopy__", &panel_deepcopy)
       .def("__copy__", &panel_deepcopy)
       .def("__str__", &panel_to_string)

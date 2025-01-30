@@ -1,6 +1,5 @@
 """Methods specific to interacting with CSPAD images"""
 
-
 from __future__ import annotations
 
 import pycbf
@@ -61,7 +60,8 @@ class FormatCBFCspad(FormatCBFMultiTileHierarchyStill):
 
     def sync_detector_to_cbf(self, detector=None):
         """If the detector object has been changed, due to refinement or manual repositioning
-        in a gui, call this function to synchronize these changes to the underlying CBF handle"""
+        in a gui, call this function to synchronize these changes to the underlying CBF handle
+        """
 
         def recursive_sync(cbf, group, cbf_detectors=None, root=False):
             """Walks the hierarchy and synchronizes the dxtbx matrices to the CBF axes."""

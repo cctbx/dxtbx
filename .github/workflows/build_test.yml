@@ -1,0 +1,79 @@
+on:
+  push:
+  pull_request:
+    types:
+      - synchronize
+      - opened
+
+jobs:
+  build_test:
+    name: Build/Test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macOS, windows]
+        python: ["3.9", "3.12"]
+    runs-on: ${{ matrix.os }}-latest
+    # Micromamba needs a login shell to activate
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          path: dxtbx
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Prepare Base Environment
+        run: |
+          python3 dxtbx/.github/parse_dependencies.py \
+              dxtbx/dependencies.yaml \
+              dxtbx/.github/ci-dependencies.yaml \
+              --prebuilt-cctbx \
+            > ci-conda-env.txt
+          echo "python=${{ matrix.python }}" >> ci-conda-env.txt
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: ci-conda-env.txt
+          environment-name: conda_base
+          init-shell: bash
+      - if: runner.os != 'Windows'
+        run: echo "CMAKE_GENERATOR=Ninja" >> $GITHUB_ENV
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ../dxtbx -DCMAKE_UNITY_BUILD=true -DPython_ROOT_DIR="${CONDA_PREFIX}"
+          cmake --build . --config Release
+          cmake --install . --config Release
+          which pip3
+          pip3 install ../dxtbx
+          cd ..
+          rm -rf ./build
+      - name: Prepare for cache restoration
+        run: |
+          set -x
+          find . -name "dials.data*"
+          echo "DIALS_DATA_VERSION_FULL=$(dials.data info -v | grep version.full)" >> $GITHUB_ENV
+          echo "DIALS_DATA_VERSION=$(dials.data info -v | grep version.major_minor)" >> $GITHUB_ENV
+          echo "DIALS_DATA=${PWD}/data" >> $GITHUB_ENV
+          echo "CURRENT_WEEK=$(date +W%W)" >> $GITHUB_ENV
+          echo "TODAY_ISO=$(date +%Y%m%d)" >> $GITHUB_ENV
+      - name: Restore Cache
+        uses: actions/cache@v4
+        with:
+          key: "${{ env.CURRENT_WEEK }}-${{ env.DIALS_DATA_VERSION }}-${{ env.TODAY_ISO }}-${{ env.DIALS_DATA_VERSION_FULL }}"
+          restore-keys: |
+            ${{ env.CURRENT_WEEK }}-${{ env.DIALS_DATA_VERSION }}-${{ env.TODAY_ISO }}-
+            ${{ env.CURRENT_WEEK }}-${{ env.DIALS_DATA_VERSION }}-
+          path: ${{ github.workspace }}/data
+      - name: Run pytest
+        uses: pavelzw/pytest-action@510c5e90c360a185039bea56ce8b3e7e51a16507 # v2.2.0
+        with:
+          verbose: true
+          emoji: false
+          job-summary: true
+          custom-arguments: dxtbx --regression
+          click-to-expand: true

@@ -1,3 +1,172 @@
+dxtbx 3.22.0 (2024-10-15)
+=========================
+
+Features
+--------
+
+- Add format class to read data from the NMX ESS detector. (`#764 <https://github.com/cctbx/dxtbx/issues/764>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: Add work around for issues with data recorded at 32-bit. (`#759 <https://github.com/cctbx/dxtbx/issues/759>`_)
+- Auxiliary data processing files (mask, gain, pedestal, and dx and dy maps) will now always be loaded when available. (`#760 <https://github.com/cctbx/dxtbx/issues/760>`_)
+- Allow triangles in polygon masking. (`#761 <https://github.com/cctbx/dxtbx/issues/761>`_)
+- Refactor panel positions of FormatISISSXD to account for differences in panel positions, depending on the date of data collection. (`#762 <https://github.com/cctbx/dxtbx/issues/762>`_)
+- Raise a more suitable error message when failing to load an experiment list. (`#763 <https://github.com/cctbx/dxtbx/issues/763>`_)
+
+
+Misc
+----
+
+- `#753 <https://github.com/cctbx/dxtbx/issues/753>`_, `#754 <https://github.com/cctbx/dxtbx/issues/754>`_, `#755 <https://github.com/cctbx/dxtbx/issues/755>`_, `#758 <https://github.com/cctbx/dxtbx/issues/758>`_
+
+
+Dxtbx 3.22.0 (2024-10-15)
+=========================
+
+Features
+--------
+
+- Add format class to read data from the NMX ESS detector. (`#764 <https://github.com/cctbx/dxtbx/issues/764>`_)
+
+
+Bugfixes
+--------
+
+- ``dxtbx.dlsnxs2cbf``: add bit_depth_image explicitly to work around issues with data recorded at 32 bit (`#759 <https://github.com/cctbx/dxtbx/issues/759>`_)
+- Ensure that data processing auxililary files (mask, gain, pedestal, and
+  dx and dy maps) are loaded whenever available. This fixes
+  https://github.com/dials/dials/issues/2744 (`#760 <https://github.com/cctbx/dxtbx/issues/760>`_)
+- + allow triangles in polygon masking (`#761 <https://github.com/cctbx/dxtbx/issues/761>`_)
+- Refactor panel positions of FormatISISSXD to account for differences in panel positions depending on the date of data collection. (`#762 <https://github.com/cctbx/dxtbx/issues/762>`_)
+- Raise a more suitable error message when failing to load an experiment list. (`#763 <https://github.com/cctbx/dxtbx/issues/763>`_)
+
+
+Misc
+----
+
+- `#753 <https://github.com/cctbx/dxtbx/issues/753>`_, `#754 <https://github.com/cctbx/dxtbx/issues/754>`_, `#755 <https://github.com/cctbx/dxtbx/issues/755>`_, `#758 <https://github.com/cctbx/dxtbx/issues/758>`_
+
+
+DIALS 3.21.1 (2024-08-23)
+=========================
+
+Bugfixes
+--------
+
+- Stop ``dxtbx.image_average`` shuffling panel positions for segmented detectors. (`#752 <https://github.com/cctbx/dxtbx/issues/752>`_)
+
+
+dxtbx 3.21.0 (2024-08-20)
+=========================
+
+Features
+--------
+
+- Add Nonius KappaCCD format. (`#741 <https://github.com/cctbx/dxtbx/issues/741>`_)
+
+
+Bugfixes
+--------
+
+- ``FormatMRC``: Relax restrictive check on the overloaded MZ header value, which caused failures to read files where MZ == 1. (`#740 <https://github.com/cctbx/dxtbx/issues/740>`_)
+- ``FormatCBFMini``: When parsing header lines for a timestamp, avoid clashes with Windows paths. (`#742 <https://github.com/cctbx/dxtbx/issues/742>`_)
+- ``FormatPy``: Add fix for pickle files. (`#744 <https://github.com/cctbx/dxtbx/issues/744>`_)
+- ``FormatSMVRigakuSaturnNoTS``: Fix a bug in reading the image pedestal from headers. (`#746 <https://github.com/cctbx/dxtbx/issues/746>`_)
+
+
+Misc
+----
+
+- `#739 <https://github.com/cctbx/dxtbx/issues/739>`_, `#743 <https://github.com/cctbx/dxtbx/issues/743>`_, `#748 <https://github.com/cctbx/dxtbx/issues/748>`_, `#749 <https://github.com/cctbx/dxtbx/issues/749>`_, `#750 <https://github.com/cctbx/dxtbx/issues/750>`_
+
+
+dxtbx 3.20.0 (2024-06-19)
+=========================
+
+Features
+--------
+
+- The template handling mechanism is extended so that a template with a
+  single ``#`` is expanded to match non-zero padded sequential numbers.
+  For example, ``image_#.cbf`` will match ``image_1.cbf``, ``image_2.cbf``,
+  ..., ``image_10.cbf`` and so on.
+
+  Using a single ``#`` to match up to 10 images _within_ a zero-padded
+  sequence continues to work as before. For example,
+  ``dials.import template=insulin_1_01#.img`` will match the files
+  ``insulin_1_010.img``, ``insulin_1_011.img``, ..., ``insulin_1_019.img``,
+  and no others. (`#705 <https://github.com/cctbx/dxtbx/issues/705>`_)
+- Allows stepping through XTC streams at specific indices provided by a text file. (`#709 <https://github.com/cctbx/dxtbx/issues/709>`_)
+- Compatibility with Python 3.12. (`#725 <https://github.com/cctbx/dxtbx/issues/725>`_)
+- Add ``dxtbx.any2nexus`` program, to convert any file dxtbx can read to a NeXus file. (`#735 <https://github.com/cctbx/dxtbx/issues/735>`_)
+
+
+Bugfixes
+--------
+
+- ``FormatROD``: set the beam probe to "electron" for 3D ED experiments. (`#728 <https://github.com/cctbx/dxtbx/issues/728>`_)
+- Raise an error if ``geometry.goniometer.axis=`` is set with a multi-axis goniometer. In that case ``geometry.goniometer.axes=`` must be set instead. (`#730 <https://github.com/cctbx/dxtbx/issues/730>`_)
+- Update goniometer for `FormatISISSXD` to allow for different ways the goniometer angle can be stored. (`#731 <https://github.com/cctbx/dxtbx/issues/731>`_)
+- Fix `Scan.get_property` key type. (`#734 <https://github.com/cctbx/dxtbx/issues/734>`_)
+
+
+Misc
+----
+
+- `#702 <https://github.com/cctbx/dxtbx/issues/702>`_, `#721 <https://github.com/cctbx/dxtbx/issues/721>`_, `#724 <https://github.com/cctbx/dxtbx/issues/724>`_, `#726 <https://github.com/cctbx/dxtbx/issues/726>`_, `#727 <https://github.com/cctbx/dxtbx/issues/727>`_, `#732 <https://github.com/cctbx/dxtbx/issues/732>`_, `#733 <https://github.com/cctbx/dxtbx/issues/733>`_, `#738 <https://github.com/cctbx/dxtbx/issues/738>`_
+
+
+DIALS 3.19.1 (2024-05-23)
+=========================
+
+Bugfixes
+--------
+
+- Fix case where old I03 Eiger nexus data (pre-2020) would fail to process. (`#737 <https://github.com/cctbx/dxtbx/issues/737>`_)
+
+
+dxtbx 3.19.0 (2024-04-17)
+=========================
+
+Features
+--------
+
+- Add format reader for Jungfrau4M serial images from beamline ID29 at ESRF. (`#659 <https://github.com/cctbx/dxtbx/issues/659>`_)
+- Better handle spectra calibration for bad data in XTC format using new parameter: ``spectrum_required=``. (`#674 <https://github.com/cctbx/dxtbx/issues/674>`_)
+- Add Bruker and miniCBF format readers for the ELDICO ED-1 electron diffractometer with DECTRIS QUADRO detector. (`#682 <https://github.com/cctbx/dxtbx/issues/682>`_)
+- ``FormatSMVTimePix_SU``: Always mask out the central cross of virtual pixels. (`#683 <https://github.com/cctbx/dxtbx/issues/683>`_)
+- Add format reader for ISIS SXD detector. (`#687 <https://github.com/cctbx/dxtbx/issues/687>`_)
+- Detector distance can now be manually overridden for multi-panel detectors. (`#698 <https://github.com/cctbx/dxtbx/issues/698>`_)
+- Add format reader to read time of flight Laue data from MANDI. (`#703 <https://github.com/cctbx/dxtbx/issues/703>`_)
+- Additional features for `FormatXTCRayonix` (`#723 <https://github.com/cctbx/dxtbx/issues/723>`_)
+
+
+Bugfixes
+--------
+
+- Importing the (deprecated and removed) ``dxtbx.datablock`` module failed to display warning properly. (`#665 <https://github.com/cctbx/dxtbx/issues/665>`_)
+- Fix scan comparison for scan properties changes (`#669 <https://github.com/cctbx/dxtbx/issues/669>`_)
+- Eiger Support: Invert the module dimensions, only for older firmware versions. See https://media.dectris.com/230203-Release_Notes-DECTRIS_EIGER2.pdf for reference. (`#676 <https://github.com/cctbx/dxtbx/issues/676>`_)
+- ``FormatMRC``: Better handling of extended headers. (https://github.com/ccpem/mrcfile/issues/50), and extended headers are ignored if they contain junk values. (`#679 <https://github.com/cctbx/dxtbx/issues/679>`_)
+- Fixed some properties not being correctly parsed in `Scan.from_dict`. (`#688 <https://github.com/cctbx/dxtbx/issues/688>`_)
+- Negative rotation angles are now allowed, the goniometer axis will be inverted if necessary. (`#690 <https://github.com/cctbx/dxtbx/issues/690>`_)
+- ``dials.import`` now uses natural sorting on input data, instead of strict sorting. (`#697 <https://github.com/cctbx/dxtbx/issues/697>`_)
+- Fix setting detector distance for single panel detectors that have a hierarchy. (`#699 <https://github.com/cctbx/dxtbx/issues/699>`_)
+- Better recognition for SMV images from MLFSOM and other simulators from James Holton. (`#708 <https://github.com/cctbx/dxtbx/issues/708>`_)
+- Fix error introduced in ``FormatSMVJHSim`` causing test failures. (`#710 <https://github.com/cctbx/dxtbx/issues/710>`_)
+- `PolychromaticBeam` can now be copied with `copy.deepcopy`. (`#711 <https://github.com/cctbx/dxtbx/issues/711>`_)
+- Add missing argument to `PolychromaticBeamPickleSuite.getinitargs`. (`#714 <https://github.com/cctbx/dxtbx/issues/714>`_)
+
+
+Misc
+----
+
+- `#620 <https://github.com/cctbx/dxtbx/issues/620>`_, `#667 <https://github.com/cctbx/dxtbx/issues/667>`_, `#670 <https://github.com/cctbx/dxtbx/issues/670>`_, `#689 <https://github.com/cctbx/dxtbx/issues/689>`_, `#691 <https://github.com/cctbx/dxtbx/issues/691>`_, `#694 <https://github.com/cctbx/dxtbx/issues/694>`_, `#696 <https://github.com/cctbx/dxtbx/issues/696>`_, `#701 <https://github.com/cctbx/dxtbx/issues/701>`_, `#704 <https://github.com/cctbx/dxtbx/issues/704>`_, `#707 <https://github.com/cctbx/dxtbx/issues/707>`_, `#713 <https://github.com/cctbx/dxtbx/issues/713>`_
+
+
 dxtbx 3.17.0 (2023-11-03)
 =========================
 

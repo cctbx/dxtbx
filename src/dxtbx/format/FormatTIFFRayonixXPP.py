@@ -6,7 +6,6 @@ distance, wavelength, etc.  Set these values to zero so the images can be at
 least viewed.
 """
 
-
 from __future__ import annotations
 
 import re

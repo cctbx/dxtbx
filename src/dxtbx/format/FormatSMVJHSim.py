@@ -1,6 +1,5 @@
 """An implementation of the SMV image reader for JHSim images."""
 
-
 from __future__ import annotations
 
 import calendar
@@ -31,7 +30,7 @@ class FormatSMVJHSim(FormatSMV):
 
         size, header = FormatSMV.get_smv_header(image_file)
 
-        if header.get("BEAMLINE") == "fake":
+        if header.get("BEAMLINE", "").lower() == "fake":
             return True
         else:
             return False

@@ -38,7 +38,6 @@ class FormatNexusJungfrauHack(FormatNexus):
             return False
 
     def _start(self):
-
         # Read the file structure
         self._reader = reader = NXmxReader(self._image_file)
 

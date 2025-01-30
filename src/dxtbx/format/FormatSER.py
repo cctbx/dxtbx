@@ -3,7 +3,6 @@ Experimental format for TIA .ser files used by some FEI microscopes. See
 https://personal.ntu.edu.sg/cbb/info/TIAformat/index.html
 """
 
-
 from __future__ import annotations
 
 import os
@@ -123,9 +122,9 @@ def read_emi(filename):
     grp = root.find("ExperimentalDescription/Root")
 
     for elem in grp:
-        _emi[
-            "{} [{}]".format(elem.findtext("Label"), elem.findtext("Unit"))
-        ] = _parseEntry_emi(elem.findtext("Value"))
+        _emi["{} [{}]".format(elem.findtext("Label"), elem.findtext("Unit"))] = (
+            _parseEntry_emi(elem.findtext("Value"))
+        )
 
     # AcquireInfo
     grp = root.find("AcquireInfo")
@@ -362,9 +361,7 @@ class FormatSER(Format):
             elif d["DataType"] == 1:
                 read_pixel = dxtbx.ext.read_uint8
             else:
-                raise RuntimeError(
-                    "Image {} data is of an unsupported type".format(index + 1)
-                )
+                raise RuntimeError(f"Image {index + 1} data is of an unsupported type")
 
             d["ArraySizeX"] = struct.unpack("<I", f.read(4))[0]
             d["ArraySizeY"] = struct.unpack("<I", f.read(4))[0]
@@ -373,13 +370,9 @@ class FormatSER(Format):
 
         # Check image size is as expected (same as the first image)
         if d["ArraySizeX"] != self._header_dictionary["ArraySizeX"]:
-            raise RuntimeError(
-                "Image {} has an unexpected array size in X".format(index + 1)
-            )
+            raise RuntimeError(f"Image {index + 1} has an unexpected array size in X")
         if d["ArraySizeY"] != self._header_dictionary["ArraySizeY"]:
-            raise RuntimeError(
-                "Image {} has an unexpected array size in Y".format(index + 1)
-            )
+            raise RuntimeError(f"Image {index + 1} has an unexpected array size in Y")
 
         image_size = (d["ArraySizeX"], d["ArraySizeY"])
         raw_data.reshape(flex.grid(image_size[1], image_size[0]))
@@ -390,7 +383,6 @@ class FormatSER(Format):
 class FormatSERimages(FormatSER):
     @staticmethod
     def understand(image_file):
-
         with FormatSER.open_file(image_file, "rb") as fh:
             fh.seek(18)
             nimages = struct.unpack("<I", fh.read(4))[0]
@@ -422,14 +414,12 @@ class FormatSERimages(FormatSER):
 class FormatSERstack(FormatMultiImage, FormatSER):
     @staticmethod
     def understand(image_file):
-
         with FormatSER.open_file(image_file, "rb") as fh:
             fh.seek(18)
             nimages = struct.unpack("<I", fh.read(4))[0]
         return nimages > 1
 
     def __init__(self, image_file, **kwargs):
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         FormatMultiImage.__init__(self, **kwargs)

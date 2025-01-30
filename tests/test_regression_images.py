@@ -270,7 +270,7 @@ def test_format_class_API_assumptions(test_image, dials_regression):
         multiple_formats = False
         for subformat in dag.get(parentformat, []):
             format_class = dxtbx.format.Registry.get_format_class_for(subformat)
-            if not get_url_scheme(filename) in format_class.schemes:
+            if get_url_scheme(filename) not in format_class.schemes:
                 print("Not matching ", filename, "to", format_class)
                 continue
             understood = format_class.understand(filename)

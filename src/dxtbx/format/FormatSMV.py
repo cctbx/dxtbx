@@ -8,7 +8,6 @@ including header information and generate the experimental model
 representations.
 """
 
-
 from __future__ import annotations
 
 from boost_adaptbx.boost.python import streambuf

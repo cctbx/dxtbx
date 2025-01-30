@@ -18,7 +18,6 @@ class FormatNexus(FormatHDF5):
             return False
 
     def _start(self):
-
         # Read the file structure
         self._reader = reader = nexus.NXmxReader(self._image_file)
 
@@ -180,7 +179,6 @@ class FormatNexusStill(FormatNexus, FormatStill):
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
         if FormatNexus.understand(arg):
-
             format_instance = FormatNexus(arg)
 
             beam = format_instance.get_beam()

@@ -1,1 +1,0 @@
-``FormatMRC``: better handling of extended headers: padding is supported in mrcfile>=1.5.0 (https://github.com/ccpem/mrcfile/issues/50), and extended headers are ignored if they contain junk values.

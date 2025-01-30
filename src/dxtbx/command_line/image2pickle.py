@@ -12,10 +12,10 @@ import os
 import sys
 
 import numpy as np
-import serialtbx.detector.cspad
-import serialtbx.util
 
 import libtbx.option_parser
+import serialtbx.detector.cspad
+import serialtbx.util
 from libtbx import easy_pickle
 from libtbx.utils import Usage
 from scitbx.array_family import flex

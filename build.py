@@ -13,10 +13,10 @@ import itertools
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
-def get_entry_point(filename: Path, prefix: str, import_path: str) -> List[str]:
+def get_entry_point(filename: Path, prefix: str, import_path: str) -> list[str]:
     """Returns the entry point string for a given path.
 
     This looks for LIBTBX_SET_DISPATCHER_NAME, and a root function
@@ -37,7 +37,10 @@ def get_entry_point(filename: Path, prefix: str, import_path: str) -> List[str]:
     tree = ast.parse(contents)
     # Find root functions named "run"
     has_run = any(
-        x for x in tree.body if isinstance(x, ast.FunctionDef) and x.name == "run"
+        x
+        for x in tree.body
+        if (isinstance(x, ast.FunctionDef) and x.name == "run")
+        or (isinstance(x, ast.ImportFrom) and "run" in [a.name for a in x.names])
     )
     if not has_run:
         return []
@@ -51,7 +54,7 @@ def get_entry_point(filename: Path, prefix: str, import_path: str) -> List[str]:
     return [f"{prefix}.{filename.stem}={import_path}.{filename.stem}:run"]
 
 
-def enumerate_format_classes(path: Path) -> List[str]:
+def enumerate_format_classes(path: Path) -> list[str]:
     """Find all Format*.py files and contained Format classes in a path"""
     format_classes = []
     for filename in path.glob("Format*.py"):
@@ -78,7 +81,7 @@ def enumerate_format_classes(path: Path) -> List[str]:
     return format_classes
 
 
-def build(setup_kwargs: Dict[str, Any]) -> None:
+def build(setup_kwargs: dict[str, Any]) -> None:
     """Called by setup.py to inject any dynamic configuration"""
     package_path = Path(__file__).parent / "src" / "dxtbx"
     entry_points = setup_kwargs.setdefault("entry_points", {})

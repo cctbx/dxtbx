@@ -1,1 +1,0 @@
-Add check to `Scan.is_still()` to treat Scans with time_of_flight as not stills.

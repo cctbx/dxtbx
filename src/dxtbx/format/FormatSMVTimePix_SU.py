@@ -1,7 +1,6 @@
 """Format classes to specifically recognise images from an electron detector
 with a 2x2 array of Timepix modules, converted to SMV in various ways."""
 
-
 from __future__ import annotations
 
 import calendar
@@ -10,8 +9,7 @@ import time
 
 from iotbx.detectors import SMVImage
 from scitbx import matrix
-
-from dials.array_family import flex
+from scitbx.array_family import flex
 
 from dxtbx.format.FormatSMV import FormatSMV
 from dxtbx.masking import mask_untrusted_rectangle
@@ -30,7 +28,6 @@ class FormatSMVTimePix_SU(FormatSMV):
 
     @staticmethod
     def understand(image_file):
-
         size, header = FormatSMV.get_smv_header(image_file)
 
         # only recognise TimePix_SU
@@ -121,7 +118,6 @@ class FormatSMVTimePix_SU_512x512(FormatSMVTimePix_SU):
 
     @staticmethod
     def understand(image_file):
-
         size, header = FormatSMVTimePix_SU.get_smv_header(image_file)
 
         # check the pixel size is 55 microns
@@ -323,7 +319,6 @@ class FormatSMVTimePix_SU_516x516(FormatSMVTimePix_SU):
 
     @staticmethod
     def understand(image_file):
-
         size, header = FormatSMVTimePix_SU.get_smv_header(image_file)
 
         # check there are 516*516 pixels

@@ -308,9 +308,30 @@ namespace dxtbx { namespace model {
     }
 
     /**
+     * Get the resolution at a given pixel.
+     * @param xy The pixel coordinate
+     * @returns The resolution at that point.
+     */
+    double get_resolution_at_pixel(Beam beam, vec2<double> xy) const {
+      vec3<double> s0 = beam.get_s0();
+      return get_resolution_at_pixel(s0, xy);
+    }
+
+    /**
+     * Get the resolution at a given pixel.
+     * @param xy The pixel coordinate
+     * @returns The resolution at that point.
+     */
+    double get_resolution_at_pixel(PolychromaticBeam beam, vec2<double> xy) const {
+      vec3<double> unit_s0 = beam.get_unit_s0();
+      double min_wavelength = beam.get_wavelength_range()[0];
+      vec3<double> s0 = unit_s0 / min_wavelength;
+      return get_resolution_at_pixel(s0, xy);
+    }
+
+    /**
      * Get the maximum resolution of the detector (i.e. look at each corner
      * and find the maximum resolution.)
-     * @param beam The beam parameters
      * @returns The maximum resolution at the detector corners.
      */
     double get_max_resolution_at_corners(vec3<double> s0) const {
@@ -323,11 +344,32 @@ namespace dxtbx { namespace model {
     }
 
     /**
+     * Get the maximum resolution of the detector (i.e. look at each corner
+     * and find the maximum resolution.)
+     * @returns The maximum resolution at the detector corners.
+     */
+    double get_max_resolution_at_corners(Beam beam) const {
+      vec3<double> s0 = beam.get_s0();
+      return get_max_resolution_at_corners(s0);
+    }
+
+    /**
+     * Get the maximum resolution of the detector (i.e. look at each corner
+     * and find the maximum resolution.)
+     * @returns The maximum resolution at the detector corners.
+     */
+    double get_max_resolution_at_corners(PolychromaticBeam beam) const {
+      vec3<double> unit_s0 = beam.get_unit_s0();
+      double min_wavelength = beam.get_wavelength_range()[0];
+      vec3<double> s0 = unit_s0 / min_wavelength;
+      return get_max_resolution_at_corners(s0);
+    }
+
+    /**
      * Get the maximum resolution of a full circle on the detector. Get the
      * beam centre in pixels. Then find the coordinates on the edges making
      * a cross-hair with the beam centre. Calculate the resolution at these
      * corners and choose the minimum angle.
-     * @param beam The beam parameters
      * @returns The maximum resolution at the detector corners.
      */
     double get_max_resolution_ellipse(vec3<double> s0) const {
@@ -338,6 +380,32 @@ namespace dxtbx { namespace model {
                 get_resolution_at_pixel(s0, vec2<double>(fast, c[1])),
                 get_resolution_at_pixel(s0, vec2<double>(c[0], 0)),
                 get_resolution_at_pixel(s0, vec2<double>(c[0], slow))));
+    }
+
+    /**
+     * Get the maximum resolution of a full circle on the detector. Get the
+     * beam centre in pixels. Then find the coordinates on the edges making
+     * a cross-hair with the beam centre. Calculate the resolution at these
+     * corners and choose the minimum angle.
+     * @returns The maximum resolution at the detector corners.
+     */
+    double get_max_resolution_ellipse(Beam beam) const {
+      vec3<double> s0 = beam.get_s0();
+      return get_max_resolution_ellipse(s0);
+    }
+
+    /**
+     * Get the maximum resolution of a full circle on the detector. Get the
+     * beam centre in pixels. Then find the coordinates on the edges making
+     * a cross-hair with the beam centre. Calculate the resolution at these
+     * corners and choose the minimum angle.
+     * @returns The maximum resolution at the detector corners.
+     */
+    double get_max_resolution_ellipse(PolychromaticBeam beam) const {
+      vec3<double> unit_s0 = beam.get_unit_s0();
+      double min_wavelength = beam.get_wavelength_range()[0];
+      vec3<double> s0 = unit_s0 / min_wavelength;
+      return get_max_resolution_ellipse(s0);
     }
 
     /** Rotate the panel about an axis */

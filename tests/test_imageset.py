@@ -76,7 +76,6 @@ def test_format(dials_regression, image):
 
 @pytest.fixture(scope="session")
 def image_examples(dials_data):
-
     return [
         str(dials_data("image_examples", pathlib=True) / e)
         for e in [
@@ -689,9 +688,6 @@ def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
     )
 
 
-@pytest.mark.xfail(
-    raises=OverflowError, reason="https://github.com/cctbx/dxtbx/issues/213"
-)
 def test_scan_imageset_slice_consistency(dials_data):
     files = dials_data("centroid_test_data", pathlib=False).listdir("*.cbf", sort=True)[
         1:

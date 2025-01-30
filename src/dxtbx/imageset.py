@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
+
+import natsort
+
 import boost_adaptbx.boost.python
 
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
@@ -29,8 +33,6 @@ except ModuleNotFoundError:
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
-from typing import Iterable
-
 __all__ = (
     "ExternalLookup",
     "ExternalLookupItemBool",
@@ -45,7 +47,9 @@ __all__ = (
 )
 
 
-def _expand_template(template: str, indices: Iterable[int]) -> list[str]:
+def _expand_template_to_sorted_filenames(
+    template: str, indices: Iterable[int]
+) -> list[str]:
     """Expand a template string to a list of filenames.
 
     Args:
@@ -55,7 +59,13 @@ def _expand_template(template: str, indices: Iterable[int]) -> list[str]:
     pfx = template.split("#")[0]
     sfx = template.split("#")[-1]
     count = template.count("#")
-    return [f"{pfx}{index:0{count}}{sfx}" for index in indices]
+    if count == 1:
+        # Special handling for a template with a single "#", which does not
+        # assume a zero-padded index.
+        filenames = [f"{pfx}{index}{sfx}" for index in indices]
+    else:
+        filenames = [f"{pfx}{index:0{count}}{sfx}" for index in indices]
+    return natsort.natsorted(filenames)
 
 
 class MemReader:
@@ -361,7 +371,6 @@ def _analyse_files(filenames):
     # Label each group as either an imageset or a sequence.
     file_groups = []
     for template, indices in filelist_per_imageset.items():
-
         # Check if this imageset is a sequence
         is_sequence = _is_imageset_a_sequence(template, indices)
 
@@ -449,7 +458,7 @@ class ImageSetFactory:
 
             # Set the image range
             indices = range(image_range[0], image_range[1] + 1)
-            filenames = _expand_template(template, indices)
+            filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             if "master" not in template:
                 raise ValueError("Invalid template")
@@ -486,7 +495,7 @@ class ImageSetFactory:
 
         # Get the template format
         if "#" in template:
-            filenames = sorted(_expand_template(template, indices))
+            filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             filenames = [template]
 
@@ -503,7 +512,7 @@ class ImageSetFactory:
 
         # Expand the template if necessary
         if "#" in template:
-            filenames = sorted(_expand_template(template, indices))
+            filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             filenames = [template]
 
@@ -564,7 +573,7 @@ class ImageSetFactory:
 
         # Get the template format
         if "#" in template:
-            filenames = sorted(_expand_template(template, indices))
+            filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             filenames = [template]
 

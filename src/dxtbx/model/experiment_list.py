@@ -10,9 +10,12 @@ import logging
 import operator
 import os
 import pickle
-from typing import Any, Callable, Generator, Iterable
+import sys
+from collections.abc import Callable, Generator, Iterable
+from typing import Any
 
 import natsort
+from tqdm import tqdm
 
 import dxtbx
 from dxtbx.format.Format import Format
@@ -50,6 +53,16 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+# REMOVE and inline when Python 3.10 is minimum
+if sys.version_info < (3, 10):
+    scaling_model_entry_points = importlib.metadata.entry_points().get(
+        "dxtbx.scaling_model_ext", []
+    )
+else:
+    scaling_model_entry_points = importlib.metadata.entry_points(
+        group="dxtbx.scaling_model_ext"
+    )
+
 
 class InvalidExperimentListError(RuntimeError):
     """
@@ -59,14 +72,6 @@ class InvalidExperimentListError(RuntimeError):
     from representing a well-formed experiment list. This doesn't indicate e.g.
     some problem with the data or model consistency.
     """
-
-
-try:
-    scaling_model_entry_points = importlib.metadata.entry_points()[
-        "dxtbx.scaling_model_ext"
-    ]
-except KeyError:
-    scaling_model_entry_points = []
 
 
 class FormatChecker:
@@ -194,9 +199,7 @@ class ExperimentListDict:
         # Basic check: This is a dict-like object. This can happen if e.g. we
         # were passed a DataBlock list instead of an ExperimentList dictionary
         if isinstance(obj, list) or not hasattr(obj, "get"):
-            raise InvalidExperimentListError(
-                "Expected dictionary, not {}".format(type(obj))
-            )
+            raise InvalidExperimentListError(f"Expected dictionary, not {type(obj)}")
 
         self._obj = copy.deepcopy(obj)
         self._check_format = check_format
@@ -239,7 +242,7 @@ class ExperimentListDict:
         loaded from the named file in the target directory.
 
         If any experiments point to a file in this way, the imageset is
-        loaded and the experiment is rewritted with an integer pointing
+        loaded and the experiment is rewritten with an integer pointing
         to the new ImageSet in the returned list.
 
         Returns:
@@ -281,7 +284,10 @@ class ExperimentListDict:
         self, imageset_data: dict, param: str
     ) -> tuple[str | None, Any]:
         """
-        Read a filename from an imageset dict and load if required.
+        Read a filename from an imageset dict and load if available. This is
+        used to load mask, gain, pedestal and offset maps. In some situations
+        (such as tests) these files are not available, in which case the
+        filename is kept but the data is None.
 
         Args:
             imageset_data: The dictionary holding imageset information
@@ -289,19 +295,24 @@ class ExperimentListDict:
 
         Returns:
             A tuple of (filename, data) where data has been loaded from
-            the pickle file. If there is no key entry then (None, None)
-            is returned. If the configuration parameter check_format is
-            False then (filename, None) will be returned.
+            the pickle file, or is None if the file is inaccessible. If there
+            is no key entry then ("", None) is returned.
         """
         if param not in imageset_data:
             return "", None
 
         filename = resolve_path(imageset_data[param], directory=self._directory)
-        if self._check_format and filename:
-            with open(filename, "rb") as fh:
-                return filename, pickle.load(fh, encoding="bytes")
+        data = None
+        if filename:
+            try:
+                with open(filename, "rb") as fh:
+                    data = pickle.load(fh, encoding="bytes")
+            except OSError:
+                pass
+        else:
+            filename = ""
 
-        return filename or "", None
+        return filename, data
 
     def _imageset_from_imageset_data(self, imageset_data, models):
         """Make an imageset from imageset_data - help with refactor decode."""
@@ -322,6 +333,14 @@ class ExperimentListDict:
         pedestal_filename, pedestal = self._load_pickle_path(imageset_data, "pedestal")
         dx_filename, dx = self._load_pickle_path(imageset_data, "dx")
         dy_filename, dy = self._load_pickle_path(imageset_data, "dy")
+
+        # If dx, dy maps are expected then they must be loaded even when
+        # self._check_format == False, because they affect the operation of
+        # programs (dials.index, dials.refine) that do not need the image data.
+        if (dx_filename or dy_filename) and not all((dx, dx)):
+            raise RuntimeError(
+                f"dx ({dx_filename}) and dy ({dy_filename}) maps are expected"
+            )
 
         if imageset_data["__id__"] == "ImageSet":
             imageset = self._make_stills(imageset_data, format_kwargs=format_kwargs)
@@ -397,7 +416,6 @@ class ExperimentListDict:
                     imageset.set_detector(detector, i)
                     imageset.set_goniometer(goniometer, i)
                     imageset.set_scan(scan, i)
-
             imageset.update_detector_px_mm_data()
 
         return imageset
@@ -646,6 +664,9 @@ class ExperimentListFactory:
         """Create a list of data blocks from a list of directory or file names."""
         experiments = ExperimentList()
 
+        # Cast filenames to a list from whatever iterator they are
+        filenames = list(filenames)
+
         # Process each file given by this path list
         to_process = _openingpathiterator(filenames)
         find_format = FormatChecker()
@@ -653,7 +674,13 @@ class ExperimentListFactory:
         format_groups = collections.defaultdict(list)
         if format_kwargs is None:
             format_kwargs = {}
-        for filename in to_process:
+
+        if os.isatty and len(filenames) > 1 and "DIALS_NOBANNER" not in os.environ:
+            filename_iter = tqdm(to_process, total=len(filenames), file=sys.stdout)
+        else:
+            filename_iter = to_process
+
+        for filename in filename_iter:
             # We now have a file, pre-opened by Format.open_file (therefore
             # cached). Determine its type, and prepare to put into a group
             format_class = find_format.find_format(filename)
@@ -693,9 +720,34 @@ class ExperimentListFactory:
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
 
+        all_tof = False
+        for format_class, records in format_groups.items():
+            for i in records:
+                try:  # records can be ImageMetadataRecord or ImageSequence
+                    scan = i.get_scan()
+                    if scan is not None and scan.has_property("time_of_flight"):
+                        all_tof = True
+                    elif all_tof:
+                        raise RuntimeError(
+                            "Cannot process mix of ToF and non ToF experiments"
+                        )
+                except AttributeError:
+                    if all_tof:
+                        raise RuntimeError(
+                            "Cannot process mix of ToF and non ToF experiments"
+                        )
+
         # Treat each format as a separate block of data
         for format_class, records in format_groups.items():
             if issubclass(format_class, FormatMultiImage):
+                if all_tof:
+                    _merge_sequence_model_metadata(
+                        records,
+                        compare_beam=compare_beam,
+                        compare_detector=compare_detector,
+                        compare_goniometer=compare_goniometer,
+                    )
+
                 for imageset in records:
                     experiments.extend(
                         ExperimentListFactory.from_imageset_and_crystal(
@@ -842,9 +894,14 @@ class ExperimentListFactory:
         """Load an experiment list from a json file."""
         filename = os.path.abspath(filename)
         directory = os.path.dirname(filename)
-        with open(filename) as infile:
-            return ExperimentListFactory.from_json(
-                infile.read(), check_format=check_format, directory=directory
+        try:
+            with open(filename) as infile:
+                return ExperimentListFactory.from_json(
+                    infile.read(), check_format=check_format, directory=directory
+                )
+        except UnicodeDecodeError:
+            raise InvalidExperimentListError(
+                f"Cannot interpret {filename} as an ExperimentList"
             )
 
     @staticmethod
@@ -915,8 +972,6 @@ class ExperimentListFactory:
                     f"Image file {filenames[0]} appears to be a '{type(format_class).__name__}', but this is an abstract Format"
                 )
             else:
-                index = slice(*template_string_number_index(template))
-
                 image_range = kwargs.get("image_range")
                 if image_range:
                     first, last = image_range
@@ -926,7 +981,13 @@ class ExperimentListFactory:
                 if not kwargs.get("allow_incomplete_sequences", False):
                     if "#" in template:
                         # Check all images in range are present - if allowed
-                        all_numbers = {int(f[index]) for f in filenames}
+                        i0, i1 = template_string_number_index(template)
+                        prefix = template[:i0]
+                        suffix = template[i1:]
+                        all_numbers = {
+                            int(f.replace(prefix, "").replace(suffix, ""))
+                            for f in filenames
+                        }
                         missing = set(range(first, last + 1)) - all_numbers
                         if missing:
                             raise ValueError(
@@ -1243,6 +1304,42 @@ def _merge_model_metadata(
             compare_detector=compare_detector,
             compare_goniometer=compare_goniometer,
         )
+
+
+def _merge_sequence_model_metadata(
+    records: Iterable[ImageSequence],
+    compare_beam: Callable | None = None,
+    compare_detector: Callable | None = None,
+    compare_goniometer: Callable | None = None,
+):
+    record_altered = False
+    for prev, record in _iterate_with_previous(records):
+        if prev is None:
+            continue
+
+        record_altered = False
+        record_beam = record.get_beam()
+        record_detector = record.get_detector()
+        record_goniometer = record.get_goniometer()
+        prev_beam = prev.get_beam()
+        prev_detector = prev.get_detector()
+        prev_goniometer = prev.get_goniometer()
+
+        if record_beam is not prev_beam and compare_beam(record_beam, prev_beam):
+            record.set_beam(prev_beam)
+            record_altered = True
+        if record_detector is not prev_detector and compare_detector(
+            record_detector, prev_detector
+        ):
+            record.set_detector(prev_detector)
+            record_altered = True
+        if record_goniometer is not prev_goniometer and compare_goniometer(
+            record_goniometer, prev_goniometer
+        ):
+            record.set_goniometer(prev_goniometer)
+            record_altered = True
+
+    return record_altered
 
 
 def _merge_scans(

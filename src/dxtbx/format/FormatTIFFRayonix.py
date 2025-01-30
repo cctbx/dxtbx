@@ -1,6 +1,5 @@
 """An implementation of the TIFF image reader for Rayonix images."""
 
-
 from __future__ import annotations
 
 import datetime

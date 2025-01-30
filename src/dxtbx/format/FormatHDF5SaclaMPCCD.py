@@ -120,9 +120,7 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
                     self.panel_rotations[i] = tmp[i * 3 + 2]
             except Exception as e:
                 raise OSError(
-                    "Invalid MPCCD Geometry specified in environment variable MPCCD_GEOMETRY: {}".format(
-                        e
-                    )
+                    f"Invalid MPCCD Geometry specified in environment variable MPCCD_GEOMETRY: {e}"
                 )
         if "MPCCD_DISTANCE" in os.environ:
             self.distance = float(os.environ["MPCCD_DISTANCE"])
@@ -255,7 +253,6 @@ class FormatHDF5SaclaMPCCD(FormatHDF5, FormatStill):
             self.set_index(index)
 
         if self._raw_data is None:
-
             if self.RECONST_MODE:
                 self._raw_data = flex.int(self.reconst_image())
 

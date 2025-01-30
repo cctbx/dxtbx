@@ -21,7 +21,6 @@ from dxtbx.model.beam import Probe
 class FormatBrukerED1(FormatBruker):
     @staticmethod
     def understand(image_file):
-
         try:
             header_lines = FormatBruker.read_header_lines(image_file)
         except OSError:
@@ -45,7 +44,6 @@ class FormatBrukerED1(FormatBruker):
         return True
 
     def _start(self):
-
         try:
             header_lines = FormatBruker.read_header_lines(self._image_file)
         except OSError:
@@ -175,7 +173,6 @@ class FormatBrukerED1(FormatBruker):
         )
 
     def _scan(self):
-
         start = float(self.header_dict["START"].split()[0])
         incr = float(self.header_dict["INCREME"].split()[0])
         if incr < 0:
@@ -225,9 +222,7 @@ class FormatBrukerED1(FormatBruker):
         elif npixelb[0] == 2:
             read_data = read_2b
         else:
-            raise IncorrectFormatError(
-                "{} bytes per pixel is not supported".format(npixelb[0])
-            )
+            raise IncorrectFormatError(f"{npixelb[0]} bytes per pixel is not supported")
 
         nrows = int(self.header_dict["NROWS"].split()[0])
         ncols = int(self.header_dict["NCOLS"].split()[0])
@@ -237,9 +232,9 @@ class FormatBrukerED1(FormatBruker):
         image_size = (nrows, ncols)
         raw_data.reshape(flex.grid(*image_size))
 
-        (num_underflows, num_2b_overflows, num_4b_overflows) = [
+        (num_underflows, num_2b_overflows, num_4b_overflows) = (
             int(e) for e in self.header_dict["NOVERFL"].split()
-        ]
+        )
 
         # read underflows
         if num_underflows > 0:

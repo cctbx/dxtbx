@@ -27,7 +27,7 @@ class FormatPYunspecified(FormatPY):
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
                 data = pickle.load(fh, encoding="bytes")
                 data = image_dict_to_unicode(data)
-        except OSError:
+        except (AttributeError, OSError):
             return False
 
         headers = set(data)
@@ -65,7 +65,6 @@ class FormatPYunspecified(FormatPY):
         )
 
     def start_helper(self, version_token):
-
         is_file = isinstance(self._image_file, str) and os.path.isfile(self._image_file)
 
         if is_file:
@@ -97,7 +96,6 @@ class FormatPYunspecified(FormatPY):
         self.detectorbase = image
 
     def _goniometer(self):
-
         return self._goniometer_factory.single_axis()
 
     def _detector(self):

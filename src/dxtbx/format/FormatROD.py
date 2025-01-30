@@ -25,6 +25,7 @@ from scitbx.math import r3_rotation_axis_and_angle_as_matrix
 
 from dxtbx.ext import uncompress_rod_TY6
 from dxtbx.format.Format import Format
+from dxtbx.model.beam import Probe
 
 
 class FormatROD(Format):
@@ -283,11 +284,18 @@ class FormatROD(Format):
         return Format.get_beam(self)
 
     def _beam(self):
+        wavelength = self._bin_header["alpha1_wavelength"]
+        if wavelength <= 0.05:
+            probe = Probe.electron
+        else:
+            probe = Probe.xray
+
         return self._beam_factory.make_polarized_beam(
             sample_to_source=(0.0, 0.0, 1.0),
-            wavelength=self._bin_header["alpha1_wavelength"],
+            wavelength=wavelength,
             polarization=(0, 1, 0),
             polarization_fraction=0.5,
+            probe=probe,
         )
 
     def get_detector(self, index=None):
@@ -302,19 +310,13 @@ class FormatROD(Format):
         # Note that XDS.INP's directions of Y and Z are opposite from ours.
         rot_e1 = np.array(
             r3_rotation_axis_and_angle_as_matrix([0, 0, 1], detector_rotns_rad[0])
-        ).reshape(
-            3, 3
-        )  # clockwise along e1 = Z
+        ).reshape(3, 3)  # clockwise along e1 = Z
         rot_e2 = np.array(
             r3_rotation_axis_and_angle_as_matrix([-1, 0, 0], detector_rotns_rad[1])
-        ).reshape(
-            3, 3
-        )  # ANTI-clockwise along e2 = X
+        ).reshape(3, 3)  # ANTI-clockwise along e2 = X
         rot_theta = np.array(
             r3_rotation_axis_and_angle_as_matrix([0, -1, 0], theta_rad)
-        ).reshape(
-            3, 3
-        )  # ANTI-clockwise along e3 = Y
+        ).reshape(3, 3)  # ANTI-clockwise along e3 = Y
         detector_axes = rot_theta.dot(rot_e2.dot(rot_e1))
 
         pixel_size_x = self._bin_header["real_px_size_x"]
@@ -362,7 +364,7 @@ class FormatROD(Format):
         if comp.startswith("TY6"):
             return self._get_raw_data_ty6_native()
         else:
-            raise NotImplementedError("Can't handle compression: {0}".format(comp))
+            raise NotImplementedError(f"Can't handle compression: {comp}")
 
     def _get_raw_data_ty6_native(self):
         offset = self._txt_header["NHEADER"]

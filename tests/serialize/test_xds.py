@@ -51,9 +51,7 @@ UNTRUSTED_RECTANGLE= 0 2464 2103 2121
 UNTRUSTED_RECTANGLE= 0 2464 2315 2333
 DATA_RANGE= 1 9
 JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
-""" % (
-        dials_data("centroid_test_data", pathlib=True) / "centroid_????.cbf"
-    )
+""" % (dials_data("centroid_test_data", pathlib=True) / "centroid_????.cbf")
 
     # universe changed once, so be flexible
     expected = [expected_f % a for a in ["3.960382", "3.960386"]]

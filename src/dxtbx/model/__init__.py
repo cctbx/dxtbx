@@ -33,6 +33,7 @@ try:
         DetectorNode,
         Experiment,
         ExperimentList,
+        ExperimentType,
         Goniometer,
         GoniometerBase,
         KappaDirection,
@@ -69,6 +70,7 @@ except ModuleNotFoundError:
         DetectorNode,
         Experiment,
         ExperimentList,
+        ExperimentType,
         Goniometer,
         GoniometerBase,
         KappaDirection,
@@ -338,12 +340,12 @@ class _crystal:
         recalculated_unit_cell = self.get_recalculated_unit_cell()
         if recalculated_unit_cell is not None:
             xl_dict["recalculated_unit_cell"] = recalculated_unit_cell.parameters()
-            xl_dict[
-                "recalculated_cell_parameter_sd"
-            ] = self.get_recalculated_cell_parameter_sd()
-            xl_dict[
-                "recalculated_cell_volume_sd"
-            ] = self.get_recalculated_cell_volume_sd()
+            xl_dict["recalculated_cell_parameter_sd"] = (
+                self.get_recalculated_cell_parameter_sd()
+            )
+            xl_dict["recalculated_cell_volume_sd"] = (
+                self.get_recalculated_cell_volume_sd()
+            )
 
         return xl_dict
 
@@ -599,11 +601,33 @@ class _experimentlist:
 
     def all_stills(self):
         """Check if all the experiments are stills"""
-        return all(exp.is_still() for exp in self)
+        return all(exp.get_type() == ExperimentType.STILL for exp in self)
 
     def all_sequences(self):
         """Check if all the experiments are from sequences"""
-        return all(exp.is_sequence() for exp in self)
+        return self.all_rotations()
+
+    def all_rotations(self):
+        """Check if all the experiments are stills"""
+        return all(exp.get_type() == ExperimentType.ROTATION for exp in self)
+
+    def all_tof(self):
+        """Check if all the experiments are time-of-flight"""
+        return all(exp.get_type() == ExperimentType.TOF for exp in self)
+
+    def all_laue(self):
+        """Check if all the experiments are Laue experiments"""
+        return all(exp.get_type() == ExperimentType.LAUE for exp in self)
+
+    def all_same_type(self):
+        """Check if all experiments are the same type"""
+        if len(self) <= 1:
+            return True
+        expt_type = self[0].get_type()
+        for i in range(1, len(self)):
+            if self[i].get_type() != expt_type:
+                return False
+        return True
 
     def to_dict(self):
         """Serialize the experiment list to dictionary."""

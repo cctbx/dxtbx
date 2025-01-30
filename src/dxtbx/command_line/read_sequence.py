@@ -12,7 +12,6 @@ from dxtbx.imageset import ImageSetFactory
 
 
 def read_sequence(images: list[str]):
-
     sequences = ImageSetFactory.new(images)
 
     for sequence in sequences:
