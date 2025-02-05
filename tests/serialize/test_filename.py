@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import glob
 import os
 import uuid
 
@@ -20,8 +21,8 @@ def test_resolve_path(monkeypatch):
     path = resolve_path(new_path)
     assert path == new_path
 
-    # Now pretend the path exists
-    monkeypatch.setattr(os.path, "exists", alwaystrue)
+    # Now pretend the path exists by ensuring its glob is truthy
+    monkeypatch.setattr(glob, "glob", alwaystrue)
     path = resolve_path(new_path)
     assert path == os.path.join(os.path.expanduser("~"), "EXPANDED", filename)
 
