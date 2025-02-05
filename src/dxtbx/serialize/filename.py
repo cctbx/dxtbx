@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import glob
 import os
+
+from dxtbx.sequence_filenames import template_string_to_glob_expr
 
 
 def resolve_path(path, directory=None):
@@ -23,7 +26,7 @@ def resolve_path(path, directory=None):
     if directory and not os.path.isabs(trial_path):
         trial_path = os.path.join(directory, trial_path)
     trial_path = os.path.abspath(trial_path)
-    if os.path.exists(trial_path):
+    if glob.glob(template_string_to_glob_expr(trial_path)):
         return trial_path
     else:
         return path
