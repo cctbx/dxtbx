@@ -81,7 +81,7 @@ class FormatNXmx(FormatNexus):
                     if "definition" in entry
                     and nxmx.h5str(entry["definition"][()]) == "NXmx"
                 ]
-            )
+            ) and "/entry/data/data" in handle
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
