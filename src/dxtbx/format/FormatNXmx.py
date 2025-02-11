@@ -74,14 +74,17 @@ class FormatNXmx(FormatNexus):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file) as handle:
-            return bool(
-                [
-                    entry
-                    for entry in nxmx.find_class(handle, "NXentry")
-                    if "definition" in entry
-                    and nxmx.h5str(entry["definition"][()]) == "NXmx"
-                ]
-            ) and "/entry/data/data" in handle
+            return (
+                bool(
+                    [
+                        entry
+                        for entry in nxmx.find_class(handle, "NXentry")
+                        if "definition" in entry
+                        and nxmx.h5str(entry["definition"][()]) == "NXmx"
+                    ]
+                )
+                and "/entry/data/data" in handle
+            )
 
     def __init__(self, image_file, **kwargs):
         """Initialise the image structure from the given file."""
