@@ -203,13 +203,13 @@ class FormatROD(Format):
 
         self._gonio_start_angles = (
             np.array(self._bin_header["start_angles_steps"])
-            * np.array(self._bin_header["step_to_rad"])
+            * np.nan_to_num(np.array(self._bin_header["step_to_rad"]))
             / np.pi
             * 180
         )
         self._gonio_end_angles = (
             np.array(self._bin_header["end_angles_steps"])
-            * np.array(self._bin_header["step_to_rad"])
+            * np.nan_to_num(np.array(self._bin_header["step_to_rad"]))
             / np.pi
             * 180
         )
