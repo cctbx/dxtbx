@@ -579,6 +579,7 @@ class FormatROD_Arc(FormatROD):
             p.set_trusted_range((0, self._bin_header["overflow_threshold"]))
             p.set_pixel_size((pixel_size_x, pixel_size_y))
             p.set_local_frame(fast.elems, slow.elems, origin_panel.elems)
+            p.set_projection_2d((-1, 0, 0, -1), (0, pd["xmin"]))
             self.coords[panel_name] = (xmin, ymin, xmax, ymax)
 
         # Now rotate the external panels. For the time being do the rotation around
