@@ -496,6 +496,45 @@ class FormatROD_Arc(FormatROD):
                 return True
         return False
 
+    @staticmethod
+    def _read_binary_header(
+        image_file,
+        offset=256,
+        nbytes=5120,
+        general_nbytes=512,
+        special_nbytes=768,
+        km4gonio_nbytes=1024,
+        statistics_nbytes=512,
+        history_nbytes=2048,
+    ):
+        bh = FormatROD._read_binary_header(
+            image_file,
+            offset,
+            nbytes,
+            general_nbytes,
+            special_nbytes,
+            km4gonio_nbytes,
+            statistics_nbytes,
+            history_nbytes,
+        )
+
+        # Seek to the end of the standard version 3 header and into the
+        # extra camera parameters section
+        with FormatROD_Arc.open_file(image_file, "rb") as f:
+            f.seek(nbytes + 268)
+            ix, iy, nx, ny, gapx, gapy = struct.unpack("<hhhhhh", f.read(12))
+        assert ix in (2, 3)
+        assert iy == 1
+        assert nx == 385
+        assert ny == 775
+        assert gapx == 30
+        assert gapy == 0
+        bh["nx"] = nx
+        bh["ny"] = ny
+        bh["gap_px"] = gapx
+
+        return bh
+
     def _detector(self):
         """2 or 3 panel detector, each rotated 38° from its neighbour."""
 
@@ -533,25 +572,27 @@ class FormatROD_Arc(FormatROD):
         panel_idx = 0
 
         pnl_data = []
-        gap_px = 30
-        pnl_data.append({"xmin": 0, "ymin": 0, "xmax": 385, "ymax": 775, "xmin_mm": 0})
+        nx = self._bin_header["nx"]
+        ny = self._bin_header["ny"]
+        gap_px = self._bin_header["gap_px"]
+        pnl_data.append({"xmin": 0, "ymin": 0, "xmax": nx, "ymax": ny, "xmin_mm": 0})
         pnl_data.append(
             {
-                "xmin": (385 + gap_px),
+                "xmin": (nx + gap_px),
                 "ymin": 0,
-                "xmax": 800,
-                "ymax": 775,
-                "xmin_mm": (385 + gap_px) * pixel_size_x,
+                "xmax": 2 * nx + gap_px,
+                "ymax": ny,
+                "xmin_mm": (nx + gap_px) * pixel_size_x,
             }
         )
         if self._bin_header["detector_type"] == 12:
             pnl_data.append(
                 {
-                    "xmin": (385 + gap_px) * 2,
+                    "xmin": (nx + gap_px) * 2,
                     "ymin": 0,
-                    "xmax": 1215,
-                    "ymax": 775,
-                    "xmin_mm": (385 + gap_px) * 2 * pixel_size_x,
+                    "xmax": 3 * nx + 2 * gap_px,
+                    "ymax": ny,
+                    "xmin_mm": (nx + gap_px) * 2 * pixel_size_x,
                 }
             )
 
