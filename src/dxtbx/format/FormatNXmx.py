@@ -1,25 +1,39 @@
 from __future__ import annotations
 
+import weakref
+
 import h5py
 import nxmx
+
+import scitbx.array_family.flex as flex
 
 import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
 
 
-# A singleton to hold unique static_mask objects to avoid duplications
-class MaskDict(dict):
-    def hash_func(self, mask):
-        return hash(mask[0].as_numpy_array().tobytes())
+class _MaskCache:
+    """A singleton to hold unique static_mask objects to avoid duplications"""
 
-    def insert(self, mask):
-        mask_hash = self.hash_func(mask)
-        if mask_hash not in self:
-            mask_dict[mask_hash] = mask
-        return mask_dict[mask_hash]
+    def __init__(self):
+        self.local_mask_cache = weakref.WeakValueDictionary()
+
+    def _mask_hasher(self, mask: flex.bool) -> int:
+        return hash(mask.as_numpy_array().tobytes())
+
+    def store_unique_and_get(
+        self, mask_tuple: tuple[flex.bool, ...] | None
+    ) -> tuple[flex.bool, ...] | None:
+        if mask_tuple is None:
+            return None
+        output = []
+        for mask in mask_tuple:
+            mask_hash = self._mask_hasher(mask)
+            self.local_mask_cache[mask_hash] = mask
+            output.append(mask)
+        return tuple(output)
 
 
-mask_dict = MaskDict()
+mask_cache = _MaskCache()
 
 
 def detector_between_sample_and_source(detector, beam):
@@ -98,7 +112,9 @@ class FormatNXmx(FormatNexus):
             self._detector_model = inverted_distance_detector(self._detector_model)
 
         self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
-        self._static_mask = mask_dict.insert(dxtbx.nexus.get_static_mask(nxdetector))
+        self._static_mask = mask_cache.store_unique_and_get(
+            dxtbx.nexus.get_static_mask(nxdetector)
+        )
         self._bit_depth_readout = nxdetector.bit_depth_readout
 
         if self._scan_model:

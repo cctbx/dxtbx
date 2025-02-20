@@ -1,1 +1,1 @@
-Store static masks in FormatNXmx.py in a dict to avoid duplication
+Store unique masks in a dictionary to avoid duplication (FormatNXmx.py)
