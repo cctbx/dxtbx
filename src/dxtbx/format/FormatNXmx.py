@@ -28,7 +28,7 @@ class _MaskCache:
         output = []
         for mask in mask_tuple:
             mask_hash = self._mask_hasher(mask)
-            self.local_mask_cache[mask_hash] = mask
+            mask = self.local_mask_cache.setdefault(mask_hash, mask)
             output.append(mask)
         return tuple(output)
 
