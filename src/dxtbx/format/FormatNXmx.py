@@ -7,6 +7,21 @@ import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
 
 
+# A singleton to hold unique static_mask objects to avoid duplications
+class MaskDict(dict):
+    def hash_func(self, mask):
+        return hash(mask[0].as_numpy_array().tobytes())
+
+    def insert(self, mask):
+        mask_hash = self.hash_func(mask)
+        if mask_hash not in self:
+            mask_dict[mask_hash] = mask
+        return mask_dict[mask_hash]
+
+
+mask_dict = MaskDict()
+
+
 def detector_between_sample_and_source(detector, beam):
     """Check if the detector is perpendicular to beam and
     upstream of the sample."""
@@ -83,7 +98,7 @@ class FormatNXmx(FormatNexus):
             self._detector_model = inverted_distance_detector(self._detector_model)
 
         self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
-        self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
+        self._static_mask = mask_dict.insert(dxtbx.nexus.get_static_mask(nxdetector))
         self._bit_depth_readout = nxdetector.bit_depth_readout
 
         if self._scan_model:
