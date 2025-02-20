@@ -1,0 +1,1 @@
+Store static masks in FormatNXmx.py in a dict to avoid duplication
