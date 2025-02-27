@@ -4,7 +4,6 @@ import re
 
 import h5py
 import nxmx
-from packaging import version
 
 from scitbx.array_family import flex
 
@@ -49,15 +48,22 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         if nxdetector.underload_value is None:
             nxdetector.underload_value = 0
 
-        # older firmware versions had the detector dimensions inverted
-        fw_version_string = (
-            fh["/entry/instrument/detector/detectorSpecific/eiger_fw_version"][()]
-            .decode()
-            .replace("release-", "")
-        )
-        if version.parse("2022.1.2") > version.parse(fw_version_string):
-            for module in nxdetector.modules:
+        # Some firmware versions had the detector dimensions swapped. The correct way
+        # is the number of pixels along the slow axis first, then the fast axis. Here
+        # swap any that look like they are (fast, slow) instead.
+        swapped_dims = {
+            (4148, 4362),
+            (3108, 3262),
+            (2068, 2162),
+            (1028, 1062),
+            (4148, 512),
+            (2068, 512),
+            (1028, 512),
+        }
+        for module in nxdetector.modules:
+            if (tuple(module.data_size)) in swapped_dims:
                 module.data_size = module.data_size[::-1]
+
         return nxmx_obj
 
     def get_raw_data(self, index):
