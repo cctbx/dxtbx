@@ -48,7 +48,9 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         if nxdetector.underload_value is None:
             nxdetector.underload_value = 0
 
-        # Some firmware versions had the detector dimensions swapped.
+        # Some firmware versions had the detector dimensions swapped. The correct way
+        # is the number of pixels along the slow axis first, then the fast axis. Here
+        # swap any that look like they are (fast, slow) instead.
         swapped_dims = {
             (4148, 4362),
             (3108, 3262),
