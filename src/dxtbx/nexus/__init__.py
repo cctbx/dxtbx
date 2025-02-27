@@ -124,7 +124,7 @@ class CachedWavelengthBeamFactory:
 
         def get_wavelength(wavelength):
             if wavelength.shape in ((), (1,)):
-                wavelength_value = wavelength[()]
+                wavelength_value = wavelength[()].item()
             else:
                 wavelength_value = wavelength[index]
             wavelength_units = nxmx.units(wavelength)
