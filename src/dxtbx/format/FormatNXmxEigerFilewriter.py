@@ -50,9 +50,15 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
 
         # Some firmware versions had the detector dimensions swapped.
         swapped_dims = {
-            (4362, 4148)(3262, 3108)(4362, 4148)(3262, 3108)(2162, 2068)(1062, 1028)(
-                512, 1028
-            )(512, 4148)(512, 2068)
+            (4362, 4148),
+            (3262, 3108),
+            (4362, 4148),
+            (3262, 3108),
+            (2162, 2068),
+            (1062, 1028),
+            (512, 1028),
+            (512, 4148),
+            (512, 2068),
         }
         for module in nxdetector.modules:
             if (tuple(module.data_size)) in swapped_dims:
