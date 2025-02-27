@@ -54,13 +54,11 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         swapped_dims = {
             (4148, 4362),
             (3108, 3262),
-            (4148, 4362),
-            (3108, 3262),
             (2068, 2162),
             (1028, 1062),
-            (1028, 512),
             (4148, 512),
             (2068, 512),
+            (1028, 512),
         }
         for module in nxdetector.modules:
             if (tuple(module.data_size)) in swapped_dims:
