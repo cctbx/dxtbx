@@ -224,6 +224,7 @@ class FormatESSNMX(FormatHDF5):
         return (1.8, 3.55)
 
     def _get_sample_to_source_distance(self) -> float:
+        """get sample to source distance in mm"""
         try:
             dist = abs(self._nxs_file["NMX_data/NXsource/distance"][...]) * 1000
             return dist
@@ -235,7 +236,7 @@ class FormatESSNMX(FormatHDF5):
         return 1.0
 
     def get_goniometer_phi_angle(self) -> float:
-        return self.get_goniometer_orientations()[0]
+        return self.get_goniometer_orientations()[1]
 
     def get_goniometer(self, index: int = None) -> Goniometer:
         rotation_axis = (0.0, 1.0, 0.0)
@@ -244,15 +245,16 @@ class FormatESSNMX(FormatHDF5):
         try:
             angles = self.get_goniometer_orientations()
         except KeyError:
+            logger.warning("crystal_rotation not found, using default")
             return goniometer
         axes = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
         for idx, angle in enumerate(angles):
-            goniometer.rotate_around_origin(axes[idx], -angle)
+            goniometer.rotate_around_origin(axes[idx], angle)
         return goniometer
 
     def get_goniometer_orientations(self) -> tuple[float, float, float]:
         # Angles in deg along x, y, z
-        return self._nxs_file["NMX_data/crystal_orientation"][...]
+        return self._nxs_file["NMX_data/NXsample/crystal_rotation"][...]
 
     def get_scan(self, index=None) -> Scan:
         image_range = (1, self.get_num_images())
