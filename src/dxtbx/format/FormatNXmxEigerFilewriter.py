@@ -12,6 +12,17 @@ from dxtbx.nexus import _dataset_as_flex, get_detector_module_slices
 
 DATA_FILE_RE = re.compile(r"data_\d{6}")
 
+KNOWN_MODULE_SLOW_FAST_DIMS = {
+    (4362, 4148),
+    (3262, 3108),
+    (2162, 2068),
+    (1062, 1028),
+    (512, 4148),
+    (512, 2068),
+    (512, 1028),
+}
+KNOWN_MODULE_FAST_SLOW_DIMS = {shape[::-1] for shape in KNOWN_MODULE_SLOW_FAST_DIMS}
+
 
 class FormatNXmxEigerFilewriter(FormatNXmx):
     _cached_file_handle = None
@@ -51,18 +62,12 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         # Some firmware versions had the detector dimensions swapped. The correct way
         # is the number of pixels along the slow axis first, then the fast axis. Here
         # swap any that look like they are (fast, slow) instead.
-        swapped_dims = {
-            (4148, 4362),
-            (3108, 3262),
-            (2068, 2162),
-            (1028, 1062),
-            (4148, 512),
-            (2068, 512),
-            (1028, 512),
-        }
         for module in nxdetector.modules:
-            if (tuple(module.data_size)) in swapped_dims:
+            if (tuple(module.data_size)) in KNOWN_MODULE_FAST_SLOW_DIMS:
                 module.data_size = module.data_size[::-1]
+
+        # Fail if we find an unknown Eiger module size
+        assert tuple(module.data_size) in KNOWN_MODULE_SLOW_FAST_DIMS
 
         return nxmx_obj
 
