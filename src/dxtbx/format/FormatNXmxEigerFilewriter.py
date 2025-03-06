@@ -9,6 +9,9 @@ from scitbx.array_family import flex
 
 from dxtbx.format.FormatNXmx import FormatNXmx
 from dxtbx.nexus import _dataset_as_flex, get_detector_module_slices
+from dxtbx.setup import setup_kwargs
+
+author_email = setup_kwargs["author_email"]
 
 DATA_FILE_RE = re.compile(r"data_\d{6}")
 
@@ -67,7 +70,12 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
                 module.data_size = module.data_size[::-1]
 
         # Fail if we find an unknown Eiger module size
-        assert tuple(module.data_size) in KNOWN_MODULE_SLOW_FAST_DIMS
+        try:
+            assert tuple(module.data_size) in KNOWN_MODULE_SLOW_FAST_DIMS
+        except AssertionError:
+            raise ValueError(
+                f"Unknown Eiger module size: {module.data_size}, please report to {author_email}"
+            )
 
         return nxmx_obj
 
