@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from importlib.metadata import metadata
 
 import h5py
 import nxmx
@@ -9,9 +10,8 @@ from scitbx.array_family import flex
 
 from dxtbx.format.FormatNXmx import FormatNXmx
 from dxtbx.nexus import _dataset_as_flex, get_detector_module_slices
-from dxtbx.setup import setup_kwargs
 
-author_email = setup_kwargs["author_email"]
+author_email = metadata("dxtbx")["Author-Email"]
 
 DATA_FILE_RE = re.compile(r"data_\d{6}")
 
