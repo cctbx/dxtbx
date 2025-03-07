@@ -15,6 +15,7 @@ author_email = metadata("dxtbx")["Author-Email"]
 
 DATA_FILE_RE = re.compile(r"data_\d{6}")
 
+# Starting with known Eiger2 module sizes
 KNOWN_MODULE_SLOW_FAST_DIMS = {
     (4362, 4148),
     (3262, 3108),
@@ -24,6 +25,17 @@ KNOWN_MODULE_SLOW_FAST_DIMS = {
     (512, 2068),
     (512, 1028),
 }
+# Now include known Eiger1 module sizes
+KNOWN_MODULE_SLOW_FAST_DIMS.update(
+    {
+        (514, 1030),
+        (1065, 1030),
+        (2167, 2070),
+        (3269, 3110),
+        (4371, 4150),
+    }
+)
+
 KNOWN_MODULE_FAST_SLOW_DIMS = {shape[::-1] for shape in KNOWN_MODULE_SLOW_FAST_DIMS}
 
 
