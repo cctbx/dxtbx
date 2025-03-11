@@ -75,7 +75,7 @@ run:
   - natsort
   - {{ pin_compatible('numpy') }} # [not bootstrap]
   - nxmx >=0.0.4
-  - orderedset
+  - ordered-set
   - pint
   - pycbf # [prebuilt_cctbx]
   - python
