@@ -1,17 +1,42 @@
 from __future__ import annotations
 
 import re
+from importlib.metadata import metadata
 
 import h5py
 import nxmx
-from packaging import version
 
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatNXmx import FormatNXmx
 from dxtbx.nexus import _dataset_as_flex, get_detector_module_slices
 
+author_email = metadata("dxtbx")["Author-Email"]
+
 DATA_FILE_RE = re.compile(r"data_\d{6}")
+
+# Starting with known Eiger2 module sizes
+KNOWN_MODULE_SLOW_FAST_DIMS = {
+    (4362, 4148),
+    (3262, 3108),
+    (2162, 2068),
+    (1062, 1028),
+    (512, 4148),
+    (512, 2068),
+    (512, 1028),
+}
+# Now include known Eiger1 module sizes
+KNOWN_MODULE_SLOW_FAST_DIMS.update(
+    {
+        (514, 1030),
+        (1065, 1030),
+        (2167, 2070),
+        (3269, 3110),
+        (4371, 4150),
+    }
+)
+
+KNOWN_MODULE_FAST_SLOW_DIMS = {shape[::-1] for shape in KNOWN_MODULE_SLOW_FAST_DIMS}
 
 
 class FormatNXmxEigerFilewriter(FormatNXmx):
@@ -49,15 +74,21 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         if nxdetector.underload_value is None:
             nxdetector.underload_value = 0
 
-        # older firmware versions had the detector dimensions inverted
-        fw_version_string = (
-            fh["/entry/instrument/detector/detectorSpecific/eiger_fw_version"][()]
-            .decode()
-            .replace("release-", "")
-        )
-        if version.parse("2022.1.2") > version.parse(fw_version_string):
-            for module in nxdetector.modules:
+        # Some firmware versions had the detector dimensions swapped. The correct way
+        # is the number of pixels along the slow axis first, then the fast axis. Here
+        # swap any that look like they are (fast, slow) instead.
+        for module in nxdetector.modules:
+            if (tuple(module.data_size)) in KNOWN_MODULE_FAST_SLOW_DIMS:
                 module.data_size = module.data_size[::-1]
+
+        # Fail if we find an unknown Eiger module size
+        try:
+            assert tuple(module.data_size) in KNOWN_MODULE_SLOW_FAST_DIMS
+        except AssertionError:
+            raise ValueError(
+                f"Unknown Eiger module size: {module.data_size}, please report to {author_email}"
+            )
+
         return nxmx_obj
 
     def get_raw_data(self, index):
