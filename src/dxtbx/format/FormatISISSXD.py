@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import List, Tuple
+
 import h5py
 import numpy as np
 
@@ -177,10 +179,10 @@ class FormatISISSXD(FormatHDF5):
                 (-62.876000000000005, 96.0, 236.46999999999997),
                 (-224.999, 96.0, 96.0),
                 (-213.065, 96.0, -120.017),
-                (260.974, -118.56599999999997, -96.0),
-                (96.0, -118.56599999999997, 260.974),
+                (258.86499037, -123.10256614, -96.0),
+                (96.0, -123.10256614147632, 258.86499037410107),
                 (-258.78, -123.05699999999999, 96.0),
-                (-96.0, -118.56599999999997, -260.974),
+                (-99.0, -123.10256614147632, -258.86499037410107),
                 (96.0, -278.0, 96.0),
             )
 
@@ -234,10 +236,10 @@ class FormatISISSXD(FormatHDF5):
                 (0.0, -1.0, 0.0),
                 (0.0, -1.0, 0.0),
                 (0.0, -1.0, 0.0),
-                (-0.695, -0.719, 0.0),
-                (0.0, -0.719, -0.695),
+                (-0.70744243, -0.70676107, 0.0),
+                (0.0, -0.7067610703435333, -0.7074424283620987),
                 (0.707, -0.707, 0.0),
-                (0.0, -0.719, 0.695),
+                (0.0, -0.7067610703435333, 0.7074424283620987),
                 (-0.0, 0.0, -1.0),
             )
 
@@ -338,7 +340,10 @@ class FormatISISSXD(FormatHDF5):
 
     def get_scan(self, index=None) -> Scan:
         image_range = (1, self.get_num_images())
-        properties = {"time_of_flight": self._get_time_of_flight()}
+        properties = {
+            "time_of_flight": self._get_time_of_flight(),
+            "time_of_flight_bin_widths": self._get_time_channel_bin_widths(),
+        }
         return ScanFactory.make_scan_from_properties(
             image_range=image_range, properties=properties
         )
@@ -349,7 +354,11 @@ class FormatISISSXD(FormatHDF5):
             "time_of_flight"
         ][:]
 
-    def _get_time_of_flight(self) -> tuple[float]:
+    def _get_time_channel_bin_widths(self) -> List[float]:
+        bins = self._get_time_channel_bins()
+        return tuple([float((bins[i + 1] - bins[i])) for i in range(len(bins) - 1)])
+
+    def _get_time_of_flight(self) -> Tuple[float]:
         # (usec)
         bins = self._get_time_channel_bins()
         return tuple(
