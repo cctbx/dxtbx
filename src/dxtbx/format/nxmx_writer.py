@@ -159,7 +159,9 @@ class NXmxWriter:
         f = self.handle
         f.attrs["NX_class"] = "NXroot"
         f.attrs["file_name"] = os.path.basename(output_file_name)
-        f.attrs["file_time"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        f.attrs["file_time"] = datetime.datetime.now(datetime.UTC).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
         f.attrs["HDF5_Version"] = h5py.version.hdf5_version
         entry = f.create_group("entry")
         entry.attrs["NX_class"] = "NXentry"
