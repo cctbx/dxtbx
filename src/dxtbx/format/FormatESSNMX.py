@@ -74,14 +74,14 @@ class FormatESSNMX(FormatHDF5):
             if self._raw_data is None:
                 self._load_raw_data()
             for panel in self._raw_data:
-                data = panel[:, :, index : index + 1]
+                data = panel[:, :, index : index + 1].astype(np.int32)
                 data.reshape(flex.grid(panel.all()[0], panel.all()[1]))
                 data.matrix_transpose_in_place()
                 raw_data.append(data)
 
         else:
             for panel in self._get_panels():
-                spectra = panel["data"][...]
+                spectra = panel["data"][...][:, :, index].astype(np.int32)
                 raw_data.append(flumpy.from_numpy(np.ascontiguousarray(spectra)))
 
         return tuple(raw_data)
