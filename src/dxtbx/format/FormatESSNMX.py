@@ -280,51 +280,6 @@ class FormatESSNMX(FormatHDF5):
             image_range=image_range, properties=properties
         )
 
-    def get_flattened_data(
-        self, image_range: None | tuple = None, scale_data: bool = True
-    ) -> tuple[flex.int]:
-        """
-        Image data summed along the time-of-flight direction
-        """
-        max_val = None
-        raw_data = []
-        for panel in self._get_panels():
-            panel_data = panel["data"][...]
-            if image_range is not None:
-                assert (
-                    len(image_range) == 2
-                ), "expected image_range to be only two values"
-                assert (
-                    image_range[0] >= 0 and image_range[0] < image_range[1]
-                ), "image_range[0] out of range"
-                panel_data = np.sum(
-                    panel_data[:, :, image_range[0] : image_range[1]], axis=2
-                ).T
-            else:
-                panel_data = np.sum(panel_data, axis=2).T
-            panel_max_val = np.max(panel_data)
-            if max_val is None or max_val < panel_max_val:
-                max_val = panel_max_val
-            raw_data.append(panel_data)
-
-        if scale_data:
-            return tuple([(i / max_val).tolist() for i in raw_data])
-
-        return tuple([i.tolist() for i in raw_data])
-
-    # def get_flattened_pixel_data(
-    #     self, panel_idx: int, x: int, y: int
-    # ) -> tuple[tuple, tuple]:
-    #     time_channels = self._get_time_of_flight()
-    #     panel_size = self._get_image_size()
-    #     height = panel_size[1]
-    #     total_pixels = panel_size[0] * panel_size[1]
-    #     idx = (panel_idx * total_pixels) + panel_idx + x * height + y
-    #     return (
-    #         time_channels,
-    #         tuple(self._nxs_file["NMX_data/detector_1/counts"][0, idx, :].tolist()),
-    #     )
-
     def get_proton_charge(self) -> float:
         """McStas Simulations don't have a proton charge
         so this is a calculated value"""
