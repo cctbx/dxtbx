@@ -43,7 +43,7 @@ class FormatESSNMX(FormatHDF5):
         def get_name(image_file):
             try:
                 with h5py.File(image_file, "r") as handle:
-                    return handle["NMX_data"].attrs["name"]
+                    return handle["entry/instrument/name"][...].item().decode()
             except (OSError, KeyError, AttributeError):
                 return ""
 
@@ -57,12 +57,8 @@ class FormatESSNMX(FormatHDF5):
 
     def _load_raw_data(self) -> None:
         raw_data = []
-        image_size = self._get_image_size()
-        # total_pixels = image_size[0] * image_size[1]
-        num_images = self.get_num_images()
-        for i in range(self._get_num_panels()):
-            spectra = self._nxs_file["NMX_data"]["detector_1"]["counts"][i, :, :]
-            spectra = np.reshape(spectra, (image_size, num_images))
+        for panel in self._get_panels():
+            spectra = panel["data"][...]
             raw_data.append(flumpy.from_numpy(np.ascontiguousarray(spectra)))
 
         self._raw_data = tuple(raw_data)
@@ -71,7 +67,7 @@ class FormatESSNMX(FormatHDF5):
         self, index: int, use_loaded_data: bool = False
     ) -> tuple[flex.int]:
         raw_data = []
-        image_size = self._get_image_size()
+        # image_size = self._get_image_size()
         # total_pixels = image_size[0] * image_size[1]
 
         if use_loaded_data:
@@ -84,24 +80,18 @@ class FormatESSNMX(FormatHDF5):
                 raw_data.append(data)
 
         else:
-            for i in range(self._get_num_panels()):
-                # spectra = self._nxs_file["NMX_data"]["detector_1"]["counts"][
-                #     0, total_pixels * i : total_pixels * (i + 1), index : index + 1
-                # ]
-                spectra = self._nxs_file["NMX_data"]["detector_1"]["counts"][
-                    i, :, index
-                ]
-                spectra = np.reshape(spectra, image_size)
+            for panel in self._get_panels():
+                spectra = panel["data"][...]
                 raw_data.append(flumpy.from_numpy(np.ascontiguousarray(spectra)))
 
         return tuple(raw_data)
 
     def _get_time_channel_bins(self) -> list[float]:
         # (usec)
-        if np.ndim(self._nxs_file["NMX_data"]["detector_1"]["t_bin"][:]) == 1:
-            return self._nxs_file["NMX_data"]["detector_1"]["t_bin"][:] * 10**6
-        else:
-            return self._nxs_file["NMX_data"]["detector_1"]["t_bin"][1] * 10**6
+        # the tofs are recorded separately per panel but they
+        # should all be the same
+        for panel in self._get_panels():
+            return panel["time_of_flight"][...] * 1e6
 
     def _get_time_of_flight(self) -> list[float]:
         # (usec)
@@ -112,37 +102,31 @@ class FormatESSNMX(FormatHDF5):
         return len(self._get_time_of_flight())
 
     def get_detector(self, index: int = None) -> Detector:
-        num_panels = self._get_num_panels()
         panel_names = self._get_panel_names()
         panel_type = self._get_panel_type()
-        image_size = self._get_image_size()
         trusted_range = self._get_panel_trusted_range()
         pixel_size = self._get_pixel_size()
-        fast_axes = self._get_panel_fast_axes()
-        slow_axes = self._get_panel_slow_axes()
-        panel_origins = self._get_panel_origins()
         gain = self._get_panel_gain()
-        panel_projections = self._get_panel_projections_2d()
         detector = Detector()
         root = detector.hierarchy()
-
-        for i in range(num_panels):
+        panels = self._get_panels()
+        panel_projections = self._get_panel_projections_2d(panels)
+        for panel_dset, panel_name in zip(panels, panel_names):
             panel = root.add_panel()
             panel.set_type(panel_type)
-            panel.set_name(panel_names[i])
-            panel.set_image_size(image_size)
+            panel.set_name(panel_name)
+            panel.set_image_size(
+                self._get_image_size(panel_dset)
+            )  # XXX fix to include detectors possibly not being the same size
             panel.set_trusted_range(trusted_range)
             panel.set_pixel_size(pixel_size)
-            # old_origin = np.array(panel_origins[i])
-            # fast_axis = np.array(fast_axes[i])
-            # slow_axis = np.array(slow_axes[i])
-            # New_origin = tuple(old_origin + slow_axis* 0.4 * 1280 + fast_axis* 0.4 * 1280)
-            # fast_axis = tuple(fast_axis)
-            # slow_axis = tuple(slow_axis)
-            # panel.set_local_frame(fast_axis, slow_axis, New_origin)
-            panel.set_local_frame(fast_axes[i], slow_axes[i], panel_origins[i])
+            fast_axis = self._get_panel_fast_axes(panel_dset)
+            slow_axis = self._get_panel_slow_axes(panel_dset)
+            panel_origin = self._get_panel_origins(panel_dset)
+            panel.set_local_frame(fast_axis, slow_axis, panel_origin)
 
             panel.set_gain(gain)
+            i = int(panel_name[-1])
             r, t = panel_projections[i]
             r = tuple(map(int, r))
             t = tuple(map(int, t))
@@ -151,18 +135,35 @@ class FormatESSNMX(FormatHDF5):
         return detector
 
     def _get_num_panels(self) -> int:
-        num_rows = self._nxs_file["NMX_data"]["NXdetector"]["fast_axis"].shape
-        return num_rows[0]
+        return len(self._get_panels())
+
+    def _get_panels(self) -> list[h5py._hl.group.Group]:
+        """get the detector panel locations in file"""
+        panels = []
+        inst_dset = self._nxs_file["/entry/instrument/"]
+        for _, dset in inst_dset.items():
+            if dset.attrs.get("NX_class") == "NXdetector":
+                panels.append(dset)
+        return panels
 
     def _get_panel_names(self) -> list[str]:
-        return ["%02d" % (i + 1) for i in range(self._get_num_panels())]
+        panel_names = []
+        inst_dset = self._nxs_file["/entry/instrument/"]
+        for name, dset in inst_dset.items():
+            if dset.attrs.get("NX_class") == "NXdetector":
+                panel_names.append(name)
+        return panel_names
+
+    def _get_panel_name(self, panel) -> str:
+        return panel.name.split("/")[-1]
 
     def _get_panel_type(self) -> str:
-        return "SENSOR_PAD"
+        return "Triple_GEM_Gd"
 
-    def _get_image_size(self) -> tuple[int, int]:
+    def _get_image_size(self, panel) -> tuple[int, int]:
         # (px)
-        return (1280, 1280)
+        dset = panel["data"]
+        return dset[:, :, 0].shape
 
     def _get_panel_trusted_range(self) -> tuple[int, int]:
         # 4 * 1280**2 plus buffer
@@ -172,35 +173,39 @@ class FormatESSNMX(FormatHDF5):
         # (mm)
         return (0.4, 0.4)
 
-    def _get_panel_fast_axes(self) -> tuple[tuple[float, float, float]]:
+    def _get_panel_fast_axes(self, panel) -> tuple[float, float, float]:
         # return ((1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.0, -1.0))
-        fast_axes = self._nxs_file["NMX_data/NXdetector"]["fast_axis"][:]
-        return (tuple(fast_axes[0]), tuple(fast_axes[1]), tuple(fast_axes[2]))
+        fast_axis = panel["fast_axis"][...]
+        return tuple(fast_axis)
 
-    def _get_panel_slow_axes(self) -> tuple[tuple[float, float, float]]:
+    def _get_panel_slow_axes(self, panel) -> tuple[float, float, float]:
         # return ((0.0, 1.0, 0.0), (0.0, 1.0, 0.0), (0.0, 1.0, 0.0))
-        slow_axes = self._nxs_file["NMX_data/NXdetector"]["slow_axis"][:]
-        return (tuple(slow_axes[0]), tuple(slow_axes[1]), tuple(slow_axes[2]))
+        slow_axis = panel["slow_axis"][...]
+        return tuple(slow_axis)
 
-    def _get_panel_origins(self) -> tuple[tuple[float, float, float]]:
+    def _get_panel_origins(self, panel) -> tuple[float, float, float]:
         # (mm)
         # return ((-250, -250.0, -292.0), (290, -250.0, -250), (-290, -250.0, 250.0))
 
-        origin = self._nxs_file["NMX_data/NXdetector"]["origin"][:] * 1000
-        corrfact = np.array([[0, -256, -256], [-256.0, -256.0, 0], [0, -256, 256]])
+        origin = panel["origin"][...]
+        panelnum = int(panel.name[-1])
+        origin *= 1000  # convert to mm
+        corrfact = self._get_correction_factor()[panelnum]
 
         corrorg = origin + corrfact
-        return (tuple(corrorg[0]), tuple(corrorg[1]), tuple(corrorg[2]))
-        # return (tuple(origin[0]),tuple(origin[1]),tuple(origin[2]))
+        return tuple(corrorg)
 
-    def _get_panel_projections_2d(self) -> dict[int : tuple[tuple, tuple]]:
-        p_w, p_h = self._get_image_size()
+    def _get_correction_factor(self):
+        return np.array([[0, -256, -256], [-256.0, -256.0, 0], [0, -256, 256]])
+
+    def _get_panel_projections_2d(self, panels) -> dict[int : tuple[tuple, tuple]]:
+        p_w, p_h = self._get_image_size(panels[0])  # XXX fix later
         p_w += 10
         p_h += 10
         panel_pos = {
-            0: ((-1, 0, 0, -1), (p_h, 0)),
-            1: ((-1, 0, 0, -1), (p_h, p_w)),
-            2: ((-1, 0, 0, -1), (p_h, -p_w)),
+            int(panels[0].name[-1]): ((-1, 0, 0, -1), (p_h, 0)),
+            int(panels[1].name[-1]): ((-1, 0, 0, -1), (p_h, p_w)),
+            int(panels[2].name[-1]): ((-1, 0, 0, -1), (p_h, -p_w)),
         }
 
         return panel_pos
@@ -221,16 +226,28 @@ class FormatESSNMX(FormatHDF5):
 
     def _get_wavelength_range(self) -> tuple[float, float]:
         # (A)
-        return (1.8, 3.55)
+        tofs = np.array(self._get_time_of_flight()) / 1e6
+        tof_low = tofs[0]
+        tof_high = tofs[-1]
+        lambda_low = self._tof_to_lambda(tof_low)
+        lambda_high = self._tof_to_lambda(tof_high)
+        return (round(lambda_low, 2), round(lambda_high, 2))
+
+    def _tof_to_lambda(self, tof):
+        """given tof in s, return lambda in Angstrom"""
+        neutron_mass = 1.67492749804e-27
+        h = 6.62607015e-34
+        distance = self._get_sample_to_source_distance() / 1000  # convert to m
+        return h / (neutron_mass * (distance / tof)) * 1e10
 
     def _get_sample_to_source_distance(self) -> float:
         """get sample to source distance in mm"""
         try:
-            dist = abs(self._nxs_file["NMX_data/NXsource/distance"][...]) * 1000
+            dist = abs(self._nxs_file["entry/instrument/source/distance"][...]) * 1000
             return dist
         except (KeyError, ValueError):
             logger.warning("sample to moderator_distance not found, using dummy value")
-            return 157406
+            return 156714
 
     def _get_panel_gain(self) -> float:
         return 1.0
@@ -254,7 +271,7 @@ class FormatESSNMX(FormatHDF5):
 
     def get_goniometer_orientations(self) -> tuple[float, float, float]:
         # Angles in deg along x, y, z
-        return self._nxs_file["NMX_data/NXsample/crystal_rotation"][...]
+        return self._nxs_file["entry/sample/crystal_rotation"][...]
 
     def get_scan(self, index=None) -> Scan:
         image_range = (1, self.get_num_images())
@@ -269,19 +286,10 @@ class FormatESSNMX(FormatHDF5):
         """
         Image data summed along the time-of-flight direction
         """
-
-        panel_size = self._get_image_size()
-        total_pixels = panel_size[0] * panel_size[1]
         max_val = None
-        num_tof_bins = len(self._get_time_channel_bins()) - 1
         raw_data = []
-        for panel_idx in range(self._get_num_panels()):
-            panel_data = self._nxs_file["NMX_data"]["detector_1"]["counts"][
-                0, total_pixels * panel_idx : total_pixels * (panel_idx + 1), :
-            ]
-            panel_data = np.reshape(
-                panel_data, (panel_size[0], panel_size[1], num_tof_bins)
-            )
+        for panel in self._get_panels():
+            panel_data = panel["data"][...]
             if image_range is not None:
                 assert (
                     len(image_range) == 2
@@ -289,11 +297,9 @@ class FormatESSNMX(FormatHDF5):
                 assert (
                     image_range[0] >= 0 and image_range[0] < image_range[1]
                 ), "image_range[0] out of range"
-                assert image_range[1] <= num_tof_bins, "image_range[1] out of range"
                 panel_data = np.sum(
                     panel_data[:, :, image_range[0] : image_range[1]], axis=2
                 ).T
-
             else:
                 panel_data = np.sum(panel_data, axis=2).T
             panel_max_val = np.max(panel_data)
@@ -306,18 +312,22 @@ class FormatESSNMX(FormatHDF5):
 
         return tuple([i.tolist() for i in raw_data])
 
-    def get_flattened_pixel_data(
-        self, panel_idx: int, x: int, y: int
-    ) -> tuple[tuple, tuple]:
-        time_channels = self._get_time_of_flight()
-        panel_size = self._get_image_size()
-        height = panel_size[1]
-        total_pixels = panel_size[0] * panel_size[1]
-        idx = (panel_idx * total_pixels) + panel_idx + x * height + y
-        return (
-            time_channels,
-            tuple(self._nxs_file["NMX_data/detector_1/counts"][0, idx, :].tolist()),
-        )
+    # def get_flattened_pixel_data(
+    #     self, panel_idx: int, x: int, y: int
+    # ) -> tuple[tuple, tuple]:
+    #     time_channels = self._get_time_of_flight()
+    #     panel_size = self._get_image_size()
+    #     height = panel_size[1]
+    #     total_pixels = panel_size[0] * panel_size[1]
+    #     idx = (panel_idx * total_pixels) + panel_idx + x * height + y
+    #     return (
+    #         time_channels,
+    #         tuple(self._nxs_file["NMX_data/detector_1/counts"][0, idx, :].tolist()),
+    #     )
 
     def get_proton_charge(self) -> float:
-        return self._nxs_file["NMX_data"]["proton_charge"][...]
+        """McStas Simulations don't have a proton charge
+        so this is a calculated value"""
+        return self._nxs_file["entry/metadata/mcstas_weight2count_scale_factor"][
+            ...
+        ].item()
