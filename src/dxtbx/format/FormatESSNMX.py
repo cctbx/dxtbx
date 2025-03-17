@@ -81,7 +81,7 @@ class FormatESSNMX(FormatHDF5):
 
         else:
             for panel in self._get_panels():
-                spectra = panel["data"][...][:, :, index].astype(np.int32)
+                spectra = panel["data"][:, :, index].astype(np.int32)
                 raw_data.append(flumpy.from_numpy(np.ascontiguousarray(spectra)))
 
         return tuple(raw_data)
