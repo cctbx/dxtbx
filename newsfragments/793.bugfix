@@ -1,1 +1,0 @@
-``FormatNXmxEigerFilewriter``: rather than relying on a firmware version check to decide whether to swap image dimensions (which can break), do this by a lookup table.

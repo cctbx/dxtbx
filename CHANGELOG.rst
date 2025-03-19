@@ -1,3 +1,47 @@
+dxtbx 3.24.0 (2025-03-19)
+=========================
+
+Features
+--------
+
+- Add support for reading the detector gain for nexus files (`#756 <https://github.com/cctbx/dxtbx/issues/756>`_)
+- ``dials.import``: add a progress bar for the import process, particularly
+  useful when importing thousands of files (`#768 <https://github.com/cctbx/dxtbx/issues/768>`_)
+- Add ``FormatSMVADSCCetaD`` to allow easier processing of 3DED images from the Ceta-D detector, which have been converted to SMV. (`#770 <https://github.com/cctbx/dxtbx/issues/770>`_)
+- ``FormatROD_Arc``: Support for Rigaku HyPix-Arc 100° and 150° curved detectors (`#787 <https://github.com/cctbx/dxtbx/issues/787>`_)
+
+
+Bugfixes
+--------
+
+- Do not try to resolve file paths if they are not accessible. (`#772 <https://github.com/cctbx/dxtbx/issues/772>`_)
+- ``dials.import``: force tqdm output to stdout not stderr as default (`#773 <https://github.com/cctbx/dxtbx/issues/773>`_)
+- ``dials.show``: hide tqdm if DIALS_NOBANNER (`#774 <https://github.com/cctbx/dxtbx/issues/774>`_)
+- ``dials.import``: set tqdm output to stdout (again) (`#775 <https://github.com/cctbx/dxtbx/issues/775>`_)
+- Fix ``DeprecationWarning``s raised during tests (`#788 <https://github.com/cctbx/dxtbx/issues/788>`_)
+- ``dials.import``: Reduce excessive memory usage when importing many (>100s) FormatNXMX files. (`#789 <https://github.com/cctbx/dxtbx/issues/789>`_)
+- ``FormatNXmxEigerFilewriter``: rather than relying on a firmware version check to decide whether to swap image dimensions (which can break), do this by a lookup table. (`#793 <https://github.com/cctbx/dxtbx/issues/793>`_)
+- Switch from using unmaintained ``orderedset`` to ``ordered_set`` (`#796 <https://github.com/cctbx/dxtbx/issues/796>`_)
+
+
+Improved Documentation
+----------------------
+
+- The user support mailing list is now dials-user-group@jiscmail.net (`#795 <https://github.com/cctbx/dxtbx/issues/795>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Python 3.10 is now the minimum required (`#769 <https://github.com/cctbx/dxtbx/issues/769>`_)
+
+
+Misc
+----
+
+- `#197 <https://github.com/cctbx/dxtbx/issues/197>`_, `#767 <https://github.com/cctbx/dxtbx/issues/767>`_, `#797 <https://github.com/cctbx/dxtbx/issues/797>`_, `#978 <https://github.com/cctbx/dxtbx/issues/978>`_
+
+
 dxtbx 3.22.0 (2024-10-15)
 =========================
 
