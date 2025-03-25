@@ -153,6 +153,8 @@ class FormatROD(Format):
             # FIXME: I don't know what these are. Isn't the beam along e1 by definition??
             beam_rotn_around_e2, beam_rotn_around_e3 = struct.unpack("<dd", f.read(16))
             alpha1_wavelength = struct.unpack("<d", f.read(8))[0]
+            alpha2_wavelength = struct.unpack("<d", f.read(8))[0]
+            alpha12_wavelength = struct.unpack("<d", f.read(8))[0]
             f.seek(offset + general_nbytes + special_nbytes + 640)
             # detector rotation in degrees along e1, e2, e3
             detector_rotns = struct.unpack("<ddd", f.read(24))
@@ -187,6 +189,8 @@ class FormatROD(Format):
             "beam_rotn_around_e2": beam_rotn_around_e2,
             "beam_rotn_around_e3": beam_rotn_around_e3,
             "alpha1_wavelength": alpha1_wavelength,
+            "alpha2_wavelength": alpha2_wavelength,
+            "alpha12_wavelength": alpha12_wavelength,
             "detector_rotns": detector_rotns,
             "origin_px_x": origin_px_x,
             "origin_px_y": origin_px_y,
@@ -286,7 +290,7 @@ class FormatROD(Format):
         return Format.get_beam(self)
 
     def _beam(self):
-        wavelength = self._bin_header["alpha1_wavelength"]
+        wavelength = self._bin_header["alpha12_wavelength"]
         if wavelength <= 0.05:
             probe = Probe.electron
         else:
