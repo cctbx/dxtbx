@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import sys
 from multiprocessing import Pool, cpu_count
 from os.path import join
-from sys import argv
 
 import h5py
 import numpy as np
@@ -73,6 +73,7 @@ class FormatMANDI(FormatHDF5):
                 ],
                 panel_size,
             ).T
+            # spectra = self.nxs_file[self._base_entry][f"{panel_name}_events"]["spectra"]
             raw_data.append(flumpy.from_numpy(np.ascontiguousarray(spectra)))
 
         return tuple(raw_data)
@@ -421,15 +422,21 @@ class FormatMANDI(FormatHDF5):
             output_path = join(base_dir, panel_name)
             output_path = join(output_path, spectra_output_name)
             print(f"Writing spectra to {output_path}")
+            if nxs_file.get(output_path):
+                print(f"deleting {output_path}...")
+                del nxs_file[output_path]
             panel_spectra = FormatMANDI.generate_histogram_data_for_panel(
                 nxs_file, tof_bins, panel_size, panel_name, nproc
             )
+
             nxs_file.create_dataset(output_path, data=panel_spectra, compression="gzip")
             if remove_event_data:
                 delete_event_data(nxs_file, base_dir, panel_name)
                 print(f"Removed event data for {panel_name}")
             if write_tof_bins and not written_tof_bins:
                 tof_path = join(base_dir, "time_of_flight")
+                if nxs_file.get(tof_path):
+                    del nxs_file[tof_path]
                 print(f"Writing time of flight bins to {tof_path}")
                 nxs_file.create_dataset(tof_path, data=tof_bins, compression="gzip")
                 written_tof_bins = True
@@ -583,7 +590,7 @@ class FormatMANDI(FormatHDF5):
         min_tof = min_tof - padding
         max_tof = max_tof + padding
         print(
-            f"Time of flight range for {nxs_file}: {round(min_tof,3)} - {round(max_tof,3)} (usec)"
+            f"Time of flight range for {nxs_file}: {round(min_tof, 3)} - {round(max_tof, 3)} (usec)"
         )
         num_bins = int((max_tof - min_tof) / delta_tof)
         return np.linspace(min_tof, max_tof, num_bins)
@@ -606,5 +613,9 @@ class FormatMANDI(FormatHDF5):
 
 
 if __name__ == "__main__":
-    for arg in argv[1:]:
-        print(FormatMANDI.understand(arg))
+    nxs_file = sys.argv[1]
+    remove_event_data = False
+    delta_tof = 50  # usec
+    FormatMANDI.add_histogram_data_to_nxs_file(
+        nxs_file_path=nxs_file, remove_event_data=remove_event_data, delta_tof=delta_tof
+    )
