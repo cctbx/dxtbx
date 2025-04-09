@@ -1,1 +1,2 @@
-Change dxtbx tests to use publicly-available data on dials-data
+- Change dxtbx tests to use publicly-available data on dials-data
+- ``FormatRAXIS``: Allow the possibility of reading compressed files
