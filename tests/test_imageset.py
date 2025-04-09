@@ -19,8 +19,6 @@ from dxtbx.model import Beam, Detector, Panel
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
 
-from . import imagelist
-
 
 @pytest.mark.parametrize(
     "indices,expected_call_count,lazy",
@@ -47,47 +45,10 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
         iset.reader().nullify_format_instance()
 
 
-@pytest.mark.parametrize(
-    "image",
-    imagelist.smv_images
-    + imagelist.tiff_images
-    + imagelist.cbf_multitile_images
-    + imagelist.cbf_images,
-    ids=(
-        imagelist.smv_image_ids
-        + imagelist.tiff_image_ids
-        + imagelist.cbf_multitile_image_ids
-        + imagelist.cbf_image_ids
-    ),
-)
-def test_format(dials_regression, image):
-    print(image)
-    image = os.path.join(dials_regression, *(image.split("/")))
-    format_class = dxtbx.format.Registry.get_format_class_for_file(image)
-    reader = format_class.get_reader()([image])
-
-    N = len(reader)
-
-    for i in range(N):
-        reader.read(i)
-
-    assert format_class.get_imageset([image])
-
-
-@pytest.fixture(scope="session")
-def image_examples(dials_data):
-    return [
-        str(dials_data("image_examples", pathlib=True) / e)
-        for e in [
-            "ThermoFisher_EPU-D_1.5_001.mrc.gz",
-            "Gatan_float32_zero_array_001.dm4.gz",
-        ]
-    ]
-
-
-def test_other_formats(image_examples):
-    """Test additional image examples in dials_data, not dials_regression"""
-    for image in image_examples:
+def test_format(dials_data):
+    """Test that we can read examples of various image formats"""
+    data_dir = dials_data("image_examples", pathlib=True)
+    for image in data_dir:
         format_class = dxtbx.format.Registry.get_format_class_for_file(image)
         reader = format_class.get_reader()([image])
 
