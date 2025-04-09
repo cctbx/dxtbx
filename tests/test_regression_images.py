@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import bz2
 import gzip
-import os
 import shutil
 from pathlib import Path
 
@@ -99,16 +98,11 @@ def test_detectorbase(test_image):
 
 @pytest.mark.regression
 @pytest.mark.parametrize("test_image", _files)
-def test_read_image(test_image, dials_regression):
+def test_read_image(test_image):
     """Test that all the regression images can be read"""
 
     if not h5py and test_image.endswith((".h5", ".nxs")):
         pytest.skip("could not import 'h5py'")
-
-    if dials_regression:
-        test_image = os.path.join(
-            dials_regression, "image_examples", *test_image.split("/")
-        )
 
     format_instance = dxtbx.format.Registry.get_format_class_for_file(test_image)
     print("Reading", test_image)
@@ -152,7 +146,7 @@ def test_read_image(test_image, dials_regression):
 
 
 @pytest.mark.parametrize("test_image", _files)
-def test_format_class_API_assumptions(test_image, dials_regression):
+def test_format_class_API_assumptions(test_image):
     """For a given image file, walk the whole DAG of Format objects, and
     verify the following basic assumptions for format classes:
     * Any file must only be understood by a single leaf node format class.
@@ -161,11 +155,6 @@ def test_format_class_API_assumptions(test_image, dials_regression):
     """
     if not h5py and test_image.endswith((".h5", ".nxs")):
         pytest.skip("could not import 'h5py'")
-
-    if dials_regression:
-        test_image = os.path.join(
-            dials_regression, "image_examples", *test_image.split("/")
-        )
 
     dag = dxtbx.format.Registry.get_format_class_dag()
 
