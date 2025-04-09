@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import os
 import pickle
 import shutil
 from unittest import mock
@@ -636,9 +635,9 @@ def test_multi_panel_gain_map(dials_data):
         (True, 120),
     ),
 )
-def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
-    image_path = os.path.join(
-        dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
+def test_multi_panel(multi_panel, expected_panel_count, dials_data):
+    image_path = str(
+        dials_data("image_examples", pathlib=True) / "DLS_I23-germ_13KeV_0001.cbf.bz2"
     )
     experiments = ExperimentListFactory.from_filenames(
         [image_path], format_kwargs={"multi_panel": multi_panel}
