@@ -19,6 +19,8 @@ from dxtbx.model import Beam, Detector, Panel
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
 
+from . import imagelist
+
 
 @pytest.mark.parametrize(
     "indices,expected_call_count,lazy",
@@ -45,19 +47,19 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
         iset.reader().nullify_format_instance()
 
 
-def test_format(dials_data):
+# parametrize with the dials_data fixture
+@pytest.mark.parametrize("image", imagelist.image_examples)
+def test_format(image):
     """Test that we can read examples of various image formats"""
-    data_dir = dials_data("image_examples", pathlib=True)
-    for image in data_dir:
-        format_class = dxtbx.format.Registry.get_format_class_for_file(image)
-        reader = format_class.get_reader()([image])
+    format_class = dxtbx.format.Registry.get_format_class_for_file(image)
+    reader = format_class.get_reader()([image])
 
-        N = len(reader)
+    N = len(reader)
 
-        for i in range(N):
-            reader.read(i)
+    for i in range(N):
+        reader.read(i)
 
-        assert format_class.get_imageset([image])
+    assert format_class.get_imageset([image])
 
 
 def test_image_tile():
