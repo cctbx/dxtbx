@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-import os
 import random
 from pathlib import Path
 
@@ -82,10 +81,9 @@ def test_filecache():
     assert actual == expected
 
 
-def test_filecache_more(dials_regression):
-    filename = os.path.join(
-        dials_regression, "image_examples", "MacScience", "reallysurprise_001.ipf"
-    )
+def test_filecache_more(dials_data):
+    data_dir = dials_data("image_examples", pathlib=True)
+    filename = str(data_dir / "MacScience-reallysurprise_001.ipf")
     cache = dxtbx.filecache.lazy_file_cache(open(filename, "rb"))
     with dxtbx.filecache.pseudo_file(cache) as fh:
         fh.seek(3000 * 3000 * 2)
