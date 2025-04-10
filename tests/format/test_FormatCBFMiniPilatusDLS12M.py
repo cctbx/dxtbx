@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import calendar
-import os
 
 import pytest
 
@@ -49,9 +48,7 @@ n_pixels_vertical_gaps = 195 * 7 * 4 * 24
         ),
     ),
 )
-def test_bad_pixel_mask(
-    timestamp, multi_panel, masked_pixel_count, dials_regression, mocker
-):
+def test_bad_pixel_mask(timestamp, multi_panel, masked_pixel_count, dials_data, mocker):
     if timestamp is not None:
         # Fool the format class into masking out bad modules
         mocked_timestamp = mocker.patch(
@@ -59,8 +56,8 @@ def test_bad_pixel_mask(
         )
         mocked_timestamp.return_value = timestamp
 
-    image_path = os.path.join(
-        dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
+    image_path = str(
+        dials_data("image_examples", pathlib=True) / "DLS_I23-germ_13KeV_0001.cbf.bz2"
     )
     experiments = ExperimentListFactory.from_filenames(
         [image_path], format_kwargs={"multi_panel": multi_panel}

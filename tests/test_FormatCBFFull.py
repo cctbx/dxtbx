@@ -34,10 +34,12 @@ def test_multi_axis_goniometer(dials_regression):
     )
 
 
-def test_still(dials_regression):
-    data_dir = os.path.join(dials_regression, "image_examples", "DLS_I04")
+def test_still(dials_data):
+    data_dir = dials_data("image_examples", pathlib=True)
 
-    imgset = ImageSetFactory.new(os.path.join(data_dir, "grid_full_cbf_0005.cbf"))[0]
+    imgset = ImageSetFactory.new(str(data_dir / "DLS_I04-grid_full_cbf_0005.cbf.bz2"))[
+        0
+    ]
     if imgset.get_scan(0):
         scan = imgset.get_scan(0)
         assert approx_equal(
