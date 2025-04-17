@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import os
 import pickle
 import shutil
 from unittest import mock
@@ -47,22 +46,10 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
         iset.reader().nullify_format_instance()
 
 
-@pytest.mark.parametrize(
-    "image",
-    imagelist.smv_images
-    + imagelist.tiff_images
-    + imagelist.cbf_multitile_images
-    + imagelist.cbf_images,
-    ids=(
-        imagelist.smv_image_ids
-        + imagelist.tiff_image_ids
-        + imagelist.cbf_multitile_image_ids
-        + imagelist.cbf_image_ids
-    ),
-)
-def test_format(dials_regression, image):
-    print(image)
-    image = os.path.join(dials_regression, *(image.split("/")))
+# parametrize with the dials_data fixture
+@pytest.mark.parametrize("image", imagelist.image_examples)
+def test_format(image):
+    """Test that we can read examples of various image formats"""
     format_class = dxtbx.format.Registry.get_format_class_for_file(image)
     reader = format_class.get_reader()([image])
 
@@ -72,31 +59,6 @@ def test_format(dials_regression, image):
         reader.read(i)
 
     assert format_class.get_imageset([image])
-
-
-@pytest.fixture(scope="session")
-def image_examples(dials_data):
-    return [
-        str(dials_data("image_examples", pathlib=True) / e)
-        for e in [
-            "ThermoFisher_EPU-D_1.5_001.mrc.gz",
-            "Gatan_float32_zero_array_001.dm4.gz",
-        ]
-    ]
-
-
-def test_other_formats(image_examples):
-    """Test additional image examples in dials_data, not dials_regression"""
-    for image in image_examples:
-        format_class = dxtbx.format.Registry.get_format_class_for_file(image)
-        reader = format_class.get_reader()([image])
-
-        N = len(reader)
-
-        for i in range(N):
-            reader.read(i)
-
-        assert format_class.get_imageset([image])
 
 
 def test_image_tile():
@@ -673,9 +635,9 @@ def test_multi_panel_gain_map(dials_data):
         (True, 120),
     ),
 )
-def test_multi_panel(multi_panel, expected_panel_count, dials_regression):
-    image_path = os.path.join(
-        dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
+def test_multi_panel(multi_panel, expected_panel_count, dials_data):
+    image_path = str(
+        dials_data("image_examples", pathlib=True) / "DLS_I23-germ_13KeV_0001.cbf.bz2"
     )
     experiments = ExperimentListFactory.from_filenames(
         [image_path], format_kwargs={"multi_panel": multi_panel}
