@@ -1,0 +1,1 @@
+``dials.import``: Reduce excessive memory usage when importing many (>100s) FormatNXMX files.

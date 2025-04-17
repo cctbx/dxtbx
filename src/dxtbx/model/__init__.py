@@ -5,7 +5,7 @@ import json
 import os
 import sys
 
-from orderedset import OrderedSet
+from ordered_set import OrderedSet
 
 import boost_adaptbx.boost.python
 import cctbx.crystal
