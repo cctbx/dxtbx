@@ -462,6 +462,7 @@ protected:
     // Get the class name
     std::string name =
       boost::python::extract<std::string>(obj[0].attr("__class__").attr("__name__"))();
+
     // Read the image
     ImageBuffer buffer;
     if (name == "double") {
