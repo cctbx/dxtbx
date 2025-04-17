@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 from libtbx.test_utils import approx_equal
 from rstbx.cftbx import coordinate_frame_helpers
 
@@ -81,10 +79,9 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
     assert approx_equal(detector[0].get_origin(), converter.get_detector_origin())
 
 
-def test_to_xds_multi_panel_i23(dials_regression, tmpdir, mocker):
-    file_name = os.path.join(
-        dials_regression, "image_examples", "DLS_I23", "germ_13KeV_0001.cbf"
-    )
+def test_to_xds_multi_panel_i23(dials_data, tmpdir, mocker):
+    data_dir = dials_data("image_examples", pathlib=True)
+    file_name = str(data_dir / "DLS_I23-germ_13KeV_0001.cbf.bz2")
     sequence = ImageSetFactory.new([file_name])[0]
     to_xds = xds.to_xds(sequence)
     s1 = to_xds.XDS_INP()
