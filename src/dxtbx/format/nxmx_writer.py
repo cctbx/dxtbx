@@ -385,12 +385,10 @@ class NXmxWriter:
             assert len({p.get_thickness() for p in detector}) == 1
             det["sensor_material"] = detector[0].get_material()
         if self.params.detector.sensor_thickness:
-          thickness = self.params.detector.sensor_thickness
+            thickness = self.params.detector.sensor_thickness
         else:
-          thickness = detector[0].get_thickness()
-        self._create_scalar(
-            det, "sensor_thickness", "f", thickness * 1000
-        )
+            thickness = detector[0].get_thickness()
+        self._create_scalar(det, "sensor_thickness", "f", thickness * 1000)
         det["sensor_thickness"].attrs["units"] = "microns"
         if self.params.nexus_details.count_time is not None:
             self._create_scalar(
