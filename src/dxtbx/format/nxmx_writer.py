@@ -104,6 +104,18 @@ phil_scope = parse(
       .type = float
       .help = flux incident on beam plane in photons per second
   }
+  detector {
+    sensor_material = None
+      .type = str
+      .help = At times, radiation is not directly sensed by the detector. Rather, \
+              the detector might sense the output from some converter like a \
+              scintillator. This is the name of this converter material.
+    sensor_thickness = None
+      .type = float
+      .help = At times, radiation is not directly sensed by the detector. Rather, \
+              the detector might sense the output from some converter like a \
+              scintillator. This is the thickness of this converter material.
+  }
 """
 )
 
@@ -119,6 +131,7 @@ class NXmxWriter:
 
     def __init__(self, params, experiments=None, imageset=None):
         self.params = params
+        self.detector = None
         if experiments or imageset:
             self.setup(experiments, imageset)
         self.handle = None
@@ -365,12 +378,17 @@ class NXmxWriter:
         det["description"] = "Detector converted from DIALS models"
         det["depends_on"] = "/entry/instrument/detector/transformations/AXIS_RAIL"
         det["gain_setting"] = "auto"
-        assert len({p.get_material() for p in detector}) == 1
-        assert len({p.get_thickness() for p in detector}) == 1
-        det["sensor_material"] = detector[0].get_material()
-        self._create_scalar(
-            det, "sensor_thickness", "f", detector[0].get_thickness() * 1000
-        )
+        if self.params.detector.sensor_material:
+            det["sensor_material"] = self.params.detector.sensor_material
+        else:
+            assert len({p.get_material() for p in detector}) == 1
+            assert len({p.get_thickness() for p in detector}) == 1
+            det["sensor_material"] = detector[0].get_material()
+        if self.params.detector.sensor_thickness:
+            thickness = self.params.detector.sensor_thickness
+        else:
+            thickness = detector[0].get_thickness()
+        self._create_scalar(det, "sensor_thickness", "f", thickness * 1000)
         det["sensor_thickness"].attrs["units"] = "microns"
         if self.params.nexus_details.count_time is not None:
             self._create_scalar(
