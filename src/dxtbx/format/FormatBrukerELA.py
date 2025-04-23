@@ -65,7 +65,6 @@ class FormatBrukerELA(FormatBruker):
             scan_axis = 2  # "OMEGA" default
 
         # Axes here may be incorrect
-        # axis for the ED-1 prototype, in which the CHI angle is 267°
         axes = flex.vec3_double(((1, 0, 0), (0, 0, -1), (0, 1, 0)))
         omega -= 180
         angles = flex.double((phi, chi, omega))
@@ -87,7 +86,7 @@ class FormatBrukerELA(FormatBruker):
             4. bias
             5. full scale
         and the gain in ADU/X-ray is given by (e/photon) / (e/ADU).
-        It is not exactly clear what the gain is for an electron detector, but
+        It is not exactly clear what the gain is for this electron detector, but
         these files seem to set it to 1
         """
         ccdparm = self.header_dict["CCDPARM"].split()
@@ -143,7 +142,7 @@ class FormatBrukerELA(FormatBruker):
         # pixel-to-millimetre strategy and a very high mu value.
         for panel in detector:
             panel.set_gain(gain)
-            panel.set_thickness(0.450)
+            panel.set_thickness(0.450)  # Assume same as Eiger
             panel.set_material("Si")
             panel.set_px_mm_strategy(SimplePxMmStrategy())
             panel.set_mu(1e10)
@@ -186,9 +185,7 @@ class FormatBrukerELA(FormatBruker):
         # the understand method. Otherwise the user gets FormatBruker reading the
         # image improperly but without failing
         if self.header_dict["FORMAT"] != "100":
-            raise NotImplementedError(
-                "Only FORMAT 100 images from the ED-1 are currently supported"
-            )
+            raise NotImplementedError("Only FORMAT 100 images are currently supported")
 
         f = self.open_file(self._image_file, "rb")
         header_size = int(self.header_dict["HDRBLKS"]) * 512
