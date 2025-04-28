@@ -1,1 +1,1 @@
-Do not try to resolve file paths if they are not accessible.
+Fix issue where attempting to group experiments would fail if the source images are currently inaccessible. This caused failures in downstream tooling such as ``xia2.ssx_reduce``.
