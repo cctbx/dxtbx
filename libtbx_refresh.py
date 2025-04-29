@@ -21,23 +21,24 @@ except ModuleNotFoundError:
     pass
 
 
-def _find_package_metadata_dir(package_name: str):
-    """Find the metadata directory for a package, whether .egg-info or .dist-info."""
-    try:
-        # Use importlib.metadata to find the package distribution
-        dist = importlib.metadata.distribution(package_name)
-        # Get the metadata location
-        return Path(dist._path)
-    except importlib.metadata.PackageNotFoundError:
-        # Fall back to searching common locations
-        for site_dir in sys.path:
-            site_path = Path(site_dir)
-            # Look for both .dist-info and .egg-info
+def _find_site_packages_with_metadata(package_name: str, build_path: Path):
+    """
+    Find the site-packages directory containing the package metadata.
+    Returns the site-packages directory if metadata is found, None otherwise.
+    """
+    # Look for Python site-packages directories in the build path
+    for python_dir in build_path.glob("lib/python*"):
+        site_packages = python_dir / "site-packages"
+        if site_packages.exists():
+            # Look for both .dist-info and .egg-info directories
             for pattern in [f"{package_name}*.dist-info", f"{package_name}*.egg-info"]:
-                for metadata_dir in site_path.glob(pattern):
+                for metadata_dir in site_packages.glob(pattern):
                     if metadata_dir.exists():
-                        return metadata_dir
+                        # Return site-packages only if we actually found metadata
+                        return site_packages
+            # If no metadata found in this site-packages, continue searching
     return None
+
 
 
 def _install_setup_readonly_fallback(package_name: str):
@@ -53,21 +54,20 @@ def _install_setup_readonly_fallback(package_name: str):
 
     # Install this into a build/dxtbx subfolder
     build_path = abs(libtbx.env.build_path / package_name)
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "--prefix",
-            build_path,
-            "--no-build-isolation",
-            "--no-deps",
-            "-e",
-            root_path,
-        ],
-        check=True,
-    )
+    command = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--prefix",
+        build_path,
+        "--no-build-isolation",
+        "--no-deps",
+        "-e",
+        root_path,
+    ]
+    print('INSTALLING WITH ', ' '.join(command))
+    subprocess.run(command, check=True)
 
     # Get the actual environment being configured (NOT libtbx.env)
     env = _get_real_env_hack_hack_hack()
@@ -80,11 +80,11 @@ def _install_setup_readonly_fallback(package_name: str):
         env.pythonpath.insert(0, rel_path)
 
     # Make sure the metadata directory is also in the path if it's not in site-packages
-    metadata_dir = _find_package_metadata_dir(package_name)
+    metadata_dir = _find_site_packages_with_metadata(package_name, Path(build_path))
     if metadata_dir and metadata_dir.parent not in sys.path:
-        metadata_parent = libtbx.env.as_relocatable_path(str(metadata_dir.parent))
+        metadata_parent = libtbx.env.as_relocatable_path(str(metadata_dir))#.parent))
         if metadata_parent not in env.pythonpath:
-            env.pythonpath.append(metadata_parent)
+            env.pythonpath.insert(0, metadata_parent)
 
     # Update the sys.path so we can find the package in this process
     if import_path not in sys.path:
