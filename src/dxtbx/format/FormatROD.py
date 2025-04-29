@@ -20,12 +20,14 @@ import struct
 
 import numpy as np
 
+from scitbx import matrix
 from scitbx.array_family import flex
 from scitbx.math import r3_rotation_axis_and_angle_as_matrix
 
 from dxtbx.ext import uncompress_rod_TY6
 from dxtbx.format.Format import Format
 from dxtbx.model.beam import Probe
+from dxtbx.model.detector import Detector
 
 
 class FormatROD(Format):
@@ -151,6 +153,8 @@ class FormatROD(Format):
             # FIXME: I don't know what these are. Isn't the beam along e1 by definition??
             beam_rotn_around_e2, beam_rotn_around_e3 = struct.unpack("<dd", f.read(16))
             alpha1_wavelength = struct.unpack("<d", f.read(8))[0]
+            alpha2_wavelength = struct.unpack("<d", f.read(8))[0]
+            alpha12_wavelength = struct.unpack("<d", f.read(8))[0]
             f.seek(offset + general_nbytes + special_nbytes + 640)
             # detector rotation in degrees along e1, e2, e3
             detector_rotns = struct.unpack("<ddd", f.read(24))
@@ -185,6 +189,8 @@ class FormatROD(Format):
             "beam_rotn_around_e2": beam_rotn_around_e2,
             "beam_rotn_around_e3": beam_rotn_around_e3,
             "alpha1_wavelength": alpha1_wavelength,
+            "alpha2_wavelength": alpha2_wavelength,
+            "alpha12_wavelength": alpha12_wavelength,
             "detector_rotns": detector_rotns,
             "origin_px_x": origin_px_x,
             "origin_px_y": origin_px_y,
@@ -201,13 +207,13 @@ class FormatROD(Format):
 
         self._gonio_start_angles = (
             np.array(self._bin_header["start_angles_steps"])
-            * np.array(self._bin_header["step_to_rad"])
+            * np.nan_to_num(np.array(self._bin_header["step_to_rad"]))
             / np.pi
             * 180
         )
         self._gonio_end_angles = (
             np.array(self._bin_header["end_angles_steps"])
-            * np.array(self._bin_header["step_to_rad"])
+            * np.nan_to_num(np.array(self._bin_header["step_to_rad"]))
             / np.pi
             * 180
         )
@@ -284,7 +290,7 @@ class FormatROD(Format):
         return Format.get_beam(self)
 
     def _beam(self):
-        wavelength = self._bin_header["alpha1_wavelength"]
+        wavelength = self._bin_header["alpha12_wavelength"]
         if wavelength <= 0.05:
             probe = Probe.electron
         else:
@@ -480,6 +486,198 @@ class FormatROD(Format):
             opos += 1
 
         return ret
+
+
+class FormatROD_Arc(FormatROD):
+    @staticmethod
+    def understand(image_file):
+        offset = 256
+        general_nbytes = 512
+        with FormatROD_Arc.open_file(image_file, "rb") as f:
+            f.seek(offset + general_nbytes + 548)
+            detector_type = struct.unpack("<l", f.read(4))[0]
+            if detector_type in [12, 14]:
+                return True
+        return False
+
+    @staticmethod
+    def _read_binary_header(
+        image_file,
+        offset=256,
+        nbytes=5120,
+        general_nbytes=512,
+        special_nbytes=768,
+        km4gonio_nbytes=1024,
+        statistics_nbytes=512,
+        history_nbytes=2048,
+    ):
+        bh = FormatROD._read_binary_header(
+            image_file,
+            offset,
+            nbytes,
+            general_nbytes,
+            special_nbytes,
+            km4gonio_nbytes,
+            statistics_nbytes,
+            history_nbytes,
+        )
+
+        # Seek to the end of the standard version 3 header and into the
+        # extra camera parameters section
+        with FormatROD_Arc.open_file(image_file, "rb") as f:
+            f.seek(nbytes + 268)
+            ix, iy, nx, ny, gapx, gapy = struct.unpack("<hhhhhh", f.read(12))
+        assert ix in (2, 3)
+        assert iy == 1
+        assert nx == 385
+        assert ny == 775
+        assert gapx == 30
+        assert gapy == 0
+        bh["nx"] = nx
+        bh["ny"] = ny
+        bh["gap_px"] = gapx
+
+        return bh
+
+    def _detector(self):
+        """2 or 3 panel detector, each rotated 38° from its neighbour."""
+
+        theta_rad = self._gonio_start_angles[1] / 180 * np.pi
+        detector_rotns_rad = np.array(self._bin_header["detector_rotns"]) / 180 * np.pi
+        rot_e1 = np.array(
+            r3_rotation_axis_and_angle_as_matrix([0, 0, 1], detector_rotns_rad[0])
+        ).reshape(3, 3)  # clockwise along e1 = Z
+        rot_e2 = np.array(
+            r3_rotation_axis_and_angle_as_matrix([-1, 0, 0], detector_rotns_rad[1])
+        ).reshape(3, 3)  # ANTI-clockwise along e2 = X
+        rot_theta = np.array(
+            r3_rotation_axis_and_angle_as_matrix([0, -1, 0], theta_rad)
+        ).reshape(3, 3)  # ANTI-clockwise along e3 = Y
+        detector_axes = rot_theta.dot(rot_e2.dot(rot_e1))
+
+        pixel_size_x = self._bin_header["real_px_size_x"]
+        pixel_size_y = self._bin_header["real_px_size_y"]
+        origin_at_zero = np.array(
+            [
+                -self._bin_header["origin_px_x"] * pixel_size_x,
+                -self._bin_header["origin_px_y"] * pixel_size_y,
+                -self._bin_header["distance_mm"],
+            ]
+        )
+        # Get origin for the first panel, not rotated
+        origin = detector_axes.dot(origin_at_zero)
+
+        d = Detector()
+
+        root = d.hierarchy()
+        root.set_local_frame(detector_axes[:, 0], detector_axes[:, 1], origin)
+
+        self.coords = {}
+        panel_idx = 0
+
+        pnl_data = []
+        nx = self._bin_header["nx"]
+        ny = self._bin_header["ny"]
+        gap_px = self._bin_header["gap_px"]
+        pnl_data.append({"xmin": 0, "ymin": 0, "xmax": nx, "ymax": ny, "xmin_mm": 0})
+        pnl_data.append(
+            {
+                "xmin": (nx + gap_px),
+                "ymin": 0,
+                "xmax": 2 * nx + gap_px,
+                "ymax": ny,
+                "xmin_mm": (nx + gap_px) * pixel_size_x,
+            }
+        )
+        if self._bin_header["detector_type"] == 12:
+            pnl_data.append(
+                {
+                    "xmin": (nx + gap_px) * 2,
+                    "ymin": 0,
+                    "xmax": 3 * nx + 2 * gap_px,
+                    "ymax": ny,
+                    "xmin_mm": (nx + gap_px) * 2 * pixel_size_x,
+                }
+            )
+
+        # redefine fast, slow for the local frame
+        fast = matrix.col((1.0, 0.0, 0.0))
+        slow = matrix.col((0.0, 1.0, 0.0))
+
+        for ipanel, pd in enumerate(pnl_data):
+            xmin = pd["xmin"]
+            xmax = pd["xmax"]
+            ymin = pd["ymin"]
+            ymax = pd["ymax"]
+            xmin_mm = pd["xmin_mm"]
+
+            origin_panel = fast * xmin_mm
+
+            panel_name = "Panel%d" % panel_idx
+            panel_idx += 1
+
+            p = d.add_panel()
+            p.set_type("SENSOR_PAD")
+            p.set_name(panel_name)
+            p.set_raw_image_offset((xmin, ymin))
+            p.set_image_size((xmax - xmin, ymax - ymin))
+            p.set_trusted_range((0, self._bin_header["overflow_threshold"]))
+            p.set_pixel_size((pixel_size_x, pixel_size_y))
+            p.set_local_frame(fast.elems, slow.elems, origin_panel.elems)
+            p.set_projection_2d((-1, 0, 0, -1), (0, pd["xmin"]))
+            self.coords[panel_name] = (xmin, ymin, xmax, ymax)
+
+        # Now rotate the external panels. For the time being do the rotation around
+        # and axis along the centre of the gap between the panels.
+        if len(pnl_data) == 2:
+            angle = 19.0
+        elif len(pnl_data) == 3:
+            angle = 38.0
+        else:
+            raise ValueError("Unexpected number of panels")
+
+        left_panel = d[0]
+        right_panel = d[len(d) - 1]
+
+        # Point to rotate the left panel around, from the local origin
+        pnl_fast = matrix.col(left_panel.get_local_fast_axis())
+        pnl_slow = matrix.col(left_panel.get_local_slow_axis())
+        pt = pnl_fast * (
+            left_panel.get_image_size_mm()[0] + (gap_px / 2) * pixel_size_x
+        )
+
+        rotated = (-1.0 * pt).rotate_around_origin(pnl_slow, angle, deg=True)
+        new_origin = pt + rotated
+        new_fast = pnl_fast.rotate_around_origin(pnl_slow, angle, deg=True)
+        left_panel.set_local_frame(new_fast.elems, pnl_slow.elems, new_origin.elems)
+
+        # Point to rotate the right panel around, from the panel's origin
+        pnl_fast = matrix.col(right_panel.get_local_fast_axis())
+        pnl_slow = matrix.col(right_panel.get_local_slow_axis())
+        pnl_origin = matrix.col(right_panel.get_local_origin())
+        pt = -pnl_fast * (gap_px / 2) * pixel_size_x
+
+        rotated = (-1.0 * pt).rotate_around_origin(pnl_slow, -angle, deg=True)
+        new_origin = pnl_origin + pt + rotated
+        new_fast = pnl_fast.rotate_around_origin(pnl_slow, -angle, deg=True)
+        right_panel.set_local_frame(new_fast.elems, pnl_slow.elems, new_origin.elems)
+
+        return d
+
+    def get_raw_data(self):
+        """Get the pixel intensities (i.e. read the image and return as a
+        flex array of integers.)"""
+
+        raw_data = super().get_raw_data()
+
+        # split into separate panels
+        self._raw_data = []
+        d = self.get_detector()
+        for panel in d:
+            xmin, ymin, xmax, ymax = self.coords[panel.get_name()]
+            self._raw_data.append(raw_data[ymin:ymax, xmin:xmax])
+
+        return tuple(self._raw_data)
 
 
 if __name__ == "__main__":

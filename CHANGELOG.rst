@@ -1,3 +1,32 @@
+dxtbx 3.23.0 (2025-01-08)
+=========================
+
+Features
+--------
+
+- Nexus support: Handle reading new scale_factor fields (used for detector gain). (`#756 <https://github.com/cctbx/dxtbx/issues/756>`_)
+- ``dials.import``: Add a progress bar, so that it doesn't look like progress has stopped with large collections of images. (`#768 <https://github.com/cctbx/dxtbx/issues/768>`_)
+- Add ``FormatSMVADSCCetaD`` to allow easier processing of 3DED images from the Ceta-D detector, which have been converted to SMV. (`#770 <https://github.com/cctbx/dxtbx/issues/770>`_)
+
+
+Bugfixes
+--------
+
+- ``dials.show``: Hide progress bar if DIALS_NOBANNER (`#774 <https://github.com/cctbx/dxtbx/issues/774>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Python 3.10 is now the minimum required (`#769 <https://github.com/cctbx/dxtbx/issues/769>`_)
+
+
+Misc
+----
+
+- `#767 <https://github.com/cctbx/dxtbx/issues/767>`_, `#773 <https://github.com/cctbx/dxtbx/issues/773>`_, `#775 <https://github.com/cctbx/dxtbx/issues/775>`_
+
+
 dxtbx 3.22.0 (2024-10-15)
 =========================
 

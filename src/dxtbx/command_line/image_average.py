@@ -281,7 +281,7 @@ def run(argv=None):
 
     if command_line.options.mpi:
         try:
-            from mpi4py import MPI
+            from libtbx.mpi4py import MPI
         except ImportError:
             raise Sorry("MPI not found")
         comm = MPI.COMM_WORLD

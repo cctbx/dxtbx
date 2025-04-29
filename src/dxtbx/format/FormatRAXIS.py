@@ -64,13 +64,83 @@ from __future__ import annotations
 
 import calendar
 import datetime
+import io
 import math
 import struct
 
+from iotbx.detectors import ReadRAXIS
 from iotbx.detectors.raxis import RAXISImage
 
 from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format
+
+header_struct = [
+    ("Device", 10, "s"),
+    ("Version", 10, "s"),
+    ("Crystal", 20, "s"),
+    ("CrystalSystem", 12, "s"),
+    (None, 24),
+    ("SpaceGroup", 12, "s"),
+    ("mosaic1", 4, "!f"),
+    ("memo", 80, "s"),
+    ("reserve1", 84, "s"),
+    ("date", 12, "s"),
+    ("operatorname", 20, "s"),
+    ("target", 4, "s"),
+    ("wavelength", 4, "!f"),
+    ("monotype", 20, "s"),
+    ("mono2theta", 4, "!f"),
+    ("collimator", 20, "s"),
+    ("filter", 4, "s"),
+    ("distance", 4, "!f"),
+    ("Kv", 4, "!f"),
+    ("mA", 4, "!f"),
+    ("focus", 12, "s"),
+    ("Xmemo", 80, "s"),
+    ("cyl", 4, "!i"),
+    (None, 60),
+    ("Spindle", 4, "s"),  # Crystal mount axis closest to spindle axis
+    ("Xray_axis", 4, "s"),  # Crystal mount axis closest to beam axis
+    ("phidatum", 4, "!f"),
+    ("phistart", 4, "!f"),
+    ("phiend", 4, "!f"),
+    ("noscillations", 4, "!i"),
+    ("minutes", 4, "!f"),  # Exposure time in minutes?
+    ("beampixels_x", 4, "!f"),
+    ("beampixels_y", 4, "!f"),  # Direct beam position in pixels
+    ("omega", 4, "!f"),
+    ("chi", 4, "!f"),
+    ("twotheta", 4, "!f"),
+    ("Mu", 4, "!f"),  # Spindle inclination angle?
+    ("ScanTemplate", 204, "s"),  # This space is now used for storing the scan
+    # templates information
+    ("nFast", 4, "!i"),
+    ("nSlow", 4, "!i"),  # Number of fast, slow pixels
+    ("sizeFast", 4, "!f"),
+    ("sizeSlow", 4, "!f"),  # Size of fast, slow direction in mm
+    ("record_length", 4, "!i"),  # Record length in bytes
+    ("number_records", 4, "!i"),  # number of records
+    ("Read_start", 4, "!i"),  # For partial reads, 1st read line
+    ("IP_num", 4, "!i"),  # Which imaging plate 1, 2 ?
+    ("Ratio", 4, "!f"),  # Output ratio for high value pixels
+    ("Fading_start", 4, "!f"),  # Fading time to start of read
+    ("Fading_end", 4, "!f"),  # Fading time to end of read
+    ("computer", 10, "s"),  # Type of computer "IRIS", "VAX", "SUN", etc
+    ("plate_type", 10, "s"),  # Type of IP
+    ("Dr", 4, "!i"),
+    ("Dx", 4, "!i"),
+    ("Dz", 4, "!i"),  # IP scanning codes??
+    ("PixShiftOdd", 4, "!f"),  # Pixel shift to odd lines
+    ("IntRatioOdd", 4, "!f"),  # Intensity ratio to odd lines
+    ("MagicNum", 4, "!i"),  # Magic number to indicate next values are legit
+    ("NumGonAxes", 4, "!i"),  # Number of goniometer axes
+    ("a5x3fGonVecs", 60, "!fffffffffffffff"),  # Goniometer axis vectors
+    ("a5fGonStart", 20, "!fffff"),  # Start angles for each of 5 axes
+    ("a5fGonEnd", 20, "!fffff"),  # End angles for each of 5 axes
+    ("a5fGonOffset", 20, "!fffff"),  # Offset values for each of 5 axes
+    ("ScanAxisNum", 4, "!i"),  # Which axis is the scan axis?
+    ("AxesNames", 40, "s"),  # Names of the axes (space or comma separated?)'''
+]
 
 
 class RAXISHelper:
@@ -83,8 +153,22 @@ class RAXISHelper:
     def _start(self):
         with Format.open_file(self._image_file) as fh:
             self._header_bytes = fh.read(1024)
-
-        if self._header_bytes[812:822].strip() in (b"SGI", b"IRIS"):
+        self.head = {}
+        stream = io.BytesIO(self._header_bytes)
+        for item in header_struct:
+            if item[0] is None:
+                stream.read(item[1])
+            elif item[2] == "s":
+                self.head[item[0]] = stream.read(item[1])[0 : item[1]]
+            elif len(item[2]) > 2:
+                rawdata = stream.read(item[1])
+                assert len(rawdata) == struct.calcsize(item[2])
+                self.head[item[0]] = struct.unpack(item[2], rawdata)
+            else:
+                rawdata = stream.read(item[1])
+                assert len(rawdata) == struct.calcsize(item[2])
+                self.head[item[0]] = struct.unpack(item[2], rawdata)[0]
+        if self.head["computer"].strip() in (b"SGI", b"IRIS"):
             self._f = ">f"
             self._i = ">i"
         else:
@@ -98,8 +182,34 @@ class RAXISHelper:
     def get_raw_data(self):
         """Get the pixel intensities (i.e. read the image and return as a flex array."""
         self.detectorbase_start()
-        # super() resolves to the other (true) parent class
-        return super().get_raw_data()
+
+        dim0 = self.head["nFast"]  # number of fast pixels
+        to_read = self.head["record_length"]
+        read_lines = self.head["number_records"]
+
+        with Format.open_file(self._image_file) as fh:
+            fh.seek(to_read)
+            raw_data = fh.read(to_read * read_lines)
+
+        # For a normal image, there should be no padding per line
+        # Each line might be padded, so figure this out
+        bytes_per_line = dim0 * 2
+        if bytes_per_line < to_read:
+            # Remove all padding bytes
+            raw_data = b"".join(
+                raw_data[record * to_read : record * to_read + bytes_per_line]
+                for record in range(read_lines)
+            )
+
+        raw_data = ReadRAXIS(
+            raw_data,
+            self.head["record_length"] // self.head["nFast"],
+            self.head["nSlow"] * self.detectorbase.bin,
+            self.head["nFast"] * self.detectorbase.bin,
+            self.detectorbase.endian_swap_required(),
+        )
+
+        return raw_data
 
     def _detector_helper(self):
         """Returns image header values as a dictionary."""

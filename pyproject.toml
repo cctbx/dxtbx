@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dxtbx"
-version = "3.23.dev"
+version = "3.24.dev"
 description = "Diffraction Experiment Toolkit"
 authors = [
-    { name = "Diamond Light Source", email = "dials-support@lists.sourceforge.net" },
+    { name = "Diamond Light Source", email = "dials-user-group@jiscmail.net" },
 ]
 license = { file = "LICENSE.txt" }
 readme = "README.md"
