@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import contextlib
 import importlib
-import importlib.metadata
 import inspect
 import io
 import os
@@ -39,8 +38,6 @@ def _find_site_packages_with_metadata(package_name: str, build_path: Path):
             # If no metadata found in this site-packages, continue searching
     return None
 
-
-
 def _install_setup_readonly_fallback(package_name: str):
     """
     Partially install package in the libtbx build folder.
@@ -54,39 +51,40 @@ def _install_setup_readonly_fallback(package_name: str):
 
     # Install this into a build/dxtbx subfolder
     build_path = abs(libtbx.env.build_path / package_name)
-    command = [
-        sys.executable,
-        "-m",
-        "pip",
-        "install",
-        "--prefix",
-        build_path,
-        "--no-build-isolation",
-        "--no-deps",
-        "-e",
-        root_path,
-    ]
-    print('INSTALLING WITH ', ' '.join(command))
-    subprocess.run(command, check=True)
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--prefix",
+            build_path,
+            "--no-build-isolation",
+            "--no-deps",
+            "-e",
+            root_path,
+        ],
+        check=True,
+    )
 
     # Get the actual environment being configured (NOT libtbx.env)
     env = _get_real_env_hack_hack_hack()
 
-    # Update the libtbx environment pythonpaths to point to the source
-    # location; in PEP 660 we don't need the .egg-info to be in the source
-    # but we still need the source in the path
+    # Update the libtbx environment pythonpaths to point to the source location
     rel_path = libtbx.env.as_relocatable_path(import_path)
     if rel_path not in env.pythonpath:
         env.pythonpath.insert(0, rel_path)
 
-    # Make sure the metadata directory is also in the path if it's not in site-packages
+    # As of PEP 660, the package metadata (dist-info) goes in the install dir,
+    # not the source dir. Add this location to the python path too.
     metadata_dir = _find_site_packages_with_metadata(package_name, Path(build_path))
-    if metadata_dir and metadata_dir.parent not in sys.path:
-        metadata_parent = libtbx.env.as_relocatable_path(str(metadata_dir))#.parent))
-        if metadata_parent not in env.pythonpath:
-            env.pythonpath.insert(0, metadata_parent)
+    if metadata_dir and metadata_dir not in sys.path:
+        metadata_rel = libtbx.env.as_relocatable_path(str(metadata_dir))
+        if metadata_rel not in env.pythonpath:
+            env.pythonpath.insert(0, metadata_rel)
 
     # Update the sys.path so we can find the package in this process
+    # if we do a full reconstruction of the working set
     if import_path not in sys.path:
         sys.path.insert(0, import_path)
 
