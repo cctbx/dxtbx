@@ -38,6 +38,7 @@ def _find_site_packages_with_metadata(package_name: str, build_path: Path):
             # If no metadata found in this site-packages, continue searching
     return None
 
+
 def _install_setup_readonly_fallback(package_name: str):
     """
     Partially install package in the libtbx build folder.
