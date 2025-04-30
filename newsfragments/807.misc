@@ -1,0 +1,1 @@
+Update build scripts (for "libtbx mode") to work with setuptools>=79.
