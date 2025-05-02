@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import bz2
 import collections
 import errno
 import os
 import pickle
+import shutil
 from unittest import mock
 
 import pytest
@@ -621,10 +623,21 @@ def test_experimentlist_dumper_dump_empty_sequence(tmp_path):
     check(experiments, experiments2)
 
 
-def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmp_path):
-    filename = os.path.join(
-        dials_regression, "centroid_test_data", "experiments_with_lookup.json"
-    )
+def test_experimentlist_dumper_dump_with_lookup(dials_data, tmp_path):
+    data_dir = dials_data("centroid_test_data", pathlib=True)
+
+    # Copy to the tmp directory, because we need to unpack some files
+    filename = shutil.copy(data_dir / "experiments_with_lookup.json", tmp_path)
+    gain_bz2 = shutil.copy(data_dir / "lookup_gain.pickle.bz2", tmp_path)
+    pedestal_bz2 = shutil.copy(data_dir / "lookup_pedestal.pickle.bz2", tmp_path)
+    shutil.copy(data_dir / "lookup_mask.pickle", tmp_path)
+    for image in data_dir.glob("centroid_000*.cbf"):
+        shutil.copy(image, tmp_path)
+
+    for f in [gain_bz2, pedestal_bz2]:
+        with bz2.BZ2File(f) as compr:
+            with open(f[:-4], "wb") as decompr:
+                shutil.copyfileobj(compr, decompr)
 
     experiments = ExperimentListFactory.from_json_file(filename, check_format=True)
 
