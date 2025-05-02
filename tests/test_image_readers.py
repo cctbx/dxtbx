@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 import pycbf
 
 from dxtbx.model.detector import DetectorFactory
@@ -16,10 +14,9 @@ except ImportError:
         return handle.read_buffer(contents, flags)
 
 
-def test_cbf_buffer(dials_regression):
-    filename = os.path.join(
-        dials_regression, "image_examples", "dials-190", "whatev1_01_00001.cbf"
-    )
+def test_cbf_buffer(dials_data):
+    data_dir = dials_data("misc_regression", pathlib=True)
+    filename = str(data_dir / "dials-190_01_00001.cbf")
     with open(filename, "rb") as f:
         contents = f.read()
 

@@ -97,7 +97,7 @@ setup(
     if not custom_folder.exists():
         os.symlink(home_location, custom_folder)
     subprocess.run(
-        ["libtbx.python", str(home_location / "setup.py"), "develop", "--user"],
+        [sys.executable, "-m", "pip", "install", "-e", "--user", str(home_location)],
         cwd=home_location,
         capture_output=True,
         check=True,
