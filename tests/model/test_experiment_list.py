@@ -8,6 +8,7 @@ import pickle
 import shutil
 from unittest import mock
 
+import monkeypatch
 import pytest
 
 from cctbx import sgtbx
@@ -402,21 +403,16 @@ def experiment_list():
     return experiments
 
 
-def test_experimentlist_factory_from_json(monkeypatch, dials_regression):
+def test_experimentlist_factory_from_json(monkeypatch, dials_data):
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
     # Get all the filenames
-    filename1 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_1.json"
-    )
-    filename3 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_3.json"
-    )
-    filename4 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_4.json"
-    )
+    filename1 = str(data_dir / "experiment_1.json")
+    filename3 = str(data_dir / "experiment_3.json")
+    filename4 = str(data_dir / "experiment_4.json")
 
-    # Read all the experiment lists in
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         el1 = ExperimentListFactory.from_json_file(filename1)
         el3 = ExperimentListFactory.from_json_file(filename3)
         el4 = ExperimentListFactory.from_json_file(filename4)
@@ -444,15 +440,15 @@ def test_experimentlist_factory_from_json(monkeypatch, dials_regression):
             assert e1.crystal == ee.crystal
 
 
-def test_experimentlist_factory_from_pickle(monkeypatch, dials_regression):
+def test_experimentlist_factory_from_pickle(monkeypatch, dials_data):
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
     # Get all the filenames
-    filename1 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_1.json"
-    )
+    filename1 = str(data_dir / "experiment_1.json")
 
     # Read all the experiment lists in
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         el1 = ExperimentListFactory.from_json_file(filename1)
 
     # Pickle then load again
@@ -472,20 +468,22 @@ def test_experimentlist_factory_from_pickle(monkeypatch, dials_regression):
         assert e1.crystal and e1.crystal == e2.crystal
 
 
-def test_experimentlist_factory_from_args(monkeypatch, dials_regression):
+def test_experimentlist_factory_from_args(monkeypatch, dials_data):
     pytest.importorskip("dials")
+
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
 
     # Get all the filenames
     filenames = [
-        os.path.join(dials_regression, "experiment_test_data", "experiment_1.json"),
-        # os.path.join(dials_regression, 'experiment_test_data', 'experiment_2.json'),
-        os.path.join(dials_regression, "experiment_test_data", "experiment_3.json"),
-        os.path.join(dials_regression, "experiment_test_data", "experiment_4.json"),
+        str(data_dir / "experiment_1.json"),
+        str(data_dir / "experiment_3.json"),
+        str(data_dir / "experiment_4.json"),
     ]
 
     # Get the experiments from a list of filenames
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         experiments = ExperimentListFactory.from_args(filenames)
 
     assert len(experiments) == 3
@@ -538,15 +536,16 @@ def test_experimentlist_factory_from_sequence():
     assert experiments[0].crystal
 
 
-def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmp_path):
+def test_experimentlist_dumper_dump_formats(monkeypatch, dials_data, tmp_path):
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
+
     # Get all the filenames
-    filename1 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_1.json"
-    )
+    filename1 = str(data_dir / "experiment_1.json")
 
     # Read all the experiment lists in
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         elist1 = ExperimentListFactory.from_json_file(filename1)
 
     # Dump as JSON file and reload
@@ -562,17 +561,15 @@ def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmp_p
     check(elist1, elist2)
 
 
-def test_experimentlist_dumper_dump_scan_varying(
-    monkeypatch, dials_regression, tmp_path
-):
+def test_experimentlist_dumper_dump_scan_varying(monkeypatch, dials_data, tmp_path):
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
     # Get all the filenames
-    filename1 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_1.json"
-    )
+    filename1 = str(data_dir / "experiment_1.json")
 
     # Read the experiment list in
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         elist1 = ExperimentListFactory.from_json_file(filename1)
 
     # Make trivial scan-varying models
@@ -848,24 +845,23 @@ def compare_experiment(exp1, exp2):
     )
 
 
-def test_experimentlist_from_file(monkeypatch, dials_regression, tmpdir):
+def test_experimentlist_from_file(dials_data, tmpdir):
     # With the default check_format=True this file should fail to load with an
     # appropriate error as we can't find the images on disk
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
+
     with monkeypatch.context() as m:
-        m.delenv("DIALS_REGRESSION", raising=False)
+        m.delenv("DIALS_DATA", raising=False)
         with pytest.raises(IOError) as e:
-            exp_list = ExperimentList.from_file(
-                os.path.join(
-                    dials_regression, "experiment_test_data", "experiment_1.json"
-                )
-            )
+            exp_list = ExperimentList.from_file(str(data_dir / "experiment_1.json"))
     assert e.value.errno == errno.ENOENT
     assert "No such file or directory" in str(e.value)
     assert "centroid_0001.cbf" in str(e.value)
 
     # Setting check_format=False should allow the file to load
     exp_list = ExperimentList.from_file(
-        os.path.join(dials_regression, "experiment_test_data", "experiment_1.json"),
+        str(data_dir / "experiment_1.json"),
         check_format=False,
     )
     assert len(exp_list) == 1
@@ -875,10 +871,8 @@ def test_experimentlist_from_file(monkeypatch, dials_regression, tmpdir):
     # file to load with check_format=True
 
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
-        exp_list = ExperimentList.from_file(
-            os.path.join(dials_regression, "experiment_test_data", "experiment_1.json")
-        )
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
+        exp_list = ExperimentList.from_file(str(data_dir / "experiment_1.json"))
     assert len(exp_list) == 1
     assert exp_list[0].beam
 
