@@ -8,7 +8,6 @@ import pickle
 import shutil
 from unittest import mock
 
-import monkeypatch
 import pytest
 
 from cctbx import sgtbx
@@ -845,7 +844,7 @@ def compare_experiment(exp1, exp2):
     )
 
 
-def test_experimentlist_from_file(dials_data, tmpdir):
+def test_experimentlist_from_file(dials_data, monkeypatch, tmpdir):
     # With the default check_format=True this file should fail to load with an
     # appropriate error as we can't find the images on disk
     data_dir = dials_data("experiment_test_data", pathlib=True)
