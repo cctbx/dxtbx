@@ -6,6 +6,7 @@ import os
 import pickle
 from unittest import mock
 
+import dateutil.parser
 import pytest
 
 from cctbx import sgtbx
@@ -1285,3 +1286,33 @@ def test_experiment_list_all():
     )
     assert experiments.all_stills()
     assert experiments.all_same_type()
+
+
+def test_history(tmp_path):
+    experiments = ExperimentList()
+    experiments.append_history("foo")
+    h = experiments.history()
+    assert len(h) == 1
+    msg, timestamp = experiments.history()[0].split("@")
+    assert msg.strip() == "foo"
+    # Check the timestamp is the expected format
+    dateutil.parser.isoparse(timestamp.strip())
+    experiments.set_history(["bar", "baz"])
+    assert experiments.history() == [
+        "bar",
+        "baz",
+    ]  # when setting we don't add a timestamp
+    experiments.append_history("foo")
+    h = experiments.history()
+    assert len(h) == 3
+
+    e2 = pickle.loads(pickle.dumps(experiments))
+    assert e2.history() == h
+
+    filename = tmp_path / "temp.expt"
+    e2.as_file(filename)  # adds another timestamp
+
+    e3 = ExperimentList.from_file(filename)
+    assert e3.history()[0:3] == h
+    # This module called the as_file function, so its name should be in the history
+    assert e3.history()[-1].startswith(__name__)
