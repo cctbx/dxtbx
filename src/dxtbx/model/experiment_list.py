@@ -510,6 +510,10 @@ class ExperimentListDict:
                 )
             )
 
+        # Add the history if it exists
+        if "history" in self._obj:
+            el.set_history(self._obj["history"])
+
         return el
 
     def _make_mem_imageset(self, imageset):

@@ -18,6 +18,7 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/extract.hpp>
 #include <scitbx/vec3.h>
 #include <scitbx/array_family/simple_io.h>
 #include <scitbx/array_family/simple_tiny_io.h>
@@ -574,12 +575,16 @@ namespace dxtbx { namespace model {
       return true;
     }
 
-    void append_history(const std::string &name) {
-      _history.push_back(name);
-    }
-
     std::vector<std::string> history() const {
       return _history;
+    }
+
+    void set_history(const std::vector<std::string> &history) {
+      _history = history;
+    }
+
+    void append_history(const std::string &name) {
+      _history.push_back(name);
     }
 
     boost::python::list history_as_list() const {
@@ -588,6 +593,18 @@ namespace dxtbx { namespace model {
         result.append(item);
       }
       return result;
+    }
+
+    void history_from_list(const boost::python::list &history) {
+      _history.clear();
+
+      long length = boost::python::len(history);
+      _history.reserve(length);
+
+      for (long i = 0; i < length; ++i) {
+        boost::python::extract<std::string> extractor(history[i]);
+        _history.push_back(extractor());
+      }
     }
 
   protected:

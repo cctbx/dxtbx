@@ -664,6 +664,7 @@ class _experimentlist:
         result = {
             "__id__": "ExperimentList",
             "experiment": [],
+            "history": self.history(),
         }
 
         # Add the experiments to the dictionary

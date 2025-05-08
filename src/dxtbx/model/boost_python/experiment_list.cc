@@ -255,6 +255,7 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("scaling_model") = boost::python::object()))
       .def("is_consistent", &ExperimentList::is_consistent)
       .def("history", &ExperimentList::history_as_list)
+      .def("set_history", &ExperimentList::history_from_list)
       .def("append_history", &ExperimentList::append_history)
       .def_pickle(ExperimentListPickleSuite());
   }
