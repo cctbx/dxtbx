@@ -1,3 +1,66 @@
+dxtbx 3.24.0 (2025-04-29)
+=========================
+
+Features
+--------
+
+- ``FormatROD_Arc``: Support for Rigaku HyPix-Arc 100° and 150° curved detectors. (`#787 <https://github.com/cctbx/dxtbx/issues/787>`_)
+- ``FormatBrukerELA``: Add support for the DECTRIS-ELA detector images in Bruker SFRM format. (`#802 <https://github.com/cctbx/dxtbx/issues/802>`_)
+- ``dxtbx.any2nexus``: Add ``sensor_material=`` and ``sensor_thickness=`` options. (`#803 <https://github.com/cctbx/dxtbx/issues/803>`_)
+- ``FormatXTC``: New features for managing wavelength calibration and an adjustment to the minimum trusted range for the ePix. (`#804 <https://github.com/cctbx/dxtbx/issues/804>`_)
+
+
+Bugfixes
+--------
+
+- Fix issue where attempting to group experiments would fail if the source images are currently inaccessible. This caused failures in downstream tooling such as ``xia2.ssx_reduce``. (`#772 <https://github.com/cctbx/dxtbx/issues/772>`_)
+- ``dials.import``: Reduce excessive memory usage when importing many (>100s) FormatNXMX files. (`#789 <https://github.com/cctbx/dxtbx/issues/789>`_)
+- ``FormatNXmxEigerFilewriter``: Use a lookup table when deciding whether to swap image dimensions, rather than relying on a firmware version check. (`#793 <https://github.com/cctbx/dxtbx/issues/793>`_)
+- ``FormatROD``: Use the weighted average of K-alpha1 and K-alpha2 as the monochromatic wavelength for the beam model. (`#800 <https://github.com/cctbx/dxtbx/issues/800>`_)
+- ``FormatRAXIS``: Allow the possibility of reading compressed files. (`#801 <https://github.com/cctbx/dxtbx/issues/801>`_)
+
+
+Improved Documentation
+----------------------
+
+- The user support mailing list is now ``dials-user-group@jiscmail.net`` (`#795 <https://github.com/cctbx/dxtbx/issues/795>`_)
+
+
+Misc
+----
+
+- `#197 <https://github.com/cctbx/dxtbx/issues/197>`_, `#788 <https://github.com/cctbx/dxtbx/issues/788>`_, `#796 <https://github.com/cctbx/dxtbx/issues/796>`_, `#797 <https://github.com/cctbx/dxtbx/issues/797>`_, `#805 <https://github.com/cctbx/dxtbx/issues/805>`_, `#978 <https://github.com/cctbx/dxtbx/issues/978>`_
+
+
+dxtbx 3.23.0 (2025-01-08)
+=========================
+
+Features
+--------
+
+- Nexus support: Handle reading new scale_factor fields (used for detector gain). (`#756 <https://github.com/cctbx/dxtbx/issues/756>`_)
+- ``dials.import``: Add a progress bar, so that it doesn't look like progress has stopped with large collections of images. (`#768 <https://github.com/cctbx/dxtbx/issues/768>`_)
+- Add ``FormatSMVADSCCetaD`` to allow easier processing of 3DED images from the Ceta-D detector, which have been converted to SMV. (`#770 <https://github.com/cctbx/dxtbx/issues/770>`_)
+
+
+Bugfixes
+--------
+
+- ``dials.show``: Hide progress bar if DIALS_NOBANNER (`#774 <https://github.com/cctbx/dxtbx/issues/774>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- Python 3.10 is now the minimum required (`#769 <https://github.com/cctbx/dxtbx/issues/769>`_)
+
+
+Misc
+----
+
+- `#767 <https://github.com/cctbx/dxtbx/issues/767>`_, `#773 <https://github.com/cctbx/dxtbx/issues/773>`_, `#775 <https://github.com/cctbx/dxtbx/issues/775>`_
+
+
 dxtbx 3.22.0 (2024-10-15)
 =========================
 
