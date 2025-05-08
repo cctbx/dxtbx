@@ -24,6 +24,7 @@
 #include <scitbx/array_family/simple_tiny_io.h>
 #include <dxtbx/model/experiment.h>
 #include <dxtbx/error.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace dxtbx { namespace model {
 
@@ -584,7 +585,12 @@ namespace dxtbx { namespace model {
     }
 
     void append_history(const std::string &name) {
-      _history.push_back(name);
+      // Get the current UTC time
+      boost::posix_time::ptime now_utc =
+        boost::posix_time::second_clock::universal_time();
+      std::string utc_string = boost::posix_time::to_iso_extended_string(now_utc);
+
+      _history.push_back(name + " @ " + utc_string + "Z");
     }
 
     boost::python::list history_as_list() const {
