@@ -215,6 +215,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("extend", &ExperimentList::extend)
       .def("clear", &ExperimentList::clear)
       .def("empty", &ExperimentList::empty)
+      .def("__len__", &ExperimentList::size)
       .def("__getitem__", &experiment_list_getitem, return_internal_reference<>())
       .def("__getitem__", &experiment_list_getitem_slice)
       .def("__setitem__", &experiment_list_setitem)
@@ -253,7 +254,8 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("imageset") = boost::python::object(),
             arg("scaling_model") = boost::python::object()))
       .def("is_consistent", &ExperimentList::is_consistent)
-      .def("__len__", &ExperimentList::size)
+      .def("history", &ExperimentList::history_as_list)
+      .def("append_history", &ExperimentList::append_history)
       .def_pickle(ExperimentListPickleSuite());
   }
 

@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <scitbx/vec3.h>
 #include <scitbx/array_family/simple_io.h>
 #include <scitbx/array_family/simple_tiny_io.h>
@@ -49,6 +50,7 @@ namespace dxtbx { namespace model {
           _experiment_identifiers.insert(identifier);
         }
       }
+      //
     }
 
     /**
@@ -572,6 +574,22 @@ namespace dxtbx { namespace model {
       return true;
     }
 
+    void append_history(const std::string &name) {
+      _history.push_back(name);
+    }
+
+    std::vector<std::string> history() const {
+      return _history;
+    }
+
+    boost::python::list history_as_list() const {
+      boost::python::list result;
+      for (const auto &item : _history) {
+        result.append(item);
+      }
+      return result;
+    }
+
   protected:
     /** Rebuild the internal experiment identifier map.
      *
@@ -602,6 +620,7 @@ namespace dxtbx { namespace model {
 
     shared_type data_;
     std::unordered_set<std::string> _experiment_identifiers{};
+    std::vector<std::string> _history;
   };
 
 }}  // namespace dxtbx::model
