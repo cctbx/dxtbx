@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import inspect
 import json
 import os
 import sys
@@ -749,6 +750,18 @@ class _experimentlist:
 
     def as_json(self, filename=None, compact=False, split=False):
         """Dump experiment list as json"""
+
+        # Add a history entry referencing the calling module
+        stack = inspect.stack()
+        this_module = inspect.getmodule(stack[0].frame)
+        caller_module = "Unknown"
+        for f in stack[1:]:
+            module = inspect.getmodule(f.frame)
+            if module != this_module:
+                caller_module = module
+                break
+        self.append_history(caller_module.__name__)
+
         # Get the dictionary and get the JSON string
         dictionary = self.to_dict()
 
