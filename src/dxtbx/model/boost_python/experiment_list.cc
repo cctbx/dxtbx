@@ -35,12 +35,22 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   struct ExperimentListPickleSuite : boost::python::pickle_suite {
-    static boost::python::tuple getinitargs(const ExperimentList &obj) {
+    static boost::python::tuple getstate(const ExperimentList &obj) {
       boost::python::list experiments;
       for (std::size_t i = 0; i < obj.size(); ++i) {
         experiments.append(obj[i]);
       }
-      return boost::python::make_tuple(experiments);
+      return boost::python::make_tuple(experiments, obj.history_as_list());
+    }
+    static void setstate(ExperimentList &obj, boost::python::tuple state) {
+      DXTBX_ASSERT(boost::python::len(state) == 2);
+      boost::python::list experiments =
+        boost::python::extract<boost::python::list>(state[0])();
+      obj.clear();
+      for (std::size_t i = 0; i < boost::python::len(experiments); ++i) {
+        obj.append(boost::python::extract<Experiment>(experiments[i])());
+      }
+      obj.history_from_list(boost::python::extract<boost::python::list>(state[1])());
     }
   };
 
