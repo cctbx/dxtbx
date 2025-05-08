@@ -52,7 +52,6 @@ namespace dxtbx { namespace model {
           _experiment_identifiers.insert(identifier);
         }
       }
-      //
     }
 
     /**
