@@ -16,6 +16,8 @@
 #include <memory>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/extract.hpp>
 #include <scitbx/vec3.h>
 #include <scitbx/array_family/simple_io.h>
 #include <scitbx/array_family/simple_tiny_io.h>
@@ -248,6 +250,38 @@ namespace dxtbx { namespace model {
       return identifier_;
     }
 
+    void set_history(const std::vector<std::string> &history) {
+      _history = history;
+    }
+
+    void append_history(const std::string &message) {
+      _history.push_back(message);
+    }
+
+    void set_history_from_list(const boost::python::list &history) {
+      _history.clear();
+
+      long length = boost::python::len(history);
+      _history.reserve(length);
+
+      for (long i = 0; i < length; ++i) {
+        boost::python::extract<std::string> extractor(history[i]);
+        _history.push_back(extractor());
+      }
+    }
+
+    std::vector<std::string> get_history() const {
+      return _history;
+    }
+
+    boost::python::list get_history_as_list() const {
+      boost::python::list result;
+      for (const auto &item : _history) {
+        result.append(item);
+      }
+      return result;
+    }
+
   protected:
     std::shared_ptr<BeamBase> beam_;
     std::shared_ptr<Detector> detector_;
@@ -258,6 +292,7 @@ namespace dxtbx { namespace model {
     boost::python::object imageset_;
     boost::python::object scaling_model_;
     std::string identifier_;
+    std::vector<std::string> _history;
   };
 
 }}  // namespace dxtbx::model
