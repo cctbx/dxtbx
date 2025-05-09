@@ -1,1 +1,0 @@
-``dxtbx.install_format``: Fix for modern setuptools versions which drop legacy ``setup.py`` features.
