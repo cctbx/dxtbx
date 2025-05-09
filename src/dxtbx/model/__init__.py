@@ -671,6 +671,7 @@ class _experimentlist:
             obj = {
                 "__id__": "Experiment",
                 "identifier": e.identifier,
+                "history": e.get_history(),
             }
 
             # For each member model, look up the index

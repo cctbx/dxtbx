@@ -463,6 +463,7 @@ class ExperimentListDict:
         for eobj in self._obj["experiment"]:
             # Get the models
             identifier = eobj.get("identifier", "")
+            history = eobj.get("history", [])
             beam = self._lookup_model("beam", eobj)
             detector = self._lookup_model("detector", eobj)
             goniometer = self._lookup_model("goniometer", eobj)
@@ -495,20 +496,20 @@ class ExperimentListDict:
                     # Even if we have an empty entry, this counts as a load
                     imagesets[imageset_ref] = None
 
-            # Append the experiment
-            el.append(
-                Experiment(
-                    imageset=imagesets[imageset_ref],
-                    beam=beam,
-                    detector=detector,
-                    goniometer=goniometer,
-                    scan=scan,
-                    crystal=crystal,
-                    profile=profile,
-                    scaling_model=scaling_model,
-                    identifier=identifier,
-                )
+            # Create and append the experiment
+            experiment = Experiment(
+                imageset=imagesets[imageset_ref],
+                beam=beam,
+                detector=detector,
+                goniometer=goniometer,
+                scan=scan,
+                crystal=crystal,
+                profile=profile,
+                scaling_model=scaling_model,
+                identifier=identifier,
             )
+            experiment.set_history(history)
+            el.append(experiment)
 
         return el
 

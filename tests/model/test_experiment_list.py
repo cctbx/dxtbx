@@ -1301,3 +1301,8 @@ def test_history(tmp_path):
 
     experiment2 = pickle.loads(pickle.dumps(experiment))
     assert experiment2.get_history() == h
+
+    el = ExperimentList([experiment])
+    el.as_file(tmp_path / "temp.expt")
+    experiment3 = ExperimentList.from_file(tmp_path / "temp.expt")[0]
+    assert experiment3.get_history() == h
