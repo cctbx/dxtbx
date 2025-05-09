@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-import os
 import pickle
 import random
 
@@ -25,8 +24,8 @@ from dxtbx.model.detector import DetectorFactory
 
 
 @pytest.fixture
-def model(dials_regression):
-    filename = os.path.join(dials_regression, "image_examples", "XDS", "XPARM.XDS")
+def model(dials_data):
+    filename = str(dials_data("misc_regression", pathlib=True) / "sim_mx-GXPARM.XDS")
 
     models = dxtbx.load(filename)
     detector = models.get_detector()
