@@ -1298,3 +1298,6 @@ def test_history(tmp_path):
     h = experiment.get_history()
     assert len(h) == 2
     assert h == ["foo", "bar"]
+
+    experiment2 = pickle.loads(pickle.dumps(experiment))
+    assert experiment2.get_history() == h

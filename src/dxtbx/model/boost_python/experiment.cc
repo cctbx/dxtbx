@@ -33,6 +33,26 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_scaling_model(),
                                        obj.get_identifier());
     }
+
+    static boost::python::tuple getstate(boost::python::object obj) {
+      const Experiment &experiment = boost::python::extract<const Experiment &>(obj)();
+      return boost::python::make_tuple(obj.attr("__dict__"),
+                                       experiment.get_history_as_list());
+    }
+
+    static void setstate(boost::python::object obj, boost::python::tuple state) {
+      Experiment &experiment = boost::python::extract<Experiment &>(obj)();
+      DXTBX_ASSERT(boost::python::len(state) == 2);
+
+      // restore the object's __dict__
+      boost::python::dict d =
+        boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
+      d.update(state[0]);
+
+      // restore the internal state of the C++ object
+      experiment.set_history_from_list(
+        boost::python::extract<boost::python::list>(state[1])());
+    }
   };
 
   /**
