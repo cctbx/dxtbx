@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <scitbx/vec3.h>
 #include <scitbx/array_family/simple_io.h>
 #include <scitbx/array_family/simple_tiny_io.h>
@@ -570,6 +571,18 @@ namespace dxtbx { namespace model {
         }
       }
       return true;
+    }
+
+    void append_history(const std::string &message) {
+      // Get the current UTC time
+      boost::posix_time::ptime now_utc =
+        boost::posix_time::second_clock::universal_time();
+      std::string utc_string = boost::posix_time::to_iso_extended_string(now_utc);
+
+      // Append the history message to each experiment
+      for (std::size_t i = 0; i < size(); ++i) {
+        data_[i].append_history(message + " @ " + utc_string + "Z");
+      }
     }
 
   protected:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import inspect
 import json
 import os
 import sys
@@ -747,8 +748,37 @@ class _experimentlist:
             if experiment.imageset.reader().is_single_file_reader():
                 experiment.imageset.reader().nullify_format_instance()
 
-    def as_json(self, filename=None, compact=False, split=False):
+    def as_json(
+        self,
+        filename=None,
+        compact=False,
+        split=False,
+        flag_as_integrated=False,
+        flag_as_scaled=False,
+    ):
         """Dump experiment list as json"""
+
+        # Add a history entry referencing the calling module
+        flags = []
+        if flag_as_integrated:
+            flags.append("integrated")
+        if flag_as_scaled:
+            flags.append("scaled")
+        if flags:
+            flags = " [" + ",".join(flags) + "]"
+        else:
+            flags = ""
+        stack = inspect.stack()
+        this_module = inspect.getmodule(stack[0].frame)
+        caller_module = "Unknown"
+        for f in stack[1:]:
+            module = inspect.getmodule(f.frame)
+            if module != this_module:
+                caller_module = module
+                break
+        message = caller_module.__name__ + flags
+        self.append_history(message)
+
         # Get the dictionary and get the JSON string
         dictionary = self.to_dict()
 

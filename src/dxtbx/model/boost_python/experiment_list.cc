@@ -253,6 +253,7 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("imageset") = boost::python::object(),
             arg("scaling_model") = boost::python::object()))
       .def("is_consistent", &ExperimentList::is_consistent)
+      .def("append_history", &ExperimentList::append_history)
       .def("__len__", &ExperimentList::size)
       .def_pickle(ExperimentListPickleSuite());
   }

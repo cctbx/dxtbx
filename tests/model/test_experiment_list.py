@@ -6,6 +6,7 @@ import os
 import pickle
 from unittest import mock
 
+import dateutil.parser
 import pytest
 
 from cctbx import sgtbx
@@ -1302,7 +1303,28 @@ def test_history(tmp_path):
     experiment2 = pickle.loads(pickle.dumps(experiment))
     assert experiment2.get_history() == h
 
+    # Check append_history, which adds a timestamp
     el = ExperimentList([experiment])
+    el.append_history("baz")
+    h = el[0].get_history()
+    assert len(h) == 3
+    msg, timestamp = el[0].get_history()[-1].split("@")
+    assert msg.strip() == "baz"
+    # Check the timestamp is the expected format
+    dateutil.parser.isoparse(timestamp.strip())
+
+    # Now check saving and loading, which adds new history items
     el.as_file(tmp_path / "temp.expt")
     experiment3 = ExperimentList.from_file(tmp_path / "temp.expt")[0]
-    assert experiment3.get_history() == h
+    assert experiment3.get_history()[0:3] == h
+    # This module called the as_file function, so its name should be in the history
+    assert experiment3.get_history()[-1].startswith(__name__)
+    el.as_file(tmp_path / "temp2.expt", flag_as_integrated=True)
+    check = ExperimentList.from_file(tmp_path / "temp2.expt")[0].get_history()[-1]
+    assert "[integrated]" in check
+    el.as_file(tmp_path / "temp3.expt", flag_as_scaled=True)
+    check = ExperimentList.from_file(tmp_path / "temp3.expt")[0].get_history()[-1]
+    assert "[scaled]" in check
+    el.as_file(tmp_path / "temp4.expt", flag_as_integrated=True, flag_as_scaled=True)
+    check = ExperimentList.from_file(tmp_path / "temp4.expt")[0].get_history()[-1]
+    assert "[integrated,scaled]" in check
