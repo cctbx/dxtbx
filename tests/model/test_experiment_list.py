@@ -1285,3 +1285,16 @@ def test_experiment_list_all():
     )
     assert experiments.all_stills()
     assert experiments.all_same_type()
+
+
+def test_history(tmp_path):
+    experiment = Experiment()
+    experiment.set_history(["foo"])
+    h = experiment.get_history()
+    assert len(h) == 1
+    assert h[0] == "foo"
+
+    experiment.set_history(["foo", "bar"])
+    h = experiment.get_history()
+    assert len(h) == 2
+    assert h == ["foo", "bar"]

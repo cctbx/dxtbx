@@ -125,6 +125,8 @@ namespace dxtbx { namespace model { namespace boost_python {
            &Experiment::is_sequence,
            "Check if this experiment represents swept rotation image(s)")
       .def("get_type", &Experiment::get_type)
+      .def("set_history", &Experiment::set_history_from_list)
+      .def("get_history", &Experiment::get_history_as_list)
       .def_pickle(ExperimentPickleSuite());
   }
 
