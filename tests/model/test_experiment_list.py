@@ -26,6 +26,7 @@ from dxtbx.model import (
     ExperimentList,
     ExperimentType,
     Goniometer,
+    History,
     Scan,
     ScanFactory,
 )
@@ -1291,3 +1292,9 @@ def test_experiment_list_all():
     )
     assert experiments.all_stills()
     assert experiments.all_same_type()
+
+
+def test_history():
+    h = History()
+    h.set_history(["foo", "bar"])
+    assert h.get_history() == ["foo", "bar"]
