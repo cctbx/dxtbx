@@ -31,7 +31,8 @@ namespace dxtbx { namespace model { namespace boost_python {
                                        obj.get_profile(),
                                        obj.get_imageset(),
                                        obj.get_scaling_model(),
-                                       obj.get_identifier());
+                                       obj.get_identifier(),
+                                       obj.get_history());
     }
   };
 
@@ -89,15 +90,18 @@ namespace dxtbx { namespace model { namespace boost_python {
                 boost::python::object,
                 boost::python::object,
                 boost::python::object,
-                std::string>((arg("beam") = std::shared_ptr<BeamBase>(),
-                              arg("detector") = std::shared_ptr<Detector>(),
-                              arg("goniometer") = std::shared_ptr<Goniometer>(),
-                              arg("scan") = std::shared_ptr<Scan>(),
-                              arg("crystal") = std::shared_ptr<CrystalBase>(),
-                              arg("profile") = boost::python::object(),
-                              arg("imageset") = boost::python::object(),
-                              arg("scaling_model") = boost::python::object(),
-                              arg("identifier") = "")))
+                std::string,
+                std::shared_ptr<History> >(
+        (arg("beam") = std::shared_ptr<BeamBase>(),
+         arg("detector") = std::shared_ptr<Detector>(),
+         arg("goniometer") = std::shared_ptr<Goniometer>(),
+         arg("scan") = std::shared_ptr<Scan>(),
+         arg("crystal") = std::shared_ptr<CrystalBase>(),
+         arg("profile") = boost::python::object(),
+         arg("imageset") = boost::python::object(),
+         arg("scaling_model") = boost::python::object(),
+         arg("identifier") = "",
+         arg("history") = std::shared_ptr<History>())))
       .add_property("beam", &Experiment::get_beam, &Experiment::set_beam)
       .add_property("detector", &Experiment::get_detector, &Experiment::set_detector)
       .add_property(
@@ -110,6 +114,7 @@ namespace dxtbx { namespace model { namespace boost_python {
         "scaling_model", &Experiment::get_scaling_model, &Experiment::set_scaling_model)
       .add_property(
         "identifier", &Experiment::get_identifier, &Experiment::set_identifier)
+      .add_property("history", &Experiment::get_history, &Experiment::set_history)
       .def("__contains__", experiment_contains_pointers::beam())
       .def("__contains__", experiment_contains_pointers::detector())
       .def("__contains__", experiment_contains_pointers::goniometer())
