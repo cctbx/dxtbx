@@ -1298,3 +1298,6 @@ def test_history():
     h = History()
     h.set_history(["foo", "bar"])
     assert h.get_history() == ["foo", "bar"]
+
+    h2 = pickle.loads(pickle.dumps(h))
+    assert h2.get_history() == h.get_history()
