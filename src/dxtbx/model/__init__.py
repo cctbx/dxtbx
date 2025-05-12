@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import importlib.metadata
 import inspect
 import json
 import os
@@ -758,7 +759,28 @@ class _experimentlist:
     ):
         """Dump experiment list as json"""
 
-        # Add a history entry referencing the calling module
+        # Find the module that called this function
+        stack = inspect.stack()
+        this_module = inspect.getmodule(stack[0].frame)
+        caller_module = "Unknown"
+        for f in stack[1:]:
+            module = inspect.getmodule(f.frame)
+            if module != this_module:
+                caller_module = module
+                break
+
+        # Look up the dispatcher name for this module and software version
+        try:
+            lookup = {e.module: e.name for e in importlib.metadata.entry_points()}
+        except AttributeError:  # Python < 3.10
+            lookup = {
+                e.module: e.name
+                for e in importlib.metadata.entry_points()["console_scripts"]
+            }
+        dispatcher = lookup.get(caller_module.__name__, caller_module.__name__)
+        version = importlib.metadata.version(dispatcher.split(".")[0])
+
+        # Set the flags string
         flags = []
         if flag_as_integrated:
             flags.append("integrated")
@@ -768,15 +790,9 @@ class _experimentlist:
             flags = " [" + ",".join(flags) + "]"
         else:
             flags = ""
-        stack = inspect.stack()
-        this_module = inspect.getmodule(stack[0].frame)
-        caller_module = "Unknown"
-        for f in stack[1:]:
-            module = inspect.getmodule(f.frame)
-            if module != this_module:
-                caller_module = module
-                break
-        message = caller_module.__name__ + flags
+
+        # Append the history string to the experiments
+        message = dispatcher + " " + version + flags
         self.append_history(message)
 
         # Get the dictionary and get the JSON string
