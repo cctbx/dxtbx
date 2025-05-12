@@ -778,7 +778,10 @@ class _experimentlist:
                 for e in importlib.metadata.entry_points()["console_scripts"]
             }
         dispatcher = lookup.get(caller_module.__name__, caller_module.__name__)
-        version = importlib.metadata.version(dispatcher.split(".")[0])
+        try:
+            version = "v" + importlib.metadata.version(dispatcher.split(".")[0])
+        except importlib.metadata.PackageNotFoundError:
+            version = "v?"
 
         # Set the flags string
         flags = []
