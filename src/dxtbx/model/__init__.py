@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import copy
+import importlib.metadata
+import inspect
 import json
 import os
 import sys
 
+import dateutil.parser
 from ordered_set import OrderedSet
 
 import boost_adaptbx.boost.python
@@ -561,6 +564,14 @@ class _experiment:
         self.scan = self.imageset.get_scan(index)
 
 
+def _consolidate_histories(histories: list[History]) -> History:
+    lines = [l for h in histories for l in h.get_history()]
+    lines.sort(key=lambda x: dateutil.parser.isoparse(x.split("|")[0]))
+    h = History()
+    h.set_history(lines)
+    return h
+
+
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
 class _experimentlist:
     def __repr__(self):
@@ -666,10 +677,18 @@ class _experimentlist:
             for name, models, _ in lookup_members
         }
 
+        # If multiple histories are present, consolidate them
+        histories = self.histories()
+        if len(histories) > 1:
+            history = _consolidate_histories(histories)
+        else:
+            history = histories[0]
+
         # Create the output dictionary
         result = {
             "__id__": "ExperimentList",
             "experiment": [],
+            "history": history.get_history(),
         }
 
         # Add the experiments to the dictionary
@@ -752,8 +771,61 @@ class _experimentlist:
             if experiment.imageset.reader().is_single_file_reader():
                 experiment.imageset.reader().nullify_format_instance()
 
-    def as_json(self, filename=None, compact=False, split=False):
+    def as_json(
+        self,
+        filename=None,
+        compact=False,
+        split=False,
+        history_as_integrated=False,
+        history_as_scaled=False,
+    ):
         """Dump experiment list as json"""
+
+        # Find the module that called this function for the history
+        stack = inspect.stack()
+        this_module = inspect.getmodule(stack[0].frame)
+        caller_module = "Unknown"
+        for f in stack[1:]:
+            module = inspect.getmodule(f.frame)
+            if module != this_module:
+                caller_module = module
+                break
+
+        # Look up the dispatcher name for the caller module and software version
+        try:
+            lookup = {e.module: e.name for e in importlib.metadata.entry_points()}
+        except AttributeError:  # Python < 3.10
+            lookup = {
+                e.module: e.name
+                for e in importlib.metadata.entry_points()["console_scripts"]
+            }
+        dispatcher = lookup.get(caller_module.__name__, caller_module.__name__)
+        try:
+            version = "v" + importlib.metadata.version(dispatcher.split(".")[0])
+        except importlib.metadata.PackageNotFoundError:
+            version = "v?"
+
+        # Set the flags string for the history
+        flags = []
+        if history_as_integrated:
+            flags.append("integrated")
+        if history_as_scaled:
+            flags.append("scaled")
+        if flags:
+            flags = ",".join(flags)
+        else:
+            flags = ""
+
+        # Consolidate existing history objects
+        history = _consolidate_histories(self.histories())
+
+        # Append the new history line
+        history.append_history_item(dispatcher, version, flags)
+
+        # Set the new history in each experiment
+        for experiment in self:
+            experiment.history = history
+
         # Get the dictionary and get the JSON string
         dictionary = self.to_dict()
 
