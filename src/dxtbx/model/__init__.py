@@ -686,10 +686,12 @@ class _experimentlist:
 
         # If multiple histories are present, consolidate them
         histories = self.histories()
+        if len(histories) == 0:
+            history = History()
+        elif len(histories) == 1:
+            history = histories[0]
         if len(histories) > 1:
             history = _consolidate_histories(histories)
-        else:
-            history = histories[0]
 
         # Create the output dictionary
         result = {
