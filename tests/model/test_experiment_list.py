@@ -8,6 +8,7 @@ import pickle
 import shutil
 from unittest import mock
 
+import dateutil.parser
 import pytest
 
 from cctbx import sgtbx
@@ -1294,10 +1295,51 @@ def test_experiment_list_all():
     assert experiments.all_same_type()
 
 
-def test_history():
-    h = History()
-    h.set_history(["foo", "bar"])
-    assert h.get_history() == ["foo", "bar"]
+def test_history(tmp_path):
+    # Check basic construction and pickling
+    history = History(["foo"])
+    assert history.get_history() == ["foo"]
+    history2 = pickle.loads(pickle.dumps(history))
+    assert history2.get_history() == history.get_history()
 
-    h2 = pickle.loads(pickle.dumps(h))
-    assert h2.get_history() == h.get_history()
+    # Check append history, which adds a timestamp
+    history = History()
+    history.append_history_item("dxtbx.program", "v42.0.0", "flag")
+    h = history.get_history()
+    assert len(h) == 1
+    timestamp, program, version, flag = h[-1].split("|")
+    assert dateutil.parser.isoparse(timestamp)
+    assert program == "dxtbx.program"
+    assert version == "v42.0.0"
+    assert flag == "flag"
+
+    # Now check saving and loading, which adds new history items
+    el = ExperimentList()
+    el.append(Experiment())
+    el[0].history = history
+    el.as_file(tmp_path / "temp.expt")
+    el2 = ExperimentList.from_file(tmp_path / "temp.expt")
+    assert el2[0].history.get_history()[0:2] == el[0].history.get_history()
+
+    _, program, _ = el2[0].history.get_history()[-1].split("|")
+    # This module called as_json, so its name is in the history
+    assert program == __name__
+
+    # Check flags
+    el.as_file(tmp_path / "temp2.expt", history_as_integrated=True)
+    check = ExperimentList.from_file(tmp_path / "temp2.expt")[0].history.get_history()[
+        -1
+    ]
+    assert "integrated" in check
+    el.as_file(tmp_path / "temp3.expt", history_as_scaled=True)
+    check = ExperimentList.from_file(tmp_path / "temp3.expt")[0].history.get_history()[
+        -1
+    ]
+    assert "scaled" in check
+    el.as_file(
+        tmp_path / "temp4.expt", history_as_integrated=True, history_as_scaled=True
+    )
+    check = ExperimentList.from_file(tmp_path / "temp4.expt")[0].history.get_history()[
+        -1
+    ]
+    assert "integrated,scaled" in check
