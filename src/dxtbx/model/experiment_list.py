@@ -513,8 +513,7 @@ class ExperimentListDict:
 
         # Add the history to the experiments if it exists
         if "history" in self._obj:
-            history = History()
-            history.set_history(self._obj["history"])
+            history = History(self._obj["history"])
             for expt in el:
                 expt.history = history
 
