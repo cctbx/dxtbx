@@ -31,6 +31,9 @@ namespace dxtbx { namespace model { namespace boost_python {
     boost::python::class_<History>("History")
       .def("set_history", &History::set_history_from_list)
       .def("get_history", &History::get_history_as_list)
+      .def(
+        "append_history_item",
+        &History::append_history_item(arg("dispatcher"), arg("version"), arg("flag")))
       .def_pickle(HistoryPickleSuite());
   }
 }}}  // namespace dxtbx::model::boost_python
