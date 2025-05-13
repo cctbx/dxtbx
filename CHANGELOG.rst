@@ -1,3 +1,12 @@
+DIALS 3.24.1 (2025-05-13)
+=========================
+
+Bugfixes
+--------
+
+- ``dxtbx.install_format``: Fix for modern setuptools versions which drop legacy ``setup.py`` features. (`#808 <https://github.com/cctbx/dxtbx/issues/808>`_)
+
+
 dxtbx 3.24.0 (2025-04-29)
 =========================
 
