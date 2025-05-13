@@ -16,6 +16,10 @@ namespace dxtbx { namespace model {
   public:
     History() {}
 
+    History(const boost::python::list &history) {
+      set_history_from_list(history);
+    }
+
     void set_history(const std::vector<std::string> &history) {
       history_ = history;
     }

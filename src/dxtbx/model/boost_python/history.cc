@@ -32,6 +32,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     using boost::python::arg;
 
     boost::python::class_<History>("History")
+      .def(boost::python::init<const boost::python::list &>())
       .def("set_history", &History::set_history_from_list)
       .def("get_history", &History::get_history_as_list)
       .def("append_history_item",

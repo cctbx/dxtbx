@@ -567,9 +567,7 @@ class _experiment:
 def _consolidate_histories(histories: list[History]) -> History:
     lines = [l for h in histories for l in h.get_history()]
     lines.sort(key=lambda x: dateutil.parser.isoparse(x.split("|")[0]))
-    h = History()
-    h.set_history(lines)
-    return h
+    return History(lines)
 
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
