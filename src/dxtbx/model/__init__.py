@@ -601,6 +601,10 @@ class _experimentlist:
         """Get a list of the unique imagesets."""
         return list(OrderedSet([e.imageset for e in self if e.imageset is not None]))
 
+    def histories(self):
+        """Get a list of the unique history objects."""
+        return list(OrderedSet([e.history for e in self if e.history is not None]))
+
     def all_stills(self):
         """Check if all the experiments are stills"""
         return all(exp.get_type() == ExperimentType.STILL for exp in self)
