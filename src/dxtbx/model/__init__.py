@@ -565,6 +565,15 @@ class _experiment:
 
 
 def _consolidate_histories(histories: list[History]) -> History:
+    """
+    Consolidate a list of histories into a single history.
+
+    At the moment, this just combines the lines from the histories and sorts
+    them by timestamp.
+
+    :param list[History] histories: The list of History objects to consolidate
+    :return History: The consolidated history
+    """
     lines = [l for h in histories for l in h.get_history()]
     lines.sort(key=lambda x: dateutil.parser.isoparse(x.split("|")[0]))
     return History(lines)
@@ -610,7 +619,7 @@ class _experimentlist:
         """Get a list of the unique imagesets."""
         return list(OrderedSet([e.imageset for e in self if e.imageset is not None]))
 
-    def histories(self):
+    def histories(self) -> list[History]:
         """Get a list of the unique history objects."""
         return list(OrderedSet([e.history for e in self if e.history is not None]))
 
