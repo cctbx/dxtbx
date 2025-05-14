@@ -73,6 +73,7 @@ class MemReader:
 
     def __init__(self, images):
         self._images = images
+        self.format_class = self._images[0].get_format_class()
 
     def copy(self, paths):
         """
