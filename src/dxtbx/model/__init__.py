@@ -564,21 +564,6 @@ class _experiment:
         self.scan = self.imageset.get_scan(index)
 
 
-def _consolidate_histories(histories: list[History]) -> History:
-    """
-    Consolidate a list of histories into a single history.
-
-    At the moment, this just combines the lines from the histories and sorts
-    them by timestamp.
-
-    :param list[History] histories: The list of History objects to consolidate
-    :return History: The consolidated history
-    """
-    lines = [l for h in histories for l in h.get_history()]
-    lines.sort(key=lambda x: dateutil.parser.isoparse(x.split("|")[0]))
-    return History(lines)
-
-
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
 class _experimentlist:
     def __repr__(self):
@@ -653,6 +638,30 @@ class _experimentlist:
                 return False
         return True
 
+    def consolidate_histories(self) -> History:
+        """
+        Consolidate a list of histories into a single history and set this in each
+        experiment.
+
+        At the moment, this just combines the lines from the histories and sorts
+        them by timestamp.
+
+        :return History: The consolidated history
+        """
+        histories = self.histories()
+        if len(histories) == 0:
+            lines = []
+        else:
+            lines = [l for h in histories for l in h.get_history()]
+            lines.sort(key=lambda x: dateutil.parser.isoparse(x.split("|")[0]))
+        history = History(lines)
+
+        # Set the consolidated history in each experiment
+        for experiment in self:
+            experiment.history = history
+
+        return history
+
     def to_dict(self):
         """Serialize the experiment list to dictionary."""
 
@@ -685,13 +694,7 @@ class _experimentlist:
         }
 
         # If multiple histories are present, consolidate them
-        histories = self.histories()
-        if len(histories) == 0:
-            history = History()
-        elif len(histories) == 1:
-            history = histories[0]
-        if len(histories) > 1:
-            history = _consolidate_histories(histories)
+        history = self.consolidate_histories()
 
         # Create the output dictionary
         result = {
@@ -826,14 +829,10 @@ class _experimentlist:
             flags = ""
 
         # Consolidate existing history objects
-        history = _consolidate_histories(self.histories())
+        history = self.consolidate_histories()
 
         # Append the new history line
         history.append_history_item(dispatcher, version, flags)
-
-        # Set the new history in each experiment
-        for experiment in self:
-            experiment.history = history
 
         # Get the dictionary and get the JSON string
         dictionary = self.to_dict()
