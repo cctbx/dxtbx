@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-import os
 import pickle
 
 import pytest
@@ -120,9 +119,9 @@ def smargon_shadow_masker(request):
 
 
 @pytest.fixture
-def dls_i23_experiment(dials_regression):
-    experiments_file = os.path.join(
-        dials_regression, "shadow_test_data/DLS_I23_Kappa/data_1_0400.cbf.gz"
+def dls_i23_experiment(dials_data):
+    experiments_file = str(
+        dials_data("shadow_test_data") / "DLS_I23_Kappa-data_1_0400.cbf.gz"
     )
     experiments = ExperimentListFactory.from_filenames([experiments_file])
     return experiments[0]
