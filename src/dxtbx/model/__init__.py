@@ -796,11 +796,11 @@ class _experimentlist:
         # Find the module that called this function for the history
         stack = inspect.stack()
         this_module = inspect.getmodule(stack[0].frame)
-        caller_module = "Unknown"
+        caller_module_name = "Unknown"
         for f in stack[1:]:
             module = inspect.getmodule(f.frame)
-            if module != this_module:
-                caller_module = module
+            if module != this_module and module is not None:
+                caller_module_name = module.__name__
                 break
 
         # Look up the dispatcher name for the caller module and software version
@@ -811,7 +811,7 @@ class _experimentlist:
                 e.module: e.name
                 for e in importlib.metadata.entry_points()["console_scripts"]
             }
-        dispatcher = lookup.get(caller_module.__name__, caller_module.__name__)
+        dispatcher = lookup.get(caller_module_name, caller_module_name)
         try:
             version = "v" + importlib.metadata.version(dispatcher.split(".")[0])
         except importlib.metadata.PackageNotFoundError:
