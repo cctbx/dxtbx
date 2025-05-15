@@ -40,8 +40,7 @@ class FormatCBF(Format):
                 add = fin.read(4096)
                 if not add:
                     # If the marker is not contained in the file then we return the
-                    # entire file. This behaviour is enforced by test involving
-                    # dials_regression/image_examples/ADSC_CBF/thaumatin_die_M1S5_1_asc_0041.cbf
+                    # entire file.
                     marker_index = None
                     break
                 header += add
