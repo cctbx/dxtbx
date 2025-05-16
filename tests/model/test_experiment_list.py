@@ -86,7 +86,7 @@ def all_image_examples(dials_data):
         ("SSRL_bl111-mar325_1_001.mccd.bz2"),
         ("xia2-merge2cbf_averaged_0001.cbf.bz2"),
     )
-    return [str(dials_data("image_examples") / f) for f in filenames]
+    return [str(dials_data("image_examples", pathlib=True) / f) for f in filenames]
 
 
 @pytest.fixture
