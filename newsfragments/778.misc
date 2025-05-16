@@ -1,0 +1,1 @@
+Switch build backend to hatchling. This lets us avoid deprecated setuptools behaviour, and automatically generate metadata in a more future-proof way.
