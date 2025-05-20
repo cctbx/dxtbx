@@ -173,6 +173,8 @@ class CrystalFactory:
         if params.crystal.unit_cell is not None:
             crystal.set_unit_cell(params.crystal.unit_cell)
         if params.crystal.A_matrix is not None:
-            crystal.set_A_matrix(params.crystal.A_matrix)
+            crystal.set_A(params.crystal.A_matrix)
         if params.crystal.space_group is not None:
             crystal.set_space_group(params.crystal.space_group.group())
+
+        return crystal
