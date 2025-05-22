@@ -215,7 +215,7 @@ if not env_etc.no_boost_python and hasattr(env_etc, "boost_adaptbx_include"):
             "src/dxtbx/model/boost_python/crystal.cc",
             "src/dxtbx/model/boost_python/parallax_correction.cc",
             "src/dxtbx/model/boost_python/pixel_to_millimeter.cc",
-            "src/dxtbx/model/boost_python/model/boost_python/history.cc",
+            "src/dxtbx/model/boost_python/history.cc",
             "src/dxtbx/model/boost_python/experiment.cc",
             "src/dxtbx/model/boost_python/experiment_list.cc",
             "src/dxtbx/model/boost_python/model_ext.cc",
