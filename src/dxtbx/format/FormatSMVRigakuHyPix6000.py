@@ -7,9 +7,12 @@ from __future__ import annotations
 
 import sys
 
+from boost_adaptbx.boost.python import streambuf
 from iotbx.detectors.dtrek import DTREKImage
 from scitbx import matrix
+from scitbx.array_family import flex
 
+from dxtbx.ext import is_big_endian, read_uint32, read_uint32_bs
 from dxtbx.format.FormatSMVRigaku import FormatSMVRigaku
 
 
@@ -186,6 +189,27 @@ class FormatSMVRigakuHypix6000(FormatSMVRigaku):
         return self._scan_factory.single_file(
             self._image_file, exposure_time, osc_start, osc_range, epoch
         )
+
+    def get_raw_data(self):
+        """Get the pixel intensities (i.e. read the image and return as a
+        flex array of integers.)"""
+
+        assert len(self.get_detector()) == 1
+        panel = self.get_detector()[0]
+        size = panel.get_image_size()
+        big_endian = self._header_dictionary["BYTE_ORDER"] == "big_endian"
+
+        with self.open_file(self._image_file, "rb") as fh:
+            fh.seek(self._header_size)
+
+            if big_endian == is_big_endian():
+                raw_data = read_uint32(streambuf(fh), int(size[0] * size[1]))
+            else:
+                raw_data = read_uint32_bs(streambuf(fh), int(size[0] * size[1]))
+
+        # note that x and y are reversed here
+        raw_data.reshape(flex.grid(size[1], size[0]))
+        return raw_data
 
 
 if __name__ == "__main__":
