@@ -21,6 +21,7 @@ class FormatRAXISII(RAXISHelper, Format):
         pass  # override with an empty function
 
     def _start(self):
+        super()._start()
         self.detectorbase = NonSquareRAXISImage(self._image_file)
         self.detectorbase.readHeader()
 

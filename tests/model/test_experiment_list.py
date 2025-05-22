@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import bz2
 import collections
 import errno
 import os
 import pickle
+import shutil
 from unittest import mock
 
 import pytest
@@ -36,8 +38,8 @@ from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactor
 
 
 @pytest.fixture(scope="session")
-def centroid_test_data(dials_regression):
-    return os.path.join(dials_regression, "centroid_test_data")
+def centroid_test_data(dials_data):
+    return str(dials_data("centroid_test_data", pathlib=True))
 
 
 @pytest.fixture
@@ -58,33 +60,33 @@ def multiple_sequence_filenames(centroid_test_data):
 
 
 @pytest.fixture
-def all_image_examples(dials_regression):
+def all_image_examples(dials_data):
     filenames = (
-        ("ALS_1231", "q315r_lyso_1_001.img"),
-        ("ALS_501", "als501_q4_1_001.img"),
-        ("ALS_821", "q210_lyso_1_101.img"),
-        ("ALS_831", "q315r_lyso_001.img"),
-        ("APS_14BMC", "q315_1_001.img"),
-        ("APS_17ID", "q210_1_001.img"),
-        ("APS_19ID", "q315_unbinned_a.0001.img"),
-        ("APS_22ID", "mar300.0001"),
-        ("APS_23IDD", "mar300_1_E1.0001"),
-        ("APS_24IDC", "pilatus_1_0001.cbf"),
-        ("APS_24IDC", "q315_1_001.img"),
-        ("CLS1_08ID1", "mar225_2_E0_0001.img"),
-        ("DESY_ID141", "q210_2_001.img"),
-        ("ESRF_BM14", "mar165_001.mccd"),
-        ("ESRF_BM14", "mar225_1_001.mccd"),
-        ("ESRF_ID231", "q315r_7_001.img"),
-        ("RAXIS-HTC", "test1_lysozyme_0111060001.osc"),
-        ("SLS_X06SA", "mar225_2_001.img"),
-        ("SLS_X06SA", "pilatus6m_1_00001.cbf"),
-        ("SRS_101", "mar225_001.img"),
-        ("SRS_142", "q4_1_001.img"),
-        ("SSRL_bl111", "mar325_1_001.mccd"),
-        ("xia2", "merge2cbf_averaged_0001.cbf"),
+        ("ALS_1231-q315r_lyso_1_001.img.bz2"),
+        ("ALS_501-als501_q4_1_001.img.bz2"),
+        ("ALS_821-q210_lyso_1_101.img.bz2"),
+        ("ALS_831-q315r_lyso_001.img.bz2"),
+        ("APS_14BMC-q315_1_001.img.bz2"),
+        ("APS_17ID-q210_1_001.img.bz2"),
+        ("APS_19ID-q315_unbinned_a.0001.img.bz2"),
+        ("APS_22ID-mar300.0001"),
+        ("APS_23IDD-mar300_1_E1.0001.bz2"),
+        ("APS_24IDC-pilatus_1_0001.cbf.bz2"),
+        ("APS_24IDC-q315_1_001.img.bz2"),
+        ("CLS1_08ID1-mar225_2_E0_0001.img.bz2"),
+        ("DESY_ID141-q210_2_001.img.bz2"),
+        ("ESRF_BM14-mar165_001.mccd.bz2"),
+        ("ESRF_BM14-mar225_1_001.mccd.bz2"),
+        ("ESRF_ID231-q315r_7_001.img.bz2"),
+        ("RAXIS-HTC-test1_lysozyme_0111060001.osc.bz2"),
+        ("SLS_X06SA-mar225_2_001.img.bz2"),
+        ("SLS_X06SA-pilatus6m_1_00001.cbf.bz2"),
+        ("SRS_101-mar225_001.img.bz2"),
+        ("SRS_142-q4_1_001.img.bz2"),
+        ("SSRL_bl111-mar325_1_001.mccd.bz2"),
+        ("xia2-merge2cbf_averaged_0001.cbf.bz2"),
     )
-    return [os.path.join(dials_regression, "image_examples", *f) for f in filenames]
+    return [str(dials_data("image_examples", pathlib=True) / f) for f in filenames]
 
 
 @pytest.fixture
@@ -400,21 +402,16 @@ def experiment_list():
     return experiments
 
 
-def test_experimentlist_factory_from_json(monkeypatch, dials_regression):
+def test_experimentlist_factory_from_json(monkeypatch, dials_data):
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
     # Get all the filenames
-    filename1 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_1.json"
-    )
-    filename3 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_3.json"
-    )
-    filename4 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_4.json"
-    )
+    filename1 = str(data_dir / "experiment_1.json")
+    filename3 = str(data_dir / "experiment_3.json")
+    filename4 = str(data_dir / "experiment_4.json")
 
-    # Read all the experiment lists in
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         el1 = ExperimentListFactory.from_json_file(filename1)
         el3 = ExperimentListFactory.from_json_file(filename3)
         el4 = ExperimentListFactory.from_json_file(filename4)
@@ -442,15 +439,15 @@ def test_experimentlist_factory_from_json(monkeypatch, dials_regression):
             assert e1.crystal == ee.crystal
 
 
-def test_experimentlist_factory_from_pickle(monkeypatch, dials_regression):
+def test_experimentlist_factory_from_pickle(monkeypatch, dials_data):
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
     # Get all the filenames
-    filename1 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_1.json"
-    )
+    filename1 = str(data_dir / "experiment_1.json")
 
     # Read all the experiment lists in
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         el1 = ExperimentListFactory.from_json_file(filename1)
 
     # Pickle then load again
@@ -470,20 +467,22 @@ def test_experimentlist_factory_from_pickle(monkeypatch, dials_regression):
         assert e1.crystal and e1.crystal == e2.crystal
 
 
-def test_experimentlist_factory_from_args(monkeypatch, dials_regression):
+def test_experimentlist_factory_from_args(monkeypatch, dials_data):
     pytest.importorskip("dials")
+
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
 
     # Get all the filenames
     filenames = [
-        os.path.join(dials_regression, "experiment_test_data", "experiment_1.json"),
-        # os.path.join(dials_regression, 'experiment_test_data', 'experiment_2.json'),
-        os.path.join(dials_regression, "experiment_test_data", "experiment_3.json"),
-        os.path.join(dials_regression, "experiment_test_data", "experiment_4.json"),
+        str(data_dir / "experiment_1.json"),
+        str(data_dir / "experiment_3.json"),
+        str(data_dir / "experiment_4.json"),
     ]
 
     # Get the experiments from a list of filenames
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         experiments = ExperimentListFactory.from_args(filenames)
 
     assert len(experiments) == 3
@@ -536,15 +535,16 @@ def test_experimentlist_factory_from_sequence():
     assert experiments[0].crystal
 
 
-def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmp_path):
+def test_experimentlist_dumper_dump_formats(monkeypatch, dials_data, tmp_path):
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
+
     # Get all the filenames
-    filename1 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_1.json"
-    )
+    filename1 = str(data_dir / "experiment_1.json")
 
     # Read all the experiment lists in
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         elist1 = ExperimentListFactory.from_json_file(filename1)
 
     # Dump as JSON file and reload
@@ -560,17 +560,15 @@ def test_experimentlist_dumper_dump_formats(monkeypatch, dials_regression, tmp_p
     check(elist1, elist2)
 
 
-def test_experimentlist_dumper_dump_scan_varying(
-    monkeypatch, dials_regression, tmp_path
-):
+def test_experimentlist_dumper_dump_scan_varying(monkeypatch, dials_data, tmp_path):
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
     # Get all the filenames
-    filename1 = os.path.join(
-        dials_regression, "experiment_test_data", "experiment_1.json"
-    )
+    filename1 = str(data_dir / "experiment_1.json")
 
     # Read the experiment list in
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
         elist1 = ExperimentListFactory.from_json_file(filename1)
 
     # Make trivial scan-varying models
@@ -621,10 +619,21 @@ def test_experimentlist_dumper_dump_empty_sequence(tmp_path):
     check(experiments, experiments2)
 
 
-def test_experimentlist_dumper_dump_with_lookup(dials_regression, tmp_path):
-    filename = os.path.join(
-        dials_regression, "centroid_test_data", "experiments_with_lookup.json"
-    )
+def test_experimentlist_dumper_dump_with_lookup(dials_data, tmp_path):
+    data_dir = dials_data("centroid_test_data", pathlib=True)
+
+    # Copy to the tmp directory, because we need to unpack some files
+    filename = shutil.copy(data_dir / "experiments_with_lookup.json", tmp_path)
+    gain_bz2 = shutil.copy(data_dir / "lookup_gain.pickle.bz2", tmp_path)
+    pedestal_bz2 = shutil.copy(data_dir / "lookup_pedestal.pickle.bz2", tmp_path)
+    shutil.copy(data_dir / "lookup_mask.pickle", tmp_path)
+    for image in data_dir.glob("centroid_000*.cbf"):
+        shutil.copy(image, tmp_path)
+
+    for f in [gain_bz2, pedestal_bz2]:
+        with bz2.BZ2File(f) as compr:
+            with open(f[:-4], "wb") as decompr:
+                shutil.copyfileobj(compr, decompr)
 
     experiments = ExperimentListFactory.from_json_file(filename, check_format=True)
 
@@ -835,24 +844,23 @@ def compare_experiment(exp1, exp2):
     )
 
 
-def test_experimentlist_from_file(monkeypatch, dials_regression, tmpdir):
+def test_experimentlist_from_file(dials_data, monkeypatch, tmpdir):
     # With the default check_format=True this file should fail to load with an
     # appropriate error as we can't find the images on disk
+    data_dir = dials_data("experiment_test_data", pathlib=True)
+    dials_data_root = data_dir / ".."
+
     with monkeypatch.context() as m:
-        m.delenv("DIALS_REGRESSION", raising=False)
+        m.delenv("DIALS_DATA", raising=False)
         with pytest.raises(IOError) as e:
-            exp_list = ExperimentList.from_file(
-                os.path.join(
-                    dials_regression, "experiment_test_data", "experiment_1.json"
-                )
-            )
+            exp_list = ExperimentList.from_file(str(data_dir / "experiment_1.json"))
     assert e.value.errno == errno.ENOENT
     assert "No such file or directory" in str(e.value)
     assert "centroid_0001.cbf" in str(e.value)
 
     # Setting check_format=False should allow the file to load
     exp_list = ExperimentList.from_file(
-        os.path.join(dials_regression, "experiment_test_data", "experiment_1.json"),
+        str(data_dir / "experiment_1.json"),
         check_format=False,
     )
     assert len(exp_list) == 1
@@ -862,10 +870,8 @@ def test_experimentlist_from_file(monkeypatch, dials_regression, tmpdir):
     # file to load with check_format=True
 
     with monkeypatch.context() as m:
-        m.setenv("DIALS_REGRESSION", dials_regression)
-        exp_list = ExperimentList.from_file(
-            os.path.join(dials_regression, "experiment_test_data", "experiment_1.json")
-        )
+        m.setenv("DIALS_DATA", str(dials_data_root.resolve()))
+        exp_list = ExperimentList.from_file(str(data_dir / "experiment_1.json"))
     assert len(exp_list) == 1
     assert exp_list[0].beam
 
@@ -995,7 +1001,7 @@ def test_path_iterator(monkeypatch):
         if name in ("a", "b", os.path.join("dir", "c"), os.path.join("dir", "d"), "e"):
             return mock.Mock()
         elif name.startswith("dir"):
-            err = IOError()
+            err = OSError()
             err.errno = errno.EISDIR
             # raise IOError(errno=errno.EISDIR)
             raise err
@@ -1205,15 +1211,19 @@ def test_from_templates(dials_data):
 
 def test_experiment_list_all():
     experiments = ExperimentList()
+    assert experiments.all_same_type()
     for i in range(3):
         experiments.append(Experiment())
 
     assert experiments.all_stills()
+    assert experiments.all_same_type()
     experiments[0].goniometer = Goniometer()
     assert experiments.all_stills()
+    assert experiments.all_same_type()
     experiments[1].goniometer = Goniometer()
     experiments[2].goniometer = Goniometer()
     assert experiments.all_stills()
+    assert experiments.all_same_type()
 
     experiments[0].beam = BeamFactory.make_polychromatic_beam(
         direction=(0, 0, -1),
@@ -1222,6 +1232,7 @@ def test_experiment_list_all():
         wavelength_range=(1, 10),
     )
     assert not experiments.all_stills()
+    assert not experiments.all_same_type()
     experiments[1].beam = BeamFactory.make_polychromatic_beam(
         direction=(0, 0, -1),
         sample_to_source_distance=(100),
@@ -1235,23 +1246,29 @@ def test_experiment_list_all():
         wavelength_range=(1, 10),
     )
     assert experiments.all_laue()
+    assert experiments.all_same_type()
 
     experiments[0].beam = Beam()
     assert not experiments.all_laue()
+    assert not experiments.all_same_type()
     experiments[1].beam = Beam()
     experiments[2].beam = Beam()
     assert experiments.all_stills()
+    assert experiments.all_same_type()
 
     experiments[0].scan = Scan((1, 1000), (0, 0.05))
     assert not experiments.all_stills()
+    assert not experiments.all_same_type()
     experiments[1].scan = Scan((1, 1000), (0, 0.05))
     experiments[2].scan = Scan((1, 1000), (0, 0.05))
     assert experiments.all_rotations()
+    assert experiments.all_same_type()
 
     experiments[0].scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
     assert not experiments.all_rotations()
+    assert not experiments.all_same_type()
     experiments[1].scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
@@ -1259,11 +1276,13 @@ def test_experiment_list_all():
         (1, 10), properties={"time_of_flight": list(range(10))}
     )
     assert experiments.all_tof()
+    assert experiments.all_same_type()
 
     experiments[0].scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"other_property": list(range(10))}
     )
     assert not experiments.all_tof()
+    assert not experiments.all_same_type()
     experiments[1].scan = ScanFactory.make_scan_from_properties(
         (1, 10), properties={"other_property": list(range(10))}
     )
@@ -1271,3 +1290,4 @@ def test_experiment_list_all():
         (1, 10), properties={"other_property": list(range(10))}
     )
     assert experiments.all_stills()
+    assert experiments.all_same_type()

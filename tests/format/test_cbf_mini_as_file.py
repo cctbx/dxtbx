@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 import pytest
 
 from dxtbx.format.FormatCBFMini import FormatCBFMini
@@ -17,12 +15,13 @@ from dxtbx.model.experiment_list import (
 @pytest.mark.parametrize(
     "image_file",
     [
-        ("image_examples", "ALS_831", "q315r_lyso_001.img"),
-        ("image_examples", "DLS_I02", "X4_wide_M1S4_1_0001.cbf"),
+        ("ALS_831-q315r_lyso_001.img.bz2"),
+        ("DLS_I02-X4_wide_M1S4_1_0001.cbf.bz2"),
     ],
 )
-def test_cbf_writer(image_file, dials_regression, tmp_path):
-    filename = os.path.join(dials_regression, *image_file)
+def test_cbf_writer(image_file, dials_data, tmp_path):
+    data_dir = dials_data("image_examples", pathlib=True)
+    filename = str(data_dir / image_file)
     imageset = ExperimentListFactory.from_filenames([filename])[0].imageset
     output_file = tmp_path / "image_0001.cbf"
 

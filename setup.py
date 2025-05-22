@@ -8,7 +8,7 @@ from build import build
 
 # Static version number which is updated by bump2version
 # Do not change this manually - use 'bump2version <major/minor/patch/release>'
-__version_tag__ = "3.21.dev"
+__version_tag__ = "3.25.dev"
 
 setup_kwargs = {
     "name": "dxtbx",
@@ -17,7 +17,7 @@ setup_kwargs = {
     "description": "Diffraction Experiment Toolbox",
     "author": "Diamond Light Source",
     "license": "BSD-3-Clause",
-    "author_email": "dials-support@lists.sourceforge.net",
+    "author_email": "dials-user-group@jiscmail.net",
     "project_urls": {
         "homepage": "https://dials.github.io",
         "repository": "https://github.com/cctbx/dxtbx",

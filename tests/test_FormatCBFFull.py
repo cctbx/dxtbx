@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-import os
-
 from libtbx.test_utils import approx_equal
 
 from dxtbx.imageset import ImageSetFactory
 
 
-def test_multi_axis_goniometer(dials_regression):
-    data_dir = os.path.join(dials_regression, "image_examples", "dials-190")
+def test_multi_axis_goniometer(dials_data):
+    data_dir = dials_data("misc_regression", pathlib=True)
 
-    imgset = ImageSetFactory.new(os.path.join(data_dir, "whatev1_01_00001.cbf"))[0]
+    imgset = ImageSetFactory.new(str(data_dir / "dials-190_01_00001.cbf"))[0]
     gonio = imgset.get_goniometer(0)
     assert approx_equal(gonio.get_fixed_rotation(), (1, 0, 0, 0, 1, 0, 0, 0, 1))
     assert approx_equal(gonio.get_setting_rotation(), (1, 0, 0, 0, 1, 0, 0, 0, 1))
 
-    imgset = ImageSetFactory.new(os.path.join(data_dir, "whatev1_02_00001.cbf"))[0]
+    imgset = ImageSetFactory.new(str(data_dir / "dials-190_02_00001.cbf"))[0]
     gonio = imgset.get_goniometer(0)
     assert approx_equal(gonio.get_fixed_rotation(), (1, 0, 0, 0, 1, 0, 0, 0, 1))
     assert approx_equal(
@@ -24,7 +22,7 @@ def test_multi_axis_goniometer(dials_regression):
         eps=1e-4,
     )
 
-    imgset = ImageSetFactory.new(os.path.join(data_dir, "whatev1_03_00001.cbf"))[0]
+    imgset = ImageSetFactory.new(str(data_dir / "dials-190_03_00001.cbf"))[0]
     gonio = imgset.get_goniometer(0)
     assert approx_equal(gonio.get_fixed_rotation(), (1, 0, 0, 0, 1, 0, 0, 0, 1))
     assert approx_equal(
@@ -34,10 +32,12 @@ def test_multi_axis_goniometer(dials_regression):
     )
 
 
-def test_still(dials_regression):
-    data_dir = os.path.join(dials_regression, "image_examples", "DLS_I04")
+def test_still(dials_data):
+    data_dir = dials_data("image_examples", pathlib=True)
 
-    imgset = ImageSetFactory.new(os.path.join(data_dir, "grid_full_cbf_0005.cbf"))[0]
+    imgset = ImageSetFactory.new(str(data_dir / "DLS_I04-grid_full_cbf_0005.cbf.bz2"))[
+        0
+    ]
     if imgset.get_scan(0):
         scan = imgset.get_scan(0)
         assert approx_equal(

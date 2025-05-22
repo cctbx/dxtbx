@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import random
 
 from scitbx import matrix
@@ -21,8 +20,8 @@ def correct_gold(detector, attlen, xy):
     return mmcal
 
 
-def test_run(dials_regression):
-    filename = os.path.join(dials_regression, "image_examples", "XDS", "XPARM.XDS")
+def test_run(dials_data):
+    filename = str(dials_data("misc_regression", pathlib=True) / "sim_mx-GXPARM.XDS")
 
     models = dxtbx.load(filename)
     detector = models.get_detector()

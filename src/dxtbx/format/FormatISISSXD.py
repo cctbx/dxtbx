@@ -32,7 +32,7 @@ class FormatISISSXD(FormatHDF5):
     def understand(image_file: str) -> bool:
         try:
             return FormatISISSXD.is_isissxd_file(image_file)
-        except (IOError, KeyError):
+        except (OSError, KeyError):
             return False
 
     @staticmethod
@@ -112,92 +112,186 @@ class FormatISISSXD(FormatHDF5):
 
         return detector
 
-    def _get_pixel_size(self) -> Tuple[float, float]:
+    def _get_pixel_size(self) -> tuple[float, float]:
         # (mm)
         return (3.0, 3.0)
 
-    def _get_image_size(self) -> Tuple[int, int]:
+    def _get_image_size(self) -> tuple[int, int]:
         # (px)
         return (64, 64)
 
     def _get_num_panels(self) -> int:
         return 11
 
-    def _get_panel_names(self) -> List[str]:
+    def _get_panel_names(self) -> list[str]:
         return ["%02d" % (i + 1) for i in range(11)]
 
     def _get_panel_gain(self):
         return 1.0
 
-    def _get_panel_trusted_range(self) -> Tuple[int, int]:
+    def _get_panel_trusted_range(self) -> tuple[int, int]:
         return (-1, 100000)
 
     def _get_panel_type(self) -> str:
         return "SENSOR_PAD"
 
-    def _panel_0_params(self):
-        if self._panel_0_flipped():
-            return {
-                "slow_axis": (0.793, 0.0, 0.609),
-                "fast_axis": (0.0, -1.0, 0.0),
-                "origin": (60.81, 96.0, -236.946),
-            }
-        return {
-            "fast_axis": (-0.793, 0.0, -0.609),
-            "slow_axis": (0.0, 1.0, 0.0),
-            "origin": (213.099, -96.0, -120.041),
-        }
-
-    def _get_panel_origins(self) -> Tuple[Tuple[float, float, float]]:
+    def _get_panel_origins(self) -> tuple[tuple[float, float, float]]:
         # (mm)
-        return (
-            self._panel_0_params()["origin"],
-            (224.999, -96.0, 96.0),
-            (60.809, -96.0, 236.945),
-            (-214.172, -96.0, 118.198),
-            (-224.999, -96.0, -96.0),
-            (-60.809, -96.0, -236.945),
-            (127.534, -256.614, 96.0),
-            (-96.0, -256.614, 127.534),
-            (-123.036, -258.801, -96.0),
-            (96.0, -256.614, -127.534),
-            (96.0, -278.0, 96.0),
-        )
+
+        start_date = self.get_start_date()
+        assert start_date is not None
+        year, _, _ = start_date.split("-")
+        year = int(year)
+        if year < 2020:
+            return (
+                (213.066, -96.0, -120.018),
+                (224.999, -96.0, 96.0),
+                (60.809, -96.0, 236.945),
+                (-214.172, -96.0, 118.198),
+                (-224.999, -96.0, -96.0),
+                (-60.809, -96.0, -236.945),
+                (127.534, -256.614, 96.0),
+                (-96.0, -256.614, 127.534),
+                (-123.036, -258.801, -96.0),
+                (96.0, -256.614, -127.534),
+                (96.0, -278.0, 96.0),
+            )
+
+        elif year < 2024:
+            return (
+                (60.81, 96.0, -236.946),
+                (224.999, -96.0, 96.0),
+                (60.809, -96.0, 236.945),
+                (-214.172, -96.0, 118.198),
+                (-224.999, -96.0, -96.0),
+                (-60.809, -96.0, -236.945),
+                (127.534, -256.614, 96.0),
+                (-96.0, -256.614, 127.534),
+                (-123.036, -258.801, -96.0),
+                (96.0, -256.614, -127.534),
+                (96.0, -278.0, 96.0),
+            )
+        else:
+            return (
+                (60.81, 96.0, -236.946),
+                (224.999, 96.0, -96.0),
+                (213.065, 96.0, 120.017),
+                (-62.876000000000005, 96.0, 236.46999999999997),
+                (-224.999, 96.0, 96.0),
+                (-213.065, 96.0, -120.017),
+                (258.86499037, -123.10256614, -96.0),
+                (96.0, -123.10256614147632, 258.86499037410107),
+                (-258.78, -123.05699999999999, 96.0),
+                (-99.0, -123.10256614147632, -258.86499037410107),
+                (96.0, -278.0, 96.0),
+            )
 
     def _panel_0_flipped(self) -> bool:
-        if self._nxs_file["raw_data_1"]["run_number"][0] > 30000:
+        start_date = self.get_start_date()
+        assert start_date is not None
+        year, _, _ = start_date.split("-")
+        if int(year) < 2024:
             return True
         return False
 
-    def _get_panel_slow_axes(self) -> Tuple[Tuple[float, float, float]]:
-        return (
-            self._panel_0_params()["slow_axis"],
-            (0.0, 1.0, 0.0),
-            (0.0, 1.0, 0.0),
-            (0.0, 1.0, 0.0),
-            (0.0, 1.0, 0.0),
-            (0.0, 1.0, 0.0),
-            (0.695, 0.719, -0.0),
-            (0.0, 0.719, 0.695),
-            (-0.707, 0.707, -0.0),
-            (0.0, 0.719, -0.695),
-            (-0.0, 0.0, -1.0),
-        )
+    def _get_panel_slow_axes(self) -> tuple[tuple[float, float, float]]:
+        start_date = self.get_start_date()
+        assert start_date is not None
+        year, _, _ = start_date.split("-")
+        year = int(year)
+        if year < 2020:
+            return (
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.695, 0.719, -0.0),
+                (0.0, 0.719, 0.695),
+                (-0.707, 0.707, -0.0),
+                (0.0, 0.719, -0.695),
+                (-0.0, 0.0, -1.0),
+            )
+        elif year < 2024:
+            return (
+                (0.793, 0.0, 0.609),
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.0, 1.0, 0.0),
+                (0.695, 0.719, -0.0),
+                (0.0, 0.719, 0.695),
+                (-0.707, 0.707, -0.0),
+                (0.0, 0.719, -0.695),
+                (-0.0, 0.0, -1.0),
+            )
 
-    def _get_panel_fast_axes(self) -> Tuple[Tuple[float, float, float]]:
-        return (
-            self._panel_0_params()["fast_axis"],
-            (-0.0, -0.0, -1.0),
-            (0.793, -0.0, -0.609),
-            (0.788, -0.0, 0.616),
-            (-0.0, -0.0, 1.0),
-            (-0.793, -0.0, 0.609),
-            (0.0, -0.0, -1.0),
-            (1.0, -0.0, -0.0),
-            (-0.0, -0.0, 1.0),
-            (-1.0, -0.0, -0.0),
-            (-1.0, -0.0, -0.0),
-        )
+        else:
+            return (
+                (0.0, -1.0, 0.0),
+                (0.0, -1.0, 0.0),
+                (0.0, -1.0, 0.0),
+                (0.0, -1.0, 0.0),
+                (0.0, -1.0, 0.0),
+                (0.0, -1.0, 0.0),
+                (-0.70744243, -0.70676107, 0.0),
+                (0.0, -0.7067610703435333, -0.7074424283620987),
+                (0.707, -0.707, 0.0),
+                (0.0, -0.7067610703435333, 0.7074424283620987),
+                (-0.0, 0.0, -1.0),
+            )
+
+    def _get_panel_fast_axes(self) -> tuple[tuple[float, float, float]]:
+        start_date = self.get_start_date()
+        assert start_date is not None
+        year, _, _ = start_date.split("-")
+        year = int(year)
+        if year < 2020:
+            return (
+                (-0.793, 0.0, -0.609),
+                (-0.0, -0.0, -1.0),
+                (0.793, -0.0, -0.609),
+                (0.788, -0.0, 0.616),
+                (-0.0, -0.0, 1.0),
+                (-0.793, -0.0, 0.609),
+                (0.0, -0.0, -1.0),
+                (1.0, -0.0, -0.0),
+                (-0.0, -0.0, 1.0),
+                (-1.0, -0.0, -0.0),
+                (-1.0, -0.0, -0.0),
+            )
+
+        elif year < 2024:
+            return (
+                (0.0, -1.0, 0.0),
+                (-0.0, -0.0, -1.0),
+                (0.793, -0.0, -0.609),
+                (0.788, -0.0, 0.616),
+                (-0.0, -0.0, 1.0),
+                (-0.793, -0.0, 0.609),
+                (0.0, -0.0, -1.0),
+                (1.0, -0.0, -0.0),
+                (-0.0, -0.0, 1.0),
+                (-1.0, -0.0, -0.0),
+                (-1.0, -0.0, -0.0),
+            )
+
+        else:
+            return (
+                (0.793, 0.0, 0.609),
+                (-0.0, -0.0, 1.0),
+                (-0.793, 0.0, 0.609),
+                (-0.788, 0.0, -0.616),
+                (0.0, 0.0, -1.0),
+                (0.793, 0.0, -0.609),
+                (0.0, 0.0, 1.0),
+                (-1.0, 0.0, 0.0),
+                (0.0, 0.0, -1.0),
+                (1.0, 0.0, 0.0),
+                (-1.0, 0.0, 0.0),
+            )
 
     def _get_panel_projections_2d(self) -> dict:
         """
@@ -237,25 +331,32 @@ class FormatISISSXD(FormatHDF5):
         # (mm)
         return 8300.0
 
-    def _get_sample_to_source_direction(self) -> Tuple[float, float, float]:
+    def _get_sample_to_source_direction(self) -> tuple[float, float, float]:
         return (0, 0, -1)
 
-    def _get_wavelength_range(self) -> Tuple[float, float]:
+    def _get_wavelength_range(self) -> tuple[float, float]:
         # (A)
         return (0.2, 10.0)
 
     def get_scan(self, index=None) -> Scan:
         image_range = (1, self.get_num_images())
-        properties = {"time_of_flight": self._get_time_of_flight()}
+        properties = {
+            "time_of_flight": self._get_time_of_flight(),
+            "time_of_flight_bin_widths": self._get_time_channel_bin_widths(),
+        }
         return ScanFactory.make_scan_from_properties(
             image_range=image_range, properties=properties
         )
 
-    def _get_time_channel_bins(self) -> List[float]:
+    def _get_time_channel_bins(self) -> list[float]:
         # (usec)
         return self._nxs_file["raw_data_1"]["instrument"]["dae"]["time_channels_1"][
             "time_of_flight"
         ][:]
+
+    def _get_time_channel_bin_widths(self) -> List[float]:
+        bins = self._get_time_channel_bins()
+        return tuple([float((bins[i + 1] - bins[i])) for i in range(len(bins) - 1)])
 
     def _get_time_of_flight(self) -> Tuple[float]:
         # (usec)
@@ -287,7 +388,7 @@ class FormatISISSXD(FormatHDF5):
             raw_data.append(panel_data)
         self._raw_data = tuple(raw_data)
 
-    def get_raw_data(self, index: int, use_loaded_data=True) -> Tuple[flex.int]:
+    def get_raw_data(self, index: int, use_loaded_data=True) -> tuple[flex.int]:
         raw_data = []
 
         if use_loaded_data:
@@ -322,8 +423,8 @@ class FormatISISSXD(FormatHDF5):
         return tuple(raw_data)
 
     def get_flattened_data(
-        self, image_range: None | Tuple = None, scale_data: bool = True
-    ) -> Tuple[flex.int]:
+        self, image_range: None | tuple = None, scale_data: bool = True
+    ) -> tuple[flex.int]:
         """
         Image data summed along the time-of-flight direction
         """
@@ -372,7 +473,7 @@ class FormatISISSXD(FormatHDF5):
 
     def get_flattened_pixel_data(
         self, panel_idx: int, x: int, y: int
-    ) -> Tuple[Tuple, Tuple]:
+    ) -> tuple[tuple, tuple]:
         time_channels = self._get_time_of_flight()
         panel_size = self._get_image_size()
         height = panel_size[1]
@@ -386,5 +487,15 @@ class FormatISISSXD(FormatHDF5):
             tuple(self._nxs_file["raw_data_1/detector_1/counts"][0, idx, :].tolist()),
         )
 
-    def get_proton_charge(self):
+    def get_proton_charge(self) -> float:
         return float(self._nxs_file["raw_data_1/proton_charge"][0])
+
+    def get_start_date(self) -> str:
+        """
+        Date of experiment in YYYY-MM-DD format
+        """
+        try:
+            raw_date = self._nxs_file["raw_data_1/start_time"][0].decode()
+            return raw_date.split("T")[0]
+        except IndexError:
+            return None

@@ -70,9 +70,9 @@ def beam_diff(
     if abs(aw - bw) > wavelength_tolerance:
         text.append(f" Wavelength: {aw:f}, {bw:f}")
     if abs(ad.angle(bd)) > direction_tolerance:
-        text.append(" Direction: {}, {}".format(tuple(ad), tuple(bd)))
+        text.append(f" Direction: {tuple(ad)}, {tuple(bd)}")
     if abs(an.angle(bn)) > polarization_normal_tolerance:
-        text.append(" Polarization normal: {}, {}".format(tuple(an), tuple(bn)))
+        text.append(f" Polarization normal: {tuple(an)}, {tuple(bn)}")
     if abs(af - bf) > polarization_fraction_tolerance:
         text.append(f" Polarization fraction: {af}, {bf}")
     if len(text) > 0:
@@ -139,7 +139,7 @@ def goniometer_diff(
     b_setting = goniometer2.get_setting_rotation()
     text = []
     if abs(a_axis.angle(b_axis)) > rotation_axis_tolerance:
-        text.append(" Rotation axis: {}, {}".format(tuple(a_axis), tuple(b_axis)))
+        text.append(f" Rotation axis: {tuple(a_axis)}, {tuple(b_axis)}")
     if not _all_approx_equal(a_fixed, b_fixed, fixed_rotation_tolerance):
         text.append(f" Fixed rotation: {a_fixed}, {b_fixed}")
     if not _all_approx_equal(a_setting, b_setting, setting_rotation_tolerance):

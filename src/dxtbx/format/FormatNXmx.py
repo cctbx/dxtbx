@@ -1,10 +1,39 @@
 from __future__ import annotations
 
+import weakref
+
 import h5py
 import nxmx
 
+import scitbx.array_family.flex as flex
+
 import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
+
+
+class _MaskCache:
+    """A singleton to hold unique static_mask objects to avoid duplications"""
+
+    def __init__(self):
+        self.local_mask_cache = weakref.WeakValueDictionary()
+
+    def _mask_hasher(self, mask: flex.bool) -> int:
+        return hash(mask.as_numpy_array().tobytes())
+
+    def store_unique_and_get(
+        self, mask_tuple: tuple[flex.bool, ...] | None
+    ) -> tuple[flex.bool, ...] | None:
+        if mask_tuple is None:
+            return None
+        output = []
+        for mask in mask_tuple:
+            mask_hash = self._mask_hasher(mask)
+            mask = self.local_mask_cache.setdefault(mask_hash, mask)
+            output.append(mask)
+        return tuple(output)
+
+
+mask_cache = _MaskCache()
 
 
 def detector_between_sample_and_source(detector, beam):
@@ -68,10 +97,13 @@ class FormatNXmx(FormatNexus):
         nxinstrument = nxentry.instruments[0]
         nxdetector = nxinstrument.detectors[0]
         nxbeam = nxinstrument.beams[0]
+        nxdata = nxmx_obj.entries[0].data[0]
         self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
         self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
         wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
-        self._detector_model = dxtbx.nexus.get_dxtbx_detector(nxdetector, wavelength)
+        self._detector_model = dxtbx.nexus.get_dxtbx_detector(
+            nxdetector, wavelength, nxdata
+        )
 
         # if the detector is between the sample and the source, and perpendicular
         # to the beam, then invert the distance vector, as this is probably wrong
@@ -80,13 +112,14 @@ class FormatNXmx(FormatNexus):
             self._detector_model = inverted_distance_detector(self._detector_model)
 
         self._scan_model = dxtbx.nexus.get_dxtbx_scan(nxsample, nxdetector)
-        self._static_mask = dxtbx.nexus.get_static_mask(nxdetector)
+        self._static_mask = mask_cache.store_unique_and_get(
+            dxtbx.nexus.get_static_mask(nxdetector)
+        )
         self._bit_depth_readout = nxdetector.bit_depth_readout
 
         if self._scan_model:
             self._num_images = len(self._scan_model)
         else:
-            nxdata = nxmx_obj.entries[0].data[0]
             if nxdata.signal:
                 data = nxdata[nxdata.signal]
             else:

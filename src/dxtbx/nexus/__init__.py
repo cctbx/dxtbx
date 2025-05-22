@@ -124,7 +124,7 @@ class CachedWavelengthBeamFactory:
 
         def get_wavelength(wavelength):
             if wavelength.shape in ((), (1,)):
-                wavelength_value = wavelength[()]
+                wavelength_value = wavelength[()].item()
             else:
                 wavelength_value = wavelength[index]
             wavelength_units = nxmx.units(wavelength)
@@ -245,6 +245,7 @@ def get_dxtbx_scan(
 def get_dxtbx_detector(
     nxdetector: nxmx.NXdetector,
     wavelength: float,
+    nxdata: nxmx.NXdata | None = None,
 ) -> dxtbx.model.Detector:
     """Generate a dxtbx detector model from an NXdetector and NXbeam.
 
@@ -461,6 +462,9 @@ def get_dxtbx_detector(
         p.set_mu(mu)
         p.set_px_mm_strategy(px_mm)
 
+        if nxdata and nxdata.data_scale_factor and not nxdata.data_scale_factor.shape:
+            p.set_gain(1 / nxdata.data_scale_factor)
+
     return detector
 
 
@@ -561,7 +565,7 @@ def get_raw_data(
     nxdata: nxmx.NXdata,
     nxdetector: nxmx.NXdetector,
     index: int,
-    bit_depth: Optional[int] = None,
+    bit_depth: int | None = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 

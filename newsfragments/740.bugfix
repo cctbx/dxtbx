@@ -1,2 +1,0 @@
-``FormatMRC``: relax restrictive check on the overloaded MZ header
-value, which caused failures to read files where MZ == 1
