@@ -97,7 +97,7 @@ setup(
     if not custom_folder.exists():
         os.symlink(home_location, custom_folder)
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-e", "--user", str(home_location)],
+        [sys.executable, "-m", "pip", "install", "-e", str(home_location), "--user"],
         cwd=home_location,
         capture_output=True,
         check=True,
