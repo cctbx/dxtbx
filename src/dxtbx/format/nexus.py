@@ -1096,7 +1096,7 @@ class DetectorFactory:
         # mu_at_angstrom returns cm^-1, but need mu in mm^-1
         table = attenuation_coefficient.get_table(material)
         wavelength = beam.get_wavelength()
-        mu = table.mu_at_angstrom(wavelength) / 10.0
+        mu = float(table.mu_at_angstrom(wavelength)) / 10.0
 
         # Construct the detector model
         pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
@@ -1113,9 +1113,9 @@ class DetectorFactory:
             Panel(
                 detector_type,
                 detector_name,
-                tuple(fast_axis),
-                tuple(slow_axis),
-                tuple(origin),
+                tuple(float(x) for x in fast_axis),
+                tuple(float(x) for x in slow_axis),
+                tuple(float(x) for x in origin),
                 pixel_size,
                 image_size,
                 trusted_range,
