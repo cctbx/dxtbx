@@ -45,6 +45,7 @@ jobs:
         run: echo "CMAKE_GENERATOR=Ninja" >> $GITHUB_ENV
       - name: Build
         run: |
+          pip3 install "nxmx>=0.0.5"
           mkdir build
           cd build
           cmake ../dxtbx -DCMAKE_UNITY_BUILD=true -DPython_ROOT_DIR="${CONDA_PREFIX}"
