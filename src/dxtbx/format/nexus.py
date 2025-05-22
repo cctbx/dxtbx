@@ -69,7 +69,7 @@ def dataset_as_flex(dataset, selection):
         assert numpy.issubdtype(dataset.dtype, numpy.floating)
         double_types = [
             numpy.double,
-            numpy.longfloat,
+            numpy.longdouble,
             numpy.float64,
         ]
         if hasattr(numpy, "float96"):
