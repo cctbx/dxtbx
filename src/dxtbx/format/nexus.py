@@ -49,15 +49,15 @@ except ImportError:
 NXNode = Union[h5py.File, h5py.Group]
 
 
-def h5str(h5_value: str | numpy.string_ | bytes) -> str:
+def h5str(h5_value: str | numpy.bytes_ | bytes) -> str:
     """
     Convert a value returned an h5py attribute to str.
 
-    h5py can return either a bytes-like (numpy.string_) or str object
+    h5py can return either a bytes-like (numpy.bytes_) or str object
     for attribute values depending on whether the value was written as
     fixed or variable length. This function collapses the two to str.
     """
-    if isinstance(h5_value, (numpy.string_, bytes)):
+    if isinstance(h5_value, (numpy.bytes_, bytes)):
         return h5_value.decode("utf-8")
     return h5_value
 
@@ -69,7 +69,7 @@ def dataset_as_flex(dataset, selection):
         assert numpy.issubdtype(dataset.dtype, numpy.floating)
         double_types = [
             numpy.double,
-            numpy.longfloat,
+            numpy.longdouble,
             numpy.float64,
         ]
         if hasattr(numpy, "float96"):
@@ -79,7 +79,7 @@ def dataset_as_flex(dataset, selection):
         if dataset.dtype in [
             numpy.half,
             numpy.single,
-            numpy.float_,
+            numpy.float64,
             numpy.float16,
             numpy.float32,
         ]:
@@ -1096,7 +1096,7 @@ class DetectorFactory:
         # mu_at_angstrom returns cm^-1, but need mu in mm^-1
         table = attenuation_coefficient.get_table(material)
         wavelength = beam.get_wavelength()
-        mu = table.mu_at_angstrom(wavelength) / 10.0
+        mu = float(table.mu_at_angstrom(wavelength)) / 10.0
 
         # Construct the detector model
         pixel_size = (fast_pixel_direction_value, slow_pixel_direction_value)
@@ -1113,9 +1113,9 @@ class DetectorFactory:
             Panel(
                 detector_type,
                 detector_name,
-                tuple(fast_axis),
-                tuple(slow_axis),
-                tuple(origin),
+                tuple(float(x) for x in fast_axis),
+                tuple(float(x) for x in slow_axis),
+                tuple(float(x) for x in origin),
                 pixel_size,
                 image_size,
                 trusted_range,

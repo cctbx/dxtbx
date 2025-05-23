@@ -186,7 +186,7 @@ class NXmxWriter:
             entry["end_time_estimated"] = self.params.nexus_details.end_time_estimated
 
         # --> definition
-        self._create_scalar(entry, "definition", "S4", np.string_("NXmx"))
+        self._create_scalar(entry, "definition", "S4", np.bytes_("NXmx"))
 
         # --> sample
         sample = self.handle["entry"].create_group("sample")
@@ -369,7 +369,7 @@ class NXmxWriter:
         det_group.attrs["NX_class"] = "NXdetector_group"
 
         det_group.create_dataset("group_index", data=list(range(1, 3)), dtype="i")
-        data = [np.string_("detector"), np.string_("detector")]
+        data = [np.bytes_("detector"), np.bytes_("detector")]
         det_group.create_dataset("group_names", (2,), data=data, dtype="S12")
         det_group.create_dataset("group_parent", (2,), data=[-1, 1], dtype="i")
         det_group.create_dataset("group_type", (2,), data=[1, 2], dtype="i")
