@@ -225,7 +225,7 @@ def get_dxtbx_scan(
         oscillation = tuple(float(f) for f in (start.magnitude, step.magnitude))
 
     if nxdetector.frame_time is not None:
-        frame_time = nxdetector.frame_time.to("seconds").magnitude
+        frame_time = float(nxdetector.frame_time.to("seconds").magnitude)
         exposure_times = flex.double(num_images, frame_time)
         epochs = flex.double_range(0, num_images) * frame_time
     else:
@@ -441,7 +441,7 @@ def get_dxtbx_detector(
         material = KNOWN_SENSOR_MATERIALS.get(nxdetector.sensor_material)
         if not material:
             raise ValueError(f"Unknown material: {nxdetector.sensor_material}")
-        thickness = nxdetector.sensor_thickness.to("mm").magnitude
+        thickness = float(nxdetector.sensor_thickness.to("mm").magnitude)
         table = eltbx.attenuation_coefficient.get_table(material)
         mu = table.mu_at_angstrom(wavelength) / 10.0
         px_mm = dxtbx.model.ParallaxCorrectedPxMmStrategy(mu, thickness)
