@@ -191,17 +191,17 @@ class _crystal:
         sg = str(self.get_space_group().info())
         umat = (
             matrix.sqr(self.get_U())
-            .mathematica_form(format="% 5.4f", one_row_per_line=True)
+            .mathematica_form(format="% 7.6f", one_row_per_line=True)
             .splitlines()
         )
         bmat = (
             matrix.sqr(self.get_B())
-            .mathematica_form(format="% 5.4f", one_row_per_line=True)
+            .mathematica_form(format="% 7.6f", one_row_per_line=True)
             .splitlines()
         )
         amat = (
             (matrix.sqr(self.get_U()) * matrix.sqr(self.get_B()))
-            .mathematica_form(format="% 5.4f", one_row_per_line=True)
+            .mathematica_form(format="% 7.6f", one_row_per_line=True)
             .splitlines()
         )
 
