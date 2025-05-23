@@ -587,7 +587,7 @@ py::object miller_index_from_numpy(py::array np_array) {
   if (accepted_types.find(dtype) == std::string::npos) {
     throw std::invalid_argument(
       std::string("miller_index only supports int32 or intc types - cannot convert '")
-      + std::to_string(dtype) + "'");
+      + dtype + "'");
   }
   return vec_from_numpy<cctbx::miller::index>(np_array);
 }
