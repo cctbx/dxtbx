@@ -225,7 +225,7 @@ def get_dxtbx_scan(
         oscillation = tuple(float(f) for f in (start.magnitude, step.magnitude))
 
     if nxdetector.frame_time is not None:
-        frame_time = nxdetector.frame_time.to("seconds").magnitude
+        frame_time = float(nxdetector.frame_time.to("seconds").magnitude)
         exposure_times = flex.double(num_images, frame_time)
         epochs = flex.double_range(0, num_images) * frame_time
     else:
