@@ -441,7 +441,7 @@ def get_dxtbx_detector(
         material = KNOWN_SENSOR_MATERIALS.get(nxdetector.sensor_material)
         if not material:
             raise ValueError(f"Unknown material: {nxdetector.sensor_material}")
-        thickness = nxdetector.sensor_thickness.to("mm").magnitude
+        thickness = float(nxdetector.sensor_thickness.to("mm").magnitude)
         table = eltbx.attenuation_coefficient.get_table(material)
         mu = table.mu_at_angstrom(wavelength) / 10.0
         px_mm = dxtbx.model.ParallaxCorrectedPxMmStrategy(mu, thickness)

@@ -200,11 +200,11 @@ def test_understand(beamline, tmp_path):
     with h5py.File(nxs, mode="w") as fh:
         entry = fh.create_group("entry")
         instrument = entry.create_group("instrument")
-        instrument.attrs["short_name"] = np.string_(f"DLS {beamline}")
+        instrument.attrs["short_name"] = np.bytes_(f"DLS {beamline}")
         name = instrument.create_dataset(
-            "name", data=np.string_(f"DIAMOND BEAMLINE {beamline}")
+            "name", data=np.bytes_(f"DIAMOND BEAMLINE {beamline}")
         )
-        name.attrs["short_name"] = np.string_(f"DLS {beamline}")
+        name.attrs["short_name"] = np.bytes_(f"DLS {beamline}")
     assert FormatNXmxDLS16M.understand(nxs)
     assert FormatNXmxDLS.understand(nxs)
 
@@ -216,9 +216,9 @@ def test_understand_legacy(beamline, tmp_path):
     with h5py.File(nxs, mode="w") as fh:
         entry = fh.create_group("entry")
         instrument = entry.create_group("instrument")
-        instrument.attrs["short_name"] = np.string_(f"{beamline}")
-        name = instrument.create_dataset("name", data=np.string_(f"{beamline}"))
-        name.attrs["short_name"] = np.string_(f"{beamline}")
+        instrument.attrs["short_name"] = np.bytes_(f"{beamline}")
+        name = instrument.create_dataset("name", data=np.bytes_(f"{beamline}"))
+        name.attrs["short_name"] = np.bytes_(f"{beamline}")
     assert FormatNXmxDLS16M.understand(nxs)
     assert FormatNXmxDLS.understand(nxs)
 
@@ -236,9 +236,7 @@ def test_do_not_understand_i24(tmp_path):
     with h5py.File(nxs, mode="w") as fh:
         entry = fh.create_group("entry")
         instrument = entry.create_group("instrument")
-        instrument.attrs["short_name"] = np.string_("DLS I24")
-        name = instrument.create_dataset(
-            "name", data=np.string_("DIAMOND BEAMLINE I24")
-        )
-        name.attrs["short_name"] = np.string_("DLS I24")
+        instrument.attrs["short_name"] = np.bytes_("DLS I24")
+        name = instrument.create_dataset("name", data=np.bytes_("DIAMOND BEAMLINE I24"))
+        name.attrs["short_name"] = np.bytes_("DLS I24")
     assert not FormatNXmxDLS16M.understand(nxs)

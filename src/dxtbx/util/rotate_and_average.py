@@ -16,7 +16,7 @@ def rotate_and_average(data, angle, deg=False, mask=None):
     ny, nx = np.shape(data)
 
     xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
-    xx_yy = np.row_stack((xx.ravel(), yy.ravel()))
+    xx_yy = np.vstack((xx.ravel(), yy.ravel()))
     R = np.array(((np.cos(angle), -np.sin(angle)), (np.sin(angle), np.cos(angle))))
     xx_yy_rotated = np.matmul(R, xx_yy)
     xx_rotated = xx_yy_rotated[0, :].reshape((ny, nx))
