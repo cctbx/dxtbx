@@ -7,6 +7,7 @@ import pytest
 
 from cctbx import crystal, sgtbx, uctbx
 from cctbx.sgtbx import change_of_basis_op
+from iotbx.phil import parse
 from libtbx.test_utils import approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
@@ -18,6 +19,7 @@ from dxtbx.model import (
     MosaicCrystalKabsch2010,
     MosaicCrystalSauter2014,
 )
+from dxtbx.model.crystal import crystal_phil_scope
 
 from .crystal_model_old import crystal_model_old
 
@@ -639,3 +641,42 @@ def test_recalculated_cell(crystal_class):
     xl.set_recalculated_unit_cell(uctbx.unit_cell((11, 12, 13, 90, 90, 90)))
     assert xl.get_recalculated_cell_parameter_sd() == ()
     assert xl.get_recalculated_cell_volume_sd() == 0
+
+
+def test_from_phil():
+    params = crystal_phil_scope.extract()
+    assert CrystalFactory.from_phil(params) is None
+
+    params = crystal_phil_scope.fetch(
+        parse(
+            """
+    crystal {
+      unit_cell = 10, 20, 30, 90, 90, 90
+      space_group = P222
+    }
+  """
+        )
+    ).extract()
+
+    # Create the crystal
+    crystal = CrystalFactory.from_phil(params)
+    assert crystal.get_unit_cell().parameters() == (10, 20, 30, 90, 90, 90)
+    assert crystal.get_space_group().type().lookup_symbol() == "P 2 2 2"
+
+    params = crystal_phil_scope.fetch(
+        parse(
+            """
+    crystal {
+      A_matrix =  0.0541,  0.0832, -0.0060, 0.0049, -0.0175, -0.0492, -0.0840,  0.0526, -0.0068
+      space_group = P4
+    }
+  """
+        )
+    ).extract()
+
+    # Create the crystal
+    crystal = CrystalFactory.from_phil(params)
+    assert crystal.get_A() == pytest.approx(
+        (0.0541, 0.0832, -0.0060, 0.0049, -0.0175, -0.0492, -0.0840, 0.0526, -0.0068)
+    )
+    assert crystal.get_space_group().type().lookup_symbol() == "P 4"
