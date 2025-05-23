@@ -217,7 +217,7 @@ def test_reverse_vec3_dtype(dtype):
 @pytest.mark.parametrize("dtype", [np.int32, np.intc, int])
 def test_reverse_miller_index(dtype):
     hkl = np.array([(1, 0, 0), (0, 1, 0), (0, 0, 1)], dtype=dtype)
-    if dtype is int and np.dtype("l").itemsize != np.dtype("i").itemsize:
+    if np.dtype(dtype).itemsize != np.dtype(np.intc).itemsize:
         with pytest.raises(ValueError):
             flumpy.miller_index_from_numpy(hkl)
     else:
