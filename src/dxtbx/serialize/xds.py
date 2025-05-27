@@ -146,6 +146,8 @@ def xds_detector_name(dxtbx_name):
         return "MAR345"
     if "mar" in dxtbx_name:
         return "MAR"
+    if "singla" in dxtbx_name:
+        return "SINGLA"
     if "unknown" in dxtbx_name:
         return "ADSC"
 
