@@ -19,7 +19,7 @@ epix_locator_str = """
 epix_locator_scope = parse(epix_locator_str + locator_str, process_includes=True)
 
 
-class FormatXTCEpix(FormatXTC):
+class FormatXTCEpix10k2M(FormatXTC):
     def __init__(self, image_file, **kwargs):
         super().__init__(image_file, locator_scope=epix_locator_scope, **kwargs)
         self._cached_detector = {}
@@ -30,12 +30,12 @@ class FormatXTCEpix(FormatXTC):
             params = FormatXTC.params_from_phil(epix_locator_scope, image_file)
         except Exception:
             return False
-        return any("epix" in src.lower() for src in params.detector_address)
+        return any("epix10k2m" in src.lower() for src in params.detector_address)
 
     def get_raw_data(self, index=None):
         if index is None:
             index = 0
-        d = FormatXTCEpix.get_detector(self, index)
+        d = FormatXTCEpix10k2M.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         det = self._get_psana_detector(run)
@@ -58,7 +58,7 @@ class FormatXTCEpix(FormatXTC):
         return tuple(self._raw_data)
 
     def get_detector(self, index=None):
-        return FormatXTCEpix._detector(self, index)
+        return FormatXTCEpix10k2M._detector(self, index)
 
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
@@ -170,4 +170,4 @@ class FormatXTCEpix(FormatXTC):
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
         # Bug, should call this part differently for understand method to work
-        print(FormatXTCEpix.understand(arg))
+        print(FormatXTCEpix10k2M.understand(arg))

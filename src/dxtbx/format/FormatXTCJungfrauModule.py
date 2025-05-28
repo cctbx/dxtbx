@@ -32,7 +32,7 @@ jungfrau_locator_str = """
       .help = Dictates if dark subtraction is done from raw data
     monolithic = False
       .type = bool
-      .help = switch to FormatXTCJungfrauMonolithic if True. Used for LS49 image averaging
+      .help = switch to FormatXTCJungfrauModuleMonolithic if True. Used for LS49 image averaging
     use_big_pixels = True
       .type = bool
       .help = account for multi-sized pixels in the 512x1024 Jungfrau panels, forming a 514x1030 pixel panel
@@ -48,7 +48,7 @@ jungfrau_locator_scope = parse(
 )
 
 
-class FormatXTCJungfrau(FormatXTC):
+class FormatXTCJungfrauModule(FormatXTC):
     def __init__(self, image_file, **kwargs):
         super().__init__(image_file, locator_scope=jungfrau_locator_scope, **kwargs)
         self._cached_detector = {}
@@ -61,7 +61,7 @@ class FormatXTCJungfrau(FormatXTC):
             params = FormatXTC.params_from_phil(jungfrau_locator_scope, image_file)
         except Exception:
             return False
-        return any("jungfrau" in src.lower() for src in params.detector_address)
+        return any("jungfraumodule" in src.lower() for src in params.detector_address)
 
     def get_raw_data(self, index=None):
         from serialtbx.detector import jungfrau
@@ -69,7 +69,7 @@ class FormatXTCJungfrau(FormatXTC):
         if index is None:
             index = 0
 
-        d = FormatXTCJungfrau.get_detector(self, index)
+        d = FormatXTCJungfrauModule.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         det = self._get_psana_detector(run)
@@ -98,7 +98,7 @@ class FormatXTCJungfrau(FormatXTC):
         return tuple(self._raw_data)
 
     def get_detector(self, index=None):
-        return FormatXTCJungfrau._detector(self, index)
+        return FormatXTCJungfrauModule._detector(self, index)
 
     def _detector(self, index=None):
         from PSCalib.SegGeometryStore import sgs
@@ -213,7 +213,7 @@ class FormatXTCJungfrau(FormatXTC):
         return d
 
 
-class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
+class FormatXTCJungfrauModuleMonolithic(FormatXTCJungfrauModule):
     """Monolithic version of the Jungfrau, I.E. use the psana detector image function to assemble a monolithic image"""
 
     @staticmethod
@@ -258,4 +258,4 @@ class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
         # Bug, should call this part differently for understand method to work
-        print(FormatXTCJungfrau.understand(arg))
+        print(FormatXTCJungfrauModule.understand(arg))

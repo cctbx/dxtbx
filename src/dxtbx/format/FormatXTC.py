@@ -179,7 +179,8 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         assert self.params.mode in [
             "idx",
             "smd",
-        ], "idx or smd mode should be used for analysis (idx is often faster)"
+            "psana2",
+        ], "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2 should be used for LCLS-II."
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None
@@ -323,6 +324,22 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 self.times.extend(times)
             self.n_images = len(self.times)
 
+        elif self.params.mode == "psana2":
+            self._ds = FormatXTC._get_datasource(self._image_file, self.params)
+            total = 0
+            for run in self._ds.runs():
+                # TODO: look into self._hit_inds
+                run_num = run.runnum
+                events = []
+                start = total
+                for i, event in enumerate(run.events()):
+                    # TODO: look into params.filter and filter_event
+                    events.append(event)
+                    total += 1
+                end = total
+                self.run_mapping[run_num] = start, end, run_num, events
+            self.n_images = total
+
         elif self.params.mode == "smd":
             self._ds = FormatXTC._get_datasource(self._image_file, self.params)
             for event in self._ds.events():
@@ -337,6 +354,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                         self.run_mapping[run].append(event)
                 else:
                     self.run_mapping[run].append(event)
+             
             total = 0
             remade_mapping = {}
             for run in sorted(self.run_mapping):
@@ -393,7 +411,8 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             self.current_index = index
             if self.params.mode == "idx":
                 evt = self.get_run_from_index(index).event(self.times[index])
-            elif self.params.mode == "smd":
+            else:
+            #elif self.params.mode == "smd":
                 for run_number in self.run_mapping:
                     start, stop, run, events = self.run_mapping[run_number]
                     if index >= start and index < stop:
@@ -437,7 +456,14 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 )
         else:
             img = params.data_source
-        return psana.DataSource(img)
+        try:
+            src = psana.DataSource(img)
+        except psana.datasource.InvalidDataSource:
+            # psana2
+            assert len(params.run)==1
+            src=psana.DataSource(exp=params.experiment, run=params.run[0])
+        return src
+        #return psana.DataSource(img)
 
     @staticmethod
     def _get_psana_runs(datasource):
@@ -447,17 +473,31 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         only call this method after datasource is set
         """
         # this is key,value = run_integer, psana.Run, e.g. {62: <psana.Run(@0x7fbd0e23c990)>}
-        psana_runs = {r.run(): r for r in datasource.runs()}
+        try:
+            psana_runs = {r.run(): r for r in datasource.runs()}
+        except:
+            # psana2 (future package will revert to r.run())
+            psana_runs = {r.runnum: r for r in datasource.runs()}
         return psana_runs
 
     def _get_psana_detector(self, run):
         """Returns the psana detector for the given run"""
-        if run.run() not in self._cached_psana_detectors:
-            assert len(self.params.detector_address) == 1
-            self._cached_psana_detectors[run.run()] = psana.Detector(
-                self.params.detector_address[0], run.env()
-            )
-        return self._cached_psana_detectors[run.run()]
+        try:
+            if run.run() not in self._cached_psana_detectors:
+                assert len(self.params.detector_address) == 1
+                self._cached_psana_detectors[run.run()] = psana.Detector(
+                    self.params.detector_address[0], run.env()
+                )
+            return self._cached_psana_detectors[run.run()]
+        except:
+            # psana2
+            if run not in self._cached_psana_detectors:
+                assert len(self.params.detector_address) == 1
+                first_event = self.run_mapping[run][3][0]
+                self._cached_psana_detectors[run] = first_event.run().Detector(
+                    self.params.detector_address[0]
+                )
+            return self._cached_psana_detectors[run]
 
     def get_psana_timestamp(self, index):
         """Get the cctbx.xfel style event timestamp given an index"""
@@ -495,6 +535,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
     def _beam(self, index=None):
         """Returns a simple model for the beam"""
+        #import pdb; pdb.set_trace()
         if index is None:
             index = 0
         if self._beam_index != index:
@@ -524,7 +565,12 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 self._beam_cache = None
             else:
                 self._beam_cache = self._beam_factory.simple(wavelength)
-            s, nsec = evt.get(psana.EventId).time()
+            try:
+                s, nsec = evt.get(psana.EventId).time()
+            except AttributeError:
+                # psana2
+                ts = evt.timestamp
+                s = int(str(ts)[0:10]) # not elegant but works.
             evttime = time.gmtime(s)
             if (
                 evttime.tm_year == 2020 and evttime.tm_mon >= 7
