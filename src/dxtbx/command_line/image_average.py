@@ -277,7 +277,6 @@ def run(argv=None):
         and command_line.options.num_images_max < len(iterable)
     ):
         iterable = iterable[: command_line.options.num_images_max]
-    print(iterable)
     assert len(iterable) >= 2, "Need more than one image to average"
 
     if command_line.options.mpi:
