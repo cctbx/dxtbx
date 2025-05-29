@@ -842,23 +842,27 @@ class ExperimentListFactory:
     def from_stills_and_crystal(imageset, crystal, load_models=True):
         """Create an experiment list from stills and crystal."""
         experiments = ExperimentList()
-        if load_models:
-            for i in range(len(imageset)):
-                experiments.append(
-                    Experiment(
-                        imageset=imageset[i : i + 1],
-                        beam=imageset.get_beam(i),
-                        detector=imageset.get_detector(i),
-                        goniometer=imageset.get_goniometer(i),
-                        scan=imageset.get_scan(i),
-                        crystal=crystal,
+        try:
+            if load_models:
+                for i in range(len(imageset)):
+                    experiments.append(
+                        Experiment(
+                            imageset=imageset[i : i + 1],
+                            beam=imageset.get_beam(i),
+                            detector=imageset.get_detector(i),
+                            goniometer=imageset.get_goniometer(i),
+                            scan=imageset.get_scan(i),
+                            crystal=crystal,
+                        )
                     )
-                )
-        else:
-            for i in range(len(imageset)):
-                experiments.append(
-                    Experiment(imageset=imageset[i : i + 1], crystal=crystal)
-                )
+            else:
+                for i in range(len(imageset)):
+                    experiments.append(
+                        Experiment(imageset=imageset[i : i + 1], crystal=crystal)
+                    )
+        except TypeError:
+            # psana2 - it can happen that an MPI rank has len(imageset)==0
+            return experiments
         return experiments
 
     @staticmethod

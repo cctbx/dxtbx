@@ -277,7 +277,8 @@ def run(argv=None):
         and command_line.options.num_images_max < len(iterable)
     ):
         iterable = iterable[: command_line.options.num_images_max]
-    assert len(iterable) >= 2, "Need more than one image to average"
+    if not command_line.options.mpi: #psana2
+        assert len(iterable) >= 2, "Need more than one image to average"
 
     if command_line.options.mpi:
         try:
@@ -290,7 +291,10 @@ def run(argv=None):
 
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
-        iterable_rank = iterable[rank::size]
+        # psana2
+        iterable_rank = iterable
+        # psana1
+        #iterable_rank = iterable[rank::size]
         if len(iterable_rank) > 0:
             # Only run the worker on non-empty ranks
             (
@@ -303,22 +307,97 @@ def run(argv=None):
                 r_sum_wavelength,
             ) = worker(iterable_rank)
             surplus_rank = False
+            # psana2
+            #r_img_dummy = r_sum_img
+            #r_img_dummy_rank = rank
         else:
             # else run on the first iterable and set the values to zero
-            (
-                r_nfail,
-                r_nmemb,
-                r_max_img,
-                r_sum_distance,
-                r_sum_img,
-                r_ssq_img,
-                r_sum_wavelength,
-            ) = worker([iterable[0]])
+            try:
+                (
+                    r_nfail,
+                    r_nmemb,
+                    r_max_img,
+                    r_sum_distance,
+                    r_sum_img,
+                    r_ssq_img,
+                    r_sum_wavelength,
+                ) = worker([iterable[0]])
+            except IndexError:
+                # psana2
+                r_max_img = None
+                r_sum_img = None
+                r_ssq_img = None
             r_nfail = 0
             r_nmemb = 0
             r_sum_distance = 0
             r_sum_wavelength = 0
             surplus_rank = True
+            # psana2
+            #r_img_dummy = None
+            #r_img_dummy_rank = None
+
+        print(f'{rank} - 1')
+        # psana2
+        """
+        if r_img_dummy_rank is None:
+            ready_to_broadcast = np.array([0], dtype='i')
+        else:
+            ready_to_broadcast = np.array([1], dtype='i')
+            #r_img_dummy = comm.bcast(r_img_dummy, root=r_img_dummy_rank)
+        all_flags = np.zeros(size, dtype='i')
+        comm.Allgather(ready_to_broadcast, all_flags)
+        if np.any(all_flags > 0):
+            # Find the first rank that is ready to broadcast
+            first_rank = np.where(all_flags > 0)[0][0]
+            print(f'first rank {first_rank}')
+            if rank == first_rank:
+                r_img_shape = np.array(r_img_dummy[0],dtype='i')
+                for i in range(size):
+                    if i != rank:
+                        comm.isend(r_img_shape, dest=i, tag=0)
+                #comm.Bcast(r_img_shape, root=first_rank)
+            if r_img_dummy_rank is None:
+                if rank != 0:
+                    r_img_shape = np.zeros(1)
+                    r_img_shape = comm.recv(source=first_rank, tag=0)
+                    #r_img_shape = comm.Bcast(r_img_shape, root=first_rank)
+                    r_img_dummy = np.zeros(r_img_shape.shape)
+        print(f'{rank} - 2')
+        print(f'{rank} - 3')
+        if r_img_dummy_rank is None:
+            r_max_img = r_img_dummy
+            r_sum_img = r_img_dummy
+            r_ssq_img = r_img_dummy
+        print(f'{rank}:dummy done')
+        """
+        # exclude empty ranks  momentarily
+        
+        if rank == 0:
+            exclude_local_ranks = np.array(0, dtype='i')
+            exclude_ranks = np.zeros(size, dtype='i')
+        else:
+            exclude_ranks = None
+            if surplus_rank:
+                exclude_local_ranks = np.array(rank, dtype='i')
+            else:
+                exclude_local_ranks = np.array(-1, dtype='i')
+        comm.Gather(exclude_local_ranks, exclude_ranks, root=0)
+        if rank == 0:
+            print(f'{rank} - {exclude_ranks}')
+            exclude_ranks = exclude_ranks[exclude_ranks >= 0].tolist()
+            print(f'{rank} - {exclude_ranks}')
+            for i in range(1,size):
+                comm.send(exclude_ranks, dest=i)
+        else:
+            comm.recv(source=0)
+
+        comm.Barrier()
+        old_comm = comm
+        group = comm.Get_group()
+        #exclude_ranks = [0]
+        new_group = group.Excl(exclude_ranks)
+        new_comm = comm.Create(new_group)
+        comm = new_comm
 
         nfail = np.array([0])
         nmemb = np.array([0])
@@ -332,6 +411,7 @@ def run(argv=None):
         nmemb = int(nmemb)
         sum_distance = float(sum_distance[0])
         sum_wavelength = float(sum_wavelength[0])
+        print('reduced stats')
 
         def reduce_image(data, op=MPI.SUM):
             result = []
@@ -348,6 +428,9 @@ def run(argv=None):
         max_img = reduce_image(r_max_img, MPI.MAX)
         sum_img = reduce_image(r_sum_img)
         ssq_img = reduce_image(r_ssq_img)
+        print('reduced image')
+        # bring the old world back
+        comm = old_comm
 
         if rank != 0:
             return

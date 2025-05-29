@@ -60,7 +60,7 @@ class FormatXTCJungfrau2M(FormatXTC):
             params = FormatXTC.params_from_phil(jungfrau_locator_scope, image_file)
         except Exception:
             return False
-        return any("jungfrau2m" in src.lower() for src in params.detector_address)
+        return any("jungfrau" in src.lower() for src in params.detector_address)
 
     def get_raw_data(self, index=None):
         from serialtbx.detector import jungfrau
@@ -114,7 +114,6 @@ class FormatXTCJungfrau2M(FormatXTC):
         from serialtbx.detector.xtc import basis_from_geo
 
         run = self.get_run_from_index(index)
-        print(f"_detector {run}")
         try:
             run_num = run.run()
         except AttributeError:

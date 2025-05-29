@@ -325,6 +325,12 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             self.n_images = len(self.times)
 
         elif self.params.mode == "psana2":
+
+            from libtbx.mpi4py import MPI
+            comm = MPI.COMM_WORLD
+            rank = comm.Get_rank()  # each process in MPI has a unique id, 0-indexed
+            size = comm.Get_size()  # size: number of processes running in this job
+
             self._ds = FormatXTC._get_datasource(self._image_file, self.params)
             total = 0
             for run in self._ds.runs():
@@ -338,6 +344,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                     total += 1
                 end = total
                 self.run_mapping[run_num] = start, end, run_num, events
+                print(f'{rank}/{size}', run_num, len(events))
             self.n_images = total
 
         elif self.params.mode == "smd":

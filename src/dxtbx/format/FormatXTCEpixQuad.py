@@ -74,7 +74,6 @@ class FormatXTCEpixQuad(FormatXTC):
         from serialtbx.detector.xtc import basis_from_geo
 
         run = self.get_run_from_index(index)
-        print(F"_detector {run}")
         try:
             run_num = run.run()
         except AttributeError:
