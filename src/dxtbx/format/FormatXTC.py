@@ -349,6 +349,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 print(f'{rank}/{size}', run, len(times))
             self.n_images = len(self.times)
 
+
         elif self.params.mode == "psana2":
 
             from libtbx.mpi4py import MPI
@@ -445,19 +446,31 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             if self.params.mode == "idx":
                 evt = self.get_run_from_index(index).event(self.times[index])
             elif self.params.mode == "psana2_idx":
-                tzero = time.time()
-                print(f'instantiating ds. ts: {self.times[index:index+1]}')
-                ds = FormatXTC._get_datasource(self._image_file, self.params,
-                        timestamps=self.times[index:index+1])
-                print(f'instantiate ds: {time.time()-tzero}')
-                myrun=next(ds.runs())
-                print(f'instantiate myrun: {time.time()-tzero}')
-                i=0
-                for nevt, event in enumerate(myrun.events()):
-                    evt=event
-                    i+=1
-                    if nevt == 1: break # psana2 FIXME
-                print(f'getting event ({i} events loaded): {time.time()-tzero}')
+#                tzero = time.time()
+                if not hasattr(self, 'active_ds') or self.i_last_evt >= index:
+                    # reset the cached datasource
+                    self.active_ds = FormatXTC._get_datasource(
+                        self._image_file, self.params
+                    )
+                    self.active_run = next(self.active_ds.runs())
+                    self.active_events = self.active_run.events()
+                    self.i_current_evt = -1
+
+                while self.i_current_evt < index:
+                    evt = next(self.active_events)
+                    self.i_current_evt += 1
+#                print(f'instantiating ds. ts: {self.times[index:index+1]}')
+#                ds = FormatXTC._get_datasource(self._image_file, self.params,
+#                        timestamps=self.times[index:index+1])
+#                print(f'instantiate ds: {time.time()-tzero}')
+#                myrun=next(ds.runs())
+#                print(f'instantiate myrun: {time.time()-tzero}')
+#                i=0
+#                for nevt, event in enumerate(myrun.events()):
+#                    evt=event
+#                    i+=1
+#                    if nevt == 1: break # psana2 FIXME
+#                print(f'getting event ({i} events loaded): {time.time()-tzero}')
             else:
             #elif self.params.mode == "smd":
                 for run_number in self.run_mapping:
