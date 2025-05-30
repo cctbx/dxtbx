@@ -75,7 +75,11 @@ class FormatXTCEpixQuad(FormatXTC):
 
         run = self.get_run_from_index(index)
         try:
-            run_num = run.run()
+            try:
+                run_num = run.run()
+            except:
+                # psana2_idx mode
+                run_num = run.runnum
         except AttributeError:
             # smd and psana2 modes
             run_num = run

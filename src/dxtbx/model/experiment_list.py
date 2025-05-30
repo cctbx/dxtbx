@@ -53,7 +53,7 @@ __all__ = [
 
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG) #Fred
 # REMOVE and inline when Python 3.10 is minimum
 if sys.version_info < (3, 10):
     scaling_model_entry_points = importlib.metadata.entry_points().get(
@@ -670,7 +670,6 @@ class ExperimentListFactory:
     ) -> ExperimentList:
         """Create a list of data blocks from a list of directory or file names."""
         experiments = ExperimentList()
-
         # Cast filenames to a list from whatever iterator they are
         filenames = list(filenames)
 
@@ -782,7 +781,6 @@ class ExperimentListFactory:
                         imageset, crystal=None, load_models=load_models
                     )
                 )
-
         return experiments
 
     @staticmethod
@@ -842,27 +840,23 @@ class ExperimentListFactory:
     def from_stills_and_crystal(imageset, crystal, load_models=True):
         """Create an experiment list from stills and crystal."""
         experiments = ExperimentList()
-        try:
-            if load_models:
-                for i in range(len(imageset)):
-                    experiments.append(
-                        Experiment(
-                            imageset=imageset[i : i + 1],
-                            beam=imageset.get_beam(i),
-                            detector=imageset.get_detector(i),
-                            goniometer=imageset.get_goniometer(i),
-                            scan=imageset.get_scan(i),
-                            crystal=crystal,
-                        )
+        if load_models:
+            for i in range(len(imageset)):
+                experiments.append(
+                    Experiment(
+                        imageset=imageset[i : i + 1],
+                        beam=imageset.get_beam(i),
+                        detector=imageset.get_detector(i),
+                        goniometer=imageset.get_goniometer(i),
+                        scan=imageset.get_scan(i),
+                        crystal=crystal,
                     )
-            else:
-                for i in range(len(imageset)):
-                    experiments.append(
-                        Experiment(imageset=imageset[i : i + 1], crystal=crystal)
-                    )
-        except TypeError:
-            # psana2 - it can happen that an MPI rank has len(imageset)==0
-            return experiments
+                )
+        else:
+            for i in range(len(imageset)):
+                experiments.append(
+                    Experiment(imageset=imageset[i : i + 1], crystal=crystal)
+                )
         return experiments
 
     @staticmethod

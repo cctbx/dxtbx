@@ -64,10 +64,8 @@ class image_worker:
             try:
                 img, distance, wavelength = self.read(item)
             except Exception as e:
-                print(str(e))
                 nfail += 1
                 continue
-
             assert isinstance(img, tuple)
 
             # The sum-of-squares image is accumulated using long integers, as
@@ -120,7 +118,6 @@ class multi_image_worker(image_worker):
         img = tuple(image_data[i].as_1d().as_double() for i in range(len(detector)))
         wavelength = beam.get_wavelength()
         expt.imageset.clear_cache()
-
         return img, detector.hierarchy().get_distance(), wavelength
 
 
@@ -254,7 +251,6 @@ def run(argv=None):
     if len(paths) == 0:
         command_line.parser.print_usage(file=sys.stderr)
         return 2
-
     experiments = ExperimentListFactory.from_filenames([paths[0]], load_models=False)
     if len(paths) == 1:
         if len(experiments) == 1 and len(experiments[0].imageset) > 1:
@@ -360,7 +356,6 @@ def run(argv=None):
             results = easy_mp.parallel_map(
                 func=worker, iterable=iterable, processes=command_line.options.nproc
             )
-
         nfail = 0
         nmemb = 0
         for (
