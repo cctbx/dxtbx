@@ -193,6 +193,15 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 found_next_run = False
                 if self._setup_beginruns():  # try to get next run from current files
                     if os.getenv('SECRET_MPI_MODE') is not None:
+                        # Cache the calib constants
+                        global run_calib_cache
+                        key = self._get_runinfo()
+                        if key in run_calib_cache.keys():
+                            print('hit calib cache')
+                            self.dsparms.calibconst = run_calib_cache[key]
+                            print(self.dsparms.calibconst.keys())
+                            return True
+
                         from mpi4py import MPI
                         comm = MPI.COMM_WORLD
                         print(f'start run on rank {comm.rank}')
@@ -204,6 +213,8 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                             self.dsparms.calibconst, root=0
                         )
                         found_next_run = True
+                        run_calib_cache[key] = self.dsparms.calibconst
+                        print('save to calib cache')
                         print(f'done start run on rank {comm.rank}')
                     else:
                         super()._setup_run_calibconst()
@@ -368,8 +379,12 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             ds_temp = FormatXTC._get_datasource(self._image_file, self.params,
                                                  detectors=['timing'])
               
+            # No idea how we handle multiple runs
+            assert len(self._psana_runs.items()) == 1
+
             # We avoid looping over the events in the full run, but we do need
             # to store the full run in the run mapping.
+            # Note according to the previous assert we only pass thru this loop once.
             for run_temp, (run_num, run) in zip(ds_temp.runs(), self._psana_runs.items()):
                 times = []
                 for nevt,evt in enumerate(run_temp.events()):
@@ -383,6 +398,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 self.times = np.array(self.times, dtype=np.uint64)
                 print(self.times.shape)
                 print(f'{rank}/{size}', run, len(times))
+                # Cache the active run because constructing it is expensive
+                self.active_run = run
+                self.active_events = self.active_run.events()
+                self.i_current_evt = -1
             self.n_images = len(self.times)
 
 
@@ -483,12 +502,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 evt = self.get_run_from_index(index).event(self.times[index])
             elif self.params.mode == "psana2_idx":
 #                tzero = time.time()
-                if not hasattr(self, 'active_ds') or self.i_current_evt >= index:
+                if True or not hasattr(self, 'active_run') or self.i_current_evt >= index:
                     # reset the cached datasource
-                    self.active_ds = FormatXTC._get_datasource(
+                    print('----------------RESET CACHED DS----------------')
+                    ds = FormatXTC._get_datasource(
                         self._image_file, self.params
                     )
-                    self.active_run = next(self.active_ds.runs())
+                    self.active_run = next(ds.runs())
                     self.active_events = self.active_run.events()
                     self.i_current_evt = -1
 
