@@ -44,9 +44,9 @@ cspad_locator_scope = parse(cspad_locator_str + locator_str, process_includes=Tr
 class FormatXTCCspad(FormatXTC):
     def __init__(self, image_file, locator_scope=cspad_locator_scope, **kwargs):
         super().__init__(image_file, locator_scope=locator_scope, **kwargs)
-        assert (
-            self.params.cspad.detz_offset is not None
-        ), "Supply a detz_offset for the cspad"
+        assert self.params.cspad.detz_offset is not None, (
+            "Supply a detz_offset for the cspad"
+        )
         self._cache_psana_pedestals()  # NOTE: move to base FormatXTC class
         self._psana_gain_map_cache = {}
 

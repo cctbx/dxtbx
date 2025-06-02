@@ -277,28 +277,28 @@ namespace dxtbx { namespace model { namespace boost_python {
 
     class_<Detector::Node, bases<Panel> >("DetectorNode", no_init)
       .def("add_group",
-           (Detector::Node::pointer(Detector::Node::*)()) & Detector::Node::add_group,
+           (Detector::Node::pointer (Detector::Node::*)())&Detector::Node::add_group,
            return_internal_reference<>())
       .def("add_group",
-           (Detector::Node::pointer(Detector::Node::*)(const Panel &))
-             & Detector::Node::add_group,
+           (Detector::Node::pointer (Detector::Node::*)(
+             const Panel &))&Detector::Node::add_group,
            return_internal_reference<>())
       .def("add_panel",
-           (Detector::Node::pointer(Detector::Node::*)()) & Detector::Node::add_panel,
+           (Detector::Node::pointer (Detector::Node::*)())&Detector::Node::add_panel,
            return_internal_reference<>())
       .def("add_panel",
-           (Detector::Node::pointer(Detector::Node::*)(const Panel &))
-             & Detector::Node::add_panel,
+           (Detector::Node::pointer (Detector::Node::*)(
+             const Panel &))&Detector::Node::add_panel,
            return_internal_reference<>())
       .def("parent",
-           (Detector::Node::pointer(Detector::Node::*)()) & Detector::Node::parent,
+           (Detector::Node::pointer (Detector::Node::*)())&Detector::Node::parent,
            return_internal_reference<>())
       .def("root",
-           (Detector::Node::pointer(Detector::Node::*)()) & Detector::Node::root,
+           (Detector::Node::pointer (Detector::Node::*)())&Detector::Node::root,
            return_internal_reference<>())
       .def("__getitem__",
-           (Detector::Node::pointer(Detector::Node::*)(std::size_t))
-             & Detector::Node::operator[],
+           (Detector::Node::pointer (Detector::Node::*)(std::size_t))&Detector::Node::
+           operator[],
            return_internal_reference<>())
       .def("empty", &Detector::Node::empty)
       .def("__len__", &Detector::Node::size)
@@ -331,19 +331,19 @@ namespace dxtbx { namespace model { namespace boost_python {
     class_<Detector, std::shared_ptr<Detector> >("Detector")
       .def(init<const Panel &>())
       .def("hierarchy",
-           (Detector::node_pointer(Detector::*)()) & Detector::root,
+           (Detector::node_pointer (Detector::*)())&Detector::root,
            return_internal_reference<>())
       .def("add_group",
-           (Detector::node_pointer(Detector::*)()) & Detector::add_group,
+           (Detector::node_pointer (Detector::*)())&Detector::add_group,
            return_internal_reference<>())
       .def("add_group",
-           (Detector::node_pointer(Detector::*)(const Panel &)) & Detector::add_group,
+           (Detector::node_pointer (Detector::*)(const Panel &))&Detector::add_group,
            return_internal_reference<>())
       .def("add_panel",
-           (Detector::node_pointer(Detector::*)()) & Detector::add_panel,
+           (Detector::node_pointer (Detector::*)())&Detector::add_panel,
            return_internal_reference<>())
       .def("add_panel",
-           (Detector::node_pointer(Detector::*)(const Panel &)) & Detector::add_panel,
+           (Detector::node_pointer (Detector::*)(const Panel &))&Detector::add_panel,
            return_internal_reference<>())
       .def("__len__", &Detector::size)
       .def("__setitem__", &detector_set_item)

@@ -583,7 +583,7 @@ class FormatMANDI(FormatHDF5):
         min_tof = min_tof - padding
         max_tof = max_tof + padding
         print(
-            f"Time of flight range for {nxs_file}: {round(min_tof,3)} - {round(max_tof,3)} (usec)"
+            f"Time of flight range for {nxs_file}: {round(min_tof, 3)} - {round(max_tof, 3)} (usec)"
         )
         num_bins = int((max_tof - min_tof) / delta_tof)
         return np.linspace(min_tof, max_tof, num_bins)

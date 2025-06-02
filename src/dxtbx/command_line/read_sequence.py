@@ -25,7 +25,7 @@ def read_sequence(images: list[str]):
             sequence.get_raw_data(i)
         t1 = time.time()
 
-        print(f"Reading {len(indices)} frames took {t1-t0:.2f}s")
+        print(f"Reading {len(indices)} frames took {t1 - t0:.2f}s")
 
 
 def run(args=None):
