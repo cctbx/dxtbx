@@ -137,9 +137,9 @@ class NXmxWriter:
         self.handle = None
 
     def setup(self, experiments=None, imageset=None):
-        assert [experiments, imageset].count(
-            None
-        ) == 1, "Supply either experiments or imagset, not both"
+        assert [experiments, imageset].count(None) == 1, (
+            "Supply either experiments or imagset, not both"
+        )
         if experiments:
             self.imagesets = experiments.imagesets()
             assert len(experiments.detectors()) == 1, "Multiple detectors not supported"

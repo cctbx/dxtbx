@@ -135,9 +135,9 @@ def run(args=None, imageset=None):
         ref_expts = ExperimentListFactory.from_json_file(
             params.reference_geometry, check_format=None
         )
-        assert (
-            len(ref_expts.detectors()) == 1
-        ), "Provide only one detector in the reference geometry file"
+        assert len(ref_expts.detectors()) == 1, (
+            "Provide only one detector in the reference geometry file"
+        )
         detector = ref_expts.detectors()[0]
 
     # Allow writing to a file instead of stdout

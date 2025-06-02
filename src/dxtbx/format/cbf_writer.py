@@ -75,9 +75,7 @@ def add_frame_specific_cbf_tables(
                 "electrospray"
                 if is_xfel
                 else (
-                    "unknown" "crystals injected by electrospray"
-                    if is_xfel
-                    else "unknown"
+                    "unknowncrystals injected by electrospray" if is_xfel else "unknown"
                 )
             ),
         ]
@@ -150,9 +148,9 @@ class FullCBFWriter:
 
     def __init__(self, filename=None, imageset=None):
         """Provide a file name or imageset as input"""
-        assert [filename, imageset].count(
-            None
-        ) == 1, "Supply either filename or imageset"
+        assert [filename, imageset].count(None) == 1, (
+            "Supply either filename or imageset"
+        )
 
         if filename is not None:
             format_class = dxtbx.format.Registry.get_format_class_for_file(filename)

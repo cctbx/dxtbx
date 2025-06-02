@@ -138,9 +138,9 @@ class BeamFactory:
 
         if template is not None:
             if "__id__" in dict and "__id__" in template:
-                assert (
-                    dict["__id__"] == template["__id__"]
-                ), "Beam and template dictionaries are not the same type."
+                assert dict["__id__"] == template["__id__"], (
+                    "Beam and template dictionaries are not the same type."
+                )
 
         if dict is None and template is None:
             return None
