@@ -5,7 +5,7 @@ import hdf5plugin
 import numpy
 import pytest
 
-from scitbx.array_family import flex  # noqa: F401; boost python bindings
+from scitbx.array_family import flex  # noqa: F401  # boost python bindings
 
 from dxtbx_format_nexus_ext import (
     dataset_as_flex_double,
