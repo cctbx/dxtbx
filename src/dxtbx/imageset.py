@@ -470,6 +470,8 @@ class ImageSetFactory:
             else:
                 format_class = Format
         else:
+            # Note, this assumes image stacks can only be written by dectris detectors,
+            # but doesn't account for other imagestack formats like MRC.
             if "master" not in template:
                 raise ValueError("Invalid template")
             filenames = [template]
