@@ -127,3 +127,42 @@ def test_vmxi_thaumatin(dials_data):
     s = to_xds.XDS_INP()
     assert "DETECTOR=EIGER" in s
     assert "SENSOR_THICKNESS= 0.450" in s
+
+
+def test_xds_to_imageset(tmp_path, dials_data):
+    input_file = """
+DATA_RANGE=1 100
+DETECTOR=EIGER
+DETECTOR_DISTANCE=259.000000
+DIRECTION_OF_DETECTOR_X-AXIS=1.00000 0.00000 0.00000
+DIRECTION_OF_DETECTOR_Y-AXIS=0.00000 1.00000 0.00000
+FRACTION_OF_POLARIZATION=0.999
+FRIEDEL'S_LAW=TRUE
+INCIDENT_BEAM_DIRECTION=-0.000 -0.000 1.049
+MINIMUM_VALID_PIXEL_VALUE=0
+NAME_TEMPLATE_OF_DATA_FRAMES=thaumatin_??????.h5
+NX=4148
+NY=4362
+ORGX=2050.50
+ORGY=2150.50
+OSCILLATION_RANGE=0.100
+OVERLOAD=126952
+POLARIZATION_PLANE_NORMAL=0.000 1.000 0.000
+QX=0.0750
+QY=0.0750
+ROTATION_AXIS=0.00000 -1.00000 -0.00000
+STARTING_ANGLE=200.000
+TRUSTED_REGION=0.0 1.41
+SENSOR_THICKNESS=0.450
+X-RAY_WAVELENGTH=0.95372
+SPACE_GROUP_NUMBER=89
+UNIT_CELL_CONSTANTS=57.500000 57.500000 149.000000 90.000000 90.000000 90.000000
+"""
+    xds_inp = tmp_path / "XDS.INP"
+    with open(xds_inp, "w") as f:
+        f.write(input_file)
+    ## Note that the XDS.INP is for thaumatin, and centroid test data is not, but
+    ## this is sufficient for testing the creation of an imageset of the correct size.
+    xds_other = dials_data("centroid_test_data", pathlib=True) / "INTEGRATE.HKL"
+    iset = xds.to_imageset(xds_inp, xds_other)
+    assert len(iset) == 100
