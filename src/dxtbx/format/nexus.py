@@ -795,13 +795,12 @@ class DetectorFactoryFromGroup:
         expected_detectors = []
         root_name = None
         for i, parent_id in enumerate(group_parent):
-            assert (
-                parent_id
-                in [
-                    -1,
-                    1,
-                ]
-            ), "Hierarchy of detectors not supported. Hierarchy of module components within detector elements is supported"
+            assert parent_id in [
+                -1,
+                1,
+            ], (
+                "Hierarchy of detectors not supported. Hierarchy of module components within detector elements is supported"
+            )
 
             if parent_id == -1:
                 assert root_name is None, "Multiple roots not supported"
@@ -812,9 +811,9 @@ class DetectorFactoryFromGroup:
         assert root_name is not None, "Detector root not found"
         assert sorted(
             os.path.basename(d.handle.name) for d in instrument.detectors
-        ) == sorted(
-            expected_detectors
-        ), "Mismatch between detector group names and detectors available"
+        ) == sorted(expected_detectors), (
+            "Mismatch between detector group names and detectors available"
+        )
 
         root = None
 
@@ -1262,9 +1261,9 @@ class DetectorGroupDataList:
         self._datalists = datalists
         lengths = [len(datalist) for datalist in datalists]
         self._num_images = lengths[0]
-        assert all(
-            length == self._num_images for length in lengths
-        ), "Not all datasets are the same length"
+        assert all(length == self._num_images for length in lengths), (
+            "Not all datasets are the same length"
+        )
 
     def __len__(self):
         return self._num_images

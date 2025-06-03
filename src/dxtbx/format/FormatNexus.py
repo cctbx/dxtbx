@@ -24,9 +24,9 @@ class FormatNexus(FormatHDF5):
         # Only support 1 set of models at the moment
         assert len(reader.entries) == 1, "Currently only supports 1 NXmx entry"
         assert len(reader.entries[0].data) == 1, "Currently only supports 1 NXdata"
-        assert (
-            len(reader.entries[0].instruments) == 1
-        ), "Currently only supports 1 NXinstrument"
+        assert len(reader.entries[0].instruments) == 1, (
+            "Currently only supports 1 NXinstrument"
+        )
         assert len(reader.entries[0].samples) == 1, "Currently only supports 1 NXsample"
         assert (
             len(reader.entries[0].samples[0].beams) == 1
@@ -54,12 +54,12 @@ class FormatNexus(FormatHDF5):
             num_images = 0
 
         if len(instrument.detector_groups) == 0:
-            assert (
-                len(reader.entries[0].instruments[0].detectors) == 1
-            ), "Currently only supports 1 NXdetector unless in a detector group"
-            assert (
-                len(reader.entries[0].instruments[0].detectors[0].modules) == 1
-            ), "Currently only supports 1 NXdetector_module unless in a detector group"
+            assert len(reader.entries[0].instruments[0].detectors) == 1, (
+                "Currently only supports 1 NXdetector unless in a detector group"
+            )
+            assert len(reader.entries[0].instruments[0].detectors[0].modules) == 1, (
+                "Currently only supports 1 NXdetector_module unless in a detector group"
+            )
 
             self._raw_data = nexus.DataFactory(data, max_size=num_images)
             self._detector_model = nexus.DetectorFactory(
