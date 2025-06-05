@@ -87,7 +87,6 @@ def get_format_class_for_file(
     :return: An uninstantiated format class, if a matching one was found,
              otherwise None
     """
-
     # Grab the scheme from this URI
     scheme = get_url_scheme(image_file)
 

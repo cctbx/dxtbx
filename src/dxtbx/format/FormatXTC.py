@@ -184,7 +184,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             "psana2_idx",
         ], "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2 should be used for LCLS-II."
 
-        if self.params.mode in ['psana2', 'psana2_idx']:
+        if self.params.mode in ['psana2', 'psana2_idx_fake']:
             # "monkeypatch" the fetching of calib constants. A direct monkeypatch
             # is not simple because of the use of super(). Instead we define the
             # function body here and confirm that it matches.
@@ -337,9 +337,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 return
 
         if not self._psana_runs : #and self.params.mode != 'psana2_idx':
-            print('get psana runs')
             self._psana_runs = self._get_psana_runs(self._ds)
-            print('done get psana runs')
 
         self.times = []
         self.run_mapping = {}
@@ -370,6 +368,56 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             self.n_images = len(self.times)
 
         elif self.params.mode == "psana2_idx":
+            """
+            ### Code snippet from Mona on psana idx behavior ###
+
+                 with run.build_table() as success:
+                    if success:
+                        # Extract first 10 valid timestamps (those with non-empty offset info)
+                        valid_ts = sorted(k for k in run._ts_table if run._ts_table[k])[:10]
+                        assert len(valid_ts) == 10, "Expected at least 10 L1Accept events with offsets"
+
+                        # Randomly pick 3 timestamps to test
+                        sample_ts = random.sample(valid_ts, 3)
+                        for ts in sample_ts:
+                            evt = run.event(ts)
+                            assert evt is not None
+                            assert len(evt._dgrams) > 0
+
+                            det = run.Detector('xppcspad')
+            """
+            ds = FormatXTC._get_datasource(self._image_file, self.params)
+            assert len(self._psana_runs.items()) == 1
+
+            for run_num, run in self._psana_runs.items():
+                print(run)
+                with run.build_table() as success:
+                    print(run, success)
+                    if success:
+                        times = sorted(run._ts_table)
+                        print(times)
+                        if self._hit_inds is not None and run_num not in self._hit_inds:
+                            continue
+                        if self._hit_inds is not None and run_num in self._hit_inds:
+                            temp = []
+                            for i_hit in self._hit_inds[run_num]:
+                                temp.append(times[i_hit])
+                            times = tuple(temp)
+                        if (
+                            self.params.filter.required_present_codes
+                            or self.params.filter.required_absent_codes
+                        ) and self.params.filter.pre_filter:
+                            times = [t for t in times if self.filter_event(run.event(t))]
+                        self.run_mapping[run_num] = (
+                            len(self.times),
+                            len(self.times) + len(times),
+                            run,
+                        )
+
+                        self.times.extend(times)
+                    self.n_images = len(self.times)
+
+        elif self.params.mode == "psana2_idx_fake":
             
             from libtbx.mpi4py import MPI
             comm = MPI.COMM_WORLD
@@ -501,6 +549,8 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             if self.params.mode == "idx":
                 evt = self.get_run_from_index(index).event(self.times[index])
             elif self.params.mode == "psana2_idx":
+                evt = self.get_run_from_index(index).event(self.times[index])
+            elif self.params.mode == "psana2_idx_fake":
 #                tzero = time.time()
                 if True or not hasattr(self, 'active_run') or self.i_current_evt >= index:
                     # reset the cached datasource
@@ -548,6 +598,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     @staticmethod
     def _get_datasource(image_file, params, **kwargs):
         """Construct a psana data source object given the locator parameters"""
+        #import pdb; pdb.set_trace()
         if params.calib_dir is not None:
             psana.setOption("psana.calib-dir", params.calib_dir)
         if params.data_source is None:
