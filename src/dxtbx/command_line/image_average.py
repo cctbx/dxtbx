@@ -21,7 +21,8 @@ import dxtbx.format.Registry
 import dxtbx.util
 from dxtbx.format.cbf_writer import FullCBFWriter
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx.model.experiment_list import ExperimentListFactory
+from dxtbx.model.experiment_list import ExperimentListFactory, ExperimentList
+import psana
 
 
 def splitit(l, n):
@@ -59,11 +60,13 @@ class image_worker:
         """Worker function for multiprocessing"""
         nfail = 0
         nmemb = 0
-
+        print(f'called image_worker on {subset=}', flush=True)
         for item in subset:
+            print(f'{item=} in {subset=}')
             try:
                 img, distance, wavelength = self.read(item)
             except Exception as e:
+                print(f'worker {e=}')
                 nfail += 1
                 continue
             assert isinstance(img, tuple)
@@ -72,6 +75,7 @@ class image_worker:
             # this delays the point where overflow occurs.  But really, this
             # is just a band-aid...
             if nmemb == 0:
+                print(f'first {img=} / {item=}')
                 max_img = list(copy.deepcopy(img))
                 sum_distance = distance
                 sum_img = list(copy.deepcopy(img))
@@ -79,6 +83,7 @@ class image_worker:
                 sum_wavelength = wavelength
                 nmemb += 1
             else:
+                print(f'next {img=} / {item=}')
                 for n, image in enumerate(img):
                     sel = (image > max_img[n]).as_1d()
                     max_img[n].set_selected(sel, image.select(sel))
@@ -88,7 +93,7 @@ class image_worker:
                     sum_distance += distance
                     sum_wavelength += wavelength
                     nmemb += 1
-
+        print('worker returns')
         return nfail, nmemb, max_img, sum_distance, sum_img, ssq_img, sum_wavelength
 
 
@@ -112,7 +117,9 @@ class multi_image_worker(image_worker):
         beam = expt.beam
         detector = expt.detector
 
+        print(f'getting image data')
         image_data = expt.imageset[0]
+        print(f'{len(image_data)=}')
         if not isinstance(image_data, tuple):
             image_data = (image_data,)
         img = tuple(image_data[i].as_1d().as_double() for i in range(len(detector)))
@@ -251,13 +258,27 @@ def run(argv=None):
     if len(paths) == 0:
         command_line.parser.print_usage(file=sys.stderr)
         return 2
+    # dirty hack
+    from libtbx.mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+    print(f'rank {rank}', flush=True)
+    #if rank > 1:
+    #    print(f'{rank} > 1', flush=True)
     experiments = ExperimentListFactory.from_filenames([paths[0]], load_models=False)
+    #else:
+    #    print(f'{rank} is 0 or 1', flush=True)
+    #    import time
+    #    #time.sleep(1000)
+    #    experiments = ExperimentList()
     if len(paths) == 1:
         if len(experiments) == 1 and len(experiments[0].imageset) > 1:
             experiments = ExperimentListFactory.from_stills_and_crystal(
                 experiments[0].imageset, None, load_models=False
             )
-        worker = multi_image_worker(command_line, paths[0], experiments)
+        if rank > 1:
+            worker = multi_image_worker(command_line, paths[0], experiments)
         iterable = list(range(len(experiments)))
     else:
         # Multiple images provided
@@ -273,21 +294,28 @@ def run(argv=None):
         and command_line.options.num_images_max < len(iterable)
     ):
         iterable = iterable[: command_line.options.num_images_max]
-    assert len(iterable) >= 2, "Need more than one image to average"
+    #assert len(iterable) >= 2, "Need more than one image to average"
 
     if command_line.options.mpi:
-        try:
-            from libtbx.mpi4py import MPI
-        except ImportError:
-            raise Sorry("MPI not found")
-        comm = MPI.COMM_WORLD
-        rank = comm.Get_rank()
-        size = comm.Get_size()
+        #try:
+        #    from libtbx.mpi4py import MPI
+        #except ImportError:
+        #    raise Sorry("MPI not found")
 
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
-        iterable_rank = iterable[rank::size]
-        if len(iterable_rank) > 0:
+        if rank > 1: #horrible kludge
+            iterable_rank = iterable[rank-2::size-2] #could try something like this: [rank+2::size-2]
+        else:
+            iterable_rank = iterable[rank::size]
+        print(f'rank {rank} - iterable_rank {iterable_rank}')
+        print(f'building bd_comm')
+        world_group = MPI.COMM_WORLD.Get_group()
+        group = world_group.Excl([0,1])
+        bd_comm = MPI.COMM_WORLD.Create(group)
+        if len(iterable_rank) > 0 and rank >1:
+            bd_rank = bd_comm.Get_rank()
+            print(f'calling worker')
             # Only run the worker on non-empty ranks
             (
                 r_nfail,
@@ -299,55 +327,58 @@ def run(argv=None):
                 r_sum_wavelength,
             ) = worker(iterable_rank)
             surplus_rank = False
-        else:
-            # else run on the first iterable and set the values to zero
-            (
-                r_nfail,
-                r_nmemb,
-                r_max_img,
-                r_sum_distance,
-                r_sum_img,
-                r_ssq_img,
-                r_sum_wavelength,
-            ) = worker([iterable[0]])
-            r_nfail = 0
-            r_nmemb = 0
-            r_sum_distance = 0
-            r_sum_wavelength = 0
-            surplus_rank = True
+            print(f'worker done')
+        #else:
+        #    # else run on the first iterable and set the values to zero
+        #    (
+        #        r_nfail,
+        #        r_nmemb,
+        #        r_max_img,
+        #        r_sum_distance,
+        #        r_sum_img,
+        #        r_ssq_img,
+        #        r_sum_wavelength,
+        #    ) = (0,0,0,0,0,0,0) #worker([iterable[0]])
+        #    r_nfail = 0
+        #    r_nmemb = 0
+        #    r_sum_distance = 0
+        #    r_sum_wavelength = 0
+        #    surplus_rank = True
 
-        nfail = np.array([0])
-        nmemb = np.array([0])
-        sum_distance = np.array([0.0])
-        sum_wavelength = np.array([0.0])
-        comm.Reduce(np.array([r_nfail]), nfail)
-        comm.Reduce(np.array([r_nmemb]), nmemb)
-        comm.Reduce(np.array([r_sum_distance]), sum_distance)
-        comm.Reduce(np.array([r_sum_wavelength]), sum_wavelength)
-        nfail = int(nfail[0])
-        nmemb = int(nmemb)
-        sum_distance = float(sum_distance[0])
-        sum_wavelength = float(sum_wavelength[0])
+            print('about to reduce')
 
-        def reduce_image(data, op=MPI.SUM):
-            result = []
-            for panel_data in data:
-                if surplus_rank:
-                    panel_data = 0 * panel_data.as_numpy_array()
-                else:
-                    panel_data = panel_data.as_numpy_array()
-                reduced_data = np.zeros(panel_data.shape).astype(panel_data.dtype)
-                comm.Reduce(panel_data, reduced_data, op=op)
-                result.append(flex.double(reduced_data))
-            return result
+            nfail = np.array([0])
+            nmemb = np.array([0])
+            sum_distance = np.array([0.0])
+            sum_wavelength = np.array([0.0])
+            bd_comm.Reduce(np.array([r_nfail]), nfail)
+            bd_comm.Reduce(np.array([r_nmemb]), nmemb)
+            bd_comm.Reduce(np.array([r_sum_distance]), sum_distance)
+            bd_comm.Reduce(np.array([r_sum_wavelength]), sum_wavelength)
+            nfail = int(nfail[0])
+            nmemb = int(nmemb)
+            sum_distance = float(sum_distance[0])
+            sum_wavelength = float(sum_wavelength[0])
 
-        max_img = reduce_image(r_max_img, MPI.MAX)
-        sum_img = reduce_image(r_sum_img)
-        ssq_img = reduce_image(r_ssq_img)
+            def reduce_image(data, op=MPI.SUM):
+                result = []
+                for panel_data in data:
+                    if surplus_rank:
+                        panel_data = 0 * panel_data.as_numpy_array()
+                    else:
+                        panel_data = panel_data.as_numpy_array()
+                    reduced_data = np.zeros(panel_data.shape).astype(panel_data.dtype)
+                    bd_comm.Reduce(panel_data, reduced_data, op=op)
+                    result.append(flex.double(reduced_data))
+                return result
+            print(f'reducing r_max_img')
+            max_img = reduce_image(r_max_img, MPI.MAX)
+            sum_img = reduce_image(r_sum_img)
+            ssq_img = reduce_image(r_ssq_img)
 
-        if rank != 0:
-            return
-        avg_img = tuple(s / nmemb for s in sum_img)
+            if bd_rank != 0:
+                return
+            avg_img = tuple(s / nmemb for s in sum_img)
     else:
         if command_line.options.nproc == 1:
             results = [worker(iterable)]
@@ -390,6 +421,10 @@ def run(argv=None):
                 sum_wavelength += r_sum_wavelength
 
     # Early exit if no statistics were accumulated.
+    if rank < 2:
+    #    return 0
+        import time
+        time.sleep(1000) # horrible kludge
     if command_line.options.verbose:
         sys.stdout.write("Processed %d images (%d failed)\n" % (nmemb, nfail))
     if nmemb == 0:

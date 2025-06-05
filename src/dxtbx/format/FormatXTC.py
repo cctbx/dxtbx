@@ -160,6 +160,7 @@ class XtcReader(Reader):
 @abstract
 class FormatXTC(FormatMultiImage, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
+
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         self.lazy = kwargs.get("lazy", True)
@@ -386,16 +387,21 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
                             det = run.Detector('xppcspad')
             """
+            from libtbx.mpi4py import MPI
+            comm = MPI.COMM_WORLD
+            rank = comm.Get_rank()  # each process in MPI has a unique id, 0-indexed
+            size = comm.Get_size()  # size: number of processes running in this job
+
             ds = FormatXTC._get_datasource(self._image_file, self.params)
             assert len(self._psana_runs.items()) == 1
 
             for run_num, run in self._psana_runs.items():
                 print(run)
                 with run.build_table() as success:
-                    print(run, success)
+                    print(f'{run=} {success=}')
                     if success:
                         times = sorted(run._ts_table)
-                        print(times)
+                        print(f'{rank=},{len(times)=}')
                         if self._hit_inds is not None and run_num not in self._hit_inds:
                             continue
                         if self._hit_inds is not None and run_num in self._hit_inds:
@@ -413,9 +419,14 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                             len(self.times) + len(times),
                             run,
                         )
-
                         self.times.extend(times)
-                    self.n_images = len(self.times)
+                    else:
+                        self.run_mapping[run_num] = (
+                            1, 1, run
+                        )
+
+                self.n_images = len(self.times)
+                print('done populating events')
 
         elif self.params.mode == "psana2_idx_fake":
             
@@ -549,6 +560,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             if self.params.mode == "idx":
                 evt = self.get_run_from_index(index).event(self.times[index])
             elif self.params.mode == "psana2_idx":
+                from mpi4py import MPI
+                comm = MPI.COMM_WORLD
+                rank = comm.Get_rank()
+                print(f'{rank=} {index=}')
                 evt = self.get_run_from_index(index).event(self.times[index])
             elif self.params.mode == "psana2_idx_fake":
 #                tzero = time.time()
@@ -599,6 +614,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     def _get_datasource(image_file, params, **kwargs):
         """Construct a psana data source object given the locator parameters"""
         #import pdb; pdb.set_trace()
+        #import traceback; traceback.print_stack(file=sys.stdout)
         if params.calib_dir is not None:
             psana.setOption("psana.calib-dir", params.calib_dir)
         if params.data_source is None:
@@ -641,11 +657,14 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         """
         # this is key,value = run_integer, psana.Run, e.g. {62: <psana.Run(@0x7fbd0e23c990)>}
         psana_runs = dict()
-        for r in datasource.runs():
-            try:
-                psana_runs[r.runnum] = r
-            except AttributeError:
-                psana_runs[r.run()] = r
+        #for r in datasource.runs():
+        r = next(datasource.runs())
+        try:
+            runnum = r.runnum
+            #    with r.build_table() as success:
+            psana_runs[r.runnum] = r #(r, success)
+        except AttributeError: # r doesn't have runnum: psana1
+            psana_runs[r.run()] = r
         return psana_runs
 
     def _get_psana_detector(self, run):
