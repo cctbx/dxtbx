@@ -490,6 +490,9 @@ protected:
       buffer = ImageBuffer(Image<float>(get_image_tile_from_object<float>(obj)));
     } else if (name == "int") {
       buffer = ImageBuffer(Image<int>(get_image_tile_from_object<int>(obj)));
+    } else if (name == "uint32") {
+      buffer =
+        ImageBuffer(Image<unsigned int>(get_image_tile_from_object<unsigned int>(obj)));
     } else {
       throw DXTBX_ERROR("Unknown type " + name);
     }
