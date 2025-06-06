@@ -229,7 +229,9 @@ class FormatBrukerPhoton(FormatBruker):
         if num_4b_overflows > 0:
             # stored values are padded to a multiple of 16 bytes
             nbytes = num_4b_overflows * 4 + 15 & ~(15)
-            overflow_vals = read_4b(streambuf(f), nbytes // 4)[:num_4b_overflows]
+            overflow_vals = (
+                read_4b(streambuf(f), nbytes // 4)[:num_4b_overflows]
+            ).as_int()
             overflow = flex.int(nrows * ncols, 0)
             sel = (raw_data == 65535).as_1d()
             overflow.set_selected(sel, overflow_vals - 65535)

@@ -56,9 +56,9 @@ namespace dxtbx { namespace boost_python {
     return result;
   }
 
-  scitbx::af::shared<int> read_uint32(boost_adaptbx::python::streambuf &input,
-                                      size_t count) {
-    scitbx::af::shared<int> result;
+  scitbx::af::shared<unsigned int> read_uint32(boost_adaptbx::python::streambuf &input,
+                                               size_t count) {
+    scitbx::af::shared<unsigned int> result;
     boost_adaptbx::python::streambuf::istream is(input);
     std::vector<unsigned int> data;
     data.resize(count);
@@ -66,8 +66,7 @@ namespace dxtbx { namespace boost_python {
     is.read((char *)&data[0], count * sizeof(unsigned int));
 
     for (size_t j = 0; j < count; j++) {
-      DXTBX_ASSERT(data[j] <= std::numeric_limits<int>::max());
-      result.push_back((int)data[j]);
+      result.push_back(data[j]);
     }
 
     return result;
@@ -96,9 +95,10 @@ namespace dxtbx { namespace boost_python {
     return result;
   }
 
-  scitbx::af::shared<int> read_uint32_bs(boost_adaptbx::python::streambuf &input,
-                                         size_t count) {
-    scitbx::af::shared<int> result;
+  scitbx::af::shared<unsigned int> read_uint32_bs(
+    boost_adaptbx::python::streambuf &input,
+    size_t count) {
+    scitbx::af::shared<unsigned int> result;
     boost_adaptbx::python::streambuf::istream is(input);
     std::vector<unsigned int> data;
     data.resize(count);
@@ -113,8 +113,7 @@ namespace dxtbx { namespace boost_python {
     }
 
     for (size_t j = 0; j < count; j++) {
-      DXTBX_ASSERT(data[j] <= std::numeric_limits<int>::max());
-      result.push_back((int)data[j]);
+      result.push_back(data[j]);
     }
 
     return result;
