@@ -1,0 +1,1 @@
+When reading ``unsigned int`` data, do not attempt to convert to ``int``.
