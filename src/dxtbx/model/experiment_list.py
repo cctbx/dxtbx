@@ -686,9 +686,7 @@ class ExperimentListFactory:
         else:
             filename_iter = to_process
         
-        print(f"going through filename_iter")
         for filename in filename_iter:
-            print(f"{filename=}")
             # We now have a file, pre-opened by Format.open_file (therefore
             # cached). Determine its type, and prepare to put into a group
             format_class = find_format.find_format(filename)
@@ -728,10 +726,8 @@ class ExperimentListFactory:
         # - Any consecutive still frames that share any metadata with the
         #   previous still fram get collected into one ImageSet
 
-        print("going through format_groups")
         all_tof = False
         for format_class, records in format_groups.items():
-            print(f"{format_class=}")
             for i in records:
                 try:  # records can be ImageMetadataRecord or ImageSequence
                     scan = i.get_scan()
@@ -748,11 +744,8 @@ class ExperimentListFactory:
                         )
 
         # Treat each format as a separate block of data
-        print("going again")
         for format_class, records in format_groups.items():
-            print(f"{format_class=}")
             if issubclass(format_class, FormatMultiImage):
-                print(f"format_class is FormatMultiImage")
                 if all_tof:
                     _merge_sequence_model_metadata(
                         records,
@@ -760,9 +753,7 @@ class ExperimentListFactory:
                         compare_detector=compare_detector,
                         compare_goniometer=compare_goniometer,
                     )
-                print(f"...")
                 for imageset in records:
-                    print(f'extending experiment with from_imageset_and_crystal(): {imageset}.')
                     experiments.extend(
                         ExperimentListFactory.from_imageset_and_crystal(
                             imageset, crystal=None, load_models=load_models

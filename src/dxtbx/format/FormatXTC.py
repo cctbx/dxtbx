@@ -396,12 +396,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             assert len(self._psana_runs.items()) == 1
 
             for run_num, run in self._psana_runs.items():
-                print(run)
                 with run.build_table() as success:
-                    print(f'{run=} {success=}')
                     if success:
                         times = sorted(run._ts_table)
-                        print(f'{rank=},{len(times)=}')
                         if self._hit_inds is not None and run_num not in self._hit_inds:
                             continue
                         if self._hit_inds is not None and run_num in self._hit_inds:
@@ -426,7 +423,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                         )
 
                 self.n_images = len(self.times)
-                print('done populating events')
 
         elif self.params.mode == "psana2_idx_fake":
             
@@ -552,7 +548,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     def _get_event(self, index):
         """Retrieve a psana event given and index. This is the slow step for reading XTC streams,
         so implement a cache for the last read event."""
-        print(f'index {index}')
         if index == self.current_index:
             return self.current_event
         else:
@@ -563,7 +558,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 from mpi4py import MPI
                 comm = MPI.COMM_WORLD
                 rank = comm.Get_rank()
-                print(f'{rank=} {index=}')
                 evt = self.get_run_from_index(index).event(self.times[index])
             elif self.params.mode == "psana2_idx_fake":
 #                tzero = time.time()
