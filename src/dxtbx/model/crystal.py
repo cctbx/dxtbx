@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 crystal_phil_scope = iotbx.phil.parse(
     """
   crystal
-    .expert_level = 1
+    .expert_level = 2
     .short_caption = "Crystal overrides"
   {
     unit_cell = None
@@ -162,7 +162,7 @@ class CrystalFactory:
             params.crystal.space_group,
         ]
         if all_params.count(None) == len(all_params):
-            return None
+            return reference
 
         if reference is None:
             crystal = Crystal((1, 0, 0), (0, 1, 0), (0, 0, 1), "P1")
