@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import sys
 
-import numpy as np
-
 from boost_adaptbx.boost.python import streambuf
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx import IncorrectFormatError, flumpy
+from dxtbx import IncorrectFormatError
 from dxtbx.ext import (
     is_big_endian,
     read_uint8,
@@ -231,16 +229,13 @@ class FormatBrukerPhoton(FormatBruker):
         if num_4b_overflows > 0:
             # stored values are padded to a multiple of 16 bytes
             nbytes = num_4b_overflows * 4 + 15 & ~(15)
-            overflow_vals = flumpy.to_numpy(
-                (read_4b(streambuf(f), nbytes // 4)[:num_4b_overflows])
-            )
-            overflow_vals = overflow_vals.astype(np.uint64)
-            overflow = np.zeros(nrows * ncols, dtype=np.uint64)
-            sel = flumpy.to_numpy((raw_data == 65535).as_1d())
-            overflow[sel] = overflow_vals - 65535
-            overflow = flumpy.from_numpy(overflow)
+            overflow_vals = (
+                read_4b(streambuf(f), nbytes // 4)[:num_4b_overflows]
+            ).as_int()
+            overflow = flex.int(nrows * ncols, 0)
+            sel = (raw_data == 65535).as_1d()
+            overflow.set_selected(sel, overflow_vals - 65535)
             overflow.reshape(flex.grid(*image_size))
-            raw_data = raw_data.as_size_t()
             raw_data += overflow
 
         # handle underflows
