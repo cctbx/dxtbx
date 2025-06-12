@@ -91,7 +91,7 @@ class FormatBrukerModern(FormatBruker):
         # For electron diffraction (assumed if wavelength < 0.1 Angstrom)
         # it is preferable to return a single axis goniometer, as this can be
         # further optimised by dials.find_rotation_axis
-        wavelength = float(self.header_dic["WAVELEN"].split()[0])
+        wavelength = float(self.header_dict["WAVELEN"].split()[0])
         if wavelength < 0.1:
             g = self._goniometer_factory.known_axis(g.get_rotation_axis())
 
