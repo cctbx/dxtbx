@@ -74,8 +74,13 @@ class FormatBrukerModern(FormatBruker):
         if scan_axis is None:
             scan_axis = 2  # "OMEGA" default
 
-        # https://journals.iucr.org/d/issues/2014/10/00/dz5309/dz5309sup1.pdf
-        axes = flex.vec3_double(((0, -1, 0), (0, 0, 1), (0, 1, 0)))
+        if "CMOS-PHOTONII" in self.header_dict["DETTYPE"].upper():
+            # https://journals.iucr.org/d/issues/2014/10/00/dz5309/dz5309sup1.pdf
+            axes = flex.vec3_double(((0, -1, 0), (0, 0, 1), (0, 1, 0)))
+        else:
+            # Axes here determined by trial and error to give the correct rotation
+            # axis for the ED-1 prototype, in which the CHI angle is 267°
+            axes = flex.vec3_double(((1, 0, 0), (0, 0, -1), (0, 1, 0)))
         omega -= 180
         angles = flex.double((phi, chi, omega))
 
