@@ -6,7 +6,7 @@ from boost_adaptbx.boost.python import streambuf
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx import IncorrectFormatError
+from dxtbx import IncorrectFormatError, flumpy
 from dxtbx.ext import (
     is_big_endian,
     read_uint8,
@@ -16,6 +16,16 @@ from dxtbx.ext import (
     read_uint32_bs,
 )
 from dxtbx.format.FormatBruker import FormatBruker
+
+
+def _convert_int_to_uint32(array):
+    """Convert a flex.int array to a flex.uint32 array, without copying and
+    doing no checking that the values are non-negative. This should only be
+    called when the values are known to be non-negative."""
+
+    array = flumpy.to_numpy(array)
+    array = array.astype("uint32", copy=False)
+    return flumpy.from_numpy(array)
 
 
 class FormatBrukerPhoton(FormatBruker):
@@ -197,7 +207,7 @@ class FormatBrukerPhoton(FormatBruker):
         nrows = int(self.header_dict["NROWS"].split()[0])
         ncols = int(self.header_dict["NCOLS"].split()[0])
 
-        raw_data = read_data(streambuf(f), nrows * ncols)
+        raw_data = _convert_int_to_uint32(read_data(streambuf(f), nrows * ncols))
 
         image_size = (nrows, ncols)
         raw_data.reshape(flex.grid(*image_size))
@@ -210,7 +220,9 @@ class FormatBrukerPhoton(FormatBruker):
         if num_underflows > 0:
             # stored values are padded to a multiple of 16 bytes
             nbytes = num_underflows + 15 & ~(15)
-            underflow_vals = read_uint8(streambuf(f), nbytes)[:num_underflows]
+            underflow_vals = _convert_int_to_uint32(
+                read_uint8(streambuf(f), nbytes)[:num_underflows]
+            )
         else:
             underflow_vals = None
 
@@ -218,8 +230,10 @@ class FormatBrukerPhoton(FormatBruker):
         if num_2b_overflows > 0:
             # stored values are padded to a multiple of 16 bytes
             nbytes = num_2b_overflows * 2 + 15 & ~(15)
-            overflow_vals = read_2b(streambuf(f), nbytes // 2)[:num_2b_overflows]
-            overflow = flex.int(nrows * ncols, 0)
+            overflow_vals = _convert_int_to_uint32(
+                read_2b(streambuf(f), nbytes // 2)[:num_2b_overflows]
+            )
+            overflow = flex.uint32(nrows * ncols, 0)
             sel = (raw_data == 255).as_1d()
             overflow.set_selected(sel, overflow_vals - 255)
             overflow.reshape(flex.grid(*image_size))
@@ -229,10 +243,8 @@ class FormatBrukerPhoton(FormatBruker):
         if num_4b_overflows > 0:
             # stored values are padded to a multiple of 16 bytes
             nbytes = num_4b_overflows * 4 + 15 & ~(15)
-            overflow_vals = (
-                read_4b(streambuf(f), nbytes // 4)[:num_4b_overflows]
-            ).as_int()
-            overflow = flex.int(nrows * ncols, 0)
+            overflow_vals = read_4b(streambuf(f), nbytes // 4)[:num_4b_overflows]
+            overflow = flex.uint32(nrows * ncols, 0)
             sel = (raw_data == 65535).as_1d()
             overflow.set_selected(sel, overflow_vals - 65535)
             overflow.reshape(flex.grid(*image_size))
@@ -241,7 +253,7 @@ class FormatBrukerPhoton(FormatBruker):
         # handle underflows
         if underflow_vals is not None:
             sel = (raw_data == 0).as_1d()
-            underflow = flex.int(nrows * ncols, 0)
+            underflow = flex.uint32(nrows * ncols, 0)
             underflow.set_selected(sel, underflow_vals)
             underflow.reshape(flex.grid(*image_size))
             raw_data += underflow
