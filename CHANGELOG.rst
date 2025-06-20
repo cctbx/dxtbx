@@ -1,3 +1,36 @@
+dxtbx 3.25.0 (2025-06-20)
+=========================
+
+Features
+--------
+
+- DXTBX is now compatible with numpy 2. (`#751 <https://github.com/cctbx/dxtbx/issues/751>`_)
+- Allow the creation of a simple ``Crystal`` model from PHIL parameters. (`#819 <https://github.com/cctbx/dxtbx/issues/819>`_)
+- Python 3.13 compatibility. (`#826 <https://github.com/cctbx/dxtbx/issues/826>`_)
+
+
+Bugfixes
+--------
+
+- Convert tests to use ``dials-data``, rather than ``dials_regression``. This means they can be run outside of Diamond. (`#812 <https://github.com/cctbx/dxtbx/issues/812>`_)
+- Increase displayed precision of crystal U, B and A matrices. (`#823 <https://github.com/cctbx/dxtbx/issues/823>`_)
+- Add DECTRIS Singla to detectors.lib. (`#824 <https://github.com/cctbx/dxtbx/issues/824>`_)
+- Avoid reading h5 imagesets as having a single image, when a format class is not available (`#825 <https://github.com/cctbx/dxtbx/issues/825>`_)
+- ``dials.modify_experiments``: Bug fixes for ``CrystalFactory.from_phil``. (`#829 <https://github.com/cctbx/dxtbx/issues/829>`_)
+
+
+Deprecations and Removals
+-------------------------
+
+- The ``dials_regression`` and ``dials_regression_path`` fixtures are removed, as no tests use this repository any more. (`#815 <https://github.com/cctbx/dxtbx/issues/815>`_)
+
+
+Misc
+----
+
+- `#778 <https://github.com/cctbx/dxtbx/issues/778>`_, `#807 <https://github.com/cctbx/dxtbx/issues/807>`_, `#810 <https://github.com/cctbx/dxtbx/issues/810>`_, `#817 <https://github.com/cctbx/dxtbx/issues/817>`_, `#818 <https://github.com/cctbx/dxtbx/issues/818>`_, `#827 <https://github.com/cctbx/dxtbx/issues/827>`_
+
+
 DIALS 3.24.1 (2025-05-13)
 =========================
 
