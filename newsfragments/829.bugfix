@@ -1,1 +1,1 @@
-Bug fixes for ``CrystalFactory.from_phil``.
+``dials.modify_experiments``: Bug fixes for ``CrystalFactory.from_phil``.

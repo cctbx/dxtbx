@@ -1,1 +1,1 @@
-Convert the final tests to use ``dials-data`` rather than ``dials_regression``
+Convert tests to use ``dials-data``, rather than ``dials_regression``. This means they can be run outside of Diamond.
