@@ -24,6 +24,7 @@
 #include <dxtbx/model/goniometer.h>
 #include <dxtbx/model/scan.h>
 #include <dxtbx/model/crystal.h>
+#include <dxtbx/model/history.h>
 #include <dxtbx/error.h>
 
 namespace dxtbx { namespace model {
@@ -42,6 +43,8 @@ namespace dxtbx { namespace model {
    *   - crystal The crystal model
    *   - profile The profile model
    *   - scaling_model The scaling model
+   *   - identifier The experiment identifier
+   *   - history The serialization history of the experiment
    *
    * Some of these may be set to "None"
    *
@@ -61,7 +64,8 @@ namespace dxtbx { namespace model {
                boost::python::object profile,
                boost::python::object imageset,
                boost::python::object scaling_model,
-               std::string identifier)
+               std::string identifier,
+               std::shared_ptr<History> history)
         : beam_(beam),
           detector_(detector),
           goniometer_(goniometer),
@@ -70,7 +74,8 @@ namespace dxtbx { namespace model {
           profile_(profile),
           imageset_(imageset),
           scaling_model_(scaling_model),
-          identifier_(identifier) {}
+          identifier_(identifier),
+          history_(history) {}
 
     /**
      * Check if the beam model is the same.
@@ -248,6 +253,14 @@ namespace dxtbx { namespace model {
       return identifier_;
     }
 
+    void set_history(std::shared_ptr<History> history) {
+      history_ = history;
+    }
+
+    std::shared_ptr<History> get_history() const {
+      return history_;
+    }
+
   protected:
     std::shared_ptr<BeamBase> beam_;
     std::shared_ptr<Detector> detector_;
@@ -258,6 +271,7 @@ namespace dxtbx { namespace model {
     boost::python::object imageset_;
     boost::python::object scaling_model_;
     std::string identifier_;
+    std::shared_ptr<History> history_;
   };
 
 }}  // namespace dxtbx::model

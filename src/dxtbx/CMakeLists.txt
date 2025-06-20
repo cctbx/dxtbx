@@ -39,6 +39,7 @@ Python_add_library( dxtbx_model_ext
     model/boost_python/crystal.cc
     model/boost_python/parallax_correction.cc
     model/boost_python/pixel_to_millimeter.cc
+    model/boost_python/history.cc
     model/boost_python/experiment.cc
     model/boost_python/experiment_list.cc
     model/boost_python/model_ext.cc )
