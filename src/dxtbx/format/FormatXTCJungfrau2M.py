@@ -167,15 +167,15 @@ class FormatXTCJungfrau2M(FormatXTC):
             root = sub
             root_basis = root_basis * sub_basis
         t = root_basis.translation
-        if self.params.jungfrau.detz_offset:
+        if self.params.jungfrau.detz_offset is not None:
             distance = self._dist_det(evt) + self.params.jungfrau.detz_offset
         else:
             distance = t[2]
         root_basis.translation = col((t[0], t[1], -distance))
 
         origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
-        fast = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
-        slow = col((root_basis * col((0, 1, 0, 1)))[0:3]) - origin
+        fast = col((root_basis * col((0, 1, 0, 1)))[0:3]) - origin
+        slow = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
         pg0.set_local_frame(fast.elems, slow.elems, origin.elems)
         pg0.set_name("D%d" % (det_num))
 
