@@ -10,9 +10,9 @@ import numpy as np
 sys.path.append(os.path.join(os.getcwd(), "build"))
 
 try:
-    from pyterse import Terse
+    import pyterse
 except ImportError:
-    Terse = None
+    pyterse = None
 
 from scitbx.array_family import flex
 
@@ -149,11 +149,11 @@ class FormatTRPX(Format):
         return scan
 
     def get_raw_data(self):
-        if Terse is None:
+        if pyterse is None:
             raise ImportError(
                 "The package pyterse is not installed. Please install it to read TRPX files."
             )
-        terse = Terse.load(self._image_file)
+        terse = pyterse.Terse.load(self._image_file)
         decompressed_data = terse.prolix()
         raw_data_flex = flex.double(decompressed_data)
         return raw_data_flex
