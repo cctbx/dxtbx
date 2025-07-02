@@ -14,8 +14,8 @@ try:
 except ImportError:
     pyterse = None
 
-from scitbx.array_family import flex
 
+from dxtbx import flumpy
 from dxtbx.format.Format import Format
 from dxtbx.model import ScanFactory
 from dxtbx.model.beam import Probe
@@ -155,7 +155,7 @@ class FormatTRPX(Format):
             )
         terse = pyterse.Terse.load(self._image_file)
         decompressed_data = terse.prolix()
-        raw_data_flex = flex.double(decompressed_data)
+        raw_data_flex = flumpy.from_numpy(decompressed_data)
         return raw_data_flex
 
 
