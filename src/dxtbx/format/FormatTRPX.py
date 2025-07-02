@@ -149,6 +149,10 @@ class FormatTRPX(Format):
         return scan
 
     def get_raw_data(self):
+        if Terse is None:
+            raise ImportError(
+                "The package pyterse is not installed. Please install it to read TRPX files."
+            )
         terse = Terse.load(self._image_file)
         decompressed_data = terse.prolix()
         raw_data_flex = flex.double(decompressed_data)
