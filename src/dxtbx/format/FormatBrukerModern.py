@@ -45,9 +45,8 @@ class FormatBrukerModern(FormatBruker):
 
         header_dic = FormatBruker.parse_header(header_lines)
 
-        # Support Photon II/III, Eiger, Quadro and ELA detectors. I have not seen
-        # images from the Photon IV, so don't attempt to support it yet.
-        accepted_detectors = ["CMOS-PHOTONII", "EIGER", "QUADRO", "DECTRIS-ELA"]
+        # Support Photon II-IV, Eiger, Quadro and ELA detectors.
+        accepted_detectors = ["CMOS-PHOTONI", "EIGER", "QUADRO", "DECTRIS-ELA"]
         for det in accepted_detectors:
             if header_dic.get("DETTYPE", "").upper().startswith(det):
                 return True
