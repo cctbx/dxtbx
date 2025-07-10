@@ -1,1 +1,0 @@
-Removed the addition of the format_class to the MemReader as it broke a test in DIALS.

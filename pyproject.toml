@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dxtbx"
-version = "3.25.dev"
+version = "3.26.dev"
 description = "Diffraction Experiment Toolkit"
 authors = [
     { name = "Diamond Light Source", email = "dials-user-group@jiscmail.net" },
 ]
 license = { file = "LICENSE.txt" }
 readme = "README.md"
-requires-python = ">=3.9, <3.13"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
