@@ -174,8 +174,17 @@ class FormatXTCJungfrau2M(FormatXTC):
         root_basis.translation = col((t[0], t[1], -distance))
 
         origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
-        fast = col((root_basis * col((0, 1, 0, 1)))[0:3]) - origin
-        slow = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
+        #fast = col((root_basis * col((0, 1, 0, 1)))[0:3]) - origin
+        #slow = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
+        fast = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
+        slow = col((root_basis * col((0, 1, 0, 1)))[0:3]) - origin
+
+        normal = fast.cross(slow)
+        rotation = normal.axis_and_angle_as_r3_rotation_matrix(-90, deg=True)
+        fast = rotation * fast
+        slow = rotation * slow
+        origin = rotation * origin
+
         pg0.set_local_frame(fast.elems, slow.elems, origin.elems)
         pg0.set_name("D%d" % (det_num))
 
