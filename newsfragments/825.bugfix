@@ -1,1 +1,0 @@
-Avoid reading h5 imagesets as having a single image, when a format class is not available
