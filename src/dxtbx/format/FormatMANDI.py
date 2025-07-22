@@ -472,8 +472,12 @@ class FormatMANDI(FormatHDF5):
     def get_beam(self, index: int = None) -> PolychromaticBeam:
         direction = self._get_sample_to_source_direction()
         distance = self._get_sample_to_source_distance()
+        wavelength_range = (2.0, 4.0)
         return BeamFactory.make_polychromatic_beam(
-            direction=direction, sample_to_source_distance=distance, probe=Probe.neutron
+            direction=direction,
+            wavelength_range=wavelength_range,
+            sample_to_source_distance=distance,
+            probe=Probe.neutron,
         )
 
     def get_scan(self, index=None) -> Scan:
@@ -511,7 +515,7 @@ class FormatMANDI(FormatHDF5):
         return "SENSOR_PAD"
 
     def _get_panel_projections_2d(self) -> dict:
-        p_w, p_h = self._get_pixel_size()
+        p_w, p_h = self._get_image_size()
         panel_pos = {}
         count = 1
         for i in range(8):
