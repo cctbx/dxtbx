@@ -14,6 +14,7 @@ import boost_adaptbx.boost.python
 import cctbx.crystal
 import cctbx.sgtbx
 import cctbx.uctbx
+import libtbx.load_env
 from scitbx import matrix
 from scitbx.array_family import flex
 
@@ -803,7 +804,11 @@ class _experimentlist:
                 caller_module_name = module.__name__
                 break
 
-        # Look up the dispatcher name for the caller module and software version
+        # If that module was called directly, look up via file path
+        if caller_module_name == "__main__":
+            caller_module_name = os.path.splitext(os.path.basename(module.__file__))[0]
+
+        # Look up the dispatcher name for the caller module
         try:
             lookup = {e.module: e.name for e in importlib.metadata.entry_points()}
         except AttributeError:  # Python < 3.10
@@ -812,6 +817,16 @@ class _experimentlist:
                 for e in importlib.metadata.entry_points()["console_scripts"]
             }
         dispatcher = lookup.get(caller_module_name, caller_module_name)
+
+        # If dispatcher lookup by entry_points did not work, try via libtbx
+        if dispatcher == caller_module_name:
+            dispatcher = libtbx.env.dispatcher_name
+
+        # Final fallback to the module name
+        if dispatcher in ["dials.python", "libtbx.python", "cctbx.python", None]:
+            dispatcher = caller_module_name
+
+        # Get software version
         try:
             version = "v" + importlib.metadata.version(dispatcher.split(".")[0])
         except importlib.metadata.PackageNotFoundError:
