@@ -420,8 +420,8 @@ class NXmxWriter:
         else:
             trusted_min, trusted_max = self.params.trusted_range
         # DIALS definitions match up with NXmx
-        det.create_dataset("underload_value", (1,), data=[trusted_min], dtype="int32")
-        det.create_dataset("saturation_value", (1,), data=[trusted_max], dtype="int32")
+        det.create_dataset("underload_value", (1,), data=[trusted_min], dtype="int")
+        det.create_dataset("saturation_value", (1,), data=[trusted_max], dtype="int")
 
         def find_panel_id(panel):
             for i in range(len(detector)):
