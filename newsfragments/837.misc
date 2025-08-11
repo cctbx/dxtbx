@@ -1,0 +1,1 @@
+Allow nxmx_writer to handle trusted range values beyond the previous limit of 2e31.
