@@ -157,22 +157,3 @@ class FormatTRPX(Format):
         decompressed_data = terse.prolix()
         raw_data_flex = flumpy.from_numpy(decompressed_data)
         return raw_data_flex
-
-
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) < 2:
-        print("Usage: python script.py image_file.trpx")
-        sys.exit(1)
-    image_file = sys.argv[1]
-    try:
-        if FormatTRPX.understand(image_file):
-            format_instance = FormatTRPX(image_file)
-            format_instance._start()
-            raw_data = format_instance.get_raw_data()
-            print("Raw data:", raw_data)
-        else:
-            print("File format not understood.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
