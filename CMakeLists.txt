@@ -11,6 +11,11 @@ include(AlwaysColourCompilation) # Always show coloured compiler output
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Generate compile_commands.json
 set(CMAKE_CXX_STANDARD 14)
 
+# Handle unity build on Windows
+if (CMAKE_UNITY_BUILD AND MSVC)
+    add_compile_options(/bigobj)
+endif()
+
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 find_package(CCTBX COMPONENTS scitbx cctbx REQUIRED)
 find_package(pybind11 REQUIRED)
