@@ -77,7 +77,7 @@ class FormatMANDI(FormatHDF5):
 
         return tuple(raw_data)
 
-    def get_detector(self) -> Detector:
+    def get_detector(self, index: int = None) -> Detector:
         num_panels = self._get_num_panels()
         panel_names = self._get_panel_names()
         panel_type = self._get_panel_type()
