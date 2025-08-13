@@ -1,0 +1,1 @@
+Add `tof_helpers.InstrumentDefinitionReader` to read instrument information directly from xml data, and update FormatMANDI to use this by default.
