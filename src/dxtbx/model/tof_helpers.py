@@ -493,7 +493,7 @@ class InstrumentDefinitionReader:
         init_slow_axis = np.array((0, 1, 0))
         init_fast_axis = np.array((1, 0, 0))
 
-        slow_axes, fast_axes = self.get_panel_axes(
+        fast_axes, slow_axes = self.get_panel_axes(
             xml_file, init_fast_axis, init_slow_axis
         )
 
