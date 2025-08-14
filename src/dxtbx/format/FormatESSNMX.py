@@ -397,7 +397,8 @@ class FormatESSNMX_old(FormatHDF5):
         root = detector.hierarchy()
 
         for i in range(num_panels):
-            panel = root.add_panel()
+            group = root.add_group()
+            panel = group.add_panel()
             panel.set_type(panel_type)
             panel.set_name(panel_names[i])
             panel.set_image_size(image_size)
