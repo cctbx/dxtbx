@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools
 import os
+from pathlib import Path
 from typing import Sequence
 
 from scitbx.array_family import flex
@@ -146,6 +147,214 @@ class FormatMultiImage(Format):
         # Make it a dictionary
         if format_kwargs is None:
             format_kwargs = {}
+
+        # If get_num_images hasn't been implemented, we need indices for number of images
+        if cls.get_num_images == FormatMultiImage.get_num_images:
+            assert single_file_indices is not None
+            assert len(single_file_indices) > 0
+            num_images = len(single_file_indices)
+        else:
+            num_images = None
+
+        # Get the format instance
+        assert len(filenames) == 1
+        if check_format is True:
+            cls._current_filename_ = None
+            cls._current_instance_ = None
+            format_instance = cls.get_instance(filenames[0], **format_kwargs)
+            if hasattr(format_instance, "lazy"):
+                lazy = format_instance.lazy
+            if num_images is None and not lazy:
+                # As we now have the actual format class we can get the number
+                # of images from here. This saves having to create another
+                # format class instance in the Reader() constructor
+                # NOTE: Having this information breaks internal assumptions in
+                #       *Lazy classes, so they have to figure this out in
+                #       their own time.
+                num_images = format_instance.get_num_images()
+        else:
+            format_instance = None
+            if not as_sequence:
+                lazy = True
+
+        # Get some information from the format class
+        reader = cls.get_reader()(filenames, num_images=num_images, **format_kwargs)
+
+        # Read the vendor type
+        if check_format is True:
+            vendor = format_instance.get_vendortype()
+        else:
+            vendor = ""
+
+        # Get the format kwargs
+        params = format_kwargs
+
+        # Check if we have a sequence
+
+        # Make sure only 1 or none is set
+        assert [as_imageset, as_sequence].count(True) < 2
+        if as_imageset:
+            is_sequence = False
+        elif as_sequence:
+            is_sequence = True
+        else:
+            if scan is None and format_instance is None:
+                raise RuntimeError(
+                    """
+          One of the following needs to be set
+            - as_imageset=True
+            - as_sequence=True
+            - scan
+            - check_format=True
+      """
+                )
+            if scan is None:
+                test_scan = format_instance.get_scan()
+            else:
+                test_scan = scan
+            if test_scan is not None:
+                is_sequence = True
+            else:
+                is_sequence = False
+
+        assert not (as_sequence and lazy), "No lazy support for sequences"
+
+        if single_file_indices is not None:
+            assert len(single_file_indices)
+            single_file_indices = flex.size_t(single_file_indices)
+
+        # Create an imageset or sequence
+        if not is_sequence:
+            # Use imagesetlazy
+            # Setup ImageSetLazy and just return it. No models are set.
+            if lazy:
+                iset = ImageSetLazy(
+                    ImageSetData(
+                        reader=reader,
+                        masker=None,
+                        vendor=vendor,
+                        params=params,
+                        format=cls,
+                    ),
+                    indices=single_file_indices,
+                )
+                _add_static_mask_to_iset(format_instance, iset)
+                return iset
+            # Create the imageset
+            iset = ImageSet(
+                ImageSetData(
+                    reader=reader, masker=None, vendor=vendor, params=params, format=cls
+                ),
+                indices=single_file_indices,
+            )
+
+            if single_file_indices is None:
+                single_file_indices = range(format_instance.get_num_images())
+
+            # If any are None then read from format
+            if not all((beam, detector, goniometer, scan)):
+                # Get list of models
+                num_images = format_instance.get_num_images()
+                beam = [None] * num_images
+                detector = [None] * num_images
+                goniometer = [None] * num_images
+                scan = [None] * num_images
+                for i in single_file_indices:
+                    beam[i] = format_instance.get_beam(i)
+                    detector[i] = format_instance.get_detector(i)
+                    goniometer[i] = format_instance.get_goniometer(i)
+                    scan[i] = format_instance.get_scan(i)
+
+            # Set the list of models
+            for i, index in enumerate(single_file_indices):
+                iset.set_beam(beam[index], i)
+                iset.set_detector(detector[index], i)
+                iset.set_goniometer(goniometer[index], i)
+                iset.set_scan(scan[index], i)
+
+        else:
+            # Get the template
+            template = filenames[0]
+
+            # Check indices are sequential
+            if single_file_indices is not None:
+                assert all(
+                    i + 1 == j
+                    for i, j in zip(single_file_indices[:-1], single_file_indices[1:])
+                )
+                num_images = len(single_file_indices)
+            else:
+                num_images = format_instance.get_num_images()
+
+            # Check the scan makes sense - we must want to use <= total images
+            if scan is not None:
+                assert scan.get_num_images() <= num_images
+
+            # If any are None then read from format
+            if beam is None:
+                beam = format_instance.get_beam()
+            if detector is None:
+                detector = format_instance.get_detector()
+            if goniometer is None:
+                goniometer = format_instance.get_goniometer()
+            if scan is None:
+                scan = format_instance.get_scan()
+
+            # Create the masker
+            if format_instance is not None:
+                masker = format_instance.get_masker(goniometer=goniometer)
+            else:
+                masker = None
+
+            isetdata = ImageSetData(
+                reader=reader,
+                masker=masker,
+                vendor=vendor,
+                params=params,
+                format=cls,
+                template=template,
+            )
+
+            # Create the sequence
+            iset = ImageSequence(
+                isetdata,
+                beam=beam,
+                detector=detector,
+                goniometer=goniometer,
+                scan=scan,
+                indices=single_file_indices,
+            )
+
+        _add_static_mask_to_iset(format_instance, iset)
+
+        return iset
+
+    @classmethod
+    def get_imagesequence(
+        cls,
+        filenames: Sequence[str],
+        template: str | None = None,
+        beam: model.Beam | None = None,
+        detector: model.Detector | None = None,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        single_file_indices: Sequence[int] | None = None,
+        format_kwargs: dict | None = None,
+    ) -> ImageSequence:
+        # Although this accepts filenames as a sequence, for Liskov substitution
+        # reasons, since this is a FormatMultiImage we only support _one_ file
+        # that contains many images in a single dataset, not multiple files.
+        if len(filenames) == 0:
+            raise ValueError("Error: Cannot make an ImageSequence out of no files")
+        elif len(filenames) > 1:
+            raise ValueError(
+                "Error: FormatMultiImage.get_imagesequence only supports single multiimage files"
+            )
+
+        # Default empty kwargs
+        format_kwargs = format_kwargs or {}
+        # Make filenames absolute
+        filename = Path(filenames[0]).absolute()
 
         # If get_num_images hasn't been implemented, we need indices for number of images
         if cls.get_num_images == FormatMultiImage.get_num_images:
