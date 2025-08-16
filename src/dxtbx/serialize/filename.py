@@ -29,9 +29,8 @@ def resolve_path(path: T, directory: AnyStr | os.PathLike | None = None) -> T:
             return the original path..
     """
 
-    # assert path, "Believe this is overly defensive, check if we ever rely on"
+    assert path, "Believe this is overly defensive, check if we ever rely on"
     if not path:
-        breakpoint()
         return ""
     path = str(path)
     trial_path = os.path.expanduser(os.path.expandvars(path))
