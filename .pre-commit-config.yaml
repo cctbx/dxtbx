@@ -17,6 +17,7 @@ repos:
     exclude: dependencies.yaml
   - id: no-commit-to-branch
     name: "Don't commit to 'main' directly"
+  - id: debug-statements
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
   rev: v0.11.12
