@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import functools
 import os
+from typing import Sequence
 
 from scitbx.array_family import flex
 
+import dxtbx.model as model
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetLazy
@@ -115,19 +117,19 @@ class FormatMultiImage(Format):
     @classmethod
     def get_imageset(
         cls,
-        filenames,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        as_sequence=False,
-        as_imageset=False,
-        single_file_indices=None,
-        format_kwargs=None,
-        template=None,
-        check_format=True,
-        lazy=False,
-    ):
+        filenames: str | Sequence[str],
+        beam: model.Beam | None = None,
+        detector: model.Detector | None = None,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        as_sequence: bool = False,
+        as_imageset: bool = False,
+        single_file_indices: Sequence[int] | None = None,
+        format_kwargs: dict | None = None,
+        template: str | None = None,
+        check_format: bool = True,
+        lazy: bool = False,
+    ) -> ImageSet | ImageSequence | ImageSetLazy:
         """
         Factory method to create an imageset
         """
