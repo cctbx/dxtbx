@@ -24,9 +24,9 @@ def resolve_path(
         return the original path as provided
     """
 
-    path = str(path)
     if not path:
         return ""
+    path = str(path)
     trial_path = os.path.expanduser(os.path.expandvars(path))
     if directory and not os.path.isabs(trial_path):
         trial_path = os.path.join(str(directory), trial_path)
