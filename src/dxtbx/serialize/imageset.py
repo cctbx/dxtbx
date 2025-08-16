@@ -10,7 +10,21 @@ from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFac
 from dxtbx.serialize.filename import resolve_path
 
 
-def filename_to_absolute(filename):
+@overload
+def filename_to_absolute(
+    filename: list[os.PathLike | AnyStr],
+) -> list[AnyStr]: ...
+
+
+@overload
+def filename_to_absolute(
+    filename: os.PathLike | AnyStr,
+) -> AnyStr: ...
+
+
+def filename_to_absolute(
+    filename: list[os.PathLike | AnyStr] | os.PathLike | AnyStr,
+) -> list[AnyStr] | AnyStr:
     """Convert filenames to absolute form."""
 
     if isinstance(filename, list):
@@ -19,7 +33,7 @@ def filename_to_absolute(filename):
     return os.path.abspath(filename)
 
 
-def filename_or_none(filename):
+def filename_or_none(filename: str | None) -> str | None:
     if filename is None or filename == "":
         return None
     return filename_to_absolute(filename)
@@ -91,7 +105,7 @@ def imageset_to_dict(imageset):
 
 
 def basic_imageset_from_dict(
-    d: dict, directory: AnyStr | os.PathLike | None = None
+    d: dict, directory: str | os.PathLike | None = None
 ) -> ImageSet:
     """Construct an ImageSet class from the dictionary."""
     # Get the filename list and create the imageset
@@ -191,7 +205,7 @@ def imagesequence_from_dict(
 
 @overload
 def imageset_from_dict(
-    d: None, check_format: bool = ..., directory: AnyStr | os.PathLike | None = ...
+    d: None, check_format: bool = ..., directory: str | os.PathLike | None = ...
 ) -> None: ...
 
 
@@ -199,14 +213,14 @@ def imageset_from_dict(
 def imageset_from_dict(
     d: dict | None,
     check_format: bool = ...,
-    directory: AnyStr | os.PathLike | None = ...,
+    directory: str | os.PathLike | None = ...,
 ) -> ImageSequence | ImageSet | None: ...
 
 
 def imageset_from_dict(
     d: dict | None,
     check_format: bool = True,
-    directory: AnyStr | os.PathLike | None = None,
+    directory: str | os.PathLike | None = None,
 ) -> ImageSequence | ImageSet | None:
     """
     Convert a dictionary to an ImageSet
