@@ -595,6 +595,8 @@ class ExperimentListDict:
 
         format_class = None
 
+        breakpoint()
+
         if self._check_format is False:
             if "single_file_indices" in imageset:
                 format_class = FormatMultiImage

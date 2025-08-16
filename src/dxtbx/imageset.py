@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+import warnings
 from collections.abc import Iterable
 from typing import Sequence
 
@@ -338,7 +339,7 @@ class _imagesequence:
         return self.data().get_template()
 
 
-def _analyse_files(filenames):
+def _analyse_files(filenames: list[str]) -> list[tuple[str, list[int | None], bool]]:
     """Group images by filename into image sets.
 
     Params:
@@ -363,13 +364,15 @@ def _analyse_files(filenames):
 
         return True
 
-    def _is_imageset_a_sequence(template, indices):
-        """Return True/False if the imageset is a sequence or not.
+    def _is_imageset_a_sequence(indices: Sequence[int | None]) -> bool:
+        """
+        Check if a set of indices is sequential or not.
 
-        Where more than 1 image that follow sequential numbers are given
-        the images are catagorised as belonging to a sequence, otherwise they
+        Where more than 1 image that follow sequential numbers are given,
+        the images are categorised as belonging to a sequence; otherwise they
         belong to an image set.
 
+        A single index on it's own is never a sequence.
         """
         if len(indices) <= 1:
             return False
@@ -380,7 +383,7 @@ def _analyse_files(filenames):
     file_groups = []
     for template, indices in filelist_per_imageset.items():
         # Check if this imageset is a sequence
-        is_sequence = _is_imageset_a_sequence(template, indices)
+        is_sequence = _is_imageset_a_sequence(indices)
 
         # Append the items to the group list
         file_groups.append((template, indices, is_sequence))
@@ -393,18 +396,28 @@ class ImageSetFactory:
     """Factory to create imagesets and sequences."""
 
     @staticmethod
-    def new(filenames, check_headers=False, ignore_unknown=False):
-        """Create an imageset or sequence
-
-        Params:
-            filenames A list of filenames
-            check_headers Check the headers to ensure all images are valid
-            ignore_unknown Ignore unknown formats
-
-        Returns:
-            A list of imagesets
-
+    def new(
+        filenames: list[str] | str,
+        *args,
+        **kwargs,
+    ) -> list[ImageSet | ImageSequence]:
         """
+        Create a list of imageset and/or sequences.
+
+        Args:
+            filenames: A list of filename templates. These will be expanded, and
+                any that appear to be a sequence will be loaded into ImageSequences.
+            check_headers: [OBSOLETE] Did nothing.
+            ignore_unknown: [OBSOLETE] Blanket ignored all errors when processing.
+        """
+        if args or kwargs:
+            # We used to have two parameters here - that did nothing, or hid errors.
+            # These were always optional, so warn the user if they are setting it.
+            warnings.warn(
+                "check_headers and ignore_unknown arguments to ImageSetFactory::new are obsolete",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         # Ensure we have enough images
         if isinstance(filenames, list):
             assert filenames
@@ -414,22 +427,17 @@ class ImageSetFactory:
             raise RuntimeError("unknown argument passed to ImageSetFactory")
 
         # Analyse the filenames and group the images into imagesets.
-        filelist_per_imageset = _analyse_files(filenames)
-
+        #
         # For each file list denoting an image set, create the imageset
         # and return as a list of imagesets. N.B sequences and image sets are
         # returned in the same list.
         imagesetlist = []
-        for filelist in filelist_per_imageset:
-            try:
-                if filelist[2] is True:
-                    iset = ImageSetFactory._create_sequence(filelist, check_headers)
-                else:
-                    iset = ImageSetFactory._create_imageset(filelist, check_headers)
-                imagesetlist.append(iset)
-            except Exception:
-                if not ignore_unknown:
-                    raise
+        for template, indices, is_sequence in _analyse_files(filenames):
+            if is_sequence:
+                iset = ImageSetFactory._create_sequence(template, indices)
+            else:
+                iset = ImageSetFactory._create_imageset(template, indices)
+            imagesetlist.append(iset)
 
         return imagesetlist
 
@@ -453,7 +461,6 @@ class ImageSetFactory:
 
         Returns:
             A list of sequences
-
         """
         if not check_format:
             assert not check_headers
@@ -507,11 +514,8 @@ class ImageSetFactory:
         return [sequence]
 
     @staticmethod
-    def _create_imageset(filelist, check_headers):
+    def _create_imageset(template: str, indices: list[int | None]):
         """Create an image set"""
-        # Extract info from filelist
-        template, indices, is_sequence = filelist
-
         # Get the template format
         if "#" in template:
             filenames = _expand_template_to_sorted_filenames(template, indices)
@@ -525,12 +529,13 @@ class ImageSetFactory:
         return format_class.get_imageset(filenames, as_imageset=True)
 
     @staticmethod
-    def _create_sequence(filelist, check_headers):
+    def _create_sequence(template: str, indices: list[int | None]) -> ImageSequence:
         """Create a sequence"""
-        template, indices, is_sequence = filelist
-
         # Expand the template if necessary
         if "#" in template:
+            assert not any(x is None for x in indices), (
+                "Only accept None-indices for non-template filenames"
+            )
             filenames = _expand_template_to_sorted_filenames(template, indices)
         else:
             filenames = [template]

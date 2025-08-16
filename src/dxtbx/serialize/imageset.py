@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import pickle
+from typing import AnyStr, overload
 
 from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetFactory
@@ -89,7 +90,9 @@ def imageset_to_dict(imageset):
         raise TypeError("Unknown ImageSet Type")
 
 
-def basic_imageset_from_dict(d, directory=None):
+def basic_imageset_from_dict(
+    d: dict, directory: AnyStr | os.PathLike | None = None
+) -> ImageSet:
     """Construct an ImageSet class from the dictionary."""
     # Get the filename list and create the imageset
     filenames = [resolve_path(str(p), directory=directory) for p in d["filenames"]]
@@ -123,7 +126,9 @@ def basic_imageset_from_dict(d, directory=None):
     return imageset
 
 
-def imagesequence_from_dict(d, check_format=True, directory=None):
+def imagesequence_from_dict(
+    d: dict, check_format: bool = True, directory: AnyStr | os.PathLike | None = None
+) -> ImageSequence:
     """Construct and image sequence from the dictionary."""
     # Get the template (required)
     template = resolve_path(str(d["template"]), directory=directory)
@@ -184,15 +189,37 @@ def imagesequence_from_dict(d, check_format=True, directory=None):
     return sequence
 
 
-def imageset_from_dict(d, check_format=True, directory=None):
-    """Convert the dictionary to a sequence
+@overload
+def imageset_from_dict(
+    d: None, check_format: bool = ..., directory: AnyStr | os.PathLike | None = ...
+) -> None: ...
 
-    Params:
-        d The dictionary of parameters
+
+@overload
+def imageset_from_dict(
+    d: dict | None,
+    check_format: bool = ...,
+    directory: AnyStr | os.PathLike | None = ...,
+) -> ImageSequence | ImageSet | None: ...
+
+
+def imageset_from_dict(
+    d: dict | None,
+    check_format: bool = True,
+    directory: AnyStr | os.PathLike | None = None,
+) -> ImageSequence | ImageSet | None:
+    """
+    Convert a dictionary to an ImageSet
+
+    Args:
+        d: The imageset model dictionary
 
     Returns:
         The sequence
 
+    Raises:
+        ValueError: If the `d["__id__"]` is not "imageset".
+        TypeError: If d does not contain "filename" or "template".
     """
     # Check the input
     if d is None:

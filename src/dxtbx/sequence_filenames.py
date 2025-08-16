@@ -3,19 +3,21 @@ from __future__ import annotations
 import os
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 from glob import glob
+from typing import AnyStr
 
 import natsort
 
 
-def template_regex(filename):
+def template_regex(filename: str) -> tuple[str | None, int]:
     """Works out a template from a filename.
 
     Tries a bunch of templates to work out the most sensible. N.B. assumes
     that the image index will be the last digits found in the file name.
 
-    Arguments:
-      filename (str): The filename to template-ize
+    Args:
+      filename: The filename to template-ize
 
     Returns:
         Tuple[str or None, int]:
@@ -115,7 +117,9 @@ def template_regex_from_list(filenames):
     return common_prefix + template, indices
 
 
-def group_files_by_imageset(filenames):
+def group_files_by_imageset(
+    filenames: list[AnyStr | os.PathLike],
+) -> Mapping[str, list[int | None]]:
     """Group filenames by supposed imageset.
 
     Get the template for each file in the list. Then add to a dictionary
@@ -128,7 +132,7 @@ def group_files_by_imageset(filenames):
     # Calculate the template for each image. If the template is None
     # (i.e. there are no numbers to identify the filename, add the
     # filename itself.
-    template = []
+    template: list[tuple[str, int | None]] = []
     for f in filenames:
         f = os.fspath(f)
         t = template_regex(f)
