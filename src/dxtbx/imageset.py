@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import typing
 from collections.abc import Iterable
+from typing import Sequence
 
 import natsort
 
@@ -9,6 +11,8 @@ import boost_adaptbx.boost.python
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
 from dxtbx.sequence_filenames import group_files_by_imageset, template_image_range
+
+from . import model
 
 try:
     from .dxtbx_imageset_ext import (
@@ -30,6 +34,10 @@ except ModuleNotFoundError:
         ImageSet,
         ImageSetData,
     )
+
+if typing.TYPE_CHECKING:
+    # Here because circular dependency
+    from dxtbx.format.Format import Format
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
@@ -569,16 +577,16 @@ class ImageSetFactory:
 
     @staticmethod
     def make_sequence(
-        template,
-        indices,
-        format_class=None,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        check_format=True,
-        format_kwargs=None,
-    ):
+        template: str,
+        indices: Sequence[int],
+        format_class: Format | None = None,
+        beam: model.Beam | None = None,
+        detector: model.Detector | None = None,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        check_format: bool = True,
+        format_kwargs: dict | None = None,
+    ) -> ImageSequence:
         """Create a sequence"""
         indices = sorted(indices)
 
@@ -586,26 +594,21 @@ class ImageSetFactory:
         from dxtbx.format.Format import Format
         from dxtbx.format.FormatMultiImage import FormatMultiImage
 
-        # Get the template format
         if "#" in template:
             filenames = _expand_template_to_sorted_filenames(template, indices)
-            # Get the format object and reader
-            if format_class is None:
-                if check_format:
-                    format_class = dxtbx.format.Registry.get_format_class_for_file(
-                        filenames[0]
-                    )
-                else:
-                    format_class = Format
+            default_format_class = Format
         else:
             filenames = [template]
-            if format_class is None:
-                if check_format:
-                    format_class = dxtbx.format.Registry.get_format_class_for_file(
-                        filenames[0]
-                    )
-                else:
-                    format_class = FormatMultiImage
+            default_format_class = FormatMultiImage
+
+        if format_class is None:
+            if check_format:
+                format_class = dxtbx.format.Registry.get_format_class_for_file(
+                    filenames[0]
+                )
+            else:
+                format_class = default_format_class
+        assert format_class is not None
 
         # Set the image range
         array_range = (min(indices) - 1, max(indices))

@@ -12,7 +12,7 @@ import os
 import pickle
 import sys
 from collections.abc import Callable, Generator, Iterable
-from typing import Any, TypedDict
+from typing import Any, AnyStr, TypedDict
 
 import natsort
 from tqdm import tqdm
@@ -210,7 +210,12 @@ class ExperimentListDict:
     """A helper class for serializing the experiment list to dictionary (needed
     to save the experiment list to JSON format."""
 
-    def __init__(self, obj: dict, check_format=True, directory=None):
+    def __init__(
+        self,
+        obj: dict,
+        check_format=True,
+        directory: AnyStr | os.PathLike | None = None,
+    ):
         """Initialise. Copy the dictionary."""
         # Basic check: This is a dict-like object. This can happen if e.g. we
         # were passed a DataBlock list instead of an ExperimentList dictionary
@@ -336,7 +341,7 @@ class ExperimentListDict:
         """Make an imageset from imageset_data - help with refactor decode."""
         assert imageset_data is not None
         if "params" in imageset_data:
-            format_kwargs = imageset_data["params"]
+            format_kwargs: dict = imageset_data["params"]
         else:
             format_kwargs = {}
 
@@ -567,12 +572,12 @@ class ExperimentListDict:
 
     def _make_sequence(
         self,
-        imageset,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        format_kwargs=None,
+        imageset: dict,
+        beam: Beam | None = None,
+        detector: Detector | None = None,
+        goniometer: Goniometer | None = None,
+        scan: Scan | None = None,
+        format_kwargs: dict | None = None,
     ):
         """Make an image sequence."""
         # Get the template format

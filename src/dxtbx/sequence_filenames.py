@@ -206,7 +206,7 @@ def locate_files_matching_template_string(template):
     return [os.path.join(*m) for m in matches if patt.match(m[1])]
 
 
-def template_image_range(template):
+def template_image_range(template: str) -> tuple[int, int]:
     """Return the image range of files with this template."""
 
     # Find the files matching the template
