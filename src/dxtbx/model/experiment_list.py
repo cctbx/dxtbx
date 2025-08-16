@@ -12,6 +12,7 @@ import os
 import pickle
 import sys
 from collections.abc import Callable, Generator, Iterable
+from pathlib import Path
 from typing import Any, AnyStr, TypedDict
 
 import natsort
@@ -224,7 +225,7 @@ class ExperimentListDict:
 
         self._obj = copy.deepcopy(obj)
         self._check_format = check_format
-        self._directory = directory
+        self._directory = Path(directory) if directory else None
 
         # If this doesn't claim to be an ExperimentList, don't even try
         if self._obj.get("__id__") != "ExperimentList":
@@ -293,7 +294,9 @@ class ExperimentListDict:
                 if value not in mmap:
                     mmap[value] = len(mlist)
                     mlist.append(
-                        from_dict(_experimentlist_from_file(value, self._directory))
+                        from_dict(
+                            _experimentlist_from_file(Path(value), self._directory)
+                        )
                     )
                 eobj[name] = mmap[value]
             elif not isinstance(value, int):
@@ -578,7 +581,7 @@ class ExperimentListDict:
         goniometer: Goniometer | None = None,
         scan: Scan | None = None,
         format_kwargs: dict | None = None,
-    ):
+    ) -> ImageSequence:
         """Make an image sequence."""
         # Get the template format
         template = resolve_path(imageset["template"], directory=self._directory)
@@ -639,7 +642,7 @@ class ExperimentListDict:
                 return entry_point.load().from_dict(obj)
 
 
-def _experimentlist_from_file(filename, directory=None):
+def _experimentlist_from_file(filename: Path, directory: Path | None = None) -> dict:
     """Load a model dictionary from a file."""
     filename = resolve_path(filename, directory=directory)
     try:

@@ -181,7 +181,7 @@ def replace_template_format_with_hash(match):
     return "#" * len(match.group(0) % 0)
 
 
-def template_string_to_glob_expr(template):
+def template_string_to_glob_expr(template: str) -> str:
     """Convert the template to a glob expression."""
     if template.count("#") == 1:
         # https://github.com/cctbx/dxtbx/issues/646
@@ -194,7 +194,7 @@ def template_string_number_index(template):
     return template.find("#"), template.rfind("#") + 1
 
 
-def locate_files_matching_template_string(template):
+def locate_files_matching_template_string(template: str) -> list[str]:
     """Return all files matching template."""
     matches = glob(template_string_to_glob_expr(template))
     if template.count("#") != 1:
@@ -207,7 +207,12 @@ def locate_files_matching_template_string(template):
 
 
 def template_image_range(template: str) -> tuple[int, int]:
-    """Return the image range of files with this template."""
+    """
+    Return the image range of files with this template.
+
+    Raises:
+        ValueError: If the template doesn't match any files
+    """
 
     # Find the files matching the template
     filenames = locate_files_matching_template_string(template)
