@@ -587,7 +587,16 @@ class ImageSetFactory:
         check_format: bool = True,
         format_kwargs: dict | None = None,
     ) -> ImageSequence:
-        """Create a sequence"""
+        """
+        Create a sequence
+
+        Args:
+            format_class: The Format class to use. If unspecified, then
+                this will be either automatically detected via dxtbx (if
+                `check_format` is False), or default to Format or
+                FormatMultiImage depending on whether the template looks
+                like a multiimage template or not.
+        """
         indices = sorted(indices)
 
         # Import here as Format and Imageset have cyclic dependencies
