@@ -12,7 +12,7 @@ import os
 import pickle
 import sys
 from collections.abc import Callable, Generator, Iterable
-from typing import Any
+from typing import Any, TypedDict
 
 import natsort
 from tqdm import tqdm
@@ -24,14 +24,19 @@ from dxtbx.format.image import ImageBool, ImageDouble
 from dxtbx.format.Registry import get_format_class_for_file
 from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet, ImageSetFactory
 from dxtbx.model import (
+    Beam,
     BeamFactory,
+    Crystal,
     CrystalFactory,
+    Detector,
     DetectorFactory,
     Experiment,
     ExperimentList,
+    Goniometer,
     GoniometerFactory,
     History,
     ProfileModelFactory,
+    Scan,
     ScanFactory,
 )
 from dxtbx.sequence_filenames import (
@@ -63,6 +68,16 @@ else:
     scaling_model_entry_points = importlib.metadata.entry_points(
         group="dxtbx.scaling_model_ext"
     )
+
+
+class ModelDict(TypedDict):
+    beam: Beam | None
+    crystal: Crystal | None
+    detector: Detector | None
+    goniometer: Goniometer | None
+    profile: Any | None
+    scaling_model: Any | None
+    scan: Scan | None
 
 
 class InvalidExperimentListError(RuntimeError):
@@ -195,7 +210,7 @@ class ExperimentListDict:
     """A helper class for serializing the experiment list to dictionary (needed
     to save the experiment list to JSON format."""
 
-    def __init__(self, obj, check_format=True, directory=None):
+    def __init__(self, obj: dict, check_format=True, directory=None):
         """Initialise. Copy the dictionary."""
         # Basic check: This is a dict-like object. This can happen if e.g. we
         # were passed a DataBlock list instead of an ExperimentList dictionary
@@ -231,7 +246,7 @@ class ExperimentListDict:
             )
         }
 
-    def _extract_models(self, name, from_dict):
+    def _extract_models(self, name: str, from_dict: Callable[[dict], Any]):
         """
         Helper function. Extract the models.
 
@@ -315,7 +330,9 @@ class ExperimentListDict:
 
         return filename, data
 
-    def _imageset_from_imageset_data(self, imageset_data, models):
+    def _imageset_from_imageset_data(
+        self, imageset_data: dict, models: ModelDict
+    ) -> ImageSet | ImageSequence | ImageGrid | None:
         """Make an imageset from imageset_data - help with refactor decode."""
         assert imageset_data is not None
         if "params" in imageset_data:
@@ -323,10 +340,10 @@ class ExperimentListDict:
         else:
             format_kwargs = {}
 
-        beam = models["beam"]
-        detector = models["detector"]
-        goniometer = models["goniometer"]
-        scan = models["scan"]
+        beam: Beam = models["beam"]
+        detector: Detector = models["detector"]
+        goniometer: Goniometer | None = models["goniometer"]
+        scan: Scan | None = models["scan"]
 
         # Load the external lookup data
         mask_filename, mask = self._load_pickle_path(imageset_data, "mask")
@@ -421,7 +438,7 @@ class ExperimentListDict:
 
         return imageset
 
-    def decode(self):
+    def decode(self) -> ExperimentList:
         """Decode the dictionary into a list of experiments."""
         # Extract all the experiments - first find all scans belonging to
         # same imageset
@@ -463,7 +480,7 @@ class ExperimentListDict:
         el = ExperimentList()
         for eobj in self._obj["experiment"]:
             # Get the models
-            identifier = eobj.get("identifier", "")
+            identifier: str = eobj.get("identifier", "")
             beam = self._lookup_model("beam", eobj)
             detector = self._lookup_model("detector", eobj)
             goniometer = self._lookup_model("goniometer", eobj)
@@ -569,6 +586,7 @@ class ExperimentListDict:
             i0, i1 = scan.get_image_range()
 
         format_class = None
+
         if self._check_format is False:
             if "single_file_indices" in imageset:
                 format_class = FormatMultiImage
@@ -586,13 +604,13 @@ class ExperimentListDict:
             format_kwargs=format_kwargs,
         )
 
-    def _lookup_model(self, name, experiment_dict):
+    def _lookup_model(self, name: str, experiment_dict: dict[str, int]) -> dict | None:
         """
         Find a model by looking up its index from a dictionary
 
         Args:
-            name (str): The model name e.g. 'beam', 'detector'
-            experiment_dict (Dict[str, int]):
+            name: The model name e.g. 'beam', 'detector'
+            experiment_dict:
                 The experiment dictionary. experiment_dict[name] must
                 exist and be not None to retrieve a model. If this key
                 exists, then there *must* be an item with this index
