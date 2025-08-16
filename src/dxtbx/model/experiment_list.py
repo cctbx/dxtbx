@@ -252,7 +252,7 @@ class ExperimentListDict:
             )
         }
 
-    def _extract_models(self, name: str, from_dict: Callable[[dict], Any]):
+    def _extract_models(self, name: str, from_dict: Callable[[dict], Any]) -> Any:
         """
         Helper function. Extract the models.
 
@@ -322,10 +322,10 @@ class ExperimentListDict:
             the pickle file, or is None if the file is inaccessible. If there
             is no key entry then ("", None) is returned.
         """
-        if param not in imageset_data:
+        if not imageset_data.get(param):
             return "", None
 
-        filename = resolve_path(imageset_data[param], directory=self._directory)
+        filename = resolve_path(Path(imageset_data[param]), directory=self._directory)
         data = None
         if filename:
             try:
