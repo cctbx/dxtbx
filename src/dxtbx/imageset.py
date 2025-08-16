@@ -391,7 +391,6 @@ def _analyse_files(filenames: list[str]) -> list[tuple[str, list[int | None], bo
     return file_groups
 
 
-# FIXME Lots of duplication in this class, need to tidy up
 class ImageSetFactory:
     """Factory to create imagesets and sequences."""
 
