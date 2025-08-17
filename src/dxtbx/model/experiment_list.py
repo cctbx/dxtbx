@@ -359,8 +359,6 @@ class ExperimentListDict:
                 scan=scan,
                 format_kwargs=format_kwargs,
             )
-        elif imageset_data["__id__"] == "MemImageSet":
-            imageset = self._make_mem_imageset(imageset_data)
         else:
             raise RuntimeError("Unknown imageset type")
 
@@ -518,10 +516,6 @@ class ExperimentListDict:
                 expt.history = history
 
         return el
-
-    def _make_mem_imageset(self, imageset):
-        """Can't make a mem imageset from dict."""
-        return None
 
     def _make_stills(self, imageset, format_kwargs=None):
         """Make a still imageset."""
