@@ -171,12 +171,22 @@ public:
   ImageSetData(boost::python::object reader, masker_ptr masker)
       : reader_(reader),
         masker_(masker),
+        masker_obj_(),
         beams_(boost::python::len(reader)),
         detectors_(boost::python::len(reader)),
         goniometers_(boost::python::len(reader)),
         scans_(boost::python::len(reader)),
         reject_(boost::python::len(reader)) {}
 
+  ImageSetData(boost::python::object reader, boost::python::object masker)
+      : reader_(reader),
+        masker_(),
+        masker_obj_(masker),
+        beams_(boost::python::len(reader)),
+        detectors_(boost::python::len(reader)),
+        goniometers_(boost::python::len(reader)),
+        scans_(boost::python::len(reader)),
+        reject_(boost::python::len(reader)) {}
   /**
    * @returns The reader object
    */
@@ -188,6 +198,11 @@ public:
    * @returns The masker object
    */
   masker_ptr masker() {
+    if (masker_ == nullptr && masker_obj_ != boost::python::object()) {
+      masker_ = boost::python::extract<ImageSetData::masker_ptr>(masker_obj_())();
+      masker_obj_ = boost::python::object();
+    }
+
     return masker_;
   }
 
@@ -195,7 +210,7 @@ public:
    * @returns Does the imageset have a dynamic mask.
    */
   bool has_dynamic_mask() const {
-    return masker_ != NULL;
+    return masker_ != nullptr || masker_obj_ != boost::python::object();
   }
 
   /**
@@ -440,7 +455,12 @@ public:
                             std::size_t first,
                             std::size_t last) const {
     DXTBX_ASSERT(last > first);
-    ImageSetData partial = ImageSetData(reader, masker_);
+    ImageSetData partial;
+    if (masker_ == nullptr && masker_obj_ != boost::python::object()) {
+      partial = ImageSetData(reader, masker_obj_);
+    } else {
+      partial = ImageSetData(reader, masker_);
+    }
     for (size_t i = 0; i < last - first; i++) {
       partial.beams_[i] = beams_[i + first];
       partial.detectors_[i] = detectors_[i + first];
@@ -518,6 +538,13 @@ protected:
   }
 
   boost::python::object reader_;
+  /// Hold an object that can be called to get the masker.
+  ///
+  /// This won't be called until the masker is actually required, under
+  /// the assumption that accessing the masker requires accessing the raw
+  /// data file.
+  boost::python::object masker_obj_;
+  /// The Goniometer Masker object, if loaded (or present)
   std::shared_ptr<GoniometerShadowMasker> masker_;
   scitbx::af::shared<beam_ptr> beams_;
   scitbx::af::shared<detector_ptr> detectors_;

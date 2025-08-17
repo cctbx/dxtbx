@@ -1,8 +1,19 @@
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, Callable, Protocol, Union, overload
 
 from scitbx.array_family import flex
+
+from dxtbx.format.Format import Format
+from dxtbx.masking import GoniometerShadowMasker
+from dxtbx.model import Beam, Detector, Goniometer, Scan
+
+class Reader(Protocol):
+    def read(self, index: int | None) -> Any: ...
+    def is_single_file_reader(self) -> bool: ...
+    def paths(self) -> list[str]: ...
+    def master_path(self) -> str: ...
+    def identifiers(self) -> list[str]: ...
 
 ImageData = Union[flex.int, flex.double, flex.float]
 
@@ -40,7 +51,25 @@ class ImageGrid(ImageSet):
     def __reduce__(self) -> Any: ...
 
 class ImageSequence(ImageSet):
-    def __init__(self, *args, **kwargs) -> None: ...
+    @overload
+    def __init__(
+        self,
+        data: ImageSetData,
+        beam: Beam,
+        detector: Detector,
+        goniometer: Goniometer,
+        scan: Scan,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        data: ImageSetData,
+        beam: Beam,
+        detector: Detector,
+        goniometer: Goniometer,
+        scan: Scan,
+        indices: flex.size_t,
+    ) -> None: ...
     def complete_set(self) -> Any: ...
     def get_array_range(self) -> Any: ...
     def get_beam(self) -> Any: ...
@@ -93,7 +122,15 @@ class ImageSet:
     def external_lookup(self) -> Any: ...
 
 class ImageSetData:
-    def __init__(self, *args, **kwargs) -> None: ...
+    def __init__(
+        self,
+        reader: Reader,
+        masker: GoniometerShadowMasker | Callable[[], GoniometerShadowMasker] | None,
+        template: str = "",
+        vendor: str = "",
+        params: dict | None = None,
+        format: Format | None = None,
+    ) -> None: ...
     def get_beam(self, int) -> Any: ...
     def get_data(self, int) -> Any: ...
     def get_detector(self, int) -> Any: ...
