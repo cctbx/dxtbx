@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import os
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Type
 
 from scitbx.array_family import flex
 
@@ -28,43 +28,54 @@ def _add_static_mask_to_iset(format_instance: Format, iset: ImageSet) -> None:
 
 
 class Reader:
-    def __init__(self, format_class, filenames, num_images=None, **kwargs):
+    def __init__(
+        self,
+        format_class: Type[FormatMultiImage],
+        filenames: Sequence[str],
+        num_images: int | None = None,
+        **kwargs,
+    ):
         self.kwargs = kwargs
         self.format_class = format_class
         assert len(filenames) == 1
         self._filename = filenames[0]
-        if num_images is None:
-            format_instance = self.format_class.get_instance(
+        self._num_images = num_images
+        self._format_instance = None
+
+    def get_format_instance(self) -> FormatMultiImage:
+        print("Instantiating format class from Reader")
+        if self._format_instance is None:
+            self._format_instance = self.format_class.get_instance(
                 self._filename, **self.kwargs
             )
-            self._num_images = format_instance.get_num_images()
-        else:
-            self._num_images = num_images
+        return self._format_instance
 
     def nullify_format_instance(self):
         self.format_class._current_instance_ = None
         self.format_class._current_filename_ = None
+        self._format_instance = None
 
     def read(self, index):
-        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
-        return format_instance.get_raw_data(index)
+        return self.get_format_instance().get_raw_data(index)
 
     def paths(self):
         return [self._filename]
 
-    def __len__(self):
+    def __len__(self) -> int:
+        if self._num_images is None:
+            self._num_images = self.get_format_instance().get_num_images()
         return self._num_images
 
-    def copy(self, filenames, num_images=None):
+    def copy(self, filenames: Sequence[str], num_images: int | None = None):
         return Reader(self.format_class, filenames, num_images, **self.kwargs)
 
-    def identifiers(self):
+    def identifiers(self) -> list[str]:
         return ["%s-%d" % (self._filename, index) for index in range(len(self))]
 
-    def is_single_file_reader(self):
+    def is_single_file_reader(self) -> bool:
         return True
 
-    def master_path(self):
+    def master_path(self) -> str:
         return self._filename
 
 
