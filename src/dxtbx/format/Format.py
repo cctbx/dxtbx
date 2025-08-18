@@ -14,7 +14,7 @@ import functools
 import os
 from collections.abc import Callable, Sequence
 from io import IOBase
-from typing import ClassVar, Literal, overload
+from typing import TYPE_CHECKING, ClassVar, Literal, overload
 
 import libtbx
 
@@ -35,6 +35,8 @@ try:
 except ImportError:
     gzip = None  # type: ignore
 
+if TYPE_CHECKING:
+    from dxtbx.masking import GoniometerShadowMasker
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -286,7 +288,9 @@ class Format:
         """
         return functools.partial(Reader, cls)
 
-    def get_masker(self, goniometer=None):
+    def get_masker(
+        self, goniometer: model.Goniometer | None = None
+    ) -> GoniometerShadowMasker | None:
         """
         Return a masker class
         """
