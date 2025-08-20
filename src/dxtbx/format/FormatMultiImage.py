@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import copy
 import functools
 import os
+from pathlib import Path
 from typing import Sequence, Type
 
 from scitbx.array_family import flex
@@ -340,3 +342,190 @@ class FormatMultiImage(Format):
         _add_static_mask_to_iset(format_instance, iset)
 
         return iset
+
+    @classmethod
+    def create_imagesequence(
+        cls,
+        filenames: Sequence[str],
+        single_file_indices: Sequence[int] | None = None,
+        format_kwargs: dict | None = None,
+    ) -> ImageSequence:
+        """Create an ImageSequence by reading the image file"""
+        return cls.get_imageset(
+            filenames,
+            single_file_indices=single_file_indices,
+            format_kwargs=format_kwargs,
+            as_sequence=True,
+        )
+
+    @classmethod
+    def reload_imagesequence(
+        cls,
+        filenames: Sequence[str],
+        single_file_indices: Sequence[int],
+        beam: model.Beam,
+        detector: model.Detector,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        format_kwargs: dict | None = None,
+    ) -> ImageSequence:
+        """
+        Construct an ImageSequence from existing data
+        """
+        # Although this accepts filenames as a sequence, for Liskov substitution
+        # reasons, since this is a FormatMultiImage we only support _one_ file
+        # that contains many images in a single dataset, not multiple files.
+        if len(filenames) == 0:
+            raise ValueError("Error: Cannot make an ImageSequence out of no files")
+        elif len(filenames) > 1:
+            raise ValueError(
+                "Error: FormatMultiImage.get_imagesequence only supports single multiimage files"
+            )
+
+        # Default empty kwargs
+        format_kwargs = format_kwargs or {}
+        # Make filenames absolute
+        filename = Path(filenames[0]).absolute()
+        # WIP: Ensure that we can't use this again
+        del filenames
+
+        assert single_file_indices, (
+            "We must have single file indices to reload ImageSequence"
+        )
+        num_images = len(single_file_indices)
+
+        # Get the format instance
+        # assert len(filenames) == 1
+        # cls._current_filename_ = None
+        # cls._current_instance_ = None
+        # format_instance = cls.get_instance(filename, **format_kwargs)
+
+        # if num_images is None:
+        #     # As we now have the actual format class we can get the number
+        #     # of images from here. This saves having to create another
+        #     # format class instance in the Reader() constructor
+        #     # NOTE: Having this information breaks internal assumptions in
+        #     #       *Lazy classes, so they have to figure this out in
+        #     #       their own time.
+        #     num_images = format_instance.get_num_images()
+
+        # Get some information from the format class
+        reader = cls.get_reader()([filename], num_images=num_images, **format_kwargs)
+
+        # WIP: This should always be safe if we have the actual format class,
+        # and the assumption we have in this version is that we do
+        assert not cls.is_abstract()
+        # WIP: ... BUT, we don't have a FormatClass instance (and probably
+        #   don't need to have one), so maybe we need to change all these
+        #   existing examples to ClassMethod? Or, check_format=False always
+        #   just set this blank, so maybe we never need this after initial
+        #   load.
+        vendor = ""
+
+        if not single_file_indices:
+            raise ValueError(
+                "single_file_indices can not be empty to reload FormatMultiImage ImageSequence"
+            )
+        single_file_indices = flex.size_t(single_file_indices)
+
+        # Check indices are sequential
+        if (
+            max(single_file_indices) - min(single_file_indices)
+            == len(single_file_indices) - 1
+        ):
+            raise ValueError("single_file_idices are not sequential")
+        num_images = len(single_file_indices)
+
+        # Check the scan makes sense - we must want to use <= total images
+        if scan is not None:
+            assert scan.get_num_images() <= num_images
+
+        # Create the masker
+        format_instance: FormatMultiImage = None
+
+        loader = DeferredLoader(
+            cls,
+            filename,
+            format_kwargs=format_kwargs,
+            gonimeter=goniometer,
+        )
+
+        isetdata = ImageSetData(
+            reader=reader,
+            masker=loader.load_dynamic_mask,
+            vendor=vendor,
+            params=format_kwargs,
+            format=cls,
+            template=filename,
+        )
+
+        # Create the sequence
+        iset = ImageSequence(
+            isetdata,
+            beam=beam,
+            detector=detector,
+            goniometer=goniometer,
+            scan=scan,
+            indices=single_file_indices,
+        )
+
+        # Handle merging detector static mask... if necessary
+        assert iset.external_lookup.mask.data.empty(), (
+            "Deferred static mask loading assumes nothing loaded already"
+        )
+
+        # Set up deferred instantiation and loading of the format class
+        iset.external_lookup.mask.set_data_generator(loader.load_static_mask)
+        return iset
+
+        # WIP: Things reloading reads involving format_instance
+        # - [x] _add_static_mask_to_iset(format_instance, iset)
+        #   - Added set_data_generator to ExternalLookupItem
+        # - [x] masker = format_instance.get_masker(goniometer=goniometer)
+        #   - Masker is now a callable that returns the masker on request
+        # - [x] vendor = format_instance.get_vendortype()
+        #   - Have just removed when reloading, for now
+        # - [x] reader = cls.get_reader()(filenames, num_images=num_images, **format_kwargs)
+        #   - Reader now lazily loads rather than eagerly loads
+
+
+class DeferredLoader:
+    """
+    Single object to hold data related to deferred loading
+
+    We don't want to eagerly access the raw image data on disk unless
+    it's actively requested. This class holds the information to do this,
+    and instances of it's methods passed into appropriate places so that
+    they can load on demand.
+
+    Also, the objects this is going on are likely to be passed through a
+    pickly boundary, so needs to be statically defined.
+    """
+
+    def __init__(
+        self,
+        format: Type[Format],
+        filename: str,
+        format_kwargs: dict,
+        gonimeter: model.Goniometer,
+    ):
+        self.format = format
+        self.filename = filename
+        self.format_kwargs = copy.deepcopy(format_kwargs or {})
+        self.goniometer = gonimeter
+
+    def load_static_mask(self) -> ImageBool | None:
+        print("Deferred loading of static mask")
+        static_mask = self.format.get_instance(
+            self.filename, **self.format_kwargs
+        ).get_static_mask()
+        if static_mask:
+            return ImageBool(static_mask)
+        return None
+
+    def load_dynamic_mask(self) -> dxtbx.masking.GoniometerShadowMasker | None:
+        """Lazy reading of dynamic masking"""
+        print("Rendering masker")
+        return self.format.get_instance(self.filename, **self.format_kwargs).get_masker(
+            goniometer=self.goniometer
+        )
