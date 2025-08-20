@@ -12,9 +12,9 @@ from __future__ import annotations
 import bz2
 import functools
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from io import IOBase
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal, overload
 
 import libtbx
 import scitbx.array_family.flex as flex
@@ -22,7 +22,7 @@ import scitbx.array_family.flex as flex
 import dxtbx.filecache_controller
 from dxtbx import model
 from dxtbx.format.image import ImageBool
-from dxtbx.imageset import ImageSequence, ImageSet
+from dxtbx.imageset import ImageSequence, ImageSet, ImageSetLazy
 from dxtbx.model import MultiAxisGoniometer
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
@@ -305,21 +305,56 @@ class Format:
             masker = None
         return masker
 
+    @overload
     @classmethod
     def get_imageset(
-        Class,
-        input_filenames,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        as_imageset=False,
-        as_sequence=False,
-        single_file_indices=None,
-        format_kwargs=None,
-        template=None,
-        check_format=True,
-    ):
+        cls,
+        filenames: str | Sequence[str],
+        beam: model.Beam | None = None,
+        detector: model.Detector | None = None,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        as_imageset: Literal[False] = ...,
+        as_sequence: Literal[True] = ...,
+        single_file_indices: Sequence[int] | None = None,
+        format_kwargs: dict | None = None,
+        template: str | None = None,
+        check_format: bool = True,
+    ) -> ImageSequence:
+        pass
+
+    @overload
+    @classmethod
+    def get_imageset(
+        cls,
+        filenames: str | Sequence[str],
+        beam: model.Beam | None = None,
+        detector: model.Detector | None = None,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        as_imageset: bool = False,
+        as_sequence: bool = False,
+        single_file_indices: Sequence[int] | None = None,
+        format_kwargs: dict | None = None,
+        template: str | None = None,
+        check_format: bool = True,
+    ) -> ImageSet | ImageSequence | ImageSetLazy: ...
+
+    @classmethod
+    def get_imageset(
+        cls,
+        filenames: str | Sequence[str],
+        beam: model.Beam | None = None,
+        detector: model.Detector | None = None,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        as_imageset: bool = False,
+        as_sequence: bool = False,
+        single_file_indices: Sequence[int] | None = None,
+        format_kwargs: dict | None = None,
+        template: str | None = None,
+        check_format: bool = True,
+    ) -> ImageSet | ImageSequence | ImageSetLazy:
         """
         Factory method to create an imageset
 
@@ -330,7 +365,7 @@ class Format:
         # Turn entries that are filenames into absolute paths
         filenames = [
             os.fspath(os.path.abspath(x)) if not get_url_scheme(x) else x
-            for x in input_filenames
+            for x in filenames
         ]
 
         # Make it a dict
@@ -338,13 +373,13 @@ class Format:
             format_kwargs = {}
 
         # Get some information from the format class
-        reader = Class.get_reader()(filenames, **format_kwargs)
+        reader = cls.get_reader()(filenames, **format_kwargs)
 
         # Get the format instance
         if check_format is True:
-            Class._current_filename_ = None
-            Class._current_instance_ = None
-            format_instance = Class.get_instance(filenames[0], **format_kwargs)
+            cls._current_filename_ = None
+            cls._current_instance_ = None
+            format_instance = cls.get_instance(filenames[0], **format_kwargs)
         else:
             format_instance = None
 
@@ -392,7 +427,7 @@ class Format:
                     masker=None,
                     vendor=vendor,
                     params=params,
-                    format=Class,
+                    format=cls,
                 )
             )
 
@@ -404,7 +439,7 @@ class Format:
                 goniometer = []
                 scan = []
                 for f in filenames:
-                    format_instance = Class(f, **format_kwargs)
+                    format_instance = cls(f, **format_kwargs)
                     beam.append(format_instance.get_beam())
                     detector.append(format_instance.get_detector())
                     goniometer.append(format_instance.get_goniometer())
@@ -440,7 +475,7 @@ class Format:
                 scan = format_instance.get_scan()
                 if scan is not None:
                     for f in filenames[1:]:
-                        format_instance = Class(f, **format_kwargs)
+                        format_instance = cls(f, **format_kwargs)
                         scan += format_instance.get_scan()
 
             assert beam is not None, "Can't create Sequence without beam"
@@ -461,7 +496,7 @@ class Format:
                     masker=masker,
                     vendor=vendor,
                     params=params,
-                    format=Class,
+                    format=cls,
                     template=template,
                 ),
                 beam=beam,
