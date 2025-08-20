@@ -13,7 +13,7 @@ import pickle
 import sys
 from collections.abc import Callable, Generator, Iterable
 from pathlib import Path
-from typing import Any, AnyStr, TypedDict
+from typing import Any, AnyStr, Type, TypedDict
 
 import natsort
 from tqdm import tqdm
@@ -22,7 +22,7 @@ import dxtbx
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
-from dxtbx.format.Registry import get_format_class_for_file
+from dxtbx.format.Registry import get_format_class_for_file, get_format_class_index
 from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet, ImageSetFactory
 from dxtbx.model import (
     Beam,
@@ -593,8 +593,37 @@ class ExperimentListDict:
         else:
             i0, i1 = scan.get_image_range()
 
+        def _get_validate_format(name: str) -> Type[Format]:
+            """
+            Get a Format class type instance, from the fully qualified name
+
+            Do extra work to validate that the Format in the registry matches the
+            expected qualified name completely.
+            """
+            shortname = name.split(".")[-1]
+            index = get_format_class_index()
+            if shortname not in index:
+                raise RuntimeError(
+                    f"ImageSequence is registered as an unrecognised format class: '{name}'"
+                )
+            # As a safety check, ensure that this is in the same location
+            concrete = index[shortname][0]()
+            concrete_full_name = f"{concrete.__module__}.{concrete.__qualname__}"
+            if concrete_full_name != name:
+                raise RuntimeError(
+                    f"ImageSequence has recognised format class '{shortname}', but at an unrecognised location ({concrete} instead of the expected {name})"
+                )
+            return concrete
+
         format_class = None
-        if self._check_format is False:
+
+        # WIP: This loads the matching format class if we have one defined. But we
+        # need to check to see what happens everywhere else when check_format=True
+        # (we want to effectively _always_ have check_format=True because the need
+        # to access it should have gone away).
+        if qualname := imageset.get("__format__"):
+            format_class = _get_validate_format(qualname)
+        elif self._check_format is False:
             if "single_file_indices" in imageset:
                 format_class = FormatMultiImage
 
