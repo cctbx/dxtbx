@@ -34,10 +34,14 @@ class ExternalLookup:
 class ExternalLookupItemBool:
     data: ImageBool
     filename: str
+    def set_data_generator(self, generator: Callable[[], ImageBool | None]) -> None: ...
 
 class ExternalLookupItemDouble:
     data: ImageDouble
     filename: str
+    def set_data_generator(
+        self, generator: Callable[[], ImageDouble | None]
+    ) -> None: ...
 
 class ImageGrid(ImageSet):
     def __init__(self, *args, **kwargs) -> None: ...

@@ -39,26 +39,30 @@ class Reader:
         self.format_class = format_class
         assert len(filenames) == 1
         self._filename = filenames[0]
-        if num_images is None:
-            format_instance = self.format_class.get_instance(
-                self._filename, **self.kwargs
-            )
-            self._num_images = format_instance.get_num_images()
-        else:
-            self._num_images = num_images
+        self._num_images = num_images
+        self._format_instance = None
+
+    def get_format_instance(self) -> FormatMultiImage:
+        print("Instantiating format class from Reader")
+        # if self._format_instance is None:
+        #     self._format_instance =
+        # return self._format_instance
+        return self.format_class.get_instance(self._filename, **self.kwargs)
 
     def nullify_format_instance(self):
         self.format_class._current_instance_ = None
         self.format_class._current_filename_ = None
+        self._format_instance = None
 
     def read(self, index):
-        format_instance = self.format_class.get_instance(self._filename, **self.kwargs)
-        return format_instance.get_raw_data(index)
+        return self.get_format_instance().get_raw_data(index)
 
     def paths(self):
         return [self._filename]
 
     def __len__(self) -> int:
+        if self._num_images is None:
+            self._num_images = self.get_format_instance().get_num_images()
         return self._num_images
 
     def copy(self, filenames: Sequence[str], num_images: int | None = None):
