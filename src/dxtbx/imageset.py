@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 from collections.abc import Iterable
 
 import natsort
@@ -30,6 +31,12 @@ except ModuleNotFoundError:
         ImageSet,
         ImageSetData,
     )
+
+if typing.TYPE_CHECKING:
+    from dxtbx.format.Format import Format
+
+    from . import model
+
 
 ext = boost_adaptbx.boost.python.import_ext("dxtbx_ext")
 
@@ -330,7 +337,7 @@ class _imagesequence:
         return self.data().get_template()
 
 
-def _analyse_files(filenames):
+def _analyse_files(filenames: list[str]) -> list[tuple[str, list[int | None], bool]]:
     """Group images by filename into image sets.
 
     Params:
@@ -380,7 +387,6 @@ def _analyse_files(filenames):
     return file_groups
 
 
-# FIXME Lots of duplication in this class, need to tidy up
 class ImageSetFactory:
     """Factory to create imagesets and sequences."""
 
@@ -445,7 +451,6 @@ class ImageSetFactory:
 
         Returns:
             A list of sequences
-
         """
         if not check_format:
             assert not check_headers
@@ -569,17 +574,26 @@ class ImageSetFactory:
 
     @staticmethod
     def make_sequence(
-        template,
-        indices,
-        format_class=None,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        check_format=True,
-        format_kwargs=None,
-    ):
-        """Create a sequence"""
+        template: str,
+        indices: Sequence[int],
+        format_class: Format | None = None,
+        beam: model.Beam | None = None,
+        detector: model.Detector | None = None,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        check_format: bool = True,
+        format_kwargs: dict | None = None,
+    ) -> ImageSequence:
+        """
+        Create a sequence
+
+        Args:
+            format_class: The Format class to use. If unspecified, then
+                this will be either automatically detected via dxtbx (if
+                `check_format` is False), or default to Format or
+                FormatMultiImage depending on whether the template looks
+                like a multiimage template or not.
+        """
         indices = sorted(indices)
 
         # Import here as Format and Imageset have cyclic dependencies

@@ -14,12 +14,15 @@ import functools
 import os
 from collections.abc import Callable
 from io import IOBase
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import libtbx
+import scitbx.array_family.flex as flex
 
 import dxtbx.filecache_controller
+from dxtbx import model
 from dxtbx.format.image import ImageBool
+from dxtbx.imageset import ImageSequence, ImageSet
 from dxtbx.model import MultiAxisGoniometer
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
@@ -33,6 +36,8 @@ try:
 except ImportError:
     gzip = None  # type: ignore
 
+if TYPE_CHECKING:
+    from dxtbx.masking import GoniometerShadowMasker
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -284,7 +289,9 @@ class Format:
         """
         return functools.partial(Reader, cls)
 
-    def get_masker(self, goniometer=None):
+    def get_masker(
+        self, goniometer: model.Goniometer | None = None
+    ) -> GoniometerShadowMasker | None:
         """
         Return a masker class
         """
@@ -318,7 +325,7 @@ class Format:
 
         """
         # Import here to avoid cyclic imports
-        from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData
+        from dxtbx.imageset import ImageSetData
 
         # Turn entries that are filenames into absolute paths
         filenames = [
@@ -517,7 +524,7 @@ class Format:
         long as the result is a scan."""
         return None
 
-    def get_static_mask(self):
+    def get_static_mask(self) -> tuple[flex.int] | None:
         """Overload this method to override the static mask."""
         return None
 

@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import functools
 import os
+from typing import Sequence, Type
 
 from scitbx.array_family import flex
 
+import dxtbx.masking
+import dxtbx.model as model
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.image import ImageBool
 from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData, ImageSetLazy
@@ -25,7 +28,13 @@ def _add_static_mask_to_iset(format_instance: Format, iset: ImageSet) -> None:
 
 
 class Reader:
-    def __init__(self, format_class, filenames, num_images=None, **kwargs):
+    def __init__(
+        self,
+        format_class: Type[FormatMultiImage],
+        filenames: Sequence[str],
+        num_images: int | None = None,
+        **kwargs,
+    ):
         self.kwargs = kwargs
         self.format_class = format_class
         assert len(filenames) == 1
@@ -49,19 +58,19 @@ class Reader:
     def paths(self):
         return [self._filename]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._num_images
 
-    def copy(self, filenames, num_images=None):
+    def copy(self, filenames: Sequence[str], num_images: int | None = None):
         return Reader(self.format_class, filenames, num_images, **self.kwargs)
 
-    def identifiers(self):
+    def identifiers(self) -> list[str]:
         return ["%s-%d" % (self._filename, index) for index in range(len(self))]
 
-    def is_single_file_reader(self):
+    def is_single_file_reader(self) -> bool:
         return True
 
-    def master_path(self):
+    def master_path(self) -> str:
         return self._filename
 
 
@@ -101,7 +110,9 @@ class FormatMultiImage(Format):
         """
         return functools.partial(Reader, cls)
 
-    def get_masker(self, goniometer=None):
+    def get_masker(
+        self, goniometer: model.Goniometer | None = None
+    ) -> dxtbx.masking.GoniometerShadowMasker | None:
         if (
             isinstance(goniometer, MultiAxisGoniometer)
             and hasattr(self, "_dynamic_shadowing")
@@ -115,19 +126,19 @@ class FormatMultiImage(Format):
     @classmethod
     def get_imageset(
         cls,
-        filenames,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        as_sequence=False,
-        as_imageset=False,
-        single_file_indices=None,
-        format_kwargs=None,
-        template=None,
-        check_format=True,
-        lazy=False,
-    ):
+        filenames: str | Sequence[str],
+        beam: model.Beam | None = None,
+        detector: model.Detector | None = None,
+        goniometer: model.Goniometer | None = None,
+        scan: model.Scan | None = None,
+        as_sequence: bool = False,
+        as_imageset: bool = False,
+        single_file_indices: Sequence[int] | None = None,
+        format_kwargs: dict | None = None,
+        template: str | None = None,
+        check_format: bool = True,
+        lazy: bool = False,
+    ) -> ImageSet | ImageSequence | ImageSetLazy:
         """
         Factory method to create an imageset
         """

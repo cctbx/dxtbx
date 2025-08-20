@@ -3,19 +3,21 @@ from __future__ import annotations
 import os
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 from glob import glob
+from typing import AnyStr
 
 import natsort
 
 
-def template_regex(filename):
+def template_regex(filename: str) -> tuple[str | None, int]:
     """Works out a template from a filename.
 
     Tries a bunch of templates to work out the most sensible. N.B. assumes
     that the image index will be the last digits found in the file name.
 
-    Arguments:
-      filename (str): The filename to template-ize
+    Args:
+      filename: The filename to template-ize
 
     Returns:
         Tuple[str or None, int]:
@@ -115,7 +117,9 @@ def template_regex_from_list(filenames):
     return common_prefix + template, indices
 
 
-def group_files_by_imageset(filenames):
+def group_files_by_imageset(
+    filenames: list[AnyStr | os.PathLike],
+) -> Mapping[str, list[int | None]]:
     """Group filenames by supposed imageset.
 
     Get the template for each file in the list. Then add to a dictionary
@@ -128,7 +132,7 @@ def group_files_by_imageset(filenames):
     # Calculate the template for each image. If the template is None
     # (i.e. there are no numbers to identify the filename, add the
     # filename itself.
-    template = []
+    template: list[tuple[str, int | None]] = []
     for f in filenames:
         f = os.fspath(f)
         t = template_regex(f)
@@ -181,7 +185,7 @@ def replace_template_format_with_hash(match):
     return "#" * len(match.group(0) % 0)
 
 
-def template_string_to_glob_expr(template):
+def template_string_to_glob_expr(template: str) -> str:
     """Convert the template to a glob expression."""
     if template.count("#") == 1:
         # https://github.com/cctbx/dxtbx/issues/646
@@ -194,7 +198,7 @@ def template_string_number_index(template):
     return template.find("#"), template.rfind("#") + 1
 
 
-def locate_files_matching_template_string(template):
+def locate_files_matching_template_string(template: str) -> list[str]:
     """Return all files matching template."""
     matches = glob(template_string_to_glob_expr(template))
     if template.count("#") != 1:
@@ -206,8 +210,13 @@ def locate_files_matching_template_string(template):
     return [os.path.join(*m) for m in matches if patt.match(m[1])]
 
 
-def template_image_range(template):
-    """Return the image range of files with this template."""
+def template_image_range(template: str) -> tuple[int, int]:
+    """
+    Return the image range of files with this template.
+
+    Raises:
+        ValueError: If the template doesn't match any files
+    """
 
     # Find the files matching the template
     filenames = locate_files_matching_template_string(template)

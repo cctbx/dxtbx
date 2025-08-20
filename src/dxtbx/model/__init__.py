@@ -950,7 +950,7 @@ class _experimentlist:
             else:
                 return text
 
-    def as_file(self, filename, **kwargs):
+    def as_file(self, filename: str, **kwargs):
         """Dump experiment list as file."""
         ext = os.path.splitext(filename)[1]
         j_ext = [".json", ".expt"]

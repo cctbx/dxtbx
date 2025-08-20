@@ -6,7 +6,7 @@ from rstbx.cftbx.coordinate_frame_helpers import align_reference_frame
 from scitbx import matrix
 from scitbx.array_family import flex
 
-from dxtbx.model import MultiAxisGoniometer
+from dxtbx.model import Goniometer, MultiAxisGoniometer
 
 try:
     from ..dxtbx_masking_ext import (
@@ -39,7 +39,9 @@ __all__ = [
 
 class GoniometerMaskerFactory:
     @staticmethod
-    def mini_kappa(goniometer, cone_opening_angle=43.60281897270362):
+    def mini_kappa(
+        goniometer: MultiAxisGoniometer, cone_opening_angle=43.60281897270362
+    ) -> GoniometerShadowMasker:
         """Construct a GoniometerShadowMasker for a mini-kappa goniometer.
 
         This is modelled a simple cone with the opening angle specified by
@@ -80,7 +82,7 @@ class GoniometerMaskerFactory:
         return GoniometerShadowMasker(goniometer, coords, flex.size_t(len(coords), 0))
 
     @staticmethod
-    def dls_i23_kappa(goniometer):
+    def dls_i23_kappa(goniometer: MultiAxisGoniometer) -> GoniometerShadowMasker:
         """Construct a GoniometerShadowMasker for the DLS I23 Kappa goniometer.
 
         Args:
@@ -183,7 +185,7 @@ class GoniometerMaskerFactory:
         return GoniometerShadowMasker(goniometer, coords, flex.size_t(len(coords), 1))
 
     @staticmethod
-    def smargon(goniometer):
+    def smargon(goniometer: MultiAxisGoniometer) -> SmarGonShadowMasker:
         """Construct a SmarGonShadowMasker for the SmarGon goniometer.
 
         Args:
@@ -196,7 +198,9 @@ class GoniometerMaskerFactory:
         return SmarGonShadowMasker(goniometer)
 
     @staticmethod
-    def diamond_anvil_cell(goniometer, cone_opening_angle):
+    def diamond_anvil_cell(
+        goniometer: MultiAxisGoniometer, cone_opening_angle: float
+    ) -> GoniometerShadowMasker:
         radius_height_ratio = math.tan(1 / 2 * cone_opening_angle)
         height = 10  # mm
         radius = radius_height_ratio * height
