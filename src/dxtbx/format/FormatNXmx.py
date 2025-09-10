@@ -90,14 +90,23 @@ class FormatNXmx(FormatNexus):
     def _start(self):
         self._static_mask = None
 
-        self._cached_file_handle = h5py.File(self._image_file, swmr=True)
+        if isinstance(self._image_file, h5py.File):
+            # Already opened file from a streaming application.
+            self._cached_file_handle = self._image_file
+        else:
+            self._cached_file_handle = h5py.File(self._image_file, swmr=True)
         nxmx_obj = self._get_nxmx(self._cached_file_handle)
         nxentry = nxmx_obj.entries[0]
         nxsample = nxentry.samples[0]
         nxinstrument = nxentry.instruments[0]
         nxdetector = nxinstrument.detectors[0]
         nxbeam = nxinstrument.beams[0]
-        nxdata = nxmx_obj.entries[0].data[0]
+        if len(nxmx_obj.entries[0].data) == 0:
+            # Case where a nexus file is read that does not contain data.
+            # This occurs with streaming processing
+            nxdata = None
+        else:
+            nxdata = nxmx_obj.entries[0].data[0]
         self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
         self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
         wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
@@ -117,7 +126,9 @@ class FormatNXmx(FormatNexus):
         )
         self._bit_depth_readout = nxdetector.bit_depth_readout
 
-        if self._scan_model:
+        if nxdata is None:
+            self._num_images = 0
+        elif self._scan_model:
             self._num_images = len(self._scan_model)
         else:
             if nxdata.signal:
