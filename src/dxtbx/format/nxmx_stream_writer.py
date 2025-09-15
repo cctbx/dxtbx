@@ -75,7 +75,7 @@ class NXmxStreamWriter(NXmxWriter):
             # This ensures that the h5 file is written to the buffer.
             self.handle.flush()
 
-    def write_master(self, data_file_names):
+    def write_master(self, data_file_names, sort_values=None):
         """
         This method is used by the control to link together the data files written
         by the archivers.
@@ -83,21 +83,51 @@ class NXmxStreamWriter(NXmxWriter):
             data_file_names: list of tuples. each individual tuple has the first
                 element as the paths to the archived h5 files. The second element
                 is the total number of images archived to that file.
+            sort_values: list of lists. First level corresponds to data files,
+                second level contains sort values for each image in that file.
         """
         total_images = sum(n_images for _, n_images in data_file_names)
         total_shape = (total_images, *self.image_shape)
 
         # Create a virtual layout for the combined dataset
         layout = h5py.VirtualLayout(shape=total_shape, dtype=self.params.dtype)
-        start = 0
-        for data_file_name, n_images in data_file_names:
-            layout[start : start + n_images] = h5py.VirtualSource(
-                data_file_name,
-                "/entry/data/data_000001",
-                shape=(n_images, *self.image_shape),
-                dtype=self.params.dtype,
-            )
-            start += n_images
+        if sort_values is None:
+            start = 0
+            for data_file_name, n_images in data_file_names:
+                layout[start : start + n_images] = h5py.VirtualSource(
+                    data_file_name,
+                    "/entry/data/data_000001",
+                    shape=(n_images, *self.image_shape),
+                    dtype=self.params.dtype,
+                )
+                start += n_images
+        else:
+            # Create list of (file_path, local_index, sort_value) for all images
+            all_images = []
+            for file_index, ((data_file_name, n_images), file_sort_values) in enumerate(
+                zip(data_file_names, sort_values)
+            ):
+                for local_index, sort_value in enumerate(file_sort_values):
+                    all_images.append(
+                        (data_file_name, local_index, sort_value, n_images)
+                    )
+
+            # Sort by the sort values
+            all_images.sort(key=lambda x: x[2])
+
+            # Map each image to its sorted position
+            for virtual_index, (
+                file_path,
+                local_index,
+                sort_value,
+                n_images,
+            ) in enumerate(all_images):
+                layout[virtual_index : virtual_index + 1] = h5py.VirtualSource(
+                    file_path,
+                    "/entry/data/data_000001",
+                    shape=(n_images, *self.image_shape),
+                    dtype=self.params.dtype,
+                )[local_index]
 
         # Create the virtual dataset
         self.data_group = self.handle["entry"].create_group("data")
@@ -132,10 +162,10 @@ class NXmxStreamWriter(NXmxWriter):
 
         # Calculate chunk index for this image
         # For a dataset with shape (N, height, width) chunked as (1, height, width)
-        chunk_idx = (current_size, 0, 0)
+        chunk_index = (current_size, 0, 0)
 
         # Write compressed data directly to chunk
-        self.dset.id.write_direct_chunk(chunk_idx, compressed_data, filter_mask=0)
+        self.dset.id.write_direct_chunk(chunk_index, compressed_data, filter_mask=0)
         self.image_count += 1
 
     def append_image(self, image_data):
