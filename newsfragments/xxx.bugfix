@@ -1,0 +1,1 @@
+Ensure imageset reject lists are preserved in multiprocessing (for https://github.com/dials/dials/issues/2998)
