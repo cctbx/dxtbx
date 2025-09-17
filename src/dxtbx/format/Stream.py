@@ -133,5 +133,5 @@ class StreamClass(ABC):
         pass
 
     @abstractmethod
-    def get_data(self, message):
+    def get_data(self, message, **kwargs):
         pass
