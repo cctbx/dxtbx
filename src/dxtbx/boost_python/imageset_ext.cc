@@ -121,7 +121,7 @@ namespace dxtbx { namespace boost_python {
     }
 
     return std::shared_ptr<ImageSet>(new ImageSet(
-      data, boost::python::extract<scitbx::af::const_ref<std::size_t> >(indices)()));
+      data, boost::python::extract<scitbx::af::const_ref<std::size_t>>(indices)()));
   }
 
   /**
@@ -153,7 +153,7 @@ namespace dxtbx { namespace boost_python {
     template <typename Model, typename Func>
     static boost::python::tuple get_model_list(ImageSetData obj, Func get) {
       // Create a list of models and a list of indices
-      std::vector<std::shared_ptr<Model> > model_list;
+      std::vector<std::shared_ptr<Model>> model_list;
       std::vector<std::size_t> index_list;
       for (std::size_t i = 0; i < obj.size(); ++i) {
         std::shared_ptr<Model> m = get(obj, i);
@@ -214,7 +214,8 @@ namespace dxtbx { namespace boost_python {
                                        obj.get_template(),
                                        obj.get_vendor(),
                                        detail::bytes_from_std_string(obj.get_params()),
-                                       detail::bytes_from_std_string(obj.get_format()));
+                                       detail::bytes_from_std_string(obj.get_format()),
+                                       obj.get_reject_list());
     }
 
     template <typename Model, typename Func>
@@ -226,11 +227,11 @@ namespace dxtbx { namespace boost_python {
         boost::python::extract<boost::python::list>(data[1])();
 
       // Convert to c++ vectors
-      std::vector<std::shared_ptr<Model> > model_list;
+      std::vector<std::shared_ptr<Model>> model_list;
       std::vector<std::size_t> index_list;
       for (std::size_t i = 0; i < boost::python::len(models); ++i) {
         model_list.push_back(
-          boost::python::extract<std::shared_ptr<Model> >(models[i])());
+          boost::python::extract<std::shared_ptr<Model>>(models[i])());
       }
       for (std::size_t i = 0; i < boost::python::len(indices); ++i) {
         index_list.push_back(boost::python::extract<std::size_t>(indices[i])());
@@ -281,30 +282,30 @@ namespace dxtbx { namespace boost_python {
 
     static void set_lookup_tuple(ImageSetData &obj, boost::python::tuple lookup) {
       DXTBX_ASSERT(boost::python::len(lookup) == 5);
-      ImageSetDataPickleSuite::set_lookup_item<Image<bool> >(
+      ImageSetDataPickleSuite::set_lookup_item<Image<bool>>(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[0])(),
         &ExternalLookup::mask);
-      ImageSetDataPickleSuite::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite::set_lookup_item<Image<double>>(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[1])(),
         &ExternalLookup::gain);
-      ImageSetDataPickleSuite::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite::set_lookup_item<Image<double>>(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[2])(),
         &ExternalLookup::pedestal);
-      ImageSetDataPickleSuite::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite::set_lookup_item<Image<double>>(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[3])(),
         &ExternalLookup::dx);
-      ImageSetDataPickleSuite::set_lookup_item<Image<double> >(
+      ImageSetDataPickleSuite::set_lookup_item<Image<double>>(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[4])(),
         &ExternalLookup::dy);
     }
 
     static void setstate(ImageSetData &obj, boost::python::tuple state) {
-      DXTBX_ASSERT(boost::python::len(state) == 6);
+      DXTBX_ASSERT(boost::python::len(state) == 7);
 
       // Set the models
       ImageSetDataPickleSuite::set_model_tuple(
@@ -319,6 +320,10 @@ namespace dxtbx { namespace boost_python {
       obj.set_vendor(boost::python::extract<std::string>(state[3])());
       obj.set_params(boost::python::extract<std::string>(state[4])());
       obj.set_format(boost::python::extract<std::string>(state[5])());
+
+      // Set the reject list
+      obj.set_reject_list(
+        boost::python::extract<scitbx::af::const_ref<bool>>(state[6])());
     }
   };
 
@@ -400,18 +405,18 @@ namespace dxtbx { namespace boost_python {
         // If we have a tuple then add items of tuple to image data
         for (std::size_t i = 0; i < boost::python::len(item); ++i) {
           flex_type a = boost::python::extract<flex_type>(item)();
-          data.push_back(ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2> >(
+          data.push_back(ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2>>(
             a.handle(), scitbx::af::c_grid<2>(a.accessor()))));
         }
       } else {
         try {
           // If we have a single array then add
           flex_type a = boost::python::extract<flex_type>(item)();
-          data.push_back(ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2> >(
+          data.push_back(ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2>>(
             a.handle(), scitbx::af::c_grid<2>(a.accessor()))));
 
         } catch (boost::python::error_already_set) {
-          data = boost::python::extract<Image<T> >(item)();
+          data = boost::python::extract<Image<T>>(item)();
           boost::python::handle_exception();
         }
       }
@@ -468,7 +473,7 @@ namespace dxtbx { namespace boost_python {
   void external_lookup_item_wrapper(const char *name) {
     using namespace boost::python;
 
-    class_<ExternalLookupItem<T> >(name)
+    class_<ExternalLookupItem<T>>(name)
       .add_property("filename",
                     &ExternalLookupItem<T>::get_filename,
                     &ExternalLookupItem<T>::set_filename)
@@ -568,7 +573,7 @@ namespace dxtbx { namespace boost_python {
       .add_property("dy",
                     make_function(&ExternalLookup::dy, return_internal_reference<>()));
 
-    class_<ImageSetData, std::shared_ptr<ImageSetData> >("ImageSetData", no_init)
+    class_<ImageSetData, std::shared_ptr<ImageSetData>>("ImageSetData", no_init)
       .def("__init__",
            make_constructor(&make_imageset_data1,
                             default_call_policies(),
@@ -652,7 +657,7 @@ namespace dxtbx { namespace boost_python {
         make_function(&ImageSet::external_lookup, return_internal_reference<>()))
       .def_pickle(ImageSetPickleSuite());
 
-    class_<ImageGrid, bases<ImageSet> >("ImageGrid", no_init)
+    class_<ImageGrid, bases<ImageSet>>("ImageGrid", no_init)
       .def(init<const ImageSetData &, int2>((arg("data"), arg("grid_size"))))
       .def(init<const ImageSetData &, const scitbx::af::const_ref<std::size_t> &, int2>(
         (arg("data"), arg("indices"), arg("grid_size"))))
@@ -661,7 +666,7 @@ namespace dxtbx { namespace boost_python {
       .staticmethod("from_imageset")
       .def_pickle(ImageGridPickleSuite());
 
-    class_<ImageSequence, bases<ImageSet> >("ImageSequence", no_init)
+    class_<ImageSequence, bases<ImageSet>>("ImageSequence", no_init)
       .def(init<const ImageSetData &,
                 const ImageSequence::beam_ptr &,
                 const ImageSequence::detector_ptr &,
