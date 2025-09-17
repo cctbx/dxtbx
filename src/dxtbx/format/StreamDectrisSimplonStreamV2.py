@@ -130,18 +130,20 @@ class StreamDectrisSimplonStreamV2(StreamClass):
 
         if message is None:
             message = self.decode(encoded_message)
-
+        if isinstance(message["detector_description"], bytes):
+            message["detector_description"] = message["detector_description"].decode()
+        if isinstance(message["sensor_material"], bytes):
+            message["sensor_material"] = message["sensor_material"].decode()
+        if isinstance(message["image_dtype"], bytes):
+            message["image_dtype"] = message["image_dtype"].decode()
+        
         file_writer_params = nxmx_writer_phil_scope.extract()
 
         file_writer_params.output_file = None
         file_writer_params.compression = "bslz4"
-        file_writer_params.dtype = "int32"
+        file_writer_params.dtype = message["image_dtype"]
 
-        if isinstance(message["detector_description"], bytes):
-            message["detector_description"] = message["detector_description"].decode()
-        file_writer_params.nexus_details.instrument_name = message[
-            "detector_description"
-        ]
+        file_writer_params.nexus_details.instrument_name = message["detector_description"]
         file_writer_params.nexus_details.instrument_short_name = None
         file_writer_params.nexus_details.source_name = "ALS 2.0.1"
         file_writer_params.nexus_details.source_short_name = "ALS"
@@ -164,8 +166,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         file_writer_params.nexus_details.count_time = message["count_time"]
         file_writer_params.nexus_details.frame_time = message["frame_time"]
         file_writer_params.nexus_details.sample_name = "sample"
-        if isinstance(message["sensor_material"], bytes):
-            message["sensor_material"] = message["sensor_material"].decode()
         file_writer_params.detector.sensor_material = message["sensor_material"]
         file_writer_params.detector.sensor_thickness = message["sensor_thickness"]
 
@@ -250,5 +250,5 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             message = self.decode(encoded_message)
         return message
 
-    def get_data(self, message):
+    def get_data(self, message, **kwargs):
         return message["data"]["threshold_1"]

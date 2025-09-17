@@ -1,5 +1,3 @@
-import datetime
-from dials.array_family import flex
 from dxtbx.format.nxmx_writer import NXmxWriter
 import h5py
 import hdf5plugin
