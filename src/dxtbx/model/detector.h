@@ -49,11 +49,11 @@ namespace dxtbx { namespace model {
      * @param x The set of input points
      * @return The points in the convex hull
      */
-    inline scitbx::af::shared<vec2<double> > convex_hull(
-      const scitbx::af::const_ref<vec2<double> > &x) {
+    inline scitbx::af::shared<vec2<double>> convex_hull(
+      const scitbx::af::const_ref<vec2<double>> &x) {
       DXTBX_ASSERT(x.size() > 2);
 
-      scitbx::af::shared<vec2<double> > result;
+      scitbx::af::shared<vec2<double>> result;
 
       // Find the leftmost point
       std::size_t current = 0;
@@ -446,7 +446,7 @@ namespace dxtbx { namespace model {
       bool is_panel_;
     };
 
-    typedef std::pair<int, vec2<double> > coord_type;
+    typedef std::pair<int, vec2<double>> coord_type;
     typedef Node::pointer node_pointer;
     typedef Node::const_pointer const_node_pointer;
     typedef Panel panel_type;
@@ -668,7 +668,7 @@ namespace dxtbx { namespace model {
       vec3<double> xa = za.cross(ya).normalize();
 
       // Compute the stereographic projection of panel corners
-      scitbx::af::shared<vec2<double> > points;
+      scitbx::af::shared<vec2<double>> points;
       for (std::size_t i = 0; i < size(); ++i) {
         std::size_t width = (*this)[i].get_image_size()[0];
         std::size_t height = (*this)[i].get_image_size()[1];
@@ -688,7 +688,7 @@ namespace dxtbx { namespace model {
       }
 
       // Compute the convex hull of points
-      scitbx::af::shared<vec2<double> > hull = detail::convex_hull(points.const_ref());
+      scitbx::af::shared<vec2<double>> hull = detail::convex_hull(points.const_ref());
       DXTBX_ASSERT(hull.size() >= 4);
 
       // Compute the minimum distance to the line segments
@@ -736,6 +736,30 @@ namespace dxtbx { namespace model {
       // otherwise return the coordinate.
       DXTBX_ASSERT(w_max > 0);
       return pxy;
+    }
+
+    /** Get ray intersection with detector */
+    scitbx::af::shared<coord_type> get_ray_intersection(
+      scitbx::af::const_ref<vec3<double>> s1) const {
+      scitbx::af::shared<coord_type> result = scitbx::af::shared<coord_type>(s1.size());
+
+      for (std::size_t i = 0; i < s1.size(); ++i) {
+        result[i] = get_ray_intersection(s1[i]);
+      }
+      return result;
+    }
+
+    /** Get ray intersection with detector */
+    scitbx::af::shared<vec2<double>> get_ray_intersection(
+      scitbx::af::const_ref<vec3<double>> s1,
+      scitbx::af::const_ref<std::size_t> panel) const {
+      DXTBX_ASSERT(s1.size() == panel.size());
+      scitbx::af::shared<vec2<double>> xy = scitbx::af::shared<vec2<double>>(s1.size());
+
+      for (std::size_t i = 0; i < s1.size(); ++i) {
+        xy[i] = (*this)[panel[i]].get_ray_intersection(s1[i]);
+      }
+      return xy;
     }
 
     /** finds the panel id with which s1 intersects.  Returns -1 if none do. **/
