@@ -11,6 +11,7 @@ import os
 import sys
 
 import h5py
+import hdf5plugin
 import numpy as np
 from dials.util.options import ArgumentParser, flatten_experiments
 
@@ -34,8 +35,28 @@ and in Bernstein et. al. (2020):
 https://doi.org/10.1107/S2052252520008672
 """
 
-phil_scope = parse(
+def _compression_phil_str():
+    return """
+  compression {
+    algorithm = none *bslz4 bszstd, gzip
+      .type = choice
+      .multiple = False
+      .help = Compression algorithm
+    block_size_exponent = 12
+      .type = int
+      .help = The number of elements per block of the bit shuffle algorithm
+      .help =   will be 2**block_size_exponent
+    bszstd {
+      compression_level = 3
+        .type = int
+        .help = Compression level, used only for zstd compression. 
+        .help =   Can be negative, and must be below or equal to 22.
+     }
+  }
     """
+
+def _nxmx_writer_phil_str():
+    return """
   output_file = None
     .type = path
     .help = output file path
@@ -48,9 +69,6 @@ phil_scope = parse(
   trusted_range = None
     .type = floats(size=2)
     .help = Override the trusted range
-  compression = gzip
-    .type = str
-    .help = Compression to apply to the data
   dtype = None
     .type = str
     .help = Override the data type. If data is floats and an integer type is specified, \
@@ -117,6 +135,12 @@ phil_scope = parse(
               scintillator. This is the thickness of this converter material.
   }
 """
+
+
+phil_scope = parse(
+    _nxmx_writer_phil_str()
+    + _compression_phil_str(),
+    process_includes=True,
 )
 
 # Conversion from the imgCIF coordinate system conventionally used by dxtbx to
@@ -124,6 +148,28 @@ phil_scope = parse(
 #   https://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/Caxis.html
 #   https://manual.nexusformat.org/design.html#design-coordinatesystem
 IMGCIF_TO_MCSTAS = matrix.diag([-1, 1, -1])
+
+def get_compression(params):
+    if params.algorithm == "none":
+        return None
+    elif params.algorithm == "bslz4":
+        return hdf5plugin.Bitshuffle(
+            nelems=2**params.block_size_exponent,
+            cname="lz4",
+        )
+    elif params.algorithm == "bszstd":
+        return hdf5plugin.Bitshuffle(
+            nelems=2**params.block_size_exponent,
+            cname="zstd",
+            clevel=params.bszstd.compression_level
+        )
+    elif params.algorithm == "gzip":
+        return "gzip"
+    else:
+        raise ValueError(
+            f"{params.algorithm} is not a valid compression algorithm."
+            + "Choices for compression.algorithm are none bslz4 bszstd gzip"
+        )
 
 
 class NXmxWriter:
@@ -733,7 +779,7 @@ class NXmxWriter:
                 (1, *shape),
                 maxshape=(None, *shape),
                 dtype=dtype,
-                compression=self.params.compression,
+                compression=get_compression(params.compression),
             )
 
         if len(data) > 1:

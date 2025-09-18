@@ -1,20 +1,22 @@
 from dxtbx.format.nxmx_writer import NXmxWriter
+from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
+from dxtbx.format.nxmx_writer import get_compression
 import h5py
 import hdf5plugin
+from libtbx.phil import parse
 
 
-def compress_with_hdf5_filters(data, block_size_exponent):
+def compress_with_hdf5_filters(data, params):
     """Compress data using HDF5 filters without writing to disk"""
     # Create an in-memory HDF5 file using the core driver
+
     with h5py.File(name="in-memory", driver="core", backing_store=False, mode="w") as f:
         # Create dataset with the desired compression settings
         dset = f.create_dataset(
             "data",
             data=data,
             chunks=data.shape,
-            compression=hdf5plugin.Bitshuffle(
-                nelems=2**block_size_exponent, cname="lz4"
-            ),
+            compression=get_compression(params),
         )
 
         # Get the compressed chunk directly
@@ -35,7 +37,7 @@ class NXmxStreamWriter(NXmxWriter):
     This object adds to NXmxWriter to be compatible with streaming.
     """
 
-    def __init__(self, params, experiments=None, imageset=None, block_size_exponent=12):
+    def __init__(self, params, experiments=None, imageset=None):
         self.params = params
         self.detector = None
         self.handle = None
@@ -43,7 +45,6 @@ class NXmxStreamWriter(NXmxWriter):
         self.image_count = 0
         self.data_group = None
         self.dset = None
-        self.block_size_exponent = block_size_exponent
 
     def __call__(self, experiments=None, imageset=None, in_memory=True):
         """
@@ -143,9 +144,7 @@ class NXmxStreamWriter(NXmxWriter):
                 maxshape=(None, *self.image_shape),
                 chunks=(1, *self.image_shape),  # Each image is one chunk
                 dtype=self.params.dtype,
-                compression=hdf5plugin.Bitshuffle(
-                    nelems=2**self.block_size_exponent, cname="lz4"
-                ),
+                compression=get_compression(self.params.compression),
             )
 
     def append_compressed_image(self, compressed_data):
