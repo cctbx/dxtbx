@@ -139,10 +139,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         
         file_writer_params = nxmx_writer_phil_scope.extract()
 
-        file_writer_params.output_file = None
-        file_writer_params.compression = "bslz4"
         file_writer_params.dtype = message["image_dtype"]
-
         file_writer_params.nexus_details.instrument_name = message["detector_description"]
         file_writer_params.nexus_details.instrument_short_name = None
         file_writer_params.nexus_details.source_name = "ALS 2.0.1"
