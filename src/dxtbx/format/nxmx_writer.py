@@ -35,6 +35,7 @@ and in Bernstein et. al. (2020):
 https://doi.org/10.1107/S2052252520008672
 """
 
+
 def _compression_phil_str():
     return """
   compression {
@@ -54,6 +55,7 @@ def _compression_phil_str():
      }
   }
     """
+
 
 def _nxmx_writer_phil_str():
     return """
@@ -138,8 +140,7 @@ def _nxmx_writer_phil_str():
 
 
 phil_scope = parse(
-    _nxmx_writer_phil_str()
-    + _compression_phil_str(),
+    _nxmx_writer_phil_str() + _compression_phil_str(),
     process_includes=True,
 )
 
@@ -148,6 +149,7 @@ phil_scope = parse(
 #   https://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/Caxis.html
 #   https://manual.nexusformat.org/design.html#design-coordinatesystem
 IMGCIF_TO_MCSTAS = matrix.diag([-1, 1, -1])
+
 
 def get_compression(params):
     if params.algorithm == "none":
@@ -161,7 +163,7 @@ def get_compression(params):
         return hdf5plugin.Bitshuffle(
             nelems=2**params.block_size_exponent,
             cname="zstd",
-            clevel=params.bszstd.compression_level
+            clevel=params.bszstd.compression_level,
         )
     elif params.algorithm == "gzip":
         return "gzip"
@@ -183,11 +185,12 @@ class NXmxWriter:
         self.handle = None
 
     def setup(self, experiments=None, imageset=None, in_memory=False):
-        assert [experiments, imageset].count(None) == 1, (
-            "Supply either experiments or imagset, not both"
-        )
+        assert [experiments, imageset].count(
+            None
+        ) == 1, "Supply either experiments or imagset, not both"
         if experiments:
-            self.imagesets = experiments.imagesets()
+            if hasattr(experiments, "imagesets"):
+                self.imagesets = experiments.imagesets()
             assert len(experiments.detectors()) == 1, "Multiple detectors not supported"
             self.detector = experiments.detectors()[0]
             self.beams = experiments.beams()
@@ -216,6 +219,7 @@ class NXmxWriter:
         )
         if in_memory:
             import io
+
             self.buffer = io.BytesIO()
             self.handle = h5py.File(self.buffer, "w")
         else:
@@ -397,17 +401,17 @@ class NXmxWriter:
         source.attrs["NX_class"] = "NXsource"
         source["name"] = self.params.nexus_details.source_name
         if self.params.nexus_details.source_short_name:
-            source["name"].attrs["short_name"] = (
-                self.params.nexus_details.source_short_name
-            )
+            source["name"].attrs[
+                "short_name"
+            ] = self.params.nexus_details.source_short_name
         # --> instrument
         instrument = entry.create_group("instrument")
         instrument.attrs["NX_class"] = "NXinstrument"
         instrument["name"] = self.params.nexus_details.instrument_name
         if self.params.nexus_details.instrument_short_name:
-            instrument["name"].attrs["short_name"] = (
-                self.params.nexus_details.instrument_short_name
-            )
+            instrument["name"].attrs[
+                "short_name"
+            ] = self.params.nexus_details.instrument_short_name
         beam = instrument.create_group("beam")
         beam.attrs["NX_class"] = "NXbeam"
         if self.params.nexus_details.total_flux:
@@ -651,9 +655,9 @@ class NXmxWriter:
                         dtype=spectra_y.dtype,
                     )
                     handle["incident_wavelength_1Dspectrum"].attrs["units"] = "angstrom"
-                    handle["incident_wavelength"].attrs["variant"] = (
-                        "incident_wavelength_1Dspectrum"
-                    )
+                    handle["incident_wavelength"].attrs[
+                        "variant"
+                    ] = "incident_wavelength_1Dspectrum"
             else:
                 if len(beams) > 1:
                     wavelengths = np.array(
@@ -858,9 +862,8 @@ class NXmxWriter:
                 if axis_number == len(gonio.get_axes()) - 1:
                     axis.attrs["depends_on"] = "."
                 else:
-                    axis.attrs["depends_on"] = (
-                        "/entry/sample/transformations/%s"
-                        % (gonio.get_names()[axis_number + 1])
+                    axis.attrs["depends_on"] = "/entry/sample/transformations/%s" % (
+                        gonio.get_names()[axis_number + 1]
                     )
         else:
             setup_axis("omega", gonio.get_rotation_axis(), main_axis=True)

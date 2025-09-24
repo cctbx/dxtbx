@@ -121,7 +121,7 @@ class NXmxStreamWriter(NXmxWriter):
                 sort_value,
                 n_images,
             ) in enumerate(all_images):
-                layout[virtual_index : virtual_index + 1] = h5py.VirtualSource(
+                layout[virtual_index] = h5py.VirtualSource(
                     file_path,
                     "/entry/data/data_000001",
                     shape=(n_images, *self.image_shape),
@@ -132,6 +132,7 @@ class NXmxStreamWriter(NXmxWriter):
         self.data_group = self.handle["entry"].create_group("data")
         self.data_group.attrs["NX_class"] = "NXdata"
         self.handle.create_virtual_dataset("/entry/data/data_000001", layout)
+        self.handle.flush()
 
     def initialize_dataset(self):
         if self.data_group is None:
