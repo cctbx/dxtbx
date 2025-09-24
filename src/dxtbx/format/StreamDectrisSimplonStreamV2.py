@@ -136,11 +136,13 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             message["sensor_material"] = message["sensor_material"].decode()
         if isinstance(message["image_dtype"], bytes):
             message["image_dtype"] = message["image_dtype"].decode()
-        
+
         file_writer_params = nxmx_writer_phil_scope.extract()
 
         file_writer_params.dtype = message["image_dtype"]
-        file_writer_params.nexus_details.instrument_name = message["detector_description"]
+        file_writer_params.nexus_details.instrument_name = message[
+            "detector_description"
+        ]
         file_writer_params.nexus_details.instrument_short_name = None
         file_writer_params.nexus_details.source_name = "ALS 2.0.1"
         file_writer_params.nexus_details.source_short_name = "ALS"
@@ -171,41 +173,25 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             from dxtbx.model.beam import BeamFactory
             from dxtbx.model.detector import detector_phil_scope
             from dxtbx.model.detector import DetectorFactory
-            from dxtbx.model.experiment_list import Experiment
+            from dxtbx.model.experiment_list import Experiment, ExperimentList
 
             # Construct beam
             beam_params = beam_phil_scope.extract()
-            beam_params_ = beam_phil_scope.format(beam_params).as_str()
             beam_params.beam.direction = [0, 0, 1]
             beam_params.beam.divergence = None
             beam_params.beam.flux = None
             beam_params.beam.polarization_fraction = None
             beam_params.beam.polarization_normal = None
-            beam_params.beam.probe = None
+            beam_params.beam.probe = "x-ray"
             beam_params.beam.sample_to_source_distance = 0
             beam_params.beam.sigma_divergence = None
             beam_params.beam.transmission = None
-            beam_params.beam.type = None
-            beam_params.beam.wavelength = message["incident_wavelength"]
+            beam_params.beam.type = "monochromatic"
+            beam_params.beam.wavelength = float(message["incident_wavelength"])
             beam_params.beam.wavelength_range = None
 
             # Construct detector
             detector_params = detector_phil_scope.extract()
-            # detector_params.detector.distance
-            # detector_params.detector.fast_slow_beam_centre
-            # detector_params.detector.mosflm_beam_centre
-            # detector_params.detector.slow_fast_beam_centre
-
-            detector_params.detector.hierarchy.fast_axis = (1, 0, 0)
-            detector_params.detector.hierarchy.origin = (0, 0, 0)
-            detector_params.detector.hierarchy.slow_axis = (0, -1, 0)
-
-            # detector_params.detector.hierarchy.group.fast_axis
-            # detector_params.detector.hierarchy.group.origin
-            # detector_params.detector.hierarchy.group.id
-            # detector_params.detector.hierarchy.group.panel
-            # detector_params.detector.hierarchy.group.name
-            # detector_params.detector.hierarchy.group.slow_axis
 
             detector_params.detector.panel[0].fast_axis = (1, 0, 0)
             detector_params.detector.panel[0].gain = 1.0
@@ -228,9 +214,13 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             detector_params.detector.panel[0].thickness = message["sensor_thickness"]
             detector_params.detector.panel[0].trusted_range = (0, 2147483647)
 
-            reference_experiment = Experiment(
-                beam=BeamFactory.from_phil(beam_params),
-                detector=DetectorFactory.generate_from_phil(detector_params, ref_beam),
+            detector_params.detector.hierarchy.group[0].id = [0]
+            detector_params.detector.hierarchy.group[0].panel = [0]
+
+            ref_beam = BeamFactory.from_phil(beam_params)
+            ref_detector = DetectorFactory.generate_from_phil(detector_params, ref_beam)
+            reference_experiment = ExperimentList(
+                [Experiment(beam=ref_beam, detector=ref_detector)]
             )
 
         file_writer = NXmxStreamWriter(file_writer_params)
