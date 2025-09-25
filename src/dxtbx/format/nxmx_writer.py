@@ -184,7 +184,7 @@ class NXmxWriter:
             self.setup(experiments, imageset)
         self.handle = None
 
-    def setup(self, experiments=None, imageset=None, in_memory=False):
+    def setup(self, experiments=None, imageset=None):
         assert [experiments, imageset].count(
             None
         ) == 1, "Supply either experiments or imagset, not both"
@@ -209,22 +209,15 @@ class NXmxWriter:
 
             self.scan = imageset.get_scan(0)
             self.goniometer = imageset.get_goniometer(0)
-        self.construct_entry(in_memory)
+        self.construct_entry()
 
-    def construct_entry(self, in_memory=False):
+    def construct_entry(self):
         output_file_name = (
             self.params.output_file
             if self.params.output_file is not None
             else "converted.h5"
         )
-        if in_memory:
-            import io
-
-            self.buffer = io.BytesIO()
-            self.handle = h5py.File(self.buffer, "w")
-        else:
-            self.buffer = None
-            self.handle = h5py.File(output_file_name, "w")
+        self.handle = h5py.File(output_file_name, "w")
         f = self.handle
         f.attrs["NX_class"] = "NXroot"
         f.attrs["file_name"] = os.path.basename(output_file_name)
