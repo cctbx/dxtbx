@@ -103,6 +103,36 @@ class MemReader:
         return ""
 
 
+class StreamReader:
+    """A reader for data from a stream"""
+
+    def __init__(self, image_data):
+        self._image_data = image_data
+
+    def copy(self, paths):
+        return StreamReader(self._image_data)
+
+    def paths(self):
+        return [""]
+
+    def identifiers(self):
+        return self.paths()
+
+    def __len__(self):
+        return len(self._image_data)
+
+    def read(self, index):
+        return self._image_data[index]
+
+    @staticmethod
+    def is_single_file_reader():
+        return False
+
+    @staticmethod
+    def master_path():
+        return ""
+
+
 @boost_adaptbx.boost.python.inject_into(ImageSet)
 class _:
     """

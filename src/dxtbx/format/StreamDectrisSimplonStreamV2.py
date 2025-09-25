@@ -2,6 +2,11 @@ import cbor2
 import datetime
 from dectris.compression import decompress
 from dxtbx.format.Stream import StreamClass
+from dxtbx.model.experiment_list import (
+    ExperimentListFactory,
+    ExperimentList,
+    Experiment,
+)
 import numpy as np
 
 
@@ -222,10 +227,21 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             reference_experiment = ExperimentList(
                 [Experiment(beam=ref_beam, detector=ref_detector)]
             )
+        else:
+            from dxtbx.model.experiment_list import ExperimentList, Experiment
 
-        file_writer = NXmxStreamWriter(file_writer_params)
-        file_writer(experiments=reference_experiment, in_memory=True)
-        return file_writer
+            # If the reference_experiment has an imageset, it gets removed by
+            # creating a new experiment without the imageset.
+            reference_experiment = ExperimentList(
+                [
+                    Experiment(
+                        beam=reference_experiment[0].beam,
+                        detector=reference_experiment[0].detector,
+                    )
+                ]
+            )
+
+        return file_writer_params, reference_experiment
 
     def handle_end_message(self, encoded_message=None, message=None):
         if message is None:
@@ -239,3 +255,26 @@ class StreamDectrisSimplonStreamV2(StreamClass):
 
     def get_data(self, message, **kwargs):
         return message["data"]["threshold_1"]
+
+    def get_reader(self, image_data, **kwargs):
+        from dials.array_family import flex
+        from dxtbx.imageset import StreamReader
+
+        image_data = flex.double(image_data)
+        # if "image_dtype" in kwargs.keys():
+        #    image_dtype = kwargs["image_dtype"]
+        #    # if 32 bit then it is a signed int, I think if 8, 16 then it is
+        #    # unsigned with the highest two values assigned as masking values
+        #    if image_dtype == "uint32":
+        #        top = 2**31
+        #    elif image_dtype == "uint16":
+        #        top = 2**16
+        #    elif image_dtype == "uint8":
+        #        top = 2**8
+        #    else:
+        #        raise Exception(f"Unhandled data type {image_dtype}")
+        #    for data in image_data:
+        #        d1d = data.as_1d()
+        #        d1d.set_selected(d1d == top - 1, -1)
+        #        d1d.set_selected(d1d == top - 2, -2)
+        return StreamReader([image_data])

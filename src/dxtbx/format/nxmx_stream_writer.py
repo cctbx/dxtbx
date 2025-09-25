@@ -46,7 +46,7 @@ class NXmxStreamWriter(NXmxWriter):
         self.data_group = None
         self.dset = None
 
-    def __call__(self, experiments=None, imageset=None, in_memory=True):
+    def __call__(self, experiments=None, imageset=None):
         """
         This method is overwritten to remove the self.append_all_frames() call.
         Archivers use this method to setup the file writer before they have received
@@ -56,7 +56,7 @@ class NXmxStreamWriter(NXmxWriter):
         It gets the image shape from the reference experiments
         """
         if experiments or imageset:
-            self.setup(experiments, imageset, in_memory)
+            self.setup(experiments, imageset)
         self.validate()
         self.construct_detector()
         self.add_all_beams()
@@ -69,10 +69,6 @@ class NXmxStreamWriter(NXmxWriter):
                 self.image_shape = panel_shape
             else:
                 self.image_shape = (n_panels, *panel_shape)
-
-        if in_memory:
-            # This ensures that the h5 file is written to the buffer.
-            self.handle.flush()
 
     def write_master(self, data_file_names, sort_values=None):
         """
