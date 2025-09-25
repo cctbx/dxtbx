@@ -2,11 +2,8 @@ import cbor2
 import datetime
 from dectris.compression import decompress
 from dxtbx.format.Stream import StreamClass
-from dxtbx.model.experiment_list import (
-    ExperimentListFactory,
-    ExperimentList,
-    Experiment,
-)
+from dxtbx.model.experiment_list import ExperimentList, Experiment
+
 import numpy as np
 
 
@@ -131,7 +128,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         self, encoded_message=None, message=None, reference_experiment=None
     ):
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
-        from dxtbx.format.nxmx_stream_writer import NXmxStreamWriter
 
         if message is None:
             message = self.decode(encoded_message)
@@ -178,7 +174,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             from dxtbx.model.beam import BeamFactory
             from dxtbx.model.detector import detector_phil_scope
             from dxtbx.model.detector import DetectorFactory
-            from dxtbx.model.experiment_list import Experiment, ExperimentList
 
             # Construct beam
             beam_params = beam_phil_scope.extract()
@@ -228,8 +223,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
                 [Experiment(beam=ref_beam, detector=ref_detector)]
             )
         else:
-            from dxtbx.model.experiment_list import ExperimentList, Experiment
-
             # If the reference_experiment has an imageset, it gets removed by
             # creating a new experiment without the imageset.
             reference_experiment = ExperimentList(
