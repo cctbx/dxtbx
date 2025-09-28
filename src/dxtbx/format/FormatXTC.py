@@ -84,7 +84,7 @@ locator_str = """
     .type = float
     .help = If the wavelength cannot be found from the XTC stream, fall \
             back to using this value instead
-  spectrum_address = FEE-SPEC0
+  spectrum_address = feespec
     .type = str
     .help = Address for incident beam spectrometer
   spectrum_eV_per_pixel = None
@@ -410,6 +410,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                             self.params.filter.required_present_codes
                             or self.params.filter.required_absent_codes
                         ) and self.params.filter.pre_filter:
+                            if not self._evr:
+                                timing = run.Detector('timing')
+                                self._evr = timing.raw
                             times = [t for t in times if self.filter_event(run.event(t))]
                         self.run_mapping[run_num] = (
                             len(self.times),
@@ -523,7 +526,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             return True
         if not self._evr:
             self._evr = psana.Detector(self.params.filter.evr_address)
-        codes = self._evr.eventCodes(evt)
+        try: #psana1
+            codes = self._evr.eventCodes(evt)
+        except: #psana2_idx
+            codes = [i for i, val in enumerate(self._evr.eventcodes(evt)) if val != 0]
 
         if self.params.filter.required_present_codes and not all(
             c in codes for c in self.params.filter.required_present_codes
@@ -558,7 +564,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 from mpi4py import MPI
                 comm = MPI.COMM_WORLD
                 rank = comm.Get_rank()
-                evt = self.get_run_from_index(index).event(self.times[index])
+                run = self.get_run_from_index(index)
+                if not self._evr:
+                    timing = run.Detector('timing')
+                    self._evr = timing.raw
+                evt = run.event(self.times[index])
             elif self.params.mode == "psana2_idx_fake":
 #                tzero = time.time()
                 if True or not hasattr(self, 'active_run') or self.i_current_evt >= index:
@@ -768,6 +778,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 if self._beam_cache is not None:
                     self._beam_cache.set_polarization_normal((1, 0, 0))
 
+        if self._beam_cache.get_wavelength() < 0.1:
+            from dxtbx.model.beam import Probe
+            self._beam_cache.set_probe(Probe.electron)
+            
         return self._beam_cache
 
     def get_spectrum(self, index=None):
@@ -792,41 +806,56 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         if not evt:
             return None
         if self._fee is None:
-            self._fee = psana.Detector(self.params.spectrum_address)
+            try:
+                self._fee = psana.Detector(self.params.spectrum_address)
+            except AttributeError: # psana2
+                self._fee = self.get_run_from_index(index).Detector(self.params.spectrum_address).raw
         if self._fee is None:
             return None
-        try:
-            fee = self._fee.get(evt)
-            y = fee.hproj()
+        if hasattr(self._fee, 'hproj'):
+            #psana2
+            y = self._fee.hproj(evt)
+            if y is None or not len(y):
+                return None
             if self.params.spectrum_pedestal:
                 y = y - self._spectrum_pedestal.as_numpy_array()
-
-        except AttributeError:  # Handle older spectometers without the hproj method
-            try:
-                img = self._fee.image(evt)
-            except AttributeError:
-                return None
-            if self.params.spectrum_rotation_angle is None:
-                x = (
-                    self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
-                ) + self.params.spectrum_eV_offset
-                y = img.mean(axis=0)  # Collapse 2D image to 1D trace
-            else:
-                mask = img == 2**16 - 1
-                mask = np.invert(mask)
-
-                x, y = rotate_and_average(
-                    img, self.params.spectrum_rotation_angle, deg=True, mask=mask
-                )
-                x = (
-                    self.params.spectrum_eV_per_pixel * x
-                ) + self.params.spectrum_eV_offset
-
-        else:
             x = (
                 self.params.spectrum_eV_per_pixel * np.array(range(len(y)))
             ) + self.params.spectrum_eV_offset
+        else:
+            try:
+                fee = self._fee.get(evt)
+                y = fee.hproj()
+                if self.params.spectrum_pedestal:
+                    y = y - self._spectrum_pedestal.as_numpy_array()
+
+            except AttributeError:  # Handle older spectometers without the hproj method
+                try:
+                    img = self._fee.image(evt)
+                except AttributeError:
+                    return None
+                if self.params.spectrum_rotation_angle is None:
+                    x = (
+                        self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
+                    ) + self.params.spectrum_eV_offset
+                    y = img.mean(axis=0)  # Collapse 2D image to 1D trace
+                else:
+                    mask = img == 2**16 - 1
+                    mask = np.invert(mask)
+
+                    x, y = rotate_and_average(
+                        img, self.params.spectrum_rotation_angle, deg=True, mask=mask
+                    )
+                    x = (
+                        self.params.spectrum_eV_per_pixel * x
+                    ) + self.params.spectrum_eV_offset
+
+            else:
+                x = (
+                    self.params.spectrum_eV_per_pixel * np.array(range(len(y)))
+                ) + self.params.spectrum_eV_offset
         try:
+            # Apply vignetting here to x and y
             sp = Spectrum(flex.double(x), flex.double(y))
         except RuntimeError:
             return None
