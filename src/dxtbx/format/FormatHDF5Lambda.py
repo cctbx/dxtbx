@@ -29,7 +29,7 @@ class FormatHDF5Lambda(FormatHDF5):
         # check that this is a HDF5 file (should not have got here if not
         # anyway...)
 
-        if tag != "\211HDF\r\n\032\n":
+        if tag != b"\211HDF\r\n\032\n":
             return False
 
         with h5py.File(image_file, "r") as h5_handle:
