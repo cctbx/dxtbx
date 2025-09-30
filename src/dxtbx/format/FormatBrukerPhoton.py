@@ -31,8 +31,8 @@ class FormatBrukerPhoton(FormatBruker):
         dettype = header_dic.get("DETTYPE")
         if dettype is None:
             return False
-        # We support Photon-II and Photon-III detectors
-        if not dettype.startswith("CMOS-PHOTONII"):
+        # We support Photon-II, -III and -IV detectors. The earlier generation was Photon100
+        if not dettype.startswith("CMOS-PHOTONI"):
             return False
 
         return True

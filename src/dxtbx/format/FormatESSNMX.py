@@ -123,7 +123,8 @@ class FormatESSNMX(FormatHDF5):
         root = detector.hierarchy()
 
         for i in range(num_panels):
-            panel = root.add_panel()
+            group = root.add_group()
+            panel = group.add_panel()
             panel.set_type(panel_type)
             panel.set_name(panel_names[i])
             panel.set_image_size(image_size)
@@ -260,12 +261,12 @@ class FormatESSNMX(FormatHDF5):
                 panel_data, (panel_size[0], panel_size[1], num_tof_bins)
             )
             if image_range is not None:
-                assert (
-                    len(image_range) == 2
-                ), "expected image_range to be only two values"
-                assert (
-                    image_range[0] >= 0 and image_range[0] < image_range[1]
-                ), "image_range[0] out of range"
+                assert len(image_range) == 2, (
+                    "expected image_range to be only two values"
+                )
+                assert image_range[0] >= 0 and image_range[0] < image_range[1], (
+                    "image_range[0] out of range"
+                )
                 assert image_range[1] <= num_tof_bins, "image_range[1] out of range"
                 panel_data = np.sum(
                     panel_data[:, :, image_range[0] : image_range[1]], axis=2

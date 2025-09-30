@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import os
+import bz2
 
 import dxtbx
 
 
-def test_noninteger_pedestal(dials_regression, tmpdir):
-    filename = os.path.join(dials_regression, "image_examples/APS_14BMC/q315_1_001.img")
+def test_noninteger_pedestal(dials_data, tmpdir):
+    data_dir = dials_data("image_examples", pathlib=True)
+    filename = str(data_dir / "APS_14BMC-q315_1_001.img.bz2")
     # Read this file in as data
-    with open(filename, "rb") as f:
+    with bz2.open(filename, "rb") as f:
         data = f.read()
 
     # Write out with an inserted header item of a noninteger pedestal

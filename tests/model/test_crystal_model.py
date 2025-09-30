@@ -7,6 +7,7 @@ import pytest
 
 from cctbx import crystal, sgtbx, uctbx
 from cctbx.sgtbx import change_of_basis_op
+from iotbx.phil import parse
 from libtbx.test_utils import approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
@@ -18,6 +19,7 @@ from dxtbx.model import (
     MosaicCrystalKabsch2010,
     MosaicCrystalSauter2014,
 )
+from dxtbx.model.crystal import crystal_phil_scope
 
 from .crystal_model_old import crystal_model_old
 
@@ -149,20 +151,20 @@ def test_crystal_model():
     assert approx_equal(b_, R * real_space_b)
     assert approx_equal(c_, R * real_space_c)
     assert (
-        str(model).replace("-0.0000", " 0.0000")
+        str(model).replace("-0.000000", " 0.000000")
         == """\
 Crystal:
     Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
-    U matrix:  {{ 0.4330, -0.7500,  0.5000},
-                { 0.7891,  0.0474, -0.6124},
-                { 0.4356,  0.6597,  0.6124}}
-    B matrix:  {{ 0.1000,  0.0000,  0.0000},
-                { 0.0000,  0.0909,  0.0000},
-                { 0.0000,  0.0000,  0.0833}}
-    A = UB:    {{ 0.0433, -0.0682,  0.0417},
-                { 0.0789,  0.0043, -0.0510},
-                { 0.0436,  0.0600,  0.0510}}"""
+    U matrix:  {{ 0.433013, -0.750000,  0.500000},
+                { 0.789149,  0.047367, -0.612372},
+                { 0.435596,  0.659740,  0.612372}}
+    B matrix:  {{ 0.100000,  0.000000,  0.000000},
+                { 0.000000,  0.090909,  0.000000},
+                { 0.000000,  0.000000,  0.083333}}
+    A = UB:    {{ 0.043301, -0.068182,  0.041667},
+                { 0.078915,  0.004306, -0.051031},
+                { 0.043560,  0.059976,  0.051031}}"""
     )
     model.set_B((1 / 12, 0, 0, 0, 1 / 12, 0, 0, 0, 1 / 12))
     assert approx_equal(model.get_unit_cell().parameters(), (12, 12, 12, 90, 90, 90))
@@ -329,20 +331,20 @@ def test_MosaicCrystalKabsch2010():
         space_group_symbol="P 1",
     )
     assert (
-        str(mosaic_model).replace("-0.0000", " 0.0000")
+        str(mosaic_model).replace("-0.000000", " 0.000000")
         == """\
 Crystal:
     Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
-    U matrix:  {{ 1.0000,  0.0000,  0.0000},
-                { 0.0000,  1.0000,  0.0000},
-                { 0.0000,  0.0000,  1.0000}}
-    B matrix:  {{ 0.1000,  0.0000,  0.0000},
-                { 0.0000,  0.0909,  0.0000},
-                { 0.0000,  0.0000,  0.0833}}
-    A = UB:    {{ 0.1000,  0.0000,  0.0000},
-                { 0.0000,  0.0909,  0.0000},
-                { 0.0000,  0.0000,  0.0833}}
+    U matrix:  {{ 1.000000,  0.000000,  0.000000},
+                { 0.000000,  1.000000,  0.000000},
+                { 0.000000,  0.000000,  1.000000}}
+    B matrix:  {{ 0.100000,  0.000000,  0.000000},
+                { 0.000000,  0.090909,  0.000000},
+                { 0.000000,  0.000000,  0.083333}}
+    A = UB:    {{ 0.100000,  0.000000,  0.000000},
+                { 0.000000,  0.090909,  0.000000},
+                { 0.000000,  0.000000,  0.083333}}
     Mosaicity:  0.000000"""
     )
     assert approx_equal(mosaic_model.get_mosaicity(), 0)
@@ -375,20 +377,20 @@ def test_MosaicCrystalSauter2014():
         space_group_symbol="P 1",
     )
     assert (
-        str(mosaic_model).replace("-0.0000", " 0.0000")
+        str(mosaic_model).replace("-0.000000", " 0.000000")
         == """\
 Crystal:
     Unit cell: 10.000, 11.000, 12.000, 90.000, 90.000, 90.000
     Space group: P 1
-    U matrix:  {{ 1.0000,  0.0000,  0.0000},
-                { 0.0000,  1.0000,  0.0000},
-                { 0.0000,  0.0000,  1.0000}}
-    B matrix:  {{ 0.1000,  0.0000,  0.0000},
-                { 0.0000,  0.0909,  0.0000},
-                { 0.0000,  0.0000,  0.0833}}
-    A = UB:    {{ 0.1000,  0.0000,  0.0000},
-                { 0.0000,  0.0909,  0.0000},
-                { 0.0000,  0.0000,  0.0833}}
+    U matrix:  {{ 1.000000,  0.000000,  0.000000},
+                { 0.000000,  1.000000,  0.000000},
+                { 0.000000,  0.000000,  1.000000}}
+    B matrix:  {{ 0.100000,  0.000000,  0.000000},
+                { 0.000000,  0.090909,  0.000000},
+                { 0.000000,  0.000000,  0.083333}}
+    A = UB:    {{ 0.100000,  0.000000,  0.000000},
+                { 0.000000,  0.090909,  0.000000},
+                { 0.000000,  0.000000,  0.083333}}
     Half mosaic angle (degrees):  0.000000
     Domain size (Angstroms):  0.000000"""
     )
@@ -639,3 +641,42 @@ def test_recalculated_cell(crystal_class):
     xl.set_recalculated_unit_cell(uctbx.unit_cell((11, 12, 13, 90, 90, 90)))
     assert xl.get_recalculated_cell_parameter_sd() == ()
     assert xl.get_recalculated_cell_volume_sd() == 0
+
+
+def test_from_phil():
+    params = crystal_phil_scope.extract()
+    assert CrystalFactory.from_phil(params) is None
+
+    params = crystal_phil_scope.fetch(
+        parse(
+            """
+    crystal {
+      unit_cell = 10, 20, 30, 90, 90, 90
+      space_group = P222
+    }
+  """
+        )
+    ).extract()
+
+    # Create the crystal
+    crystal = CrystalFactory.from_phil(params)
+    assert crystal.get_unit_cell().parameters() == (10, 20, 30, 90, 90, 90)
+    assert crystal.get_space_group().type().lookup_symbol() == "P 2 2 2"
+
+    params = crystal_phil_scope.fetch(
+        parse(
+            """
+    crystal {
+      A_matrix =  0.0541,  0.0832, -0.0060, 0.0049, -0.0175, -0.0492, -0.0840,  0.0526, -0.0068
+      space_group = P4
+    }
+  """
+        )
+    ).extract()
+
+    # Create the crystal
+    crystal = CrystalFactory.from_phil(params)
+    assert crystal.get_A() == pytest.approx(
+        (0.0541, 0.0832, -0.0060, 0.0049, -0.0175, -0.0492, -0.0840, 0.0526, -0.0068)
+    )
+    assert crystal.get_space_group().type().lookup_symbol() == "P 4"

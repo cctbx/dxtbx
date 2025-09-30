@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import iotbx.phil
 from cctbx.sgtbx import space_group as SG
 from scitbx import matrix
 
@@ -15,6 +16,25 @@ except ModuleNotFoundError:
         MosaicCrystalKabsch2010,
         MosaicCrystalSauter2014,
     )
+
+crystal_phil_scope = iotbx.phil.parse(
+    """
+  crystal
+    .expert_level = 2
+    .short_caption = "Crystal overrides"
+  {
+    unit_cell = None
+      .type = unit_cell
+
+    A_matrix = None
+      .type = floats(size=9)
+      .help = "The crystal setting A=UB matrix. If set, this will override the unit cell."
+
+    space_group = None
+      .type = space_group
+  }
+"""
+)
 
 
 class CrystalFactory:
@@ -126,3 +146,35 @@ class CrystalFactory:
         _c = rotate_mosflm_to_imgCIF * c
 
         return Crystal(_a, _b, _c, space_group=space_group)
+
+    @staticmethod
+    def from_phil(
+        params: iotbx.phil.scope_extract,
+        reference: Crystal | None = None,
+    ) -> Crystal:
+        """
+        Convert the phil parameters into a crystal model
+        """
+
+        all_params = [
+            params.crystal.unit_cell,
+            params.crystal.A_matrix,
+            params.crystal.space_group,
+        ]
+        if all_params.count(None) == len(all_params):
+            return reference
+
+        if reference is None:
+            crystal = Crystal((1, 0, 0), (0, 1, 0), (0, 0, 1), "P1")
+        else:
+            crystal = reference
+            crystal.reset_scan_points()
+
+        if params.crystal.unit_cell is not None:
+            crystal.set_unit_cell(params.crystal.unit_cell)
+        if params.crystal.A_matrix is not None:
+            crystal.set_A(params.crystal.A_matrix)
+        if params.crystal.space_group is not None:
+            crystal.set_space_group(params.crystal.space_group.group())
+
+        return crystal

@@ -450,6 +450,10 @@ class ImageSetFactory:
         if not check_format:
             assert not check_headers
 
+        # Import here as Format and Imageset have cyclic dependencies
+        from dxtbx.format.Format import Format
+        from dxtbx.format.FormatMultiImage import FormatMultiImage
+
         # Check the template is valid
         if "#" in template:
             # Get the template image range
@@ -459,23 +463,30 @@ class ImageSetFactory:
             # Set the image range
             indices = range(image_range[0], image_range[1] + 1)
             filenames = _expand_template_to_sorted_filenames(template, indices)
+            if check_format:
+                format_class = dxtbx.format.Registry.get_format_class_for_file(
+                    filenames[0]
+                )
+            else:
+                format_class = Format
         else:
+            # Note, this assumes image stacks can only be written by dectris detectors,
+            # but doesn't account for other imagestack formats like MRC.
             if "master" not in template:
                 raise ValueError("Invalid template")
             filenames = [template]
-
-        # Import here as Format and Imageset have cyclic dependencies
-        from dxtbx.format.Format import Format
-
-        # Get the format class
-        if check_format:
-            format_class = dxtbx.format.Registry.get_format_class_for_file(filenames[0])
-        else:
-            format_class = Format
+            indices = range(image_range[0], image_range[1] + 1)
+            if check_format:
+                format_class = dxtbx.format.Registry.get_format_class_for_file(
+                    filenames[0]
+                )
+            else:
+                format_class = FormatMultiImage
 
         # Create the sequence object
         sequence = format_class.get_imageset(
             filenames,
+            single_file_indices=indices,
             template=template,
             as_sequence=True,
             beam=beam,
@@ -571,29 +582,36 @@ class ImageSetFactory:
         """Create a sequence"""
         indices = sorted(indices)
 
+        # Import here as Format and Imageset have cyclic dependencies
+        from dxtbx.format.Format import Format
+        from dxtbx.format.FormatMultiImage import FormatMultiImage
+
         # Get the template format
         if "#" in template:
             filenames = _expand_template_to_sorted_filenames(template, indices)
+            # Get the format object and reader
+            if format_class is None:
+                if check_format:
+                    format_class = dxtbx.format.Registry.get_format_class_for_file(
+                        filenames[0]
+                    )
+                else:
+                    format_class = Format
         else:
             filenames = [template]
+            if format_class is None:
+                if check_format:
+                    format_class = dxtbx.format.Registry.get_format_class_for_file(
+                        filenames[0]
+                    )
+                else:
+                    format_class = FormatMultiImage
 
         # Set the image range
         array_range = (min(indices) - 1, max(indices))
         if scan is not None:
             assert array_range == scan.get_array_range()
             scan.set_batch_offset(array_range[0])
-
-        # Get the format object and reader
-        if format_class is None:
-            # Import here as Format and Imageset have cyclic dependencies
-            from dxtbx.format.Format import Format
-
-            if check_format:
-                format_class = dxtbx.format.Registry.get_format_class_for_file(
-                    filenames[0]
-                )
-            else:
-                format_class = Format
 
         return format_class.get_imageset(
             filenames,

@@ -30,6 +30,7 @@ from dxtbx.model import (
     Experiment,
     ExperimentList,
     GoniometerFactory,
+    History,
     ProfileModelFactory,
     ScanFactory,
 )
@@ -509,6 +510,12 @@ class ExperimentListDict:
                     identifier=identifier,
                 )
             )
+
+        # Add the history to the experiments if it exists
+        if "history" in self._obj:
+            history = History(self._obj["history"])
+            for expt in el:
+                expt.history = history
 
         return el
 

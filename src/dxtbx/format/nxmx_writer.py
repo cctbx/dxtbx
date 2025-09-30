@@ -104,6 +104,18 @@ phil_scope = parse(
       .type = float
       .help = flux incident on beam plane in photons per second
   }
+  detector {
+    sensor_material = None
+      .type = str
+      .help = At times, radiation is not directly sensed by the detector. Rather, \
+              the detector might sense the output from some converter like a \
+              scintillator. This is the name of this converter material.
+    sensor_thickness = None
+      .type = float
+      .help = At times, radiation is not directly sensed by the detector. Rather, \
+              the detector might sense the output from some converter like a \
+              scintillator. This is the thickness of this converter material.
+  }
 """
 )
 
@@ -119,14 +131,15 @@ class NXmxWriter:
 
     def __init__(self, params, experiments=None, imageset=None):
         self.params = params
+        self.detector = None
         if experiments or imageset:
             self.setup(experiments, imageset)
         self.handle = None
 
     def setup(self, experiments=None, imageset=None):
-        assert [experiments, imageset].count(
-            None
-        ) == 1, "Supply either experiments or imagset, not both"
+        assert [experiments, imageset].count(None) == 1, (
+            "Supply either experiments or imagset, not both"
+        )
         if experiments:
             self.imagesets = experiments.imagesets()
             assert len(experiments.detectors()) == 1, "Multiple detectors not supported"
@@ -173,7 +186,7 @@ class NXmxWriter:
             entry["end_time_estimated"] = self.params.nexus_details.end_time_estimated
 
         # --> definition
-        self._create_scalar(entry, "definition", "S4", np.string_("NXmx"))
+        self._create_scalar(entry, "definition", "S4", np.bytes_("NXmx"))
 
         # --> sample
         sample = self.handle["entry"].create_group("sample")
@@ -356,7 +369,7 @@ class NXmxWriter:
         det_group.attrs["NX_class"] = "NXdetector_group"
 
         det_group.create_dataset("group_index", data=list(range(1, 3)), dtype="i")
-        data = [np.string_("detector"), np.string_("detector")]
+        data = [np.bytes_("detector"), np.bytes_("detector")]
         det_group.create_dataset("group_names", (2,), data=data, dtype="S12")
         det_group.create_dataset("group_parent", (2,), data=[-1, 1], dtype="i")
         det_group.create_dataset("group_type", (2,), data=[1, 2], dtype="i")
@@ -365,12 +378,17 @@ class NXmxWriter:
         det["description"] = "Detector converted from DIALS models"
         det["depends_on"] = "/entry/instrument/detector/transformations/AXIS_RAIL"
         det["gain_setting"] = "auto"
-        assert len({p.get_material() for p in detector}) == 1
-        assert len({p.get_thickness() for p in detector}) == 1
-        det["sensor_material"] = detector[0].get_material()
-        self._create_scalar(
-            det, "sensor_thickness", "f", detector[0].get_thickness() * 1000
-        )
+        if self.params.detector.sensor_material:
+            det["sensor_material"] = self.params.detector.sensor_material
+        else:
+            assert len({p.get_material() for p in detector}) == 1
+            assert len({p.get_thickness() for p in detector}) == 1
+            det["sensor_material"] = detector[0].get_material()
+        if self.params.detector.sensor_thickness:
+            thickness = self.params.detector.sensor_thickness
+        else:
+            thickness = detector[0].get_thickness()
+        self._create_scalar(det, "sensor_thickness", "f", thickness * 1000)
         det["sensor_thickness"].attrs["units"] = "microns"
         if self.params.nexus_details.count_time is not None:
             self._create_scalar(
@@ -402,8 +420,8 @@ class NXmxWriter:
         else:
             trusted_min, trusted_max = self.params.trusted_range
         # DIALS definitions match up with NXmx
-        det.create_dataset("underload_value", (1,), data=[trusted_min], dtype="int32")
-        det.create_dataset("saturation_value", (1,), data=[trusted_max], dtype="int32")
+        det.create_dataset("underload_value", (1,), data=[trusted_min], dtype="int")
+        det.create_dataset("saturation_value", (1,), data=[trusted_max], dtype="int")
 
         def find_panel_id(panel):
             for i in range(len(detector)):

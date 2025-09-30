@@ -6,6 +6,7 @@ import time
 from itertools import groupby
 
 import numpy as np
+from scipy.signal import convolve
 
 import serialtbx.detector.xtc
 import serialtbx.util
@@ -73,6 +74,11 @@ locator_str = """
             for any events with a dropped spectrum. If the spectrum is \
             present and calibration constants are provided, \
             wavelength_offset is ignored.
+  wavelength_scale = None
+    .type = float
+    .help = Optional scalar to apply to each wavelength (see \
+            wavelength_offset).  If both scale and offset are present, \
+            the final wavelength is (scale * initial wavelength) + offset.
   wavelength_fallback = None
     .type = float
     .help = If the wavelength cannot be found from the XTC stream, fall \
@@ -101,6 +107,27 @@ locator_str = """
     .type = bool
     .help = Raise an exception for any event where the spectrum is not \
             available.
+  spectrum_index_offset = None
+    .type = int
+    .help = Optional offset if the spectrometer and images are not in sync in \
+            XTC stream
+  check_spectrum {
+    enable = False
+      .type = bool
+    smooth_window = 50
+      .type = int
+      .help = Before determining spectral width, smooth it by convolution with \
+              a box of this width in pixels.
+    max_width = .003
+      .type = float
+      .help = Reject spectra with greater than this fractional width.
+    intensity_threshold = 0.2
+      .type = float
+      .help = Determine the spectral width at this fraction of the maximum.
+    min_height = 500
+      .type = float
+      .help = Reject spectra below this max intensity (after smoothing).
+  }
   filter {
     evr_address = evr1
       .type = str
@@ -172,6 +199,28 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         else:
             self._spectrum_pedestal = None
 
+        """
+        # Prototype code for checking automatically determining the offst between the eBeam
+        # and the spectrometer
+        if self.params.spectrum_eV_per_pixel is not None and self.params.wavelength_offset is None:
+            i = 0; count = 0
+            all_fee_wav, all_eBeam_wav = [],[]
+            while i < self.get_num_images() and count < 200:
+                evt = self._get_event(i)
+                spectrum = self.get_spectrum(i)
+                eBeam_wav = serialtbx.detector.xtc.evt_wavelength(evt, delta_k=self.params.wavelength_delta_k)
+                i += 1
+                if spectrum is None: continue
+                if eBeam_wav is None: continue
+                all_fee_wav.append(spectrum.get_weighted_wavelength())
+                all_eBeam_wav.append(eBeam_wav)
+                count += 1
+            if count >= 200:
+                mean_eBeam_wav = sum(all_eBeam_wav)/len(all_eBeam_wav)
+                mean_fee_wav = sum(all_fee_wav)/len(all_fee_wav)
+                self.params.wavelength_offset = mean_fee_wav - mean_eBeam_wav
+        """
+
     def _load_hit_indices(self):
         self._hit_inds = None
         if self.params.hits_file is not None:
@@ -217,7 +266,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 for unused_arg in unused_args:
                     print(unused_arg)
                 print(
-                    "Incorrect of unused parameter in locator file. Please check and retry"
+                    "Incorrect or unused parameter in locator file. Please check and retry"
                 )
                 return None
             params = working_phil.extract()
@@ -429,6 +478,21 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     def get_beam(self, index=None):
         return self._beam(index)
 
+    def check_spectrum(self, spectrum):
+        """Verify the spectrum is above a certain threshold"""
+        xvals = spectrum.get_energies_eV()
+        yvals = spectrum.get_weights()
+        window = self.params.check_spectrum.smooth_window
+        yvals = convolve(yvals, np.ones((window,)) / window, mode="same")
+        ymax = max(yvals)
+        if ymax < self.params.check_spectrum.min_height:
+            return False
+        threshold = ymax * self.params.check_spectrum.intensity_threshold
+        indices = np.where(yvals > threshold)[0]
+        width = xvals[indices[-1]] - xvals[indices[0]]
+        frac_width = width / spectrum.get_weighted_energy_eV()
+        return frac_width < self.params.check_spectrum.max_width
+
     def _beam(self, index=None):
         """Returns a simple model for the beam"""
         if index is None:
@@ -441,6 +505,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 return None
             spectrum = self.get_spectrum(index)
             if spectrum:
+                if self.params.check_spectrum.enable:
+                    if not self.check_spectrum(spectrum):
+                        return None
                 wavelength = spectrum.get_weighted_wavelength()
             else:
                 wavelength = serialtbx.detector.xtc.evt_wavelength(
@@ -448,8 +515,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 )
                 if wavelength is None or wavelength <= 0:
                     wavelength = self.params.wavelength_fallback
-                if self.params.wavelength_offset is not None:
-                    wavelength += self.params.wavelength_offset
+                if wavelength is not None and wavelength > 0:
+                    if self.params.wavelength_scale is not None:
+                        wavelength *= self.params.wavelength_scale
+                    if self.params.wavelength_offset is not None:
+                        wavelength += self.params.wavelength_offset
             if wavelength is None:
                 self._beam_cache = None
             else:
@@ -475,6 +545,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     def _spectrum(self, index=None):
         if index is None:
             index = 0
+        if self.params.spectrum_index_offset:
+            index += self.params.spectrum_index_offset
+            if index < 0:
+                return None
         if self.params.spectrum_eV_per_pixel is None:
             return None
 

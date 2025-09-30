@@ -271,34 +271,54 @@ namespace dxtbx { namespace model { namespace boost_python {
     return detector_detail::detector_from_dict(result, obj);
   }
 
+  boost::python::tuple get_ray_intersection_py(const Detector &self,
+                                               scitbx::af::const_ref<vec3<double>> s1) {
+    /**
+     * Wrapper to convert coord_type to Python Tuple
+     */
+
+    scitbx::af::shared<Detector::coord_type> result = self.get_ray_intersection(s1);
+
+    scitbx::af::shared<vec2<double>> xy =
+      scitbx::af::shared<vec2<double>>(result.size());
+    scitbx::af::shared<std::size_t> panel =
+      scitbx::af::shared<std::size_t>(result.size());
+
+    for (std::size_t i = 0; i < result.size(); ++i) {
+      panel[i] = result[i].first;
+      xy[i] = result[i].second;
+    }
+    return boost::python::make_tuple(panel, xy);
+  }
+
   void export_detector() {
     using namespace boost::python;
     using namespace detector_detail;
 
-    class_<Detector::Node, bases<Panel> >("DetectorNode", no_init)
+    class_<Detector::Node, bases<Panel>>("DetectorNode", no_init)
       .def("add_group",
-           (Detector::Node::pointer(Detector::Node::*)()) & Detector::Node::add_group,
+           (Detector::Node::pointer (Detector::Node::*)())&Detector::Node::add_group,
            return_internal_reference<>())
       .def("add_group",
-           (Detector::Node::pointer(Detector::Node::*)(const Panel &))
-             & Detector::Node::add_group,
+           (Detector::Node::pointer (Detector::Node::*)(
+             const Panel &))&Detector::Node::add_group,
            return_internal_reference<>())
       .def("add_panel",
-           (Detector::Node::pointer(Detector::Node::*)()) & Detector::Node::add_panel,
+           (Detector::Node::pointer (Detector::Node::*)())&Detector::Node::add_panel,
            return_internal_reference<>())
       .def("add_panel",
-           (Detector::Node::pointer(Detector::Node::*)(const Panel &))
-             & Detector::Node::add_panel,
+           (Detector::Node::pointer (Detector::Node::*)(
+             const Panel &))&Detector::Node::add_panel,
            return_internal_reference<>())
       .def("parent",
-           (Detector::Node::pointer(Detector::Node::*)()) & Detector::Node::parent,
+           (Detector::Node::pointer (Detector::Node::*)())&Detector::Node::parent,
            return_internal_reference<>())
       .def("root",
-           (Detector::Node::pointer(Detector::Node::*)()) & Detector::Node::root,
+           (Detector::Node::pointer (Detector::Node::*)())&Detector::Node::root,
            return_internal_reference<>())
       .def("__getitem__",
-           (Detector::Node::pointer(Detector::Node::*)(std::size_t))
-             & Detector::Node::operator[],
+           (Detector::Node::pointer (Detector::Node::*)(std::size_t))&Detector::Node::
+           operator[],
            return_internal_reference<>())
       .def("empty", &Detector::Node::empty)
       .def("__len__", &Detector::Node::size)
@@ -324,31 +344,31 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("origin_tolerance") = 1e-6,
             arg("static_only") = false,
             arg("ignore_trusted_range") = false))
-      .def("__iter__", iterator<Detector::Node, return_internal_reference<> >())
-      .def("children", iterator<Detector::Node, return_internal_reference<> >());
+      .def("__iter__", iterator<Detector::Node, return_internal_reference<>>())
+      .def("children", iterator<Detector::Node, return_internal_reference<>>());
 
     // Export a Detector base class
-    class_<Detector, std::shared_ptr<Detector> >("Detector")
+    class_<Detector, std::shared_ptr<Detector>>("Detector")
       .def(init<const Panel &>())
       .def("hierarchy",
-           (Detector::node_pointer(Detector::*)()) & Detector::root,
+           (Detector::node_pointer (Detector::*)())&Detector::root,
            return_internal_reference<>())
       .def("add_group",
-           (Detector::node_pointer(Detector::*)()) & Detector::add_group,
+           (Detector::node_pointer (Detector::*)())&Detector::add_group,
            return_internal_reference<>())
       .def("add_group",
-           (Detector::node_pointer(Detector::*)(const Panel &)) & Detector::add_group,
+           (Detector::node_pointer (Detector::*)(const Panel &))&Detector::add_group,
            return_internal_reference<>())
       .def("add_panel",
-           (Detector::node_pointer(Detector::*)()) & Detector::add_panel,
+           (Detector::node_pointer (Detector::*)())&Detector::add_panel,
            return_internal_reference<>())
       .def("add_panel",
-           (Detector::node_pointer(Detector::*)(const Panel &)) & Detector::add_panel,
+           (Detector::node_pointer (Detector::*)(const Panel &))&Detector::add_panel,
            return_internal_reference<>())
       .def("__len__", &Detector::size)
       .def("__setitem__", &detector_set_item)
       .def("__getitem__", &detector_get_item, return_internal_reference<>())
-      .def("__iter__", iterator<Detector, return_internal_reference<> >())
+      .def("__iter__", iterator<Detector, return_internal_reference<>>())
       .def("__eq__", &Detector::operator==)
       .def("__ne__", &Detector::operator!=)
       .def("is_similar_to",
@@ -363,7 +383,17 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_max_inscribed_resolution",
            &Detector::get_max_inscribed_resolution,
            (arg("s0")))
-      .def("get_ray_intersection", &Detector::get_ray_intersection, (arg("s1")))
+      .def("get_ray_intersection",
+           (Detector::coord_type (Detector::*)(vec3<double>) const)
+             & Detector::get_ray_intersection,
+           (arg("s1")))
+      .def("get_ray_intersection", &get_ray_intersection_py, (arg("s1")))
+      .def("get_ray_intersection",
+           (scitbx::af::shared<vec2<double>> (Detector::*)(
+             scitbx::af::const_ref<vec3<double>>, scitbx::af::const_ref<std::size_t>)
+              const)
+             & Detector::get_ray_intersection,
+           (arg("s1"), arg("panel")))
       .def("get_panel_intersection", &Detector::get_panel_intersection, (arg("s1")))
       //.def("do_panels_intersect",
       //  &Detector::do_panels_intersect)
@@ -383,7 +413,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .staticmethod("from_dict")
       .def_pickle(DetectorPickleSuite());
 
-    boost_adaptbx::std_pair_conversions::to_and_from_tuple<int, vec2<double> >();
+    boost_adaptbx::std_pair_conversions::to_and_from_tuple<int, vec2<double>>();
   }
 
 }}}  // namespace dxtbx::model::boost_python

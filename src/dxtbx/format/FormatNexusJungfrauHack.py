@@ -44,9 +44,9 @@ class FormatNexusJungfrauHack(FormatNexus):
         # Only support 1 set of models at the moment
         assert len(reader.entries) == 1, "Currently only supports 1 NXmx entry"
         assert len(reader.entries[0].data) == 1, "Currently only supports 1 NXdata"
-        assert (
-            len(reader.entries[0].instruments) == 1
-        ), "Currently only supports 1 NXinstrument"
+        assert len(reader.entries[0].instruments) == 1, (
+            "Currently only supports 1 NXinstrument"
+        )
         assert len(reader.entries[0].samples) == 1, "Currently only supports 1 NXsample"
         assert (
             len(reader.entries[0].samples[0].beams) == 1
@@ -106,11 +106,11 @@ class FormatNexusJungfrauHack(FormatNexus):
         detector_material = clean_string(str(material))
         material = {
             "Si": "Si",
-            np.string_("Si"): "Si",
-            np.string_("Silicon"): "Si",
-            np.string_("Sillicon"): "Si",
-            np.string_("CdTe"): "CdTe",
-            np.string_("GaAs"): "GaAs",
+            np.bytes_("Si"): "Si",
+            np.bytes_("Silicon"): "Si",
+            np.bytes_("Sillicon"): "Si",
+            np.bytes_("CdTe"): "CdTe",
+            np.bytes_("GaAs"): "GaAs",
         }.get(detector_material)
         if not material:
             raise RuntimeError("Unknown material: %s" % detector_material)

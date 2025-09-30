@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-import os
-
 from dxtbx.format.FormatPYunspecifiedStill import FormatPYunspecifiedStill
 from dxtbx.model.experiment_list import ExperimentListFactory
 
 
-def test_static_mask(dials_regression):
-    filename = os.path.join(
-        dials_regression,
-        "image_examples/LCLS_CXI/shot-s00-2011-12-02T21_07Z29.723_00569.pickle",
+def test_static_mask(dials_data):
+    data_dir = dials_data("image_examples", pathlib=True)
+    filename = str(
+        data_dir / "LCLS_CXI-shot-s00-2011-12-02T21_07Z29.723_00569.pickle",
     )
     assert FormatPYunspecifiedStill.understand(filename)
 

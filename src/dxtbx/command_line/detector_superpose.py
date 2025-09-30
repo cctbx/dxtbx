@@ -98,9 +98,9 @@ def run(args=None):
         panel_ids = params.panel_list
 
     if params.fit_target == "centers":
-        assert (
-            len(panel_ids) >= 3
-        ), "When using centers as target for superpose, detector needs at least 3 panels"
+        assert len(panel_ids) >= 3, (
+            "When using centers as target for superpose, detector needs at least 3 panels"
+        )
 
     def rmsd_from_centers(a, b):
         assert len(a) == len(b)

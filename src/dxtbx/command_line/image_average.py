@@ -135,9 +135,9 @@ class single_image_worker(image_worker):
             print("Processing %s" % path)
 
         format_class = dxtbx.format.Registry.get_format_class_for_file(path)
-        assert not issubclass(
-            format_class, FormatMultiImage
-        ), "Average container files separately"
+        assert not issubclass(format_class, FormatMultiImage), (
+            "Average container files separately"
+        )
         img_instance = format_class(path)
 
         beam = img_instance.get_beam()
@@ -281,7 +281,7 @@ def run(argv=None):
 
     if command_line.options.mpi:
         try:
-            from mpi4py import MPI
+            from libtbx.mpi4py import MPI
         except ImportError:
             raise Sorry("MPI not found")
         comm = MPI.COMM_WORLD

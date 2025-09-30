@@ -86,9 +86,9 @@ class FormatXTCRayonix(FormatXTC):
             self._distance_mm = (
                 self._detz_encoder(self.current_event) + self.params.rayonix.detz_offset
             )
-            assert (
-                self._distance_mm > 0
-            ), "something is wrong with encoder or detz_offset"
+            assert self._distance_mm > 0, (
+                "something is wrong with encoder or detz_offset"
+            )
         return self._detector()
 
     def _detector(self):
