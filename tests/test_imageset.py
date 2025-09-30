@@ -571,6 +571,11 @@ def test_pickle_imageset(centroid_files):
     # Read the 5th image
     assert sequence[4]
 
+    # Set a rejected image
+    assert not sequence.is_marked_for_rejection(8)
+    sequence.mark_for_rejection(8, True)
+    assert sequence.is_marked_for_rejection(8)
+
     # Pickle, then unpickle
     pickled_sequence = pickle.dumps(sequence)
     sequence2 = pickle.loads(pickled_sequence)
@@ -588,6 +593,9 @@ def test_pickle_imageset(centroid_files):
     sequence4 = sequence3[0:2]
     sequence4.get_detectorbase(0)
     sequence4[0]
+
+    # Check reject list is preserved for https://github.com/dials/dials/issues/2998
+    assert sequence2.is_marked_for_rejection(8)
 
 
 def test_get_corrected_data(centroid_files):
