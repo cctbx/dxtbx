@@ -1,0 +1,1 @@
+``FormatHDF5Lambda``: Python 2 to 3 and ``h5py`` changes required to update for modern DIALS.
