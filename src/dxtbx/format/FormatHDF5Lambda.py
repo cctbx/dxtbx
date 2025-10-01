@@ -38,8 +38,11 @@ class FormatHDF5Lambda(FormatHDF5):
             except KeyError:
                 return False
 
-            if b"Lambda" in desc[()][0]:
-                return True
+            try:
+                if b"Lambda" in desc[()][0]:
+                    return True
+            except TypeError:
+                return False
 
         return False
 
