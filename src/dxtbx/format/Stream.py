@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 import zmq
 
 
@@ -111,27 +111,28 @@ class StreamClass(ABC):
             self.socket = None
 
     @abstractmethod
-    def recv(self, copy=True, decode=True):
+    def recv(self, copy: bool = True, decode: bool = True) -> bytes:
+        """Receive a message from the stream"""
         pass
 
     @abstractmethod
-    def decode(self, encoded_message):
+    def decode(self, encoded_message) -> dict:
+        """Decode the message"""
         pass
 
     @abstractmethod
     def handle_start_message(
         self, encoded_message=None, message=None, reference_experiment=None
     ):
-        pass
-
-    @abstractmethod
-    def handle_end_message(self, encoded_message=None, message=None):
-        pass
-
-    @abstractmethod
-    def handle_image_message(self, encoded_message=None, message=None):
+        """
+        Convert a start message into
+            1: file writer phil parameters
+                dxtbx.format.nxmx_writer.phil_scope
+            2: An ExperimentList
+        """
         pass
 
     @abstractmethod
     def get_data(self, message, **kwargs):
+        """Convert an image message to a numpy array"""
         pass
