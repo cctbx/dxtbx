@@ -94,35 +94,9 @@ class StreamDectrisSimplonStreamV2(StreamClass):
     def decode(self, encoded_message):
         return cbor2.loads(encoded_message, tag_hook=tag_hook)
 
-    def _get_message_type(self, encoded_message=None, message=None):
-        # len(encoded_message) gets the message size in bytes.
-        # cbor2.loads takes ~0.5s with an Eiger 16M detector. len(encoded_message) is trivial.
-        # The start and end messages are less than 1,000 bytes.
-        # The image message is more than 1,000,000 bytes.
-        # If the encoded message is more than 10,000 bytes, assume it is an image message and
-        # do not decode it. Decoding the start and end messages is very fast.
-        if message is None:
-            type_section = encoded_message[:100]
-            if b"image" in type_section:
-                return "image"
-            elif b"start" in type_section or b"end" in type_section:
-                return "control"
-            elif len(encoded_message) < 100000:
-                return "control"
-            else:
-                return "image"
-        else:
-            return message["type"]
-
     def recv(self, copy=True, decode=True):
         encoded_message = self.socket.recv(copy=True)
-        if decode:
-            message = self.socket._decode(encoded_message)
-            message_type = self._get_message_type(message)
-            return message_type, message
-        else:
-            message_type = self._get_message_type(encoded_message)
-            return message_type, encoded_message
+        return encoded_message
 
     def handle_start_message(
         self, encoded_message=None, message=None, reference_experiment=None
@@ -235,16 +209,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             )
 
         return file_writer_params, reference_experiment
-
-    def handle_end_message(self, encoded_message=None, message=None):
-        if message is None:
-            message = self.decode(encoded_message)
-        return message
-
-    def handle_image_message(self, encoded_message=None, message=None):
-        if message is None:
-            message = self.decode(encoded_message)
-        return message
 
     def get_data(self, message, **kwargs):
         return message["data"]["threshold_1"]

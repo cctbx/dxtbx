@@ -144,6 +144,27 @@ class NXmxStreamWriter(NXmxWriter):
                 compression=get_compression(self.params.compression),
             )
 
+    def append_image(self, image_data, compressed=False):
+        """Method for uncompressed data"""
+        # Make sure dataset is initialized
+        if self.dset is None:
+            self.initialize_dataset()
+
+        current_size = self.dset.shape[0]
+        self.dset.resize(current_size + 1, axis=0)
+
+        if compressed:
+            # Calculate chunk index for this image
+            # For a dataset with shape (N, height, width) chunked as (1, height, width)
+            chunk_index = (current_size, 0, 0)
+            # Write compressed data directly to chunk
+            self.dset.id.write_direct_chunk(chunk_index, image_data, filter_mask=0)
+        else:
+            self.dset[-1:] = image_data
+
+        self.image_count += 1
+
+    '''
     def append_compressed_image(self, compressed_data):
         """Append already-compressed image data directly"""
         # Make sure dataset is initialized
@@ -172,3 +193,4 @@ class NXmxStreamWriter(NXmxWriter):
         self.dset.resize(current_size + 1, axis=0)
         self.dset[-1:] = image_data
         self.image_count += 1
+    '''
