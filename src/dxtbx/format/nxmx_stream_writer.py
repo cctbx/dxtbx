@@ -51,7 +51,6 @@ class NXmxStreamWriter(NXmxWriter):
         This method is overwritten to remove the self.append_all_frames() call.
         Archivers use this method to setup the file writer before they have received
         data to save. They will then build up the h5 file incrementally.
-
         Because Archivers can archive compressed data, they need to know the image shape.
         It gets the image shape from the reference experiments
         """
@@ -163,34 +162,3 @@ class NXmxStreamWriter(NXmxWriter):
             self.dset[-1:] = image_data
 
         self.image_count += 1
-
-    '''
-    def append_compressed_image(self, compressed_data):
-        """Append already-compressed image data directly"""
-        # Make sure dataset is initialized
-        if self.dset is None:
-            self.initialize_dataset()
-
-        # Resize dataset to accommodate new image
-        current_size = self.dset.shape[0]
-        self.dset.resize(current_size + 1, axis=0)
-
-        # Calculate chunk index for this image
-        # For a dataset with shape (N, height, width) chunked as (1, height, width)
-        chunk_index = (current_size, 0, 0)
-
-        # Write compressed data directly to chunk
-        self.dset.id.write_direct_chunk(chunk_index, compressed_data, filter_mask=0)
-        self.image_count += 1
-
-    def append_image(self, image_data):
-        """Method for uncompressed data"""
-        # Make sure dataset is initialized
-        if self.dset is None:
-            self.initialize_dataset()
-        # Resize and add image the traditional way
-        current_size = self.dset.shape[0]
-        self.dset.resize(current_size + 1, axis=0)
-        self.dset[-1:] = image_data
-        self.image_count += 1
-    '''

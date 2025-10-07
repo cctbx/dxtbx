@@ -111,7 +111,7 @@ class StreamClass(ABC):
             self.socket = None
 
     @abstractmethod
-    def recv(self, copy: bool = True, decode: bool = True) -> bytes:
+    def recv(self, copy: bool = True) -> bytes:
         """Receive a message from the stream"""
         pass
 
@@ -136,3 +136,11 @@ class StreamClass(ABC):
     def get_data(self, message, **kwargs):
         """Convert an image message to a numpy array"""
         pass
+
+    @abstractmethod
+    def get_reader(self, image_data, **kwargs):
+        from dials.array_family import flex
+        from dxtbx.imageset import StreamReader
+
+        image_data = flex.double(image_data)
+        return StreamReader([image_data])

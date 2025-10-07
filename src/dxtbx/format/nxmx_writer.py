@@ -182,7 +182,8 @@ class NXmxWriter:
         self.detector = None
         if experiments or imageset:
             self.setup(experiments, imageset)
-        self.handle = None
+        else:
+            self.handle = None
 
     def setup(self, experiments=None, imageset=None):
         assert [experiments, imageset].count(

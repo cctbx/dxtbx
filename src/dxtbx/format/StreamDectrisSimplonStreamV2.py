@@ -92,19 +92,17 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         self.name = "DectrisSimplonStreamV2"
 
     def decode(self, encoded_message):
-        return cbor2.loads(encoded_message, tag_hook=tag_hook)
+        message = cbor2.loads(encoded_message, tag_hook=tag_hook)
+        if "image_size_x" in message.keys():
+            message["image_shape"] = (message["image_size_y"], message["image_size_x"])
+        return message
 
-    def recv(self, copy=True, decode=True):
-        encoded_message = self.socket.recv(copy=True)
-        return encoded_message
+    def recv(self, copy=True):
+        return self.socket.recv(copy=copy)
 
-    def handle_start_message(
-        self, encoded_message=None, message=None, reference_experiment=None
-    ):
+    def handle_start_message(self, message, reference_experiment=None):
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
 
-        if message is None:
-            message = self.decode(encoded_message)
         if isinstance(message["detector_description"], bytes):
             message["detector_description"] = message["detector_description"].decode()
         if isinstance(message["sensor_material"], bytes):
