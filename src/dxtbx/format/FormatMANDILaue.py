@@ -102,7 +102,7 @@ class FormatMANDILaue(FormatMANDI):
         for panel_name in panel_names:
             output_path = join(base_dir, panel_name)
             output_path = join(output_path, output_name)
-            panel_data = FormatMANDI.generate_laue_data_for_panel(
+            panel_data = FormatMANDILaue.generate_laue_data_for_panel(
                 nxs_file, panel_size, panel_name
             )
             if compress:

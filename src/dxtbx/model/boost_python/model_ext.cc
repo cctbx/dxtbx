@@ -29,6 +29,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   void export_experiment();
   void export_experiment_list();
   void export_spectrum();
+  void export_history();
 
   BOOST_PYTHON_MODULE(dxtbx_model_ext) {
     export_beam();
@@ -45,6 +46,7 @@ namespace dxtbx { namespace model { namespace boost_python {
     export_experiment();
     export_experiment_list();
     export_spectrum();
+    export_history();
   }
 
 }}}  // namespace dxtbx::model::boost_python

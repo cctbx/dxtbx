@@ -29,7 +29,7 @@ class FormatHDF5Lambda(FormatHDF5):
         # check that this is a HDF5 file (should not have got here if not
         # anyway...)
 
-        if tag != "\211HDF\r\n\032\n":
+        if tag != b"\211HDF\r\n\032\n":
             return False
 
         with h5py.File(image_file, "r") as h5_handle:
@@ -38,8 +38,11 @@ class FormatHDF5Lambda(FormatHDF5):
             except KeyError:
                 return False
 
-            if "Lambda" in desc[()][0]:
-                return True
+            try:
+                if b"Lambda" in desc[()][0]:
+                    return True
+            except TypeError:
+                return False
 
         return False
 
@@ -65,14 +68,14 @@ class FormatHDF5Lambda(FormatHDF5):
 
         # Get the pixel and image size
         pixel_size = (
-            1.0e-3 * detector["x_pixel_size"].value,
-            1.0e-3 * detector["y_pixel_size"].value,
+            1.0e-3 * float(detector["x_pixel_size"][0]),
+            1.0e-3 * float(detector["y_pixel_size"][0]),
         )
-        layout = detector["layout"].value[0].split("X")
+        layout = detector["layout"][0].split(b"X")
         image_size = int(layout[0]), int(layout[1])
-        trusted_range = (0, detector["saturation_value"][0])
-        thickness = float(detector["sensor_thickness"].value) / 1000.0
-        material = str(detector["sensor_material"].value[0])
+        trusted_range = (0, int(detector["saturation_value"][0]))
+        thickness = float(detector["sensor_thickness"][0]) / 1000.0
+        material = detector["sensor_material"][0].decode()
 
         # Make the detector
         detector = self._detector_factory.make_detector(
@@ -116,7 +119,7 @@ class FormatHDF5Lambda(FormatHDF5):
         """Dummy scan"""
 
         entry = self._h5_handle["entry"]
-        nframes = int(entry["instrument/detector/collection/frame_numbers"].value)
+        nframes = int(entry["instrument/detector/collection/frame_numbers"][0])
         image_range = (1, nframes)
         exposure_times = 0.0
         oscillation = (0, 1)
