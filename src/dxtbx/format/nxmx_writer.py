@@ -39,20 +39,17 @@ https://doi.org/10.1107/S2052252520008672
 def _compression_phil_str():
     return """
   compression {
-    algorithm = none *bslz4 bszstd, gzip
+    algorithm = none *bslz4 bszstd gzip zstd
       .type = choice
       .multiple = False
       .help = Compression algorithm
     block_size_exponent = 12
       .type = int
       .help = The number of elements per block of the bit shuffle algorithm
-      .help =   will be 2**block_size_exponent
-    bszstd {
-      compression_level = 3
-        .type = int
-        .help = Compression level, used only for zstd compression. 
-        .help =   Can be negative, and must be below or equal to 22.
-     }
+      .help =   will be 2**block_size_exponent  
+    compression_level = 3
+      .type = int
+      .help = Compression level, used for bszstd, zstd, and gzip compression. 
   }
     """
 
@@ -152,7 +149,7 @@ IMGCIF_TO_MCSTAS = matrix.diag([-1, 1, -1])
 
 
 def get_compression(params):
-    if params.algorithm == "none":
+    if params.algorithm in ["none", None]:
         return None
     elif params.algorithm == "bslz4":
         return hdf5plugin.Bitshuffle(
@@ -163,8 +160,10 @@ def get_compression(params):
         return hdf5plugin.Bitshuffle(
             nelems=2**params.block_size_exponent,
             cname="zstd",
-            clevel=params.bszstd.compression_level,
+            clevel=params.compression_level,
         )
+    elif params.algorithm == "zstd":
+        return hdf5plugin.Zstd(clevel=params.compression_level)
     elif params.algorithm == "gzip":
         return "gzip"
     else:

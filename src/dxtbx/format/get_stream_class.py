@@ -32,6 +32,11 @@ def get_stream_class(name):
     elif name == "LCLStreamer":
         from dxtbx.format.StreamLCLStreamer import StreamLCLStreamer
 
+        return StreamLCLStreamer
+    elif name == "NXmxEmulator":
+        from format_class.nxmx_stream import NXmxEmulatorStreamer
+
+        return NXmxEmulatorStreamer
     else:
         print(f"EXCEPTION: {name} IS NOT IMPLEMENTED")
         assert False
