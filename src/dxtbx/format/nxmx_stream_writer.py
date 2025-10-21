@@ -133,7 +133,6 @@ class NXmxStreamWriter(NXmxWriter):
         if self.data_group is None:
             self.data_group = self.handle["entry"].create_group("data")
             self.data_group.attrs["NX_class"] = "NXdata"
-
             self.dset = self.data_group.create_dataset(
                 "data_000001",
                 (0, *self.image_shape),
@@ -155,7 +154,11 @@ class NXmxStreamWriter(NXmxWriter):
         if compressed:
             # Calculate chunk index for this image
             # For a dataset with shape (N, height, width) chunked as (1, height, width)
-            chunk_index = (current_size, 0, 0)
+            if len(self.image_shape) == 2:
+                chunk_index = (current_size, 0, 0)
+            # For a dataset with shape (N, n_panels, height, width) chunked as (1, n_panels, height, width)
+            elif len(self.image_shape) == 3:
+                chunk_index = (current_size, 0, 0, 0)
             # Write compressed data directly to chunk
             self.dset.id.write_direct_chunk(chunk_index, image_data, filter_mask=0)
         else:

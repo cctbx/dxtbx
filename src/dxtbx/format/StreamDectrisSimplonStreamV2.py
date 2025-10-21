@@ -209,7 +209,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         return file_writer_params, reference_experiment
 
     def get_data(self, message, **kwargs):
-        return message["data"]["threshold_1"]
+        return message["data"]["threshold_1"], None
 
     def get_reader(self, image_data, **kwargs):
         from dials.array_family import flex

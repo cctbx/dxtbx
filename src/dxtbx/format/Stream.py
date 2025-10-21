@@ -69,8 +69,8 @@ class StreamClass(ABC):
     def __init__(
         self,
         port=None,
+        ports=None,
         ip_address=None,
-        ipc_path=None,
         socket_library=None,
         socket_type=None,
         socket_mode=None,
@@ -79,17 +79,19 @@ class StreamClass(ABC):
         rcvbuf=None,
     ):
         if socket_mode == "connect":
-            if ipc_path is None:
+            if ports is None:
                 assert port and ip_address
                 self._address = format_address(ip_address, port)
-            else:
-                self._address = format_address(ipc_path=ipc_path)
+            elif ports:
+                assert ip_address
+                self._addresses = [
+                    format_address(ip_address, port_i) for port_i in ports
+                ]
         elif socket_mode == "bind":
-            if ipc_path is None:
-                assert port
+            if ports is None:
                 self._address = format_address(port=port)
             else:
-                self._address = format_address(ipc_path=ipc_path)
+                self._addresses = [format_address(port=port_i) for port_i in ports]
         else:
             assert socket_mode is None
             self._address = None
@@ -101,9 +103,17 @@ class StreamClass(ABC):
             if rcvbuf:
                 self.socket.setsockopt(zmq.RCVBUF, rcvbuf)
             if socket_mode == "connect":
-                self.socket.connect(self._address)
+                if ports is None:
+                    self.socket.connect(self._address)
+                elif ports:
+                    for address in self._addresses:
+                        self.socket.connect(address)
             elif socket_mode == "bind":
-                self.socket.bind(self._address)
+                if ports is None:
+                    self.socket.bind(self._address)
+                else:
+                    for address in self._addresses:
+                        self.socket.bind(address)
         elif socket_library == "nng":
             assert False
         else:
