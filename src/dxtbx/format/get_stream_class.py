@@ -30,9 +30,8 @@ def get_stream_class(name):
         print("EXCEPTION: DectrisSimplonStreamV1Emulator IS NOT IMPLEMENTED")
         assert False
     elif name == "LCLStreamer":
-        from dxtbx.format.StreamLCLStreamer import StreamLCLStreamer
-
-        return StreamLCLStreamer
+        from dxtbx.format.StreamLCLStreamer import LCLStreamer
+        return LCLStreamer
     elif name == "NXmxEmulator":
         from format_class.nxmx_stream import NXmxEmulatorStreamer
 

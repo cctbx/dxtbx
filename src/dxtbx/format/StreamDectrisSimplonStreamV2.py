@@ -69,8 +69,8 @@ class StreamDectrisSimplonStreamV2(StreamClass):
     def __init__(
         self,
         port=None,
+        ports=None,
         ip_address=None,
-        ipc_path=None,
         socket_library=None,
         socket_type=None,
         socket_mode=None,
@@ -79,15 +79,15 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         rcvbuf=None,
     ):
         super().__init__(
-            port,
-            ip_address,
-            ipc_path,
-            socket_library,
-            socket_type,
-            socket_mode,
-            zmq_context,
-            rcvhwm,
-            rcvbuf,
+            port=port,
+            ports=ports,
+            ip_address=ip_address,
+            socket_library=socket_library,
+            socket_type=socket_type,
+            socket_mode=socket_mode,
+            zmq_context=zmq_context,
+            rcvhwm=rcvhwm,
+            rcvbuf=rcvbuf,
         )
         self.name = "DectrisSimplonStreamV2"
 
