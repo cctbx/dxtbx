@@ -1,0 +1,2 @@
+When reading ``unsigned int`` data, do not attempt to convert to ``int``.
+``FormatBrukerModern``: replace various Bruker file readers with a single Format class.
