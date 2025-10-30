@@ -74,7 +74,7 @@ class FormatXTCJungfrau2M(FormatXTC):
         det = self._get_psana_detector(run)
         try:
             data = det.calib(evt)
-        except:
+        except Exception:
             #psana2
             data = det.raw.calib(evt)
         data = data.astype(np.float64)
@@ -127,7 +127,7 @@ class FormatXTCJungfrau2M(FormatXTC):
         if index is None:
             index = 0
         assert len(self.params.detector_address) == 1
-        
+
         evt = self._get_event(index)
         try:
             self._det = psana.Detector(self.params.detector_address[0], run.env())
@@ -253,7 +253,7 @@ class FormatXTCJungfrau2M(FormatXTC):
             #assert len(d) == 8
         try:
             self._cached_detector[run.run()] = d
-        except:
+        except Exception:
             #psana2
             self._cached_detector[run] = d
         return d

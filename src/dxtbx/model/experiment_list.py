@@ -685,7 +685,7 @@ class ExperimentListFactory:
             filename_iter = tqdm(to_process, total=len(filenames), file=sys.stdout)
         else:
             filename_iter = to_process
-        
+
         for filename in filename_iter:
             # We now have a file, pre-opened by Format.open_file (therefore
             # cached). Determine its type, and prepare to put into a group

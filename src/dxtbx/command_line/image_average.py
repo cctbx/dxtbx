@@ -14,15 +14,14 @@ import sys
 import numpy as np
 
 from libtbx import easy_mp, option_parser
-from libtbx.utils import Sorry, Usage
+from libtbx.utils import Usage
 from scitbx.array_family import flex
 
 import dxtbx.format.Registry
 import dxtbx.util
 from dxtbx.format.cbf_writer import FullCBFWriter
 from dxtbx.format.FormatMultiImage import FormatMultiImage
-from dxtbx.model.experiment_list import ExperimentListFactory, ExperimentList
-import psana
+from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def splitit(l, n):
@@ -63,7 +62,7 @@ class image_worker:
         for item in subset:
             try:
                 img, distance, wavelength = self.read(item)
-            except Exception as e:
+            except Exception:
                 nfail += 1
                 continue
             assert isinstance(img, tuple)
@@ -289,7 +288,7 @@ def run(argv=None):
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
         if rank > 1: #horrible kludge
-            iterable_rank = iterable[rank-2::size-2] 
+            iterable_rank = iterable[rank-2::size-2]
         else:
             iterable_rank = iterable[rank::size]
         world_group = MPI.COMM_WORLD.Get_group()
@@ -352,11 +351,11 @@ def run(argv=None):
             max_img = reduce_image(r_max_img, MPI.MAX)
             sum_img = reduce_image(r_sum_img)
             ssq_img = reduce_image(r_ssq_img)
-            
+
             if bd_rank == 0:
                 avg_img = tuple(s / nmemb for s in sum_img)
-        else: #horrible 
-            nmemb = 0 
+        else: #horrible
+            nmemb = 0
             nfail = 0
     else:
         if command_line.options.nproc == 1:

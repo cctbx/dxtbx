@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import functools
+import os
 import sys
 import time
 from itertools import groupby
-import os
 
 import numpy as np
 from scipy.signal import convolve
@@ -392,7 +392,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             rank = comm.Get_rank()  # each process in MPI has a unique id, 0-indexed
             size = comm.Get_size()  # size: number of processes running in this job
 
-            ds = FormatXTC._get_datasource(self._image_file, self.params)
+            FormatXTC._get_datasource(self._image_file, self.params)
             assert len(self._psana_runs.items()) == 1
 
             for run_num, run in self._psana_runs.items():
@@ -428,7 +428,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 self.n_images = len(self.times)
 
         elif self.params.mode == "psana2_idx_fake":
-            
+
             from libtbx.mpi4py import MPI
             comm = MPI.COMM_WORLD
             rank = comm.Get_rank()  # each process in MPI has a unique id, 0-indexed
@@ -436,7 +436,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
             ds_temp = FormatXTC._get_datasource(self._image_file, self.params,
                                                  detectors=['timing'])
-              
+
             # No idea how we handle multiple runs
             assert len(self._psana_runs.items()) == 1
 
@@ -500,7 +500,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                         self.run_mapping[run].append(event)
                 else:
                     self.run_mapping[run].append(event)
-             
+
             total = 0
             remade_mapping = {}
             for run in sorted(self.run_mapping):
@@ -528,7 +528,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             self._evr = psana.Detector(self.params.filter.evr_address)
         try: #psana1
             codes = self._evr.eventCodes(evt)
-        except: #psana2_idx
+        except Exception: #psana2_idx
             codes = [i for i, val in enumerate(self._evr.eventcodes(evt)) if val != 0]
 
         if self.params.filter.required_present_codes and not all(
@@ -561,9 +561,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             if self.params.mode == "idx":
                 evt = self.get_run_from_index(index).event(self.times[index])
             elif self.params.mode == "psana2_idx":
-                from mpi4py import MPI
-                comm = MPI.COMM_WORLD
-                rank = comm.Get_rank()
                 run = self.get_run_from_index(index)
                 if not self._evr:
                     timing = run.Detector('timing')
@@ -660,11 +657,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         only call this method after datasource is set
         """
         # this is key,value = run_integer, psana.Run, e.g. {62: <psana.Run(@0x7fbd0e23c990)>}
-        psana_runs = dict()
+        psana_runs = {}
         #for r in datasource.runs():
         r = next(datasource.runs())
         try:
-            runnum = r.runnum
             #    with r.build_table() as success:
             psana_runs[r.runnum] = r #(r, success)
         except AttributeError: # r doesn't have runnum: psana1
@@ -781,7 +777,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         if self._beam_cache.get_wavelength() < 0.1:
             from dxtbx.model.beam import Probe
             self._beam_cache.set_probe(Probe.electron)
-            
+
         return self._beam_cache
 
     def get_spectrum(self, index=None):

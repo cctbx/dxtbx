@@ -41,7 +41,7 @@ class FormatXTCEpixQuad(FormatXTC):
         det = self._get_psana_detector(run)
         try:
             data = det.calib(evt)
-        except:
+        except Exception:
             #psana2
             data = det.raw.calib(evt)
         data = data.astype(np.float64)
@@ -77,7 +77,7 @@ class FormatXTCEpixQuad(FormatXTC):
         try:
             try:
                 run_num = run.run()
-            except:
+            except Exception:
                 # psana2_idx mode
                 run_num = run.runnum
         except AttributeError:
