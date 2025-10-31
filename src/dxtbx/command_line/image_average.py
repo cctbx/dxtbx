@@ -333,7 +333,7 @@ def run(argv=None):
             bd_comm.Reduce(np.array([r_sum_distance]), sum_distance)
             bd_comm.Reduce(np.array([r_sum_wavelength]), sum_wavelength)
             nfail = int(nfail[0])
-            nmemb = int(nmemb)
+            nmemb = int(nmemb[0])
             sum_distance = float(sum_distance[0])
             sum_wavelength = float(sum_wavelength[0])
 
