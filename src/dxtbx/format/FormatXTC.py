@@ -345,11 +345,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
                             det = run.Detector('xppcspad')
             """
-            from libtbx.mpi4py import MPI
-            comm = MPI.COMM_WORLD
-            rank = comm.Get_rank()  # each process in MPI has a unique id, 0-indexed
-            size = comm.Get_size()  # size: number of processes running in this job
-
             FormatXTC._get_datasource(self._image_file, self.params)
             assert len(self._psana_runs.items()) == 1
 
