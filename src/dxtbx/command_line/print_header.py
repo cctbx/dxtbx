@@ -14,7 +14,6 @@ def print_header(filenames):
     # if all frames are from the same instrument
     for arg in filenames:
         print(f"=== {arg} ===")
-        #import pdb; pdb.set_trace()
         format_class = dxtbx.format.Registry.get_format_class_for_file(arg)
         if not format_class:
             print(f"No format class found that can understand {arg}")

@@ -53,7 +53,7 @@ __all__ = [
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG) #Fred
+
 # REMOVE and inline when Python 3.10 is minimum
 if sys.version_info < (3, 10):
     scaling_model_entry_points = importlib.metadata.entry_points().get(
@@ -670,6 +670,7 @@ class ExperimentListFactory:
     ) -> ExperimentList:
         """Create a list of data blocks from a list of directory or file names."""
         experiments = ExperimentList()
+
         # Cast filenames to a list from whatever iterator they are
         filenames = list(filenames)
 
@@ -753,6 +754,7 @@ class ExperimentListFactory:
                         compare_detector=compare_detector,
                         compare_goniometer=compare_goniometer,
                     )
+
                 for imageset in records:
                     experiments.extend(
                         ExperimentListFactory.from_imageset_and_crystal(
@@ -780,6 +782,7 @@ class ExperimentListFactory:
                         imageset, crystal=None, load_models=load_models
                     )
                 )
+
         return experiments
 
     @staticmethod
