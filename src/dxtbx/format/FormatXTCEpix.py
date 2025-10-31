@@ -19,7 +19,7 @@ epix_locator_str = """
 epix_locator_scope = parse(epix_locator_str + locator_str, process_includes=True)
 
 
-class FormatXTCEpix10k2M(FormatXTC):
+class FormatXTCEpix(FormatXTC):
     def __init__(self, image_file, **kwargs):
         super().__init__(image_file, locator_scope=epix_locator_scope, **kwargs)
         self._cached_detector = {}
@@ -30,16 +30,20 @@ class FormatXTCEpix10k2M(FormatXTC):
             params = FormatXTC.params_from_phil(epix_locator_scope, image_file)
         except Exception:
             return False
-        return any("epix10k2m" in src.lower() for src in params.detector_address)
+        return any("epix" in src.lower() for src in params.detector_address)
 
     def get_raw_data(self, index=None):
         if index is None:
             index = 0
-        d = FormatXTCEpix10k2M.get_detector(self, index)
+        d = FormatXTCEpix.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         det = self._get_psana_detector(run)
-        data = det.calib(evt)
+        try:
+            data = det.calib(evt)
+        except Exception:
+            #psana2
+            data = det.raw.calib(evt)
         data = data.astype(np.float64)
         # the shape of the epix 10k data is (16, 352, 384)
 
@@ -58,16 +62,31 @@ class FormatXTCEpix10k2M(FormatXTC):
         return tuple(self._raw_data)
 
     def get_detector(self, index=None):
-        return FormatXTCEpix10k2M._detector(self, index)
+        return FormatXTCEpix._detector(self, index)
 
     def _detector(self, index=None):
-        from PSCalib.SegGeometryStore import sgs
+        try:
+            from PSCalib.SegGeometryStore import sgs
+        except ModuleNotFoundError:
+            # psana2
+            from psana.pscalib.geometry.SegGeometryStore import sgs
 
         from serialtbx.detector.xtc import basis_from_geo
 
         run = self.get_run_from_index(index)
-        if run.run() in self._cached_detector:
-            return self._cached_detector[run.run()]
+        try:
+            try:
+                run_num = run.run()
+            except Exception:
+                # psana2_idx mode
+                run_num = run.runnum
+        except AttributeError:
+            # smd and psana2 modes
+            run_num = run
+        if run_num in self._cached_detector:
+            return self._cached_detector[run_num]
+        #if run.run() in self._cached_detector:
+        #    return self._cached_detector[run.run()]
 
         if index is None:
             index = 0
@@ -77,8 +96,16 @@ class FormatXTCEpix10k2M(FormatXTC):
 
         det = self._get_psana_detector(run)
 
-        geom = det.pyda.geoaccess(self._get_event(index).run())
-        pixel_size = det.pixel_size(self._get_event(index)) / 1000.0  # convert to mm
+        try:
+            geom = det.pyda.geoaccess(self._get_event(index).run())
+        except AttributeError:
+            # psana2
+            geom = det.raw._det_geo()
+        try:
+            pixel_size_um = det.pixel_size(self._get_event(index))
+        except AttributeError:
+            pixel_size_um = geom.get_pixel_scale_size()
+        pixel_size = pixel_size_um / 1000.0  # convert to mm
         d = Detector()
         pg0 = d.hierarchy()
         # first deal with D0
@@ -144,7 +171,14 @@ class FormatXTCEpix10k2M(FormatXTC):
             print(
                 "No beam object initialized. Returning ePix detector without parallax corrections"
             )
-            self._cached_detector[run.run()] = d
+            try:
+                run_num = run.run()
+            except AttributeError:
+                # smd and psana2 modes
+                run_num = run
+            if run_num in self._cached_detector:
+                self._cached_detector[run_num] = d
+                #self._cached_detector[run.run()] = d
             return d
 
         # take into consideration here the thickness of the sensor also the
@@ -163,11 +197,17 @@ class FormatXTCEpix10k2M(FormatXTC):
             panel.set_material(material)
             panel.set_mu(mu)
 
-        self._cached_detector[run.run()] = d
+        try:
+            run_num = run.run()
+        except AttributeError:
+            # smd and psana2 modes
+            run_num = run
+        self._cached_detector[run_num] = d
+        #self._cached_detector[run.run()] = d
         return d
 
 
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
         # Bug, should call this part differently for understand method to work
-        print(FormatXTCEpix10k2M.understand(arg))
+        print(FormatXTCEpix.understand(arg))
