@@ -248,8 +248,7 @@ class FormatXTCJungfrau(FormatXTC):
             self.params.jungfrau.use_big_pixels
             and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
         ):
-            assert len(d) == 32 #JF16M
-            #assert len(d) == 8
+            assert len(d) in (32, 8) #JF16M or 4M
         try:
             self._cached_detector[run.run()] = d
         except Exception:
