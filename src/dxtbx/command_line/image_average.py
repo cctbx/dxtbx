@@ -79,7 +79,6 @@ class image_worker:
                 sum_img = list(copy.deepcopy(img))
                 ssq_img = [flex.pow2(p) for p in img]
                 sum_wavelength = wavelength
-                nmemb += 1
             else:
                 for n, image in enumerate(img):
                     sel = (image > max_img[n]).as_1d()
@@ -87,9 +86,10 @@ class image_worker:
 
                     sum_img[n] += image
                     ssq_img[n] += flex.pow2(image)
-                    sum_distance += distance
-                    sum_wavelength += wavelength
-                    nmemb += 1
+                sum_distance += distance
+                sum_wavelength += wavelength
+            nmemb += 1
+
         return nfail, nmemb, max_img, sum_distance, sum_img, ssq_img, sum_wavelength
 
 
