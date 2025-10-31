@@ -181,51 +181,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         assert self.params.mode in [
             "idx",
             "smd",
-            "psana2",
             "psana2_idx",
-        ], "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2 should be used for LCLS-II."
+        ], "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2_idx should be used for LCLS-II."
 
-        if self.params.mode in ['psana2', 'psana2_idx_fake']:
-            # "monkeypatch" the fetching of calib constants. A direct monkeypatch
-            # is not simple because of the use of super(). Instead we define the
-            # function body here and confirm that it matches.
-            from psana.psexp.serial_ds import SerialDataSource
-            def _start_run_mp(self):
-                found_next_run = False
-                if self._setup_beginruns():  # try to get next run from current files
-                    if os.getenv('SECRET_MPI_MODE') is not None:
-                        # Cache the calib constants
-                        global run_calib_cache
-                        key = self._get_runinfo()
-                        if key in run_calib_cache.keys():
-                            print('hit calib cache')
-                            self.dsparms.calibconst = run_calib_cache[key]
-                            print(self.dsparms.calibconst.keys())
-                            return True
-
-                        from mpi4py import MPI
-                        comm = MPI.COMM_WORLD
-                        print(f'start run on rank {comm.rank}')
-                        if comm.rank == 0:
-                            super()._setup_run_calibconst()
-                        else:
-                            self.dsparms.calibconst = None
-                        self.dsparms.calibconst = comm.bcast(
-                            self.dsparms.calibconst, root=0
-                        )
-                        found_next_run = True
-                        run_calib_cache[key] = self.dsparms.calibconst
-                        print('save to calib cache')
-                        print(f'done start run on rank {comm.rank}')
-                    else:
-                        super()._setup_run_calibconst()
-                        found_next_run = True
-                elif self._setup_run():  # try to get next run from next files
-                    if self._setup_beginruns():
-                        super()._setup_run_calibconst()
-                        found_next_run = True
-                return found_next_run
-            assert SerialDataSource._start_run.__code__.co_code == _start_run_mp.__code__.co_code
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None
         self._load_hit_indices()
@@ -337,7 +295,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             if hasattr(self, "run_mapping") and self.run_mapping:
                 return
 
-        if not self._psana_runs : #and self.params.mode != 'psana2_idx':
+        if not self._psana_runs:
             self._psana_runs = self._get_psana_runs(self._ds)
 
         self.times = []
@@ -427,65 +385,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
                 self.n_images = len(self.times)
 
-        elif self.params.mode == "psana2_idx_fake":
-
-            from libtbx.mpi4py import MPI
-            comm = MPI.COMM_WORLD
-            rank = comm.Get_rank()  # each process in MPI has a unique id, 0-indexed
-            size = comm.Get_size()  # size: number of processes running in this job
-
-            ds_temp = FormatXTC._get_datasource(self._image_file, self.params,
-                                                 detectors=['timing'])
-
-            # No idea how we handle multiple runs
-            assert len(self._psana_runs.items()) == 1
-
-            # We avoid looping over the events in the full run, but we do need
-            # to store the full run in the run mapping.
-            # Note according to the previous assert we only pass thru this loop once.
-            for run_temp, (run_num, run) in zip(ds_temp.runs(), self._psana_runs.items()):
-                times = []
-                for nevt,evt in enumerate(run_temp.events()):
-                    times.append(evt.timestamp)
-                self.run_mapping[run_num] = (
-                    len(self.times),
-                    len(self.times) + len(times),
-                    run,
-                )
-                self.times.extend(times)
-                self.times = np.array(self.times, dtype=np.uint64)
-                print(self.times.shape)
-                print(f'{rank}/{size}', run, len(times))
-                # Cache the active run because constructing it is expensive
-                self.active_run = run
-                self.active_events = self.active_run.events()
-                self.i_current_evt = -1
-            self.n_images = len(self.times)
-
-
-        elif self.params.mode == "psana2":
-
-            from libtbx.mpi4py import MPI
-            comm = MPI.COMM_WORLD
-            rank = comm.Get_rank()  # each process in MPI has a unique id, 0-indexed
-            size = comm.Get_size()  # size: number of processes running in this job
-
-            self._ds = FormatXTC._get_datasource(self._image_file, self.params)
-            total = 0
-            for run in self._ds.runs():
-                # TODO: look into self._hit_inds
-                run_num = run.runnum
-                events = []
-                start = total
-                for i, event in enumerate(run.events()):
-                    # TODO: look into params.filter and filter_event
-                    events.append(event)
-                    total += 1
-                end = total
-                self.run_mapping[run_num] = start, end, run_num, events
-                print(f'{rank}/{size}', run_num, len(events))
-            self.n_images = total
-
         elif self.params.mode == "smd":
             self._ds = FormatXTC._get_datasource(self._image_file, self.params)
             for event in self._ds.events():
@@ -566,33 +465,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                     timing = run.Detector('timing')
                     self._evr = timing.raw
                 evt = run.event(self.times[index])
-            elif self.params.mode == "psana2_idx_fake":
-#                tzero = time.time()
-                if True or not hasattr(self, 'active_run') or self.i_current_evt >= index:
-                    # reset the cached datasource
-                    print('----------------RESET CACHED DS----------------')
-                    ds = FormatXTC._get_datasource(
-                        self._image_file, self.params
-                    )
-                    self.active_run = next(ds.runs())
-                    self.active_events = self.active_run.events()
-                    self.i_current_evt = -1
-
-                while self.i_current_evt < index:
-                    evt = next(self.active_events)
-                    self.i_current_evt += 1
-#                print(f'instantiating ds. ts: {self.times[index:index+1]}')
-#                ds = FormatXTC._get_datasource(self._image_file, self.params,
-#                        timestamps=self.times[index:index+1])
-#                print(f'instantiate ds: {time.time()-tzero}')
-#                myrun=next(ds.runs())
-#                print(f'instantiate myrun: {time.time()-tzero}')
-#                i=0
-#                for nevt, event in enumerate(myrun.events()):
-#                    evt=event
-#                    i+=1
-#                    if nevt == 1: break # psana2 FIXME
-#                print(f'getting event ({i} events loaded): {time.time()-tzero}')
             else:
             #elif self.params.mode == "smd":
                 for run_number in self.run_mapping:
@@ -614,8 +486,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     @staticmethod
     def _get_datasource(image_file, params, **kwargs):
         """Construct a psana data source object given the locator parameters"""
-        #import pdb; pdb.set_trace()
-        #import traceback; traceback.print_stack(file=sys.stdout)
         if params.calib_dir is not None:
             psana.setOption("psana.calib-dir", params.calib_dir)
         if params.data_source is None:
@@ -669,15 +539,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
     def _get_psana_detector(self, run):
         """Returns the psana detector for the given run"""
-        if self.params.mode not in ['psana2', 'psana2_idx']:
-            if run.run() not in self._cached_psana_detectors:
-                assert len(self.params.detector_address) == 1
-                self._cached_psana_detectors[run.run()] = psana.Detector(
-                    self.params.detector_address[0], run.env()
-                )
-            return self._cached_psana_detectors[run.run()]
-        elif self.params.mode == 'psana2_idx':
-            #psana2_idx
+        if self.params.mode == 'psana2_idx':
             run_num = run.runnum
             if run_num not in self._cached_psana_detectors:
                 assert len(self.params.detector_address) == 1
@@ -686,15 +548,12 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 )
             return self._cached_psana_detectors[run_num]
         else:
-            # psana2
-            run_num = run
-            if run_num not in self._cached_psana_detectors:
+            if run.run() not in self._cached_psana_detectors:
                 assert len(self.params.detector_address) == 1
-                first_event = self.run_mapping[run_num][3][0]
-                self._cached_psana_detectors[run_num] = first_event.run().Detector(
-                    self.params.detector_address[0]
+                self._cached_psana_detectors[run.run()] = psana.Detector(
+                    self.params.detector_address[0], run.env()
                 )
-            return self._cached_psana_detectors[run]
+            return self._cached_psana_detectors[run.run()]
 
     def get_psana_timestamp(self, index):
         """Get the cctbx.xfel style event timestamp given an index"""
