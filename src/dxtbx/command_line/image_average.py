@@ -14,7 +14,7 @@ import sys
 import numpy as np
 
 from libtbx import easy_mp, option_parser
-from libtbx.utils import Usage
+from libtbx.utils import Sorry, Usage
 from scitbx.array_family import flex
 
 import dxtbx.format.Registry
@@ -59,12 +59,15 @@ class image_worker:
         """Worker function for multiprocessing"""
         nfail = 0
         nmemb = 0
+
         for item in subset:
             try:
                 img, distance, wavelength = self.read(item)
-            except Exception:
+            except Exception as e:
+                print(str(e))
                 nfail += 1
                 continue
+
             assert isinstance(img, tuple)
 
             # The sum-of-squares image is accumulated using long integers, as
@@ -116,6 +119,7 @@ class multi_image_worker(image_worker):
         img = tuple(image_data[i].as_1d().as_double() for i in range(len(detector)))
         wavelength = beam.get_wavelength()
         expt.imageset.clear_cache()
+
         return img, detector.hierarchy().get_distance(), wavelength
 
 
@@ -249,19 +253,25 @@ def run(argv=None):
     if len(paths) == 0:
         command_line.parser.print_usage(file=sys.stderr)
         return 2
-    # dirty hack
-    from libtbx.mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
-    size = comm.Get_size()
+
+    if any(os.path.splitext(p)[1].lower() == '.loc' for p in paths):
+        import psana
+        if getattr(psana, 'xtc_version', None) == 2:
+            # multiprocessing with psana2 requires mpi
+            assert command_line.options.mpi or command_line.options.nproc == 1
+            root = 2 # psana2 uses ranks 0 and 1
+        else:
+            root = 0
+    else:
+        root = 0
+
     experiments = ExperimentListFactory.from_filenames([paths[0]], load_models=False)
     if len(paths) == 1:
         if len(experiments) == 1 and len(experiments[0].imageset) > 1:
             experiments = ExperimentListFactory.from_stills_and_crystal(
                 experiments[0].imageset, None, load_models=False
             )
-        if rank > 1:
-            worker = multi_image_worker(command_line, paths[0], experiments)
+        worker = multi_image_worker(command_line, paths[0], experiments)
         iterable = list(range(len(experiments)))
     else:
         # Multiple images provided
@@ -277,25 +287,20 @@ def run(argv=None):
         and command_line.options.num_images_max < len(iterable)
     ):
         iterable = iterable[: command_line.options.num_images_max]
-    #assert len(iterable) >= 2, "Need more than one image to average"
 
     if command_line.options.mpi:
-        #try:
-        #    from libtbx.mpi4py import MPI
-        #except ImportError:
-        #    raise Sorry("MPI not found")
+        try:
+            from libtbx.mpi4py import MPI
+        except ImportError:
+            raise Sorry("MPI not found")
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        size = comm.Get_size() - root # handle psana2
 
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
-        if rank > 1: #horrible kludge
-            iterable_rank = iterable[rank-2::size-2]
-        else:
-            iterable_rank = iterable[rank::size]
-        world_group = MPI.COMM_WORLD.Get_group()
-        group = world_group.Excl([0,1])
-        bd_comm = MPI.COMM_WORLD.Create(group)
-        if len(iterable_rank) > 0 and rank >1: # rank < 2 should have len(iterable_rank) == 0 anyway
-            bd_rank = bd_comm.Get_rank()
+        iterable_rank = iterable[rank-root::size]
+        if len(iterable_rank) > 0:
             # Only run the worker on non-empty ranks
             (
                 r_nfail,
@@ -306,57 +311,51 @@ def run(argv=None):
                 r_ssq_img,
                 r_sum_wavelength,
             ) = worker(iterable_rank)
-            surplus_rank = False
-        #else:
-        #    # else run on the first iterable and set the values to zero
-        #    (
-        #        r_nfail,
-        #        r_nmemb,
-        #        r_max_img,
-        #        r_sum_distance,
-        #        r_sum_img,
-        #        r_ssq_img,
-        #        r_sum_wavelength,
-        #    ) = (0,0,0,0,0,0,0) #worker([iterable[0]])
-        #    r_nfail = 0
-        #    r_nmemb = 0
-        #    r_sum_distance = 0
-        #    r_sum_wavelength = 0
-        #    surplus_rank = True
 
-            nfail = np.array([0])
-            nmemb = np.array([0])
-            sum_distance = np.array([0.0])
-            sum_wavelength = np.array([0.0])
-            bd_comm.Reduce(np.array([r_nfail]), nfail)
-            bd_comm.Reduce(np.array([r_nmemb]), nmemb)
-            bd_comm.Reduce(np.array([r_sum_distance]), sum_distance)
-            bd_comm.Reduce(np.array([r_sum_wavelength]), sum_wavelength)
-            nfail = int(nfail[0])
-            nmemb = int(nmemb[0])
-            sum_distance = float(sum_distance[0])
-            sum_wavelength = float(sum_wavelength[0])
+            # send the shape of the data to those ranks with no data
+            shapes_  = [p.focus() for p in r_sum_img]
+            shapes = comm.allgather(shapes_)
+        else:
+            # else set the values to zero
+            r_nfail = 0
+            r_nmemb = 0
+            r_sum_distance = 0.
+            r_sum_wavelength = 0.
+            shapes = comm.allgather(None)
+            shape = [ss for ss in shapes if ss is not None][0]
+            r_sum_img = [flex.double(flex.grid(s), 0) for s in shape]
+            r_ssq_img = [flex.double(flex.grid(s), 0) for s in shape]
+            r_max_img = [flex.double(flex.grid(s), 0) for s in shape]
 
-            def reduce_image(data, op=MPI.SUM):
-                result = []
-                for panel_data in data:
-                    if surplus_rank:
-                        panel_data = 0 * panel_data.as_numpy_array()
-                    else:
-                        panel_data = panel_data.as_numpy_array()
-                    reduced_data = np.zeros(panel_data.shape).astype(panel_data.dtype)
-                    bd_comm.Reduce(panel_data, reduced_data, op=op)
-                    result.append(flex.double(reduced_data))
-                return result
-            max_img = reduce_image(r_max_img, MPI.MAX)
-            sum_img = reduce_image(r_sum_img)
-            ssq_img = reduce_image(r_ssq_img)
+        nfail = np.array([0])
+        nmemb = np.array([0])
+        sum_distance = np.array([0.0])
+        sum_wavelength = np.array([0.0])
+        comm.Reduce(np.array([r_nfail]), nfail, root=root)
+        comm.Reduce(np.array([r_nmemb]), nmemb, root=root)
+        comm.Reduce(np.array([r_sum_distance]), sum_distance, root=root)
+        comm.Reduce(np.array([r_sum_wavelength]), sum_wavelength, root=root)
+        nfail = int(nfail[0])
+        nmemb = int(nmemb[0])
+        sum_distance = float(sum_distance[0])
+        sum_wavelength = float(sum_wavelength[0])
 
-            if bd_rank == 0:
-                avg_img = tuple(s / nmemb for s in sum_img)
-        else: #horrible
-            nmemb = 0
-            nfail = 0
+        def reduce_image(data, op=MPI.SUM):
+            result = []
+            for panel_data in data:
+                panel_data = panel_data.as_numpy_array()
+                reduced_data = np.zeros(panel_data.shape).astype(panel_data.dtype)
+                comm.Reduce(panel_data, reduced_data, op=op, root=root)
+                result.append(flex.double(reduced_data))
+            return result
+
+        max_img = reduce_image(r_max_img, MPI.MAX)
+        sum_img = reduce_image(r_sum_img)
+        ssq_img = reduce_image(r_ssq_img)
+
+        if rank != root:
+            return
+        avg_img = tuple(s / nmemb for s in sum_img)
     else:
         if command_line.options.nproc == 1:
             results = [worker(iterable)]
@@ -365,6 +364,7 @@ def run(argv=None):
             results = easy_mp.parallel_map(
                 func=worker, iterable=iterable, processes=command_line.options.nproc
             )
+
         nfail = 0
         nmemb = 0
         for (
@@ -399,75 +399,75 @@ def run(argv=None):
                 sum_wavelength += r_sum_wavelength
 
     # Early exit if no statistics were accumulated.
-    if rank > 1:
-        if command_line.options.verbose:
-            sys.stdout.write("Processed %d images (%d failed)\n" % (nmemb, nfail))
-    if rank > 1 and nmemb > 0:
+    if command_line.options.verbose:
+        sys.stdout.write("Processed %d images (%d failed)\n" % (nmemb, nfail))
+    if nmemb == 0:
+        return 0
 
-        # Calculate averages for measures where other statistics do not make
-        # sense.  Note that avg_img is required for stddev_img.
-        avg_img = tuple(s.as_double() / nmemb for s in sum_img)
-        avg_distance = sum_distance / nmemb
-        avg_wavelength = sum_wavelength / nmemb
-        expt = experiments[0]
-        expt.load_models()
-        detector = expt.detector
-        h = detector.hierarchy()
-        origin = h.get_local_origin()
-        h.set_local_frame(
-            h.get_local_fast_axis(),
-            h.get_local_slow_axis(),
-            (origin[0], origin[1], -avg_distance),
-        )
-        expt.beam.set_wavelength(avg_wavelength)
-        assert expt.beam.get_wavelength() == expt.imageset.get_beam(0).get_wavelength()
+    # Calculate averages for measures where other statistics do not make
+    # sense.  Note that avg_img is required for stddev_img.
+    avg_img = tuple(s.as_double() / nmemb for s in sum_img)
+    avg_distance = sum_distance / nmemb
+    avg_wavelength = sum_wavelength / nmemb
+    expt = experiments[0]
+    expt.load_models()
+    detector = expt.detector
+    h = detector.hierarchy()
+    origin = h.get_local_origin()
+    h.set_local_frame(
+        h.get_local_fast_axis(),
+        h.get_local_slow_axis(),
+        (origin[0], origin[1], -avg_distance),
+    )
+    expt.beam.set_wavelength(avg_wavelength)
+    assert expt.beam.get_wavelength() == expt.imageset.get_beam(0).get_wavelength()
 
-        # Output the average image, maximum projection image, and standard
-        # deviation image, if requested.
-        if command_line.options.avg_path is not None:
-            for n, d in enumerate(detector):
-                fast, slow = d.get_image_size()
-                avg_img[n].resize(flex.grid(slow, fast))
-            writer = FullCBFWriter(imageset=expt.imageset)
-            cbf = writer.get_cbf_handle(header_only=True)
-            writer.add_data_to_cbf(cbf, data=avg_img)
-            writer.write_cbf(command_line.options.avg_path, cbf=cbf)
+    # Output the average image, maximum projection image, and standard
+    # deviation image, if requested.
+    if command_line.options.avg_path is not None:
+        for n, d in enumerate(detector):
+            fast, slow = d.get_image_size()
+            avg_img[n].resize(flex.grid(slow, fast))
+        writer = FullCBFWriter(imageset=expt.imageset)
+        cbf = writer.get_cbf_handle(header_only=True)
+        writer.add_data_to_cbf(cbf, data=avg_img)
+        writer.write_cbf(command_line.options.avg_path, cbf=cbf)
 
-        if command_line.options.max_path is not None:
-            for n, d in enumerate(detector):
-                fast, slow = d.get_image_size()
-                max_img[n].resize(flex.grid(slow, fast))
-            max_img = tuple(max_img)
+    if command_line.options.max_path is not None:
+        for n, d in enumerate(detector):
+            fast, slow = d.get_image_size()
+            max_img[n].resize(flex.grid(slow, fast))
+        max_img = tuple(max_img)
 
-            writer = FullCBFWriter(imageset=expt.imageset)
-            cbf = writer.get_cbf_handle(header_only=True)
-            writer.add_data_to_cbf(cbf, data=max_img)
-            writer.write_cbf(command_line.options.max_path, cbf=cbf)
+        writer = FullCBFWriter(imageset=expt.imageset)
+        cbf = writer.get_cbf_handle(header_only=True)
+        writer.add_data_to_cbf(cbf, data=max_img)
+        writer.write_cbf(command_line.options.max_path, cbf=cbf)
 
-        if command_line.options.stddev_path is not None:
-            stddev_img = []
-            for n, d in enumerate(detector):
-                stddev_img.append(
-                    ssq_img[n].as_double() - sum_img[n].as_double() * avg_img[n]
-                )
-                # Accumulating floating-point numbers introduces errors, which may
-                # cause negative variances.  Since a two-pass approach is
-                # unacceptable, the standard deviation is clamped at zero.
-                stddev_img[n].set_selected(stddev_img[n] < 0, 0)
-                if nmemb == 1:
-                    stddev_img[n] = flex.sqrt(stddev_img[n])
-                else:
-                    stddev_img[n] = flex.sqrt(stddev_img[n] / (nmemb - 1))
+    if command_line.options.stddev_path is not None:
+        stddev_img = []
+        for n, d in enumerate(detector):
+            stddev_img.append(
+                ssq_img[n].as_double() - sum_img[n].as_double() * avg_img[n]
+            )
+            # Accumulating floating-point numbers introduces errors, which may
+            # cause negative variances.  Since a two-pass approach is
+            # unacceptable, the standard deviation is clamped at zero.
+            stddev_img[n].set_selected(stddev_img[n] < 0, 0)
+            if nmemb == 1:
+                stddev_img[n] = flex.sqrt(stddev_img[n])
+            else:
+                stddev_img[n] = flex.sqrt(stddev_img[n] / (nmemb - 1))
 
-                fast, slow = d.get_image_size()
-                stddev_img[n].resize(flex.grid(slow, fast))
-            stddev_img = tuple(stddev_img)
+            fast, slow = d.get_image_size()
+            stddev_img[n].resize(flex.grid(slow, fast))
+        stddev_img = tuple(stddev_img)
 
-            writer = FullCBFWriter(imageset=expt.imageset)
-            cbf = writer.get_cbf_handle(header_only=True)
-            writer.add_data_to_cbf(cbf, data=stddev_img)
-            writer.write_cbf(command_line.options.stddev_path, cbf=cbf)
-    comm.Barrier()
+        writer = FullCBFWriter(imageset=expt.imageset)
+        cbf = writer.get_cbf_handle(header_only=True)
+        writer.add_data_to_cbf(cbf, data=stddev_img)
+        writer.write_cbf(command_line.options.stddev_path, cbf=cbf)
+
     return 0
 
 
