@@ -519,7 +519,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         """
         # this is key,value = run_integer, psana.Run, e.g. {62: <psana.Run(@0x7fbd0e23c990)>}
         psana_runs = {}
-        #for r in datasource.runs():
         r = next(datasource.runs())
         try:
             psana_runs[r.runnum] = r
