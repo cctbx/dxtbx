@@ -85,8 +85,6 @@ class FormatXTCEpix(FormatXTC):
             run_num = run
         if run_num in self._cached_detector:
             return self._cached_detector[run_num]
-        #if run.run() in self._cached_detector:
-        #    return self._cached_detector[run.run()]
 
         if index is None:
             index = 0
@@ -203,7 +201,6 @@ class FormatXTCEpix(FormatXTC):
             # smd and psana2 modes
             run_num = run
         self._cached_detector[run_num] = d
-        #self._cached_detector[run.run()] = d
         return d
 
 
