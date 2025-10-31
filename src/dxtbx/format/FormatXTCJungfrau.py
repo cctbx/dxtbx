@@ -52,6 +52,7 @@ class FormatXTCJungfrau(FormatXTC):
     def __init__(self, image_file, **kwargs):
         super().__init__(image_file, locator_scope=jungfrau_locator_scope, **kwargs)
         self._cached_detector = {}
+
         self._dist_det = None
 
     @staticmethod
@@ -80,7 +81,6 @@ class FormatXTCJungfrau(FormatXTC):
         data = data.astype(np.float64)
         self._raw_data = []
         for module_count, module in enumerate(d.hierarchy()):
-            # DEBUG print(module_count)
             if (
                 self.params.jungfrau.use_big_pixels
                 and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
@@ -121,8 +121,6 @@ class FormatXTCJungfrau(FormatXTC):
             run_num = run
         if run_num in self._cached_detector:
             return self._cached_detector[run_num]
-        #if run.run() in self._cached_detector:
-        #    return self._cached_detector[run.run()]
 
         if index is None:
             index = 0
@@ -134,7 +132,6 @@ class FormatXTCJungfrau(FormatXTC):
         except AttributeError:
             # psana2
             self._det = evt.run().Detector('jungfrau')
-            #self._det = psana.Detector(self.params.detector_address[0], run.env())
         wavelength = self.get_beam(index).get_wavelength()
 
         if self._dist_det is None:

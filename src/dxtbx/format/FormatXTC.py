@@ -160,7 +160,6 @@ class XtcReader(Reader):
 @abstract
 class FormatXTC(FormatMultiImage, FormatStill, Format):
     def __init__(self, image_file, **kwargs):
-
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         self.lazy = kwargs.get("lazy", True)
@@ -394,7 +393,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                         self.run_mapping[run].append(event)
                 else:
                     self.run_mapping[run].append(event)
-
             total = 0
             remade_mapping = {}
             for run in sorted(self.run_mapping):
@@ -460,8 +458,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                     timing = run.Detector('timing')
                     self._evr = timing.raw
                 evt = run.event(self.times[index])
-            else:
-            #elif self.params.mode == "smd":
+            elif self.params.mode == "smd":
                 for run_number in self.run_mapping:
                     start, stop, run, events = self.run_mapping[run_number]
                     if index >= start and index < stop:
@@ -512,7 +509,6 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             assert len(params.run)==1
             src=psana.DataSource(exp=params.experiment, run=params.run[0], **kwargs)
         return src
-        #return psana.DataSource(img)
 
     @staticmethod
     def _get_psana_runs(datasource):
@@ -526,8 +522,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         #for r in datasource.runs():
         r = next(datasource.runs())
         try:
-            #    with r.build_table() as success:
-            psana_runs[r.runnum] = r #(r, success)
+            psana_runs[r.runnum] = r
         except AttributeError: # r doesn't have runnum: psana1
             psana_runs[r.run()] = r
         return psana_runs
