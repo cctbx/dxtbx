@@ -32,7 +32,7 @@ jungfrau_locator_str = """
       .help = Dictates if dark subtraction is done from raw data
     monolithic = False
       .type = bool
-      .help = switch to FormatXTCJungfrau2MMonolithic if True. Used for LS49 image averaging
+      .help = switch to FormatXTCJungfrauMonolithic if True. Used for LS49 image averaging
     use_big_pixels = True
       .type = bool
       .help = account for multi-sized pixels in the 512x1024 Jungfrau panels, forming a 514x1030 pixel panel
@@ -48,7 +48,7 @@ jungfrau_locator_scope = parse(
 )
 
 
-class FormatXTCJungfrau2M(FormatXTC):
+class FormatXTCJungfrau(FormatXTC):
     def __init__(self, image_file, **kwargs):
         super().__init__(image_file, locator_scope=jungfrau_locator_scope, **kwargs)
         self._cached_detector = {}
@@ -68,7 +68,7 @@ class FormatXTCJungfrau2M(FormatXTC):
         if index is None:
             index = 0
 
-        d = FormatXTCJungfrau2M.get_detector(self, index)
+        d = FormatXTCJungfrau.get_detector(self, index)
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         det = self._get_psana_detector(run)
@@ -102,7 +102,7 @@ class FormatXTCJungfrau2M(FormatXTC):
         return tuple(self._raw_data)
 
     def get_detector(self, index=None):
-        return FormatXTCJungfrau2M._detector(self, index)
+        return FormatXTCJungfrau._detector(self, index)
 
     def _detector(self, index=None):
         try:
@@ -174,16 +174,15 @@ class FormatXTCJungfrau2M(FormatXTC):
         root_basis.translation = col((t[0], t[1], -distance))
 
         origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
-        #fast = col((root_basis * col((0, 1, 0, 1)))[0:3]) - origin
-        #slow = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
         fast = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
         slow = col((root_basis * col((0, 1, 0, 1)))[0:3]) - origin
 
-        normal = fast.cross(slow)
-        rotation = normal.axis_and_angle_as_r3_rotation_matrix(-90, deg=True)
-        fast = rotation * fast
-        slow = rotation * slow
-        origin = rotation * origin
+        if not any("4m" in src.lower() for src in self.params.detector_address):
+            normal = fast.cross(slow)
+            rotation = normal.axis_and_angle_as_r3_rotation_matrix(-90, deg=True)
+            fast = rotation * fast
+            slow = rotation * slow
+            origin = rotation * origin
 
         pg0.set_local_frame(fast.elems, slow.elems, origin.elems)
         pg0.set_name("D%d" % (det_num))
@@ -259,7 +258,7 @@ class FormatXTCJungfrau2M(FormatXTC):
         return d
 
 
-class FormatXTCJungfrau2MMonolithic(FormatXTCJungfrau2M):
+class FormatXTCJungfrauMonolithic(FormatXTCJungfrau):
     """Monolithic version of the Jungfrau, I.E. use the psana detector image function to assemble a monolithic image"""
 
     @staticmethod
@@ -304,4 +303,4 @@ class FormatXTCJungfrau2MMonolithic(FormatXTCJungfrau2M):
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
         # Bug, should call this part differently for understand method to work
-        print(FormatXTCJungfrau2M.understand(arg))
+        print(FormatXTCJungfrau.understand(arg))
