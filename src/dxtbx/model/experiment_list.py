@@ -842,6 +842,8 @@ class ExperimentListFactory:
     def from_stills_and_crystal(imageset, crystal, load_models=True):
         """Create an experiment list from stills and crystal."""
         experiments = ExperimentList()
+        if imageset is None:
+            return experiments
         if load_models:
             for i in range(len(imageset)):
                 experiments.append(

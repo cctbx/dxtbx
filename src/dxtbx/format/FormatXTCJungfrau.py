@@ -73,7 +73,11 @@ class FormatXTCJungfrau(FormatXTC):
         evt = self._get_event(index)
         run = self.get_run_from_index(index)
         det = self._get_psana_detector(run)
-        data = det.calib(evt)
+        try:
+            data = det.calib(evt)
+        except Exception:
+            # psana2
+            data = det.raw.calib(evt)
         data = data.astype(np.float64)
         self._raw_data = []
         for module_count, module in enumerate(d.hierarchy()):
@@ -101,28 +105,53 @@ class FormatXTCJungfrau(FormatXTC):
         return FormatXTCJungfrau._detector(self, index)
 
     def _detector(self, index=None):
-        from PSCalib.SegGeometryStore import sgs
+        try:
+            from PSCalib.SegGeometryStore import sgs
+        except ModuleNotFoundError:
+            # psana2
+            from psana.pscalib.geometry.SegGeometryStore import sgs
 
         from serialtbx.detector.xtc import basis_from_geo
 
         run = self.get_run_from_index(index)
-        if run.run() in self._cached_detector:
-            return self._cached_detector[run.run()]
+        try:
+            run_num = run.run()
+        except AttributeError:
+            # smd and psana2 modes
+            run_num = run
+        if run_num in self._cached_detector:
+            return self._cached_detector[run_num]
 
         if index is None:
             index = 0
         assert len(self.params.detector_address) == 1
-        self._det = psana.Detector(self.params.detector_address[0], run.env())
+
         evt = self._get_event(index)
+        try:
+            self._det = psana.Detector(self.params.detector_address[0], run.env())
+        except AttributeError:
+            # psana2
+            self._det = evt.run().Detector("jungfrau")
         wavelength = self.get_beam(index).get_wavelength()
 
         if self._dist_det is None:
-            self._dist_det = psana.Detector("CXI:DS1:MMS:06.RBV")
+            try:
+                self._dist_det = psana.Detector("CXI:DS1:MMS:06.RBV")
+            except AttributeError:
+                # psana2
+                self._dist_det = evt.run().Detector("MFX:DET:MMS:04.RBV")
 
-        geom = self._det.pyda.geoaccess(evt.run())
-        pixel_size = (
-            self._det.pixel_size(self._get_event(index)) / 1000.0
-        )  # convert to mm
+        try:
+            geom = self._det.pyda.geoaccess(evt.run())
+        except AttributeError:
+            # psana2
+            geom = self._det.raw._det_geo()
+        try:
+            pixel_size_um = self._det.pixel_size(self._get_event(index))
+        except AttributeError:
+            # psana2
+            pixel_size_um = geom.get_pixel_scale_size()
+        pixel_size = pixel_size_um / 1000.0  # convert to mm
         d = Detector()
         pg0 = d.hierarchy()
         # first deal with D0
@@ -135,7 +164,7 @@ class FormatXTCJungfrau(FormatXTC):
             root = sub
             root_basis = root_basis * sub_basis
         t = root_basis.translation
-        if self.params.jungfrau.detz_offset:
+        if self.params.jungfrau.detz_offset is not None:
             distance = self._dist_det(evt) + self.params.jungfrau.detz_offset
         else:
             distance = t[2]
@@ -144,6 +173,14 @@ class FormatXTCJungfrau(FormatXTC):
         origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
         fast = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
         slow = col((root_basis * col((0, 1, 0, 1)))[0:3]) - origin
+
+        if not any("4m" in src.lower() for src in self.params.detector_address):
+            normal = fast.cross(slow)
+            rotation = normal.axis_and_angle_as_r3_rotation_matrix(-90, deg=True)
+            fast = rotation * fast
+            slow = rotation * slow
+            origin = rotation * origin
+
         pg0.set_local_frame(fast.elems, slow.elems, origin.elems)
         pg0.set_name("D%d" % (det_num))
 
@@ -208,8 +245,12 @@ class FormatXTCJungfrau(FormatXTC):
             self.params.jungfrau.use_big_pixels
             and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
         ):
-            assert len(d) == 8
-        self._cached_detector[run.run()] = d
+            assert len(d) in (32, 8)  # JF16M or 4M
+        try:
+            self._cached_detector[run.run()] = d
+        except Exception:
+            # psana2
+            self._cached_detector[run] = d
         return d
 
 
