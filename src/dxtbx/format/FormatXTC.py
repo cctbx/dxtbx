@@ -181,7 +181,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             "idx",
             "smd",
             "psana2_idx",
-        ], "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2_idx should be used for LCLS-II."
+        ], (
+            "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2_idx should be used for LCLS-II."
+        )
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None
@@ -363,9 +365,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                             or self.params.filter.required_absent_codes
                         ) and self.params.filter.pre_filter:
                             if not self._evr:
-                                timing = run.Detector('timing')
+                                timing = run.Detector("timing")
                                 self._evr = timing.raw
-                            times = [t for t in times if self.filter_event(run.event(t))]
+                            times = [
+                                t for t in times if self.filter_event(run.event(t))
+                            ]
                         self.run_mapping[run_num] = (
                             len(self.times),
                             len(self.times) + len(times),
@@ -373,9 +377,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                         )
                         self.times.extend(times)
                     else:
-                        self.run_mapping[run_num] = (
-                            1, 1, run
-                        )
+                        self.run_mapping[run_num] = (1, 1, run)
 
                 self.n_images = len(self.times)
 
@@ -418,9 +420,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             return True
         if not self._evr:
             self._evr = psana.Detector(self.params.filter.evr_address)
-        try: #psana1
+        try:  # psana1
             codes = self._evr.eventCodes(evt)
-        except Exception: #psana2_idx
+        except Exception:  # psana2_idx
             codes = [i for i, val in enumerate(self._evr.eventcodes(evt)) if val != 0]
 
         if self.params.filter.required_present_codes and not all(
@@ -455,7 +457,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             elif self.params.mode == "psana2_idx":
                 run = self.get_run_from_index(index)
                 if not self._evr:
-                    timing = run.Detector('timing')
+                    timing = run.Detector("timing")
                     self._evr = timing.raw
                 evt = run.event(self.times[index])
             elif self.params.mode == "smd":
@@ -506,8 +508,8 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             src = psana.DataSource(img)
         except psana.datasource.InvalidDataSource:
             # psana2
-            assert len(params.run)==1
-            src=psana.DataSource(exp=params.experiment, run=params.run[0], **kwargs)
+            assert len(params.run) == 1
+            src = psana.DataSource(exp=params.experiment, run=params.run[0], **kwargs)
         return src
 
     @staticmethod
@@ -522,13 +524,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         r = next(datasource.runs())
         try:
             psana_runs[r.runnum] = r
-        except AttributeError: # r doesn't have runnum: psana1
+        except AttributeError:  # r doesn't have runnum: psana1
             psana_runs[r.run()] = r
         return psana_runs
 
     def _get_psana_detector(self, run):
         """Returns the psana detector for the given run"""
-        if self.params.mode == 'psana2_idx':
+        if self.params.mode == "psana2_idx":
             run_num = run.runnum
             if run_num not in self._cached_psana_detectors:
                 assert len(self.params.detector_address) == 1
@@ -614,7 +616,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             except AttributeError:
                 # psana2
                 ts = evt.timestamp
-                s = int(str(ts)[0:10]) # not elegant but works.
+                s = int(str(ts)[0:10])  # not elegant but works.
             evttime = time.gmtime(s)
             if (
                 evttime.tm_year == 2020 and evttime.tm_mon >= 7
@@ -624,6 +626,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
         if self._beam_cache.get_wavelength() < 0.1:
             from dxtbx.model.beam import Probe
+
             self._beam_cache.set_probe(Probe.electron)
 
         return self._beam_cache
@@ -652,12 +655,16 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         if self._fee is None:
             try:
                 self._fee = psana.Detector(self.params.spectrum_address)
-            except AttributeError: # psana2
-                self._fee = self.get_run_from_index(index).Detector(self.params.spectrum_address).raw
+            except AttributeError:  # psana2
+                self._fee = (
+                    self.get_run_from_index(index)
+                    .Detector(self.params.spectrum_address)
+                    .raw
+                )
         if self._fee is None:
             return None
-        if hasattr(self._fee, 'hproj'):
-            #psana2
+        if hasattr(self._fee, "hproj"):
+            # psana2
             y = self._fee.hproj(evt)
             if y is None or not len(y):
                 return None
@@ -680,7 +687,8 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                     return None
                 if self.params.spectrum_rotation_angle is None:
                     x = (
-                        self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
+                        self.params.spectrum_eV_per_pixel
+                        * np.array(range(img.shape[1]))
                     ) + self.params.spectrum_eV_offset
                     y = img.mean(axis=0)  # Collapse 2D image to 1D trace
                 else:

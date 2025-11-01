@@ -76,7 +76,7 @@ class FormatXTCJungfrau(FormatXTC):
         try:
             data = det.calib(evt)
         except Exception:
-            #psana2
+            # psana2
             data = det.raw.calib(evt)
         data = data.astype(np.float64)
         self._raw_data = []
@@ -131,7 +131,7 @@ class FormatXTCJungfrau(FormatXTC):
             self._det = psana.Detector(self.params.detector_address[0], run.env())
         except AttributeError:
             # psana2
-            self._det = evt.run().Detector('jungfrau')
+            self._det = evt.run().Detector("jungfrau")
         wavelength = self.get_beam(index).get_wavelength()
 
         if self._dist_det is None:
@@ -151,7 +151,7 @@ class FormatXTCJungfrau(FormatXTC):
         except AttributeError:
             # psana2
             pixel_size_um = geom.get_pixel_scale_size()
-        pixel_size = ( pixel_size_um / 1000.0 )  # convert to mm
+        pixel_size = pixel_size_um / 1000.0  # convert to mm
         d = Detector()
         pg0 = d.hierarchy()
         # first deal with D0
@@ -245,11 +245,11 @@ class FormatXTCJungfrau(FormatXTC):
             self.params.jungfrau.use_big_pixels
             and os.environ.get("DONT_USE_BIG_PIXELS_JUNGFRAU") is None
         ):
-            assert len(d) in (32, 8) #JF16M or 4M
+            assert len(d) in (32, 8)  # JF16M or 4M
         try:
             self._cached_detector[run.run()] = d
         except Exception:
-            #psana2
+            # psana2
             self._cached_detector[run] = d
         return d
 

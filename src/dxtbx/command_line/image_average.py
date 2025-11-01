@@ -254,12 +254,13 @@ def run(argv=None):
         command_line.parser.print_usage(file=sys.stderr)
         return 2
 
-    if any(os.path.splitext(p)[1].lower() == '.loc' for p in paths):
+    if any(os.path.splitext(p)[1].lower() == ".loc" for p in paths):
         import psana
-        if getattr(psana, 'xtc_version', None) == 2:
+
+        if getattr(psana, "xtc_version", None) == 2:
             # multiprocessing with psana2 requires mpi
             assert command_line.options.mpi or command_line.options.nproc == 1
-            root = 2 # psana2 uses ranks 0 and 1
+            root = 2  # psana2 uses ranks 0 and 1
         else:
             root = 0
     else:
@@ -295,11 +296,11 @@ def run(argv=None):
             raise Sorry("MPI not found")
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
-        size = comm.Get_size() - root # handle psana2
+        size = comm.Get_size() - root  # handle psana2
 
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
-        iterable_rank = iterable[rank-root::size]
+        iterable_rank = iterable[rank - root :: size]
         if len(iterable_rank) > 0:
             # Only run the worker on non-empty ranks
             (
@@ -313,14 +314,14 @@ def run(argv=None):
             ) = worker(iterable_rank)
 
             # send the shape of the data to those ranks with no data
-            shapes_  = [p.focus() for p in r_sum_img]
+            shapes_ = [p.focus() for p in r_sum_img]
             shapes = comm.allgather(shapes_)
         else:
             # else set the values to zero
             r_nfail = 0
             r_nmemb = 0
-            r_sum_distance = 0.
-            r_sum_wavelength = 0.
+            r_sum_distance = 0.0
+            r_sum_wavelength = 0.0
             shapes = comm.allgather(None)
             shape = [ss for ss in shapes if ss is not None][0]
             r_sum_img = [flex.double(flex.grid(s), 0) for s in shape]

@@ -240,7 +240,10 @@ class FormatMultiImage(Format):
                     return iset
                 except RuntimeError:
                     # psana2
-                    if not (format_instance.get_num_images() == 0 or len(single_file_indices) == 0):
+                    if not (
+                        format_instance.get_num_images() == 0
+                        or len(single_file_indices) == 0
+                    ):
                         raise
                     return None
 

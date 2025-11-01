@@ -42,7 +42,7 @@ class FormatXTCEpix(FormatXTC):
         try:
             data = det.calib(evt)
         except Exception:
-            #psana2
+            # psana2
             data = det.raw.calib(evt)
         data = data.astype(np.float64)
         # the shape of the epix 10k data is (16, 352, 384)
@@ -176,7 +176,7 @@ class FormatXTCEpix(FormatXTC):
                 run_num = run
             if run_num in self._cached_detector:
                 self._cached_detector[run_num] = d
-                #self._cached_detector[run.run()] = d
+                # self._cached_detector[run.run()] = d
             return d
 
         # take into consideration here the thickness of the sensor also the
