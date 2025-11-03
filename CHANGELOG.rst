@@ -1,3 +1,12 @@
+DIALS 3.25.2 (2025-11-03)
+=========================
+
+Features
+--------
+
+- Update known bad-module detector masks for Diamond I23's Pilatus 12M. (`#835 <https://github.com/cctbx/dxtbx/issues/835>`_)
+
+
 dxtbx 3.25.0 (2025-06-20)
 =========================
 
