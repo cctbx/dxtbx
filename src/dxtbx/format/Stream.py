@@ -98,6 +98,7 @@ class StreamClass(ABC):
 
         if socket_library == "zeromq":
             self.socket = zmq_context.socket(socket_type)
+            self.socket.setsockopt(zmq.LINGER, 0)
             if rcvhwm:
                 self.socket.setsockopt(zmq.RCVHWM, rcvhwm)
             if rcvbuf:
@@ -119,6 +120,9 @@ class StreamClass(ABC):
         else:
             assert socket_library is None
             self.socket = None
+
+    def close_socket(self):
+        self.socket.close()
 
     @abstractmethod
     def recv(self, copy: bool = True) -> bytes:
@@ -147,7 +151,6 @@ class StreamClass(ABC):
         """Convert an image message to a numpy array"""
         pass
 
-    @abstractmethod
     def get_reader(self, image_data, **kwargs):
         from dials.array_family import flex
         from dxtbx.imageset import StreamReader
