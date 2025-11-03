@@ -64,10 +64,11 @@ class NXmxStreamWriter(NXmxWriter):
         if experiments:
             n_panels = len(experiments[0].detector)
             panel_shape = experiments[0].detector[0].get_image_size()
+            # NOT SURE IF THE ORDER OF THE PANEL SHAPE IS CORRECT
             if n_panels == 1:
-                self.image_shape = panel_shape
+                self.image_shape = [panel_shape[1], panel_shape[0]]
             else:
-                self.image_shape = (n_panels, *panel_shape)
+                self.image_shape = (n_panels, panel_shape[1], panel_shape[0])
 
     def write_master(self, data_file_names, sort_values=None):
         """
