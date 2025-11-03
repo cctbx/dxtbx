@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dxtbx"
-version = "3.25.0"
+version = "3.25.2"
 description = "Diffraction Experiment Toolkit"
 authors = [
     { name = "Diamond Light Source", email = "dials-user-group@jiscmail.net" },
