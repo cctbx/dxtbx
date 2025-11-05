@@ -96,8 +96,12 @@ class StreamClass(ABC):
             assert socket_mode is None
             self._address = None
 
-        if socket_library == "zeromq":
+        if socket_library is None:
+            self.socket = None
+            self.socket_libary = None
+        elif socket_library in ["zeromq", "zmq", "0mq"]:
             self.socket = zmq_context.socket(socket_type)
+            self.socket_libary = "zmq"
             self.socket.setsockopt(zmq.LINGER, 0)
             if rcvhwm:
                 self.socket.setsockopt(zmq.RCVHWM, rcvhwm)
@@ -116,10 +120,33 @@ class StreamClass(ABC):
                     for address in self._addresses:
                         self.socket.bind(address)
         elif socket_library == "nng":
-            assert False
+            import pynng
+
+            self.socket = pynng.Pull0()
+            self.socket_libary = "nng"
+
+            if rcvbuf:
+                self.socket.recv_buffer_size = rcvbuf
+            if rcvhwm:
+                self.socket.recv_max_size = rcvhwm
+
+            if socket_mode == "connect":
+                if ports is None:
+                    self.socket.dial(self._address)
+                elif ports:
+                    for address in self._addresses:
+                        self.socket.dial(address)
+            elif socket_mode == "bind":
+                if ports is None:
+                    self.socket.listen(self._address)
+                else:
+                    for address in self._addresses:
+                        self.socket.listen(address)
         else:
-            assert socket_library is None
-            self.socket = None
+            raise ValueError(
+                f"Invalid socket_library '{socket_library}'. "
+                + "Must be None, 'zeromq', 'zmq', '0mq', or 'nng'."
+            )
 
     def close_socket(self):
         self.socket.close()
