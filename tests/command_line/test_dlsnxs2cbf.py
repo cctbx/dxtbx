@@ -16,7 +16,7 @@ from dxtbx.util.dlsnxs2cbf import make_cbf
 
 @pytest.mark.xfail(reason="Broken for old data while collecting new data")
 def test_dlsnxs2cbf(dials_data, tmp_path, capsys):
-    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
+    screen = dials_data("thaumatin_eiger_screen")
     master = screen / "Therm_6_1_master.h5"
     run([str(master), "junk_%04d.cbf"])
 
@@ -48,7 +48,7 @@ def test_dlsnxs2cbf(dials_data, tmp_path, capsys):
 @pytest.mark.parametrize("remove_axis", ["phi", "chi"], ids=["no phi", "no chi"])
 def test_dlsnxs2cbf_deleted_axis(dials_data, tmp_path, remove_axis):
     """Check that a master file without φ or χ axes processes OK."""
-    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
+    screen = dials_data("thaumatin_eiger_screen")
     master = "Therm_6_1_master.h5"
     links = (path.name for path in screen.glob("*") if path.name != master)
     try:

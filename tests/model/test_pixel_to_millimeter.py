@@ -25,7 +25,7 @@ from dxtbx.model.detector import DetectorFactory
 
 @pytest.fixture
 def model(dials_data):
-    filename = str(dials_data("misc_regression", pathlib=True) / "sim_mx-GXPARM.XDS")
+    filename = str(dials_data("misc_regression") / "sim_mx-GXPARM.XDS")
 
     models = dxtbx.load(filename)
     detector = models.get_detector()

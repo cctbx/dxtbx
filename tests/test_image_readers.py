@@ -15,7 +15,7 @@ except ImportError:
 
 
 def test_cbf_buffer(dials_data):
-    data_dir = dials_data("misc_regression", pathlib=True)
+    data_dir = dials_data("misc_regression")
     filename = str(data_dir / "dials-190_01_00001.cbf")
     with open(filename, "rb") as f:
         contents = f.read()

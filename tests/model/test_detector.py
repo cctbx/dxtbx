@@ -333,7 +333,7 @@ def test_get_detector_projection_2d_axes():
 def test_get_panel_projection_2d_from_axes(dials_data):
     # Get test data
     pytest.importorskip("h5py")
-    filename = dials_data("image_examples", pathlib=True) / "dectris_eiger_master.h5"
+    filename = dials_data("image_examples") / "dectris_eiger_master.h5"
     experiment = ExperimentListFactory.from_filenames([filename])[0]
     detector = experiment.detector
 

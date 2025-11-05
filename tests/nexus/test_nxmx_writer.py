@@ -18,8 +18,7 @@ from dxtbx.format.nxmx_writer import NXmxWriter, phil_scope  # noqa: E402
 
 def test_writer_jf16M(dials_data, tmpdir):
     h5path = (
-        dials_data("lysozyme_JF16M_4img", pathlib=True)
-        / "lyso009a_0087.JF07T32V01_master_4img.h5"
+        dials_data("lysozyme_JF16M_4img") / "lyso009a_0087.JF07T32V01_master_4img.h5"
     )
     with h5py.File(h5path) as handle:
         output_file = tmpdir / "4img.h5"
@@ -66,7 +65,7 @@ def test_writer_jf16M(dials_data, tmpdir):
 
 
 def test_writer_x4wide(dials_data, tmpdir):
-    cbfspath = dials_data("x4wide", pathlib=True) / "X4_wide_M1S4_2_000*.cbf"
+    cbfspath = dials_data("x4wide") / "X4_wide_M1S4_2_000*.cbf"
 
     output_file = tmpdir / "x4wide_10img.h5"
     params = phil_scope.fetch(

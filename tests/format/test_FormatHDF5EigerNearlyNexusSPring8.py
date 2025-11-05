@@ -11,7 +11,7 @@ from dxtbx.model.goniometer import Goniometer
 
 def test_spring8_ccp4_2018_zenodo_1443110_data03(dials_data):
     master_h5 = (
-        dials_data("spring8_ccp4_2018", pathlib=True)
+        dials_data("spring8_ccp4_2018")
         / "ccp4school2018_bl41xu"
         / "05"
         / "data03"
