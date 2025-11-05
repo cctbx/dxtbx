@@ -173,9 +173,7 @@ def test_experiment_equality():
 
 def test_experiment_consistent(dials_data):
     # Create a sequence
-    sequence_filenames = dials_data("centroid_test_data", pathlib=False).listdir(
-        "centroid*.cbf"
-    )
+    sequence_filenames = dials_data("centroid_test_data").glob("centroid*.cbf")
     sequence = ImageSetFactory.new(sorted(f.strpath for f in sequence_filenames))[0]
 
     # Create experiment with sequence and good scan
