@@ -1,1 +1,1 @@
-Add missing index param for `FormatMANDI.get_detector`.
+``FormatMANDI.get_detector``: Add missing index parameter.

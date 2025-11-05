@@ -1,1 +1,1 @@
-Fix typo in tof_helpers.InstrumentDefinitionReader swapping panel axes.
+Fix typo in ``tof_helpers.InstrumentDefinitionReader`` swapping panel axes.
