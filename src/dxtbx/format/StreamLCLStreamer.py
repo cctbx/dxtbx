@@ -24,7 +24,7 @@ def get_jungfrau_detector_asic(file_content, wavelength):
     TRUSTED_RANGE = (-10, 2e6)
     THICKNESS = 0.32
     MATERIAL = "Si"
-    
+
     geom = GeometryAccess()
     geom.load_pars_from_str(file_content)
 
@@ -95,10 +95,10 @@ def get_jungfrau_detector_asic(file_content, wavelength):
             p.set_pixel_size((PIXEL_SIZE, PIXEL_SIZE))
             p.set_trusted_range(TRUSTED_RANGE)
             p.set_name(val)
-            
+
             p.set_thickness(THICKNESS)  # mm
             p.set_material(MATERIAL)
-            p.set_type('jungfrau')
+            p.set_type("jungfrau")
             # Compute the attenuation coefficient.
             # This will fail for undefined composite materials
             # mu_at_angstrom returns cm^-1, but need mu in mm^-1
@@ -109,6 +109,7 @@ def get_jungfrau_detector_asic(file_content, wavelength):
             p.set_gain(factor_kev_angstrom / wavelength)
             p.set_image_size((dim_fast // 4, dim_slow // 2))
     return d
+
 
 def get_jungfrau_detector_module(file_content, wavelength):
     """
@@ -132,7 +133,7 @@ def get_jungfrau_detector_module(file_content, wavelength):
     # mu_at_angstrom returns cm^-1, but need mu in mm^-1
     table = attenuation_coefficient.get_table(MATERIAL)
     mu = table.mu_at_angstrom(wavelength) / 10.0
-    
+
     geom = GeometryAccess()
     geom.load_pars_from_str(file_content)
 
@@ -178,10 +179,10 @@ def get_jungfrau_detector_module(file_content, wavelength):
 
         pg1.set_pixel_size((PIXEL_SIZE, PIXEL_SIZE))
         pg1.set_trusted_range(TRUSTED_RANGE)
-        
+
         pg1.set_thickness(THICKNESS)  # mm
         pg1.set_material(MATERIAL)
-        pg1.set_type('jungfrau')
+        pg1.set_type("jungfrau")
         pg1.set_mu(mu)
         pg1.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, THICKNESS))
         pg1.set_gain(factor_kev_angstrom / wavelength)
@@ -190,10 +191,11 @@ def get_jungfrau_detector_module(file_content, wavelength):
 
 
 class LCLStreamer(StreamClass):
-    """ 
+    """
     https://github.com/slac-lcls/lclstreamer/blob/features/simplon/src/lclstreamer/frontend/data_serializers/json.py
     https://confluence.slac.stanford.edu/spaces/PSDM/pages/150405475/Detector+Geometry
     """
+
     def __init__(
         self,
         port=None,
@@ -218,14 +220,18 @@ class LCLStreamer(StreamClass):
             rcvbuf=rcvbuf,
         )
         self.name = "LCLStreamer"
-        self._split_modules = False
+        self._split_modules = True
 
     def recv(self, copy=True):
         # The LCLStream adds a character at the beginning of the message to identify
         # The message type withouit decoding.
         #   b"c" == control message
         #   b"m" == image message
-        encoded_message = self.socket.recv(copy=True)
+        if self.socket_library == "zmq":
+            encoded_message = self.socket.recv(copy=copy)
+        elif self.socket_library == "nng":
+            # pynng recv() returns a bytes object directly, no copy parameter
+            encoded_message = self.socket.recv()
         message_type = encoded_message[:1]
         encoded_message = encoded_message[1:]
         return encoded_message
@@ -241,12 +247,14 @@ class LCLStreamer(StreamClass):
             message["image_id"] = message.pop("message_id")
         if "shape" in message.keys():
             if type(message["shape"]) == str:
-                message["image_shape"] = tuple(map(int, message["shape"].split('x')))
+                message["image_shape"] = tuple(map(int, message["shape"].split("x")))
         if "datatype" in message.keys():
             message["image_dtype"] = message.pop("datatype")
         if "data_collection_rate" in message.keys():
             if type(message["data_collection_rate"]) == str:
-                message["data_collection_rate"] = float(message["data_collection_rate"].split("Hz")[0])
+                message["data_collection_rate"] = float(
+                    message["data_collection_rate"].split("Hz")[0]
+                )
         return message
 
     def handle_start_message(self, message, reference_experiment=None):
@@ -262,7 +270,7 @@ class LCLStreamer(StreamClass):
 
         file_writer_params.nexus_details.start_time = message["start_time"]
         if message["duration"] == "N/A":
-            collection_time_estimate = 5 * 60 # five minute run
+            collection_time_estimate = 5 * 60  # five minute run
         else:
             collection_time_estimate = message["duration"]
 
@@ -273,8 +281,12 @@ class LCLStreamer(StreamClass):
         file_writer_params.nexus_details.end_time_estimated = (
             end_time_estimated.strftime("%Y-%m-%dT%H:%M:%SZ")
         )
-        file_writer_params.nexus_details.count_time = 1/message["data_collection_rate"]
-        file_writer_params.nexus_details.frame_time = 1/message["data_collection_rate"]
+        file_writer_params.nexus_details.count_time = (
+            1 / message["data_collection_rate"]
+        )
+        file_writer_params.nexus_details.frame_time = (
+            1 / message["data_collection_rate"]
+        )
         file_writer_params.nexus_details.sample_name = message["experiment"]
 
         if reference_experiment is None:
@@ -294,7 +306,7 @@ class LCLStreamer(StreamClass):
             beam_params.beam.transmission = None
             beam_params.beam.type = "monochromatic"
             # EWvelength is not included in the start message ...
-            beam_params.beam.wavelength = 1#float(message["photon_wavelength"])
+            beam_params.beam.wavelength = 1  # float(message["photon_wavelength"])
             beam_params.beam.wavelength_range = None
             reference_beam = BeamFactory.from_phil(beam_params)
 
@@ -302,13 +314,11 @@ class LCLStreamer(StreamClass):
             if "jungfrau" in message["detector"]["name"].lower():
                 if self._split_modules:
                     reference_detector = get_jungfrau_detector_asic(
-                        message["detector"]["geometry"],
-                        beam_params.beam.wavelength
+                        message["detector"]["geometry"], beam_params.beam.wavelength
                     )
                 else:
                     reference_detector = get_jungfrau_detector_module(
-                        message["detector"]["geometry"],
-                        beam_params.beam.wavelength
+                        message["detector"]["geometry"], beam_params.beam.wavelength
                     )
             else:
                 assert False
@@ -317,7 +327,7 @@ class LCLStreamer(StreamClass):
             # by the get_reader method to determine how to read the data.
             if "jungfrau" in message["detector"]["name"].lower():
                 for panel in reference_experiment[0].detector:
-                    panel.set_type('jungfrau')
+                    panel.set_type("jungfrau")
             else:
                 assert False
             # If the reference_experiment has an imageset, it gets removed by
@@ -325,12 +335,15 @@ class LCLStreamer(StreamClass):
             reference_beam = reference_experiment[0].beam
             reference_detector = reference_experiment[0].detector
 
-        reference_experiment = ExperimentList([Experiment(
-            beam=reference_beam,
-            detector=reference_detector
-        )])
-        file_writer_params.detector.sensor_material = reference_detector[0].get_material()
-        file_writer_params.detector.sensor_thickness = reference_detector[0].get_thickness()
+        reference_experiment = ExperimentList(
+            [Experiment(beam=reference_beam, detector=reference_detector)]
+        )
+        file_writer_params.detector.sensor_material = reference_detector[
+            0
+        ].get_material()
+        file_writer_params.detector.sensor_thickness = reference_detector[
+            0
+        ].get_thickness()
 
         return file_writer_params, reference_experiment
 
@@ -371,42 +384,44 @@ class LCLStreamer(StreamClass):
                 src_row_end = (row + 1) * 256
                 src_col_start = col * 256
                 src_col_end = (col + 1) * 256
-                
+
                 # Calculate destination position (with 2 pixel gaps)
-                dst_row_start = src_row_start + 2*row
+                dst_row_start = src_row_start + 2 * row
                 dst_row_end = dst_row_start + 256
-                dst_col_start = src_col_start + 2*col
+                dst_col_start = src_col_start + 2 * col
                 dst_col_end = dst_col_start + 256
-                
+
                 # Copy ASIC data
-                output[:, dst_row_start:dst_row_end, dst_col_start:dst_col_end] = image_data[
-                    :,
-                    src_row_start:src_row_end,
-                    src_col_start:src_col_end
-                ]
-    
+                output[:, dst_row_start:dst_row_end, dst_col_start:dst_col_end] = (
+                    image_data[:, src_row_start:src_row_end, src_col_start:src_col_end]
+                )
+
         for col in range(1, 4):
-            left_index = 256*col + 2*(col-1) - 1
+            left_index = 256 * col + 2 * (col - 1) - 1
             right_index = left_index + 3
             left = output[:, :, left_index]
             right = output[:, :, right_index]
-            output[:, :, left_index+1 : right_index] = ((left + right) / 4)[:, :, np.newaxis]
+            output[:, :, left_index + 1 : right_index] = ((left + right) / 4)[
+                :, :, np.newaxis
+            ]
             output[:, :, left_index] = left / 2
             output[:, :, right_index] = right / 2
-    
+
         top_index = 256 - 1
         bottom_index = top_index + 3
         top = output[:, top_index, :]
         bottom = output[:, bottom_index, :]
-        output[:, top_index+1 : bottom_index] = ((top + bottom) / 4)[:, np.newaxis, :]
+        output[:, top_index + 1 : bottom_index] = ((top + bottom) / 4)[:, np.newaxis, :]
         output[:, top_index] = top / 2
         output[:, bottom_index] = bottom / 2
-    
+
         return output
-    
+
     def get_reader(self, image_data, **kwargs):
         from dials.array_family import flex
         from dxtbx.imageset import StreamReader
 
-        image_data = tuple([flex.double(image_data[i]) for i in range(image_data.shape[0])])
+        image_data = tuple(
+            [flex.double(image_data[i]) for i in range(image_data.shape[0])]
+        )
         return StreamReader([image_data])
