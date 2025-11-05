@@ -5,7 +5,7 @@ import os
 import dials_data.download
 
 df = dials_data.download.DataFetcher()
-data_dir = df("image_examples", pathlib=True)
+data_dir = df("image_examples")
 image_examples = []
 for f in data_dir.iterdir():
     ext = os.path.splitext(f)[1]

@@ -14,9 +14,7 @@ def test_average(dials_data, tmp_path, use_mpi):
     if use_mpi:
         pytest.importorskip("mpi4py")
 
-    data = (
-        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
-    )
+    data = dials_data("image_examples") / "SACLA-MPCCD-run266702-0-subset.h5"
     if use_mpi:
         command = "mpirun"
         mpargs = "-n 2 dxtbx.image_average --mpi=True".split()
