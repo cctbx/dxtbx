@@ -98,10 +98,10 @@ class StreamClass(ABC):
 
         if socket_library is None:
             self.socket = None
-            self.socket_libary = None
+            self.socket_library = None
         elif socket_library in ["zeromq", "zmq", "0mq"]:
             self.socket = zmq_context.socket(socket_type)
-            self.socket_libary = "zmq"
+            self.socket_library = "zmq"
             self.socket.setsockopt(zmq.LINGER, 0)
             if rcvhwm:
                 self.socket.setsockopt(zmq.RCVHWM, rcvhwm)
@@ -123,7 +123,7 @@ class StreamClass(ABC):
             import pynng
 
             self.socket = pynng.Pull0()
-            self.socket_libary = "nng"
+            self.socket_library = "nng"
 
             if rcvbuf:
                 self.socket.recv_buffer_size = rcvbuf
