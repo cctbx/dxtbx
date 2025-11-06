@@ -103,6 +103,20 @@ class StreamDectrisSimplonStreamV2(StreamClass):
     def handle_start_message(self, message, reference_experiment=None):
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
 
+        # If the dtype is not in the start message, hard code it to uint32.
+        message.setdefault("image_dtype", "uint32")
+        # The dtype is supposedly a function of frame rate. This will be useful
+        # once those boundaries are determined.
+        '''
+        frame_rate = 1 / message["count_time"]
+        if frame_rate < 100:
+            message.setdefault("image_dtype", "uint32")
+        elif frame_rate < 200:
+            message.setdefault("image_dtype", "uint16")
+        elif frame_rate < 300:
+            message.setdefault("image_dtype", "uint8")
+        '''
+
         if isinstance(message["detector_description"], bytes):
             message["detector_description"] = message["detector_description"].decode()
         if isinstance(message["sensor_material"], bytes):
@@ -209,27 +223,25 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         return file_writer_params, reference_experiment
 
     def get_data(self, message, **kwargs):
-        return message["data"]["threshold_1"], None
+        image_data = message["data"]["threshold_1"]
+        if "image_dtype" in kwargs.keys():
+           # if 32 bit then it is a signed int, I think if 8, 16 then it is
+           # unsigned with the highest two values assigned as masking values
+           if kwargs["image_dtype"] == "uint32":
+               top = 2**31
+           elif kwargs["image_dtype"] == "uint16":
+               top = 2**16
+           elif kwargs["image_dtype"] == "uint8":
+               top = 2**8
+           else:
+               raise Exception(f"Unhandled data type {kwargs['image_dtype']} in StreamDectrisSimplonStreamV2.get_data")
+           image_data[image_data == (top-1)] = -1
+           image_data[image_data == (top-2)] = -2
+        return image_data, None
 
     def get_reader(self, image_data, **kwargs):
         from dials.array_family import flex
         from dxtbx.imageset import StreamReader
 
         image_data = flex.double(image_data)
-        # if "image_dtype" in kwargs.keys():
-        #    image_dtype = kwargs["image_dtype"]
-        #    # if 32 bit then it is a signed int, I think if 8, 16 then it is
-        #    # unsigned with the highest two values assigned as masking values
-        #    if image_dtype == "uint32":
-        #        top = 2**31
-        #    elif image_dtype == "uint16":
-        #        top = 2**16
-        #    elif image_dtype == "uint8":
-        #        top = 2**8
-        #    else:
-        #        raise Exception(f"Unhandled data type {image_dtype}")
-        #    for data in image_data:
-        #        d1d = data.as_1d()
-        #        d1d.set_selected(d1d == top - 1, -1)
-        #        d1d.set_selected(d1d == top - 2, -2)
         return StreamReader([image_data])
