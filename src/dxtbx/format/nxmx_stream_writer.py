@@ -4,6 +4,7 @@ from dxtbx.format.nxmx_writer import get_compression
 import h5py
 import hdf5plugin
 from libtbx.phil import parse
+import numpy as np
 
 
 def compress_with_hdf5_filters(data, params):
@@ -60,6 +61,12 @@ class NXmxStreamWriter(NXmxWriter):
         self.construct_detector()
         self.add_all_beams()
         self.add_scan_and_gonio()
+
+        value = np.dtype(self.params.dtype).itemsize * 8
+        self.handle['/entry/instrument/detector'].create_dataset(
+            "bit_depth_readout", (), "i"
+        )
+        self.handle['/entry/instrument/detector/bit_depth_readout'][()] = value
 
         if experiments:
             n_panels = len(experiments[0].detector)
