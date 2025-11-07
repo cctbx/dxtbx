@@ -95,15 +95,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         message = cbor2.loads(encoded_message, tag_hook=tag_hook)
         if "image_size_x" in message.keys():
             message["image_shape"] = (message["image_size_y"], message["image_size_x"])
-        message.setdefault("image_dtype", "uint32")
-        return message
-
-    def recv(self, copy=True):
-        return self.socket.recv(copy=copy)
-
-    def handle_start_message(self, message, reference_experiment=None):
-        from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
-
         # If the dtype is not in the start message, hard code it to uint32.
         message.setdefault("image_dtype", "uint32")
         # The dtype is supposedly a function of frame rate. This will be useful
@@ -117,6 +108,14 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         elif frame_rate < 300:
             message.setdefault("image_dtype", "uint8")
         '''
+        return message
+
+    def recv(self, copy=True):
+        return self.socket.recv(copy=copy)
+
+    def handle_start_message(self, message, reference_experiment=None):
+        from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
+        
         if isinstance(message["detector_description"], bytes):
             message["detector_description"] = message["detector_description"].decode()
         if isinstance(message["sensor_material"], bytes):
