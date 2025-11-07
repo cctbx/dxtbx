@@ -95,6 +95,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         message = cbor2.loads(encoded_message, tag_hook=tag_hook)
         if "image_size_x" in message.keys():
             message["image_shape"] = (message["image_size_y"], message["image_size_x"])
+        message.setdefault("image_dtype", "uint32")
         return message
 
     def recv(self, copy=True):
@@ -116,7 +117,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         elif frame_rate < 300:
             message.setdefault("image_dtype", "uint8")
         '''
-
         if isinstance(message["detector_description"], bytes):
             message["detector_description"] = message["detector_description"].decode()
         if isinstance(message["sensor_material"], bytes):
@@ -224,6 +224,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
 
     def get_data(self, message, **kwargs):
         image_data = message["data"]["threshold_1"]
+        """
         if "image_dtype" in kwargs.keys():
            # if 32 bit then it is a signed int, I think if 8, 16 then it is
            # unsigned with the highest two values assigned as masking values
@@ -237,6 +238,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
                raise Exception(f"Unhandled data type {kwargs['image_dtype']} in StreamDectrisSimplonStreamV2.get_data")
            image_data[image_data == (top-1)] = -1
            image_data[image_data == (top-2)] = -2
+        """
         return image_data, None
 
     def get_reader(self, image_data, **kwargs):
