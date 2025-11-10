@@ -41,7 +41,7 @@ from dxtbx.model.experiment_list import ExperimentListDict, ExperimentListFactor
 
 @pytest.fixture(scope="session")
 def centroid_test_data(dials_data):
-    return str(dials_data("centroid_test_data", pathlib=True))
+    return str(dials_data("centroid_test_data"))
 
 
 @pytest.fixture
@@ -88,7 +88,7 @@ def all_image_examples(dials_data):
         ("SSRL_bl111-mar325_1_001.mccd.bz2"),
         ("xia2-merge2cbf_averaged_0001.cbf.bz2"),
     )
-    return [str(dials_data("image_examples", pathlib=True) / f) for f in filenames]
+    return [str(dials_data("image_examples") / f) for f in filenames]
 
 
 @pytest.fixture
@@ -173,10 +173,8 @@ def test_experiment_equality():
 
 def test_experiment_consistent(dials_data):
     # Create a sequence
-    sequence_filenames = dials_data("centroid_test_data", pathlib=False).listdir(
-        "centroid*.cbf"
-    )
-    sequence = ImageSetFactory.new(sorted(f.strpath for f in sequence_filenames))[0]
+    sequence_filenames = dials_data("centroid_test_data").glob("centroid*.cbf")
+    sequence = ImageSetFactory.new(sorted(str(f) for f in sequence_filenames))[0]
 
     # Create experiment with sequence and good scan
     e = Experiment(imageset=sequence, scan=sequence.get_scan())
@@ -405,7 +403,7 @@ def experiment_list():
 
 
 def test_experimentlist_factory_from_json(monkeypatch, dials_data):
-    data_dir = dials_data("experiment_test_data", pathlib=True)
+    data_dir = dials_data("experiment_test_data")
     dials_data_root = data_dir / ".."
     # Get all the filenames
     filename1 = str(data_dir / "experiment_1.json")
@@ -442,7 +440,7 @@ def test_experimentlist_factory_from_json(monkeypatch, dials_data):
 
 
 def test_experimentlist_factory_from_pickle(monkeypatch, dials_data):
-    data_dir = dials_data("experiment_test_data", pathlib=True)
+    data_dir = dials_data("experiment_test_data")
     dials_data_root = data_dir / ".."
     # Get all the filenames
     filename1 = str(data_dir / "experiment_1.json")
@@ -472,7 +470,7 @@ def test_experimentlist_factory_from_pickle(monkeypatch, dials_data):
 def test_experimentlist_factory_from_args(monkeypatch, dials_data):
     pytest.importorskip("dials")
 
-    data_dir = dials_data("experiment_test_data", pathlib=True)
+    data_dir = dials_data("experiment_test_data")
     dials_data_root = data_dir / ".."
 
     # Get all the filenames
@@ -538,7 +536,7 @@ def test_experimentlist_factory_from_sequence():
 
 
 def test_experimentlist_dumper_dump_formats(monkeypatch, dials_data, tmp_path):
-    data_dir = dials_data("experiment_test_data", pathlib=True)
+    data_dir = dials_data("experiment_test_data")
     dials_data_root = data_dir / ".."
 
     # Get all the filenames
@@ -563,7 +561,7 @@ def test_experimentlist_dumper_dump_formats(monkeypatch, dials_data, tmp_path):
 
 
 def test_experimentlist_dumper_dump_scan_varying(monkeypatch, dials_data, tmp_path):
-    data_dir = dials_data("experiment_test_data", pathlib=True)
+    data_dir = dials_data("experiment_test_data")
     dials_data_root = data_dir / ".."
     # Get all the filenames
     filename1 = str(data_dir / "experiment_1.json")
@@ -622,7 +620,7 @@ def test_experimentlist_dumper_dump_empty_sequence(tmp_path):
 
 
 def test_experimentlist_dumper_dump_with_lookup(dials_data, tmp_path):
-    data_dir = dials_data("centroid_test_data", pathlib=True)
+    data_dir = dials_data("centroid_test_data")
 
     # Copy to the tmp directory, because we need to unpack some files
     filename = shutil.copy(data_dir / "experiments_with_lookup.json", tmp_path)
@@ -668,10 +666,7 @@ def test_experimentlist_dumper_dump_with_lookup(dials_data, tmp_path):
 
 
 def test_experimentlist_dumper_dump_with_bad_lookup(dials_data, tmpdir):
-    filename = (
-        dials_data("centroid_test_data", pathlib=True)
-        / "experiments_with_bad_lookup.json"
-    )
+    filename = dials_data("centroid_test_data") / "experiments_with_bad_lookup.json"
     experiments = ExperimentListFactory.from_json_file(filename, check_format=False)
 
     imageset = experiments[0].imageset
@@ -734,9 +729,7 @@ def test_experimentlist_with_identifiers():
 
 def test_load_models(dials_data):
     pytest.importorskip("h5py")
-    filename = (
-        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
-    )
+    filename = dials_data("image_examples") / "SACLA-MPCCD-run266702-0-subset.h5"
 
     # Test different ways of loading the data
     waves1, waves2, waves3, waves4, waves5 = [], [], [], [], []
@@ -849,7 +842,7 @@ def compare_experiment(exp1, exp2):
 def test_experimentlist_from_file(dials_data, monkeypatch, tmpdir):
     # With the default check_format=True this file should fail to load with an
     # appropriate error as we can't find the images on disk
-    data_dir = dials_data("experiment_test_data", pathlib=True)
+    data_dir = dials_data("experiment_test_data")
     dials_data_root = data_dir / ".."
 
     with monkeypatch.context() as m:
@@ -880,10 +873,7 @@ def test_experimentlist_from_file(dials_data, monkeypatch, tmpdir):
 
 def test_experimentlist_imagesequence_stills(dials_data):
     filenames = [
-        str(
-            dials_data("thaumatin_grid_scan", pathlib=True)
-            / f"thau_3_2_{i:04d}.cbf.bz2"
-        )
+        str(dials_data("thaumatin_grid_scan") / f"thau_3_2_{i:04d}.cbf.bz2")
         for i in range(1, 4)
     ]
     experiments = ExperimentListFactory.from_filenames(filenames)
@@ -967,8 +957,7 @@ def test_experimentlist_change_basis(dials_data):
     for i in range(4):
         experiments.extend(
             ExperimentList.from_file(
-                dials_data("vmxi_proteinase_k_sweeps", pathlib=True)
-                / ("experiments_%i.expt" % i),
+                dials_data("vmxi_proteinase_k_sweeps") / ("experiments_%i.expt" % i),
                 check_format=False,
             )
         )
@@ -1204,7 +1193,7 @@ def test_from_null_sequence():
 
 
 def test_from_templates(dials_data):
-    template = dials_data("insulin", pathlib=True) / "insulin_1_###.img"
+    template = dials_data("insulin") / "insulin_1_###.img"
     expts = ExperimentList.from_templates([template])
     assert len(expts) == 1
     assert expts[0].imageset.get_template() == str(template)

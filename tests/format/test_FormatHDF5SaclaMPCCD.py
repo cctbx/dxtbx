@@ -15,10 +15,7 @@ pytest.importorskip("h5py")
 
 
 def test_static_mask(dials_data):
-    master_h5 = (
-        dials_data("image_examples", pathlib=True)
-        / "SACLA-MPCCD-Phase3-21528-5images.h5"
-    )
+    master_h5 = dials_data("image_examples") / "SACLA-MPCCD-Phase3-21528-5images.h5"
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
 
     expts_from_filename = ExperimentListFactory.from_filenames([master_h5])
@@ -35,10 +32,7 @@ def test_static_mask(dials_data):
 
 
 def test_MPCCD_Phase3_21528(dials_data):
-    master_h5 = (
-        dials_data("image_examples", pathlib=True)
-        / "SACLA-MPCCD-Phase3-21528-5images.h5"
-    )
+    master_h5 = dials_data("image_examples") / "SACLA-MPCCD-Phase3-21528-5images.h5"
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
     expts = ExperimentListFactory.from_filenames([master_h5])
     imageset = expts[0].imageset
@@ -81,10 +75,7 @@ def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
         else:
             monkeypatch.delenv("MPCCD_RECONST_MODE", raising=False)
 
-        master_h5 = (
-            dials_data("image_examples", pathlib=True)
-            / "SACLA-MPCCD-Phase3-21528-5images.h5"
-        )
+        master_h5 = dials_data("image_examples") / "SACLA-MPCCD-Phase3-21528-5images.h5"
         expts = ExperimentListFactory.from_filenames([master_h5])
         imageset = expts[0].imageset
         # Horrible hack to work around format_instance caching
@@ -107,10 +98,7 @@ def test_MPCCD_RECONST_MODE(dials_data, monkeypatch):
 
 
 def test_combine_with_user_static_mask(dials_data, tmpdir):
-    master_h5 = (
-        dials_data("image_examples", pathlib=True)
-        / "SACLA-MPCCD-Phase3-21528-5images.h5"
-    )
+    master_h5 = dials_data("image_examples") / "SACLA-MPCCD-Phase3-21528-5images.h5"
     assert FormatHDF5SaclaMPCCD.understand(master_h5)
 
     expts_from_filename = ExperimentListFactory.from_filenames([master_h5])
@@ -154,7 +142,7 @@ def test_HDF5_format_caching(dials_data, clear_cache):
     xfail: see https://github.com/cctbx/dxtbx/issues/245
     """
     img_file = "SACLA-MPCCD-Phase3-21528-5images.h5"
-    master_h5 = dials_data("image_examples", pathlib=True) / img_file
+    master_h5 = dials_data("image_examples") / img_file
 
     expts1 = ExperimentListFactory.from_filenames([master_h5])
     expts1[0].imageset.get_mask(0)

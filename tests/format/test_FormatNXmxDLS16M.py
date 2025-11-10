@@ -182,9 +182,7 @@ def test_grid_scan_i04():
     raises=AssertionError, reason="https://github.com/cctbx/dxtbx/issues/13"
 )
 def test_screening(dials_data):
-    master_h5 = (
-        dials_data("thaumatin_eiger_screen", pathlib=True) / "Therm_6_1_master.h5"
-    )
+    master_h5 = dials_data("thaumatin_eiger_screen") / "Therm_6_1_master.h5"
     assert FormatNXmxDLS16M.understand(master_h5)
 
     expts = ExperimentListFactory.from_filenames([master_h5])

@@ -6,7 +6,7 @@ from dxtbx.imageset import ImageSetFactory
 
 
 def test_multi_axis_goniometer(dials_data):
-    data_dir = dials_data("misc_regression", pathlib=True)
+    data_dir = dials_data("misc_regression")
 
     imgset = ImageSetFactory.new(str(data_dir / "dials-190_01_00001.cbf"))[0]
     gonio = imgset.get_goniometer(0)
@@ -33,7 +33,7 @@ def test_multi_axis_goniometer(dials_data):
 
 
 def test_still(dials_data):
-    data_dir = dials_data("image_examples", pathlib=True)
+    data_dir = dials_data("image_examples")
 
     imgset = ImageSetFactory.new(str(data_dir / "DLS_I04-grid_full_cbf_0005.cbf.bz2"))[
         0

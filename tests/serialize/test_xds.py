@@ -9,7 +9,7 @@ from dxtbx.serialize import xds
 
 
 def test_to_xds(dials_data, tmpdir):
-    file_names = dials_data("centroid_test_data", pathlib=True).glob("centroid_00*.cbf")
+    file_names = dials_data("centroid_test_data").glob("centroid_00*.cbf")
     sequence = ImageSetFactory.new(list(file_names))[0]
     to_xds = xds.to_xds(sequence)
     s1 = to_xds.XDS_INP()
@@ -49,7 +49,7 @@ UNTRUSTED_RECTANGLE= 0 2464 2103 2121
 UNTRUSTED_RECTANGLE= 0 2464 2315 2333
 DATA_RANGE= 1 9
 JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
-""" % (dials_data("centroid_test_data", pathlib=True) / "centroid_????.cbf")
+""" % (dials_data("centroid_test_data") / "centroid_????.cbf")
 
     # universe changed once, so be flexible
     expected = [expected_f % a for a in ["3.960382", "3.960386"]]
@@ -80,7 +80,7 @@ JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT\
 
 
 def test_to_xds_multi_panel_i23(dials_data, tmpdir, mocker):
-    data_dir = dials_data("image_examples", pathlib=True)
+    data_dir = dials_data("image_examples")
     file_name = str(data_dir / "DLS_I23-germ_13KeV_0001.cbf.bz2")
     sequence = ImageSetFactory.new([file_name])[0]
     to_xds = xds.to_xds(sequence)
@@ -121,7 +121,7 @@ SEGMENT_ORGX= 1075.00 SEGMENT_ORGY= 4973.67""",
 
 
 def test_vmxi_thaumatin(dials_data):
-    master_h5 = dials_data("vmxi_thaumatin", pathlib=True) / "image_15799_master.h5"
+    master_h5 = dials_data("vmxi_thaumatin") / "image_15799_master.h5"
     expts = ExperimentListFactory.from_filenames([master_h5])
     to_xds = xds.to_xds(expts[0].imageset)
     s = to_xds.XDS_INP()
@@ -163,6 +163,6 @@ UNIT_CELL_CONSTANTS=57.500000 57.500000 149.000000 90.000000 90.000000 90.000000
         f.write(input_file)
     ## Note that the XDS.INP is for thaumatin, and centroid test data is not, but
     ## this is sufficient for testing the creation of an imageset of the correct size.
-    xds_other = dials_data("centroid_test_data", pathlib=True) / "INTEGRATE.HKL"
+    xds_other = dials_data("centroid_test_data") / "INTEGRATE.HKL"
     iset = xds.to_imageset(xds_inp, xds_other)
     assert len(iset) == 100

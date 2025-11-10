@@ -1,6 +1,6 @@
 """
-An implementation of the CBF image reader for Pilatus images, from the Pilatus
-6M SN 100 currently on Diamond I04.
+An implementation of the CBF image reader for Pilatus images for beamlines
+with a horizontal, but reversed rotation axis.
 """
 
 from __future__ import annotations
@@ -8,8 +8,9 @@ from __future__ import annotations
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 
 
-class FormatCBFMiniPilatusXXX(FormatCBFMiniPilatus):
-    """A class for reading mini CBF format Pilatus images for 6M SN XXX."""
+class FormatCBFMiniPilatusReverse(FormatCBFMiniPilatus):
+    """A class for reading mini CBF format Pilatus images for beamlines with
+    a horizontal reversed rotation axis."""
 
     @staticmethod
     def understand(image_file):
@@ -19,12 +20,11 @@ class FormatCBFMiniPilatusXXX(FormatCBFMiniPilatus):
         header = FormatCBFMiniPilatus.get_cbf_header(image_file)
 
         for record in header.split("\n"):
-            if (
-                "# Detector" in record
-                and "PILATUS" in record
-                and "S/N XX-XXX" in header
-            ):
-                return True
+            if "# Detector" in record and "PILATUS" in record:
+                if "S/N XX-XXX" in record or "S/N 60-0123" in record:
+                    # S/N 60-0123: SSRF BL18U1
+                    # S/N XX-XXX: SSRF BL19U1
+                    return True
 
         return False
 

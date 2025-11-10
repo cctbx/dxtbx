@@ -14,7 +14,7 @@ class FormatNexus(FormatHDF5):
     def understand(image_file):
         try:
             return nexus.is_nexus_file(image_file)
-        except OSError:
+        except (OSError, TypeError):
             return False
 
     def _start(self):

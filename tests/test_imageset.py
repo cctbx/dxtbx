@@ -34,10 +34,7 @@ def test_single_file_indices(indices, expected_call_count, lazy, dials_data):
         "_beam",
         side_effect=dummy_beam,
     ) as obj:
-        filename = (
-            dials_data("image_examples", pathlib=True)
-            / "SACLA-MPCCD-run266702-0-subset.h5"
-        )
+        filename = dials_data("image_examples") / "SACLA-MPCCD-run266702-0-subset.h5"
         format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
         iset = format_class.get_imageset(
             [filename], single_file_indices=indices, format_kwargs={"lazy": lazy}
@@ -194,7 +191,7 @@ def test_imagesetdata(centroid_files):
 @pytest.fixture(scope="session")
 def centroid_files(dials_data):
     return [
-        str(dials_data("centroid_test_data", pathlib=True) / f"centroid_{i:04d}.cbf")
+        str(dials_data("centroid_test_data") / f"centroid_{i:04d}.cbf")
         for i in range(1, 10)
     ]
 
@@ -462,9 +459,7 @@ class TestImageSequence:
 @pytest.mark.parametrize("lazy", (True, False))
 def test_SACLA_MPCCD_Cheetah_File(dials_data, lazy):
     pytest.importorskip("h5py")
-    filename = (
-        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
-    )
+    filename = dials_data("image_examples") / "SACLA-MPCCD-run266702-0-subset.h5"
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
 
@@ -499,7 +494,7 @@ def test_imagesetfactory(centroid_files, dials_data):
 
     assert isinstance(sequence[0], ImageSequence)
 
-    template = str(dials_data("centroid_test_data", pathlib=True) / "centroid_####.cbf")
+    template = str(dials_data("centroid_test_data") / "centroid_####.cbf")
     image_range = (3, 6)
 
     sequence = ImageSetFactory.from_template(template, image_range)
@@ -524,8 +519,7 @@ def test_imagesetfactory(centroid_files, dials_data):
 
 def test_make_sequence_with_percent_character(dials_data, tmp_path):
     images = [
-        dials_data("centroid_test_data", pathlib=True) / f"centroid_{i:04}.cbf"
-        for i in range(1, 10)
+        dials_data("centroid_test_data") / f"centroid_{i:04}.cbf" for i in range(1, 10)
     ]
     directory = tmp_path / "test%"
     directory.mkdir()
@@ -620,9 +614,7 @@ def test_get_corrected_data(centroid_files):
 
 def test_multi_panel_gain_map(dials_data):
     pytest.importorskip("h5py")
-    filename = (
-        dials_data("image_examples", pathlib=True) / "SACLA-MPCCD-run266702-0-subset.h5"
-    )
+    filename = dials_data("image_examples") / "SACLA-MPCCD-run266702-0-subset.h5"
 
     format_class = dxtbx.format.Registry.get_format_class_for_file(filename)
     iset = format_class.get_imageset([filename])
@@ -644,9 +636,7 @@ def test_multi_panel_gain_map(dials_data):
     ),
 )
 def test_multi_panel(multi_panel, expected_panel_count, dials_data):
-    image_path = str(
-        dials_data("image_examples", pathlib=True) / "DLS_I23-germ_13KeV_0001.cbf.bz2"
-    )
+    image_path = str(dials_data("image_examples") / "DLS_I23-germ_13KeV_0001.cbf.bz2")
     experiments = ExperimentListFactory.from_filenames(
         [image_path], format_kwargs={"multi_panel": multi_panel}
     )
@@ -659,10 +649,8 @@ def test_multi_panel(multi_panel, expected_panel_count, dials_data):
 
 
 def test_scan_imageset_slice_consistency(dials_data):
-    files = dials_data("centroid_test_data", pathlib=False).listdir("*.cbf", sort=True)[
-        1:
-    ]
-    expt = ExperimentListFactory.from_filenames(f.strpath for f in files)[0]
+    files = sorted(dials_data("centroid_test_data").glob("*.cbf"))[1:]
+    expt = ExperimentListFactory.from_filenames(str(f) for f in files)[0]
     assert expt.scan[0:8] == expt.scan
     # The following doesn't work, and expects expt.imageset[1:9]
     assert expt.imageset[0:8] == expt.imageset
