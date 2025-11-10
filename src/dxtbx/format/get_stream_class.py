@@ -16,7 +16,7 @@ def get_stream_class(name):
             StreamDectrisSimplonStreamV2HitFiltered,
         )
 
-        return StreamDectrisSimplonStreamV2HitFiltered()
+        return StreamDectrisSimplonStreamV2HitFiltered
 
     elif name == "LCLStreamer":
         from dxtbx.format.StreamLCLStreamer import LCLStreamer

@@ -95,19 +95,17 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         message = cbor2.loads(encoded_message, tag_hook=tag_hook)
         if "image_size_x" in message.keys():
             message["image_shape"] = (message["image_size_y"], message["image_size_x"])
-        # If the dtype is not in the start message, hard code it to uint32.
-        message.setdefault("image_dtype", "uint32")
+
         # The dtype is supposedly a function of frame rate. This will be useful
         # once those boundaries are determined.
-        '''
-        frame_rate = 1 / message["count_time"]
-        if frame_rate < 100:
-            message.setdefault("image_dtype", "uint32")
-        elif frame_rate < 200:
-            message.setdefault("image_dtype", "uint16")
-        elif frame_rate < 300:
-            message.setdefault("image_dtype", "uint8")
-        '''
+        if message['type'] == 'start':
+            if message["count_time"] >= 0.0145:
+                message.setdefault("image_dtype", "uint32")
+            elif message["count_time"] >= 0.00:
+                message.setdefault("image_dtype", "uint16")
+            else:
+                message.setdefault("image_dtype", "uint8")
+
         return message
 
     def recv(self, copy=True):
@@ -152,7 +150,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         file_writer_params.nexus_details.frame_time = message["frame_time"]
         file_writer_params.nexus_details.sample_name = "sample"
         file_writer_params.detector.sensor_material = message["sensor_material"]
-        file_writer_params.detector.sensor_thickness = message["sensor_thickness"]
+        file_writer_params.detector.sensor_thickness = 1000 * message["sensor_thickness"]
 
         if reference_experiment is None:
             from dxtbx.model.beam import beam_phil_scope
@@ -196,7 +194,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
                 1000 * message["pixel_size_y"],
             )
             detector_params.detector.panel[0].slow_axis = (0, -1, 0)
-            detector_params.detector.panel[0].thickness = message["sensor_thickness"]
+            detector_params.detector.panel[0].thickness = 1000 * message["sensor_thickness"]
             detector_params.detector.panel[0].trusted_range = (0, 2147483647)
 
             detector_params.detector.hierarchy.group[0].id = [0]
@@ -223,26 +221,25 @@ class StreamDectrisSimplonStreamV2(StreamClass):
 
     def get_data(self, message, **kwargs):
         image_data = message["data"]["threshold_1"]
-        """
-        if "image_dtype" in kwargs.keys():
-           # if 32 bit then it is a signed int, I think if 8, 16 then it is
-           # unsigned with the highest two values assigned as masking values
-           if kwargs["image_dtype"] == "uint32":
-               top = 2**31
-           elif kwargs["image_dtype"] == "uint16":
-               top = 2**16
-           elif kwargs["image_dtype"] == "uint8":
-               top = 2**8
-           else:
-               raise Exception(f"Unhandled data type {kwargs['image_dtype']} in StreamDectrisSimplonStreamV2.get_data")
-           image_data[image_data == (top-1)] = -1
-           image_data[image_data == (top-2)] = -2
-        """
         return image_data, None
 
     def get_reader(self, image_data, **kwargs):
         from dials.array_family import flex
         from dxtbx.imageset import StreamReader
 
-        image_data = flex.double(image_data)
+        # if 32 bit then it is a signed int, I think if 8, 16 then it is
+        # unsigned with the highest two values assigned as masking values
+        if image_data.dtype.name == "uint32":
+           top = 2**32
+        elif image_data.dtype.name == "uint16":
+           top = 2**16
+        elif image_data.dtype.name == "uint8":
+           top = 2**8
+        else:
+           raise Exception(f"Unhandled data type {image_data.dtype.name} in StreamDectrisSimplonStreamV2.get_data")
+        image_data_int = image_data.astype(np.int32)
+        image_data_int[image_data == (top-1)] = -1
+        image_data_int[image_data == (top-2)] = -2
+
+        image_data = flex.double(image_data_int)
         return StreamReader([image_data])
