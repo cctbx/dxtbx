@@ -162,9 +162,7 @@ class StreamClass(ABC):
         pass
 
     @abstractmethod
-    def handle_start_message(
-        self, encoded_message=None, message=None, reference_experiment=None
-    ):
+    def handle_start_message(self, message, reference_experiment=None, sync_reference_geom=True, wavelength=None):
         """
         Convert a start message into
             1: file writer phil parameters

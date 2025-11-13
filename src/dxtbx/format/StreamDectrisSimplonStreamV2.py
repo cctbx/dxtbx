@@ -111,8 +111,10 @@ class StreamDectrisSimplonStreamV2(StreamClass):
     def recv(self, copy=True):
         return self.socket.recv(copy=copy)
 
-    def handle_start_message(self, message, reference_experiment=None):
+    def handle_start_message(self, message, reference_experiment=None, sync_reference_geom=True, wavelength=None):
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
+        from dxtbx.model.beam import beam_phil_scope
+        from dxtbx.model.beam import BeamFactory
         
         if isinstance(message["detector_description"], bytes):
             message["detector_description"] = message["detector_description"].decode()
@@ -152,26 +154,29 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         file_writer_params.detector.sensor_material = message["sensor_material"]
         file_writer_params.detector.sensor_thickness = 1000 * message["sensor_thickness"]
 
-        if reference_experiment is None:
-            from dxtbx.model.beam import beam_phil_scope
-            from dxtbx.model.beam import BeamFactory
+        # Construct beam
+        beam_params = beam_phil_scope.extract()
+        beam_params.beam.direction = [0, 0, 1]
+        beam_params.beam.divergence = None
+        beam_params.beam.flux = None
+        beam_params.beam.polarization_fraction = None
+        beam_params.beam.polarization_normal = None
+        beam_params.beam.probe = "x-ray"
+        beam_params.beam.sample_to_source_distance = 0
+        beam_params.beam.sigma_divergence = None
+        beam_params.beam.transmission = None
+        beam_params.beam.type = "monochromatic"
+        if wavelength:
+            beam_params.beam.wavelength = wavelength
+        else:
+            beam_params.beam.wavelength = float(message["incident_wavelength"])
+        beam_params.beam.wavelength_range = None
+        beam = BeamFactory.from_phil(beam_params)
+
+        if reference_experiment is None:# or sync_reference_geom:
             from dxtbx.model.detector import detector_phil_scope
             from dxtbx.model.detector import DetectorFactory
-
-            # Construct beam
-            beam_params = beam_phil_scope.extract()
-            beam_params.beam.direction = [0, 0, 1]
-            beam_params.beam.divergence = None
-            beam_params.beam.flux = None
-            beam_params.beam.polarization_fraction = None
-            beam_params.beam.polarization_normal = None
-            beam_params.beam.probe = "x-ray"
-            beam_params.beam.sample_to_source_distance = 0
-            beam_params.beam.sigma_divergence = None
-            beam_params.beam.transmission = None
-            beam_params.beam.type = "monochromatic"
-            beam_params.beam.wavelength = float(message["incident_wavelength"])
-            beam_params.beam.wavelength_range = None
+            from dials.command_line.stills_process import sync_geometry
 
             # Construct detector
             detector_params = detector_phil_scope.extract()
@@ -200,22 +205,27 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             detector_params.detector.hierarchy.group[0].id = [0]
             detector_params.detector.hierarchy.group[0].panel = [0]
 
-            ref_beam = BeamFactory.from_phil(beam_params)
-            ref_detector = DetectorFactory.generate_from_phil(detector_params, ref_beam)
-            reference_experiment = ExperimentList(
-                [Experiment(beam=ref_beam, detector=ref_detector)]
-            )
+            detector = DetectorFactory.generate_from_phil(detector_params, beam)
+
+            #if sync_reference_geom:
+            #    sync_geometry(
+            #        reference_experiment[0].detector.hierarchy(),
+            #        detector.hierarchy()
+            #    )
+            #print()
+            #pprint(detector.to_dict())
+            #print()
+            reference_experiment = ExperimentList([Experiment(
+                beam=beam,
+                detector=detector
+            )])
         else:
             # If the reference_experiment has an imageset, it gets removed by
             # creating a new experiment without the imageset.
-            reference_experiment = ExperimentList(
-                [
-                    Experiment(
-                        beam=reference_experiment[0].beam,
-                        detector=reference_experiment[0].detector,
-                    )
-                ]
-            )
+            reference_experiment = ExperimentList([Experiment(
+                beam=beam,
+                detector=reference_experiment[0].detector,
+            )])
 
         return file_writer_params, reference_experiment
 
