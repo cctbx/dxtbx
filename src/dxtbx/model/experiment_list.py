@@ -786,7 +786,7 @@ class ExperimentListFactory:
         return experiments
 
     @staticmethod
-    def from_imageset_and_crystal(imageset, crystal, load_models=True):
+    def from_imageset_and_crystal(imageset: ImageSet | None, crystal, load_models=True):
         """Load an experiment list from an imageset and crystal."""
         if isinstance(imageset, ImageSequence):
             return ExperimentListFactory.from_sequence_and_crystal(
@@ -839,7 +839,7 @@ class ExperimentListFactory:
             return ExperimentList([Experiment(imageset=imageset, crystal=crystal)])
 
     @staticmethod
-    def from_stills_and_crystal(imageset, crystal, load_models=True):
+    def from_stills_and_crystal(imageset: ImageSet | None, crystal, load_models=True):
         """Create an experiment list from stills and crystal."""
         experiments = ExperimentList()
         if imageset is None:
