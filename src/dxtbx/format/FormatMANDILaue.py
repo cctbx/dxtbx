@@ -143,6 +143,6 @@ class FormatMANDILaue(FormatMANDI):
         else:
             counts = counts[:num_pixels]
 
-        laue_array = np.reshape(counts, panel_size)
+        laue_array = np.reshape(counts, panel_size).T
 
         return laue_array
