@@ -607,9 +607,12 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                         return None
                 wavelength = spectrum.get_weighted_wavelength()
             else:
-                wavelength = serialtbx.detector.xtc.evt_wavelength(
-                    evt, delta_k=self.params.wavelength_delta_k
-                )
+                try:
+                    wavelength = serialtbx.detector.xtc.evt_wavelength(
+                        evt, delta_k=self.params.wavelength_delta_k
+                    )
+                except TypeError:  # no eBeam
+                    wavelength = None
                 if wavelength is None or wavelength <= 0:
                     wavelength = self.params.wavelength_fallback
                 if wavelength is not None and wavelength > 0:
