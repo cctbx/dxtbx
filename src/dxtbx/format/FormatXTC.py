@@ -11,6 +11,7 @@ from scipy.signal import convolve
 
 import serialtbx.detector.xtc
 import serialtbx.util
+from libtbx import Auto
 from libtbx.phil import parse
 from scitbx.array_family import flex
 
@@ -45,7 +46,7 @@ locator_str = """
     .type = int
     .multiple = True
     .help = Run number or a list of runs to process
-  mode = idx
+  mode = Auto
     .type = str
     .help = Mode for reading the xtc data (see LCLS documentation)
   data_source = None
@@ -177,6 +178,15 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             self.params = FormatXTC.params_from_phil(
                 master_phil=locator_scope, user_phil=image_file, strict=True
             )
+
+        if self.params.mode in [Auto, "Auto"]:
+            xtc_version = getattr(psana, "xtc_version", None)
+            if xtc_version == 2:
+                self.params.mode = "psana2_idx"
+            elif xtc_version is None:
+                self.params.mode = "idx"
+            else:
+                assert False, "Unrecognized psana version"
         assert self.params.mode in [
             "idx",
             "smd",
