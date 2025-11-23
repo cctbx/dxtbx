@@ -803,7 +803,7 @@ class _experimentlist:
         while True:
             try:
                 frame = sys._getframe(frame_depth)
-                module = sys.modules.get(frame.f_globals.get('__name__'))
+                module = sys.modules.get(frame.f_globals.get("__name__"))
                 if module is not None and module != this_module:
                     caller_module = module
                     caller_module_name = module.__name__
@@ -814,9 +814,13 @@ class _experimentlist:
 
         # If that module was called directly, look up via file path
         if caller_module_name == "__main__":
-            if hasattr(caller_module, '__file__') and caller_module.__file__ is not None:
-                caller_module_name = os.path.splitext(os.path.basename(caller_module.__file__))[0]
-
+            if (
+                hasattr(caller_module, "__file__")
+                and caller_module.__file__ is not None
+            ):
+                caller_module_name = os.path.splitext(
+                    os.path.basename(caller_module.__file__)
+                )[0]
 
         # Look up the dispatcher name for the caller module
         try:
