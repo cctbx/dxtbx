@@ -20,7 +20,7 @@ from dxtbx.model.experiment_list import (
     ],
 )
 def test_cbf_writer(image_file, dials_data, tmp_path):
-    data_dir = dials_data("image_examples", pathlib=True)
+    data_dir = dials_data("image_examples")
     filename = str(data_dir / image_file)
     imageset = ExperimentListFactory.from_filenames([filename])[0].imageset
     output_file = tmp_path / "image_0001.cbf"

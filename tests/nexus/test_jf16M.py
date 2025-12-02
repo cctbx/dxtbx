@@ -7,7 +7,7 @@ from dxtbx.model.experiment_list import ExperimentList
 def test_jf16M_matches_expected_hierarchy(dials_data):
     try:
         h5path = (
-            dials_data("lysozyme_JF16M_4img", pathlib=True)
+            dials_data("lysozyme_JF16M_4img")
             / "lyso009a_0087.JF07T32V01_master_4img.h5"
         )
     except Exception as e:
@@ -18,7 +18,7 @@ def test_jf16M_matches_expected_hierarchy(dials_data):
     d1 = img.get_detector()
 
     expts_path = (
-        dials_data("lysozyme_JF16M_4img", pathlib=True)
+        dials_data("lysozyme_JF16M_4img")
         / "lyso009a_0087.JF07T32V01_master_4img_imported.expt"
     )
     expts = ExperimentList.from_file(expts_path, check_format=False)

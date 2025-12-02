@@ -1,1 +1,0 @@
-Add overloads for Detector.get_ray_intersection to allow for arrays of s1 vectors.

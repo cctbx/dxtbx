@@ -5,7 +5,7 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def test_static_mask(dials_data):
-    data_dir = dials_data("image_examples", pathlib=True)
+    data_dir = dials_data("image_examples")
     filename = str(
         data_dir / "LCLS_CXI-shot-s00-2011-12-02T21_07Z29.723_00569.pickle",
     )

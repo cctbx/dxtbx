@@ -4,7 +4,7 @@ from dxtbx.command_line import print_header
 
 
 def test_print_header(dials_data, capsys):
-    screen = dials_data("thaumatin_eiger_screen", pathlib=True)
+    screen = dials_data("thaumatin_eiger_screen")
     master = screen / "Therm_6_1_master.h5"
     print_header.run([str(master)])
 

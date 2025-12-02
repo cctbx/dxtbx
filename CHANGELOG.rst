@@ -1,3 +1,34 @@
+dxtbx 3.26.0 (2025-11-06)
+=========================
+
+Features
+--------
+
+- Serialization history information is now stored with each ``Experiment``, and added to each time an ``ExperimentList`` is saved to disk. (`#816 <https://github.com/cctbx/dxtbx/issues/816>`_)
+- Support for the Bruker Photon-IV detector. (`#830 <https://github.com/cctbx/dxtbx/issues/830>`_)
+- ``FormatTRPX``: Adds support for images in compressed ``.trpx`` format, when ``pyterse`` is installed. (`#831 <https://github.com/cctbx/dxtbx/issues/831>`_)
+- Add support for treating data from MANDI as Laue data. (`#833 <https://github.com/cctbx/dxtbx/issues/833>`_)
+- Update known bad-module detector masks for Diamond I23's Pilatus 12M. (`#835 <https://github.com/cctbx/dxtbx/issues/835>`_)
+
+
+Bugfixes
+--------
+
+- When reading ``unsigned int`` data, do not attempt to convert to ``int``.
+  ``FormatBrukerModern``: replace various Bruker file readers with a single Format class. (`#828 <https://github.com/cctbx/dxtbx/issues/828>`_)
+- ``FormatMANDI.get_detector``: Add missing index parameter. (`#840 <https://github.com/cctbx/dxtbx/issues/840>`_)
+- Fix typo in ``tof_helpers.InstrumentDefinitionReader`` swapping panel axes. (`#843 <https://github.com/cctbx/dxtbx/issues/843>`_)
+- Ensure imageset reject lists are preserved in multiprocessing (for https://github.com/dials/dials/issues/2998) (`#849 <https://github.com/cctbx/dxtbx/issues/849>`_)
+- Support for miniCBF images with inverted rotation axis from SSRF beamlines BL18U1, BL19U1, and BL17U1. (`#851 <https://github.com/cctbx/dxtbx/issues/851>`_)
+- ``FormatHDF5Lambda``: Python 2 to 3 and ``h5py`` changes required to update for modern DIALS. (`#854 <https://github.com/cctbx/dxtbx/issues/854>`_)
+
+
+Misc
+----
+
+- `#837 <https://github.com/cctbx/dxtbx/issues/837>`_, `#839 <https://github.com/cctbx/dxtbx/issues/839>`_, `#841 <https://github.com/cctbx/dxtbx/issues/841>`_, `#842 <https://github.com/cctbx/dxtbx/issues/842>`_, `#844 <https://github.com/cctbx/dxtbx/issues/844>`_, `#850 <https://github.com/cctbx/dxtbx/issues/850>`_, `#861 <https://github.com/cctbx/dxtbx/issues/861>`_, `#862 <https://github.com/cctbx/dxtbx/issues/862>`_
+
+
 dxtbx 3.25.0 (2025-06-20)
 =========================
 
