@@ -823,13 +823,10 @@ class _experimentlist:
                 )[0]
 
         # Look up the dispatcher name for the caller module
-        try:
-            lookup = {e.module: e.name for e in importlib.metadata.entry_points()}
-        except AttributeError:  # Python < 3.10
-            lookup = {
-                e.module: e.name
-                for e in importlib.metadata.entry_points()["console_scripts"]
-            }
+        lookup = {
+            e.module: e.name
+            for e in importlib.metadata.entry_points(group="console_scripts")
+        }
         dispatcher = lookup.get(caller_module_name, caller_module_name)
 
         # If dispatcher lookup by entry_points did not work, try via libtbx
