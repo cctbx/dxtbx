@@ -234,7 +234,7 @@ class FormatCBFMultiTile(FormatCBFFull):
                 assert cbf.get_typeofvalue().find(b"bnry") > -1
 
                 image_string = cbf.get_realarray_as_string()
-                image = flex.double(numpy.fromstring(image_string, numpy.float))
+                image = flex.double(numpy.frombuffer(image_string, numpy.float))
 
                 parameters = cbf.get_realarrayparameters_wdims_fs()
                 image_size = (parameters[6], parameters[5])
