@@ -194,15 +194,15 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
 
         # handle floats vs ints
         if dtype == b"signed 32-bit integer":
-            array_string = cbf.get_integerarray_as_string()
-            self._raw_data = flex.int(np.frombuffer(array_string, np.int32))
+            array_data = cbf.get_integerarray_as_string()
+            self._raw_data = flex.int(np.frombuffer(array_data, np.int32))
             parameters = cbf.get_integerarrayparameters_wdims_fs()
             slow, mid, fast = (parameters[11], parameters[10], parameters[9])
             assert slow == 1  # sections not supported
             array_size = mid, fast
         elif dtype == b"signed 64-bit real IEEE":
-            array_string = cbf.get_realarray_as_string()
-            self._raw_data = flex.double(np.frombuffer(array_string, float))
+            array_data = cbf.get_realarray_as_string()
+            self._raw_data = flex.double(np.frombuffer(array_data, float))
             parameters = cbf.get_realarrayparameters_wdims_fs()
             slow, mid, fast = (parameters[7], parameters[6], parameters[5])
             assert slow == 1  # sections not supported
