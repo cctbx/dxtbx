@@ -10,10 +10,7 @@ def test_mpccd_nexus_gain(dials_data):
     """
 
     try:
-        h5path = (
-            dials_data("image_examples", pathlib=True)
-            / "SACLA-MPCCD-run197287-0-nexus.h5"
-        )
+        h5path = dials_data("image_examples") / "SACLA-MPCCD-run197287-0-nexus.h5"
     except Exception as e:
         print(type(e), str(e))
         raise

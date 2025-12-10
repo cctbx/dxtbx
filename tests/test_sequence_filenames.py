@@ -25,12 +25,12 @@ def test_template_regex(filename, template, digits):
 
 
 def test_template_image_range(dials_data):
-    template = str(dials_data("insulin", pathlib=True) / "insulin_1_###.img")
+    template = str(dials_data("insulin") / "insulin_1_###.img")
     assert template_image_range(template) == (1, 45)
 
 
 def test_template_image_range_non_zero_padded(dials_data, tmp_path):
-    images = sorted(dials_data("insulin", pathlib=True).glob("insulin_1_0[0-1]*"))
+    images = sorted(dials_data("insulin").glob("insulin_1_0[0-1]*"))
     # symlink if possible, copy if necessary
     for i, image in enumerate(images):
         try:

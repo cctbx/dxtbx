@@ -6,7 +6,7 @@ import dxtbx
 
 
 def test_noninteger_pedestal(dials_data, tmpdir):
-    data_dir = dials_data("image_examples", pathlib=True)
+    data_dir = dials_data("image_examples")
     filename = str(data_dir / "APS_14BMC-q315_1_001.img.bz2")
     # Read this file in as data
     with bz2.open(filename, "rb") as f:

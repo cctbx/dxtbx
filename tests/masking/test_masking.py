@@ -121,8 +121,7 @@ def smargon_shadow_masker(request):
 @pytest.fixture
 def dls_i23_experiment(dials_data):
     experiments_file = str(
-        dials_data("shadow_test_data", pathlib=True)
-        / "DLS_I23_Kappa-data_1_0400.cbf.gz"
+        dials_data("shadow_test_data") / "DLS_I23_Kappa-data_1_0400.cbf.gz"
     )
     experiments = ExperimentListFactory.from_filenames([experiments_file])
     return experiments[0]

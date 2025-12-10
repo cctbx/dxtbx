@@ -4,7 +4,7 @@ from dxtbx.command_line import show_mask_info
 
 
 def test_show_mask_info(dials_data, capsys):
-    data = dials_data("image_examples", pathlib=True) / "dectris_eiger_master.h5"
+    data = dials_data("image_examples") / "dectris_eiger_master.h5"
 
     show_mask_info.run([str(data)])
     captured = capsys.readouterr()

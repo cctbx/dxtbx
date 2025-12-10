@@ -9,7 +9,7 @@ from dxtbx.format.FormatISISSXD import FormatISISSXD
 
 @pytest.fixture(scope="session")
 def nacl(dials_data):
-    location = dials_data("isis_sxd_example_data", pathlib=True)
+    location = dials_data("isis_sxd_example_data")
     nacl_filename = join(location, "sxd_nacl_run.nxs")
     return nacl_filename
 
