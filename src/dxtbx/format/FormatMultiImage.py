@@ -225,18 +225,28 @@ class FormatMultiImage(Format):
             # Use imagesetlazy
             # Setup ImageSetLazy and just return it. No models are set.
             if lazy:
-                iset = ImageSetLazy(
-                    ImageSetData(
-                        reader=reader,
-                        masker=None,
-                        vendor=vendor,
-                        params=params,
-                        format=cls,
-                    ),
-                    indices=single_file_indices,
-                )
-                _add_static_mask_to_iset(format_instance, iset)
-                return iset
+                try:
+                    iset = ImageSetLazy(
+                        ImageSetData(
+                            reader=reader,
+                            masker=None,
+                            vendor=vendor,
+                            params=params,
+                            format=cls,
+                        ),
+                        indices=single_file_indices,
+                    )
+                    _add_static_mask_to_iset(format_instance, iset)
+                    return iset
+                except RuntimeError:
+                    # psana2
+                    if not (
+                        format_instance.get_num_images() == 0
+                        or len(single_file_indices) == 0
+                    ):
+                        raise
+                    return None
+
             # Create the imageset
             iset = ImageSet(
                 ImageSetData(

@@ -82,7 +82,7 @@ def test_filecache():
 
 
 def test_filecache_more(dials_data):
-    data_dir = dials_data("image_examples", pathlib=True)
+    data_dir = dials_data("image_examples")
     filename = str(data_dir / "MacScience-reallysurprise_001.ipf")
     cache = dxtbx.filecache.lazy_file_cache(open(filename, "rb"))
     with dxtbx.filecache.pseudo_file(cache) as fh:

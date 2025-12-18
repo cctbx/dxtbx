@@ -5,6 +5,8 @@ https://personal.ntu.edu.sg/cbb/info/dmformat/index.html
 
 from __future__ import annotations
 
+import os
+import re
 import struct
 
 from boost_adaptbx.boost.python import streambuf
@@ -359,18 +361,6 @@ class FormatGatanDM4(Format):
             probe=Probe.electron,
         )
 
-    def _scan(self):
-        """Dummy scan"""
-
-        image_range = (1, self._num_images)
-        exposure_times = 0.0
-        oscillation = (0, 0.5)
-        epochs = [0] * self._num_images
-
-        return self._scan_factory.make_scan(
-            image_range, exposure_times, oscillation, epochs, deg=True
-        )
-
     def _read_raw_data(self, f):
         """Read raw data from a positioned file"""
 
@@ -415,6 +405,25 @@ class FormatGatanDM4Images(FormatGatanDM4):
             raise IncorrectFormatError(self, image_file)
         FormatGatanDM4.__init__(self, image_file, **kwargs)
 
+    def _scan(self):
+        """Dummy scan for an image, assuming 0.5 degree per image"""
+
+        fname = os.path.split(self._image_file)[-1]
+        # assume that the final number before the extension is the image number
+        s = fname.split("_")[-1].split(".")[0]
+        try:
+            index = int(re.match(".*?([0-9]+)$", s).group(1))
+        except AttributeError:
+            index = 1
+        exposure_times = 0.0
+        frame = index - 1
+        # Dummy scan with a 0.5 deg image
+        oscillation = (frame * 0.5, 0.5)
+        epochs = [0]
+        return self._scan_factory.make_scan(
+            (index, index), exposure_times, oscillation, epochs, deg=True
+        )
+
     def get_raw_data(self):
         with FormatGatanDM4.open_file(self._image_file, "rb") as f:
             f.seek(self._data_offset)
@@ -431,6 +440,18 @@ class FormatGatanDM4Stack(FormatMultiImage, FormatGatanDM4):
             raise IncorrectFormatError(self, image_file)
         FormatMultiImage.__init__(self, **kwargs)
         FormatGatanDM4.__init__(self, image_file, **kwargs)
+
+    def _scan(self):
+        """Dummy scan for a stack of images, assuming 0.5 degree per image"""
+
+        image_range = (1, self._num_images)
+        exposure_times = 0.0
+        oscillation = (0, 0.5)
+        epochs = [0] * self._num_images
+
+        return self._scan_factory.make_scan(
+            image_range, exposure_times, oscillation, epochs, deg=True
+        )
 
     def get_raw_data(self, index):
         with FormatGatanDM4.open_file(self._image_file, "rb") as f:

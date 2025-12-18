@@ -7,7 +7,7 @@ from dxtbx.model.experiment_list import ExperimentListFactory
 
 
 def test_single_panel(dials_data, tmpdir):
-    filename = dials_data("x4wide", pathlib=True) / "X4_wide_M1S4_2_0001.cbf"
+    filename = dials_data("x4wide") / "X4_wide_M1S4_2_0001.cbf"
 
     assert FormatCBFMiniPilatus.understand(filename)
     expts = ExperimentListFactory.from_filenames([filename])
@@ -17,7 +17,7 @@ def test_single_panel(dials_data, tmpdir):
 
 
 def test_multi_panel(dials_data, tmpdir):
-    filename = dials_data("x4wide", pathlib=True) / "X4_wide_M1S4_2_0001.cbf"
+    filename = dials_data("x4wide") / "X4_wide_M1S4_2_0001.cbf"
 
     assert FormatCBFMiniPilatus.understand(filename)
     expts = ExperimentListFactory.from_filenames(
