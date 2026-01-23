@@ -7,8 +7,8 @@ import time
 from itertools import groupby
 
 import numpy as np
-from scipy.signal import convolve
 from scipy.optimize import curve_fit
+from scipy.signal import convolve, savgol_filter
 
 import serialtbx.detector.xtc
 import serialtbx.util
@@ -115,6 +115,9 @@ locator_str = """
   spectrum_gaussian_max_fwhm = 20
     .type = float
     .help = reject spectra with a fitted Gaussian FWHM above this value.
+  spectrum_gaussian_min_fwhm = 3
+    .type = float
+    .help = reject spectra with a fitted Gaussian FWHM below this value.
   spectrum_gaussian_max_dist = 10
     .type = float
     .help = reject spectra when the fitted Gaussian center is this far from \
@@ -634,26 +637,35 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 if not self.params.spectrum_gaussian_fit:
                     wavelength = spectrum.get_weighted_wavelength()
                 else:
-                    def gaussian(x, amplitude, center, sigma):
-                        return amplitude * np.exp(-(x - center)**2 / (2 * sigma**2))
+                    def gaussian_offset(x, amplitude, center, sigma, offset):
+                        return offset + amplitude * np.exp(-(x - center)**2 / (2 * sigma**2))
 
                     e = spectrum.get_energies_eV().as_numpy_array()
                     w = spectrum.get_weights().as_numpy_array()
-                    max_idx = np.argmax(w)
+                    # Smooth before choosing the max pixel. This gives us some resistance to
+                    # panel edges and other hot pixels.
+                    w_sm = savgol_filter(w, window_length=11, polyorder=2)
+                    max_idx = np.argmax(w_sm)
                     center_init = e[max_idx]
                     amplitude_init = w[max_idx]
                     sigma_init = 10  # Guess bandwidth in eV
-                    p0 = [amplitude_init, center_init, sigma_init]
+                    offset_init = 0
+                    p0 = [amplitude_init, center_init, sigma_init, offset_init]
+                    b_low=(0,0,0,-np.inf)
+                    b_high=(np.inf, np.inf, np.inf, np.inf)
                     try:
-                        popt, pcov = curve_fit(gaussian, e, w, p0=p0)
+                        popt, pcov = curve_fit(gaussian_offset, e, w, p0=p0, bounds=(b_low, b_high))
                     except RuntimeError: # Refinement failed
                         wavelength = None
-                    center = popt[1]
-                    sigma = popt[2]
+                    amplitude, center, sigma, offset = popt
                     fwhm = sigma*2.355
                     if (
                         abs(center - center_init) > self.params.spectrum_gaussian_max_dist or
-                        fwhm > self.params.spectrum_gaussian_max_fwhm
+                        fwhm > self.params.spectrum_gaussian_max_fwhm or
+                        fwhm < self.params.spectrum_gaussian_min_fwhm or
+                        amplitude < 0 or
+                        center < e.min() or
+                        center > e.max()
                     ):
                         wavelength = None
                     else:
@@ -692,7 +704,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 if self._beam_cache is not None:
                     self._beam_cache.set_polarization_normal((1, 0, 0))
 
-        if self._beam_cache.get_wavelength() < 0.1:
+        if self._beam_cache and self._beam_cache.get_wavelength() < 0.1:
             from dxtbx.model.beam import Probe
 
             self._beam_cache.set_probe(Probe.electron)
@@ -801,10 +813,14 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
           y = y - self._spectrum_pedestal.as_numpy_array()
 
         # Recklessly clip at 0
-        y = y.clip(min=0)
+        #y = y.clip(min=0)
+        # Avoid negative mean
+        if y.mean() < 0:
+          y -= 2*y.mean()
+
 
         # Generate calibrated energy axis
-        n_pixels = x2 - x1 + 1
+        #n_pixels = x2 - x1 + 1
         pixel_positions = np.arange(x1, x2 + 1)
         x = (self.params.spectrum_eV_per_pixel * pixel_positions) + self.params.spectrum_eV_offset
 
