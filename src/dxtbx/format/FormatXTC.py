@@ -176,6 +176,10 @@ locator_str = """
       .help = If True, read the event codes for all events up front, and \
               apply the filter then. Otherwise, apply when loading an \
               event.
+    encode_codes_in_timestamp = False
+      .type = bool
+    code_range = None
+      .type = ints(size=2)
   }
 """
 locator_scope = parse(locator_str)
@@ -450,6 +454,15 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 ]
             )
 
+    def _get_event_codes(self, evt):
+        if not self._evr:
+            self._evr = psana.Detector(self.params.filter.evr_address)
+        try:  # psana1
+            codes = self._evr.eventCodes(evt)
+        except Exception:  # psana2_idx
+            codes = [i for i, val in enumerate(self._evr.eventcodes(evt)) if val != 0]
+        return codes
+
     def filter_event(self, evt):
         """Return True to keep the event, False to reject it."""
         if not (
@@ -457,12 +470,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             or self.params.filter.required_absent_codes
         ):
             return True
-        if not self._evr:
-            self._evr = psana.Detector(self.params.filter.evr_address)
-        try:  # psana1
-            codes = self._evr.eventCodes(evt)
-        except Exception:  # psana2_idx
-            codes = [i for i, val in enumerate(self._evr.eventcodes(evt)) if val != 0]
+        codes = self._get_event_codes(evt)
 
         if self.params.filter.required_present_codes and not all(
             c in codes for c in self.params.filter.required_present_codes
@@ -590,13 +598,30 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         evt = self._get_event(index)
         if not evt:
             return None
-        time = evt.get(psana.EventId).time()
-        # fid = evt.get(psana.EventId).fiducials()
+        try:
+            sec, nsec = evt.get(psana.EventId).time()
+        except AttributeError:
+            # psana2
+            dt = evt.datetime()
+            sec = int(dt.timestamp())
+            nsec = dt.microsecond * 1000
+        ts = serialtbx.util.time.timestamp((sec, nsec / 1e6))
 
-        sec = time[0]
-        nsec = time[1]
-
-        return serialtbx.util.time.timestamp((sec, nsec / 1e6))
+        if self.params.filter.encode_codes_in_timestamp:
+            codes = self._get_event_codes(evt)
+            if self.params.filter.code_range:
+                min_code, max_code = self.params.filter.code_range
+                code = ""
+                for c in range(min_code, max_code + 1):
+                    if c in codes:
+                        code = "1" + code
+                    else:
+                        code = "0" + code
+                code = str(int(code, 2))
+                ts = code + "_" + ts
+            else:
+                ts = ",".join([str(c) for c in codes]) + "_" + ts
+        return ts
 
     def get_num_images(self):
         return self.n_images
@@ -699,8 +724,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 s, nsec = evt.get(psana.EventId).time()
             except AttributeError:
                 # psana2
-                ts = evt.timestamp
-                s = int(str(ts)[0:10])  # not elegant but works.
+                dt = evt.datetime()
+                s = int(dt.timestamp())
+
             evttime = time.gmtime(s)
             if (
                 evttime.tm_year == 2020 and evttime.tm_mon >= 7
