@@ -637,8 +637,11 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 if not self.params.spectrum_gaussian_fit:
                     wavelength = spectrum.get_weighted_wavelength()
                 else:
+
                     def gaussian_offset(x, amplitude, center, sigma, offset):
-                        return offset + amplitude * np.exp(-(x - center)**2 / (2 * sigma**2))
+                        return offset + amplitude * np.exp(
+                            -((x - center) ** 2) / (2 * sigma**2)
+                        )
 
                     e = spectrum.get_energies_eV().as_numpy_array()
                     w = spectrum.get_weights().as_numpy_array()
@@ -651,27 +654,28 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                     sigma_init = 10  # Guess bandwidth in eV
                     offset_init = 0
                     p0 = [amplitude_init, center_init, sigma_init, offset_init]
-                    b_low=(0,0,0,-np.inf)
-                    b_high=(np.inf, np.inf, np.inf, np.inf)
+                    b_low = (0, 0, 0, -np.inf)
+                    b_high = (np.inf, np.inf, np.inf, np.inf)
                     try:
-                        popt, pcov = curve_fit(gaussian_offset, e, w, p0=p0, bounds=(b_low, b_high))
-                    except RuntimeError: # Refinement failed
+                        popt, pcov = curve_fit(
+                            gaussian_offset, e, w, p0=p0, bounds=(b_low, b_high)
+                        )
+                    except RuntimeError:  # Refinement failed
                         wavelength = None
                     amplitude, center, sigma, offset = popt
-                    fwhm = sigma*2.355
+                    fwhm = sigma * 2.355
                     if (
-                        abs(center - center_init) > self.params.spectrum_gaussian_max_dist or
-                        fwhm > self.params.spectrum_gaussian_max_fwhm or
-                        fwhm < self.params.spectrum_gaussian_min_fwhm or
-                        amplitude < 0 or
-                        center < e.min() or
-                        center > e.max()
+                        abs(center - center_init)
+                        > self.params.spectrum_gaussian_max_dist
+                        or fwhm > self.params.spectrum_gaussian_max_fwhm
+                        or fwhm < self.params.spectrum_gaussian_min_fwhm
+                        or amplitude < 0
+                        or center < e.min()
+                        or center > e.max()
                     ):
                         wavelength = None
                     else:
-                        wavelength = 12398.4/center
-
-
+                        wavelength = 12398.4 / center
 
             else:
                 try:
@@ -714,13 +718,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     def get_spectrum(self, index=None):
         if index is None:
             index = 0
-        if self.params.spectrum_source == 'fee':
+        if self.params.spectrum_source == "fee":
             if self.params.double_spectrum_required_hack:
                 test = self._spectrum_hutch(index)
                 if not test:
                     raise RuntimeError("No paired spectra in shot %d" % index)
             spectrum = self._spectrum_fee(index)
-        elif self.params.spectrum_source == 'hutch':
+        elif self.params.spectrum_source == "hutch":
             if self.params.double_spectrum_required_hack:
                 test = self._spectrum_fee(index)
                 if not test:
@@ -738,101 +742,103 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         This is the actual implementation that will be used in production.
         """
         if index is None:
-          index = 0
+            index = 0
 
         # Apply index offset if specified
         if self.params.spectrum_index_offset:
-          index += self.params.spectrum_index_offset
-          if index < 0:
-            return None
+            index += self.params.spectrum_index_offset
+            if index < 0:
+                return None
 
         # Check that calibration parameters are available
         if self.params.spectrum_eV_per_pixel is None:
-          return None
+            return None
         if self.params.spectrum_roi_limits is None:
-          return None
+            return None
 
         # Get the event
         evt = self._get_event(index)
         if not evt:
-          return None
+            return None
 
         # Get or initialize detector object
         if self._hutch_spec is None:
-          try:
-            # psana2 style
-            self._hutch_spec = self.get_run_from_index(index).Detector(
-              self.params.spectrum_address_hutch or self.params.det
-            )
-          except AttributeError:
-            # psana1 style (fallback)
-            import psana
-            self._hutch_spec = psana.Detector(
-              self.params.spectrum_address_hutch or self.params.det
-            )
+            try:
+                # psana2 style
+                self._hutch_spec = self.get_run_from_index(index).Detector(
+                    self.params.spectrum_address_hutch or self.params.det
+                )
+            except AttributeError:
+                # psana1 style (fallback)
+                import psana
+
+                self._hutch_spec = psana.Detector(
+                    self.params.spectrum_address_hutch or self.params.det
+                )
 
         if self._hutch_spec is None:
-          return None
+            return None
 
         # Get the detector image
         try:
-          # Try psana2 first
-          img = self._hutch_spec.raw.calib(evt)
+            # Try psana2 first
+            img = self._hutch_spec.raw.calib(evt)
         except AttributeError:
-          # Fall back to psana1
-          try:
-            img = self._hutch_spec.image(evt)
-          except AttributeError:
-            return None
+            # Fall back to psana1
+            try:
+                img = self._hutch_spec.image(evt)
+            except AttributeError:
+                return None
 
         if img is None:
-          return None
+            return None
 
         # Extract ROI limits
         # Handle both [y1, y2] and [x1, x2, y1, y2] formats
         if len(self.params.spectrum_roi_limits) == 2:
-          y1, y2 = self.params.spectrum_roi_limits
-          x1 = 0
-          x2 = img.shape[1] - 1
+            y1, y2 = self.params.spectrum_roi_limits
+            x1 = 0
+            x2 = img.shape[1] - 1
         elif len(self.params.spectrum_roi_limits) == 4:
-          x1, x2, y1, y2 = self.params.spectrum_roi_limits
+            x1, x2, y1, y2 = self.params.spectrum_roi_limits
         else:
-          return None
+            return None
 
         # Extract ROI from image
         try:
-          roi_img = img[y1:y2+1, x1:x2+1]
+            roi_img = img[y1 : y2 + 1, x1 : x2 + 1]
         except (IndexError, TypeError):
-          return None
+            return None
 
         # Collapse ROI to 1D spectrum by summing/averaging along y-axis
         y = roi_img.mean(axis=0)
 
         # Apply pedestal subtraction if specified
         if self.params.spectrum_pedestal and self._spectrum_pedestal:
-          y = y - self._spectrum_pedestal.as_numpy_array()
+            y = y - self._spectrum_pedestal.as_numpy_array()
 
         # Recklessly clip at 0
-        #y = y.clip(min=0)
+        # y = y.clip(min=0)
         # Avoid negative mean
         if y.mean() < 0:
-          y -= 2*y.mean()
-
+            y -= 2 * y.mean()
 
         # Generate calibrated energy axis
-        #n_pixels = x2 - x1 + 1
+        # n_pixels = x2 - x1 + 1
         pixel_positions = np.arange(x1, x2 + 1)
-        x = (self.params.spectrum_eV_per_pixel * pixel_positions) + self.params.spectrum_eV_offset
+        x = (
+            self.params.spectrum_eV_per_pixel * pixel_positions
+        ) + self.params.spectrum_eV_offset
 
         # Validate data
         if len(x) != len(y):
-          return None
+            return None
 
         try:
-          # Create Spectrum object
-          sp = Spectrum(x, y)
+            # Create Spectrum object
+            sp = Spectrum(x, y)
         except (RuntimeError, NameError):
-          return None
+            return None
 
         return sp
 
