@@ -617,7 +617,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                         code = "1" + code
                     else:
                         code = "0" + code
-                code = str(int(code, 2))
+                code = "%03s"%int(code, 2)
                 ts = code + "_" + ts
             else:
                 ts = ",".join([str(c) for c in codes]) + "_" + ts
