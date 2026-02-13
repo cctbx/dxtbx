@@ -16,24 +16,19 @@ The intention is that all of the code should try to converge towards these.
     Linux/macOS, the current best way to create a fresh installation of DIALS
     and all of its dependencies is with the following commands:
     ```
-    git clone https://github.com/cctbx/cctbx_project modules/cctbx_project
-    ln -s modules/cctbx_project/libtbx/auto_build/bootstrap.py
-    python bootstrap.py hot base update build --builder=dials --use-conda
+    git clone https://github.com/dials/dials modules/dials
+    python modules/dials/installer/bootstrap.py
     ```
-2.  Activate the environment with `source <root>/build/setpaths.sh`. This will
+2.  Activate the environment with `source <root>/dials`. This will
     need to be done every time you work on DIALS code.
-3.  Install pre-commit hooks with `libtbx.precommit install`. This will install
-    hooks for DIALS, dxtbx and xia2.
 
 The DIALS repository is now checked out in `<root>/modules/dials`. During
 development, run tests with pytest with `libtbx.pytest --regression` to ensure
 that all of the tests still pass.
 
-If you update or change dependencies, you may occasionally need to regenerate
-the static libtbx ecosystem by running `libtbx.refresh` - this will also
-generate an alias to any executable scripts installed by `pip` as
-`libtbx.<script>`. Using these helps ensure that you are using the bundled
-python version instead of your system version.
+If you update source code or change dependencies, you may occasionally need
+to regenerate the static libtbx ecosystem and rebuild any C++ code. You can
+go this by running `make reconf` in the `<root>/build` directory.
 
 ## Code Development Guidelines
 
