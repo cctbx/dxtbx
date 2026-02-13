@@ -12,7 +12,8 @@ import os
 import pickle
 import sys
 from collections.abc import Callable, Generator, Iterable
-from typing import Any
+from pathlib import Path
+from typing import Any, AnyStr, Type, TypedDict
 
 import natsort
 from tqdm import tqdm
@@ -21,17 +22,22 @@ import dxtbx
 from dxtbx.format.Format import Format
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.format.image import ImageBool, ImageDouble
-from dxtbx.format.Registry import get_format_class_for_file
+from dxtbx.format.Registry import get_format_class_for_file, get_format_class_index
 from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet, ImageSetFactory
 from dxtbx.model import (
+    Beam,
     BeamFactory,
+    Crystal,
     CrystalFactory,
+    Detector,
     DetectorFactory,
     Experiment,
     ExperimentList,
+    Goniometer,
     GoniometerFactory,
     History,
     ProfileModelFactory,
+    Scan,
     ScanFactory,
 )
 from dxtbx.sequence_filenames import (
@@ -63,6 +69,16 @@ else:
     scaling_model_entry_points = importlib.metadata.entry_points(
         group="dxtbx.scaling_model_ext"
     )
+
+
+class ModelDict(TypedDict):
+    beam: Beam | None
+    crystal: Crystal | None
+    detector: Detector | None
+    goniometer: Goniometer | None
+    profile: Any | None
+    scaling_model: Any | None
+    scan: Scan | None
 
 
 class InvalidExperimentListError(RuntimeError):
@@ -195,7 +211,12 @@ class ExperimentListDict:
     """A helper class for serializing the experiment list to dictionary (needed
     to save the experiment list to JSON format."""
 
-    def __init__(self, obj, check_format=True, directory=None):
+    def __init__(
+        self,
+        obj: dict,
+        check_format=True,
+        directory: AnyStr | os.PathLike | None = None,
+    ):
         """Initialise. Copy the dictionary."""
         # Basic check: This is a dict-like object. This can happen if e.g. we
         # were passed a DataBlock list instead of an ExperimentList dictionary
@@ -204,7 +225,7 @@ class ExperimentListDict:
 
         self._obj = copy.deepcopy(obj)
         self._check_format = check_format
-        self._directory = directory
+        self._directory = Path(directory) if directory else None
 
         # If this doesn't claim to be an ExperimentList, don't even try
         if self._obj.get("__id__") != "ExperimentList":
@@ -231,7 +252,7 @@ class ExperimentListDict:
             )
         }
 
-    def _extract_models(self, name, from_dict):
+    def _extract_models(self, name: str, from_dict: Callable[[dict], Any]) -> Any:
         """
         Helper function. Extract the models.
 
@@ -273,7 +294,9 @@ class ExperimentListDict:
                 if value not in mmap:
                     mmap[value] = len(mlist)
                     mlist.append(
-                        from_dict(_experimentlist_from_file(value, self._directory))
+                        from_dict(
+                            _experimentlist_from_file(Path(value), self._directory)
+                        )
                     )
                 eobj[name] = mmap[value]
             elif not isinstance(value, int):
@@ -299,10 +322,10 @@ class ExperimentListDict:
             the pickle file, or is None if the file is inaccessible. If there
             is no key entry then ("", None) is returned.
         """
-        if param not in imageset_data:
+        if not imageset_data.get(param):
             return "", None
 
-        filename = resolve_path(imageset_data[param], directory=self._directory)
+        filename = resolve_path(Path(imageset_data[param]), directory=self._directory)
         data = None
         if filename:
             try:
@@ -315,18 +338,20 @@ class ExperimentListDict:
 
         return filename, data
 
-    def _imageset_from_imageset_data(self, imageset_data, models):
+    def _imageset_from_imageset_data(
+        self, imageset_data: dict, models: ModelDict
+    ) -> ImageSet | ImageSequence | ImageGrid | None:
         """Make an imageset from imageset_data - help with refactor decode."""
         assert imageset_data is not None
         if "params" in imageset_data:
-            format_kwargs = imageset_data["params"]
+            format_kwargs: dict = imageset_data["params"]
         else:
             format_kwargs = {}
 
-        beam = models["beam"]
-        detector = models["detector"]
-        goniometer = models["goniometer"]
-        scan = models["scan"]
+        beam: Beam = models["beam"]
+        detector: Detector = models["detector"]
+        goniometer: Goniometer | None = models["goniometer"]
+        scan: Scan | None = models["scan"]
 
         # Load the external lookup data
         mask_filename, mask = self._load_pickle_path(imageset_data, "mask")
@@ -421,7 +446,7 @@ class ExperimentListDict:
 
         return imageset
 
-    def decode(self):
+    def decode(self) -> ExperimentList:
         """Decode the dictionary into a list of experiments."""
         # Extract all the experiments - first find all scans belonging to
         # same imageset
@@ -463,7 +488,7 @@ class ExperimentListDict:
         el = ExperimentList()
         for eobj in self._obj["experiment"]:
             # Get the models
-            identifier = eobj.get("identifier", "")
+            identifier: str = eobj.get("identifier", "")
             beam = self._lookup_model("beam", eobj)
             detector = self._lookup_model("detector", eobj)
             goniometer = self._lookup_model("goniometer", eobj)
@@ -550,13 +575,13 @@ class ExperimentListDict:
 
     def _make_sequence(
         self,
-        imageset,
-        beam=None,
-        detector=None,
-        goniometer=None,
-        scan=None,
-        format_kwargs=None,
-    ):
+        imageset: dict,
+        beam: Beam | None = None,
+        detector: Detector | None = None,
+        goniometer: Goniometer | None = None,
+        scan: Scan | None = None,
+        format_kwargs: dict | None = None,
+    ) -> ImageSequence:
         """Make an image sequence."""
         # Get the template format
         template = resolve_path(imageset["template"], directory=self._directory)
@@ -568,8 +593,37 @@ class ExperimentListDict:
         else:
             i0, i1 = scan.get_image_range()
 
+        def _get_validate_format(name: str) -> Type[Format]:
+            """
+            Get a Format class type instance, from the fully qualified name
+
+            Do extra work to validate that the Format in the registry matches the
+            expected qualified name completely.
+            """
+            shortname = name.split(".")[-1]
+            index = get_format_class_index()
+            if shortname not in index:
+                raise RuntimeError(
+                    f"ImageSequence is registered as an unrecognised format class: '{name}'"
+                )
+            # As a safety check, ensure that this is in the same location
+            concrete = index[shortname][0]()
+            concrete_full_name = f"{concrete.__module__}.{concrete.__qualname__}"
+            if concrete_full_name != name:
+                raise RuntimeError(
+                    f"ImageSequence has recognised format class '{shortname}', but at an unrecognised location ({concrete} instead of the expected {name})"
+                )
+            return concrete
+
         format_class = None
-        if self._check_format is False:
+
+        # WIP: This loads the matching format class if we have one defined. But we
+        # need to check to see what happens everywhere else when check_format=True
+        # (we want to effectively _always_ have check_format=True because the need
+        # to access it should have gone away).
+        if qualname := imageset.get("__format__"):
+            format_class = _get_validate_format(qualname)
+        elif self._check_format is False:
             if "single_file_indices" in imageset:
                 format_class = FormatMultiImage
 
@@ -586,13 +640,13 @@ class ExperimentListDict:
             format_kwargs=format_kwargs,
         )
 
-    def _lookup_model(self, name, experiment_dict):
+    def _lookup_model(self, name: str, experiment_dict: dict[str, int]) -> dict | None:
         """
         Find a model by looking up its index from a dictionary
 
         Args:
-            name (str): The model name e.g. 'beam', 'detector'
-            experiment_dict (Dict[str, int]):
+            name: The model name e.g. 'beam', 'detector'
+            experiment_dict:
                 The experiment dictionary. experiment_dict[name] must
                 exist and be not None to retrieve a model. If this key
                 exists, then there *must* be an item with this index
@@ -616,7 +670,7 @@ class ExperimentListDict:
                 return entry_point.load().from_dict(obj)
 
 
-def _experimentlist_from_file(filename, directory=None):
+def _experimentlist_from_file(filename: Path, directory: Path | None = None) -> dict:
     """Load a model dictionary from a file."""
     filename = resolve_path(filename, directory=directory)
     try:

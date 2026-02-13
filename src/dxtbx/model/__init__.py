@@ -735,6 +735,11 @@ class _experimentlist:
                     "__id__": "ImageSequence",
                     "template": template,
                 }
+                format_class = imset.get_format_class()
+                if not format_class.is_abstract():
+                    r["__format__"] = (
+                        f"{format_class.__module__}.{format_class.__qualname__}"
+                    )
                 if imset.reader().is_single_file_reader():
                     r["single_file_indices"] = list(imset.indices())
             elif isinstance(imset, ImageSet):
@@ -947,7 +952,7 @@ class _experimentlist:
             else:
                 return text
 
-    def as_file(self, filename, **kwargs):
+    def as_file(self, filename: str, **kwargs):
         """Dump experiment list as file."""
         ext = os.path.splitext(filename)[1]
         j_ext = [".json", ".expt"]
