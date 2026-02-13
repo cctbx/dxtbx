@@ -1,3 +1,30 @@
+dxtbx 3.27.0 (2026-02-13)
+=========================
+
+Features
+--------
+
+- Add psana2 support, which allows reading data from LCLS-II file formats (`#860 <https://github.com/cctbx/dxtbx/issues/860>`_)
+
+
+Bugfixes
+--------
+
+- Transpose laue array from FormatMANDILaue.generate_laue_data_for_panel to be consistent with FormatMANDI. (`#847 <https://github.com/cctbx/dxtbx/issues/847>`_)
+- ``FormatGatanDM4``: Fix to allow import of data sets that do not start with image 1. (`#864 <https://github.com/cctbx/dxtbx/issues/864>`_)
+- Fix `image_range` not working for ToF data when using `dials.import` by checking first if the `Scan` object has the oscillation property. (`#870 <https://github.com/cctbx/dxtbx/issues/870>`_)
+- Fix to avoid a reported deprecation warning on Python 3.11 (`#871 <https://github.com/cctbx/dxtbx/issues/871>`_)
+- Fix `FormatMANDI.get_time_range_for_panel` giving the incorrect range in some cases. (`#873 <https://github.com/cctbx/dxtbx/issues/873>`_)
+- Avoid ``PytestUnknownMarkWarning`` in tests (`#874 <https://github.com/cctbx/dxtbx/issues/874>`_)
+- Fix usage of flumpy with pandas 3.0+. Trying to convert a read-only numpy array to flex will now implicitly copy it. (`#876 <https://github.com/cctbx/dxtbx/issues/876>`_)
+
+
+Misc
+----
+
+- `#872 <https://github.com/cctbx/dxtbx/issues/872>`_
+
+
 dxtbx 3.26.0 (2025-11-06)
 =========================
 

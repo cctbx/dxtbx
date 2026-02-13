@@ -1,1 +1,0 @@
-Fix `image_range` not working for ToF data when using `dials.import` by checking first if the `Scan` object has the oscillation property.

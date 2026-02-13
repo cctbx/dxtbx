@@ -1,1 +1,0 @@
-Fix usage of flumpy with pandas 3.0+. Trying to convert a read-only numpy array to flex will now implicitly copy it.
