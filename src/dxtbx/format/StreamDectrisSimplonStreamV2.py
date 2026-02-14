@@ -112,6 +112,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         return self.socket.recv(copy=copy)
 
     def handle_start_message(self, message, reference_experiment=None, sync_reference_geom=True, wavelength=None):
+        from dials.command_line.stills_process import sync_geometry
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
         from dxtbx.model.beam import beam_phil_scope
         from dxtbx.model.beam import BeamFactory
@@ -166,17 +167,13 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         beam_params.beam.sigma_divergence = None
         beam_params.beam.transmission = None
         beam_params.beam.type = "monochromatic"
-        if wavelength:
-            beam_params.beam.wavelength = wavelength
-        else:
-            beam_params.beam.wavelength = float(message["incident_wavelength"])
+        beam_params.beam.wavelength = float(message["incident_wavelength"])
         beam_params.beam.wavelength_range = None
         beam = BeamFactory.from_phil(beam_params)
 
-        if reference_experiment is None:# or sync_reference_geom:
+        if reference_experiment is None or sync_reference_geom:
             from dxtbx.model.detector import detector_phil_scope
             from dxtbx.model.detector import DetectorFactory
-            from dials.command_line.stills_process import sync_geometry
 
             # Construct detector
             detector_params = detector_phil_scope.extract()
@@ -207,18 +204,13 @@ class StreamDectrisSimplonStreamV2(StreamClass):
 
             detector = DetectorFactory.generate_from_phil(detector_params, beam)
 
-            #if sync_reference_geom:
-            #    sync_geometry(
-            #        reference_experiment[0].detector.hierarchy(),
-            #        detector.hierarchy()
-            #    )
-            #print()
-            #pprint(detector.to_dict())
-            #print()
-            reference_experiment = ExperimentList([Experiment(
-                beam=beam,
-                detector=detector
-            )])
+            if reference_experiment and sync_reference_geom:
+                sync_geometry(
+                    reference_experiment[0].detector.hierarchy(),
+                    detector.hierarchy(),
+                )
+
+            reference_experiment = ExperimentList([Experiment(beam=beam, detector=detector)])
         else:
             # If the reference_experiment has an imageset, it gets removed by
             # creating a new experiment without the imageset.
@@ -227,6 +219,10 @@ class StreamDectrisSimplonStreamV2(StreamClass):
                 detector=reference_experiment[0].detector,
             )])
 
+        reference_experiment = ExperimentList([Experiment(
+            beam=reference_experiment[0].beam,
+            detector=reference_experiment[0].detector,
+        )])
         return file_writer_params, reference_experiment
 
     def get_data(self, message, **kwargs):
