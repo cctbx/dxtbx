@@ -257,8 +257,11 @@ class LCLStreamer(StreamClass):
                 )
         return message
 
-    def handle_start_message(self, message, reference_experiment=None):
+    def handle_start_message(self, message, reference_experiment=None, sync_reference_geom=True, wavelength=None):
+        from dials.command_line.stills_process import sync_geometry
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
+        from dxtbx.model.beam import beam_phil_scope
+        from dxtbx.model.beam import BeamFactory
 
         file_writer_params = nxmx_writer_phil_scope.extract()
 
@@ -289,39 +292,44 @@ class LCLStreamer(StreamClass):
         )
         file_writer_params.nexus_details.sample_name = message["experiment"]
 
-        if reference_experiment is None:
-            from dxtbx.model.beam import beam_phil_scope
-            from dxtbx.model.beam import BeamFactory
+        # Construct beam
+        beam_params = beam_phil_scope.extract()
+        beam_params.beam.direction = [0, 0, 1]
+        beam_params.beam.divergence = None
+        beam_params.beam.flux = None
+        beam_params.beam.polarization_fraction = message["polarization"]["fraction"]
+        beam_params.beam.polarization_normal = message["polarization"]["axis"]
+        beam_params.beam.probe = message["beam_type"].lower()
+        beam_params.beam.sample_to_source_distance = 0
+        beam_params.beam.sigma_divergence = None
+        beam_params.beam.transmission = None
+        beam_params.beam.type = "monochromatic"
+        if wavelength:
+            beam_params.beam.wavelength = wavelength
+        else:
+            # Wavelength is not included in the start message ...
+            beam_params.beam.wavelength = 1 # float(message["photon_wavelength"])
+        beam_params.beam.wavelength_range = None
+        beam = BeamFactory.from_phil(beam_params)
 
-            # Construct beam
-            beam_params = beam_phil_scope.extract()
-            beam_params.beam.direction = [0, 0, 1]
-            beam_params.beam.divergence = None
-            beam_params.beam.flux = None
-            beam_params.beam.polarization_fraction = message["polarization"]["fraction"]
-            beam_params.beam.polarization_normal = message["polarization"]["axis"]
-            beam_params.beam.probe = message["beam_type"].lower()
-            beam_params.beam.sample_to_source_distance = 0
-            beam_params.beam.sigma_divergence = None
-            beam_params.beam.transmission = None
-            beam_params.beam.type = "monochromatic"
-            # EWvelength is not included in the start message ...
-            beam_params.beam.wavelength = 1  # float(message["photon_wavelength"])
-            beam_params.beam.wavelength_range = None
-            reference_beam = BeamFactory.from_phil(beam_params)
-
+        if reference_experiment is None or sync_reference_geom:
             # Construct detector
             if "jungfrau" in message["detector"]["name"].lower():
                 if self._split_modules:
-                    reference_detector = get_jungfrau_detector_asic(
+                    detector = get_jungfrau_detector_asic(
                         message["detector"]["geometry"], beam_params.beam.wavelength
                     )
                 else:
-                    reference_detector = get_jungfrau_detector_module(
+                    detector = get_jungfrau_detector_module(
                         message["detector"]["geometry"], beam_params.beam.wavelength
                     )
             else:
                 assert False
+            if reference_experiment and sync_reference_geom:
+                sync_geometry(
+                    reference_experiment[0].detector.hierarchy(),
+                    detector.hierarchy(),
+                )
         else:
             # Add the type of detector to the panel type field. This gets used
             # by the get_reader method to determine how to read the data.
@@ -332,18 +340,12 @@ class LCLStreamer(StreamClass):
                 assert False
             # If the reference_experiment has an imageset, it gets removed by
             # creating a new experiment without the imageset.
-            reference_beam = reference_experiment[0].beam
-            reference_detector = reference_experiment[0].detector
+            beam = reference_experiment[0].beam
+            detector = reference_experiment[0].detector
 
-        reference_experiment = ExperimentList(
-            [Experiment(beam=reference_beam, detector=reference_detector)]
-        )
-        file_writer_params.detector.sensor_material = reference_detector[
-            0
-        ].get_material()
-        file_writer_params.detector.sensor_thickness = reference_detector[
-            0
-        ].get_thickness()
+        reference_experiment = ExperimentList([Experiment(beam=beam, detector=detector)])
+        file_writer_params.detector.sensor_material = detector[0].get_material()
+        file_writer_params.detector.sensor_thickness = detector[0].get_thickness()
 
         return file_writer_params, reference_experiment
 
