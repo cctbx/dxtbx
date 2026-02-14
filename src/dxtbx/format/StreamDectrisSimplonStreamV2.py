@@ -203,7 +203,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             detector_params.detector.hierarchy.group[0].panel = [0]
 
             detector = DetectorFactory.generate_from_phil(detector_params, beam)
-
             if reference_experiment and sync_reference_geom:
                 sync_geometry(
                     reference_experiment[0].detector.hierarchy(),
@@ -218,7 +217,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
                 beam=beam,
                 detector=reference_experiment[0].detector,
             )])
-
         reference_experiment = ExperimentList([Experiment(
             beam=reference_experiment[0].beam,
             detector=reference_experiment[0].detector,
