@@ -181,8 +181,12 @@ class FormatCBFMiniPilatus(FormatCBFMini):
 
         exposure_time = float(self._cif_header_dictionary["Exposure_period"].split()[0])
 
-        osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
-        osc_range = float(self._cif_header_dictionary["Angle_increment"].split()[0])
+        if "Start_angle" in self._cif_header_dictionary:
+            osc_start = float(self._cif_header_dictionary["Start_angle"].split()[0])
+            osc_range = float(self._cif_header_dictionary["Angle_increment"].split()[0])
+        elif "Omega" in self._cif_header_dictionary:
+            osc_start = float(self._cif_header_dictionary["Omega"].split()[0])
+            osc_range = float(self._cif_header_dictionary["Omega_increment"].split()[0])
 
         timestamp = get_pilatus_timestamp(self._cif_header_dictionary["timestamp"])
 
