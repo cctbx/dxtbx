@@ -1,1 +1,1 @@
-Transpose laue array from FormatMANDILaue.generate_laue_data_for_panel to be consistent with FormatMANDI.
+``FormatMANDILaue``: Transpose laue array to be consistent with FormatMANDI.
