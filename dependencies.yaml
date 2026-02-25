@@ -83,7 +83,7 @@ run:
   - tqdm
 
 test:
-  - dials-data
+  - dials-data >=2.4.140
   - pip
   - pytest >6
   - pytest-mock
