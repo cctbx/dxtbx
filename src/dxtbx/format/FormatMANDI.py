@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
 from os.path import join
 from sys import argv
+from typing import Optional, Tuple
 
 import h5py
 import numpy as np
@@ -88,7 +89,7 @@ class FormatMANDI(FormatHDF5):
         run_number = self.get_experiment_run_number()
         return f"{title} ({run_number})"
 
-    def get_raw_data(self, index: int) -> tuple[flex.int]:
+    def get_raw_data(self, index: int) -> Tuple[flex.int]:
         raw_data = []
         panel_size = self._get_image_size()
         for panel_name in self._get_panel_names():
@@ -234,7 +235,6 @@ class FormatMANDI(FormatHDF5):
     ) -> None:
         tof_bins = FormatMANDI.generate_tof_bins(
             nxs_file=nxs_file_path,
-            panel_size=panel_size,
             delta_tof=delta_tof,
             padding=tof_padding,
         )
@@ -280,7 +280,7 @@ class FormatMANDI(FormatHDF5):
             output_path = join(output_path, spectra_output_name)
             print(f"Writing spectra to {output_path}")
             panel_spectra = FormatMANDI.generate_histogram_data_for_panel(
-                nxs_file, tof_bins, panel_size, panel_name, nproc
+                nxs_file, tof_bins, panel_size, panel_name
             )
             nxs_file.create_dataset(output_path, data=panel_spectra, compression="gzip")
             if remove_event_data:
@@ -352,46 +352,37 @@ class FormatMANDI(FormatHDF5):
 
     @staticmethod
     def get_time_range_for_panel(
-        nxs_file: h5py.File, panel_size: tuple[float, float], panel_name: str
-    ) -> tuple[float, float]:
-        """
-        Returns the range of event times for a given panel
-        """
+        nxs_file: h5py.File, panel_name: str
+    ) -> Optional[Tuple[float, float]]:
+        event_index = nxs_file[f"entry/{panel_name}/event_index"][:]
+        event_time_zero = nxs_file[f"entry/{panel_name}/event_time_zero"][:]
+        event_time_offset = nxs_file[f"entry/{panel_name}/event_time_offset"][:]
 
-        def event_data_is_valid(event_id, event_time_offset):
-            if len(event_id) == 0 or len(event_time_offset) == 0:
-                return False
-            return len(event_id) == len(event_time_offset)
+        tofs_min = []
+        tofs_max = []
 
-        panel_number = FormatMANDI.get_panel_number(panel_name)
-        event_index = nxs_file[f"entry/{panel_name}/event_index"]
-        event_id = nxs_file[f"entry/{panel_name}/event_id"]
-        event_time_zero = nxs_file[f"entry/{panel_name}/event_time_zero"]
-        event_time_offset = nxs_file[f"entry/{panel_name}/event_time_offset"]
+        n_pulses = len(event_index) - 1
 
-        if not event_data_is_valid(event_id, event_time_offset):
+        for p in range(n_pulses):
+            start = event_index[p]
+            stop = event_index[p + 1]
+
+            if start == stop:
+                continue
+
+            T0 = event_time_zero[p]
+            offsets = event_time_offset[start:stop]
+
+            tofs_min.append(T0 + np.min(offsets))
+            tofs_max.append(T0 + np.max(offsets))
+
+        if not tofs_min:
             return None, None
 
-        num_pixels = panel_size[0] * panel_size[1]
-        event_id_offset = panel_number * num_pixels - 1
-
-        raw_event_id = event_id[event_index[0]]
-        corrected_event_id = raw_event_id - event_id_offset
-        min_event_time = event_time_zero[0] + event_time_offset[corrected_event_id]
-
-        max_idx = int(event_index[-1] - 1)
-        raw_event_id = event_id[max_idx]
-        corrected_event_id = raw_event_id - event_id_offset
-        max_event_time = (
-            event_time_zero[max_idx] + event_time_offset[corrected_event_id]
-        )
-
-        return min_event_time, max_event_time
+        return min(tofs_min), max(tofs_max)
 
     @staticmethod
-    def get_time_range_for_dataset(
-        nxs_file_path: str, panel_size: tuple[int, int]
-    ) -> tuple[float, float]:
+    def get_time_range_for_dataset(nxs_file_path: str) -> tuple[float, float]:
         """
         Iterates over num_panels to find the overall min/max tof event recorded
         """
@@ -408,7 +399,7 @@ class FormatMANDI(FormatHDF5):
         for panel_name in panel_names:
             try:
                 min_event_time, max_event_time = FormatMANDI.get_time_range_for_panel(
-                    nxs_file, panel_size, panel_name
+                    nxs_file, panel_name
                 )
                 if min_event_time is None or max_event_time is None:
                     # Some banks contain no data
@@ -428,7 +419,6 @@ class FormatMANDI(FormatHDF5):
     @staticmethod
     def generate_tof_bins(
         nxs_file: str,
-        panel_size: tuple[float, float],
         delta_tof: float = 50,
         padding: float = 100,
     ) -> np.ndarray:
@@ -437,7 +427,7 @@ class FormatMANDI(FormatHDF5):
         padding: float (usec)
         """
 
-        min_tof, max_tof = FormatMANDI.get_time_range_for_dataset(nxs_file, panel_size)
+        min_tof, max_tof = FormatMANDI.get_time_range_for_dataset(nxs_file)
         min_tof = min_tof - padding
         max_tof = max_tof + padding
         print(

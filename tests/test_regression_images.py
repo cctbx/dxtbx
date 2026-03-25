@@ -33,7 +33,6 @@ from . import imagelist
 _files = imagelist.image_examples
 
 
-@pytest.mark.regression
 @pytest.mark.parametrize("test_image", _files)
 def test_detectorbase(test_image):
     if not h5py and test_image.endswith((".h5", ".nxs")):
@@ -91,7 +90,6 @@ def test_detectorbase(test_image):
         assert (Ip == Rp).all_eq(True)
 
 
-@pytest.mark.regression
 @pytest.mark.parametrize("test_image", _files)
 def test_read_image(test_image):
     """Test that all the regression images can be read"""
