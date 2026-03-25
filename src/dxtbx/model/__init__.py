@@ -797,6 +797,7 @@ class _experimentlist:
         # Make sure sys._getframe exists (cctbx/dxtbx#867)
         if not hasattr(sys, "_getframe"):
             from libtbx.utils import Sorry
+
             raise Sorry("sys._getframe is missing from this python version.")
 
         # Find the first caller outside of this module
