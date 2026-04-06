@@ -24,7 +24,7 @@ from scitbx import matrix
 from scitbx.array_family import flex
 from scitbx.math import r3_rotation_axis_and_angle_as_matrix
 
-from dxtbx.ext import uncompress_rod_TY6
+from dxtbx.ext import uncompress_rod_TY5_TY6
 from dxtbx.format.Format import Format
 from dxtbx.model.beam import Probe
 from dxtbx.model.detector import Detector
@@ -81,6 +81,10 @@ class FormatROD(Format):
         if len(vers) < 2 or vers[0] != "OD" or vers[1] != "SAPPHIRE":
             raise ValueError("Wrong header format")
         hd["version"] = float(vers[-1])
+        if hd["version"] != 4.0:
+            raise NotImplementedError(
+                f"FormatROD: only header version 4.0 is supported but got {hd['version']}"
+            )
 
         compression = lines[1].split("=")
         if compression[0] != "COMPRESSION":
@@ -122,8 +126,11 @@ class FormatROD(Format):
             )
             f.seek(offset + 36)
             num_points = struct.unpack("<I", f.read(4))[0]
+            num_image = struct.unpack("<h", f.read(2))[0]
             if num_points != im_npx_x * im_npx_y:
                 raise ValueError("Cannot interpret binary header")
+            if num_image != 1:
+                raise NotImplementedError("num_image != 1 is not supported.")
 
             # Special section
             f.seek(offset + general_nbytes + 56)
@@ -203,6 +210,8 @@ class FormatROD(Format):
         self._header_dictionary"""
 
         self._txt_header = self._read_ascii_header(self._image_file)
+        # TODO: the block sizes in the binary header should be taken from the
+        # ASCII header.
         self._bin_header = self._read_binary_header(self._image_file)
 
         self._gonio_start_angles = (
@@ -329,8 +338,12 @@ class FormatROD(Format):
         pixel_size_y = self._bin_header["real_px_size_y"]
         origin_at_zero = np.array(
             [
-                -self._bin_header["origin_px_x"] * pixel_size_x,
-                -self._bin_header["origin_px_y"] * pixel_size_y,
+                -self._bin_header["origin_px_x"]
+                * pixel_size_x
+                / self._bin_header["bin_x"],
+                -self._bin_header["origin_px_y"]
+                * pixel_size_y
+                / self._bin_header["bin_y"],
                 -self._bin_header["distance_mm"],
             ]
         )
@@ -344,6 +357,7 @@ class FormatROD(Format):
             (pixel_size_x, pixel_size_y),
             (self._txt_header["NX"], self._txt_header["NY"]),
             (0, self._bin_header["overflow_threshold"]),
+            gain=self._bin_header["gain"],
         )
 
         return detector
@@ -367,40 +381,69 @@ class FormatROD(Format):
 
     def get_raw_data(self):
         comp = self._txt_header["compression"].strip()
+
+        # The differences between TY5 and TY6 are:
+        # - TY5 lacks the lbytesincompressedfield field; we must calculate it.
+        # - TY6 uses fewer-bit compression inside "blocks".
+        #   Outside such blocks, TY5 and TY6 use the same delta compression.
         if comp.startswith("TY6"):
-            return self._get_raw_data_ty6_native()
+            return self._get_raw_data_ty5_ty6_native(mode=6)
+        elif comp.startswith("TY5"):
+            return self._get_raw_data_ty5_ty6_native(mode=5)
         else:
             raise NotImplementedError(f"Can't handle compression: {comp}")
 
-    def _get_raw_data_ty6_native(self):
+    def _get_raw_data_ty5_ty6_native(self, mode):
         offset = self._txt_header["NHEADER"]
         nx = self._txt_header["NX"]
         ny = self._txt_header["NY"]
-        with open(self._image_file, "rb") as f:
+        with FormatROD.open_file(self._image_file, "rb") as f:
             f.seek(offset)
-            lbytesincompressedfield = struct.unpack("<l", f.read(4))[0]
+            if mode == 5:
+                lbytesincompressedfield = (
+                    nx * ny + 2 * self._txt_header["OI"] + 4 * self._txt_header["OL"]
+                )
+            elif mode == 6:
+                lbytesincompressedfield = struct.unpack("<l", f.read(4))[0]
+            else:
+                raise NotImplementedError(
+                    "_get_raw_data_ty5_ty6: only mode 5 and 6 are supported."
+                )
+
             linedata = f.read(lbytesincompressedfield)
             offsets = f.read(4 * ny)
 
-            return uncompress_rod_TY6(linedata, offsets, ny, nx)
+            return uncompress_rod_TY5_TY6(linedata, offsets, ny, nx, mode)
 
     # Python implementation
-    def _get_raw_data_ty6(self):
+    def _get_raw_data_ty5_ty6(self, mode):
         offset = self._txt_header["NHEADER"]
         nx = self._txt_header["NX"]
         ny = self._txt_header["NY"]
-        with open(self._image_file, "rb") as f:
+        with FormatROD.open_file(self._image_file, "rb") as f:
             f.seek(offset)
-            lbytesincompressedfield = struct.unpack("<l", f.read(4))[0]
+            if mode == 5:
+                lbytesincompressedfield = (
+                    nx * ny + 2 * self._txt_header["OI"] + 4 * self._txt_header["OL"]
+                )
+            elif mode == 6:
+                lbytesincompressedfield = struct.unpack("<l", f.read(4))[0]
+            else:
+                raise NotImplementedError(
+                    "_get_raw_data_ty5_ty6: only mode 5 and 6 are supported."
+                )
+
             linedata = np.fromfile(f, dtype=np.uint8, count=lbytesincompressedfield)
             offsets = struct.unpack("<%dI" % ny, f.read(4 * ny))
 
             image = np.zeros((ny, nx), dtype=np.int32)
             for iy in range(ny):
-                image[iy, :] = self.decode_TY6_oneline(linedata[offsets[iy] :], nx)
+                image[iy, :] = self.decode_TY5_TY6_oneline(
+                    linedata[offsets[iy] :], nx, mode
+                )
             return flex.int(image)
 
-    def decode_TY6_oneline(self, linedata, w):
+    def decode_TY5_TY6_oneline(self, linedata, w, mode):
         """Decompress TY6 encoded pixels for a single line.
         w is the number of pixels in the fast axis."""
 
@@ -414,8 +457,16 @@ class FormatROD(Format):
         opos = 0
         ret = np.zeros(w, dtype=np.int32)
 
-        nblock = (w - 1) // (BLOCKSIZE * 2)
-        nrest = (w - 1) % (BLOCKSIZE * 2)
+        if mode == 5:
+            nblock = 0
+            nrest = w - 1  # 1st px is special
+        elif mode == 6:
+            nblock = (w - 1) // (BLOCKSIZE * 2)
+            nrest = (w - 1) % (BLOCKSIZE * 2)
+        else:
+            raise NotImplementedError(
+                "decode_TY5_TY6_oneline: only mode 5 and 6 are supported."
+            )
 
         firstpx = linedata[ipos]
         ipos += 1
@@ -619,6 +670,7 @@ class FormatROD_Arc(FormatROD):
             p = d.add_panel()
             p.set_type("SENSOR_PAD")
             p.set_name(panel_name)
+            p.set_gain(self._bin_header["gain"])
             p.set_raw_image_offset((xmin, ymin))
             p.set_image_size((xmax - xmin, ymax - ymin))
             p.set_trusted_range((0, self._bin_header["overflow_threshold"]))
