@@ -198,14 +198,19 @@ class FormatESSNMX(FormatHDF5):
     def _get_panel_origins(self, panel) -> tuple[float, float, float]:
         # (mm)
         # return ((-250, -250.0, -292.0), (290, -250.0, -250), (-290, -250.0, 250.0))
+        if panel["origin"].attrs.get("first_pixel_position", None) is not None:
+            logger.debug("first_pixel_origin found in attrubiute, using...")
+            first_pixel_position = panel["origin"].attrs.get("first_pixel_position")
+            first_pixel_position *= 1000  # mm
+            return tuple(first_pixel_position)
+        else:
+            origin = panel["origin"][...]
+            panelnum = int(panel.name[-1])
+            origin *= 1000  # convert to mm
+            corrfact = self._get_correction_factor()[panelnum]
 
-        origin = panel["origin"][...]
-        panelnum = int(panel.name[-1])
-        origin *= 1000  # convert to mm
-        corrfact = self._get_correction_factor()[panelnum]
-
-        corrorg = origin + corrfact
-        return tuple(corrorg)
+            corrorg = origin + corrfact
+            return tuple(corrorg)
 
     def _get_correction_factor(self):
         return np.array([[0, -256, -256], [-256.0, -256.0, 0], [0, -256, 256]])
