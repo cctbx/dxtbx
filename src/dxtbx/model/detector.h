@@ -716,11 +716,13 @@ namespace dxtbx { namespace model {
       coord_type pxy(-1, vec2<double>(0, 0));
       double w_max = 0;
 
-      // Loop through all detectors. If the w component of the (u, v, w)
-      // vector points in the correct direction, and is greater than that of
-      // the current closest valid coordinate, then calculate the coordinate.
-      // If the coordinate is valid, then set this coordinate as the current
-      // best bet.
+      // Loop through all panels. For each panel, check that the w component
+      // of the (u, v, w) projection points toward the detector (v[2] > 0),
+      // then test whether the intersection coordinate lies within the panel
+      // bounds. On real detectors panels are non-overlapping, so the first
+      // valid hit is the only valid hit; break immediately to avoid the O(N)
+      // cost of iterating all remaining panels (important for large detectors
+      // such as Pilatus 6M ~60 panels or JUNGFRAU ~hundreds of panels).
       for (std::size_t i = 0; i < size(); ++i) {
         vec3<double> v = (*this)[i].get_D_matrix() * s1;
         if (v[2] > w_max) {
@@ -728,6 +730,7 @@ namespace dxtbx { namespace model {
           if ((*this)[i].is_coord_valid_mm(xy_temp)) {
             pxy = coord_type((int)i, xy_temp);
             w_max = v[2];
+            break;  // panels are non-overlapping; first hit is the only hit
           }
         }
       }
