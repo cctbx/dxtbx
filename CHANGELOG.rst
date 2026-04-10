@@ -1,3 +1,19 @@
+dxtbx 3.28.0 (2026-04-10)
+=========================
+
+Features
+--------
+
+- ``FormatROD``: support TY5 compression, gzip/bzipped files, non-unity gain and binning. (`#879 <https://github.com/cctbx/dxtbx/issues/879>`_)
+- Improved ``FormatESSNMX`` and introduced ``FormatESSNMXLaue``. (`#880 <https://github.com/cctbx/dxtbx/issues/880>`_)
+
+
+Misc
+----
+
+- `#867 <https://github.com/cctbx/dxtbx/issues/867>`_
+
+
 dxtbx 3.27.0 (2026-02-23)
 =========================
 
