@@ -1,1 +1,1 @@
-Improved FormatESSNMX and introduced FormatESSNMXLaue
+Improved ``FormatESSNMX`` and introduced ``FormatESSNMXLaue``.
