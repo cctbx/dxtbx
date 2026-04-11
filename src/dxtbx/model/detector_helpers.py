@@ -14,10 +14,6 @@ if TYPE_CHECKING:
 
     from dxtbx.model import Detector, Panel
 
-try:
-    import sklearn.cluster
-except ImportError:
-    sklearn = None
 
 Float2 = tuple[float, float]
 Float4 = tuple[float, float, float, float]
@@ -369,6 +365,10 @@ def get_detector_projection_2d_axes(
     # consensus X, Y for the 2D plane
     axes: list[matrix.rec]
     clustered_axes = False
+    try:
+        import sklearn.cluster
+    except ImportError:
+        sklearn = None
     if sklearn and len(detector) > 1:
         clustered_axes = True
         axes = []
