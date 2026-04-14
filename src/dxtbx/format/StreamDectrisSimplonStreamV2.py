@@ -95,7 +95,8 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         message = cbor2.loads(encoded_message, tag_hook=tag_hook)
         if "image_size_x" in message.keys():
             message["image_shape"] = (message["image_size_y"], message["image_size_x"])
-
+        if "series_id" in message and "run_id" not in message:
+            message["run_id"] = message.pop("series_id")
         # The dtype is supposedly a function of frame rate. This will be useful
         # once those boundaries are determined.
         if message['type'] == 'start':
@@ -116,7 +117,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
         from dxtbx.model.beam import beam_phil_scope
         from dxtbx.model.beam import BeamFactory
-        
+
         if isinstance(message["detector_description"], bytes):
             message["detector_description"] = message["detector_description"].decode()
         if isinstance(message["sensor_material"], bytes):
