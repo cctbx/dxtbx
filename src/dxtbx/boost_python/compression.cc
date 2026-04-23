@@ -188,17 +188,20 @@ inline uint16_t read_uint16_from_bytearray(const char *buf) {
   return ((unsigned char)buf[0]) | ((unsigned char)buf[1] << 8);
 }
 
-void dxtbx::boost_python::rod_TY6_decompress(int *const ret,
-                                             const char *const buf_data,
-                                             const char *const buf_offsets,
-                                             const int slow,
-                                             const int fast) {
+void dxtbx::boost_python::rod_TY5_TY6_decompress(int *const ret,
+                                                 const char *const buf_data,
+                                                 const char *const buf_offsets,
+                                                 const int slow,
+                                                 const int fast,
+                                                 const int mode) {
   const size_t BLOCKSIZE = 8;             // Codes below assume this is at most 8
   const signed int SHORT_OVERFLOW = 127;  // after 127 is subtracted
   const signed int LONG_OVERFLOW = 128;
 
-  const size_t nblock = (fast - 1) / (BLOCKSIZE * 2);
-  const size_t nrest = (fast - 1) % (BLOCKSIZE * 2);
+  assert(mode == 5 || mode == 6);
+
+  const size_t nblock = (mode == 5) ? 0 : (fast - 1) / (BLOCKSIZE * 2);
+  const size_t nrest = (mode == 5) ? (fast - 1) : (fast - 1) % (BLOCKSIZE * 2);
 
   for (size_t iy = 0; iy < slow; iy++) {
     size_t ipos = read_uint32_from_bytearray(buf_offsets + iy * sizeof(uint32_t));
