@@ -794,28 +794,45 @@ class _experimentlist:
     ):
         """Dump experiment list as json"""
 
-        # Find the module that called this function for the history
-        stack = inspect.stack()
-        this_module = inspect.getmodule(stack[0].frame)
+        # Make sure sys._getframe exists (cctbx/dxtbx#867)
+        if not hasattr(sys, "_getframe"):
+            from libtbx.utils import Sorry
+
+            raise Sorry("sys._getframe is missing from this python version.")
+
+        # Find the first caller outside of this module
+        this_module = sys.modules[__name__]  # The module containing as_json()
+
         caller_module_name = "Unknown"
-        for f in stack[1:]:
-            module = inspect.getmodule(f.frame)
-            if module != this_module and module is not None:
-                caller_module_name = module.__name__
+        caller_module = None
+        frame_depth = 1
+        while True:
+            try:
+                frame = sys._getframe(frame_depth)
+                module = sys.modules.get(frame.f_globals.get("__name__"))
+                if module is not None and module != this_module:
+                    caller_module = module
+                    caller_module_name = module.__name__
+                    break
+                frame_depth += 1
+            except ValueError:  # No more frames
                 break
 
         # If that module was called directly, look up via file path
         if caller_module_name == "__main__":
-            caller_module_name = os.path.splitext(os.path.basename(module.__file__))[0]
+            if (
+                hasattr(caller_module, "__file__")
+                and caller_module.__file__ is not None
+            ):
+                caller_module_name = os.path.splitext(
+                    os.path.basename(caller_module.__file__)
+                )[0]
 
         # Look up the dispatcher name for the caller module
-        try:
-            lookup = {e.module: e.name for e in importlib.metadata.entry_points()}
-        except AttributeError:  # Python < 3.10
-            lookup = {
-                e.module: e.name
-                for e in importlib.metadata.entry_points()["console_scripts"]
-            }
+        lookup = {
+            e.module: e.name
+            for e in importlib.metadata.entry_points(group="console_scripts")
+        }
         dispatcher = lookup.get(caller_module_name, caller_module_name)
 
         # If dispatcher lookup by entry_points did not work, try via libtbx

@@ -79,7 +79,6 @@ class image_worker:
                 sum_img = list(copy.deepcopy(img))
                 ssq_img = [flex.pow2(p) for p in img]
                 sum_wavelength = wavelength
-                nmemb += 1
             else:
                 for n, image in enumerate(img):
                     sel = (image > max_img[n]).as_1d()
@@ -87,9 +86,9 @@ class image_worker:
 
                     sum_img[n] += image
                     ssq_img[n] += flex.pow2(image)
-                    sum_distance += distance
-                    sum_wavelength += wavelength
-                    nmemb += 1
+                sum_distance += distance
+                sum_wavelength += wavelength
+            nmemb += 1
 
         return nfail, nmemb, max_img, sum_distance, sum_img, ssq_img, sum_wavelength
 
@@ -255,6 +254,18 @@ def run(argv=None):
         command_line.parser.print_usage(file=sys.stderr)
         return 2
 
+    if any(os.path.splitext(p)[1].lower() == ".loc" for p in paths):
+        import psana
+
+        if getattr(psana, "xtc_version", None) == 2:
+            # multiprocessing with psana2 requires mpi
+            assert command_line.options.mpi or command_line.options.nproc == 1
+            root = 2  # psana2 uses ranks 0 and 1
+        else:
+            root = 0
+    else:
+        root = 0
+
     experiments = ExperimentListFactory.from_filenames([paths[0]], load_models=False)
     if len(paths) == 1:
         if len(experiments) == 1 and len(experiments[0].imageset) > 1:
@@ -277,7 +288,6 @@ def run(argv=None):
         and command_line.options.num_images_max < len(iterable)
     ):
         iterable = iterable[: command_line.options.num_images_max]
-    assert len(iterable) >= 2, "Need more than one image to average"
 
     if command_line.options.mpi:
         try:
@@ -286,11 +296,11 @@ def run(argv=None):
             raise Sorry("MPI not found")
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
-        size = comm.Get_size()
+        size = comm.Get_size() - root  # handle psana2
 
         # chop the list into pieces, depending on rank.  This assigns each process
         # events such that the get every Nth event where N is the number of processes
-        iterable_rank = iterable[rank::size]
+        iterable_rank = iterable[rank - root :: size]
         if len(iterable_rank) > 0:
             # Only run the worker on non-empty ranks
             (
@@ -302,46 +312,41 @@ def run(argv=None):
                 r_ssq_img,
                 r_sum_wavelength,
             ) = worker(iterable_rank)
-            surplus_rank = False
+
+            # send the shape of the data to those ranks with no data
+            shapes_ = [p.focus() for p in r_sum_img]
+            shapes = comm.allgather(shapes_)
         else:
-            # else run on the first iterable and set the values to zero
-            (
-                r_nfail,
-                r_nmemb,
-                r_max_img,
-                r_sum_distance,
-                r_sum_img,
-                r_ssq_img,
-                r_sum_wavelength,
-            ) = worker([iterable[0]])
+            # else set the values to zero
             r_nfail = 0
             r_nmemb = 0
-            r_sum_distance = 0
-            r_sum_wavelength = 0
-            surplus_rank = True
+            r_sum_distance = 0.0
+            r_sum_wavelength = 0.0
+            shapes = comm.allgather(None)
+            shape = [ss for ss in shapes if ss is not None][0]
+            r_sum_img = [flex.double(flex.grid(s), 0) for s in shape]
+            r_ssq_img = [flex.double(flex.grid(s), 0) for s in shape]
+            r_max_img = [flex.double(flex.grid(s), 0) for s in shape]
 
         nfail = np.array([0])
         nmemb = np.array([0])
         sum_distance = np.array([0.0])
         sum_wavelength = np.array([0.0])
-        comm.Reduce(np.array([r_nfail]), nfail)
-        comm.Reduce(np.array([r_nmemb]), nmemb)
-        comm.Reduce(np.array([r_sum_distance]), sum_distance)
-        comm.Reduce(np.array([r_sum_wavelength]), sum_wavelength)
+        comm.Reduce(np.array([r_nfail]), nfail, root=root)
+        comm.Reduce(np.array([r_nmemb]), nmemb, root=root)
+        comm.Reduce(np.array([r_sum_distance]), sum_distance, root=root)
+        comm.Reduce(np.array([r_sum_wavelength]), sum_wavelength, root=root)
         nfail = int(nfail[0])
-        nmemb = int(nmemb)
+        nmemb = int(nmemb[0])
         sum_distance = float(sum_distance[0])
         sum_wavelength = float(sum_wavelength[0])
 
         def reduce_image(data, op=MPI.SUM):
             result = []
             for panel_data in data:
-                if surplus_rank:
-                    panel_data = 0 * panel_data.as_numpy_array()
-                else:
-                    panel_data = panel_data.as_numpy_array()
+                panel_data = panel_data.as_numpy_array()
                 reduced_data = np.zeros(panel_data.shape).astype(panel_data.dtype)
-                comm.Reduce(panel_data, reduced_data, op=op)
+                comm.Reduce(panel_data, reduced_data, op=op, root=root)
                 result.append(flex.double(reduced_data))
             return result
 
@@ -349,7 +354,7 @@ def run(argv=None):
         sum_img = reduce_image(r_sum_img)
         ssq_img = reduce_image(r_ssq_img)
 
-        if rank != 0:
+        if rank != root:
             return
         avg_img = tuple(s / nmemb for s in sum_img)
     else:

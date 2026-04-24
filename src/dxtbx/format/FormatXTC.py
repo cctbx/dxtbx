@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import os
 import sys
 import time
 from itertools import groupby
@@ -10,6 +11,7 @@ from scipy.signal import convolve
 
 import serialtbx.detector.xtc
 import serialtbx.util
+from libtbx import Auto
 from libtbx.phil import parse
 from scitbx.array_family import flex
 
@@ -44,7 +46,7 @@ locator_str = """
     .type = int
     .multiple = True
     .help = Run number or a list of runs to process
-  mode = idx
+  mode = Auto
     .type = str
     .help = Mode for reading the xtc data (see LCLS documentation)
   data_source = None
@@ -83,7 +85,7 @@ locator_str = """
     .type = float
     .help = If the wavelength cannot be found from the XTC stream, fall \
             back to using this value instead
-  spectrum_address = FEE-SPEC0
+  spectrum_address = feespec
     .type = str
     .help = Address for incident beam spectrometer
   spectrum_eV_per_pixel = None
@@ -176,10 +178,22 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             self.params = FormatXTC.params_from_phil(
                 master_phil=locator_scope, user_phil=image_file, strict=True
             )
+
+        if self.params.mode in [Auto, "Auto"]:
+            xtc_version = getattr(psana, "xtc_version", None)
+            if xtc_version == 2:
+                self.params.mode = "psana2_idx"
+            elif xtc_version is None:
+                self.params.mode = "idx"
+            else:
+                assert False, "Unrecognized psana version"
         assert self.params.mode in [
             "idx",
             "smd",
-        ], "idx or smd mode should be used for analysis (idx is often faster)"
+            "psana2_idx",
+        ], (
+            "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2_idx should be used for LCLS-II."
+        )
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None
@@ -323,6 +337,60 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 self.times.extend(times)
             self.n_images = len(self.times)
 
+        elif self.params.mode == "psana2_idx":
+            """
+            ### Code snippet from Mona on psana idx behavior ###
+
+                 with run.build_table() as success:
+                    if success:
+                        # Extract first 10 valid timestamps (those with non-empty offset info)
+                        valid_ts = sorted(k for k in run._ts_table if run._ts_table[k])[:10]
+                        assert len(valid_ts) == 10, "Expected at least 10 L1Accept events with offsets"
+
+                        # Randomly pick 3 timestamps to test
+                        sample_ts = random.sample(valid_ts, 3)
+                        for ts in sample_ts:
+                            evt = run.event(ts)
+                            assert evt is not None
+                            assert len(evt._dgrams) > 0
+
+                            det = run.Detector('xppcspad')
+            """
+            FormatXTC._get_datasource(self._image_file, self.params)
+            assert len(self._psana_runs.items()) == 1
+
+            for run_num, run in self._psana_runs.items():
+                with run.build_table() as success:
+                    if success:
+                        times = sorted(run._ts_table)
+                        if self._hit_inds is not None and run_num not in self._hit_inds:
+                            continue
+                        if self._hit_inds is not None and run_num in self._hit_inds:
+                            temp = []
+                            for i_hit in self._hit_inds[run_num]:
+                                temp.append(times[i_hit])
+                            times = tuple(temp)
+                        if (
+                            self.params.filter.required_present_codes
+                            or self.params.filter.required_absent_codes
+                        ) and self.params.filter.pre_filter:
+                            if not self._evr:
+                                timing = run.Detector("timing")
+                                self._evr = timing.raw
+                            times = [
+                                t for t in times if self.filter_event(run.event(t))
+                            ]
+                        self.run_mapping[run_num] = (
+                            len(self.times),
+                            len(self.times) + len(times),
+                            run,
+                        )
+                        self.times.extend(times)
+                    else:
+                        self.run_mapping[run_num] = (1, 1, run)
+
+                self.n_images = len(self.times)
+
         elif self.params.mode == "smd":
             self._ds = FormatXTC._get_datasource(self._image_file, self.params)
             for event in self._ds.events():
@@ -362,7 +430,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             return True
         if not self._evr:
             self._evr = psana.Detector(self.params.filter.evr_address)
-        codes = self._evr.eventCodes(evt)
+        try:  # psana1
+            codes = self._evr.eventCodes(evt)
+        except Exception:  # psana2_idx
+            codes = [i for i, val in enumerate(self._evr.eventcodes(evt)) if val != 0]
 
         if self.params.filter.required_present_codes and not all(
             c in codes for c in self.params.filter.required_present_codes
@@ -393,6 +464,12 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             self.current_index = index
             if self.params.mode == "idx":
                 evt = self.get_run_from_index(index).event(self.times[index])
+            elif self.params.mode == "psana2_idx":
+                run = self.get_run_from_index(index)
+                if not self._evr:
+                    timing = run.Detector("timing")
+                    self._evr = timing.raw
+                evt = run.event(self.times[index])
             elif self.params.mode == "smd":
                 for run_number in self.run_mapping:
                     start, stop, run, events = self.run_mapping[run_number]
@@ -411,7 +488,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             return self.current_event
 
     @staticmethod
-    def _get_datasource(image_file, params):
+    def _get_datasource(image_file, params, **kwargs):
         """Construct a psana data source object given the locator parameters"""
         if params.calib_dir is not None:
             psana.setOption("psana.calib-dir", params.calib_dir)
@@ -437,7 +514,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 )
         else:
             img = params.data_source
-        return psana.DataSource(img)
+        try:
+            src = psana.DataSource(img)
+        except psana.datasource.InvalidDataSource:
+            # psana2
+            assert len(params.run) == 1
+            src = psana.DataSource(exp=params.experiment, run=params.run[0], **kwargs)
+        return src
 
     @staticmethod
     def _get_psana_runs(datasource):
@@ -447,17 +530,31 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         only call this method after datasource is set
         """
         # this is key,value = run_integer, psana.Run, e.g. {62: <psana.Run(@0x7fbd0e23c990)>}
-        psana_runs = {r.run(): r for r in datasource.runs()}
+        psana_runs = {}
+        r = next(datasource.runs())
+        try:
+            psana_runs[r.runnum] = r
+        except AttributeError:  # r doesn't have runnum: psana1
+            psana_runs[r.run()] = r
         return psana_runs
 
     def _get_psana_detector(self, run):
         """Returns the psana detector for the given run"""
-        if run.run() not in self._cached_psana_detectors:
-            assert len(self.params.detector_address) == 1
-            self._cached_psana_detectors[run.run()] = psana.Detector(
-                self.params.detector_address[0], run.env()
-            )
-        return self._cached_psana_detectors[run.run()]
+        if self.params.mode == "psana2_idx":
+            run_num = run.runnum
+            if run_num not in self._cached_psana_detectors:
+                assert len(self.params.detector_address) == 1
+                self._cached_psana_detectors[run_num] = run.Detector(
+                    self.params.detector_address[0]
+                )
+            return self._cached_psana_detectors[run_num]
+        else:
+            if run.run() not in self._cached_psana_detectors:
+                assert len(self.params.detector_address) == 1
+                self._cached_psana_detectors[run.run()] = psana.Detector(
+                    self.params.detector_address[0], run.env()
+                )
+            return self._cached_psana_detectors[run.run()]
 
     def get_psana_timestamp(self, index):
         """Get the cctbx.xfel style event timestamp given an index"""
@@ -510,9 +607,12 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                         return None
                 wavelength = spectrum.get_weighted_wavelength()
             else:
-                wavelength = serialtbx.detector.xtc.evt_wavelength(
-                    evt, delta_k=self.params.wavelength_delta_k
-                )
+                try:
+                    wavelength = serialtbx.detector.xtc.evt_wavelength(
+                        evt, delta_k=self.params.wavelength_delta_k
+                    )
+                except TypeError:  # no eBeam
+                    wavelength = None
                 if wavelength is None or wavelength <= 0:
                     wavelength = self.params.wavelength_fallback
                 if wavelength is not None and wavelength > 0:
@@ -524,13 +624,23 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 self._beam_cache = None
             else:
                 self._beam_cache = self._beam_factory.simple(wavelength)
-            s, nsec = evt.get(psana.EventId).time()
+            try:
+                s, nsec = evt.get(psana.EventId).time()
+            except AttributeError:
+                # psana2
+                ts = evt.timestamp
+                s = int(str(ts)[0:10])  # not elegant but works.
             evttime = time.gmtime(s)
             if (
                 evttime.tm_year == 2020 and evttime.tm_mon >= 7
             ) or evttime.tm_year > 2020:
                 if self._beam_cache is not None:
                     self._beam_cache.set_polarization_normal((1, 0, 0))
+
+        if self._beam_cache.get_wavelength() < 0.1:
+            from dxtbx.model.beam import Probe
+
+            self._beam_cache.set_probe(Probe.electron)
 
         return self._beam_cache
 
@@ -556,41 +666,61 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         if not evt:
             return None
         if self._fee is None:
-            self._fee = psana.Detector(self.params.spectrum_address)
+            try:
+                self._fee = psana.Detector(self.params.spectrum_address)
+            except AttributeError:  # psana2
+                self._fee = (
+                    self.get_run_from_index(index)
+                    .Detector(self.params.spectrum_address)
+                    .raw
+                )
         if self._fee is None:
             return None
-        try:
-            fee = self._fee.get(evt)
-            y = fee.hproj()
+        if hasattr(self._fee, "hproj"):
+            # psana2
+            y = self._fee.hproj(evt)
+            if y is None or not len(y):
+                return None
             if self.params.spectrum_pedestal:
                 y = y - self._spectrum_pedestal.as_numpy_array()
-
-        except AttributeError:  # Handle older spectometers without the hproj method
-            try:
-                img = self._fee.image(evt)
-            except AttributeError:
-                return None
-            if self.params.spectrum_rotation_angle is None:
-                x = (
-                    self.params.spectrum_eV_per_pixel * np.array(range(img.shape[1]))
-                ) + self.params.spectrum_eV_offset
-                y = img.mean(axis=0)  # Collapse 2D image to 1D trace
-            else:
-                mask = img == 2**16 - 1
-                mask = np.invert(mask)
-
-                x, y = rotate_and_average(
-                    img, self.params.spectrum_rotation_angle, deg=True, mask=mask
-                )
-                x = (
-                    self.params.spectrum_eV_per_pixel * x
-                ) + self.params.spectrum_eV_offset
-
-        else:
             x = (
                 self.params.spectrum_eV_per_pixel * np.array(range(len(y)))
             ) + self.params.spectrum_eV_offset
+        else:
+            try:
+                fee = self._fee.get(evt)
+                y = fee.hproj()
+                if self.params.spectrum_pedestal:
+                    y = y - self._spectrum_pedestal.as_numpy_array()
+
+            except AttributeError:  # Handle older spectometers without the hproj method
+                try:
+                    img = self._fee.image(evt)
+                except AttributeError:
+                    return None
+                if self.params.spectrum_rotation_angle is None:
+                    x = (
+                        self.params.spectrum_eV_per_pixel
+                        * np.array(range(img.shape[1]))
+                    ) + self.params.spectrum_eV_offset
+                    y = img.mean(axis=0)  # Collapse 2D image to 1D trace
+                else:
+                    mask = img == 2**16 - 1
+                    mask = np.invert(mask)
+
+                    x, y = rotate_and_average(
+                        img, self.params.spectrum_rotation_angle, deg=True, mask=mask
+                    )
+                    x = (
+                        self.params.spectrum_eV_per_pixel * x
+                    ) + self.params.spectrum_eV_offset
+
+            else:
+                x = (
+                    self.params.spectrum_eV_per_pixel * np.array(range(len(y)))
+                ) + self.params.spectrum_eV_offset
         try:
+            # Apply vignetting here to x and y
             sp = Spectrum(flex.double(x), flex.double(y))
         except RuntimeError:
             return None

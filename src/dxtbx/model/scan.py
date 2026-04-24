@@ -70,9 +70,10 @@ class ScanFactory:
                 most_recent_image_index = (
                     scan.get_image_range()[1] - scan.get_image_range()[0]
                 )
-                scan.set_oscillation(
-                    scan.get_image_oscillation(params.scan.image_range[0])
-                )
+                if scan.has_property("oscillation"):
+                    scan.set_oscillation(
+                        scan.get_image_oscillation(params.scan.image_range[0])
+                    )
                 scan.set_image_range(params.scan.image_range)
                 if (
                     params.scan.extrapolate_scan
