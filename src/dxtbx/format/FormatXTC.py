@@ -133,7 +133,7 @@ locator_str = """
     .type = bool
     .help = Raise an exception for any event where the spectrum is not \
             available.
-  double_spectrum_required_hack = False
+  double_spectrum_required = False
     .type = bool
     .help = If True, then we require both hutch and FEE spectra present to \
             a direct paired comparison.
@@ -745,13 +745,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         if index is None:
             index = 0
         if self.params.spectrum_source == "fee":
-            if self.params.double_spectrum_required_hack:
+            if self.params.double_spectrum_required:
                 test = self._spectrum_hutch(index)
                 if not test:
                     raise RuntimeError("No paired spectra in shot %d" % index)
             spectrum = self._spectrum_fee(index)
         elif self.params.spectrum_source == "hutch":
-            if self.params.double_spectrum_required_hack:
+            if self.params.double_spectrum_required:
                 test = self._spectrum_fee(index)
                 if not test:
                     raise RuntimeError("No paired spectra in shot %d" % index)
@@ -763,10 +763,8 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         return spectrum
 
     def _spectrum_hutch(self, index=None):
-        """Extract calibrated spectrum from hutch spectrometer.
+        """Extract calibrated spectrum from hutch spectrometer."""
 
-        This is the actual implementation that will be used in production.
-        """
         if index is None:
             index = 0
 
@@ -821,12 +819,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
         # Extract ROI limits
         # Handle both [y1, y2] and [x1, x2, y1, y2] formats
-        if len(self.params.spectrum_roi_limits) == 2:
+        if self.params.spectrum_roi_limits:
             y1, y2 = self.params.spectrum_roi_limits
             x1 = 0
             x2 = img.shape[1] - 1
-        elif len(self.params.spectrum_roi_limits) == 4:
-            x1, x2, y1, y2 = self.params.spectrum_roi_limits
         else:
             return None
 
