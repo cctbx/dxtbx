@@ -178,8 +178,13 @@ locator_str = """
               event.
     encode_codes_in_timestamp = False
       .type = bool
+      .help = If True, use a set of event codes specified in code_range \
+              encodes a sample number that is added to the per-shot \
+              timestamp. Useful for downstream sorting.
     code_range = None
       .type = ints(size=2)
+      .help = Min and max range of event codes that will be checked to \
+              assemble a sample number.
   }
 """
 locator_scope = parse(locator_str)
