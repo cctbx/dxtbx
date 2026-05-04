@@ -369,7 +369,14 @@ py::object to_numpy(py::object flex_array) {
  * **/
 template <typename T>
 py::object numpy_to_array_family(py::array np_array, int ignore_dims = 0) {
+  // If this array is marked as read-only, then we cannot allow it to be
+  // edited. So, make a copy of the array. This mainly affects code using
+  // pandas 3+ because they default all arrays to being read-only.
+  if (!np_array.writeable()) {
+    np_array = np_array.attr("copy")();
+  }
   auto handle = new numpy_sharing_handle(np_array);
+
   if (np_array.ndim() > 10 + ignore_dims) {
     throw std::invalid_argument("Default flex grid only supports up to 10 dimensions");
   }
