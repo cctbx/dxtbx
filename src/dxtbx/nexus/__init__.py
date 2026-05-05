@@ -357,7 +357,7 @@ def get_dxtbx_detector(
             # Flat detector model
 
             # Apply any rotation components of the dependency chain to the fast axis
-            assert module.fast_pixel_direction.depends_on is not None
+            # assert module.fast_pixel_direction.depends_on is not None
             fast_axis_depends_on = [
                 t
                 for t in nxmx.get_dependency_chain(
@@ -372,7 +372,7 @@ def get_dxtbx_detector(
             fast_axis = MCSTAS_TO_IMGCIF @ R @ module.fast_pixel_direction.vector
 
             # Apply any rotation components of the dependency chain to the slow axis
-            assert module.slow_pixel_direction.depends_on is not None
+            # assert module.slow_pixel_direction.depends_on is not None
             slow_axis_depends_on = [
                 t
                 for t in nxmx.get_dependency_chain(
@@ -388,9 +388,11 @@ def get_dxtbx_detector(
 
             # Apply all components of the dependency chain to the module offset to get the
             # dxtbx panel origin
-            dependency_chain = nxmx.get_dependency_chain(
-                module.fast_pixel_direction.depends_on
-            )
+            if module.fast_pixel_direction.depends_on is not None:
+                top = module.fast_pixel_direction.depends_on
+            else:
+                top = module.module_offset.depends_on
+            dependency_chain = nxmx.get_dependency_chain(top)
             A = nxmx.get_cumulative_transformation(dependency_chain)
 
             origin = MCSTAS_TO_IMGCIF @ (
