@@ -7,7 +7,8 @@ import time
 from itertools import groupby
 
 import numpy as np
-from scipy.signal import convolve
+from scipy.optimize import curve_fit
+from scipy.signal import convolve, savgol_filter
 
 import serialtbx.detector.xtc
 import serialtbx.util
@@ -88,6 +89,12 @@ locator_str = """
   spectrum_address = feespec
     .type = str
     .help = Address for incident beam spectrometer
+  spectrum_address_hutch = epix100_0
+    .type = str
+  spectrum_source = *fee hutch
+    .type = choice
+    .help = Where the spectral data is being read from. Affects how the spectra \
+            are calibrated.
   spectrum_eV_per_pixel = None
     .type = float
     .help = If not None, use the FEE spectrometer to determine the wavelength. \
@@ -98,6 +105,23 @@ locator_str = """
   spectrum_eV_offset = None
     .type = float
     .help = See spectrum_eV_per_pixel
+  spectrum_roi_limits = None
+    .type = ints(2)
+    .help = y1 and y2 for the slice being extracted for each spectrum. Not used \
+            for FEE spectrometer.
+  spectrum_gaussian_fit = False
+    .type = bool
+    .help = True: Fit a Gaussian to the spectrum. False: Weighted average.
+  spectrum_gaussian_max_fwhm = 20
+    .type = float
+    .help = reject spectra with a fitted Gaussian FWHM above this value.
+  spectrum_gaussian_min_fwhm = 3
+    .type = float
+    .help = reject spectra with a fitted Gaussian FWHM below this value.
+  spectrum_gaussian_max_dist = 10
+    .type = float
+    .help = reject spectra when the fitted Gaussian center is this far from \
+            the maximum.
   spectrum_rotation_angle = None
     .type = float
     .help = If present, first rotate the spectrum image a given amount in \
@@ -109,6 +133,10 @@ locator_str = """
     .type = bool
     .help = Raise an exception for any event where the spectrum is not \
             available.
+  double_spectrum_required = False
+    .type = bool
+    .help = If True, then we require both hutch and FEE spectra present to \
+            a direct paired comparison.
   spectrum_index_offset = None
     .type = int
     .help = Optional offset if the spectrometer and images are not in sync in \
@@ -148,6 +176,15 @@ locator_str = """
       .help = If True, read the event codes for all events up front, and \
               apply the filter then. Otherwise, apply when loading an \
               event.
+    encode_codes_in_timestamp = False
+      .type = bool
+      .help = If True, use a set of event codes specified in code_range \
+              encodes a sample number that is added to the per-shot \
+              timestamp. Useful for downstream sorting.
+    code_range = None
+      .type = ints(size=2)
+      .help = Min and max range of event codes that will be checked to \
+              assemble a sample number.
   }
 """
 locator_scope = parse(locator_str)
@@ -203,6 +240,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         self._cached_psana_detectors = {}
         self._beam_index = None
         self._beam_cache = None
+        self._hutch_spec = None
         self._initialized = True
         self._fee = None
 
@@ -421,6 +459,15 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 ]
             )
 
+    def _get_event_codes(self, evt):
+        if not self._evr:
+            self._evr = psana.Detector(self.params.filter.evr_address)
+        try:  # psana1
+            codes = self._evr.eventCodes(evt)
+        except Exception:  # psana2_idx
+            codes = [i for i, val in enumerate(self._evr.eventcodes(evt)) if val != 0]
+        return codes
+
     def filter_event(self, evt):
         """Return True to keep the event, False to reject it."""
         if not (
@@ -428,12 +475,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             or self.params.filter.required_absent_codes
         ):
             return True
-        if not self._evr:
-            self._evr = psana.Detector(self.params.filter.evr_address)
-        try:  # psana1
-            codes = self._evr.eventCodes(evt)
-        except Exception:  # psana2_idx
-            codes = [i for i, val in enumerate(self._evr.eventcodes(evt)) if val != 0]
+        codes = self._get_event_codes(evt)
 
         if self.params.filter.required_present_codes and not all(
             c in codes for c in self.params.filter.required_present_codes
@@ -561,13 +603,30 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
         evt = self._get_event(index)
         if not evt:
             return None
-        time = evt.get(psana.EventId).time()
-        # fid = evt.get(psana.EventId).fiducials()
+        try:
+            sec, nsec = evt.get(psana.EventId).time()
+        except AttributeError:
+            # psana2
+            dt = evt.datetime()
+            sec = int(dt.timestamp())
+            nsec = dt.microsecond * 1000
+        ts = serialtbx.util.time.timestamp((sec, nsec / 1e6))
 
-        sec = time[0]
-        nsec = time[1]
-
-        return serialtbx.util.time.timestamp((sec, nsec / 1e6))
+        if self.params.filter.encode_codes_in_timestamp:
+            codes = self._get_event_codes(evt)
+            if self.params.filter.code_range:
+                min_code, max_code = self.params.filter.code_range
+                code = ""
+                for c in range(min_code, max_code + 1):
+                    if c in codes:
+                        code = "1" + code
+                    else:
+                        code = "0" + code
+                code = "%03d" % int(code, 2)
+                ts = code + "_" + ts
+            else:
+                ts = ",".join([str(c) for c in codes]) + "_" + ts
+        return ts
 
     def get_num_images(self):
         return self.n_images
@@ -605,7 +664,49 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 if self.params.check_spectrum.enable:
                     if not self.check_spectrum(spectrum):
                         return None
-                wavelength = spectrum.get_weighted_wavelength()
+                if not self.params.spectrum_gaussian_fit:
+                    wavelength = spectrum.get_weighted_wavelength()
+                else:
+
+                    def gaussian_offset(x, amplitude, center, sigma, offset):
+                        return offset + amplitude * np.exp(
+                            -((x - center) ** 2) / (2 * sigma**2)
+                        )
+
+                    e = spectrum.get_energies_eV().as_numpy_array()
+                    w = spectrum.get_weights().as_numpy_array()
+                    # Smooth before choosing the max pixel. This gives us some resistance to
+                    # panel edges and other hot pixels.
+                    w_sm = savgol_filter(w, window_length=11, polyorder=2)
+                    max_idx = np.argmax(w_sm)
+                    center_init = e[max_idx]
+                    amplitude_init = w[max_idx]
+                    sigma_init = 10  # Guess bandwidth in eV
+                    offset_init = 0
+                    p0 = [amplitude_init, center_init, sigma_init, offset_init]
+                    b_low = (0, 0, 0, -np.inf)
+                    b_high = (np.inf, np.inf, np.inf, np.inf)
+                    try:
+                        popt, pcov = curve_fit(
+                            gaussian_offset, e, w, p0=p0, bounds=(b_low, b_high)
+                        )
+                    except RuntimeError:  # Refinement failed
+                        wavelength = None
+                    amplitude, center, sigma, offset = popt
+                    fwhm = sigma * 2.355
+                    if (
+                        abs(center - center_init)
+                        > self.params.spectrum_gaussian_max_dist
+                        or fwhm > self.params.spectrum_gaussian_max_fwhm
+                        or fwhm < self.params.spectrum_gaussian_min_fwhm
+                        or amplitude < 0
+                        or center < e.min()
+                        or center > e.max()
+                    ):
+                        wavelength = None
+                    else:
+                        wavelength = 12398.4 / center
+
             else:
                 try:
                     wavelength = serialtbx.detector.xtc.evt_wavelength(
@@ -628,8 +729,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 s, nsec = evt.get(psana.EventId).time()
             except AttributeError:
                 # psana2
-                ts = evt.timestamp
-                s = int(str(ts)[0:10])  # not elegant but works.
+                dt = evt.datetime()
+                s = int(dt.timestamp())
+
             evttime = time.gmtime(s)
             if (
                 evttime.tm_year == 2020 and evttime.tm_mon >= 7
@@ -637,7 +739,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
                 if self._beam_cache is not None:
                     self._beam_cache.set_polarization_normal((1, 0, 0))
 
-        if self._beam_cache.get_wavelength() < 0.1:
+        if self._beam_cache and self._beam_cache.get_wavelength() < 0.1:
             from dxtbx.model.beam import Probe
 
             self._beam_cache.set_probe(Probe.electron)
@@ -647,12 +749,127 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
     def get_spectrum(self, index=None):
         if index is None:
             index = 0
-        spectrum = self._spectrum(index)
+        if self.params.spectrum_source == "fee":
+            if self.params.double_spectrum_required:
+                test = self._spectrum_hutch(index)
+                if not test:
+                    raise RuntimeError("No paired spectra in shot %d" % index)
+            spectrum = self._spectrum_fee(index)
+        elif self.params.spectrum_source == "hutch":
+            if self.params.double_spectrum_required:
+                test = self._spectrum_fee(index)
+                if not test:
+                    raise RuntimeError("No paired spectra in shot %d" % index)
+            spectrum = self._spectrum_hutch(index)
+        else:
+            spectrum = None
         if not spectrum and self.params.spectrum_required:
             raise RuntimeError("No spectrum in shot %d" % index)
         return spectrum
 
-    def _spectrum(self, index=None):
+    def _spectrum_hutch(self, index=None):
+        """Extract calibrated spectrum from hutch spectrometer."""
+
+        if index is None:
+            index = 0
+
+        # Apply index offset if specified
+        if self.params.spectrum_index_offset:
+            index += self.params.spectrum_index_offset
+            if index < 0:
+                return None
+
+        # Check that calibration parameters are available
+        if self.params.spectrum_eV_per_pixel is None:
+            return None
+        if self.params.spectrum_roi_limits is None:
+            return None
+
+        # Get the event
+        evt = self._get_event(index)
+        if not evt:
+            return None
+
+        # Get or initialize detector object
+        if self._hutch_spec is None:
+            try:
+                # psana2 style
+                self._hutch_spec = self.get_run_from_index(index).Detector(
+                    self.params.spectrum_address_hutch or self.params.det
+                )
+            except AttributeError:
+                # psana1 style (fallback)
+                import psana
+
+                self._hutch_spec = psana.Detector(
+                    self.params.spectrum_address_hutch or self.params.det
+                )
+
+        if self._hutch_spec is None:
+            return None
+
+        # Get the detector image
+        try:
+            # Try psana2 first
+            img = self._hutch_spec.raw.calib(evt)
+        except AttributeError:
+            # Fall back to psana1
+            try:
+                img = self._hutch_spec.image(evt)
+            except AttributeError:
+                return None
+
+        if img is None:
+            return None
+
+        # Extract ROI limits
+        # Handle both [y1, y2] and [x1, x2, y1, y2] formats
+        if self.params.spectrum_roi_limits:
+            y1, y2 = self.params.spectrum_roi_limits
+            x1 = 0
+            x2 = img.shape[1] - 1
+        else:
+            return None
+
+        # Extract ROI from image
+        try:
+            roi_img = img[y1 : y2 + 1, x1 : x2 + 1]
+        except (IndexError, TypeError):
+            return None
+
+        # Collapse ROI to 1D spectrum by summing/averaging along y-axis
+        y = roi_img.mean(axis=0)
+
+        # Apply pedestal subtraction if specified
+        if self.params.spectrum_pedestal and self._spectrum_pedestal:
+            y = y - self._spectrum_pedestal.as_numpy_array()
+
+        # Recklessly clip at 0
+        # y = y.clip(min=0)
+        # Avoid negative mean
+        if y.mean() < 0:
+            y -= 2 * y.mean()
+
+        # Generate calibrated energy axis
+        # n_pixels = x2 - x1 + 1
+        pixel_positions = np.arange(x1, x2 + 1)
+        x = (
+            self.params.spectrum_eV_per_pixel * pixel_positions
+        ) + self.params.spectrum_eV_offset
+
+        # Validate data
+        if len(x) != len(y):
+            return None
+
+        try:
+            # Create Spectrum object
+            sp = Spectrum(x, y)
+        except (RuntimeError, NameError):
+            return None
+
+        return sp
+
+    def _spectrum_fee(self, index=None):
         if index is None:
             index = 0
         if self.params.spectrum_index_offset:
