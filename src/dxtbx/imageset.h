@@ -662,31 +662,32 @@ public:
    * @param index The image index
    * @returns The corrected data array
    */
-  Image<double> get_corrected_data(std::size_t index) {
-    typedef scitbx::af::versa<double, scitbx::af::c_grid<2> > array_type;
-    typedef scitbx::af::const_ref<double, scitbx::af::c_grid<2> > const_ref_type;
+  Image<float> get_corrected_data(std::size_t index) {
+    typedef scitbx::af::versa<float, scitbx::af::c_grid<2> > array_type;
+    typedef scitbx::af::const_ref<float, scitbx::af::c_grid<2> > float_const_ref_type;
+    typedef scitbx::af::const_ref<double, scitbx::af::c_grid<2> > double_const_ref_type;
 
     // Get the multi-tile data, gain and pedestal
     DXTBX_ASSERT(index < indices_.size());
-    Image<double> data = get_raw_data_as_double(index);
+    Image<float> data = get_raw_data_as_float(index);
     Image<double> gain = get_gain(index);
     Image<double> dark = get_pedestal(index);
     DXTBX_ASSERT(gain.n_tiles() == 0 || data.n_tiles() == gain.n_tiles());
     DXTBX_ASSERT(dark.n_tiles() == 0 || data.n_tiles() == dark.n_tiles());
 
     // Loop through tiles
-    Image<double> result;
+    Image<float> result;
     for (std::size_t i = 0; i < data.n_tiles(); ++i) {
       // Get the data
-      const_ref_type r = data.tile(i).data().const_ref();
+      float_const_ref_type r = data.tile(i).data().const_ref();
 
       // Get the gain and dark
-      const_ref_type g = gain.n_tiles() > 0
-                           ? gain.tile(i).data().const_ref()
-                           : const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
-      const_ref_type p = dark.n_tiles() > 0
-                           ? dark.tile(i).data().const_ref()
-                           : const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
+      double_const_ref_type g =
+        gain.n_tiles() > 0 ? gain.tile(i).data().const_ref()
+                           : double_const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
+      double_const_ref_type p =
+        dark.n_tiles() > 0 ? dark.tile(i).data().const_ref()
+                           : double_const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
 
       // Check gain and dark sizes
       DXTBX_ASSERT(g.size() == 0 || r.accessor().all_eq(g.accessor()));
@@ -694,7 +695,7 @@ public:
 
       if (p.size() == 0 && g.size() == 0) {
         // Nothing to apply, save the copy
-        result.push_back(ImageTile<double>(data.tile(i).data()));
+        result.push_back(ImageTile<float>(data.tile(i).data()));
       } else {
         // Create the result array
         array_type c(r.accessor(),
@@ -706,7 +707,7 @@ public:
         // Apply dark
         if (p.size() > 0) {
           for (std::size_t j = 0; j < r.size(); ++j) {
-            c[j] = c[j] - p[j];
+            c[j] = c[j] - static_cast<float>(p[j]);
           }
         }
 
@@ -714,12 +715,12 @@ public:
         if (g.size() > 0) {
           for (std::size_t j = 0; j < r.size(); ++j) {
             DXTBX_ASSERT(g[j] > 0);
-            c[j] = c[j] / g[j];
+            c[j] = c[j] / static_cast<float>(g[j]);
           }
         }
 
         // Add the image tile
-        result.push_back(ImageTile<double>(c));
+        result.push_back(ImageTile<float>(c));
       }
     }
 
@@ -895,7 +896,7 @@ public:
    */
   Image<bool> get_trusted_range_mask(Image<bool> mask, std::size_t index) {
     Detector detector = detail::safe_dereference(get_detector_for_image(index));
-    Image<double> data = get_raw_data_as_double(index);
+    Image<float> data = get_raw_data_as_float(index);
     DXTBX_ASSERT(mask.n_tiles() == data.n_tiles());
     DXTBX_ASSERT(data.n_tiles() == detector.size());
     for (std::size_t i = 0; i < detector.size(); ++i) {
@@ -1105,23 +1106,23 @@ public:
    */
   void clear_cache() {
     data_cache_ = DataCache<ImageBuffer>();
-    double_raw_data_cache_ = DataCache<Image<double> >();
+    float_raw_data_cache_ = DataCache<Image<float> >();
   }
 
 protected:
   ImageSetData data_;
   scitbx::af::shared<std::size_t> indices_;
   DataCache<ImageBuffer> data_cache_;
-  DataCache<Image<double> > double_raw_data_cache_;
+  DataCache<Image<float> > float_raw_data_cache_;
 
-  Image<double> get_raw_data_as_double(std::size_t index) {
+  Image<float> get_raw_data_as_float(std::size_t index) {
     DXTBX_ASSERT(index < indices_.size());
-    if (double_raw_data_cache_.index == index) {
-      return double_raw_data_cache_.image;
+    if (float_raw_data_cache_.index == index) {
+      return float_raw_data_cache_.image;
     }
-    Image<double> image = get_raw_data(index).as_double();
-    double_raw_data_cache_.index = index;
-    double_raw_data_cache_.image = image;
+    Image<float> image = get_raw_data(index).as_float();
+    float_raw_data_cache_.index = index;
+    float_raw_data_cache_.image = image;
     return image;
   }
 };

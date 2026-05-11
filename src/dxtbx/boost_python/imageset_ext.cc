@@ -451,7 +451,7 @@ namespace dxtbx { namespace boost_python {
   }
 
   boost::python::tuple ImageSet_get_corrected_data(ImageSet &self, std::size_t index) {
-    return image_as_tuple<double>(self.get_corrected_data(index));
+    return image_as_tuple<float>(self.get_corrected_data(index));
   }
 
   boost::python::tuple ImageSet_get_gain(ImageSet &self, std::size_t index) {
