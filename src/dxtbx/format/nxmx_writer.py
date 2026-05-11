@@ -696,11 +696,11 @@ class NXmxWriter:
             assert len(panel_data.focus()) == 2
             if isinstance(panel_data, flex.int):
                 dataisint.append(True)
-            elif isinstance(panel_data, flex.double):
+            elif isinstance(panel_data, flex.float):
                 dataisint.append(False)
             else:
-                raise TypeError("Ints or doubles are required")
-        assert all(dataisint) or not any(dataisint), "Mix of ints and doubles found"
+                raise TypeError("Ints or floats are required")
+        assert all(dataisint) or not any(dataisint), "Mix of ints and floats found"
         dataisint = all(dataisint)
 
         if self.params.dtype:
