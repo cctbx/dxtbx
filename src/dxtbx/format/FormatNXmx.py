@@ -9,6 +9,7 @@ import scitbx.array_family.flex as flex
 
 import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
+from dxtbx.format.FormatXFEL import FormatXFEL
 
 
 class _MaskCache:
@@ -176,3 +177,26 @@ class FormatNXmx(FormatNexus):
                 d1d.set_selected(d1d == top - 1, -1)
                 d1d.set_selected(d1d == top - 2, -2)
         return raw_data
+
+
+class FormatNXmxXFEL(FormatXFEL, FormatNXmx):
+    """NXmx format for XFEL sources with per-frame wavelengths.
+
+    XFEL NXmx files store incident_wavelength as a 1D array (one per pulse);
+    synchrotron NXmx files store it as a scalar. understand() distinguishes the two.
+    """
+
+    @staticmethod
+    def understand(image_file):
+        if not FormatNXmx.understand(image_file):
+            return False
+        # XFEL: incident_wavelength is a 1-D array; synchrotron: scalar
+        with h5py.File(image_file) as f:
+            wl = f.get("/entry/instrument/beam/incident_wavelength")
+            return wl is not None and wl.ndim > 0
+
+    def get_wavelengths(self):
+        return [
+            self._beam_factory.make_beam(index=i).get_wavelength()
+            for i in range(self._num_images)
+        ]

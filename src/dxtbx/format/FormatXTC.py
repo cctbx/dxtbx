@@ -20,6 +20,7 @@ from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage, Reader
 from dxtbx.format.FormatStill import FormatStill
+from dxtbx.format.FormatXFEL import FormatXFEL
 from dxtbx.model import Spectrum
 from dxtbx.util.rotate_and_average import rotate_and_average
 
@@ -948,6 +949,19 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
     def get_scan(self, index=None):
         return None
+
+
+class FormatXTCXFEL(FormatXFEL, FormatXTC):
+    """XTC format producing XFELImageSequence with per-event wavelengths."""
+
+    @staticmethod
+    def understand(image_file):
+        return FormatXTC.understand(image_file)
+
+    def get_wavelengths(self):
+        return [
+            self.get_beam(i).get_wavelength() for i in range(self.get_num_images())
+        ]
 
 
 if __name__ == "__main__":

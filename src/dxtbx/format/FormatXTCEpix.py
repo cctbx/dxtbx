@@ -10,7 +10,7 @@ from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
 
-from dxtbx.format.FormatXTC import FormatXTC, locator_str
+from dxtbx.format.FormatXTC import FormatXTC, FormatXTCXFEL, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 epix_locator_str = """
@@ -19,7 +19,7 @@ epix_locator_str = """
 epix_locator_scope = parse(epix_locator_str + locator_str, process_includes=True)
 
 
-class FormatXTCEpix(FormatXTC):
+class FormatXTCEpix(FormatXTCXFEL):
     def __init__(self, image_file, **kwargs):
         super().__init__(image_file, locator_scope=epix_locator_scope, **kwargs)
         self._cached_detector = {}

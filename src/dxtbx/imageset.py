@@ -44,6 +44,7 @@ __all__ = (
     "ImageSetLazy",
     "ImageSequence",
     "MemReader",
+    "XFELImageSequence",
 )
 
 
@@ -292,6 +293,57 @@ class ImageSetLazy(ImageSet):
     def get_gain(self, index):
         self._load_models(index)
         return super().get_gain(index)
+
+
+class XFELImageSequence(ImageSequence):
+    """ImageSequence where all frames share one beam model except for per-frame wavelength."""
+
+    def __init__(self, data, indices, beam, detector, goniometer, scan, wavelengths):
+        super().__init__(data, indices, beam, detector, goniometer, scan)
+        self._shared_beam = beam
+        self._shared_detector = detector
+        self._shared_goniometer = goniometer
+        self._wavelengths = list(wavelengths)
+
+    def get_beam(self, index=None):
+        if index is None:
+            return self._shared_beam
+        import copy
+
+        b = copy.copy(self._shared_beam)
+        b.set_wavelength(self._wavelengths[index])
+        return b
+
+    def get_wavelengths(self):
+        return self._wavelengths
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            result = super().__getitem__(item)
+            return XFELImageSequence(
+                result.data(),
+                result.indices(),
+                beam=self._shared_beam,
+                detector=self._shared_detector,
+                goniometer=self._shared_goniometer,
+                scan=result.get_scan(),
+                wavelengths=self._wavelengths[item],
+            )
+        return super().__getitem__(item)
+
+    def __reduce__(self):
+        return (
+            self.__class__,
+            (
+                self.data(),
+                self.indices(),
+                self._shared_beam,
+                self._shared_detector,
+                self._shared_goniometer,
+                self.get_scan(),
+                self._wavelengths,
+            ),
+        )
 
 
 @boost_adaptbx.boost.python.inject_into(ImageSequence)
