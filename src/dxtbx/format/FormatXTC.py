@@ -952,7 +952,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
 
 class FormatXTCXFEL(FormatXFEL, FormatXTC):
-    """XTC format producing XFELImageSequence with per-event wavelengths."""
+    """XTC format producing XFELImageSequence with per-event wavelengths.
+
+    XTC streams are exclusively LCLS XFEL stills (FormatXTC inherits FormatStill
+    via FormatMultiImage), so understand() simply delegates to FormatXTC — every
+    XTC file that FormatXTC accepts is per-event variable-wavelength data and
+    benefits from XFELImageSequence wrapping.
+    """
 
     @staticmethod
     def understand(image_file):

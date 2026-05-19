@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from collections.abc import Iterable
 
 import natsort
@@ -300,16 +301,20 @@ class XFELImageSequence(ImageSequence):
 
     def __init__(self, data, indices, beam, detector, goniometer, scan, wavelengths):
         super().__init__(data, indices, beam, detector, goniometer, scan)
+        wavelengths = list(wavelengths)
+        if len(wavelengths) != len(indices):
+            raise ValueError(
+                f"XFELImageSequence: wavelengths length {len(wavelengths)} "
+                f"does not match indices length {len(indices)}"
+            )
         self._shared_beam = beam
         self._shared_detector = detector
         self._shared_goniometer = goniometer
-        self._wavelengths = list(wavelengths)
+        self._wavelengths = wavelengths
 
     def get_beam(self, index=None):
         if index is None:
             return self._shared_beam
-        import copy
-
         b = copy.copy(self._shared_beam)
         b.set_wavelength(self._wavelengths[index])
         return b
