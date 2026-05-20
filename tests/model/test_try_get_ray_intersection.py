@@ -156,6 +156,8 @@ def test_try_get_bidirectional_ray_intersection_no_d_matrix_returns_none():
     panel = Panel()
     result = panel.try_get_bidirectional_ray_intersection((0, 0, 1))
     assert result is None
+    with pytest.raises(RuntimeError):
+        panel.get_bidirectional_ray_intersection((0, 0, 1))
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +250,8 @@ def test_try_get_bidirectional_ray_intersection_px_no_d_matrix_returns_none():
     panel = Panel()
     result = panel.try_get_bidirectional_ray_intersection_px((0, 0, 1))
     assert result is None
+    with pytest.raises(RuntimeError):
+        panel.get_bidirectional_ray_intersection_px((0, 0, 1))
 
 
 # ---------------------------------------------------------------------------
