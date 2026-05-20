@@ -11,6 +11,7 @@
 #ifndef DXTBX_MODEL_RAY_INTERSECTION_H
 #define DXTBX_MODEL_RAY_INTERSECTION_H
 
+#include <boost/optional.hpp>
 #include <scitbx/vec2.h>
 #include <scitbx/vec3.h>
 #include <scitbx/mat3.h>
@@ -23,18 +24,33 @@ namespace dxtbx { namespace model {
   using scitbx::vec3;
 
   /** Get the coordinate of a ray intersecting with the detector */
-  inline vec2<double> plane_ray_intersection(mat3<double> D, vec3<double> s1) {
+  inline boost::optional<vec2<double>> try_plane_ray_intersection(mat3<double> D,
+                                                                  vec3<double> s1) {
     vec3<double> v = D * s1;
-    DXTBX_ASSERT(v[2] > 0);
+    if (v[2] <= 0) return boost::none;
     return vec2<double>(v[0] / v[2], v[1] / v[2]);
   }
 
+  inline vec2<double> plane_ray_intersection(mat3<double> D, vec3<double> s1) {
+    auto r = try_plane_ray_intersection(D, s1);
+    DXTBX_ASSERT(r);
+    return *r;
+  }
+
   /** Get the coordinate of a ray intersecting with the detector */
+  inline boost::optional<vec2<double>> try_bidirectional_plane_ray_intersection(
+    mat3<double> D,
+    vec3<double> s1) {
+    vec3<double> v = D * s1;
+    if (v[2] == 0) return boost::none;
+    return vec2<double>(v[0] / v[2], v[1] / v[2]);
+  }
+
   inline vec2<double> bidirectional_plane_ray_intersection(mat3<double> D,
                                                            vec3<double> s1) {
-    vec3<double> v = D * s1;
-    DXTBX_ASSERT(v[2] != 0);
-    return vec2<double>(v[0] / v[2], v[1] / v[2]);
+    auto r = try_bidirectional_plane_ray_intersection(D, s1);
+    DXTBX_ASSERT(r);
+    return *r;
   }
 
   /** Get world coordinate of plane xy */
