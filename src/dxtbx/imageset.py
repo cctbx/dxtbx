@@ -299,7 +299,9 @@ class ImageSetLazy(ImageSet):
 class XFELImageSequence(ImageSequence):
     """ImageSequence where all frames share one beam model except for per-frame wavelength."""
 
-    def __init__(self, data, indices, beam, detector, goniometer, scan, wavelengths):
+    def __init__(
+        self, data, indices, beam, detector, goniometer, scan, wavelengths, xfel_beam=None
+    ):
         super().__init__(data, indices, beam, detector, goniometer, scan)
         wavelengths = list(wavelengths)
         if len(wavelengths) != len(indices):
@@ -311,13 +313,26 @@ class XFELImageSequence(ImageSequence):
         self._shared_detector = detector
         self._shared_goniometer = goniometer
         self._wavelengths = wavelengths
+        self._xfel_beam = xfel_beam  # C++ XFELBeam or None
 
     def get_beam(self, index=None):
         if index is None:
-            return self._shared_beam
+            return self._xfel_beam if self._xfel_beam is not None else self._shared_beam
+        if self._xfel_beam is not None:
+            from dxtbx.model.beam import BeamFactory
+
+            return BeamFactory.make_beam(
+                sample_to_source=self._xfel_beam.get_sample_to_source_direction(),
+                wavelength=self._wavelengths[index],
+                divergence=self._xfel_beam.get_divergence(),  # already degrees
+                sigma_divergence=self._xfel_beam.get_sigma_divergence(),
+            )
         b = copy.copy(self._shared_beam)
         b.set_wavelength(self._wavelengths[index])
         return b
+
+    def get_xfel_beam(self):
+        return self._xfel_beam
 
     def get_wavelengths(self):
         return self._wavelengths
@@ -333,6 +348,7 @@ class XFELImageSequence(ImageSequence):
                 goniometer=self._shared_goniometer,
                 scan=result.get_scan(),
                 wavelengths=self._wavelengths[item],
+                xfel_beam=self._xfel_beam,
             )
         return super().__getitem__(item)
 
@@ -347,6 +363,7 @@ class XFELImageSequence(ImageSequence):
                 self._shared_goniometer,
                 self.get_scan(),
                 self._wavelengths,
+                self._xfel_beam,
             ),
         )
 

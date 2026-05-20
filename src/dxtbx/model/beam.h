@@ -875,6 +875,161 @@ namespace dxtbx { namespace model {
     os << "    wavelength range : " << b.get_wavelength_range() << "\n";
     return os;
   }
+
+  /** A beam with per-frame wavelengths for XFEL pulse data. */
+  class XFELBeam : public Beam {
+  public:
+    XFELBeam() {
+      set_direction(vec3<double>(0.0, 0.0, 1.0));
+    }
+
+    XFELBeam(vec3<double> direction,
+             scitbx::af::const_ref<double> wavelengths,
+             double divergence = 0.0,
+             double sigma_divergence = 0.0) {
+      DXTBX_ASSERT(direction.length() > 0);
+      set_direction(direction);
+      wavelengths_ = scitbx::af::shared<double>(wavelengths.begin(), wavelengths.end());
+      set_divergence(divergence);
+      set_sigma_divergence(sigma_divergence);
+    }
+
+    double get_wavelength() const override {
+      throw DXTBX_ERROR("XFELBeam has no single wavelength");
+      return -1.;
+    }
+
+    void set_wavelength(double) override {
+      throw DXTBX_ERROR("XFELBeam has no single wavelength");
+    }
+
+    vec3<double> get_s0() const override {
+      throw DXTBX_ERROR("XFELBeam has no fixed s0");
+      return vec3<double>(0., 0., 0.);
+    }
+
+    void set_s0(vec3<double>) override {
+      throw DXTBX_ERROR("XFELBeam has no fixed s0");
+    }
+
+    scitbx::af::shared<double> get_wavelengths() const {
+      return wavelengths_;
+    }
+
+    void set_wavelengths(scitbx::af::const_ref<double> wavelengths) {
+      wavelengths_ = scitbx::af::shared<double>(wavelengths.begin(), wavelengths.end());
+    }
+
+    bool operator==(const BeamBase &rhs) const override {
+      double eps = 1.0e-6;
+      const XFELBeam *p = dynamic_cast<const XFELBeam *>(&rhs);
+      if (!p) return false;
+
+      if (wavelengths_.size() != p->wavelengths_.size()) return false;
+      for (std::size_t i = 0; i < wavelengths_.size(); ++i) {
+        if (std::abs(wavelengths_[i] - p->wavelengths_[i]) > eps) return false;
+      }
+
+      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
+               <= eps
+           && std::abs(divergence_ - rhs.get_divergence()) <= eps
+           && std::abs(sigma_divergence_ - rhs.get_sigma_divergence()) <= eps
+           && std::abs(
+                angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                <= eps
+           && std::abs(polarization_fraction_ - rhs.get_polarization_fraction()) <= eps
+           && std::abs(flux_ - rhs.get_flux()) <= eps
+           && std::abs(transmission_ - rhs.get_transmission()) <= eps
+           && std::abs(
+                sample_to_source_distance_ - rhs.get_sample_to_source_distance())
+                <= eps
+           && (probe_ == rhs.get_probe());
+    }
+
+    bool is_similar_to(const BeamBase &rhs,
+                       double wavelength_tolerance,
+                       double direction_tolerance,
+                       double polarization_normal_tolerance,
+                       double polarization_fraction_tolerance) const override {
+      const XFELBeam *p = dynamic_cast<const XFELBeam *>(&rhs);
+      if (!p) return false;
+
+      if (wavelengths_.size() != p->wavelengths_.size()) return false;
+      for (std::size_t i = 0; i < wavelengths_.size(); ++i) {
+        if (std::abs(wavelengths_[i] - p->wavelengths_[i]) > wavelength_tolerance)
+          return false;
+      }
+
+      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
+               <= direction_tolerance
+           && std::abs(
+                angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                <= polarization_normal_tolerance
+           && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                <= polarization_fraction_tolerance;
+    }
+
+    bool is_similar_to(const BeamBase &rhs,
+                       double wavelength_tolerance,
+                       double direction_tolerance,
+                       double polarization_normal_tolerance,
+                       double polarization_fraction_tolerance,
+                       double divergence_tolerance = 1e-6,
+                       double sigma_divergence_tolerance = 1e-6,
+                       double flux_tolerance = 1e-6,
+                       double transmission_tolerance = 1e-6,
+                       double sample_to_source_tolerance = 1e-6) const override {
+      const XFELBeam *p = dynamic_cast<const XFELBeam *>(&rhs);
+      if (!p) return false;
+
+      if (wavelengths_.size() != p->wavelengths_.size()) return false;
+      for (std::size_t i = 0; i < wavelengths_.size(); ++i) {
+        if (std::abs(wavelengths_[i] - p->wavelengths_[i]) > wavelength_tolerance)
+          return false;
+      }
+
+      return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
+               <= direction_tolerance
+           && std::abs(
+                angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                <= polarization_normal_tolerance
+           && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                <= polarization_fraction_tolerance
+           && std::abs(divergence_ - rhs.get_divergence()) <= divergence_tolerance
+           && std::abs(sigma_divergence_ - rhs.get_sigma_divergence())
+                <= sigma_divergence_tolerance
+           && std::abs(flux_ - rhs.get_flux()) <= flux_tolerance
+           && std::abs(transmission_ - rhs.get_transmission()) <= transmission_tolerance
+           && std::abs(
+                sample_to_source_distance_ - rhs.get_sample_to_source_distance())
+                <= sample_to_source_tolerance;
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const XFELBeam &b);
+
+  protected:
+    scitbx::af::shared<double> wavelengths_;
+  };
+
+  /** Print XFELBeam information */
+  inline std::ostream &operator<<(std::ostream &os, const XFELBeam &b) {
+    os << "XFELBeam:\n";
+    os << "    probe: " << b.get_probe_name() << "\n";
+    os << "    sample to source direction : "
+       << b.get_sample_to_source_direction().const_ref() << "\n";
+    os << "    divergence: " << b.get_divergence() << "\n";
+    os << "    sigma divergence: " << b.get_sigma_divergence() << "\n";
+    os << "    polarization normal: " << b.get_polarization_normal().const_ref()
+       << "\n";
+    os << "    polarization fraction: " << b.get_polarization_fraction() << "\n";
+    os << "    flux: " << b.get_flux() << "\n";
+    os << "    transmission: " << b.get_transmission() << "\n";
+    os << "    sample to source distance: " << b.get_sample_to_source_distance()
+       << "\n";
+    os << "    number of wavelengths: " << b.get_wavelengths().size() << "\n";
+    return os;
+  }
+
 }}  // namespace dxtbx::model
 
 #endif  // DXTBX_MODEL_BEAM_H

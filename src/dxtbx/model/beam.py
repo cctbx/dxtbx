@@ -7,9 +7,9 @@ import pycbf
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam, PolychromaticBeam, Probe
+    from ..dxtbx_model_ext import Beam, PolychromaticBeam, XFELBeam, Probe
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam, PolychromaticBeam, Probe  # type: ignore
+    from dxtbx_model_ext import Beam, PolychromaticBeam, XFELBeam, Probe  # type: ignore
 
 Vec3Float = tuple[float, float, float]
 
@@ -152,6 +152,8 @@ class BeamFactory:
             joint["probe"] = "x-ray"
         if joint.get("__id__") == "polychromatic":
             return PolychromaticBeam.from_dict(joint)
+        if joint.get("__id__") == "xfel":
+            return XFELBeam.from_dict(joint)
 
         return Beam.from_dict(joint)
 
@@ -214,6 +216,27 @@ class BeamFactory:
             float(sample_to_source_distance),
             bool(deg),
             tuple(map(float, wavelength_range)),
+        )
+
+    @staticmethod
+    def make_xfel_beam(
+        wavelengths,
+        sample_to_source: Vec3Float = (0.0, 0.0, 1.0),
+        divergence: float = 0.0,
+        sigma_divergence: float = 0.0,
+    ) -> "XFELBeam":
+        """Create an XFELBeam with per-frame wavelengths.
+
+        wavelengths: sequence of floats (Angstrom), one per frame.
+        divergence and sigma_divergence are in degrees.
+        """
+        from scitbx.array_family import flex
+
+        return XFELBeam(
+            tuple(map(float, sample_to_source)),
+            flex.double(wavelengths),
+            float(divergence),
+            float(sigma_divergence),
         )
 
     @staticmethod

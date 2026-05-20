@@ -196,7 +196,5 @@ class FormatNXmxXFEL(FormatXFEL, FormatNXmx):
             return wl is not None and wl.ndim > 0
 
     def get_wavelengths(self):
-        return [
-            self._beam_factory.make_beam(index=i).get_wavelength()
-            for i in range(self._num_images)
-        ]
+        xfel_beam = self._beam_factory.make_xfel_beam()
+        return list(xfel_beam.get_wavelengths())

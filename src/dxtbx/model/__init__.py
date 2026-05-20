@@ -59,6 +59,7 @@ try:
         Spectrum,
         VirtualPanel,
         VirtualPanelFrame,
+        XFELBeam,
         get_mod2pi_angles_in_range,
         get_range_of_mod2pi_angles,
         is_angle_in_range,
@@ -97,6 +98,7 @@ except ModuleNotFoundError:
         Spectrum,
         VirtualPanel,
         VirtualPanelFrame,
+        XFELBeam,
         get_mod2pi_angles_in_range,
         get_range_of_mod2pi_angles,
         is_angle_in_range,
@@ -108,6 +110,7 @@ __all__ = (
     "Beam",
     "BeamBase",
     "PolychromaticBeam",
+    "XFELBeam",
     "BeamFactory",
     "Crystal",
     "CrystalBase",
@@ -148,6 +151,26 @@ __all__ = (
     "parallax_correction",
     "parallax_correction_inv",
 )
+
+
+@boost_adaptbx.boost.python.inject_into(XFELBeam)
+class _xfelbeam:
+    def get_beam_at_frame(self, index):
+        """Return a monochromatic Beam for the given global frame index.
+
+        For output expts after JSON round-trip:
+            fi = experiment.scan.get_array_range()[0] - 1
+            mono_beam = experiment.beam.get_beam_at_frame(fi)
+        """
+        from dxtbx.model.beam import BeamFactory
+
+        wl = self.get_wavelengths()
+        return BeamFactory.make_beam(
+            sample_to_source=self.get_sample_to_source_direction(),
+            wavelength=float(wl[index]),
+            divergence=self.get_divergence(),  # degrees (Python binding default)
+            sigma_divergence=self.get_sigma_divergence(),
+        )
 
 
 @boost_adaptbx.boost.python.inject_into(Detector)
