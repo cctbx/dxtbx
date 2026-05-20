@@ -93,10 +93,7 @@ class CachedWavelengthBeamFactory:
         wavelength_units = nxmx.units(wavelength)
         wl_values = wavelength[()]
         wavelengths = flex.double(
-            [
-                float((w * wavelength_units).to("angstrom").magnitude)
-                for w in wl_values
-            ]
+            [float((w * wavelength_units).to("angstrom").magnitude) for w in wl_values]
         )
         return dxtbx.model.XFELBeam((0.0, 0.0, 1.0), wavelengths)
 

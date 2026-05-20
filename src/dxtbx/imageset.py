@@ -300,7 +300,15 @@ class XFELImageSequence(ImageSequence):
     """ImageSequence where all frames share one beam model except for per-frame wavelength."""
 
     def __init__(
-        self, data, indices, beam, detector, goniometer, scan, wavelengths, xfel_beam=None
+        self,
+        data,
+        indices,
+        beam,
+        detector,
+        goniometer,
+        scan,
+        wavelengths,
+        xfel_beam=None,
     ):
         super().__init__(data, indices, beam, detector, goniometer, scan)
         wavelengths = list(wavelengths)

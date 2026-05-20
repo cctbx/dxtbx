@@ -229,9 +229,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             "idx",
             "smd",
             "psana2_idx",
-        ], (
-            "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2_idx should be used for LCLS-II."
-        )
+        ], "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2_idx should be used for LCLS-II."
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None
@@ -965,9 +963,7 @@ class FormatXTCXFEL(FormatXFEL, FormatXTC):
         return FormatXTC.understand(image_file)
 
     def get_wavelengths(self):
-        return [
-            self.get_beam(i).get_wavelength() for i in range(self.get_num_images())
-        ]
+        return [self.get_beam(i).get_wavelength() for i in range(self.get_num_images())]
 
 
 if __name__ == "__main__":

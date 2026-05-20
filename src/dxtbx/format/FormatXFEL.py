@@ -53,7 +53,7 @@ class FormatXFEL:
         xfel_beam = BeamFactory.make_xfel_beam(
             wavelengths=wavelengths,
             sample_to_source=ref_beam.get_sample_to_source_direction(),
-            divergence=ref_beam.get_divergence(),        # already degrees
+            divergence=ref_beam.get_divergence(),  # already degrees
             sigma_divergence=ref_beam.get_sigma_divergence(),
         )
 

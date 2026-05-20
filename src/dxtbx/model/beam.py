@@ -13,8 +13,7 @@ except ModuleNotFoundError:
 
 Vec3Float = tuple[float, float, float]
 
-beam_phil_scope = libtbx.phil.parse(
-    """
+beam_phil_scope = libtbx.phil.parse("""
   beam
     .expert_level = 1
     .short_caption = "Beam overrides"
@@ -74,8 +73,7 @@ beam_phil_scope = libtbx.phil.parse(
         .type = floats(size=2)
         .help = "Override the wavelength range for polychromatic beams (A)"
   }
-"""
-)
+""")
 
 
 class BeamFactory:
@@ -138,9 +136,9 @@ class BeamFactory:
 
         if template is not None:
             if "__id__" in dict and "__id__" in template:
-                assert dict["__id__"] == template["__id__"], (
-                    "Beam and template dictionaries are not the same type."
-                )
+                assert (
+                    dict["__id__"] == template["__id__"]
+                ), "Beam and template dictionaries are not the same type."
 
         if dict is None and template is None:
             return None
