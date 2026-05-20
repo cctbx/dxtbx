@@ -23,7 +23,8 @@ namespace dxtbx { namespace model {
   using scitbx::vec2;
   using scitbx::vec3;
 
-  /** Get the coordinate of a ray intersecting with the detector */
+  /** Get the coordinate of a ray intersecting with the detector.
+   *  Returns boost::none if v[2] <= 0 (ray does not point toward panel). */
   inline boost::optional<vec2<double>> try_plane_ray_intersection(mat3<double> D,
                                                                   vec3<double> s1) {
     vec3<double> v = D * s1;
@@ -37,7 +38,8 @@ namespace dxtbx { namespace model {
     return *r;
   }
 
-  /** Get the coordinate of a ray intersecting with the detector */
+  /** Get the coordinate of a ray intersecting with the detector.
+   *  Returns boost::none if v[2] == 0. */
   inline boost::optional<vec2<double>> try_bidirectional_plane_ray_intersection(
     mat3<double> D,
     vec3<double> s1) {
