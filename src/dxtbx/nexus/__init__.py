@@ -391,6 +391,7 @@ def get_dxtbx_detector(
             if module.fast_pixel_direction.depends_on is not None:
                 top = module.fast_pixel_direction.depends_on
             else:
+                # This works around existing EIGER data putting '.' for depends_on
                 top = module.module_offset.depends_on
             dependency_chain = nxmx.get_dependency_chain(top)
             A = nxmx.get_cumulative_transformation(dependency_chain)
