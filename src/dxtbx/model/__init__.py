@@ -155,20 +155,17 @@ __all__ = (
 
 @boost_adaptbx.boost.python.inject_into(XFELBeam)
 class _xfelbeam:
-    def get_beam_at_frame(self, index):
-        """Return a monochromatic Beam for the given global frame index.
+    def get_monochromatic_beam(self, wavelength):
+        """Return a monochromatic Beam with the given wavelength.
 
-        For output expts after JSON round-trip:
-            fi = experiment.scan.get_array_range()[0] - 1
-            mono_beam = experiment.beam.get_beam_at_frame(fi)
+        Typical use: imageset.get_beam(i) dispatches here via ImageSequence.get_beam(index).
         """
         from dxtbx.model.beam import BeamFactory
 
-        wl = self.get_wavelengths()
         return BeamFactory.make_beam(
             sample_to_source=self.get_sample_to_source_direction(),
-            wavelength=float(wl[index]),
-            divergence=self.get_divergence(),  # degrees (Python binding default)
+            wavelength=float(wavelength),
+            divergence=self.get_divergence(),  # degrees (Python default); make_beam expects degrees
             sigma_divergence=self.get_sigma_divergence(),
         )
 
@@ -686,7 +683,7 @@ class _experimentlist:
 
         return history
 
-    def to_dict(self):
+    def to_dict(self, compact_stills_scans=False):
         """Serialize the experiment list to dictionary."""
 
         def abspath_or_none(filename):
@@ -787,6 +784,52 @@ class _experimentlist:
             r["params"] = imset.params()
             result["imageset"].append(r)
 
+        # Optionally consolidate single-frame stills scans into one JSON object.
+        # Each experiment gets a scan_point index; all point to scan 0.
+        # The in-memory model is unchanged; this only affects the JSON.
+        if compact_stills_scans:
+            scan_models = [s for s in index_lookup["scan"] if s is not None]
+            if len(scan_models) > 1 and all(
+                s.get_image_range()[0] == s.get_image_range()[1]
+                and s.get_oscillation()[1] == 0.0
+                for s in scan_models
+            ):
+                scan_to_point = {id(s): i for i, s in enumerate(scan_models)}
+                for exp_dict, exp in zip(result["experiment"], self):
+                    if exp.scan is not None:
+                        exp_dict["scan_point"] = scan_to_point[id(exp.scan)]
+                        exp_dict["scan"] = 0
+
+                # Union of any non-empty valid_image_ranges across all scans
+                all_vir: dict = {}
+                for s in scan_models:
+                    all_vir.update(s.to_dict().get("valid_image_ranges", {}))
+
+                # Build per-property arrays; skip entirely-zero arrays on write
+                all_prop_keys: set = set()
+                for s in scan_models:
+                    all_prop_keys.update(s.get_properties().keys())
+                consolidated_props: dict = {}
+                for key in all_prop_keys:
+                    vals = [
+                        float(s.get_properties().get(key, (0.0,))[0])
+                        for s in scan_models
+                    ]
+                    if any(v != 0.0 for v in vals):
+                        consolidated_props[key] = vals
+
+                result["scan"] = [
+                    {
+                        "__stills_consolidated": True,
+                        "batch_offset": scan_models[0].get_batch_offset(),
+                        "frame_numbers": [
+                            s.get_image_range()[0] for s in scan_models
+                        ],
+                        "properties": consolidated_props,
+                        "valid_image_ranges": all_vir,
+                    }
+                ]
+
         # Extract all the ordered model dictionaries - is important these
         # preserve the same order as used in experiment serialization above
         for name, models in index_lookup.items():
@@ -814,6 +857,7 @@ class _experimentlist:
         split=False,
         history_as_integrated=False,
         history_as_scaled=False,
+        compact_stills_scans=False,
     ):
         """Dump experiment list as json"""
 
@@ -890,7 +934,7 @@ class _experimentlist:
         history.append_history_item(dispatcher, version, flags)
 
         # Get the dictionary and get the JSON string
-        dictionary = self.to_dict()
+        dictionary = self.to_dict(compact_stills_scans=compact_stills_scans)
 
         # Split into separate files
         if filename is not None and split:

@@ -214,6 +214,10 @@ class ExperimentListDict:
                 )
             )
 
+        # Expand consolidated stills scans (written with compact_stills_scans=True)
+        # back to per-frame scan dicts before _extract_models processes them.
+        self._expand_consolidated_scans()
+
         # Extract lists of models referenced by experiments
         # Go through all the imagesets and make sure the dictionary
         # references by an index rather than a file path.
@@ -230,6 +234,46 @@ class ExperimentListDict:
                 ("scaling_model", self._scaling_model_from_dict),
             )
         }
+
+    def _expand_consolidated_scans(self):
+        """Expand a __stills_consolidated scan object back to per-frame scan
+        dicts and rewrite each experiment's scan index from its scan_point.
+
+        Called in __init__ before _extract_models so that all downstream
+        decode logic sees the standard per-frame format unchanged.
+        """
+        scans = self._obj.get("scan", [])
+        if not (len(scans) == 1 and scans[0].get("__stills_consolidated")):
+            return
+
+        consolidated = scans[0]
+        frame_numbers = consolidated["frame_numbers"]
+        props = consolidated.get("properties", {})
+        batch_offset = consolidated.get("batch_offset", 0)
+        global_vir = consolidated.get("valid_image_ranges", {})
+
+        expanded = []
+        for i, fn in enumerate(frame_numbers):
+            per_frame_props = {key: [vals[i]] for key, vals in props.items()}
+            # Reconstruct zero-valued arrays that were omitted on write
+            for zero_key in ("epochs", "exposure_time", "oscillation", "oscillation_width"):
+                if zero_key not in per_frame_props:
+                    per_frame_props[zero_key] = [0.0]
+            expanded.append(
+                {
+                    "image_range": [fn, fn],
+                    "batch_offset": batch_offset,
+                    "properties": per_frame_props,
+                    "valid_image_ranges": global_vir,
+                }
+            )
+        self._obj["scan"] = expanded
+
+        # Translate scan_point fields → direct per-frame scan indices
+        for eobj in self._obj["experiment"]:
+            scan_point = eobj.pop("scan_point", None)
+            if scan_point is not None:
+                eobj["scan"] = scan_point
 
     def _extract_models(self, name, from_dict):
         """
