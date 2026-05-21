@@ -190,11 +190,12 @@ class FormatNXmxXFEL(FormatXFEL, FormatNXmx):
     def understand(image_file):
         if not FormatNXmx.understand(image_file):
             return False
-        # XFEL: incident_wavelength is a 1-D array; synchrotron: scalar
+        # XFEL: incident_wavelength is a 1-D array with >1 entry (one per pulse).
+        # Scalar (ndim=0) or 1-element array (size=1) means constant wavelength
+        # → use regular FormatNXmx instead.
         with h5py.File(image_file) as f:
             wl = f.get("/entry/instrument/beam/incident_wavelength")
-            return wl is not None and wl.ndim > 0
+            return wl is not None and wl.ndim > 0 and wl.size > 1
 
     def get_wavelengths(self):
-        xfel_beam = self._beam_factory.make_xfel_beam()
-        return list(xfel_beam.get_wavelengths())
+        return self._beam_factory.get_wavelengths()
