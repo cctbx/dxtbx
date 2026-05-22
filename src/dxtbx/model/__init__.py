@@ -788,7 +788,10 @@ class _experimentlist:
         # Each experiment gets a scan_point index; all point to scan 0.
         # The in-memory model is unchanged; this only affects the JSON.
         if compact_stills_scans:
-            scan_models = [s for s in index_lookup["scan"] if s is not None]
+            scan_models = sorted(
+                (s for s in index_lookup["scan"] if s is not None),
+                key=lambda s: s.get_image_range()[0],
+            )
             if len(scan_models) > 1 and all(
                 s.get_image_range()[0] == s.get_image_range()[1]
                 and s.get_oscillation()[1] == 0.0
