@@ -283,12 +283,14 @@ class FormatMultiImage(Format):
             # Get the template
             template = filenames[0]
 
-            # Check indices are sequential
             if single_file_indices is not None:
-                assert all(
-                    i + 1 == j
-                    for i, j in zip(single_file_indices[:-1], single_file_indices[1:])
-                )
+                # Non-sequential indices are valid for still scan sequences
+                # (each index is an independent shot, not a continuous rotation).
+                if not (scan is not None and scan.is_still()):
+                    assert all(
+                        i + 1 == j
+                        for i, j in zip(single_file_indices[:-1], single_file_indices[1:])
+                    ), "Non-sequential single_file_indices require a still scan sequence"
                 num_images = len(single_file_indices)
             else:
                 num_images = format_instance.get_num_images()

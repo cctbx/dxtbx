@@ -622,6 +622,24 @@ class ExperimentListDict:
             if "single_file_indices" in imageset:
                 format_class = FormatMultiImage
 
+        # Single-file format with stored indices (possibly non-contiguous):
+        # bypass make_sequence() which assumes contiguous ranges and would
+        # fail the array_range == scan assertion for a sparse imageset.
+        if "single_file_indices" in imageset:
+            if format_class is None:
+                format_class = get_format_class_for_file(template)
+            return format_class.get_imageset(
+                [template],
+                beam=beam,
+                detector=detector,
+                goniometer=goniometer,
+                scan=scan,
+                single_file_indices=imageset["single_file_indices"],
+                as_sequence=True,
+                check_format=self._check_format,
+                format_kwargs=format_kwargs,
+            )
+
         # Make a sequence from the input data
         return ImageSetFactory.make_sequence(
             template,
