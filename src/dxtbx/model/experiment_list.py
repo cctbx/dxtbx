@@ -214,8 +214,8 @@ class ExperimentListDict:
                 )
             )
 
-        # Expand consolidated stills scans (written with compact_stills_scans=True)
-        # back to per-frame scan dicts before _extract_models processes them.
+        # Expand consolidated stills scans back to per-frame scan dicts before
+        # _extract_models processes them.
         self._expand_consolidated_scans()
 
         # Extract lists of models referenced by experiments
@@ -455,10 +455,19 @@ class ExperimentListDict:
                 imageset.set_detector(detector)
                 imageset.set_goniometer(goniometer)
                 existing_scan = imageset.get_scan()
-                if not (
-                    existing_scan is not None
-                    and existing_scan.has_property("wavelength")
-                ):
+                # Don't overwrite when the format class already provided a
+                # wavelength-bearing scan (XFEL, check_format=True).
+                # Also don't overwrite for sparse still imagesets where the
+                # merged eobj_scan spans (min_fn, max_fn) > len(imageset).
+                _scan_ok = existing_scan is not None and (
+                    existing_scan.has_property("wavelength")
+                    or (
+                        scan is not None
+                        and scan.is_still()
+                        and scan.get_num_images() != len(imageset)
+                    )
+                )
+                if not _scan_ok:
                     imageset.set_scan(scan)
             elif isinstance(imageset, (ImageSet, ImageGrid)):
                 for i in range(len(imageset)):
@@ -628,12 +637,25 @@ class ExperimentListDict:
         if "single_file_indices" in imageset:
             if format_class is None:
                 format_class = get_format_class_for_file(template)
+            # For sparse still imagesets the merged eobj_scan spans (min_fn, max_fn)
+            # which is larger than len(single_file_indices).  Pass a compact (1, N)
+            # scan so FormatMultiImage's assertion scan.get_num_images() <= N passes.
+            # The per-experiment scans (with absolute frame numbers and wavelengths)
+            # are stored separately and take precedence for per-experiment beam dispatch.
+            imageset_scan = scan
+            if scan is not None and scan.is_still():
+                n = len(imageset["single_file_indices"])
+                if scan.get_num_images() != n:
+                    imageset_scan = ScanFactory.make_scan_from_properties(
+                        image_range=(1, n),
+                        properties={},
+                    )
             return format_class.get_imageset(
                 [template],
                 beam=beam,
                 detector=detector,
                 goniometer=goniometer,
-                scan=scan,
+                scan=imageset_scan,
                 single_file_indices=imageset["single_file_indices"],
                 as_sequence=True,
                 check_format=self._check_format,
