@@ -47,7 +47,7 @@ class FormatXFEL:
         )
 
         fmt = cls.get_instance(filenames[0], **(format_kwargs or {}))
-        wavelengths = fmt.get_wavelengths()  # list[float], Angstrom
+        wavelengths_all = fmt.get_wavelengths()  # list[float], Angstrom, full file
 
         ref_beam = raw_iset.get_beam(0)
         xfel_beam = BeamFactory.make_xfel_beam(
@@ -57,6 +57,14 @@ class FormatXFEL:
         )
 
         n = len(raw_iset)
+        indices = list(raw_iset.indices())
+        if len(indices) != len(wavelengths_all):
+            # Subset of the file (e.g. loading a composite stills output).
+            # raw_iset.indices() holds the absolute 0-based frame positions;
+            # select the matching wavelengths so the property length equals n.
+            wavelengths = [wavelengths_all[i] for i in indices]
+        else:
+            wavelengths = wavelengths_all
         seq_scan = Scan((1, n), (0.0, 0.0))
         seq_scan.set_property("wavelength", flex.double(wavelengths))
 

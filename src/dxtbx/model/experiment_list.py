@@ -454,7 +454,12 @@ class ExperimentListDict:
                 imageset.set_beam(beam)
                 imageset.set_detector(detector)
                 imageset.set_goniometer(goniometer)
-                imageset.set_scan(scan)
+                existing_scan = imageset.get_scan()
+                if not (
+                    existing_scan is not None
+                    and existing_scan.has_property("wavelength")
+                ):
+                    imageset.set_scan(scan)
             elif isinstance(imageset, (ImageSet, ImageGrid)):
                 for i in range(len(imageset)):
                     imageset.set_beam(beam, i)

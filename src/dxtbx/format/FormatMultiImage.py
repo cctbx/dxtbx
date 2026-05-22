@@ -298,13 +298,13 @@ class FormatMultiImage(Format):
                 assert scan.get_num_images() <= num_images
 
             # If any are None then read from format
-            if beam is None:
+            if beam is None and format_instance is not None:
                 beam = format_instance.get_beam()
-            if detector is None:
+            if detector is None and format_instance is not None:
                 detector = format_instance.get_detector()
-            if goniometer is None:
+            if goniometer is None and format_instance is not None:
                 goniometer = format_instance.get_goniometer()
-            if scan is None:
+            if scan is None and format_instance is not None:
                 scan = format_instance.get_scan()
 
             # Create the masker
