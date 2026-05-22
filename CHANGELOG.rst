@@ -1,3 +1,12 @@
+DIALS 3.28.1 (2026-05-22)
+=========================
+
+Bugfixes
+--------
+
+- ``FormatNXmxEigerFilewriter``: if dependencies missing, make some (prpbably valid) assumptions about dependencies between fast, slow pixel directions and module offset (`#866 <https://github.com/cctbx/dxtbx/issues/866>`_)
+
+
 dxtbx 3.28.0 (2026-04-10)
 =========================
 
