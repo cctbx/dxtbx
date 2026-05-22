@@ -584,6 +584,27 @@ class _experiment:
         self.goniometer = self.imageset.get_goniometer(index)
         self.scan = self.imageset.get_scan(index)
 
+    def get_monochromatic_beam(self):
+        """Return a usable monochromatic Beam for this experiment's frame.
+
+        XFEL stills store a shared XFELBeam (no fixed wavelength) plus a
+        per-frame scan whose "wavelength" property holds the shot wavelength.
+        Combine the two into a monochromatic Beam. Any other beam type is
+        returned unchanged, so callers may use this unconditionally.
+        """
+        from dxtbx.model.beam import XFELBeam
+
+        if not isinstance(self.beam, XFELBeam):
+            return self.beam
+        if self.scan is None or not self.scan.has_property("wavelength"):
+            raise RuntimeError(
+                "Cannot resolve a per-frame beam: XFELBeam experiment has no "
+                "scan 'wavelength' property"
+            )
+        return self.beam.get_monochromatic_beam(
+            self.scan.get_property("wavelength")[0]
+        )
+
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
 class _experimentlist:
@@ -832,6 +853,40 @@ class _experimentlist:
                     "valid_image_ranges": all_vir,
                 }
             ]
+
+            # XFEL stills: per-frame beams differ only in wavelength, which is
+            # now stored in the consolidated scan above. Collapse them back to
+            # one shared XFELBeam so the file stays compact (mirrors the scan
+            # handling). The guard fails - and all N beams are written - if any
+            # beam was genuinely refined to a different geometry.
+            beam_models = list(index_lookup["beam"])
+            if (
+                "wavelength" in consolidated_props
+                and len(beam_models) > 1
+                and all(type(b) is Beam for b in beam_models)
+            ):
+                def _geometry(b):
+                    return (
+                        b.get_sample_to_source_direction(),
+                        b.get_divergence(),
+                        b.get_sigma_divergence(),
+                        b.get_polarization_normal(),
+                        b.get_polarization_fraction(),
+                    )
+
+                b0 = beam_models[0]
+                if all(_geometry(b) == _geometry(b0) for b in beam_models):
+                    from dxtbx.model.beam import BeamFactory
+
+                    xfel_beam = BeamFactory.make_xfel_beam(
+                        direction=b0.get_sample_to_source_direction(),
+                        divergence=b0.get_divergence(),
+                        sigma_divergence=b0.get_sigma_divergence(),
+                    )
+                    result["beam"] = [xfel_beam.to_dict()]
+                    for exp_dict in result["experiment"]:
+                        if "beam" in exp_dict:
+                            exp_dict["beam"] = 0
 
         # Extract all the ordered model dictionaries - is important these
         # preserve the same order as used in experiment serialization above
