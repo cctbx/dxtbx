@@ -1,12 +1,15 @@
-"""Mixin for XFEL format classes that produce XFELImageSequence."""
+"""Mixin for XFEL format classes that produce a per-wavelength ImageSequence."""
 
 
 class FormatXFEL:
-    """Mixin for XFEL format classes that produce XFELImageSequence.
+    """Mixin for XFEL format classes.
 
-    The parent format class (e.g. FormatNXmx) handles detector/beam/geometry.
-    This mixin wraps that imageset in XFELImageSequence with per-frame wavelengths.
-    Subclasses must implement get_wavelengths().
+    Subclasses must implement get_wavelengths() returning a Python list of
+    per-frame wavelengths in Angstrom.
+
+    get_imageset() builds a regular ImageSequence with:
+      - XFELBeam (direction + divergence, no wavelength or wavelength_range)
+      - zero-oscillation Scan with "wavelength" property (one entry per frame)
     """
 
     def get_wavelengths(self):
@@ -24,15 +27,14 @@ class FormatXFEL:
         format_kwargs=None,
         **kwargs,
     ):
-        from dxtbx.imageset import XFELImageSequence
+        from dxtbx.imageset import ImageSequence
         from dxtbx.model import Scan
         from dxtbx.model.beam import BeamFactory
+        from scitbx.array_family import flex
 
-        # Strip as_imageset/as_sequence from kwargs — we always want a plain ImageSet here
         kwargs.pop("as_imageset", None)
         kwargs.pop("as_sequence", None)
 
-        # Let the parent class build the raw ImageSet (populates beam/detector models)
         raw_iset = super().get_imageset(
             filenames,
             beam=beam,
@@ -44,27 +46,25 @@ class FormatXFEL:
             **kwargs,
         )
 
-        # Read per-frame wavelengths via the subclass implementation
         fmt = cls.get_instance(filenames[0], **(format_kwargs or {}))
-        wavelengths = fmt.get_wavelengths()
+        wavelengths = fmt.get_wavelengths()  # list[float], Angstrom
 
-        # Build an XFELBeam carrying all per-frame wavelengths
         ref_beam = raw_iset.get_beam(0)
         xfel_beam = BeamFactory.make_xfel_beam(
-            wavelengths=wavelengths,
-            sample_to_source=ref_beam.get_sample_to_source_direction(),
-            divergence=ref_beam.get_divergence(),  # already degrees
+            direction=ref_beam.get_sample_to_source_direction(),
+            divergence=ref_beam.get_divergence(),  # degrees (Python default)
             sigma_divergence=ref_beam.get_sigma_divergence(),
         )
 
         n = len(raw_iset)
-        return XFELImageSequence(
+        seq_scan = Scan((1, n), (0.0, 0.0))
+        seq_scan.set_property("wavelength", flex.double(wavelengths))
+
+        return ImageSequence(
             raw_iset.data(),
             raw_iset.indices(),
-            beam=ref_beam,
-            detector=raw_iset.get_detector(0),
-            goniometer=None,  # XFEL stills have no goniometer
-            scan=Scan((1, n), (0.0, 0.0)),  # zero-osc: is_still()=True
-            wavelengths=wavelengths,
-            xfel_beam=xfel_beam,
+            xfel_beam,
+            raw_iset.get_detector(0),
+            None,       # no goniometer for XFEL stills
+            seq_scan,
         )

@@ -438,7 +438,10 @@ class Format:
 
             assert beam is not None, "Can't create Sequence without beam"
             assert detector is not None, "Can't create Sequence without detector"
-            assert goniometer is not None, "Can't create Sequence without goniometer"
+            # Stills (zero-oscillation scans) legitimately have no goniometer.
+            # Only raise for non-still rotation sequences.
+            if goniometer is None and not (scan is not None and scan.is_still()):
+                raise AssertionError("Can't create Sequence without goniometer")
             assert scan is not None, "Can't create Sequence without scan"
 
             # Create the masker

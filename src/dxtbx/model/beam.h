@@ -876,22 +876,62 @@ namespace dxtbx { namespace model {
     return os;
   }
 
-  /** A beam with per-frame wavelengths for XFEL pulse data. */
+  /** Beam marker type for XFEL stills.
+   *
+   *  XFEL pulses are individually monochromatic but vary in energy from shot to
+   *  shot.  Per-shot wavelengths are stored in the scan properties table
+   *  (scan.set_property("wavelength", ...)), not in this object.  This class is
+   *  a stateless guard that prevents code expecting a fixed wavelength from being
+   *  silently applied to XFEL data.
+   */
   class XFELBeam : public Beam {
   public:
     XFELBeam() {
       set_direction(vec3<double>(0.0, 0.0, 1.0));
+      set_divergence(0.0);
+      set_sigma_divergence(0.0);
+      set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
+      set_polarization_fraction(0.5);
+      set_flux(0);
+      set_transmission(1.0);
+      set_probe(Probe::xray);
+      set_sample_to_source_distance(0.0);
     }
 
     XFELBeam(vec3<double> direction,
-             scitbx::af::const_ref<double> wavelengths,
              double divergence = 0.0,
              double sigma_divergence = 0.0) {
       DXTBX_ASSERT(direction.length() > 0);
       set_direction(direction);
-      wavelengths_ = scitbx::af::shared<double>(wavelengths.begin(), wavelengths.end());
       set_divergence(divergence);
       set_sigma_divergence(sigma_divergence);
+      set_polarization_normal(vec3<double>(0.0, 1.0, 0.0));
+      set_polarization_fraction(0.5);
+      set_flux(0);
+      set_transmission(1.0);
+      set_probe(Probe::xray);
+      set_sample_to_source_distance(0.0);
+    }
+
+    XFELBeam(vec3<double> direction,
+             double divergence,
+             double sigma_divergence,
+             vec3<double> polarization_normal,
+             double polarization_fraction,
+             double flux,
+             double transmission,
+             Probe probe,
+             double sample_to_source_distance = 0.0) {
+      DXTBX_ASSERT(direction.length() > 0);
+      set_direction(direction);
+      set_divergence(divergence);
+      set_sigma_divergence(sigma_divergence);
+      set_polarization_normal(polarization_normal);
+      set_polarization_fraction(polarization_fraction);
+      set_flux(flux);
+      set_transmission(transmission);
+      set_probe(probe);
+      set_sample_to_source_distance(sample_to_source_distance);
     }
 
     double get_wavelength() const override {
@@ -912,23 +952,34 @@ namespace dxtbx { namespace model {
       throw DXTBX_ERROR("XFELBeam has no fixed s0");
     }
 
-    scitbx::af::shared<double> get_wavelengths() const {
-      return wavelengths_;
+    std::size_t get_num_scan_points() const override {
+      throw DXTBX_ERROR("XFELBeam has no fixed s0");
+      return 1;
     }
 
-    void set_wavelengths(scitbx::af::const_ref<double> wavelengths) {
-      wavelengths_ = scitbx::af::shared<double>(wavelengths.begin(), wavelengths.end());
+    void set_s0_at_scan_points(
+        const scitbx::af::const_ref<vec3<double> > &s0) override {
+      throw DXTBX_ERROR("XFELBeam has no fixed s0");
+    }
+
+    scitbx::af::shared<vec3<double> > get_s0_at_scan_points() const override {
+      throw DXTBX_ERROR("XFELBeam has no fixed s0");
+      return scitbx::af::shared<vec3<double> >(1, vec3<double>(0., 0., 0.));
+    }
+
+    vec3<double> get_s0_at_scan_point(std::size_t index) const override {
+      throw DXTBX_ERROR("XFELBeam has no fixed s0");
+      return vec3<double>(0., 0., 0.);
+    }
+
+    void reset_scan_points() override {
+      throw DXTBX_ERROR("XFELBeam has no fixed s0");
     }
 
     bool operator==(const BeamBase &rhs) const override {
       double eps = 1.0e-6;
       const XFELBeam *p = dynamic_cast<const XFELBeam *>(&rhs);
       if (!p) return false;
-
-      if (wavelengths_.size() != p->wavelengths_.size()) return false;
-      for (std::size_t i = 0; i < wavelengths_.size(); ++i) {
-        if (std::abs(wavelengths_[i] - p->wavelengths_[i]) > eps) return false;
-      }
 
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
                <= eps
@@ -954,12 +1005,6 @@ namespace dxtbx { namespace model {
       const XFELBeam *p = dynamic_cast<const XFELBeam *>(&rhs);
       if (!p) return false;
 
-      if (wavelengths_.size() != p->wavelengths_.size()) return false;
-      for (std::size_t i = 0; i < wavelengths_.size(); ++i) {
-        if (std::abs(wavelengths_[i] - p->wavelengths_[i]) > wavelength_tolerance)
-          return false;
-      }
-
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
                <= direction_tolerance
            && std::abs(
@@ -982,12 +1027,6 @@ namespace dxtbx { namespace model {
       const XFELBeam *p = dynamic_cast<const XFELBeam *>(&rhs);
       if (!p) return false;
 
-      if (wavelengths_.size() != p->wavelengths_.size()) return false;
-      for (std::size_t i = 0; i < wavelengths_.size(); ++i) {
-        if (std::abs(wavelengths_[i] - p->wavelengths_[i]) > wavelength_tolerance)
-          return false;
-      }
-
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
                <= direction_tolerance
            && std::abs(
@@ -1006,9 +1045,6 @@ namespace dxtbx { namespace model {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const XFELBeam &b);
-
-  protected:
-    scitbx::af::shared<double> wavelengths_;
   };
 
   /** Print XFELBeam information */
@@ -1026,7 +1062,6 @@ namespace dxtbx { namespace model {
     os << "    transmission: " << b.get_transmission() << "\n";
     os << "    sample to source distance: " << b.get_sample_to_source_distance()
        << "\n";
-    os << "    number of wavelengths: " << b.get_wavelengths().size() << "\n";
     return os;
   }
 

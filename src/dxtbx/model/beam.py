@@ -218,21 +218,16 @@ class BeamFactory:
 
     @staticmethod
     def make_xfel_beam(
-        wavelengths,
-        sample_to_source: Vec3Float = (0.0, 0.0, 1.0),
+        direction: Vec3Float = (0.0, 0.0, 1.0),
         divergence: float = 0.0,
         sigma_divergence: float = 0.0,
     ) -> "XFELBeam":
-        """Create an XFELBeam with per-frame wavelengths.
+        """Create an XFELBeam (no wavelength; per-frame wavelengths go in scan properties).
 
-        wavelengths: sequence of floats (Angstrom), one per frame.
         divergence and sigma_divergence are in degrees.
         """
-        from scitbx.array_family import flex
-
         return XFELBeam(
-            tuple(map(float, sample_to_source)),
-            flex.double(wavelengths),
+            tuple(map(float, direction)),
             float(divergence),
             float(sigma_divergence),
         )

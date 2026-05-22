@@ -299,10 +299,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             return False
 
         try:
-            FormatXTC._get_datasource(image_file, params)
+            ds = FormatXTC._get_datasource(image_file, params)
         except Exception:
             return False
-        return True
+        return bool(ds)
 
     @staticmethod
     def params_from_phil(master_phil, user_phil, strict=False):
@@ -950,12 +950,13 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
 
 class FormatXTCXFEL(FormatXFEL, FormatXTC):
-    """XTC format producing XFELImageSequence with per-event wavelengths.
+    """XTC format with per-event wavelengths stored in scan properties.
 
     XTC streams are exclusively LCLS XFEL stills (FormatXTC inherits FormatStill
     via FormatMultiImage), so understand() simply delegates to FormatXTC — every
-    XTC file that FormatXTC accepts is per-event variable-wavelength data and
-    benefits from XFELImageSequence wrapping.
+    XTC file that FormatXTC accepts is per-event variable-wavelength data.
+    FormatXFEL.get_imageset() wraps the ImageSequence with an XFELBeam and
+    a scan 'wavelength' property.
     """
 
     @staticmethod

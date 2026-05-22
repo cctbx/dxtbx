@@ -431,10 +431,15 @@ namespace dxtbx { namespace model { namespace boost_python {
   struct XFELBeamPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const XFELBeam &obj) {
       return boost::python::make_tuple(obj.get_sample_to_source_direction(),
-                                       obj.get_wavelengths(),
-                                       obj.get_divergence(),        // radians
-                                       obj.get_sigma_divergence(),  // radians
-                                       false);                       // deg=False
+                                       obj.get_divergence(),
+                                       obj.get_sigma_divergence(),
+                                       obj.get_polarization_normal(),
+                                       obj.get_polarization_fraction(),
+                                       obj.get_flux(),
+                                       obj.get_transmission(),
+                                       obj.get_probe(),
+                                       obj.get_sample_to_source_distance(),
+                                       true);  // deg=True (divergence stored in radians, converted on restore)
     }
 
     static boost::python::tuple getstate(boost::python::object obj) {
@@ -450,15 +455,35 @@ namespace dxtbx { namespace model { namespace boost_python {
   };
 
   static XFELBeam *make_XFELBeam(vec3<double> direction,
-                                   scitbx::af::const_ref<double> wavelengths,
                                    double divergence,
                                    double sigma_divergence,
                                    bool deg) {
     using scitbx::deg_as_rad;
     return new XFELBeam(direction,
-                        wavelengths,
                         deg ? deg_as_rad(divergence) : divergence,
                         deg ? deg_as_rad(sigma_divergence) : sigma_divergence);
+  }
+
+  static XFELBeam *make_XFELBeam_w_all(vec3<double> direction,
+                                        double divergence,
+                                        double sigma_divergence,
+                                        vec3<double> polarization_normal,
+                                        double polarization_fraction,
+                                        double flux,
+                                        double transmission,
+                                        Probe probe,
+                                        double sample_to_source_distance,
+                                        bool deg) {
+    using scitbx::deg_as_rad;
+    return new XFELBeam(direction,
+                        deg ? deg_as_rad(divergence) : divergence,
+                        deg ? deg_as_rad(sigma_divergence) : sigma_divergence,
+                        polarization_normal,
+                        polarization_fraction,
+                        flux,
+                        transmission,
+                        probe,
+                        sample_to_source_distance);
   }
 
   template <>
@@ -467,13 +492,6 @@ namespace dxtbx { namespace model { namespace boost_python {
     boost::python::dict result;
     result["__id__"] = "xfel";
     result["direction"] = obj.get_sample_to_source_direction();
-    {
-      boost::python::list wl_list;
-      scitbx::af::shared<double> wl = obj.get_wavelengths();
-      for (std::size_t i = 0; i < wl.size(); ++i)
-        wl_list.append(wl[i]);
-      result["wavelengths"] = wl_list;
-    }
     result["divergence"] = rad_as_deg(obj.get_divergence());
     result["sigma_divergence"] = rad_as_deg(obj.get_sigma_divergence());
     result["polarization_normal"] = obj.get_polarization_normal();
@@ -488,29 +506,18 @@ namespace dxtbx { namespace model { namespace boost_python {
   template <>
   XFELBeam *from_dict<XFELBeam>(boost::python::dict obj) {
     using scitbx::deg_as_rad;
-    boost::python::object py_wl = obj["wavelengths"];
-    std::size_t n = (std::size_t)boost::python::len(py_wl);
-    scitbx::af::shared<double> wavelengths(n);
-    for (std::size_t i = 0; i < n; ++i) {
-      wavelengths[i] = boost::python::extract<double>(py_wl[i]);
-    }
     XFELBeam *b = new XFELBeam(
       boost::python::extract<vec3<double> >(obj["direction"]),
-      wavelengths.const_ref(),
       deg_as_rad(boost::python::extract<double>(obj.get("divergence", 0.0))),
-      deg_as_rad(boost::python::extract<double>(obj.get("sigma_divergence", 0.0))));
-    b->set_polarization_normal(boost::python::extract<vec3<double> >(
-      obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))));
-    b->set_polarization_fraction(
-      boost::python::extract<double>(obj.get("polarization_fraction", 0.999)));
-    b->set_flux(boost::python::extract<double>(obj.get("flux", 0)));
-    b->set_transmission(boost::python::extract<double>(obj.get("transmission", 1)));
-    b->set_probe(Beam::get_probe_from_name(
-      boost::python::extract<std::string>(obj.get("probe", "x-ray"))));
-    if (obj.has_key("sample_to_source_distance")) {
-      b->set_sample_to_source_distance(
-        boost::python::extract<double>(obj["sample_to_source_distance"]));
-    }
+      deg_as_rad(boost::python::extract<double>(obj.get("sigma_divergence", 0.0))),
+      boost::python::extract<vec3<double> >(
+        obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
+      boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
+      boost::python::extract<double>(obj.get("flux", 0)),
+      boost::python::extract<double>(obj.get("transmission", 1)),
+      Beam::get_probe_from_name(
+        boost::python::extract<std::string>(obj.get("probe", "x-ray"))),
+      boost::python::extract<double>(obj.get("sample_to_source_distance", 0.)));
     return b;
   }
 
@@ -681,12 +688,22 @@ namespace dxtbx { namespace model { namespace boost_python {
            make_constructor(&make_XFELBeam,
                             default_call_policies(),
                             (arg("direction"),
-                             arg("wavelengths"),
                              arg("divergence") = 0.0,
                              arg("sigma_divergence") = 0.0,
                              arg("deg") = true)))
-      .def("get_wavelengths", &XFELBeam::get_wavelengths)
-      .def("set_wavelengths", &XFELBeam::set_wavelengths)
+      .def("__init__",
+           make_constructor(&make_XFELBeam_w_all,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("polarization_normal"),
+                             arg("polarization_fraction"),
+                             arg("flux"),
+                             arg("transmission"),
+                             arg("probe") = Probe::xray,
+                             arg("sample_to_source_distance") = 0.0,
+                             arg("deg") = true)))
       .def("__str__", &xfelbeam_to_string)
       .def("to_dict", &to_dict<XFELBeam>)
       .def("from_dict", &from_dict<XFELBeam>, return_value_policy<manage_new_object>())

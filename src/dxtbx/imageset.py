@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from collections.abc import Iterable
 
 import natsort
@@ -45,7 +44,6 @@ __all__ = (
     "ImageSetLazy",
     "ImageSequence",
     "MemReader",
-    "XFELImageSequence",
 )
 
 
@@ -296,88 +294,28 @@ class ImageSetLazy(ImageSet):
         return super().get_gain(index)
 
 
-class XFELImageSequence(ImageSequence):
-    """ImageSequence where all frames share one beam model except for per-frame wavelength."""
-
-    def __init__(
-        self,
-        data,
-        indices,
-        beam,
-        detector,
-        goniometer,
-        scan,
-        wavelengths,
-        xfel_beam=None,
-    ):
-        super().__init__(data, indices, beam, detector, goniometer, scan)
-        wavelengths = list(wavelengths)
-        if len(wavelengths) != len(indices):
-            raise ValueError(
-                f"XFELImageSequence: wavelengths length {len(wavelengths)} "
-                f"does not match indices length {len(indices)}"
-            )
-        self._shared_beam = beam
-        self._shared_detector = detector
-        self._shared_goniometer = goniometer
-        self._wavelengths = wavelengths
-        self._xfel_beam = xfel_beam  # C++ XFELBeam or None
-
-    def get_beam(self, index=None):
-        if index is None:
-            return self._xfel_beam if self._xfel_beam is not None else self._shared_beam
-        if self._xfel_beam is not None:
-            from dxtbx.model.beam import BeamFactory
-
-            return BeamFactory.make_beam(
-                sample_to_source=self._xfel_beam.get_sample_to_source_direction(),
-                wavelength=self._wavelengths[index],
-                divergence=self._xfel_beam.get_divergence(),  # already degrees
-                sigma_divergence=self._xfel_beam.get_sigma_divergence(),
-            )
-        b = copy.copy(self._shared_beam)
-        b.set_wavelength(self._wavelengths[index])
-        return b
-
-    def get_xfel_beam(self):
-        return self._xfel_beam
-
-    def get_wavelengths(self):
-        return self._wavelengths
-
-    def __getitem__(self, item):
-        if isinstance(item, slice):
-            result = super().__getitem__(item)
-            return XFELImageSequence(
-                result.data(),
-                result.indices(),
-                beam=self._shared_beam,
-                detector=self._shared_detector,
-                goniometer=self._shared_goniometer,
-                scan=result.get_scan(),
-                wavelengths=self._wavelengths[item],
-                xfel_beam=self._xfel_beam,
-            )
-        return super().__getitem__(item)
-
-    def __reduce__(self):
-        return (
-            self.__class__,
-            (
-                self.data(),
-                self.indices(),
-                self._shared_beam,
-                self._shared_detector,
-                self._shared_goniometer,
-                self.get_scan(),
-                self._wavelengths,
-                self._xfel_beam,
-            ),
-        )
+_imagesequence_c_get_beam = ImageSequence.get_beam
 
 
 @boost_adaptbx.boost.python.inject_into(ImageSequence)
 class _imagesequence:
+    def get_beam(self, index=None):
+        """Get beam model, optionally for a specific frame.
+
+        For an ImageSequence with an XFELBeam and a scan 'wavelength' property,
+        get_beam(i) returns a monochromatic Beam for frame i.
+        For all other cases (including index=None), returns the shared beam.
+        """
+        from dxtbx.model.beam import XFELBeam
+
+        beam = _imagesequence_c_get_beam(self)
+        if index is None or not isinstance(beam, XFELBeam):
+            return beam
+        scan = self.get_scan()
+        if scan is None or not scan.has_property("wavelength"):
+            return beam
+        return beam.get_monochromatic_beam(scan.get_property("wavelength")[index])
+
     def __getitem__(self, item):
         """Get an item from the sequence stream.
 

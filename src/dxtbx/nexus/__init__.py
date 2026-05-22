@@ -79,23 +79,18 @@ class CachedWavelengthBeamFactory:
         self.read_models(index)
         return self.spectrum
 
-    def make_xfel_beam(self) -> "dxtbx.model.XFELBeam":
-        """Create an XFELBeam from a 1-D incident_wavelength array (single HDF5 read)."""
-        from scitbx.array_family import flex
-
+    def get_wavelengths(self) -> list:
+        """Read 1-D incident_wavelength array; return per-frame wavelengths in Angstrom."""
         primary_key = "incident_wavelength"
         wavelength = self.handle[primary_key]
         if wavelength.shape in ((), (1,)):
             raise RuntimeError(
-                "make_xfel_beam requires a 1-D wavelength array; "
+                "get_wavelengths requires a 1-D wavelength array; "
                 "this file has a scalar incident_wavelength"
             )
         wavelength_units = nxmx.units(wavelength)
         wl_values = wavelength[()]
-        wavelengths = flex.double(
-            [float((w * wavelength_units).to("angstrom").magnitude) for w in wl_values]
-        )
-        return dxtbx.model.XFELBeam((0.0, 0.0, 1.0), wavelengths)
+        return [float((w * wavelength_units).to("angstrom").magnitude) for w in wl_values]
 
     def read_models(self, index: int = 0):
         # Cached model
