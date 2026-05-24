@@ -33,6 +33,7 @@ from dxtbx.model import (
     History,
     ProfileModelFactory,
     ScanFactory,
+    XFELBeam,
 )
 from dxtbx.sequence_filenames import (
     locate_files_matching_template_string,
@@ -256,7 +257,12 @@ class ExperimentListDict:
         for i, fn in enumerate(frame_numbers):
             per_frame_props = {key: [vals[i]] for key, vals in props.items()}
             # Reconstruct zero-valued arrays that were omitted on write
-            for zero_key in ("epochs", "exposure_time", "oscillation", "oscillation_width"):
+            for zero_key in (
+                "epochs",
+                "exposure_time",
+                "oscillation",
+                "oscillation_width",
+            ):
                 if zero_key not in per_frame_props:
                     per_frame_props[zero_key] = [0.0]
             expanded.append(
@@ -574,6 +580,17 @@ class ExperimentListDict:
             history = History(self._obj["history"])
             for expt in el:
                 expt.history = history
+
+        # Auto-resolve XFELBeam on each Experiment.beam to a per-frame monochromatic
+        # Beam.  The ImageSequence and its XFELBeam slot are preserved; the scan's
+        # "wavelength" property is preserved.  Downstream consumers (refinement,
+        # detector_residuals, dials.show, scaling, etc.) see a normal Beam on
+        # Experiment.beam and do not need XFELBeam-awareness.
+        for expt in el:
+            if isinstance(expt.beam, XFELBeam):
+                resolved = expt.get_monochromatic_beam()
+                if resolved is not None:
+                    expt.beam = resolved
 
         return el
 
