@@ -193,9 +193,12 @@ class FormatNXmxXFEL(FormatXFEL, FormatNXmx):
         # XFEL: incident_wavelength is a 1-D array with >1 entry (one per pulse).
         # Scalar (ndim=0) or 1-element array (size=1) means constant wavelength
         # → use regular FormatNXmx instead.
-        with h5py.File(image_file) as f:
-            wl = f.get("/entry/instrument/beam/incident_wavelength")
-            return wl is not None and wl.ndim > 0 and wl.size > 1
+        try:
+            with h5py.File(image_file) as f:
+                wl = f.get("/entry/instrument/beam/incident_wavelength")
+                return wl is not None and wl.ndim > 0 and wl.size > 1
+        except Exception:
+            return False
 
     def get_wavelengths(self):
         return self._beam_factory.get_wavelengths()

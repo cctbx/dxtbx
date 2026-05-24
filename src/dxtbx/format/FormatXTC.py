@@ -229,7 +229,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             "idx",
             "smd",
             "psana2_idx",
-        ], "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2_idx should be used for LCLS-II."
+        ], (
+            "idx or smd mode should be used for LCLS-I analysis (idx is often faster). psana2_idx should be used for LCLS-II."
+        )
 
         self._ds = FormatXTC._get_datasource(image_file, self.params)
         self._evr = None

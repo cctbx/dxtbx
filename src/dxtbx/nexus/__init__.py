@@ -90,7 +90,9 @@ class CachedWavelengthBeamFactory:
             )
         wavelength_units = nxmx.units(wavelength)
         wl_values = wavelength[()]
-        return [float((w * wavelength_units).to("angstrom").magnitude) for w in wl_values]
+        return [
+            float((w * wavelength_units).to("angstrom").magnitude) for w in wl_values
+        ]
 
     def read_models(self, index: int = 0):
         # Cached model

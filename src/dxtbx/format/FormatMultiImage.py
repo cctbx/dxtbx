@@ -289,8 +289,12 @@ class FormatMultiImage(Format):
                 if not (scan is not None and scan.is_still()):
                     assert all(
                         i + 1 == j
-                        for i, j in zip(single_file_indices[:-1], single_file_indices[1:])
-                    ), "Non-sequential single_file_indices require a still scan sequence"
+                        for i, j in zip(
+                            single_file_indices[:-1], single_file_indices[1:]
+                        )
+                    ), (
+                        "Non-sequential single_file_indices require a still scan sequence"
+                    )
                 num_images = len(single_file_indices)
             else:
                 num_images = format_instance.get_num_images()
