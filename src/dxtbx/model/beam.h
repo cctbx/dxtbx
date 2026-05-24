@@ -953,8 +953,10 @@ namespace dxtbx { namespace model {
     }
 
     std::size_t get_num_scan_points() const override {
-      throw DXTBX_ERROR("XFELBeam has no fixed s0");
-      return 1;
+      // XFELBeam genuinely has no scan points; returning 0 (rather than throwing)
+      // lets generic Experiment copy/compare/serialize code that probes
+      // "is this scan-varying?" handle XFELBeam without XFEL-awareness.
+      return 0;
     }
 
     void set_s0_at_scan_points(

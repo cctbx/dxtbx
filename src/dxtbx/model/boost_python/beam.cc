@@ -512,7 +512,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       deg_as_rad(boost::python::extract<double>(obj.get("sigma_divergence", 0.0))),
       boost::python::extract<vec3<double> >(
         obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
-      boost::python::extract<double>(obj.get("polarization_fraction", 0.999)),
+      // Default matches XFELBeam's C++ constructor and BeamFactory.make_xfel_beam.
+      boost::python::extract<double>(obj.get("polarization_fraction", 0.5)),
       boost::python::extract<double>(obj.get("flux", 0)),
       boost::python::extract<double>(obj.get("transmission", 1)),
       Beam::get_probe_from_name(
