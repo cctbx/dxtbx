@@ -158,15 +158,27 @@ class _xfelbeam:
     def get_monochromatic_beam(self, wavelength):
         """Return a monochromatic Beam with the given wavelength.
 
+        Carries through polarization, flux, transmission, probe, and sample-to-source
+        distance from the XFELBeam so that downstream consumers (integration's
+        Lorentz-polarization correction in particular) see the instrument values
+        rather than defaults.
+
         Typical use: imageset.get_beam(i) dispatches here via ImageSequence.get_beam(index).
         """
-        from dxtbx.model.beam import BeamFactory
-
-        return BeamFactory.make_beam(
-            sample_to_source=self.get_sample_to_source_direction(),
+        # Use Beam's full constructor (divergence/sigma_divergence in degrees,
+        # deg=True converts on the way in).
+        return Beam(
+            direction=self.get_sample_to_source_direction(),
             wavelength=float(wavelength),
-            divergence=self.get_divergence(),  # degrees (Python default); make_beam expects degrees
+            divergence=self.get_divergence(),
             sigma_divergence=self.get_sigma_divergence(),
+            polarization_normal=self.get_polarization_normal(),
+            polarization_fraction=self.get_polarization_fraction(),
+            flux=self.get_flux(),
+            transmission=self.get_transmission(),
+            probe=self.get_probe(),
+            sample_to_source_distance=self.get_sample_to_source_distance(),
+            deg=True,
         )
 
 
@@ -601,9 +613,7 @@ class _experiment:
                 "Cannot resolve a per-frame beam: XFELBeam experiment has no "
                 "scan 'wavelength' property"
             )
-        return self.beam.get_monochromatic_beam(
-            self.scan.get_property("wavelength")[0]
-        )
+        return self.beam.get_monochromatic_beam(self.scan.get_property("wavelength")[0])
 
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
@@ -815,7 +825,8 @@ class _experimentlist:
         )
         if len(scan_models) > 1 and all(
             s.get_image_range()[0] == s.get_image_range()[1]
-            and s.get_oscillation()[1] == 0.0
+            and s.get_image_range()[0] > 0
+            and s.is_still()
             for s in scan_models
         ):
             scan_to_point = {id(s): i for i, s in enumerate(scan_models)}
@@ -836,8 +847,7 @@ class _experimentlist:
             consolidated_props: dict = {}
             for key in all_prop_keys:
                 vals = [
-                    float(s.get_properties().get(key, (0.0,))[0])
-                    for s in scan_models
+                    float(s.get_properties().get(key, (0.0,))[0]) for s in scan_models
                 ]
                 if any(v != 0.0 for v in vals):
                     consolidated_props[key] = vals
@@ -846,9 +856,7 @@ class _experimentlist:
                 {
                     "__stills_consolidated": True,
                     "batch_offset": scan_models[0].get_batch_offset(),
-                    "frame_numbers": [
-                        s.get_image_range()[0] for s in scan_models
-                    ],
+                    "frame_numbers": [s.get_image_range()[0] for s in scan_models],
                     "properties": consolidated_props,
                     "valid_image_ranges": all_vir,
                 }
@@ -865,6 +873,7 @@ class _experimentlist:
                 and len(beam_models) > 1
                 and all(type(b) is Beam for b in beam_models)
             ):
+
                 def _geometry(b):
                     return (
                         b.get_sample_to_source_direction(),

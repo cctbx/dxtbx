@@ -7,9 +7,9 @@ import pycbf
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam, PolychromaticBeam, XFELBeam, Probe
+    from ..dxtbx_model_ext import Beam, PolychromaticBeam, Probe, XFELBeam
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam, PolychromaticBeam, XFELBeam, Probe  # type: ignore
+    from dxtbx_model_ext import Beam, PolychromaticBeam, Probe, XFELBeam  # type: ignore
 
 Vec3Float = tuple[float, float, float]
 
@@ -136,9 +136,9 @@ class BeamFactory:
 
         if template is not None:
             if "__id__" in dict and "__id__" in template:
-                assert (
-                    dict["__id__"] == template["__id__"]
-                ), "Beam and template dictionaries are not the same type."
+                assert dict["__id__"] == template["__id__"], (
+                    "Beam and template dictionaries are not the same type."
+                )
 
         if dict is None and template is None:
             return None
@@ -221,15 +221,30 @@ class BeamFactory:
         direction: Vec3Float = (0.0, 0.0, 1.0),
         divergence: float = 0.0,
         sigma_divergence: float = 0.0,
+        polarization_normal: Vec3Float = (0.0, 1.0, 0.0),
+        polarization_fraction: float = 0.5,
+        flux: float = 0.0,
+        transmission: float = 1.0,
+        probe: Probe = Probe.xray,
+        sample_to_source_distance: float = 0.0,
     ) -> "XFELBeam":
         """Create an XFELBeam (no wavelength; per-frame wavelengths go in scan properties).
 
         divergence and sigma_divergence are in degrees.
+        Polarization, flux, transmission, etc. are forwarded to monochromatic beams
+        produced by XFELBeam.get_monochromatic_beam so that downstream corrections
+        (Lorentz-polarization, scaling) see the instrument values rather than defaults.
         """
         return XFELBeam(
             tuple(map(float, direction)),
             float(divergence),
             float(sigma_divergence),
+            tuple(map(float, polarization_normal)),
+            float(polarization_fraction),
+            float(flux),
+            float(transmission),
+            probe,
+            float(sample_to_source_distance),
         )
 
     @staticmethod

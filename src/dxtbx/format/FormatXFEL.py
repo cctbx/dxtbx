@@ -1,4 +1,5 @@
 """Mixin for XFEL format classes that produce a per-wavelength ImageSequence."""
+from __future__ import annotations
 
 
 class FormatXFEL:
@@ -27,10 +28,11 @@ class FormatXFEL:
         format_kwargs=None,
         **kwargs,
     ):
+        from scitbx.array_family import flex
+
         from dxtbx.imageset import ImageSequence
         from dxtbx.model import Scan
         from dxtbx.model.beam import BeamFactory
-        from scitbx.array_family import flex
 
         kwargs.pop("as_imageset", None)
         kwargs.pop("as_sequence", None)
@@ -50,10 +52,20 @@ class FormatXFEL:
         wavelengths_all = fmt.get_wavelengths()  # list[float], Angstrom, full file
 
         ref_beam = raw_iset.get_beam(0)
+        # Carry the instrument beam's polarization (and flux/transmission/probe/etc.)
+        # onto the XFELBeam so that monochromatic beams derived from it via
+        # get_monochromatic_beam() retain the correct values for the
+        # Lorentz-polarization correction downstream.
         xfel_beam = BeamFactory.make_xfel_beam(
             direction=ref_beam.get_sample_to_source_direction(),
             divergence=ref_beam.get_divergence(),  # degrees (Python default)
             sigma_divergence=ref_beam.get_sigma_divergence(),
+            polarization_normal=ref_beam.get_polarization_normal(),
+            polarization_fraction=ref_beam.get_polarization_fraction(),
+            flux=ref_beam.get_flux(),
+            transmission=ref_beam.get_transmission(),
+            probe=ref_beam.get_probe(),
+            sample_to_source_distance=ref_beam.get_sample_to_source_distance(),
         )
 
         n = len(raw_iset)
@@ -73,6 +85,6 @@ class FormatXFEL:
             raw_iset.indices(),
             xfel_beam,
             raw_iset.get_detector(0),
-            None,       # no goniometer for XFEL stills
+            None,  # no goniometer for XFEL stills
             seq_scan,
         )
