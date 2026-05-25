@@ -823,12 +823,14 @@ class _experimentlist:
             (s for s in index_lookup["scan"] if s is not None),
             key=lambda s: s.get_image_range()[0],
         )
-        if len(scan_models) > 1 and all(
+        all_stills = len(scan_models) >= 1 and all(
             s.get_image_range()[0] == s.get_image_range()[1]
             and s.get_image_range()[0] > 0
             and s.is_still()
             for s in scan_models
-        ):
+        )
+
+        if all_stills and len(scan_models) > 1:
             scan_to_point = {id(s): i for i, s in enumerate(scan_models)}
             for exp_dict, exp in zip(result["experiment"], self):
                 if exp.scan is not None:
@@ -862,17 +864,20 @@ class _experimentlist:
                 }
             ]
 
-            # XFEL stills: per-frame beams differ only in wavelength, which is
-            # now stored in the consolidated scan above. Collapse them back to
-            # one shared XFELBeam so the file stays compact (mirrors the scan
-            # handling). The guard fails - and all N beams are written - if any
-            # beam was genuinely refined to a different geometry.
+        # XFEL stills: collapse monochromatic per-frame beams (or a single
+        # shared beam carrying one frame's wavelength after combine_experiments
+        # reference_from_experiment.beam=0) back to one XFELBeam. The
+        # per-frame wavelengths live in scan "wavelength" properties, so the
+        # beam wavelength is redundant and dropping it keeps the file compact
+        # and round-trips identically through decode()'s auto-resolve. Runs
+        # whenever there are stills with wavelengths in the scan, independent
+        # of whether scan consolidation fired (so single-experiment writes
+        # from dials.split_experiments also produce XFELBeam).
+        if all_stills and all(
+            "wavelength" in s.get_properties() for s in scan_models
+        ):
             beam_models = list(index_lookup["beam"])
-            if (
-                "wavelength" in consolidated_props
-                and len(beam_models) > 1
-                and all(type(b) is Beam for b in beam_models)
-            ):
+            if beam_models and all(type(b) is Beam for b in beam_models):
 
                 def _geometry(b):
                     return (
@@ -891,6 +896,12 @@ class _experimentlist:
                         direction=b0.get_sample_to_source_direction(),
                         divergence=b0.get_divergence(),
                         sigma_divergence=b0.get_sigma_divergence(),
+                        polarization_normal=b0.get_polarization_normal(),
+                        polarization_fraction=b0.get_polarization_fraction(),
+                        flux=b0.get_flux(),
+                        transmission=b0.get_transmission(),
+                        probe=b0.get_probe(),
+                        sample_to_source_distance=b0.get_sample_to_source_distance(),
                     )
                     result["beam"] = [xfel_beam.to_dict()]
                     for exp_dict in result["experiment"]:
