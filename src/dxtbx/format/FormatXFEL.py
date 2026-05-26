@@ -1,4 +1,5 @@
 """Mixin for XFEL format classes that produce a per-wavelength ImageSequence."""
+
 from __future__ import annotations
 
 

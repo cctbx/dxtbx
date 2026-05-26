@@ -430,16 +430,17 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   struct XFELBeamPickleSuite : boost::python::pickle_suite {
     static boost::python::tuple getinitargs(const XFELBeam &obj) {
-      return boost::python::make_tuple(obj.get_sample_to_source_direction(),
-                                       obj.get_divergence(),
-                                       obj.get_sigma_divergence(),
-                                       obj.get_polarization_normal(),
-                                       obj.get_polarization_fraction(),
-                                       obj.get_flux(),
-                                       obj.get_transmission(),
-                                       obj.get_probe(),
-                                       obj.get_sample_to_source_distance(),
-                                       true);  // deg=True (divergence stored in radians, converted on restore)
+      return boost::python::make_tuple(
+        obj.get_sample_to_source_direction(),
+        obj.get_divergence(),
+        obj.get_sigma_divergence(),
+        obj.get_polarization_normal(),
+        obj.get_polarization_fraction(),
+        obj.get_flux(),
+        obj.get_transmission(),
+        obj.get_probe(),
+        obj.get_sample_to_source_distance(),
+        true);  // deg=True (divergence stored in radians, converted on restore)
     }
 
     static boost::python::tuple getstate(boost::python::object obj) {
@@ -455,9 +456,9 @@ namespace dxtbx { namespace model { namespace boost_python {
   };
 
   static XFELBeam *make_XFELBeam(vec3<double> direction,
-                                   double divergence,
-                                   double sigma_divergence,
-                                   bool deg) {
+                                 double divergence,
+                                 double sigma_divergence,
+                                 bool deg) {
     using scitbx::deg_as_rad;
     return new XFELBeam(direction,
                         deg ? deg_as_rad(divergence) : divergence,
@@ -465,15 +466,15 @@ namespace dxtbx { namespace model { namespace boost_python {
   }
 
   static XFELBeam *make_XFELBeam_w_all(vec3<double> direction,
-                                        double divergence,
-                                        double sigma_divergence,
-                                        vec3<double> polarization_normal,
-                                        double polarization_fraction,
-                                        double flux,
-                                        double transmission,
-                                        Probe probe,
-                                        double sample_to_source_distance,
-                                        bool deg) {
+                                       double divergence,
+                                       double sigma_divergence,
+                                       vec3<double> polarization_normal,
+                                       double polarization_fraction,
+                                       double flux,
+                                       double transmission,
+                                       Probe probe,
+                                       double sample_to_source_distance,
+                                       bool deg) {
     using scitbx::deg_as_rad;
     return new XFELBeam(direction,
                         deg ? deg_as_rad(divergence) : divergence,

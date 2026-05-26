@@ -960,7 +960,7 @@ namespace dxtbx { namespace model {
     }
 
     void set_s0_at_scan_points(
-        const scitbx::af::const_ref<vec3<double> > &s0) override {
+      const scitbx::af::const_ref<vec3<double> > &s0) override {
       throw DXTBX_ERROR("XFELBeam has no fixed s0");
     }
 
@@ -985,18 +985,19 @@ namespace dxtbx { namespace model {
 
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
                <= eps
-           && std::abs(divergence_ - rhs.get_divergence()) <= eps
-           && std::abs(sigma_divergence_ - rhs.get_sigma_divergence()) <= eps
-           && std::abs(
-                angle_safe(polarization_normal_, rhs.get_polarization_normal()))
-                <= eps
-           && std::abs(polarization_fraction_ - rhs.get_polarization_fraction()) <= eps
-           && std::abs(flux_ - rhs.get_flux()) <= eps
-           && std::abs(transmission_ - rhs.get_transmission()) <= eps
-           && std::abs(
-                sample_to_source_distance_ - rhs.get_sample_to_source_distance())
-                <= eps
-           && (probe_ == rhs.get_probe());
+             && std::abs(divergence_ - rhs.get_divergence()) <= eps
+             && std::abs(sigma_divergence_ - rhs.get_sigma_divergence()) <= eps
+             && std::abs(
+                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                  <= eps
+             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                  <= eps
+             && std::abs(flux_ - rhs.get_flux()) <= eps
+             && std::abs(transmission_ - rhs.get_transmission()) <= eps
+             && std::abs(sample_to_source_distance_
+                         - rhs.get_sample_to_source_distance())
+                  <= eps
+             && (probe_ == rhs.get_probe());
     }
 
     bool is_similar_to(const BeamBase &rhs,
@@ -1009,11 +1010,11 @@ namespace dxtbx { namespace model {
 
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
                <= direction_tolerance
-           && std::abs(
-                angle_safe(polarization_normal_, rhs.get_polarization_normal()))
-                <= polarization_normal_tolerance
-           && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
-                <= polarization_fraction_tolerance;
+             && std::abs(
+                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                  <= polarization_normal_tolerance
+             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                  <= polarization_fraction_tolerance;
     }
 
     bool is_similar_to(const BeamBase &rhs,
@@ -1031,19 +1032,20 @@ namespace dxtbx { namespace model {
 
       return std::abs(angle_safe(direction_, rhs.get_sample_to_source_direction()))
                <= direction_tolerance
-           && std::abs(
-                angle_safe(polarization_normal_, rhs.get_polarization_normal()))
-                <= polarization_normal_tolerance
-           && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
-                <= polarization_fraction_tolerance
-           && std::abs(divergence_ - rhs.get_divergence()) <= divergence_tolerance
-           && std::abs(sigma_divergence_ - rhs.get_sigma_divergence())
-                <= sigma_divergence_tolerance
-           && std::abs(flux_ - rhs.get_flux()) <= flux_tolerance
-           && std::abs(transmission_ - rhs.get_transmission()) <= transmission_tolerance
-           && std::abs(
-                sample_to_source_distance_ - rhs.get_sample_to_source_distance())
-                <= sample_to_source_tolerance;
+             && std::abs(
+                  angle_safe(polarization_normal_, rhs.get_polarization_normal()))
+                  <= polarization_normal_tolerance
+             && std::abs(polarization_fraction_ - rhs.get_polarization_fraction())
+                  <= polarization_fraction_tolerance
+             && std::abs(divergence_ - rhs.get_divergence()) <= divergence_tolerance
+             && std::abs(sigma_divergence_ - rhs.get_sigma_divergence())
+                  <= sigma_divergence_tolerance
+             && std::abs(flux_ - rhs.get_flux()) <= flux_tolerance
+             && std::abs(transmission_ - rhs.get_transmission())
+                  <= transmission_tolerance
+             && std::abs(sample_to_source_distance_
+                         - rhs.get_sample_to_source_distance())
+                  <= sample_to_source_tolerance;
     }
 
     friend std::ostream &operator<<(std::ostream &os, const XFELBeam &b);
