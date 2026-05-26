@@ -336,6 +336,56 @@ def test_experimentlist_to_dict(experiment_list):
         assert eobj["scan"] == s[i]
 
 
+def test_stills_consolidated_scan_oscillation_roundtrip():
+    """Non-zero still oscillation must round-trip through __stills_consolidated
+    in degrees, not radians. Regression for the consolidation write side that
+    used to dump raw radians from the C++ properties table.
+    """
+    experiments = ExperimentList()
+    beam = Beam()
+    detector = Detector()
+    for fi in (1, 2, 3):
+        experiments.append(
+            Experiment(
+                beam=beam,
+                detector=detector,
+                scan=Scan((fi, fi), (10.0, 0.0)),
+            )
+        )
+
+    obj = experiments.to_dict()
+
+    assert len(obj["scan"]) == 1
+    consolidated = obj["scan"][0]
+    assert consolidated.get("__stills_consolidated") is True
+    assert consolidated["frame_numbers"] == [1, 2, 3]
+    osc_arr = consolidated["properties"]["oscillation"]
+    assert osc_arr == [10.0, 10.0, 10.0]
+
+    restored = ExperimentListDict(obj).decode()
+    for exp in restored:
+        assert exp.scan.get_oscillation() == (10.0, 0.0)
+
+
+def test_stills_consolidated_rotation_not_consolidated():
+    """Rotation scans (non-zero oscillation width) must never trigger
+    consolidation, regardless of how many experiments share them."""
+    experiments = ExperimentList()
+    beam = Beam()
+    detector = Detector()
+    for fi in (1, 2):
+        experiments.append(
+            Experiment(
+                beam=beam,
+                detector=detector,
+                scan=Scan((fi, fi), (0.0, 1.0)),
+            )
+        )
+
+    obj = experiments.to_dict()
+    assert all(not s.get("__stills_consolidated") for s in obj["scan"])
+
+
 def test_experimentlist_where(experiment_list):
     for beam in experiment_list.beams():
         assert beam is not None

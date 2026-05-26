@@ -848,9 +848,17 @@ class _experimentlist:
                 all_prop_keys.update(s.get_properties().keys())
             consolidated_props: dict = {}
             for key in all_prop_keys:
-                vals = [
-                    float(s.get_properties().get(key, (0.0,))[0]) for s in scan_models
-                ]
+                if key == "oscillation":
+                    # Stored as radians in the C++ properties table, but the JSON
+                    # convention (see to_dict<Scan> in boost_python/scan.cc) is degrees.
+                    vals = [float(s.get_oscillation(deg=True)[0]) for s in scan_models]
+                elif key == "oscillation_width":
+                    vals = [float(s.get_oscillation(deg=True)[1]) for s in scan_models]
+                else:
+                    vals = [
+                        float(s.get_properties().get(key, (0.0,))[0])
+                        for s in scan_models
+                    ]
                 if any(v != 0.0 for v in vals):
                     consolidated_props[key] = vals
 
@@ -873,9 +881,7 @@ class _experimentlist:
         # whenever there are stills with wavelengths in the scan, independent
         # of whether scan consolidation fired (so single-experiment writes
         # from dials.split_experiments also produce XFELBeam).
-        if all_stills and all(
-            "wavelength" in s.get_properties() for s in scan_models
-        ):
+        if all_stills and all("wavelength" in s.get_properties() for s in scan_models):
             beam_models = list(index_lookup["beam"])
             if beam_models and all(type(b) is Beam for b in beam_models):
 
