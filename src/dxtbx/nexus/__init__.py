@@ -581,6 +581,7 @@ def get_raw_data(
     nxdetector: nxmx.NXdetector,
     index: int,
     bit_depth: int | None = None,
+    module_slices: tuple[tuple[slice, ...], ...] | None = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
@@ -596,11 +597,13 @@ def get_raw_data(
             data = list(nxdata.values())[0]
     else:
         data = list(nxdata.values())[0]
+    if module_slices is None:
+        module_slices = get_detector_module_slices(nxdetector)
     all_data = []
     sliced_outer = data[index]
-    for module_slices in get_detector_module_slices(nxdetector):
+    for slices in module_slices:
         data_as_flex = _dataset_as_flex(
-            sliced_outer, tuple(module_slices), bit_depth=bit_depth
+            sliced_outer, tuple(slices), bit_depth=bit_depth
         )
         data_as_flex.reshape(
             flex.grid(data_as_flex.all()[-2:])
