@@ -14,6 +14,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <boost_adaptbx/optional_conversions.h>
 #include <boost_adaptbx/std_pair_conversion.h>
 #include <scitbx/array_family/boost_python/flex_wrapper.h>
 #include <scitbx/array_family/simple_io.h>
@@ -294,6 +295,7 @@ namespace dxtbx { namespace model { namespace boost_python {
   void export_detector() {
     using namespace boost::python;
     using namespace detector_detail;
+    using boost_adaptbx::optional_conversions::to_and_from_python;
 
     class_<Detector::Node, bases<Panel>>("DetectorNode", no_init)
       .def("add_group",
@@ -387,6 +389,10 @@ namespace dxtbx { namespace model { namespace boost_python {
            (Detector::coord_type (Detector::*)(vec3<double>) const)
              & Detector::get_ray_intersection,
            (arg("s1")))
+      .def("try_get_ray_intersection",
+           (boost::optional<Detector::coord_type> (Detector::*)(vec3<double>) const)
+             & Detector::try_get_ray_intersection,
+           (arg("s1")))
       .def("get_ray_intersection", &get_ray_intersection_py, (arg("s1")))
       .def("get_ray_intersection",
            (scitbx::af::shared<vec2<double>> (Detector::*)(
@@ -414,6 +420,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def_pickle(DetectorPickleSuite());
 
     boost_adaptbx::std_pair_conversions::to_and_from_tuple<int, vec2<double>>();
+    to_and_from_python<boost::optional<Detector::coord_type>>();
   }
 
 }}}  // namespace dxtbx::model::boost_python
