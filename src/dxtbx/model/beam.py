@@ -133,19 +133,17 @@ class BeamFactory:
         return beam
 
     @staticmethod
-    def from_dict(dict: dict, template: dict = None) -> Beam | PolychromaticBeam:
+    def from_dict(d: dict, template: dict | None = None) -> Beam | PolychromaticBeam:
         """Convert the dictionary to a beam model"""
 
         if template is not None:
-            if "__id__" in dict and "__id__" in template:
-                assert dict["__id__"] == template["__id__"], (
+            if "__id__" in d and "__id__" in template:
+                assert d["__id__"] == template["__id__"], (
                     "Beam and template dictionaries are not the same type."
                 )
 
-        if dict is None and template is None:
-            return None
         joint = template.copy() if template else {}
-        joint.update(dict)
+        joint.update(d)
 
         # Create the model from the joint dictionary
         if "probe" not in joint:

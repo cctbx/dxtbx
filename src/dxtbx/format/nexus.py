@@ -1496,6 +1496,8 @@ class MaskFactory:
     A class to create an object to hold the pixel mask data
     """
 
+    mask: tuple[flex.int] | None
+
     def __init__(self, objects, index=None):
         def make_mask(dset, index):
             i = 0 if index is None else index
