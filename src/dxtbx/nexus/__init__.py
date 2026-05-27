@@ -79,6 +79,21 @@ class CachedWavelengthBeamFactory:
         self.read_models(index)
         return self.spectrum
 
+    def get_wavelengths(self) -> list:
+        """Read 1-D incident_wavelength array; return per-frame wavelengths in Angstrom."""
+        primary_key = "incident_wavelength"
+        wavelength = self.handle[primary_key]
+        if wavelength.shape in ((), (1,)):
+            raise RuntimeError(
+                "get_wavelengths requires a 1-D wavelength array; "
+                "this file has a scalar incident_wavelength"
+            )
+        wavelength_units = nxmx.units(wavelength)
+        wl_values = wavelength[()]
+        return [
+            float((w * wavelength_units).to("angstrom").magnitude) for w in wl_values
+        ]
+
     def read_models(self, index: int = 0):
         # Cached model
         if self.model is not None and index == self.index:

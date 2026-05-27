@@ -159,7 +159,7 @@ class FormatMultiImage(Format):
             cls._current_filename_ = None
             cls._current_instance_ = None
             format_instance = cls.get_instance(filenames[0], **format_kwargs)
-            if hasattr(format_instance, "lazy"):
+            if hasattr(format_instance, "lazy") and not as_sequence:
                 lazy = format_instance.lazy
             if num_images is None and not lazy:
                 # As we now have the actual format class we can get the number
@@ -283,12 +283,18 @@ class FormatMultiImage(Format):
             # Get the template
             template = filenames[0]
 
-            # Check indices are sequential
             if single_file_indices is not None:
-                assert all(
-                    i + 1 == j
-                    for i, j in zip(single_file_indices[:-1], single_file_indices[1:])
-                )
+                # Non-sequential indices are valid for still scan sequences
+                # (each index is an independent shot, not a continuous rotation).
+                if not (scan is not None and scan.is_still()):
+                    assert all(
+                        i + 1 == j
+                        for i, j in zip(
+                            single_file_indices[:-1], single_file_indices[1:]
+                        )
+                    ), (
+                        "Non-sequential single_file_indices require a still scan sequence"
+                    )
                 num_images = len(single_file_indices)
             else:
                 num_images = format_instance.get_num_images()
@@ -298,13 +304,13 @@ class FormatMultiImage(Format):
                 assert scan.get_num_images() <= num_images
 
             # If any are None then read from format
-            if beam is None:
+            if beam is None and format_instance is not None:
                 beam = format_instance.get_beam()
-            if detector is None:
+            if detector is None and format_instance is not None:
                 detector = format_instance.get_detector()
-            if goniometer is None:
+            if goniometer is None and format_instance is not None:
                 goniometer = format_instance.get_goniometer()
-            if scan is None:
+            if scan is None and format_instance is not None:
                 scan = format_instance.get_scan()
 
             # Create the masker

@@ -7,14 +7,13 @@ import pycbf
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam, PolychromaticBeam, Probe
+    from ..dxtbx_model_ext import Beam, PolychromaticBeam, Probe, XFELBeam
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam, PolychromaticBeam, Probe  # type: ignore
+    from dxtbx_model_ext import Beam, PolychromaticBeam, Probe, XFELBeam  # type: ignore
 
 Vec3Float = tuple[float, float, float]
 
-beam_phil_scope = libtbx.phil.parse(
-    """
+beam_phil_scope = libtbx.phil.parse("""
   beam
     .expert_level = 1
     .short_caption = "Beam overrides"
@@ -74,8 +73,7 @@ beam_phil_scope = libtbx.phil.parse(
         .type = floats(size=2)
         .help = "Override the wavelength range for polychromatic beams (A)"
   }
-"""
-)
+""")
 
 
 class BeamFactory:
@@ -152,6 +150,8 @@ class BeamFactory:
             joint["probe"] = "x-ray"
         if joint.get("__id__") == "polychromatic":
             return PolychromaticBeam.from_dict(joint)
+        if joint.get("__id__") == "xfel":
+            return XFELBeam.from_dict(joint)
 
         return Beam.from_dict(joint)
 
@@ -214,6 +214,37 @@ class BeamFactory:
             float(sample_to_source_distance),
             bool(deg),
             tuple(map(float, wavelength_range)),
+        )
+
+    @staticmethod
+    def make_xfel_beam(
+        direction: Vec3Float = (0.0, 0.0, 1.0),
+        divergence: float = 0.0,
+        sigma_divergence: float = 0.0,
+        polarization_normal: Vec3Float = (0.0, 1.0, 0.0),
+        polarization_fraction: float = 0.5,
+        flux: float = 0.0,
+        transmission: float = 1.0,
+        probe: Probe = Probe.xray,
+        sample_to_source_distance: float = 0.0,
+    ) -> "XFELBeam":
+        """Create an XFELBeam (no wavelength; per-frame wavelengths go in scan properties).
+
+        divergence and sigma_divergence are in degrees.
+        Polarization, flux, transmission, etc. are forwarded to monochromatic beams
+        produced by XFELBeam.get_monochromatic_beam so that downstream corrections
+        (Lorentz-polarization, scaling) see the instrument values rather than defaults.
+        """
+        return XFELBeam(
+            tuple(map(float, direction)),
+            float(divergence),
+            float(sigma_divergence),
+            tuple(map(float, polarization_normal)),
+            float(polarization_fraction),
+            float(flux),
+            float(transmission),
+            probe,
+            float(sample_to_source_distance),
         )
 
     @staticmethod

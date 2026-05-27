@@ -59,6 +59,7 @@ try:
         Spectrum,
         VirtualPanel,
         VirtualPanelFrame,
+        XFELBeam,
         get_mod2pi_angles_in_range,
         get_range_of_mod2pi_angles,
         is_angle_in_range,
@@ -97,6 +98,7 @@ except ModuleNotFoundError:
         Spectrum,
         VirtualPanel,
         VirtualPanelFrame,
+        XFELBeam,
         get_mod2pi_angles_in_range,
         get_range_of_mod2pi_angles,
         is_angle_in_range,
@@ -108,6 +110,7 @@ __all__ = (
     "Beam",
     "BeamBase",
     "PolychromaticBeam",
+    "XFELBeam",
     "BeamFactory",
     "Crystal",
     "CrystalBase",
@@ -148,6 +151,35 @@ __all__ = (
     "parallax_correction",
     "parallax_correction_inv",
 )
+
+
+@boost_adaptbx.boost.python.inject_into(XFELBeam)
+class _xfelbeam:
+    def get_monochromatic_beam(self, wavelength):
+        """Return a monochromatic Beam with the given wavelength.
+
+        Carries through polarization, flux, transmission, probe, and sample-to-source
+        distance from the XFELBeam so that downstream consumers (integration's
+        Lorentz-polarization correction in particular) see the instrument values
+        rather than defaults.
+
+        Typical use: imageset.get_beam(i) dispatches here via ImageSequence.get_beam(index).
+        """
+        # Use Beam's full constructor (divergence/sigma_divergence in degrees,
+        # deg=True converts on the way in).
+        return Beam(
+            direction=self.get_sample_to_source_direction(),
+            wavelength=float(wavelength),
+            divergence=self.get_divergence(),
+            sigma_divergence=self.get_sigma_divergence(),
+            polarization_normal=self.get_polarization_normal(),
+            polarization_fraction=self.get_polarization_fraction(),
+            flux=self.get_flux(),
+            transmission=self.get_transmission(),
+            probe=self.get_probe(),
+            sample_to_source_distance=self.get_sample_to_source_distance(),
+            deg=True,
+        )
 
 
 @boost_adaptbx.boost.python.inject_into(Detector)
@@ -564,6 +596,25 @@ class _experiment:
         self.goniometer = self.imageset.get_goniometer(index)
         self.scan = self.imageset.get_scan(index)
 
+    def get_monochromatic_beam(self):
+        """Return a usable monochromatic Beam for this experiment's frame.
+
+        XFEL stills store a shared XFELBeam (no fixed wavelength) plus a
+        per-frame scan whose "wavelength" property holds the shot wavelength.
+        Combine the two into a monochromatic Beam. Any other beam type is
+        returned unchanged, so callers may use this unconditionally.
+        """
+        from dxtbx.model.beam import XFELBeam
+
+        if not isinstance(self.beam, XFELBeam):
+            return self.beam
+        if self.scan is None or not self.scan.has_property("wavelength"):
+            raise RuntimeError(
+                "Cannot resolve a per-frame beam: XFELBeam experiment has no "
+                "scan 'wavelength' property"
+            )
+        return self.beam.get_monochromatic_beam(self.scan.get_property("wavelength")[0])
+
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
 class _experimentlist:
@@ -763,6 +814,105 @@ class _experimentlist:
             r["dy"] = abspath_or_none(imset.external_lookup.dy.filename)
             r["params"] = imset.params()
             result["imageset"].append(r)
+
+        # Consolidate single-frame stills scans into one JSON object when possible.
+        # Each experiment gets a scan_point index; all point to scan 0.
+        # The in-memory model is unchanged; this only affects the JSON.
+        # Guard ensures rotation data (oscillation > 0) is never affected.
+        scan_models = sorted(
+            (s for s in index_lookup["scan"] if s is not None),
+            key=lambda s: s.get_image_range()[0],
+        )
+        all_stills = len(scan_models) >= 1 and all(
+            s.get_image_range()[0] == s.get_image_range()[1]
+            and s.get_image_range()[0] > 0
+            and s.is_still()
+            for s in scan_models
+        )
+
+        if all_stills and len(scan_models) > 1:
+            scan_to_point = {id(s): i for i, s in enumerate(scan_models)}
+            for exp_dict, exp in zip(result["experiment"], self):
+                if exp.scan is not None:
+                    exp_dict["scan_point"] = scan_to_point[id(exp.scan)]
+                    exp_dict["scan"] = 0
+
+            # Union of any non-empty valid_image_ranges across all scans
+            all_vir: dict = {}
+            for s in scan_models:
+                all_vir.update(s.to_dict().get("valid_image_ranges", {}))
+
+            # Build per-property arrays; skip entirely-zero arrays on write
+            all_prop_keys: set = set()
+            for s in scan_models:
+                all_prop_keys.update(s.get_properties().keys())
+            consolidated_props: dict = {}
+            for key in all_prop_keys:
+                if key == "oscillation":
+                    # Stored as radians in the C++ properties table, but the JSON
+                    # convention (see to_dict<Scan> in boost_python/scan.cc) is degrees.
+                    vals = [float(s.get_oscillation(deg=True)[0]) for s in scan_models]
+                elif key == "oscillation_width":
+                    vals = [float(s.get_oscillation(deg=True)[1]) for s in scan_models]
+                else:
+                    vals = [
+                        float(s.get_properties().get(key, (0.0,))[0])
+                        for s in scan_models
+                    ]
+                if any(v != 0.0 for v in vals):
+                    consolidated_props[key] = vals
+
+            result["scan"] = [
+                {
+                    "__stills_consolidated": True,
+                    "batch_offset": scan_models[0].get_batch_offset(),
+                    "frame_numbers": [s.get_image_range()[0] for s in scan_models],
+                    "properties": consolidated_props,
+                    "valid_image_ranges": all_vir,
+                }
+            ]
+
+        # XFEL stills: collapse monochromatic per-frame beams (or a single
+        # shared beam carrying one frame's wavelength after combine_experiments
+        # reference_from_experiment.beam=0) back to one XFELBeam. The
+        # per-frame wavelengths live in scan "wavelength" properties, so the
+        # beam wavelength is redundant and dropping it keeps the file compact
+        # and round-trips identically through decode()'s auto-resolve. Runs
+        # whenever there are stills with wavelengths in the scan, independent
+        # of whether scan consolidation fired (so single-experiment writes
+        # from dials.split_experiments also produce XFELBeam).
+        if all_stills and all("wavelength" in s.get_properties() for s in scan_models):
+            beam_models = list(index_lookup["beam"])
+            if beam_models and all(type(b) is Beam for b in beam_models):
+
+                def _geometry(b):
+                    return (
+                        b.get_sample_to_source_direction(),
+                        b.get_divergence(),
+                        b.get_sigma_divergence(),
+                        b.get_polarization_normal(),
+                        b.get_polarization_fraction(),
+                    )
+
+                b0 = beam_models[0]
+                if all(_geometry(b) == _geometry(b0) for b in beam_models):
+                    from dxtbx.model.beam import BeamFactory
+
+                    xfel_beam = BeamFactory.make_xfel_beam(
+                        direction=b0.get_sample_to_source_direction(),
+                        divergence=b0.get_divergence(),
+                        sigma_divergence=b0.get_sigma_divergence(),
+                        polarization_normal=b0.get_polarization_normal(),
+                        polarization_fraction=b0.get_polarization_fraction(),
+                        flux=b0.get_flux(),
+                        transmission=b0.get_transmission(),
+                        probe=b0.get_probe(),
+                        sample_to_source_distance=b0.get_sample_to_source_distance(),
+                    )
+                    result["beam"] = [xfel_beam.to_dict()]
+                    for exp_dict in result["experiment"]:
+                        if "beam" in exp_dict:
+                            exp_dict["beam"] = 0
 
         # Extract all the ordered model dictionaries - is important these
         # preserve the same order as used in experiment serialization above

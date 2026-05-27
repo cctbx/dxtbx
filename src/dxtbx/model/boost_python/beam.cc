@@ -420,6 +420,109 @@ namespace dxtbx { namespace model { namespace boost_python {
     return b;
   }
 
+  // XFELBeam
+
+  std::string xfelbeam_to_string(const XFELBeam &beam) {
+    std::stringstream ss;
+    ss << beam;
+    return ss.str();
+  }
+
+  struct XFELBeamPickleSuite : boost::python::pickle_suite {
+    static boost::python::tuple getinitargs(const XFELBeam &obj) {
+      return boost::python::make_tuple(
+        obj.get_sample_to_source_direction(),
+        obj.get_divergence(),
+        obj.get_sigma_divergence(),
+        obj.get_polarization_normal(),
+        obj.get_polarization_fraction(),
+        obj.get_flux(),
+        obj.get_transmission(),
+        obj.get_probe(),
+        obj.get_sample_to_source_distance(),
+        true);  // deg=True (divergence stored in radians, converted on restore)
+    }
+
+    static boost::python::tuple getstate(boost::python::object obj) {
+      return boost::python::make_tuple(obj.attr("__dict__"));
+    }
+
+    static void setstate(boost::python::object obj, boost::python::tuple state) {
+      XFELBeam &beam = boost::python::extract<XFELBeam &>(obj)();
+      boost::python::dict d =
+        boost::python::extract<boost::python::dict>(obj.attr("__dict__"))();
+      d.update(state[0]);
+    }
+  };
+
+  static XFELBeam *make_XFELBeam(vec3<double> direction,
+                                 double divergence,
+                                 double sigma_divergence,
+                                 bool deg) {
+    using scitbx::deg_as_rad;
+    return new XFELBeam(direction,
+                        deg ? deg_as_rad(divergence) : divergence,
+                        deg ? deg_as_rad(sigma_divergence) : sigma_divergence);
+  }
+
+  static XFELBeam *make_XFELBeam_w_all(vec3<double> direction,
+                                       double divergence,
+                                       double sigma_divergence,
+                                       vec3<double> polarization_normal,
+                                       double polarization_fraction,
+                                       double flux,
+                                       double transmission,
+                                       Probe probe,
+                                       double sample_to_source_distance,
+                                       bool deg) {
+    using scitbx::deg_as_rad;
+    return new XFELBeam(direction,
+                        deg ? deg_as_rad(divergence) : divergence,
+                        deg ? deg_as_rad(sigma_divergence) : sigma_divergence,
+                        polarization_normal,
+                        polarization_fraction,
+                        flux,
+                        transmission,
+                        probe,
+                        sample_to_source_distance);
+  }
+
+  template <>
+  boost::python::dict to_dict<XFELBeam>(const XFELBeam &obj) {
+    using scitbx::rad_as_deg;
+    boost::python::dict result;
+    result["__id__"] = "xfel";
+    result["direction"] = obj.get_sample_to_source_direction();
+    result["divergence"] = rad_as_deg(obj.get_divergence());
+    result["sigma_divergence"] = rad_as_deg(obj.get_sigma_divergence());
+    result["polarization_normal"] = obj.get_polarization_normal();
+    result["polarization_fraction"] = obj.get_polarization_fraction();
+    result["flux"] = obj.get_flux();
+    result["transmission"] = obj.get_transmission();
+    result["probe"] = obj.get_probe_name();
+    result["sample_to_source_distance"] = obj.get_sample_to_source_distance();
+    return result;
+  }
+
+  template <>
+  XFELBeam *from_dict<XFELBeam>(boost::python::dict obj) {
+    using scitbx::deg_as_rad;
+    XFELBeam *b = new XFELBeam(
+      boost::python::extract<vec3<double> >(obj["direction"]),
+      deg_as_rad(boost::python::extract<double>(obj.get("divergence", 0.0))),
+      deg_as_rad(boost::python::extract<double>(obj.get("sigma_divergence", 0.0))),
+      boost::python::extract<vec3<double> >(
+        obj.get("polarization_normal", vec3<double>(0.0, 1.0, 0.0))),
+      // Default matches XFELBeam's C++ constructor and BeamFactory.make_xfel_beam.
+      boost::python::extract<double>(obj.get("polarization_fraction", 0.5)),
+      boost::python::extract<double>(obj.get("flux", 0)),
+      boost::python::extract<double>(obj.get("transmission", 1)),
+      Beam::get_probe_from_name(
+        boost::python::extract<std::string>(obj.get("probe", "x-ray"))),
+      boost::python::extract<double>(obj.get("sample_to_source_distance", 0.)));
+    return b;
+  }
+
   void export_beam() {
     using namespace beam_detail;
 
@@ -579,6 +682,35 @@ namespace dxtbx { namespace model { namespace boost_python {
            return_value_policy<manage_new_object>())
       .staticmethod("from_dict")
       .def_pickle(PolychromaticBeamPickleSuite());
+
+    class_<XFELBeam, std::shared_ptr<XFELBeam>, bases<Beam> >("XFELBeam")
+      .def(init<>())
+      .def(init<const XFELBeam &>())
+      .def("__init__",
+           make_constructor(&make_XFELBeam,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("divergence") = 0.0,
+                             arg("sigma_divergence") = 0.0,
+                             arg("deg") = true)))
+      .def("__init__",
+           make_constructor(&make_XFELBeam_w_all,
+                            default_call_policies(),
+                            (arg("direction"),
+                             arg("divergence"),
+                             arg("sigma_divergence"),
+                             arg("polarization_normal"),
+                             arg("polarization_fraction"),
+                             arg("flux"),
+                             arg("transmission"),
+                             arg("probe") = Probe::xray,
+                             arg("sample_to_source_distance") = 0.0,
+                             arg("deg") = true)))
+      .def("__str__", &xfelbeam_to_string)
+      .def("to_dict", &to_dict<XFELBeam>)
+      .def("from_dict", &from_dict<XFELBeam>, return_value_policy<manage_new_object>())
+      .staticmethod("from_dict")
+      .def_pickle(XFELBeamPickleSuite());
 
     scitbx::af::boost_python::flex_wrapper<Beam>::plain("flex_Beam");
   }

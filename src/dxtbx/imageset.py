@@ -294,8 +294,28 @@ class ImageSetLazy(ImageSet):
         return super().get_gain(index)
 
 
+_imagesequence_c_get_beam = ImageSequence.get_beam
+
+
 @boost_adaptbx.boost.python.inject_into(ImageSequence)
 class _imagesequence:
+    def get_beam(self, index=None):
+        """Get beam model, optionally for a specific frame.
+
+        For an ImageSequence with an XFELBeam and a scan 'wavelength' property,
+        get_beam(i) returns a monochromatic Beam for frame i.
+        For all other cases (including index=None), returns the shared beam.
+        """
+        from dxtbx.model.beam import XFELBeam
+
+        beam = _imagesequence_c_get_beam(self)
+        if index is None or not isinstance(beam, XFELBeam):
+            return beam
+        scan = self.get_scan()
+        if scan is None or not scan.has_property("wavelength"):
+            return beam
+        return beam.get_monochromatic_beam(scan.get_property("wavelength")[index])
+
     def __getitem__(self, item):
         """Get an item from the sequence stream.
 
