@@ -92,16 +92,18 @@ class FormatNXmxEigerFilewriter(FormatNXmx):
         return nxmx_obj
 
     def get_raw_data(self, index):
-        nxmx_obj = self._get_nxmx(self._cached_file_handle)
-        nxdata = nxmx_obj.entries[0].data[0]
-        nxdetector = nxmx_obj.entries[0].instruments[0].detectors[0]
-
         # Prefer bit_depth_image over bit_depth_readout since the former
         # actually corresponds to the bit depth of the images as stored on
         # disk. See also:
         #   https://www.dectris.com/support/downloads/header-docs/nexus/
         bit_depth = self._bit_depth_image or self._bit_depth_readout
-        raw_data = get_raw_data(nxdata, nxdetector, index, bit_depth)
+        raw_data = get_raw_data(
+            self._nxdata_cached,
+            self._nxdetector_cached,
+            index,
+            bit_depth,
+            module_slices=self._module_slices_cached,
+        )
 
         if bit_depth:
             # if 32 bit then it is a signed int, I think if 8, 16 then it is
@@ -122,6 +124,7 @@ def get_raw_data(
     nxdetector: nxmx.NXdetector,
     index: int,
     bit_depth: int | None = None,
+    module_slices: tuple[tuple[slice, ...], ...] | None = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
@@ -142,9 +145,11 @@ def get_raw_data(
         raise IndexError(f"Out of range index for raw data {index}")
     all_data = []
     sliced_outer = data[index]
-    for module_slices in get_detector_module_slices(nxdetector):
+    if module_slices is None:
+        module_slices = get_detector_module_slices(nxdetector)
+    for slices in module_slices:
         data_as_flex = _dataset_as_flex(
-            sliced_outer, tuple(module_slices), bit_depth=bit_depth
+            sliced_outer, tuple(slices), bit_depth=bit_depth
         )
         all_data.append(data_as_flex)
     return tuple(all_data)
