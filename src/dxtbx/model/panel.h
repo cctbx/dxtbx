@@ -211,14 +211,34 @@ namespace dxtbx { namespace model {
       return convert_coord_->attenuation_length(*this, xy);
     }
 
+    /** Get the ray intersection in pixel coordinates, returning boost::none on miss */
+    boost::optional<vec2<double>> try_get_ray_intersection_px(vec3<double> s1) const {
+      auto mm = try_get_ray_intersection(s1);
+      if (!mm) return boost::none;
+      return millimeter_to_pixel(*mm);
+    }
+
     /** Get the ray intersection in pixel coordinates */
     vec2<double> get_ray_intersection_px(vec3<double> s1) const {
-      return millimeter_to_pixel(get_ray_intersection(s1));
+      auto r = try_get_ray_intersection_px(s1);
+      DXTBX_ASSERT(r);
+      return *r;
+    }
+
+    /** Get the bidirectional ray intersection in pixel coordinates, returning
+     *  boost::none on miss */
+    boost::optional<vec2<double>> try_get_bidirectional_ray_intersection_px(
+      vec3<double> s1) const {
+      auto mm = try_get_bidirectional_ray_intersection(s1);
+      if (!mm) return boost::none;
+      return millimeter_to_pixel(*mm);
     }
 
     /** Get the ray intersection in pixel coordinates */
     vec2<double> get_bidirectional_ray_intersection_px(vec3<double> s1) const {
-      return millimeter_to_pixel(get_bidirectional_ray_intersection(s1));
+      auto r = try_get_bidirectional_ray_intersection_px(s1);
+      DXTBX_ASSERT(r);
+      return *r;
     }
 
     /** Map coordinates in mm to pixels */
@@ -254,12 +274,12 @@ namespace dxtbx { namespace model {
      * @param s0 The incident beam vector
      * @returns flex::double array containing 2theta at every pixel
      */
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > get_two_theta_array(
+    scitbx::af::versa<double, scitbx::af::c_grid<2>> get_two_theta_array(
       vec3<double> s0) const {
       DXTBX_ASSERT(s0.length() > 0);
       size_t fast = image_size_[0], slow = image_size_[1];
 
-      scitbx::af::versa<double, scitbx::af::c_grid<2> > result(
+      scitbx::af::versa<double, scitbx::af::c_grid<2>> result(
         scitbx::af::c_grid<2>(slow, fast));
       for (size_t j = 0; j < slow; j++) {
         for (size_t i = 0; i < fast; i++) {
@@ -274,13 +294,13 @@ namespace dxtbx { namespace model {
      * @param s0 The incident beam vector
      * @returns flex::double array containing 2theta at every pixel
      */
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > get_cos2_two_theta_array(
+    scitbx::af::versa<double, scitbx::af::c_grid<2>> get_cos2_two_theta_array(
       vec3<double> s0) const {
       DXTBX_ASSERT(s0.length() > 0);
       s0 /= s0.length();
       size_t fast = image_size_[0], slow = image_size_[1];
 
-      scitbx::af::versa<double, scitbx::af::c_grid<2> > result(
+      scitbx::af::versa<double, scitbx::af::c_grid<2>> result(
         scitbx::af::c_grid<2>(slow, fast));
       for (size_t j = 0; j < slow; j++) {
         for (size_t i = 0; i < fast; i++) {
@@ -420,7 +440,7 @@ namespace dxtbx { namespace model {
      * Get the mask from untrusted_rectangles
      */
     void apply_untrusted_rectangle_mask(
-      scitbx::af::ref<bool, scitbx::af::c_grid<2> > mask) const {
+      scitbx::af::ref<bool, scitbx::af::c_grid<2>> mask) const {
       using scitbx::af::int4;
       std::size_t xsize = get_image_size()[0];
       std::size_t ysize = get_image_size()[1];
@@ -443,12 +463,12 @@ namespace dxtbx { namespace model {
     /**
      * Get the mask from untrusted_rectangles
      */
-    scitbx::af::versa<bool, scitbx::af::c_grid<2> > get_untrusted_rectangle_mask()
+    scitbx::af::versa<bool, scitbx::af::c_grid<2>> get_untrusted_rectangle_mask()
       const {
       using scitbx::af::int4;
       std::size_t xsize = get_image_size()[0];
       std::size_t ysize = get_image_size()[1];
-      scitbx::af::versa<bool, scitbx::af::c_grid<2> > mask(
+      scitbx::af::versa<bool, scitbx::af::c_grid<2>> mask(
         scitbx::af::c_grid<2>(ysize, xsize), true);
       apply_untrusted_rectangle_mask(mask.ref());
       return mask;
@@ -459,8 +479,8 @@ namespace dxtbx { namespace model {
      */
     template <typename T>
     void apply_trusted_range_mask(
-      const scitbx::af::const_ref<T, scitbx::af::c_grid<2> > &data,
-      scitbx::af::ref<bool, scitbx::af::c_grid<2> > mask) const {
+      const scitbx::af::const_ref<T, scitbx::af::c_grid<2>> &data,
+      scitbx::af::ref<bool, scitbx::af::c_grid<2>> mask) const {
       DXTBX_ASSERT(data.accessor()[0] == image_size_[1]);
       DXTBX_ASSERT(data.accessor()[1] == image_size_[0]);
       DXTBX_ASSERT(data.accessor().all_eq(mask.accessor()));
@@ -474,9 +494,9 @@ namespace dxtbx { namespace model {
      * Apply a mask with the trusted range: [min_trusted_value, max_trusted_value]
      */
     template <typename T>
-    scitbx::af::versa<bool, scitbx::af::c_grid<2> > get_trusted_range_mask(
-      const scitbx::af::const_ref<T, scitbx::af::c_grid<2> > &image) const {
-      scitbx::af::versa<bool, scitbx::af::c_grid<2> > mask(image.accessor(), true);
+    scitbx::af::versa<bool, scitbx::af::c_grid<2>> get_trusted_range_mask(
+      const scitbx::af::const_ref<T, scitbx::af::c_grid<2>> &image) const {
+      scitbx::af::versa<bool, scitbx::af::c_grid<2>> mask(image.accessor(), true);
       apply_trusted_range_mask(image, mask.ref());
       return mask;
     }
