@@ -33,7 +33,6 @@ from dxtbx.model import (
     History,
     ProfileModelFactory,
     ScanFactory,
-    XFELBeam,
 )
 from dxtbx.sequence_filenames import (
     locate_files_matching_template_string,
@@ -581,13 +580,15 @@ class ExperimentListDict:
             for expt in el:
                 expt.history = history
 
-        # Auto-resolve XFELBeam on each Experiment.beam to a per-frame monochromatic
-        # Beam.  The ImageSequence and its XFELBeam slot are preserved; the scan's
-        # "wavelength" property is preserved.  Downstream consumers (refinement,
-        # detector_residuals, dials.show, scaling, etc.) see a normal Beam on
-        # Experiment.beam and do not need XFELBeam-awareness.
+        # Auto-resolve any per-shot resolvable beam (XFELBeam, discovered by the
+        # get_monochromatic_beam capability rather than isinstance) on each
+        # Experiment.beam to a per-frame monochromatic Beam.  The ImageSequence
+        # and its XFELBeam slot are preserved; the scan's "wavelength" property
+        # is preserved.  Downstream consumers (refinement, detector_residuals,
+        # dials.show, scaling, etc.) see a normal Beam on Experiment.beam and do
+        # not need XFELBeam-awareness.
         for expt in el:
-            if isinstance(expt.beam, XFELBeam):
+            if expt.beam is not None and hasattr(expt.beam, "get_monochromatic_beam"):
                 resolved = expt.get_monochromatic_beam()
                 if resolved is not None:
                     expt.beam = resolved

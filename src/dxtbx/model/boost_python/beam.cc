@@ -177,25 +177,32 @@ namespace dxtbx { namespace model { namespace boost_python {
       return beam;
     }
 
-    static double get_divergence(const Beam &beam, bool deg) {
+    // These helpers are bound on the BeamBase class_, so they must accept any
+    // beam (Beam, PolychromaticBeam, XFELBeam) via the abstract base.  The
+    // geometry accessors are concrete on BeamBase; the scan-point setters
+    // dispatch virtually and throw for the representations that have no fixed
+    // s0, preserving today's behaviour.
+    static double get_divergence(const BeamBase &beam, bool deg) {
       double divergence = beam.get_divergence();
       return deg ? rad_as_deg(divergence) : divergence;
     }
 
-    static double get_sigma_divergence(const Beam &beam, bool deg) {
+    static double get_sigma_divergence(const BeamBase &beam, bool deg) {
       double sigma_divergence = beam.get_sigma_divergence();
       return deg ? rad_as_deg(sigma_divergence) : sigma_divergence;
     }
 
-    static void set_divergence(Beam &beam, double divergence, bool deg) {
+    static void set_divergence(BeamBase &beam, double divergence, bool deg) {
       beam.set_divergence(deg ? deg_as_rad(divergence) : divergence);
     }
 
-    static void set_sigma_divergence(Beam &beam, double sigma_divergence, bool deg) {
+    static void set_sigma_divergence(BeamBase &beam,
+                                     double sigma_divergence,
+                                     bool deg) {
       beam.set_sigma_divergence(deg ? deg_as_rad(sigma_divergence) : sigma_divergence);
     }
 
-    static void rotate_around_origin(Beam &beam,
+    static void rotate_around_origin(BeamBase &beam,
                                      vec3<double> axis,
                                      double angle,
                                      bool deg) {
@@ -203,7 +210,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       beam.rotate_around_origin(axis, angle_rad);
     }
 
-    static void Beam_set_s0_at_scan_points_from_tuple(Beam &beam,
+    static void Beam_set_s0_at_scan_points_from_tuple(BeamBase &beam,
                                                       boost::python::tuple l) {
       scitbx::af::shared<vec3<double> > s0_list;
       for (std::size_t i = 0; i < boost::python::len(l); ++i) {
@@ -213,7 +220,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       beam.set_s0_at_scan_points(s0_list.const_ref());
     }
 
-    static void Beam_set_s0_at_scan_points_from_list(Beam &beam,
+    static void Beam_set_s0_at_scan_points_from_list(BeamBase &beam,
                                                      boost::python::list l) {
       scitbx::af::shared<vec3<double> > s0_list;
       for (std::size_t i = 0; i < boost::python::len(l); ++i) {
@@ -641,7 +648,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .staticmethod("get_probe_from_name")
       .def_pickle(BeamPickleSuite());
 
-    class_<PolychromaticBeam, std::shared_ptr<PolychromaticBeam>, bases<Beam> >(
+    class_<PolychromaticBeam, std::shared_ptr<PolychromaticBeam>, bases<BeamBase> >(
       "PolychromaticBeam")
       .def(init<const PolychromaticBeam &>())
       .def("__init__",
@@ -683,7 +690,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .staticmethod("from_dict")
       .def_pickle(PolychromaticBeamPickleSuite());
 
-    class_<XFELBeam, std::shared_ptr<XFELBeam>, bases<Beam> >("XFELBeam")
+    class_<XFELBeam, std::shared_ptr<XFELBeam>, bases<BeamBase> >("XFELBeam")
       .def(init<>())
       .def(init<const XFELBeam &>())
       .def("__init__",

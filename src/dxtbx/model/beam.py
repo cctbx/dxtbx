@@ -7,9 +7,21 @@ import pycbf
 import libtbx.phil
 
 try:
-    from ..dxtbx_model_ext import Beam, PolychromaticBeam, Probe, XFELBeam
+    from ..dxtbx_model_ext import (
+        Beam,
+        BeamBase,
+        PolychromaticBeam,
+        Probe,
+        XFELBeam,
+    )
 except ModuleNotFoundError:
-    from dxtbx_model_ext import Beam, PolychromaticBeam, Probe, XFELBeam  # type: ignore
+    from dxtbx_model_ext import (  # type: ignore
+        Beam,
+        BeamBase,
+        PolychromaticBeam,
+        Probe,
+        XFELBeam,
+    )
 
 Vec3Float = tuple[float, float, float]
 
@@ -131,7 +143,7 @@ class BeamFactory:
         return beam
 
     @staticmethod
-    def from_dict(dict: dict, template: dict = None) -> Beam | PolychromaticBeam:
+    def from_dict(dict: dict, template: dict = None) -> BeamBase:
         """Convert the dictionary to a beam model"""
 
         if template is not None:

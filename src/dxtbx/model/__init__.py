@@ -603,10 +603,13 @@ class _experiment:
         per-frame scan whose "wavelength" property holds the shot wavelength.
         Combine the two into a monochromatic Beam. Any other beam type is
         returned unchanged, so callers may use this unconditionally.
-        """
-        from dxtbx.model.beam import XFELBeam
 
-        if not isinstance(self.beam, XFELBeam):
+        The resolvable beam is discovered by capability -- it exposes
+        get_monochromatic_beam -- rather than by isinstance(XFELBeam), so a
+        future per-shot monochromatic beam type opts in by exposing the same
+        helper.
+        """
+        if not hasattr(self.beam, "get_monochromatic_beam"):
             return self.beam
         if self.scan is None or not self.scan.has_property("wavelength"):
             raise RuntimeError(

@@ -302,14 +302,14 @@ class _imagesequence:
     def get_beam(self, index=None):
         """Get beam model, optionally for a specific frame.
 
-        For an ImageSequence with an XFELBeam and a scan 'wavelength' property,
-        get_beam(i) returns a monochromatic Beam for frame i.
-        For all other cases (including index=None), returns the shared beam.
+        For an ImageSequence whose shared beam can resolve to a per-shot
+        monochromatic Beam (an XFELBeam, or any future mono-shot beam exposing
+        get_monochromatic_beam) and a scan 'wavelength' property, get_beam(i)
+        returns a monochromatic Beam for frame i.  For all other cases
+        (including index=None), returns the shared beam.
         """
-        from dxtbx.model.beam import XFELBeam
-
         beam = _imagesequence_c_get_beam(self)
-        if index is None or not isinstance(beam, XFELBeam):
+        if index is None or not hasattr(beam, "get_monochromatic_beam"):
             return beam
         scan = self.get_scan()
         if scan is None or not scan.has_property("wavelength"):
