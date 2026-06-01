@@ -834,33 +834,86 @@ class _experimentlist:
         )
 
         if all_stills and len(scan_models) > 1:
-            scan_to_point = {id(s): i for i, s in enumerate(scan_models)}
+            # Per-frame identity is now stored only as 0-based single_file_indices
+            # on each imageset (the redundant 1-based frame_numbers array was
+            # removed). That fallback is gone, so every imageset referenced by a
+            # consolidated experiment must carry single_file_indices, i.e. be a
+            # single-file reader. Consolidation eligibility above is purely
+            # scan-based and never checks reader type; this is the explicit
+            # precondition. Not exercised today (single-h5 composite + both
+            # converters are single-file readers); becomes load-bearing at P6
+            # (multi-file CBF), where consolidated non-single-file readers would
+            # otherwise lose their frame labels silently.
+            for exp in self:
+                if exp.scan is not None and not (
+                    exp.imageset is not None
+                    and exp.imageset.reader().is_single_file_reader()
+                ):
+                    raise AssertionError(
+                        "Consolidated stills scan requires every referenced "
+                        "imageset to carry single_file_indices (single-file "
+                        "reader); got a non-single-file reader. See P6 "
+                        "(multi-file CBF support)."
+                    )
+
+            # Assign scan_point per (imageset, unique frame), NOT per unique Scan
+            # object. scans() dedups by identity, so multi-lattice experiments
+            # whose Scan objects are separate-but-equal (the post-combine case:
+            # split_experiments -> combine_experiments breaks Scan identity, see
+            # combine_experiments._consolidate_stills_imagesets) would otherwise
+            # get one scan_point each and over-count the frames. The reader
+            # rebuilds each frame's image_range from the imageset's
+            # single_file_indices, which carries one entry per frame, so the
+            # consolidated property arrays must likewise be one-entry-per-frame
+            # and aligned (per imageset, ascending frame) with single_file_indices.
+            # Group by imageset (a frame index is only unique within an imageset:
+            # file A frame 0 and file B frame 0 both have image_range (1, 1)).
+            imageset_index = index_lookup["imageset"]
+            frames_by_imageset: dict = {}  # iset idx -> {frame: representative Scan}
+            for exp in self:
+                if exp.scan is None:
+                    continue
+                m = imageset_index[exp.imageset]
+                frame = exp.scan.get_image_range()[0]
+                frames_by_imageset.setdefault(m, {}).setdefault(frame, exp.scan)
+
+            # Global scan_points: imagesets in index order, frames ascending, so
+            # within each imageset ascending scan_point matches ascending frame.
+            scan_point_of_frame: dict = {}  # (iset idx, frame) -> scan_point
+            rep_scans = []  # one representative Scan per scan_point (per frame)
+            for m in sorted(frames_by_imageset):
+                for frame in sorted(frames_by_imageset[m]):
+                    scan_point_of_frame[(m, frame)] = len(rep_scans)
+                    rep_scans.append(frames_by_imageset[m][frame])
+
             for exp_dict, exp in zip(result["experiment"], self):
                 if exp.scan is not None:
-                    exp_dict["scan_point"] = scan_to_point[id(exp.scan)]
+                    m = imageset_index[exp.imageset]
+                    frame = exp.scan.get_image_range()[0]
+                    exp_dict["scan_point"] = scan_point_of_frame[(m, frame)]
                     exp_dict["scan"] = 0
 
-            # Union of any non-empty valid_image_ranges across all scans
+            # Union of any non-empty valid_image_ranges across the per-frame scans
             all_vir: dict = {}
-            for s in scan_models:
+            for s in rep_scans:
                 all_vir.update(s.to_dict().get("valid_image_ranges", {}))
 
-            # Build per-property arrays; skip entirely-zero arrays on write
+            # Build per-property arrays (one entry per scan_point/frame); skip
+            # entirely-zero arrays on write
             all_prop_keys: set = set()
-            for s in scan_models:
+            for s in rep_scans:
                 all_prop_keys.update(s.get_properties().keys())
             consolidated_props: dict = {}
             for key in all_prop_keys:
                 if key == "oscillation":
                     # Stored as radians in the C++ properties table, but the JSON
                     # convention (see to_dict<Scan> in boost_python/scan.cc) is degrees.
-                    vals = [float(s.get_oscillation(deg=True)[0]) for s in scan_models]
+                    vals = [float(s.get_oscillation(deg=True)[0]) for s in rep_scans]
                 elif key == "oscillation_width":
-                    vals = [float(s.get_oscillation(deg=True)[1]) for s in scan_models]
+                    vals = [float(s.get_oscillation(deg=True)[1]) for s in rep_scans]
                 else:
                     vals = [
-                        float(s.get_properties().get(key, (0.0,))[0])
-                        for s in scan_models
+                        float(s.get_properties().get(key, (0.0,))[0]) for s in rep_scans
                     ]
                 if any(v != 0.0 for v in vals):
                     consolidated_props[key] = vals
@@ -868,8 +921,7 @@ class _experimentlist:
             result["scan"] = [
                 {
                     "__stills_consolidated": True,
-                    "batch_offset": scan_models[0].get_batch_offset(),
-                    "frame_numbers": [s.get_image_range()[0] for s in scan_models],
+                    "batch_offset": rep_scans[0].get_batch_offset(),
                     "properties": consolidated_props,
                     "valid_image_ranges": all_vir,
                 }

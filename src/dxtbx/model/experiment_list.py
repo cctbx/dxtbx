@@ -247,14 +247,43 @@ class ExperimentListDict:
             return
 
         consolidated = scans[0]
-        frame_numbers = consolidated["frame_numbers"]
         props = consolidated.get("properties", {})
         batch_offset = consolidated.get("batch_offset", 0)
         global_vir = consolidated.get("valid_image_ranges", {})
 
+        # Recover each scan_point's 0-based frame from the imageset's
+        # single_file_indices, the single source of truth (the redundant 1-based
+        # frame_numbers array was removed). Invariant: within each imageset,
+        # single_file_indices is sparse and ascending and aligns positionally
+        # with that imageset's experiments taken in ascending (deduped)
+        # scan_point order. Multi-lattice frames share one scan_point, so dedup
+        # before zipping; group per imageset since scan_point is global while
+        # single_file_indices is per-imageset.
+        # TODO(P9): pre-P2 files carrying 'frame_numbers' are not read here;
+        # handled by version-stamp dispatch.
+        imagesets = self._obj.get("imageset", [])
+        sps_by_imageset: dict = {}
+        for eobj in self._obj["experiment"]:
+            sp = eobj.get("scan_point")
+            if sp is None:
+                continue
+            sps_by_imageset.setdefault(eobj["imageset"], set()).add(sp)
+
+        frame_for_scan_point: dict = {}
+        for m, sp_set in sps_by_imageset.items():
+            sps = sorted(sp_set)
+            sfi_m = imagesets[m]["single_file_indices"]
+            assert len(sfi_m) == len(sps), (
+                "consolidated stills: single_file_indices length %d != %d unique "
+                "scan_points for imageset %d" % (len(sfi_m), len(sps), m)
+            )
+            for local_pos, sp in enumerate(sps):
+                frame_for_scan_point[sp] = sfi_m[local_pos]
+
+        n = len(frame_for_scan_point)
         expanded = []
-        for i, fn in enumerate(frame_numbers):
-            per_frame_props = {key: [vals[i]] for key, vals in props.items()}
+        for sp in range(n):
+            per_frame_props = {key: [vals[sp]] for key, vals in props.items()}
             # Reconstruct zero-valued arrays that were omitted on write
             for zero_key in (
                 "epochs",
@@ -264,6 +293,8 @@ class ExperimentListDict:
             ):
                 if zero_key not in per_frame_props:
                     per_frame_props[zero_key] = [0.0]
+            # 0-based single_file_indices -> 1-based scan image_range
+            fn = frame_for_scan_point[sp] + 1
             expanded.append(
                 {
                     "image_range": [fn, fn],
