@@ -952,9 +952,16 @@ class ExperimentListFactory:
                     experiments.append(
                         Experiment(
                             imageset=imageset,
-                            beam=imageset.get_beam(),
-                            detector=imageset.get_detector(),
-                            goniometer=imageset.get_goniometer(),
+                            # Index per-frame: get_beam(j) dispatches through the
+                            # ImageSequence.get_beam override to the per-frame
+                            # monochromatic Beam (XFEL: XFELBeam.get_monochromatic_beam
+                            # (wl[j])). The indexless get_beam() returned the shared
+                            # XFELBeam/base beam for every frame, squashing per-frame
+                            # wavelength. detector/goniometer are shared for a still
+                            # sequence, so get_*(j) equal the shared values.
+                            beam=imageset.get_beam(j),
+                            detector=imageset.get_detector(j),
+                            goniometer=imageset.get_goniometer(j),
                             scan=subset.get_scan(),
                             crystal=crystal,
                         )
