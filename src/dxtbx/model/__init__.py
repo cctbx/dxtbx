@@ -698,8 +698,11 @@ class _experimentlist:
         Consolidate a list of histories into a single history and set this in each
         experiment.
 
-        At the moment, this just combines the lines from the histories and sorts
-        them by timestamp.
+        At the moment, this combines the lines from the histories, removes
+        duplicates, and sorts them by timestamp. Deduplication matters when many
+        experiments share the same provenance (e.g. after split->combine, each
+        source file carries an identical history that would otherwise be
+        repeated once per experiment).
 
         :return History: The consolidated history
         """
@@ -707,7 +710,7 @@ class _experimentlist:
         if len(histories) == 0:
             lines = []
         else:
-            lines = [l for h in histories for l in h.get_history()]
+            lines = list(OrderedSet(l for h in histories for l in h.get_history()))
             lines.sort(key=lambda x: dateutil.parser.isoparse(x.split("|")[0]))
         history = History(lines)
 
@@ -996,8 +999,16 @@ class _experimentlist:
         split=False,
         history_as_integrated=False,
         history_as_scaled=False,
+        history_timestamp=None,
     ):
-        """Dump experiment list as json"""
+        """Dump experiment list as json
+
+        :param history_timestamp: ISO-extended UTC timestamp string (e.g.
+            ``"2026-06-02T14:06:08Z"``) to stamp on the appended history item
+            instead of the current time. Lets a single command that writes many
+            files (e.g. ``dials.split_experiments``) give every output file an
+            identical history line so they deduplicate cleanly on recombine.
+        """
 
         # Make sure sys._getframe exists (cctbx/dxtbx#867)
         if not hasattr(sys, "_getframe"):
@@ -1068,8 +1079,16 @@ class _experimentlist:
         # Consolidate existing history objects
         history = self.consolidate_histories()
 
-        # Append the new history line
-        history.append_history_item(dispatcher, version, flags)
+        # Append the new history line. When an explicit timestamp is supplied
+        # (matching append_history_item's ISO-extended "...Z" format), build the
+        # line directly so many files written by one command share it verbatim.
+        if history_timestamp is None:
+            history.append_history_item(dispatcher, version, flags)
+        else:
+            message = f"{history_timestamp}|{dispatcher}|{version}"
+            if flags:
+                message += f"|{flags}"
+            history.set_history(list(history.get_history()) + [message])
 
         # Get the dictionary and get the JSON string
         dictionary = self.to_dict()

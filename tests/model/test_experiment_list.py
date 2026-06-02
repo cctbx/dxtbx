@@ -1414,3 +1414,56 @@ def test_history(tmp_path):
         -1
     ]
     assert "integrated,scaled" in check
+
+
+def test_consolidate_histories_dedup():
+    # Many experiments sharing identical provenance (e.g. after a
+    # split->combine, where each source file carries the same history) must
+    # collapse to a single line, not be repeated once per experiment.
+    shared = "2026-01-01T00:00:00Z|dials.stills_process|v1"
+    el = ExperimentList()
+    for _ in range(5):
+        e = Experiment()
+        e.history = History([shared])  # distinct objects, identical content
+        el.append(e)
+    lines = el.consolidate_histories().get_history()
+    assert lines == [shared]
+    assert len(lines) == len(set(lines))
+
+    # Genuinely distinct lines are preserved and sorted by timestamp.
+    el2 = ExperimentList()
+    e_late = Experiment()
+    e_late.history = History(["2026-01-02T00:00:00Z|dials.b|v1"])
+    e_early = Experiment()
+    e_early.history = History(["2026-01-01T00:00:00Z|dials.a|v1"])
+    el2.append(e_late)
+    el2.append(e_early)
+    lines2 = el2.consolidate_histories().get_history()
+    assert lines2 == [
+        "2026-01-01T00:00:00Z|dials.a|v1",
+        "2026-01-02T00:00:00Z|dials.b|v1",
+    ]
+
+
+def test_as_json_history_timestamp(tmp_path):
+    # as_json(history_timestamp=...) stamps the appended item with the supplied
+    # timestamp instead of the current time, so many files written by one
+    # command (e.g. dials.split_experiments) carry an identical provenance line
+    # that deduplicates on recombine.
+    ts = "2026-01-01T00:00:00Z"
+    written = []
+    for i in range(3):
+        el = ExperimentList()
+        el.append(Experiment())
+        path = tmp_path / f"split_{i}.expt"
+        el.as_json(path, history_timestamp=ts)
+        last = ExperimentList.from_file(path)[0].history.get_history()[-1]
+        assert last.startswith(ts + "|")
+        written.append(last)
+
+    # Identical lines across files -> consolidate to a single entry.
+    assert len(set(written)) == 1
+    merged = ExperimentList()
+    for i in range(3):
+        merged.extend(ExperimentList.from_file(tmp_path / f"split_{i}.expt"))
+    assert merged.consolidate_histories().get_history().count(written[0]) == 1
