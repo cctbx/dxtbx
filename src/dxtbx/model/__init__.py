@@ -836,29 +836,27 @@ class _experimentlist:
             for s in scan_models
         )
 
-        if all_stills and len(scan_models) > 1:
-            # Per-frame identity is now stored only as 0-based single_file_indices
-            # on each imageset (the redundant 1-based frame_numbers array was
-            # removed). That fallback is gone, so every imageset referenced by a
-            # consolidated experiment must carry single_file_indices, i.e. be a
-            # single-file reader. Consolidation eligibility above is purely
-            # scan-based and never checks reader type; this is the explicit
-            # precondition. Not exercised today (single-h5 composite + both
-            # converters are single-file readers); becomes load-bearing at P6
-            # (multi-file CBF), where consolidated non-single-file readers would
-            # otherwise lose their frame labels silently.
-            for exp in self:
-                if exp.scan is not None and not (
-                    exp.imageset is not None
-                    and exp.imageset.reader().is_single_file_reader()
-                ):
-                    raise AssertionError(
-                        "Consolidated stills scan requires every referenced "
-                        "imageset to carry single_file_indices (single-file "
-                        "reader); got a non-single-file reader. See P6 "
-                        "(multi-file CBF support)."
-                    )
+        # Per-frame identity is now stored only as 0-based single_file_indices
+        # on each imageset (the redundant 1-based frame_numbers array was
+        # removed). That fallback is gone, so consolidation is only safe when
+        # every imageset referenced by a still-scan experiment carries
+        # single_file_indices, i.e. is a single-file reader. The eligibility
+        # test above is purely scan-based and never checks reader type, so this
+        # is the explicit precondition. Multi-file CBF stills (each frame its
+        # own file) are non-single-file readers: they have no single_file_indices
+        # to recover frame labels from, so we skip consolidation and let the
+        # normal per-scan write emit each image_range. (A scan-bearing
+        # experiment with no imageset is likewise ineligible.) Producing a
+        # consolidated structure for multi-file CBF is P6 proper and is
+        # deferred; it would require reintroducing the per-frame frame labels
+        # that P2 deliberately removed.
+        all_single_file = all(
+            exp.imageset is not None and exp.imageset.reader().is_single_file_reader()
+            for exp in self
+            if exp.scan is not None
+        )
 
+        if all_stills and len(scan_models) > 1 and all_single_file:
             # Assign scan_point per (imageset, unique frame), NOT per unique Scan
             # object. scans() dedups by identity, so multi-lattice experiments
             # whose Scan objects are separate-but-equal (the post-combine case:
