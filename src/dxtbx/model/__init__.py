@@ -666,10 +666,10 @@ class _experimentlist:
     def to_dict(self):
         """Serialize the experiment list to dictionary."""
 
-        def abspath_or_none(filename):
+        def normpath_or_none(filename):
             if filename is None or filename == "":
                 return None
-            return os.path.abspath(filename)
+            return os.path.normpath(filename)
 
         # Check the experiment list is consistent
         assert self.is_consistent()
@@ -756,11 +756,11 @@ class _experimentlist:
                 raise TypeError(
                     "expected ImageSet or ImageSequence, got %s" % type(imset)
                 )
-            r["mask"] = abspath_or_none(imset.external_lookup.mask.filename)
-            r["gain"] = abspath_or_none(imset.external_lookup.gain.filename)
-            r["pedestal"] = abspath_or_none(imset.external_lookup.pedestal.filename)
-            r["dx"] = abspath_or_none(imset.external_lookup.dx.filename)
-            r["dy"] = abspath_or_none(imset.external_lookup.dy.filename)
+            r["mask"] = normpath_or_none(imset.external_lookup.mask.filename)
+            r["gain"] = normpath_or_none(imset.external_lookup.gain.filename)
+            r["pedestal"] = normpath_or_none(imset.external_lookup.pedestal.filename)
+            r["dx"] = normpath_or_none(imset.external_lookup.dx.filename)
+            r["dy"] = normpath_or_none(imset.external_lookup.dy.filename)
             r["params"] = imset.params()
             result["imageset"].append(r)
 

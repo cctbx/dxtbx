@@ -320,9 +320,9 @@ class Format:
         # Import here to avoid cyclic imports
         from dxtbx.imageset import ImageSequence, ImageSet, ImageSetData
 
-        # Turn entries that are filenames into absolute paths
+        # Turn entries that are filenames into normalized paths
         filenames = [
-            os.fspath(os.path.abspath(x)) if not get_url_scheme(x) else x
+            os.fspath(os.path.normpath(x)) if not get_url_scheme(x) else x
             for x in input_filenames
         ]
 
