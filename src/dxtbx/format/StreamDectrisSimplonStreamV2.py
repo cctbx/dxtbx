@@ -95,7 +95,10 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         self.name = "DectrisSimplonStreamV2"
 
     def decode(self, encoded_message):
-        message = cbor2.loads(encoded_message, tag_hook=tag_hook)
+        # cbor2 >= 6 returns an immutable frozendict when the message is wrapped
+        # in the self-describe tag (55799); rebuild a mutable dict so the
+        # in-place updates below (and downstream) work as they did before.
+        message = dict(cbor2.loads(encoded_message, tag_hook=tag_hook))
         if "image_size_x" in message.keys():
             message["image_shape"] = (message["image_size_y"], message["image_size_x"])
         if "series_id" in message and "run_id" not in message:
