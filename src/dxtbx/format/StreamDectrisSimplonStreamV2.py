@@ -60,7 +60,10 @@ tag_decoders = {
 }
 
 
-def tag_hook(decoder, tag):
+def tag_hook(arg0, arg1=None):
+    # cbor2 >= 6 calls tag_hook(tag, immutable); older cbor2 calls
+    # tag_hook(decoder, tag). Select whichever argument is the CBORTag.
+    tag = arg0 if isinstance(arg0, cbor2.CBORTag) else arg1
     tag_decoder = tag_decoders.get(tag.tag)
     return tag_decoder(tag) if tag_decoder else tag
 
