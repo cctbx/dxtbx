@@ -1,3 +1,1 @@
-Added faster methods for detector ray-intersection checking. The new methods
-do not use exceptions to represent non-intersecting rays. Saves up to 5 minutes
-on large integration jobs.
+Added faster methods for detector ray-intersection checking. The new methods do not use exceptions to represent non-intersecting rays. Saves up to 5 minutes on large integration jobs.
