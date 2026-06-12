@@ -77,6 +77,7 @@ class StreamClass(ABC):
         zmq_context=None,
         rcvhwm=None,
         rcvbuf=None,
+        tcp_keepalive=False,
     ):
         if socket_mode == "connect":
             if ports is None:
@@ -107,6 +108,15 @@ class StreamClass(ABC):
                 self.socket.setsockopt(zmq.RCVHWM, rcvhwm)
             if rcvbuf:
                 self.socket.setsockopt(zmq.RCVBUF, rcvbuf)
+            if tcp_keepalive:
+                # Set before connect so the options apply to the connection: the kernel
+                # then reaps a dead/orphaned peer (e.g. a consumer killed after an SSH
+                # drop) instead of leaving it ESTABLISHED and silently stealing the
+                # detector's round-robined stream.
+                self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
+                self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
+                self.socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 10)
+                self.socket.setsockopt(zmq.TCP_KEEPALIVE_CNT, 3)
             if socket_mode == "connect":
                 if ports is None:
                     self.socket.connect(self._address)

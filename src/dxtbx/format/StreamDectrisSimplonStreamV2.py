@@ -80,6 +80,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         zmq_context=None,
         rcvhwm=None,
         rcvbuf=None,
+        tcp_keepalive=False,
     ):
         super().__init__(
             port=port,
@@ -91,6 +92,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             zmq_context=zmq_context,
             rcvhwm=rcvhwm,
             rcvbuf=rcvbuf,
+            tcp_keepalive=tcp_keepalive,
         )
         self.name = "DectrisSimplonStreamV2"
 
