@@ -1,3 +1,18 @@
+dxtbx 3.29.0 (2026-06-12)
+=========================
+
+Features
+--------
+
+- XTC support updated to include more spectrometer support and sample sorting. (`#883 <https://github.com/cctbx/dxtbx/issues/883>`_)
+
+
+Bugfixes
+--------
+
+- Added faster methods for detector ray-intersection checking. The new methods do not use exceptions to represent non-intersecting rays. Saves up to 5 minutes on large integration jobs. (`#884 <https://github.com/cctbx/dxtbx/issues/884>`_)
+
+
 DIALS 3.28.1 (2026-05-22)
 =========================
 
