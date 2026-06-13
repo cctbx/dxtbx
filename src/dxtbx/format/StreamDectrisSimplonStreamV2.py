@@ -181,37 +181,58 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         beam = BeamFactory.from_phil(beam_params)
 
         if reference_experiment is None or sync_reference_geom:
-            from dxtbx.model.detector import detector_phil_scope
-            from dxtbx.model.detector import DetectorFactory
+            from dxtbx.model.detector import Detector
 
-            # Construct detector
-            detector_params = detector_phil_scope.extract()
-
-            detector_params.detector.panel[0].fast_axis = (1, 0, 0)
-            detector_params.detector.panel[0].gain = 1.0
-            detector_params.detector.panel[0].image_size = (
-                message["image_size_x"],
-                message["image_size_y"],
+            # Construct detector via Detector.from_dict rather than
+            # DetectorFactory.generate_from_phil. With a hierarchy.group,
+            # generate_from_phil builds a 3-level tree (root -> group -> panel),
+            # but a refined reference .expt with one panel is a 2-level tree
+            # (root -> panel). sync_geometry recursively zips src/dest children and
+            # copies *local* frames assuming identical structure, so the depth
+            # mismatch makes it pin the reference panel's frame onto our
+            # intermediate group and skip the real panel; the untouched panel then
+            # composes through the now-flipped group and its global slow axis comes
+            # out (0, +1, 0) instead of (0, -1, 0). from_dict yields a 2-level
+            # root -> panel tree matching the reference, so sync_geometry pairs
+            # panel-with-panel and copies cleanly. (The no-reference path is
+            # unaffected: the constructed global frame is correct either way.)
+            detector = Detector.from_dict(
+                {
+                    "panels": [
+                        {
+                            "name": "panel0",
+                            "type": "SENSOR_PAD",
+                            "fast_axis": (1.0, 0.0, 0.0),
+                            "slow_axis": (0.0, -1.0, 0.0),
+                            "origin": (
+                                -1000 * message["detector_translation"][0],
+                                1000 * message["detector_translation"][1],
+                                1000 * message["detector_translation"][2],
+                            ),
+                            "image_size": (
+                                message["image_size_x"],
+                                message["image_size_y"],
+                            ),
+                            "pixel_size": (
+                                1000 * message["pixel_size_x"],
+                                1000 * message["pixel_size_y"],
+                            ),
+                            "trusted_range": (0, 2147483647),
+                            "thickness": 1000 * message["sensor_thickness"],
+                            "material": message["sensor_material"],
+                            "gain": 1.0,
+                            "pedestal": 0.0,
+                            "mask": [],
+                        }
+                    ],
+                    "hierarchy": {
+                        "fast_axis": (1.0, 0.0, 0.0),
+                        "slow_axis": (0.0, 1.0, 0.0),
+                        "origin": (0.0, 0.0, 0.0),
+                        "children": [{"panel": 0}],
+                    },
+                }
             )
-            detector_params.detector.panel[0].material = message["sensor_material"]
-            detector_params.detector.panel[0].origin = (
-                -1000 * message["detector_translation"][0],
-                1000 * message["detector_translation"][1],
-                1000 * message["detector_translation"][2],
-            )
-            detector_params.detector.panel[0].pedestal = 0.0
-            detector_params.detector.panel[0].pixel_size = (
-                1000 * message["pixel_size_x"],
-                1000 * message["pixel_size_y"],
-            )
-            detector_params.detector.panel[0].slow_axis = (0, -1, 0)
-            detector_params.detector.panel[0].thickness = 1000 * message["sensor_thickness"]
-            detector_params.detector.panel[0].trusted_range = (0, 2147483647)
-
-            detector_params.detector.hierarchy.group[0].id = [0]
-            detector_params.detector.hierarchy.group[0].panel = [0]
-
-            detector = DetectorFactory.generate_from_phil(detector_params, beam)
             if reference_experiment and sync_reference_geom:
                 sync_geometry(
                     reference_experiment[0].detector.hierarchy(),
