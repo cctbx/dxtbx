@@ -1,10 +1,13 @@
-import cbor2
-import datetime
-from dectris.compression import decompress
-from dxtbx.format.Stream import StreamClass
-from dxtbx.model.experiment_list import ExperimentList, Experiment
+from __future__ import annotations
 
+import datetime
+
+import cbor2
 import numpy as np
+from dectris.compression import decompress
+
+from dxtbx.format.Stream import StreamClass
+from dxtbx.model.experiment_list import Experiment, ExperimentList
 
 
 def decode_multi_dim_array(tag, column_major):
@@ -107,7 +110,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             message["run_id"] = message.pop("series_id")
         # The dtype is supposedly a function of frame rate. This will be useful
         # once those boundaries are determined.
-        if message['type'] == 'start':
+        if message["type"] == "start":
             if message["count_time"] >= 0.0145:
                 message.setdefault("image_dtype", "uint32")
             elif message["count_time"] >= 0.00:
@@ -120,11 +123,17 @@ class StreamDectrisSimplonStreamV2(StreamClass):
     def recv(self, copy=True):
         return self.socket.recv(copy=copy)
 
-    def handle_start_message(self, message, reference_experiment=None, sync_reference_geom=True, wavelength=None):
+    def handle_start_message(
+        self,
+        message,
+        reference_experiment=None,
+        sync_reference_geom=True,
+        wavelength=None,
+    ):
         from dials.command_line.stills_process import sync_geometry
+
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
-        from dxtbx.model.beam import beam_phil_scope
-        from dxtbx.model.beam import BeamFactory
+        from dxtbx.model.beam import BeamFactory, beam_phil_scope
 
         if isinstance(message["detector_description"], bytes):
             message["detector_description"] = message["detector_description"].decode()
@@ -162,7 +171,9 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         file_writer_params.nexus_details.frame_time = message["frame_time"]
         file_writer_params.nexus_details.sample_name = "sample"
         file_writer_params.detector.sensor_material = message["sensor_material"]
-        file_writer_params.detector.sensor_thickness = 1000 * message["sensor_thickness"]
+        file_writer_params.detector.sensor_thickness = (
+            1000 * message["sensor_thickness"]
+        )
 
         # Construct beam
         beam_params = beam_phil_scope.extract()
@@ -181,6 +192,9 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         beam = BeamFactory.from_phil(beam_params)
 
         if reference_experiment is None or sync_reference_geom:
+            from cctbx.eltbx import attenuation_coefficient
+
+            from dxtbx.model import ParallaxCorrectedPxMmStrategy
             from dxtbx.model.detector import Detector
 
             # Construct detector via Detector.from_dict rather than
@@ -233,24 +247,48 @@ class StreamDectrisSimplonStreamV2(StreamClass):
                     },
                 }
             )
+            # Apply parallax correction so the px<->mm mapping matches the
+            # file-based path (FormatCBFMini / nexus.build_detector). Detector.from_dict
+            # leaves the default SimplePxMmStrategy, which ignores the depth at which
+            # X-rays are absorbed in the sensor and shifts spot positions.
+            mu = (
+                attenuation_coefficient.get_table(
+                    detector[0].get_material()
+                ).mu_at_angstrom(beam.get_wavelength())
+                / 10.0
+            )  # cm^-1 -> mm^-1
+            detector[0].set_mu(mu)
+            detector[0].set_px_mm_strategy(
+                ParallaxCorrectedPxMmStrategy(mu, detector[0].get_thickness())
+            )
             if reference_experiment and sync_reference_geom:
                 sync_geometry(
                     reference_experiment[0].detector.hierarchy(),
                     detector.hierarchy(),
                 )
 
-            reference_experiment = ExperimentList([Experiment(beam=beam, detector=detector)])
+            reference_experiment = ExperimentList(
+                [Experiment(beam=beam, detector=detector)]
+            )
         else:
             # If the reference_experiment has an imageset, it gets removed by
             # creating a new experiment without the imageset.
-            reference_experiment = ExperimentList([Experiment(
-                beam=beam,
-                detector=reference_experiment[0].detector,
-            )])
-        reference_experiment = ExperimentList([Experiment(
-            beam=reference_experiment[0].beam,
-            detector=reference_experiment[0].detector,
-        )])
+            reference_experiment = ExperimentList(
+                [
+                    Experiment(
+                        beam=beam,
+                        detector=reference_experiment[0].detector,
+                    )
+                ]
+            )
+        reference_experiment = ExperimentList(
+            [
+                Experiment(
+                    beam=reference_experiment[0].beam,
+                    detector=reference_experiment[0].detector,
+                )
+            ]
+        )
         return file_writer_params, reference_experiment
 
     def get_data(self, message, **kwargs):
@@ -259,21 +297,24 @@ class StreamDectrisSimplonStreamV2(StreamClass):
 
     def get_reader(self, image_data, **kwargs):
         from dials.array_family import flex
+
         from dxtbx.imageset import StreamReader
 
         # if 32 bit then it is a signed int, I think if 8, 16 then it is
         # unsigned with the highest two values assigned as masking values
         if image_data.dtype.name == "uint32":
-           top = 2**32
+            top = 2**32
         elif image_data.dtype.name == "uint16":
-           top = 2**16
+            top = 2**16
         elif image_data.dtype.name == "uint8":
-           top = 2**8
+            top = 2**8
         else:
-           raise Exception(f"Unhandled data type {image_data.dtype.name} in StreamDectrisSimplonStreamV2.get_data")
+            raise Exception(
+                f"Unhandled data type {image_data.dtype.name} in StreamDectrisSimplonStreamV2.get_data"
+            )
         image_data_int = image_data.astype(np.int32)
-        image_data_int[image_data == (top-1)] = -1
-        image_data_int[image_data == (top-2)] = -2
+        image_data_int[image_data == (top - 1)] = -1
+        image_data_int[image_data == (top - 2)] = -2
 
         image_data = flex.double(image_data_int)
         return StreamReader([image_data])
