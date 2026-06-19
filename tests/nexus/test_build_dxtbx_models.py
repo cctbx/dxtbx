@@ -803,6 +803,9 @@ def test_dataset_as_flex_float():
 
 
 def test_dataset_as_flex_double():
+    # Double-precision (and any >4-byte) float datasets are now read at single
+    # precision: DIALS integration is float and the raw-data cache stores float32
+    # regardless, so reading float64 would only create a transient double buffer.
     slices = ()
     np_double_types = (
         np.float64,
@@ -814,7 +817,7 @@ def test_dataset_as_flex_double():
         for i, dtype in enumerate(np_double_types):
             d = g.create_dataset(f"double-{i}", data=np.array([0, 1], dtype=dtype))
             flex_a = dxtbx.nexus._dataset_as_flex(d, slices)
-            assert isinstance(flex_a, flex.double)
+            assert isinstance(flex_a, flex.float)
             assert flex_a.all() == d.shape
             assert list(flex_a) == list(d)
 

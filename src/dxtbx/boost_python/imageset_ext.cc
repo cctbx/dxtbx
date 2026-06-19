@@ -40,6 +40,37 @@ namespace dxtbx { namespace boost_python {
     }
   }  // namespace detail
 
+  // Convert image-sized maps between float storage and the double python/pickle API.
+  // The external lookup maps (gain/pedestal/dx/dy) are stored as float but exposed
+  // and serialized as double, so downstream consumers and on-disk files are unchanged.
+  inline Image<double> image_float_to_double(const Image<float> &src) {
+    Image<double> result;
+    for (std::size_t i = 0; i < src.n_tiles(); ++i) {
+      scitbx::af::const_ref<float, scitbx::af::c_grid<2> > r =
+        src.tile(i).data().const_ref();
+      scitbx::af::versa<double, scitbx::af::c_grid<2> > d(r.accessor());
+      for (std::size_t j = 0; j < r.size(); ++j) {
+        d[j] = static_cast<double>(r[j]);
+      }
+      result.push_back(ImageTile<double>(d));
+    }
+    return result;
+  }
+
+  inline Image<float> image_double_to_float(const Image<double> &src) {
+    Image<float> result;
+    for (std::size_t i = 0; i < src.n_tiles(); ++i) {
+      scitbx::af::const_ref<double, scitbx::af::c_grid<2> > r =
+        src.tile(i).data().const_ref();
+      scitbx::af::versa<float, scitbx::af::c_grid<2> > d(r.accessor());
+      for (std::size_t j = 0; j < r.size(); ++j) {
+        d[j] = static_cast<float>(r[j]);
+      }
+      result.push_back(ImageTile<float>(d));
+    }
+    return result;
+  }
+
   ImageSetData::masker_ptr make_masker_pointer(boost::python::object masker) {
     if (masker == boost::python::object()) {
       return ImageSetData::masker_ptr();
@@ -195,17 +226,23 @@ namespace dxtbx { namespace boost_python {
     }
 
     static boost::python::tuple get_lookup_tuple(ImageSetData obj) {
+      // gain/pedestal/dx/dy are stored as float; pickle them as double so the
+      // on-disk format is unchanged (old files round-trip in both directions).
       return boost::python::make_tuple(
         boost::python::make_tuple(obj.external_lookup().mask().get_filename(),
                                   obj.external_lookup().mask().get_data()),
-        boost::python::make_tuple(obj.external_lookup().gain().get_filename(),
-                                  obj.external_lookup().gain().get_data()),
-        boost::python::make_tuple(obj.external_lookup().pedestal().get_filename(),
-                                  obj.external_lookup().pedestal().get_data()),
-        boost::python::make_tuple(obj.external_lookup().dx().get_filename(),
-                                  obj.external_lookup().dx().get_data()),
-        boost::python::make_tuple(obj.external_lookup().dy().get_filename(),
-                                  obj.external_lookup().dy().get_data()));
+        boost::python::make_tuple(
+          obj.external_lookup().gain().get_filename(),
+          image_float_to_double(obj.external_lookup().gain().get_data())),
+        boost::python::make_tuple(
+          obj.external_lookup().pedestal().get_filename(),
+          image_float_to_double(obj.external_lookup().pedestal().get_data())),
+        boost::python::make_tuple(
+          obj.external_lookup().dx().get_filename(),
+          image_float_to_double(obj.external_lookup().dx().get_data())),
+        boost::python::make_tuple(
+          obj.external_lookup().dy().get_filename(),
+          image_float_to_double(obj.external_lookup().dy().get_data())));
     }
 
     static boost::python::tuple getstate(ImageSetData obj) {
@@ -280,25 +317,37 @@ namespace dxtbx { namespace boost_python {
       ((&obj.external_lookup())->*item)().set_data(data);
     }
 
+    // Set a float-stored lookup item from a double-pickled tuple (down-convert).
+    static void set_lookup_item_float(
+      ImageSetData &obj,
+      boost::python::tuple lookup,
+      ExternalLookupItem<float> &(ExternalLookup::*item)()) {
+      DXTBX_ASSERT(boost::python::len(lookup) == 2);
+      std::string filename = boost::python::extract<std::string>(lookup[0])();
+      Image<double> data = boost::python::extract<Image<double>>(lookup[1])();
+      ((&obj.external_lookup())->*item)().set_filename(filename);
+      ((&obj.external_lookup())->*item)().set_data(image_double_to_float(data));
+    }
+
     static void set_lookup_tuple(ImageSetData &obj, boost::python::tuple lookup) {
       DXTBX_ASSERT(boost::python::len(lookup) == 5);
       ImageSetDataPickleSuite::set_lookup_item<Image<bool>>(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[0])(),
         &ExternalLookup::mask);
-      ImageSetDataPickleSuite::set_lookup_item<Image<double>>(
+      ImageSetDataPickleSuite::set_lookup_item_float(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[1])(),
         &ExternalLookup::gain);
-      ImageSetDataPickleSuite::set_lookup_item<Image<double>>(
+      ImageSetDataPickleSuite::set_lookup_item_float(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[2])(),
         &ExternalLookup::pedestal);
-      ImageSetDataPickleSuite::set_lookup_item<Image<double>>(
+      ImageSetDataPickleSuite::set_lookup_item_float(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[3])(),
         &ExternalLookup::dx);
-      ImageSetDataPickleSuite::set_lookup_item<Image<double>>(
+      ImageSetDataPickleSuite::set_lookup_item_float(
         obj,
         boost::python::extract<boost::python::tuple>(lookup[4])(),
         &ExternalLookup::dy);
@@ -426,6 +475,20 @@ namespace dxtbx { namespace boost_python {
     obj.set_data(data);
   }
 
+  // The external gain/pedestal/dx/dy maps are stored as float but exposed to python
+  // as double (matching the previous Image<double> .data API, so consumers that
+  // set/read ImageDouble keep working). These mirror the member get_data/set_data
+  // with a float<->double conversion at the boundary.
+  Image<double> ExternalLookupItemFloat_get_data_as_double(
+    const ExternalLookupItem<float> &obj) {
+    return image_float_to_double(obj.get_data());
+  }
+
+  void ExternalLookupItemFloat_set_data_from_double(ExternalLookupItem<float> &obj,
+                                                    const Image<double> &data) {
+    obj.set_data(image_double_to_float(data));
+  }
+
   template <typename T>
   boost::python::tuple image_as_tuple(const Image<T> &image) {
     boost::python::list result;
@@ -455,11 +518,12 @@ namespace dxtbx { namespace boost_python {
   }
 
   boost::python::tuple ImageSet_get_gain(ImageSet &self, std::size_t index) {
-    return image_as_tuple<double>(self.get_gain(index));
+    // gain is stored/returned as float; expose as double for API compatibility.
+    return image_as_tuple<double>(image_float_to_double(self.get_gain(index)));
   }
 
   boost::python::tuple ImageSet_get_pedestal(ImageSet &self, std::size_t index) {
-    return image_as_tuple<double>(self.get_pedestal(index));
+    return image_as_tuple<double>(image_float_to_double(self.get_pedestal(index)));
   }
 
   boost::python::tuple ImageSet_get_mask(ImageSet &self, std::size_t index) {
@@ -481,13 +545,27 @@ namespace dxtbx { namespace boost_python {
         "data", &ExternalLookupItem<T>::get_data, &ExternalLookupItem<T>::set_data);
   }
 
+  // Wrapper for a float-stored external lookup item that presents a double .data
+  // property (the gain/pedestal/dx/dy maps), keeping the python API unchanged.
+  void external_lookup_item_float_as_double_wrapper(const char *name) {
+    using namespace boost::python;
+
+    class_<ExternalLookupItem<float>>(name)
+      .add_property("filename",
+                    &ExternalLookupItem<float>::get_filename,
+                    &ExternalLookupItem<float>::set_filename)
+      .add_property("data",
+                    &ExternalLookupItemFloat_get_data_as_double,
+                    &ExternalLookupItemFloat_set_data_from_double);
+  }
+
   /**
    * If we have offset arrays set in the imageset then update the pixel to
    * millimeter strategy to use them
    */
   void ImageSet_update_detector_px_mm_data(ImageSet &self) {
-    Image<double> dx = self.external_lookup().dx().get_data();
-    Image<double> dy = self.external_lookup().dy().get_data();
+    Image<double> dx = image_float_to_double(self.external_lookup().dx().get_data());
+    Image<double> dy = image_float_to_double(self.external_lookup().dy().get_data());
     DXTBX_ASSERT(dx.empty() == dy.empty());
     if (dx.empty() && dy.empty()) {
       return;
@@ -523,8 +601,8 @@ namespace dxtbx { namespace boost_python {
    */
   void ImageSequence_update_detector_px_mm_data(ImageSequence &self) {
     ImageSequence::detector_ptr detector = self.get_detector();
-    Image<double> dx = self.external_lookup().dx().get_data();
-    Image<double> dy = self.external_lookup().dy().get_data();
+    Image<double> dx = image_float_to_double(self.external_lookup().dx().get_data());
+    Image<double> dy = image_float_to_double(self.external_lookup().dy().get_data());
     DXTBX_ASSERT(dx.empty() == dy.empty());
     if (dx.empty() && dy.empty()) {
       return;
@@ -557,7 +635,9 @@ namespace dxtbx { namespace boost_python {
   void export_imageset() {
     using namespace boost::python;
 
-    external_lookup_item_wrapper<double>("ExternalLookupItemDouble");
+    // gain/pedestal/dx/dy are stored as ExternalLookupItem<float> but presented
+    // under the existing "ExternalLookupItemDouble" name with a double .data API.
+    external_lookup_item_float_as_double_wrapper("ExternalLookupItemDouble");
     external_lookup_item_wrapper<bool>("ExternalLookupItemBool");
 
     class_<ExternalLookup>("ExternalLookup")

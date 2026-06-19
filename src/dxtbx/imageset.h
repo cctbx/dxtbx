@@ -117,37 +117,41 @@ public:
   /**
    * @returns an internal reference to the gain
    */
-  ExternalLookupItem<double> &gain() {
+  ExternalLookupItem<float> &gain() {
     return gain_;
   }
 
   /**
    * @returns an internal reference to the pedestal
    */
-  ExternalLookupItem<double> &pedestal() {
+  ExternalLookupItem<float> &pedestal() {
     return pedestal_;
   }
 
   /**
    * @returns an internal reference to the dx map
    */
-  ExternalLookupItem<double> &dx() {
+  ExternalLookupItem<float> &dx() {
     return dx_;
   }
 
   /**
    * @returns an internal reference to the dy map
    */
-  ExternalLookupItem<double> &dy() {
+  ExternalLookupItem<float> &dy() {
     return dy_;
   }
 
 protected:
+  // The image-sized external lookup maps (gain/pedestal/dx/dy) are stored at float
+  // precision to halve them. The python API and pickle expose/serialize them as
+  // double (see imageset_ext.cc), so on-disk files and downstream consumers are
+  // unchanged; only the resident storage is float.
   ExternalLookupItem<bool> mask_;
-  ExternalLookupItem<double> gain_;
-  ExternalLookupItem<double> pedestal_;
-  ExternalLookupItem<double> dx_;
-  ExternalLookupItem<double> dy_;
+  ExternalLookupItem<float> gain_;
+  ExternalLookupItem<float> pedestal_;
+  ExternalLookupItem<float> dx_;
+  ExternalLookupItem<float> dy_;
 };
 
 /**
@@ -670,8 +674,8 @@ public:
     // Get the multi-tile data, gain and pedestal
     DXTBX_ASSERT(index < indices_.size());
     Image<float> data = get_raw_data_as_float(index);
-    Image<double> gain = get_gain(index);
-    Image<double> dark = get_pedestal(index);
+    Image<float> gain = get_gain(index);
+    Image<float> dark = get_pedestal(index);
     DXTBX_ASSERT(gain.n_tiles() == 0 || data.n_tiles() == gain.n_tiles());
     DXTBX_ASSERT(dark.n_tiles() == 0 || data.n_tiles() == dark.n_tiles());
 
@@ -682,12 +686,12 @@ public:
       float_const_ref_type r = data.tile(i).data().const_ref();
 
       // Get the gain and dark
-      double_const_ref_type g =
+      float_const_ref_type g =
         gain.n_tiles() > 0 ? gain.tile(i).data().const_ref()
-                           : double_const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
-      double_const_ref_type p =
+                           : float_const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
+      float_const_ref_type p =
         dark.n_tiles() > 0 ? dark.tile(i).data().const_ref()
-                           : double_const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
+                           : float_const_ref_type(NULL, scitbx::af::c_grid<2>(0, 0));
 
       // Check gain and dark sizes
       DXTBX_ASSERT(g.size() == 0 || r.accessor().all_eq(g.accessor()));
@@ -707,7 +711,7 @@ public:
         // Apply dark
         if (p.size() > 0) {
           for (std::size_t j = 0; j < r.size(); ++j) {
-            c[j] = c[j] - static_cast<float>(p[j]);
+            c[j] = c[j] - p[j];
           }
         }
 
@@ -715,7 +719,7 @@ public:
         if (g.size() > 0) {
           for (std::size_t j = 0; j < r.size(); ++j) {
             DXTBX_ASSERT(g[j] > 0);
-            c[j] = c[j] / static_cast<float>(g[j]);
+            c[j] = c[j] / g[j];
           }
         }
 
@@ -734,7 +738,7 @@ public:
    * @param index The image index
    * @returns The gain
    */
-  Image<double> get_gain(std::size_t index) {
+  Image<float> get_gain(std::size_t index) {
     // If the external lookup is empty
     DXTBX_ASSERT(index < indices_.size());
     if (external_lookup().gain().get_data().empty()) {
@@ -757,13 +761,14 @@ public:
 
       // If using the gain from the panel, construct a gain map
       if (use_detector_gain && need_gain_map) {
-        Image<double> result;
+        Image<float> result;
         for (std::size_t i = 0; i < detector.size(); ++i) {
           std::size_t xsize = detector[i].get_image_size()[0];
           std::size_t ysize = detector[i].get_image_size()[1];
           scitbx::af::c_grid<2> grid(ysize, xsize);
-          scitbx::af::versa<double, scitbx::af::c_grid<2> > data(grid, gain[i]);
-          result.push_back(ImageTile<double>(data));
+          scitbx::af::versa<float, scitbx::af::c_grid<2> > data(
+            grid, static_cast<float>(gain[i]));
+          result.push_back(ImageTile<float>(data));
         }
         return result;
       }
@@ -776,7 +781,7 @@ public:
    * @param index The image index
    * @returns The pedestal image
    */
-  Image<double> get_pedestal(std::size_t index) {
+  Image<float> get_pedestal(std::size_t index) {
     //
     // If the external lookup is empty
     DXTBX_ASSERT(index < indices_.size());
@@ -796,13 +801,14 @@ public:
 
       // If using the pedestal from the panel, construct a pedestal map
       if (use_detector_pedestal) {
-        Image<double> result;
+        Image<float> result;
         for (std::size_t i = 0; i < detector.size(); ++i) {
           std::size_t xsize = detector[i].get_image_size()[0];
           std::size_t ysize = detector[i].get_image_size()[1];
           scitbx::af::c_grid<2> grid(ysize, xsize);
-          scitbx::af::versa<double, scitbx::af::c_grid<2> > data(grid, pedestal[i]);
-          result.push_back(ImageTile<double>(data));
+          scitbx::af::versa<float, scitbx::af::c_grid<2> > data(
+            grid, static_cast<float>(pedestal[i]));
+          result.push_back(ImageTile<float>(data));
         }
         return result;
       }

@@ -516,7 +516,7 @@ def _dataset_as_flex(
     data: h5py.Dataset,
     slices: tuple[slice, ...] | None,
     bit_depth: Literal[32] | None = None,
-) -> flex.float | flex.double | flex.int:
+) -> flex.float | flex.int:
     """
     Convert an HDF5 dataset to one of the expected flex types.
 
@@ -550,12 +550,13 @@ def _dataset_as_flex(
         else:
             raise TypeError(f"Unsupported integer dtype {data_np.dtype}")
     elif np.issubdtype(dtype, np.floating):
-        if dtype.itemsize <= 4:
-            # Promote anything <= single precision up to single precision
-            data_np = data_np.astype(np.float32, copy=False)
-        else:
-            # Otherwise, everything else becomes double
-            data_np = data_np.astype(np.float64, copy=False)
+        # All detector float data is read at single precision. DIALS integration is
+        # float and the raw-data cache stores float32 regardless (ImageSet stores
+        # Image<float>), so reading float64-stored NXmx at float64 would only create
+        # a transient double buffer that is immediately halved. This also harmonizes
+        # with the legacy reader (dxtbx/format/nexus.py), which already downgrades
+        # float64 -> float32.
+        data_np = data_np.astype(np.float32, copy=False)
     else:
         # Isn't a recognised integer or floating point type
         raise TypeError(f"Unsupported dtype {data_np.dtype}")
@@ -569,10 +570,10 @@ def get_raw_data(
     nxdetector: nxmx.NXdetector,
     index: int,
     bit_depth: int | None = None,
-) -> tuple[flex.float | flex.double | flex.int, ...]:
+) -> tuple[flex.float | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
-    This will be a tuple of flex.float, flex.double or flex.int arrays, of length equal
+    This will be a tuple of flex.float or flex.int arrays, of length equal
     to the number of modules. The result is intended to be compatible with the
     get_raw_data() method of dxtbx format classes.
     """
