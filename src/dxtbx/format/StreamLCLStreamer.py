@@ -207,6 +207,7 @@ class LCLStreamer(StreamClass):
         zmq_context=None,
         rcvhwm=None,
         rcvbuf=None,
+        tcp_keepalive=False,
     ):
         super().__init__(
             port=port,
@@ -218,6 +219,7 @@ class LCLStreamer(StreamClass):
             zmq_context=zmq_context,
             rcvhwm=rcvhwm,
             rcvbuf=rcvbuf,
+            tcp_keepalive=tcp_keepalive,
         )
         self.name = "LCLStreamer"
         self._split_modules = True
@@ -238,11 +240,13 @@ class LCLStreamer(StreamClass):
 
     def decode(self, encoded_message):
         message = cbor2.loads(encoded_message)
+        # Translate the LCLStreamer wire-format run identifier to the internal
+        # "run_id" the components consume. (Start messages carry "run_number",
+        # image/end messages carry "run".)
         if "run" in message.keys():
-            message["series_id"] = int(message.pop("run"))
+            message["run_id"] = int(message.pop("run"))
         elif "run_number" in message.keys():
-            message["series_id"] = message.pop("run_number")
-            message["series_id"] = int(message["series_id"])
+            message["run_id"] = int(message.pop("run_number"))
         if "message_id" in message.keys():
             message["image_id"] = message.pop("message_id")
         if "shape" in message.keys():
@@ -266,8 +270,11 @@ class LCLStreamer(StreamClass):
         file_writer_params = nxmx_writer_phil_scope.extract()
 
         file_writer_params.dtype = message["image_dtype"]
-        file_writer_params.nexus_details.instrument_name = message["beamline"]
-        file_writer_params.nexus_details.instrument_short_name = message["beamline"]
+        # The LCLS start message leaves "beamline" empty, so use the experiment
+        # name as the instrument identifier (nxmx_writer.validate() requires a
+        # non-empty instrument_name).
+        file_writer_params.nexus_details.instrument_name = message["experiment"]
+        file_writer_params.nexus_details.instrument_short_name = message["experiment"]
         file_writer_params.nexus_details.source_name = "LCLS"
         file_writer_params.nexus_details.source_short_name = "LCLS"
 
