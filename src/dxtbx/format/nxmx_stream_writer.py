@@ -1,10 +1,11 @@
-from dxtbx.format.nxmx_writer import NXmxWriter
-from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
-from dxtbx.format.nxmx_writer import get_compression
+from __future__ import annotations
+
+import os
+
 import h5py
-import hdf5plugin
-from libtbx.phil import parse
 import numpy as np
+
+from dxtbx.format.nxmx_writer import NXmxWriter, get_compression
 
 
 def compress_with_hdf5_filters(data, params):
@@ -63,10 +64,10 @@ class NXmxStreamWriter(NXmxWriter):
         self.add_scan_and_gonio()
 
         value = np.dtype(self.params.dtype).itemsize * 8
-        self.handle['/entry/instrument/detector'].create_dataset(
+        self.handle["/entry/instrument/detector"].create_dataset(
             "bit_depth_readout", (), "i"
         )
-        self.handle['/entry/instrument/detector/bit_depth_readout'][()] = value
+        self.handle["/entry/instrument/detector/bit_depth_readout"][()] = value
 
         if experiments:
             n_panels = len(experiments[0].detector)
@@ -91,13 +92,26 @@ class NXmxStreamWriter(NXmxWriter):
         total_images = sum(n_images for _, n_images in data_file_names)
         total_shape = (total_images, *self.image_shape)
 
+        # Store each VDS source path relative to the master file's own directory (a
+        # basename, since the master and its data files are co-located). HDF5 resolves a
+        # relative VDS source against the master file's directory, so the master + data
+        # files can be moved together to any directory (or machine) and still resolve,
+        # regardless of the reader's working directory. An absolute path would break that
+        # move, and an output-dir-relative path (e.g. rNNNN/rNNNN.h5) silently yields
+        # fill-value (blank) frames when read from a different directory.
+        master_dir = os.path.dirname(self.params.output_file)
+        source_name = {
+            data_file_name: os.path.relpath(data_file_name, master_dir)
+            for data_file_name, _ in data_file_names
+        }
+
         # Create a virtual layout for the combined dataset
         layout = h5py.VirtualLayout(shape=total_shape, dtype=self.params.dtype)
         if sort_values is None:
             start = 0
             for data_file_name, n_images in data_file_names:
                 layout[start : start + n_images] = h5py.VirtualSource(
-                    data_file_name,
+                    source_name[data_file_name],
                     "/entry/data/data_000001",
                     shape=(n_images, *self.image_shape),
                     dtype=self.params.dtype,
@@ -125,7 +139,7 @@ class NXmxStreamWriter(NXmxWriter):
                 n_images,
             ) in enumerate(all_images):
                 layout[virtual_index] = h5py.VirtualSource(
-                    file_path,
+                    source_name[file_path],
                     "/entry/data/data_000001",
                     shape=(n_images, *self.image_shape),
                     dtype=self.params.dtype,
