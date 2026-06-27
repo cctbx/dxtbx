@@ -1,14 +1,83 @@
+from __future__ import annotations
+
+import datetime
+
 import bitshuffle
 import cbor2
-from cctbx import factor_kev_angstrom
-import datetime
-from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
-from cctbx.eltbx import attenuation_coefficient
-from dxtbx.model.experiment_list import ExperimentList, Experiment
-from dxtbx.format.Stream import StreamClass
 import numpy as np
 from PSCalib.GeometryAccess import GeometryAccess
+
+from cctbx import factor_kev_angstrom
+from cctbx.eltbx import attenuation_coefficient
 from scitbx.matrix import col
+
+from dxtbx.format.Stream import StreamClass
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
+from dxtbx.model.experiment_list import Experiment, ExperimentList
+
+
+def reflect_detector_for_display(d):
+    """Reflect the assembled detector about the lab xz-plane (y -> -y) and return
+    it as a flat root -> panel tree.
+
+    ``get_jungfrau_detector_*`` compose the panel frames from the psana geometry
+    the same way ``FormatXTCJungfrau`` does, which yields a global slow axis of
+    (0, +1, 0). That convention is correct for the on-disk ``FormatXTCJungfrau``
+    pathway, but the streamed data is written to NXmx and read back by
+    ``FormatNXmx``, whose display convention (shared with the working
+    ``StreamDectrisSimplonStreamV2`` reader, which builds its panel with slow axis
+    (0, -1, 0)) is the opposite vertical sense. Without this reflection the
+    assembled JF16M image renders upside down in dials.image_viewer.
+
+    A single *global* reflection is applied to every panel frame, so the whole
+    detector flips coherently. Flipping the pixel data per module instead tears the
+    image at every module boundary (the beam centre splits across the central
+    seam). The result is rebuilt as a flat root -> panel tree (matching the
+    ``StreamDectrisSimplonStreamV2`` shape) so that a 2-level reference geometry
+    pairs panel-with-panel under sync_geometry.
+    """
+    from dxtbx.model.detector import Detector
+
+    panels = []
+    children = []
+    for i, p in enumerate(d):
+        fast = p.get_fast_axis()
+        slow = p.get_slow_axis()
+        origin = p.get_origin()
+        panels.append(
+            {
+                "name": p.get_name(),
+                "type": p.get_type(),
+                "fast_axis": (fast[0], -fast[1], fast[2]),
+                "slow_axis": (slow[0], -slow[1], slow[2]),
+                "origin": (origin[0], -origin[1], origin[2]),
+                "image_size": tuple(p.get_image_size()),
+                "pixel_size": tuple(p.get_pixel_size()),
+                "trusted_range": tuple(p.get_trusted_range()),
+                "thickness": p.get_thickness(),
+                "material": p.get_material(),
+                "mu": p.get_mu(),
+                "gain": p.get_gain(),
+            }
+        )
+        children.append({"panel": i})
+
+    flipped = Detector.from_dict(
+        {
+            "panels": panels,
+            "hierarchy": {
+                "fast_axis": (1.0, 0.0, 0.0),
+                "slow_axis": (0.0, 1.0, 0.0),
+                "origin": (0.0, 0.0, 0.0),
+                "children": children,
+            },
+        }
+    )
+    # Detector.from_dict leaves the default SimplePxMmStrategy; carry over the
+    # ParallaxCorrectedPxMmStrategy each source panel already holds.
+    for src, dst in zip(d, flipped):
+        dst.set_px_mm_strategy(src.get_px_mm_strategy())
+    return flipped
 
 
 def get_jungfrau_detector_asic(file_content, wavelength):
@@ -108,19 +177,13 @@ def get_jungfrau_detector_asic(file_content, wavelength):
             p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, THICKNESS))
             p.set_gain(factor_kev_angstrom / wavelength)
             p.set_image_size((dim_fast // 4, dim_slow // 2))
-    return d
+    return reflect_detector_for_display(d)
 
 
 def get_jungfrau_detector_module(file_content, wavelength):
     """
     Copied from Fred Poitevin's work on FormatXTCJungfrau2M.py
     """
-    try:
-        from PSCalib.SegGeometryStore import sgs
-    except ModuleNotFoundError:
-        # psana2
-        from psana.pscalib.geometry.SegGeometryStore import sgs
-
     from serialtbx.detector.xtc import basis_from_geo
 
     PIXEL_SIZE = 0.075
@@ -187,7 +250,7 @@ def get_jungfrau_detector_module(file_content, wavelength):
         pg1.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, THICKNESS))
         pg1.set_gain(factor_kev_angstrom / wavelength)
         pg1.set_image_size((DIM_FAST, DIM_SLOW))
-    return d
+    return reflect_detector_for_display(d)
 
 
 class LCLStreamer(StreamClass):
@@ -222,7 +285,7 @@ class LCLStreamer(StreamClass):
             tcp_keepalive=tcp_keepalive,
         )
         self.name = "LCLStreamer"
-        self._split_modules = True
+        self._split_modules = False
 
     def recv(self, copy=True):
         # The LCLStream adds a character at the beginning of the message to identify
@@ -261,11 +324,17 @@ class LCLStreamer(StreamClass):
                 )
         return message
 
-    def handle_start_message(self, message, reference_experiment=None, sync_reference_geom=True, wavelength=None):
+    def handle_start_message(
+        self,
+        message,
+        reference_experiment=None,
+        sync_reference_geom=True,
+        wavelength=None,
+    ):
         from dials.command_line.stills_process import sync_geometry
+
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
-        from dxtbx.model.beam import beam_phil_scope
-        from dxtbx.model.beam import BeamFactory
+        from dxtbx.model.beam import BeamFactory, beam_phil_scope
 
         file_writer_params = nxmx_writer_phil_scope.extract()
 
@@ -315,7 +384,7 @@ class LCLStreamer(StreamClass):
             beam_params.beam.wavelength = wavelength
         else:
             # Wavelength is not included in the start message ...
-            beam_params.beam.wavelength = 1 # float(message["photon_wavelength"])
+            beam_params.beam.wavelength = 1  # float(message["photon_wavelength"])
         beam_params.beam.wavelength_range = None
         beam = BeamFactory.from_phil(beam_params)
 
@@ -350,7 +419,9 @@ class LCLStreamer(StreamClass):
             beam = reference_experiment[0].beam
             detector = reference_experiment[0].detector
 
-        reference_experiment = ExperimentList([Experiment(beam=beam, detector=detector)])
+        reference_experiment = ExperimentList(
+            [Experiment(beam=beam, detector=detector)]
+        )
         file_writer_params.detector.sensor_material = detector[0].get_material()
         file_writer_params.detector.sensor_thickness = detector[0].get_thickness()
 
@@ -428,6 +499,7 @@ class LCLStreamer(StreamClass):
 
     def get_reader(self, image_data, **kwargs):
         from dials.array_family import flex
+
         from dxtbx.imageset import StreamReader
 
         image_data = tuple(
