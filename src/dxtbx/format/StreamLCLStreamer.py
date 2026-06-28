@@ -16,70 +16,6 @@ from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 from dxtbx.model.experiment_list import Experiment, ExperimentList
 
 
-def reflect_detector_for_display(d):
-    """Reflect the assembled detector about the lab xz-plane (y -> -y) and return
-    it as a flat root -> panel tree.
-
-    ``get_jungfrau_detector_*`` compose the panel frames from the psana geometry
-    the same way ``FormatXTCJungfrau`` does, which yields a global slow axis of
-    (0, +1, 0). That convention is correct for the on-disk ``FormatXTCJungfrau``
-    pathway, but the streamed data is written to NXmx and read back by
-    ``FormatNXmx``, whose display convention (shared with the working
-    ``StreamDectrisSimplonStreamV2`` reader, which builds its panel with slow axis
-    (0, -1, 0)) is the opposite vertical sense. Without this reflection the
-    assembled JF16M image renders upside down in dials.image_viewer.
-
-    A single *global* reflection is applied to every panel frame, so the whole
-    detector flips coherently. Flipping the pixel data per module instead tears the
-    image at every module boundary (the beam centre splits across the central
-    seam). The result is rebuilt as a flat root -> panel tree (matching the
-    ``StreamDectrisSimplonStreamV2`` shape) so that a 2-level reference geometry
-    pairs panel-with-panel under sync_geometry.
-    """
-    from dxtbx.model.detector import Detector
-
-    panels = []
-    children = []
-    for i, p in enumerate(d):
-        fast = p.get_fast_axis()
-        slow = p.get_slow_axis()
-        origin = p.get_origin()
-        panels.append(
-            {
-                "name": p.get_name(),
-                "type": p.get_type(),
-                "fast_axis": (fast[0], -fast[1], fast[2]),
-                "slow_axis": (slow[0], -slow[1], slow[2]),
-                "origin": (origin[0], -origin[1], origin[2]),
-                "image_size": tuple(p.get_image_size()),
-                "pixel_size": tuple(p.get_pixel_size()),
-                "trusted_range": tuple(p.get_trusted_range()),
-                "thickness": p.get_thickness(),
-                "material": p.get_material(),
-                "mu": p.get_mu(),
-                "gain": p.get_gain(),
-            }
-        )
-        children.append({"panel": i})
-
-    flipped = Detector.from_dict(
-        {
-            "panels": panels,
-            "hierarchy": {
-                "fast_axis": (1.0, 0.0, 0.0),
-                "slow_axis": (0.0, 1.0, 0.0),
-                "origin": (0.0, 0.0, 0.0),
-                "children": children,
-            },
-        }
-    )
-    # Detector.from_dict leaves the default SimplePxMmStrategy; carry over the
-    # ParallaxCorrectedPxMmStrategy each source panel already holds.
-    for src, dst in zip(d, flipped):
-        dst.set_px_mm_strategy(src.get_px_mm_strategy())
-    return flipped
-
-
 def get_jungfrau_detector_asic(file_content, wavelength):
     try:
         from PSCalib.SegGeometryStore import sgs
@@ -108,9 +44,10 @@ def get_jungfrau_detector_asic(file_content, wavelength):
         sub_basis = basis_from_geo(sub)
         root = sub
         root_basis = root_basis * sub_basis
-    t = root_basis.translation
-    distance = t[2]
-    root_basis.translation = col((t[0], t[1], -distance))
+    # Keep the psana root translation as-is: its z is already negative (downstream),
+    # which is the dxtbx/dials backend convention. (An earlier version negated z here,
+    # putting the detector on the wrong (+z) side; that was only made to look correct by
+    # a compensating reflect_detector_for_display, which has since been removed.)
 
     origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
     fast = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
@@ -177,7 +114,9 @@ def get_jungfrau_detector_asic(file_content, wavelength):
             p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, THICKNESS))
             p.set_gain(factor_kev_angstrom / wavelength)
             p.set_image_size((dim_fast // 4, dim_slow // 2))
-    return reflect_detector_for_display(d)
+    # Return the 3-level (root -> module groups -> ASIC panels) tree in the backend
+    # convention (slow (0, +1, 0) at downstream z < 0); the caller uses it as-is.
+    return d
 
 
 def get_jungfrau_detector_module(file_content, wavelength):
@@ -211,9 +150,10 @@ def get_jungfrau_detector_module(file_content, wavelength):
         sub_basis = basis_from_geo(sub)
         root = sub
         root_basis = root_basis * sub_basis
-    t = root_basis.translation
-    distance = t[2]
-    root_basis.translation = col((t[0], t[1], -distance))
+    # Keep the psana root translation as-is: its z is already negative (downstream),
+    # which is the dxtbx/dials backend convention. (An earlier version negated z here,
+    # putting the detector on the wrong (+z) side; that was only made to look correct by
+    # a compensating reflect_detector_for_display, which has since been removed.)
 
     origin = col((root_basis * col((0, 0, 0, 1)))[0:3])
     fast = col((root_basis * col((1, 0, 0, 1)))[0:3]) - origin
@@ -229,28 +169,37 @@ def get_jungfrau_detector_module(file_content, wavelength):
     pg0.set_local_frame(fast.elems, slow.elems, origin.elems)
     pg0.set_name("D%d" % (det_num))
 
-    # Now deal with modules
+    # Now deal with modules. Each module is a group holding a single full-module
+    # panel, so the constructed tree (root -> module groups -> panel) matches the
+    # 3-level shape of the refined reference geometries that sync_geometry pairs
+    # against. The tree is in the backend convention (slow (0, +1, 0) at downstream
+    # z < 0) and is used by the caller as-is (no display reflection).
     for module_num in range(len(root.get_list_of_children())):
         module = root.get_list_of_children()[module_num]
         module_basis = basis_from_geo(module)
         origin = col((module_basis * col((0, 0, 0, 1)))[0:3])
         fast = col((module_basis * col((1, 0, 0, 1)))[0:3]) - origin
         slow = col((module_basis * col((0, 1, 0, 1)))[0:3]) - origin
-        pg1 = pg0.add_panel()
+        pg1 = pg0.add_group()
         pg1.set_local_frame(fast.elems, slow.elems, origin.elems)
         pg1.set_name("D%dM%d" % (det_num, module_num))
 
-        pg1.set_pixel_size((PIXEL_SIZE, PIXEL_SIZE))
-        pg1.set_trusted_range(TRUSTED_RANGE)
+        # Identity-framed panel under the module group: the module placement lives
+        # on the group, so the panel's global frame equals the group frame.
+        p = pg1.add_panel()
+        p.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 0))
+        p.set_name("ARRAY_D%dM%d" % (det_num, module_num))
+        p.set_pixel_size((PIXEL_SIZE, PIXEL_SIZE))
+        p.set_trusted_range(TRUSTED_RANGE)
 
-        pg1.set_thickness(THICKNESS)  # mm
-        pg1.set_material(MATERIAL)
-        pg1.set_type("jungfrau")
-        pg1.set_mu(mu)
-        pg1.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, THICKNESS))
-        pg1.set_gain(factor_kev_angstrom / wavelength)
-        pg1.set_image_size((DIM_FAST, DIM_SLOW))
-    return reflect_detector_for_display(d)
+        p.set_thickness(THICKNESS)  # mm
+        p.set_material(MATERIAL)
+        p.set_type("jungfrau")
+        p.set_mu(mu)
+        p.set_px_mm_strategy(ParallaxCorrectedPxMmStrategy(mu, THICKNESS))
+        p.set_gain(factor_kev_angstrom / wavelength)
+        p.set_image_size((DIM_FAST, DIM_SLOW))
+    return d
 
 
 class LCLStreamer(StreamClass):
@@ -401,6 +350,15 @@ class LCLStreamer(StreamClass):
                     )
             else:
                 assert False
+            # The builders now return the correct backend convention directly:
+            # slow axis (0, +1, 0) at the true downstream distance (z < 0). No
+            # reflect_detector_for_display is applied on either path. A refined
+            # reference is already in that same convention, so when present it is
+            # synced onto the matching-depth constructed tree and used AS-IS.
+            # (A previous version built the placeholder on the wrong (+z) side and
+            # applied a compensating global reflection; that band-aid double-flipped
+            # the no-reference path into looking right but left a synced reference
+            # vertically mirrored in dials.image_viewer. Both have been removed.)
             if reference_experiment and sync_reference_geom:
                 sync_geometry(
                     reference_experiment[0].detector.hierarchy(),
