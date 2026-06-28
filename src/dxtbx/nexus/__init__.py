@@ -465,8 +465,15 @@ def get_dxtbx_detector(
         p.set_mu(mu)
         p.set_px_mm_strategy(px_mm)
 
-        if nxdata and nxdata.data_scale_factor and not nxdata.data_scale_factor.shape:
-            p.set_gain(1 / nxdata.data_scale_factor)
+        # A SCALAR data_scale_factor is carried as panel gain (downstream divides
+        # pixel/gain). A PER-IMAGE array cannot be expressed as a single panel gain,
+        # so it is left at 1.0 here and applied per frame in get_raw_data instead.
+        # Test scalar-ness (np.ndim == 0) before truthiness: bool() of a multi-element
+        # array raises ValueError, which would crash detector construction.
+        data_scale_factor = nxdata.data_scale_factor if nxdata is not None else None
+        is_scalar = data_scale_factor is not None and np.ndim(data_scale_factor) == 0
+        if is_scalar and data_scale_factor:
+            p.set_gain(1 / data_scale_factor)
 
     return detector
 
@@ -584,6 +591,27 @@ def get_raw_data(
             data = list(nxdata.values())[0]
     else:
         data = list(nxdata.values())[0]
+    # A per-image data_scale_factor (and optional data_offset) is applied here,
+    # per frame: NeXus corrected = (data + offset) * scaling_factor. A scalar
+    # data_scale_factor is instead carried as panel gain (see get_dxtbx_detector),
+    # so the two paths are mutually exclusive and the factor is never applied twice.
+    scale_factor = None
+    offset = 0.0
+    data_scale_factor = nxdata.data_scale_factor
+    if np.ndim(data_scale_factor) >= 1:
+        value = float(data_scale_factor[index])
+        # A unit factor is a no-op: skip it so already-photon data (e.g. Dectris,
+        # which still carries a per-frame data_scale_factor of 1.0) is returned
+        # verbatim, including its integer dtype, rather than promoted to float.
+        if value != 1.0:
+            scale_factor = value
+            data_offset = nxdata.data_offset
+            if data_offset is not None:
+                if np.ndim(data_offset) >= 1:
+                    offset = float(data_offset[index])
+                else:
+                    offset = float(data_offset)
+
     all_data = []
     sliced_outer = data[index]
     for module_slices in get_detector_module_slices(nxdetector):
@@ -593,5 +621,8 @@ def get_raw_data(
         data_as_flex.reshape(
             flex.grid(data_as_flex.all()[-2:])
         )  # handle 3 or 4 dimension arrays
+        if scale_factor is not None:
+            # Promote to flex.double; the scaled values are no longer integers.
+            data_as_flex = (data_as_flex.as_double() + offset) * scale_factor
         all_data.append(data_as_flex)
     return tuple(all_data)

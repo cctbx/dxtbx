@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-import numpy as np
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
+
 import zmq
 
 
@@ -172,7 +174,13 @@ class StreamClass(ABC):
         pass
 
     @abstractmethod
-    def handle_start_message(self, message, reference_experiment=None, sync_reference_geom=True, wavelength=None):
+    def handle_start_message(
+        self,
+        message,
+        reference_experiment=None,
+        sync_reference_geom=True,
+        wavelength=None,
+    ):
         """
         Convert a start message into
             1: file writer phil parameters
@@ -188,7 +196,20 @@ class StreamClass(ABC):
 
     def get_reader(self, image_data, **kwargs):
         from dials.array_family import flex
+
         from dxtbx.imageset import StreamReader
 
         image_data = flex.double(image_data)
         return StreamReader([image_data])
+
+    def get_data_scale_factor(self, wavelength: float) -> float:
+        """NeXus data_scale_factor for a frame at the given wavelength (Angstrom).
+
+        The archived pixel data is stored in the detector's native units; the
+        scale factor records what to multiply by on read to obtain photons
+        (NeXus: corrected = (data + offset) * scaling_factor). The base class
+        returns 1.0 (data is already in photons); detector APIs whose data is
+        not in photons (e.g. LCLStreamer, keV) override this. The caller supplies
+        the resolved wavelength so components never branch on API.
+        """
+        return 1.0

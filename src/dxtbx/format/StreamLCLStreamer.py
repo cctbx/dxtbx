@@ -7,7 +7,7 @@ import cbor2
 import numpy as np
 from PSCalib.GeometryAccess import GeometryAccess
 
-from cctbx import factor_kev_angstrom
+from cctbx import factor_ev_angstrom, factor_kev_angstrom
 from cctbx.eltbx import attenuation_coefficient
 from scitbx.matrix import col
 
@@ -246,7 +246,7 @@ class LCLStreamer(StreamClass):
         elif self.socket_library == "nng":
             # pynng recv() returns a bytes object directly, no copy parameter
             encoded_message = self.socket.recv()
-        message_type = encoded_message[:1]
+        # Strip the leading topic/type byte the wire prepends.
         encoded_message = encoded_message[1:]
         return encoded_message
 
@@ -262,12 +262,12 @@ class LCLStreamer(StreamClass):
         if "message_id" in message.keys():
             message["image_id"] = message.pop("message_id")
         if "shape" in message.keys():
-            if type(message["shape"]) == str:
+            if isinstance(message["shape"], str):
                 message["image_shape"] = tuple(map(int, message["shape"].split("x")))
         if "datatype" in message.keys():
             message["image_dtype"] = message.pop("datatype")
         if "data_collection_rate" in message.keys():
-            if type(message["data_collection_rate"]) == str:
+            if isinstance(message["data_collection_rate"], str):
                 message["data_collection_rate"] = float(
                     message["data_collection_rate"].split("Hz")[0]
                 )
@@ -397,8 +397,26 @@ class LCLStreamer(StreamClass):
             image_data = self._reshape_jungfrau_asic(image_data)
         else:
             image_data = self._reshape_jungfrau_module(image_data)
-        wavelength = message["photon_wavelength"]
-        return image_data, wavelength
+        return image_data, self._frame_wavelength(message)
+
+    def _frame_wavelength(self, message):
+        # LCLStreamer image messages carry the per-frame photon_energy (eV) but often
+        # leave photon_wavelength = 0, so prefer the energy and convert it to a
+        # wavelength (Angstrom); fall back to photon_wavelength if energy is absent.
+        photon_energy = message.get("photon_energy")
+        if photon_energy:
+            return factor_ev_angstrom / photon_energy
+        photon_wavelength = message.get("photon_wavelength")
+        return photon_wavelength if photon_wavelength else None
+
+    def get_data_scale_factor(self, wavelength: float) -> float:
+        # LCLStreamer Jungfrau pixels are deposited energy in keV. Photons are
+        # energy_keV / photon_energy_keV, where photon_energy_keV =
+        # factor_kev_angstrom / wavelength. So the NeXus data_scale_factor (the
+        # multiplier applied on read) is its reciprocal. The caller passes the
+        # resolved wavelength: the wire's per-frame photon_wavelength is unreliable
+        # (often 0), so the wavelength comes from the PHIL override / reference beam.
+        return wavelength / factor_kev_angstrom
 
     def _reshape_jungfrau_asic(self, image_data):
         # JF16M: (32 x 512 x 1024) -> (256 x 256 x 256)
@@ -416,17 +434,17 @@ class LCLStreamer(StreamClass):
         # Create output array with gaps
         output = np.zeros((n_modules, 514, 1030), dtype=image_data.dtype)
         for row in range(2):
-            for col in range(4):
+            for col_idx in range(4):
                 # Calculate source position (256x256 asic)
                 src_row_start = row * 256
                 src_row_end = (row + 1) * 256
-                src_col_start = col * 256
-                src_col_end = (col + 1) * 256
+                src_col_start = col_idx * 256
+                src_col_end = (col_idx + 1) * 256
 
                 # Calculate destination position (with 2 pixel gaps)
                 dst_row_start = src_row_start + 2 * row
                 dst_row_end = dst_row_start + 256
-                dst_col_start = src_col_start + 2 * col
+                dst_col_start = src_col_start + 2 * col_idx
                 dst_col_end = dst_col_start + 256
 
                 # Copy ASIC data
@@ -434,8 +452,8 @@ class LCLStreamer(StreamClass):
                     image_data[:, src_row_start:src_row_end, src_col_start:src_col_end]
                 )
 
-        for col in range(1, 4):
-            left_index = 256 * col + 2 * (col - 1) - 1
+        for col_idx in range(1, 4):
+            left_index = 256 * col_idx + 2 * (col_idx - 1) - 1
             right_index = left_index + 3
             left = output[:, :, left_index]
             right = output[:, :, right_index]
