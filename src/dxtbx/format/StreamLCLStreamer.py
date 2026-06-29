@@ -253,6 +253,12 @@ class LCLStreamer(StreamClass):
 
     def decode(self, encoded_message):
         message = cbor2.loads(encoded_message)
+        # LCLStreamer signals run-end with type "stop"; the rest of the system
+        # (ControlHub dispatch, finalize protocol) keys off the canonical "end".
+        # Normalize here at the reader boundary so no component carries the
+        # API-specific spelling.
+        if message.get("type") == "stop":
+            message["type"] = "end"
         # Translate the LCLStreamer wire-format run identifier to the internal
         # "run_id" the components consume. (Start messages carry "run_number",
         # image/end messages carry "run".)
