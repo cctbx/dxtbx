@@ -242,11 +242,7 @@ class LCLStreamer(StreamClass):
         # The message type withouit decoding.
         #   b"c" == control message
         #   b"m" == image message
-        if self.socket_library == "zmq":
-            encoded_message = self.socket.recv(copy=True)
-        elif self.socket_library == "nng":
-            # pynng recv() returns a bytes object directly, no copy parameter
-            encoded_message = self.socket.recv()
+        encoded_message = self.socket.recv(copy=True)
         # Strip the leading topic/type byte the wire prepends.
         encoded_message = encoded_message[1:]
         return encoded_message

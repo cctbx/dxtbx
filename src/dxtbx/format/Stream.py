@@ -131,33 +131,10 @@ class StreamClass(ABC):
                 else:
                     for address in self._addresses:
                         self.socket.bind(address)
-        elif socket_library == "nng":
-            import pynng
-
-            self.socket = pynng.Pull0()
-            self.socket_library = "nng"
-
-            if rcvbuf:
-                self.socket.recv_buffer_size = rcvbuf
-            if rcvhwm:
-                self.socket.recv_max_size = rcvhwm
-
-            if socket_mode == "connect":
-                if ports is None:
-                    self.socket.dial(self._address)
-                elif ports:
-                    for address in self._addresses:
-                        self.socket.dial(address)
-            elif socket_mode == "bind":
-                if ports is None:
-                    self.socket.listen(self._address)
-                else:
-                    for address in self._addresses:
-                        self.socket.listen(address)
         else:
             raise ValueError(
                 f"Invalid socket_library '{socket_library}'. "
-                + "Must be None, 'zeromq', 'zmq', '0mq', or 'nng'."
+                + "Must be None, 'zeromq', 'zmq', or '0mq'."
             )
 
     def close_socket(self):
