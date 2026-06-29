@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
 import cbor2
 import numpy as np
@@ -83,7 +83,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
     def __init__(
         self,
         port: Optional[int] = None,
-        ports: Optional[List[int]] = None,
         ip_address: Optional[str] = None,
         zmq_context: Optional[zmq.Context] = None,
         rcvhwm: Optional[int] = None,
@@ -92,7 +91,6 @@ class StreamDectrisSimplonStreamV2(StreamClass):
     ) -> None:
         super().__init__(
             port=port,
-            ports=ports,
             ip_address=ip_address,
             zmq_context=zmq_context,
             rcvhwm=rcvhwm,

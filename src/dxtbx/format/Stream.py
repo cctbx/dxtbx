@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 import zmq
 
@@ -77,7 +77,6 @@ class StreamClass(ABC):
     def __init__(
         self,
         port: Optional[int] = None,
-        ports: Optional[List[int]] = None,
         ip_address: Optional[str] = None,
         zmq_context: Optional[zmq.Context] = None,
         rcvhwm: Optional[int] = None,
@@ -86,21 +85,14 @@ class StreamClass(ABC):
     ) -> None:
         # A reader constructed without a ZeroMQ context is decoder-only: it
         # normalizes messages and holds no socket (port/ip are ignored). Live
-        # readers always PULL-connect to the source; ``ports`` connects to
-        # several source endpoints at once.
+        # readers always PULL-connect to the single source endpoint.
         if zmq_context is None:
             self._address = None
             self.socket = None
             return
 
-        if ports is None:
-            assert port and ip_address
-            self._address = format_address(ip_address, port)
-            addresses = [self._address]
-        else:
-            assert ip_address
-            self._addresses = [format_address(ip_address, port_i) for port_i in ports]
-            addresses = self._addresses
+        assert port and ip_address
+        self._address = format_address(ip_address, port)
 
         self.socket = zmq_context.socket(zmq.PULL)
         self.socket.setsockopt(zmq.LINGER, 0)
@@ -117,8 +109,7 @@ class StreamClass(ABC):
             self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
             self.socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 10)
             self.socket.setsockopt(zmq.TCP_KEEPALIVE_CNT, 3)
-        for address in addresses:
-            self.socket.connect(address)
+        self.socket.connect(self._address)
 
     def close_socket(self) -> None:
         self.socket.close()
