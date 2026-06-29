@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import bitshuffle
 import cbor2
@@ -16,8 +17,15 @@ from dxtbx.format.Stream import StreamClass
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy, Spectrum
 from dxtbx.model.experiment_list import Experiment, ExperimentList
 
+if TYPE_CHECKING:
+    import zmq
 
-def get_jungfrau_detector_asic(file_content, wavelength):
+    from libtbx.phil import scope_extract
+
+    from dxtbx.imageset import StreamReader
+
+
+def get_jungfrau_detector_asic(file_content: str, wavelength: float) -> Detector:
     try:
         from PSCalib.SegGeometryStore import sgs
     except ModuleNotFoundError:
@@ -120,7 +128,7 @@ def get_jungfrau_detector_asic(file_content, wavelength):
     return d
 
 
-def get_jungfrau_detector_module(file_content, wavelength):
+def get_jungfrau_detector_module(file_content: str, wavelength: float) -> Detector:
     """
     Copied from Fred Poitevin's work on FormatXTCJungfrau2M.py
     """
@@ -211,17 +219,17 @@ class LCLStreamer(StreamClass):
 
     def __init__(
         self,
-        port=None,
-        ports=None,
-        ip_address=None,
-        socket_library=None,
-        socket_type=None,
-        socket_mode=None,
-        zmq_context=None,
-        rcvhwm=None,
-        rcvbuf=None,
-        tcp_keepalive=False,
-    ):
+        port: Optional[int] = None,
+        ports: Optional[List[int]] = None,
+        ip_address: Optional[str] = None,
+        socket_library: Optional[str] = None,
+        socket_type: Optional[str] = None,
+        socket_mode: Optional[str] = None,
+        zmq_context: Optional[zmq.Context] = None,
+        rcvhwm: Optional[int] = None,
+        rcvbuf: Optional[int] = None,
+        tcp_keepalive: bool = False,
+    ) -> None:
         super().__init__(
             port=port,
             ports=ports,
@@ -237,7 +245,7 @@ class LCLStreamer(StreamClass):
         self.name = "LCLStreamer"
         self._split_modules = False
 
-    def recv(self, copy=True):
+    def recv(self, copy: bool = True) -> bytes:
         # The LCLStream adds a character at the beginning of the message to identify
         # The message type withouit decoding.
         #   b"c" == control message
@@ -247,7 +255,7 @@ class LCLStreamer(StreamClass):
         encoded_message = encoded_message[1:]
         return encoded_message
 
-    def decode(self, encoded_message):
+    def decode(self, encoded_message: bytes) -> Dict[str, Any]:
         message = cbor2.loads(encoded_message)
         # LCLStreamer signals run-end with type "stop"; the rest of the system
         # (ControlHub dispatch, finalize protocol) keys off the canonical "end".
@@ -286,11 +294,11 @@ class LCLStreamer(StreamClass):
 
     def handle_start_message(
         self,
-        message,
-        reference_experiment=None,
-        sync_reference_geom=True,
-        wavelength=None,
-    ):
+        message: Dict[str, Any],
+        reference_experiment: Optional[ExperimentList] = None,
+        sync_reference_geom: bool = True,
+        wavelength: Optional[float] = None,
+    ) -> Tuple[scope_extract, ExperimentList]:
         from dials.command_line.stills_process import sync_geometry
 
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
@@ -396,7 +404,9 @@ class LCLStreamer(StreamClass):
 
         return file_writer_params, reference_experiment
 
-    def _decode_image(self, message, image_shape, image_dtype):
+    def _decode_image(
+        self, message: Dict[str, Any], image_shape: Any, image_dtype: Any
+    ) -> np.ndarray:
         # A gap marker carries no detector payload: the frame was missing/damaged at the
         # source, and LCLStreamer emitted a "missing_data" marker (no compressed_data)
         # rather than drop the event. Synthesize a fully-masked frame of the expected
@@ -419,7 +429,9 @@ class LCLStreamer(StreamClass):
             return self._reshape_jungfrau_asic(image_data)
         return self._reshape_jungfrau_module(image_data)
 
-    def get_data(self, message, **kwargs):
+    def get_data(
+        self, message: Dict[str, Any], **kwargs: Any
+    ) -> Tuple[np.ndarray, Optional[float]]:
         image_data = self._decode_image(
             message, kwargs["image_shape"], kwargs["image_dtype"]
         )
@@ -429,7 +441,13 @@ class LCLStreamer(StreamClass):
         # spectrum decode it once via get_frame_data instead.
         return image_data, self.get_wavelength(message)
 
-    def get_frame_data(self, message, image_shape=None, image_dtype=None, calib=None):
+    def get_frame_data(
+        self,
+        message: Dict[str, Any],
+        image_shape: Any = None,
+        image_dtype: Any = None,
+        calib: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[np.ndarray, Optional[float], Optional[Spectrum], Optional[np.ndarray]]:
         # Single-decode entry point for components: decompress the main image AND the
         # spectrometer array exactly once, then derive every per-frame model from
         # them. Returns (image_data, wavelength, spectrum, spectrometer_image). Avoids
@@ -453,7 +471,12 @@ class LCLStreamer(StreamClass):
         wavelength = self._resolve_wavelength(message, spectrum, calib)
         return image_data, wavelength, spectrum, spectrometer_image
 
-    def _resolve_wavelength(self, message, spectrum, calib):
+    def _resolve_wavelength(
+        self,
+        message: Dict[str, Any],
+        spectrum: Optional[Spectrum],
+        calib: Dict[str, Any],
+    ) -> Optional[float]:
         # Wavelength priority (mirrors FormatXTC._beam), given an already-built
         # spectrum so the spectrometer is not decoded again:
         #   1. a calibrated per-shot spectrum (its intensity-weighted wavelength),
@@ -481,7 +504,12 @@ class LCLStreamer(StreamClass):
             return wavelength
         return None
 
-    def get_wavelength_candidates(self, message, spectrum=None, **calib):
+    def get_wavelength_candidates(
+        self,
+        message: Dict[str, Any],
+        spectrum: Optional[Spectrum] = None,
+        **calib: Any,
+    ) -> Dict[str, float]:
         # The raw per-source wavelength estimates (Angstrom) that _resolve_wavelength
         # picks between, computed every frame so the losers can be archived next to the
         # resolved incident_wavelength for diagnostics. These are the uncorrected
@@ -500,7 +528,7 @@ class LCLStreamer(StreamClass):
             candidates["pv"] = photon_wavelength
         return candidates
 
-    def get_wavelength(self, message, **calib):
+    def get_wavelength(self, message: Dict[str, Any], **calib: Any) -> Optional[float]:
         spectrum = self.get_spectrum(
             message,
             spectrum_eV_per_pixel=calib.get("spectrum_eV_per_pixel"),
@@ -508,7 +536,7 @@ class LCLStreamer(StreamClass):
         )
         return self._resolve_wavelength(message, spectrum, calib)
 
-    def _decode_spectrometer(self, message):
+    def _decode_spectrometer(self, message: Dict[str, Any]) -> Optional[np.ndarray]:
         # Decompress the optional per-frame spectrometer array (1D trace or 2D
         # image), compressed bitshuffle-lz4 exactly like the main detector frame.
         # Returns a numpy array, or None when no spectrometer rode this message.
@@ -524,7 +552,12 @@ class LCLStreamer(StreamClass):
             block_size=2**12,
         )
 
-    def _build_spectrum(self, array, spectrum_eV_per_pixel, spectrum_eV_offset):
+    def _build_spectrum(
+        self,
+        array: Optional[np.ndarray],
+        spectrum_eV_per_pixel: Optional[float],
+        spectrum_eV_offset: Optional[float],
+    ) -> Optional[Spectrum]:
         # Build a dxtbx Spectrum from an already-decoded spectrometer array. Needs the
         # eV calibration; without it the raw pixels cannot be placed on an energy
         # axis, so return None and let the wavelength resolver fall back.
@@ -551,15 +584,19 @@ class LCLStreamer(StreamClass):
         return Spectrum(flex.double(energies_eV), flex.double(trace))
 
     def get_spectrum(
-        self, message, spectrum_eV_per_pixel=None, spectrum_eV_offset=None, **kwargs
-    ):
+        self,
+        message: Dict[str, Any],
+        spectrum_eV_per_pixel: Optional[float] = None,
+        spectrum_eV_offset: Optional[float] = None,
+        **kwargs: Any,
+    ) -> Optional[Spectrum]:
         return self._build_spectrum(
             self._decode_spectrometer(message),
             spectrum_eV_per_pixel,
             spectrum_eV_offset,
         )
 
-    def get_spectrometer_image(self, message):
+    def get_spectrometer_image(self, message: Dict[str, Any]) -> Optional[np.ndarray]:
         # Archive the full 2D spectrometer pattern as a second image stream. A 1D
         # trace returns None: its full distribution is already stored on NXbeam by
         # get_spectrum, so there is nothing extra to keep at native dimensionality.
@@ -577,7 +614,7 @@ class LCLStreamer(StreamClass):
         # (often 0), so the wavelength comes from the PHIL override / reference beam.
         return wavelength / factor_kev_angstrom
 
-    def _reshape_jungfrau_asic(self, image_data):
+    def _reshape_jungfrau_asic(self, image_data: np.ndarray) -> np.ndarray:
         # JF16M: (32 x 512 x 1024) -> (256 x 256 x 256)
         n_modules = image_data.shape[0]
         # Reshape to (n_modules, 2, 256, 4, 256)
@@ -587,7 +624,7 @@ class LCLStreamer(StreamClass):
         # Reshape to (n_modules * 8, 256, 256)
         return transposed.reshape(n_modules * 8, 256, 256)
 
-    def _reshape_jungfrau_module(self, image_data):
+    def _reshape_jungfrau_module(self, image_data: np.ndarray) -> np.ndarray:
         # JF16M: (32 x 512 x 1024) -> (32 x 514 x 1030)
         n_modules = image_data.shape[0]
         # Create output array with gaps
@@ -632,7 +669,7 @@ class LCLStreamer(StreamClass):
 
         return output
 
-    def get_reader(self, image_data, **kwargs):
+    def get_reader(self, image_data: np.ndarray, **kwargs: Any) -> StreamReader:
         from dials.array_family import flex
 
         from dxtbx.imageset import StreamReader

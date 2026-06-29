@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import cbor2
 import numpy as np
@@ -9,8 +10,15 @@ from dectris.compression import decompress
 from dxtbx.format.Stream import StreamClass
 from dxtbx.model.experiment_list import Experiment, ExperimentList
 
+if TYPE_CHECKING:
+    import zmq
 
-def decode_multi_dim_array(tag, column_major):
+    from libtbx.phil import scope_extract
+
+    from dxtbx.imageset import StreamReader
+
+
+def decode_multi_dim_array(tag: cbor2.CBORTag, column_major: bool) -> np.ndarray:
     dimensions, contents = tag.value
     if isinstance(contents, list):
         array = np.empty((len(contents),), dtype=object)
@@ -22,13 +30,13 @@ def decode_multi_dim_array(tag, column_major):
     return array.reshape(dimensions, order="F" if column_major else "C")
 
 
-def decode_typed_array(tag, dtype):
+def decode_typed_array(tag: cbor2.CBORTag, dtype: Any) -> np.ndarray:
     if not isinstance(tag.value, bytes):
         raise cbor2.CBORDecodeValueError("expected byte string in typed array")
     return np.frombuffer(tag.value, dtype=dtype)
 
 
-def decode_dectris_compression(tag):
+def decode_dectris_compression(tag: cbor2.CBORTag) -> bytes:
     algorithm, elem_size, encoded = tag.value
     return decompress(encoded, algorithm, elem_size=elem_size)
 
@@ -63,7 +71,7 @@ tag_decoders = {
 }
 
 
-def tag_hook(arg0, arg1=None):
+def tag_hook(arg0: Any, arg1: Any = None) -> Any:
     # cbor2 >= 6 calls tag_hook(tag, immutable); older cbor2 calls
     # tag_hook(decoder, tag). Select whichever argument is the CBORTag.
     tag = arg0 if isinstance(arg0, cbor2.CBORTag) else arg1
@@ -74,17 +82,17 @@ def tag_hook(arg0, arg1=None):
 class StreamDectrisSimplonStreamV2(StreamClass):
     def __init__(
         self,
-        port=None,
-        ports=None,
-        ip_address=None,
-        socket_library=None,
-        socket_type=None,
-        socket_mode=None,
-        zmq_context=None,
-        rcvhwm=None,
-        rcvbuf=None,
-        tcp_keepalive=False,
-    ):
+        port: Optional[int] = None,
+        ports: Optional[List[int]] = None,
+        ip_address: Optional[str] = None,
+        socket_library: Optional[str] = None,
+        socket_type: Optional[str] = None,
+        socket_mode: Optional[str] = None,
+        zmq_context: Optional[zmq.Context] = None,
+        rcvhwm: Optional[int] = None,
+        rcvbuf: Optional[int] = None,
+        tcp_keepalive: bool = False,
+    ) -> None:
         super().__init__(
             port=port,
             ports=ports,
@@ -99,7 +107,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         )
         self.name = "DectrisSimplonStreamV2"
 
-    def decode(self, encoded_message):
+    def decode(self, encoded_message: bytes) -> Dict[str, Any]:
         # cbor2 >= 6 returns an immutable frozendict when the message is wrapped
         # in the self-describe tag (55799); rebuild a mutable dict so the
         # in-place updates below (and downstream) work as they did before.
@@ -120,16 +128,16 @@ class StreamDectrisSimplonStreamV2(StreamClass):
 
         return message
 
-    def recv(self, copy=True):
+    def recv(self, copy: bool = True) -> bytes:
         return self.socket.recv(copy=copy)
 
     def handle_start_message(
         self,
-        message,
-        reference_experiment=None,
-        sync_reference_geom=True,
-        wavelength=None,
-    ):
+        message: Dict[str, Any],
+        reference_experiment: Optional[ExperimentList] = None,
+        sync_reference_geom: bool = True,
+        wavelength: Optional[float] = None,
+    ) -> Tuple[scope_extract, ExperimentList]:
         from dials.command_line.stills_process import sync_geometry
 
         from dxtbx.format.nxmx_writer import phil_scope as nxmx_writer_phil_scope
@@ -291,11 +299,13 @@ class StreamDectrisSimplonStreamV2(StreamClass):
         )
         return file_writer_params, reference_experiment
 
-    def get_data(self, message, **kwargs):
+    def get_data(
+        self, message: Dict[str, Any], **kwargs: Any
+    ) -> Tuple[np.ndarray, Optional[float]]:
         image_data = message["data"]["threshold_1"]
         return image_data, None
 
-    def get_reader(self, image_data, **kwargs):
+    def get_reader(self, image_data: np.ndarray, **kwargs: Any) -> StreamReader:
         from dials.array_family import flex
 
         from dxtbx.imageset import StreamReader

@@ -2,9 +2,15 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import zmq
+
+if TYPE_CHECKING:
+    from libtbx.phil import scope_extract
+
+    from dxtbx.imageset import StreamReader
+    from dxtbx.model import ExperimentList
 
 
 def format_address(
@@ -70,17 +76,17 @@ def format_address(
 class StreamClass(ABC):
     def __init__(
         self,
-        port=None,
-        ports=None,
-        ip_address=None,
-        socket_library=None,
-        socket_type=None,
-        socket_mode=None,
-        zmq_context=None,
-        rcvhwm=None,
-        rcvbuf=None,
-        tcp_keepalive=False,
-    ):
+        port: Optional[int] = None,
+        ports: Optional[List[int]] = None,
+        ip_address: Optional[str] = None,
+        socket_library: Optional[str] = None,
+        socket_type: Optional[str] = None,
+        socket_mode: Optional[str] = None,
+        zmq_context: Optional[zmq.Context] = None,
+        rcvhwm: Optional[int] = None,
+        rcvbuf: Optional[int] = None,
+        tcp_keepalive: bool = False,
+    ) -> None:
         if socket_mode == "connect":
             if ports is None:
                 assert port and ip_address
@@ -137,7 +143,7 @@ class StreamClass(ABC):
                 + "Must be None, 'zeromq', 'zmq', or '0mq'."
             )
 
-    def close_socket(self):
+    def close_socket(self) -> None:
         self.socket.close()
 
     @abstractmethod
@@ -146,18 +152,18 @@ class StreamClass(ABC):
         pass
 
     @abstractmethod
-    def decode(self, encoded_message) -> dict:
+    def decode(self, encoded_message: bytes) -> Dict[str, Any]:
         """Decode the message"""
         pass
 
     @abstractmethod
     def handle_start_message(
         self,
-        message,
-        reference_experiment=None,
-        sync_reference_geom=True,
-        wavelength=None,
-    ):
+        message: Dict[str, Any],
+        reference_experiment: Optional[ExperimentList] = None,
+        sync_reference_geom: bool = True,
+        wavelength: Optional[float] = None,
+    ) -> Tuple[scope_extract, ExperimentList]:
         """
         Convert a start message into
             1: file writer phil parameters
@@ -167,11 +173,13 @@ class StreamClass(ABC):
         pass
 
     @abstractmethod
-    def get_data(self, message, **kwargs):
+    def get_data(
+        self, message: Dict[str, Any], **kwargs: Any
+    ) -> Tuple[Any, Optional[float]]:
         """Convert an image message to a numpy array"""
         pass
 
-    def get_reader(self, image_data, **kwargs):
+    def get_reader(self, image_data: Any, **kwargs: Any) -> StreamReader:
         from dials.array_family import flex
 
         from dxtbx.imageset import StreamReader
