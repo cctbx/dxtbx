@@ -4,7 +4,7 @@ import datetime
 from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 import bitshuffle
-import cbor2
+import cbor
 import numpy as np
 from PSCalib.GeometryAccess import GeometryAccess
 
@@ -250,7 +250,12 @@ class LCLStreamer(StreamClass):
         return memoryview(frame)[1:]
 
     def decode(self, encoded_message: bytes) -> Dict[str, Any]:
-        message = cbor2.loads(encoded_message)
+        # The LCLStreamer image message carries the whole ~60 MB compressed frame as a
+        # single CBOR byte string. cbor2's decoder is O(n^2) on a large byte string
+        # (~14 s/frame at 60 MB), so decode with the standalone `cbor` C implementation
+        # (~35 ms/frame) -- CBOR is a standard wire format, so it reads the cbor2-encoded
+        # message identically. cbor2 is kept for the Dectris reader (its tag_hook path).
+        message = cbor.loads(encoded_message)
         # LCLStreamer signals run-end with type "stop"; the rest of the system
         # (ControlHub dispatch, finalize protocol) keys off the canonical "end".
         # Normalize here at the reader boundary so no component carries the
