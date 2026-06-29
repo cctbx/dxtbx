@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import logging
 import os
 
 import h5py
 import numpy as np
 
+from cctbx import factor_ev_angstrom
+
 from dxtbx.format.nxmx_writer import NXmxWriter, get_compression
+
+logger = logging.getLogger(__name__)
 
 
 def compress_with_hdf5_filters(data, params):
@@ -52,6 +57,15 @@ class NXmxStreamWriter(NXmxWriter):
         # run is aborted before finalize.
         self.scale_factor_dset = None
         self.wavelength_dset = None
+        # Optional SPARSE second image stream: the raw 2D spectrometer images, stored
+        # under /entry/spectrum alongside a per-entry image_id index. Only frames that
+        # carry a real reading append, so this stream is shorter than the detector
+        # stream and is correlated back by image_id, not by position.
+        self.spectrum_group = None
+        self.spectrum_dset = None
+        self.spectrum_index_dset = None
+        self.spectrum_shape = None
+        self.spectrum_dtype = None
 
     def __call__(self, experiments=None, imageset=None):
         """
@@ -89,6 +103,7 @@ class NXmxStreamWriter(NXmxWriter):
         sort_values=None,
         data_scale_factors=None,
         incident_wavelengths=None,
+        incident_spectra=None,
     ):
         """
         This method is used by the control to link together the data files written
@@ -129,6 +144,7 @@ class NXmxStreamWriter(NXmxWriter):
         layout = h5py.VirtualLayout(shape=total_shape, dtype=self.params.dtype)
         ordered_scale_factors = []
         ordered_wavelengths = []
+        ordered_spectra = []
         if sort_values is None:
             start = 0
             for file_index, (data_file_name, n_images) in enumerate(data_file_names):
@@ -143,6 +159,8 @@ class NXmxStreamWriter(NXmxWriter):
                     ordered_scale_factors.extend(data_scale_factors[file_index])
                 if incident_wavelengths is not None:
                     ordered_wavelengths.extend(incident_wavelengths[file_index])
+                if incident_spectra is not None:
+                    ordered_spectra.extend(incident_spectra[file_index])
         else:
             # Create list of (file_path, local_index, sort_value, n_images, scale,
             # wavelength) for all images so the per-frame metadata is carried through
@@ -162,6 +180,11 @@ class NXmxStreamWriter(NXmxWriter):
                         if incident_wavelengths is not None
                         else None
                     )
+                    spectrum = (
+                        incident_spectra[file_index][local_index]
+                        if incident_spectra is not None
+                        else None
+                    )
                     all_images.append(
                         (
                             data_file_name,
@@ -170,6 +193,7 @@ class NXmxStreamWriter(NXmxWriter):
                             n_images,
                             scale,
                             wavelength,
+                            spectrum,
                         )
                     )
 
@@ -184,6 +208,7 @@ class NXmxStreamWriter(NXmxWriter):
                 n_images,
                 scale,
                 wavelength,
+                spectrum,
             ) in enumerate(all_images):
                 layout[virtual_index] = h5py.VirtualSource(
                     source_name[file_path],
@@ -193,6 +218,7 @@ class NXmxStreamWriter(NXmxWriter):
                 )[local_index]
                 ordered_scale_factors.append(scale)
                 ordered_wavelengths.append(wavelength)
+                ordered_spectra.append(spectrum)
 
         # Create the virtual dataset
         self.data_group = self.handle["entry"].create_group("data")
@@ -202,11 +228,58 @@ class NXmxStreamWriter(NXmxWriter):
         self.data_group.attrs["signal"] = "data_000001"
         self.handle.create_virtual_dataset("/entry/data/data_000001", layout)
 
-        self.write_per_frame_metadata(ordered_scale_factors, ordered_wavelengths)
+        self.write_per_frame_metadata(
+            ordered_scale_factors, ordered_wavelengths, ordered_spectra
+        )
+        self.handle.flush()
+
+    def write_spectrum_master(
+        self, spectrum_file_names, spectrum_image_ids, spectrum_shape, spectrum_dtype
+    ):
+        """Build the master's sparse /entry/spectrum VDS over the per-archiver files.
+
+        spectrum_file_names: list of (data_file_path, n_spectrum_images) per archiver.
+        spectrum_image_ids: list-of-lists of source image_ids, aligned with
+            spectrum_file_names and concatenated in the same order as the VDS so the
+            image_id index correlates each virtual spectrum frame to its detector frame.
+
+        Sparse and unsorted by design: nothing reads this stream positionally against
+        the detector frames, so it is concatenated in file order and correlated by
+        image_id. Skipped entirely when no spectrometer images were archived.
+        """
+        total = sum(n for _, n in spectrum_file_names)
+        if total == 0:
+            return
+        spectrum_shape = tuple(int(n) for n in spectrum_shape)
+        dtype = np.dtype(spectrum_dtype)
+        master_dir = os.path.dirname(self.params.output_file)
+        layout = h5py.VirtualLayout(shape=(total, *spectrum_shape), dtype=dtype)
+        start = 0
+        for data_file_name, n_images in spectrum_file_names:
+            if n_images == 0:
+                continue
+            # Basename relative to the master dir, same rule as the primary VDS, so the
+            # master + data files relocate together.
+            layout[start : start + n_images] = h5py.VirtualSource(
+                os.path.relpath(data_file_name, master_dir),
+                "/entry/spectrum/data_000001",
+                shape=(n_images, *spectrum_shape),
+                dtype=dtype,
+            )
+            start += n_images
+        group = self.handle["entry"].create_group("spectrum")
+        group.attrs["NX_class"] = "NXdata"
+        group.attrs["signal"] = "data_000001"
+        self.handle.create_virtual_dataset("/entry/spectrum/data_000001", layout)
+        all_ids = [image_id for ids in spectrum_image_ids for image_id in ids]
+        group.create_dataset("image_id", data=np.asarray(all_ids, dtype="i8"))
         self.handle.flush()
 
     def write_per_frame_metadata(
-        self, scale_factors: list[float], wavelengths: list[float]
+        self,
+        scale_factors: list[float],
+        wavelengths: list[float],
+        spectra: list | None = None,
     ) -> None:
         """Write the per-frame data_scale_factor and incident_wavelength datasets.
 
@@ -237,6 +310,89 @@ class NXmxStreamWriter(NXmxWriter):
                 "incident_wavelength", data=np.asarray(wavelengths, dtype="f8")
             )
             beam["incident_wavelength"].attrs["units"] = "angstrom"
+            # Per-shot incident spectrum, when present, rides alongside the scalar.
+            self._write_incident_spectrum_variant(beam, spectra)
+
+    def _write_incident_spectrum_variant(self, beam, spectra) -> None:
+        """Write the per-shot 1D incident spectrum as the incident_wavelength variant.
+
+        The scalar incident_wavelength (already written) stays the per-frame weighted
+        wavelength; this adds the full distribution as incident_wavelength_1Dspectrum
+        (N, n_channels) + _weights with a variant attr, mirroring nxmx_writer.add_beams
+        so dxtbx/nexus rebuilds a dxtbx.model.Spectrum on read.
+
+        Partial coverage is preserved (consistent with the no-drop principle): present
+        frames write their real spectrum; frames missing a reading get a placeholder
+        row (the shared energy axis with flat unit weights -- a valid but clearly
+        non-physical Spectrum that does not perturb the beam wavelength, which comes
+        from the scalar variant) and are flagged in incident_wavelength_1Dspectrum_present.
+        A flat row is used rather than NaN because the Spectrum reader asserts a
+        positive summed weight; the present mask is how a consumer tells real from
+        synthetic. Only a ragged run (present frames with differing channel counts) is
+        skipped, with a loud warning.
+        """
+        present = [spectrum is not None for spectrum in (spectra or [])]
+        if not any(present):
+            return
+        first = next(spectrum for spectrum in spectra if spectrum is not None)
+        n_channels = len(first["weights"])
+        if any(
+            spectrum is not None and len(spectrum["weights"]) != n_channels
+            for spectrum in spectra
+        ):
+            logger.warning(
+                "Per-shot spectra have varying channel counts; skipping the "
+                "incident_wavelength_1Dspectrum variant for this run."
+            )
+            return
+        # The reader stores wavelengths and converts back to energies, so convert the
+        # archived energies_eV to wavelengths (Angstrom) here, as nxmx_writer does.
+        # Present frames share one calibration, so a missing frame reuses that axis
+        # with flat unit weights.
+        ref_wavelengths = factor_ev_angstrom / np.asarray(
+            first["energies_eV"], dtype="f8"
+        )
+        rows_x, rows_y = [], []
+        for spectrum in spectra:
+            if spectrum is not None:
+                rows_x.append(
+                    factor_ev_angstrom / np.asarray(spectrum["energies_eV"], dtype="f8")
+                )
+                rows_y.append(np.asarray(spectrum["weights"], dtype="f8"))
+            else:
+                rows_x.append(ref_wavelengths)
+                rows_y.append(np.ones(n_channels, dtype="f8"))
+        spectra_x = np.array(rows_x, dtype="f8")
+        spectra_y = np.array(rows_y, dtype="f8")
+        present_mask = np.array(present, dtype="u1")
+        beam.create_dataset(
+            "incident_wavelength_1Dspectrum",
+            spectra_x.shape,
+            data=spectra_x,
+            dtype="f8",
+        )
+        beam.create_dataset(
+            "incident_wavelength_1Dspectrum_weights",
+            spectra_y.shape,
+            data=spectra_y,
+            dtype="f8",
+        )
+        beam.create_dataset(
+            "incident_wavelength_1Dspectrum_present",
+            present_mask.shape,
+            data=present_mask,
+            dtype="u1",
+        )
+        beam["incident_wavelength_1Dspectrum"].attrs["units"] = "angstrom"
+        beam["incident_wavelength"].attrs["variant"] = "incident_wavelength_1Dspectrum"
+        n_present = int(present_mask.sum())
+        if n_present < len(present):
+            logger.info(
+                "Per-shot 1D spectra: %d of %d frames present; missing frames carry a "
+                "placeholder row flagged in incident_wavelength_1Dspectrum_present.",
+                n_present,
+                len(present),
+            )
 
     def initialize_dataset(self):
         if self.data_group is None:
@@ -315,3 +471,52 @@ class NXmxStreamWriter(NXmxWriter):
             self.dset[-1:] = image_data
 
         self.image_count += 1
+
+    def initialize_spectrum_dataset(self, spectrum_shape, spectrum_dtype):
+        """Lazily create the sparse /entry/spectrum NXdata group on first append.
+
+        Created only when a run actually carries 2D spectrometer images, so a
+        spectrum-free run (e.g. Dectris) never grows an /entry/spectrum group and its
+        file stays byte-for-byte identical to the pre-feature output. Sibling image_id
+        dataset records which detector frame each stored spectrum belongs to.
+        """
+        self.spectrum_shape = tuple(int(n) for n in spectrum_shape)
+        self.spectrum_dtype = np.dtype(spectrum_dtype)
+        group = self.handle["entry"].create_group("spectrum")
+        group.attrs["NX_class"] = "NXdata"
+        group.attrs["signal"] = "data_000001"
+        self.spectrum_group = group
+        self.spectrum_dset = group.create_dataset(
+            "data_000001",
+            (0, *self.spectrum_shape),
+            maxshape=(None, *self.spectrum_shape),
+            chunks=(1, *self.spectrum_shape),
+            dtype=self.spectrum_dtype,
+            compression=get_compression(self.params.compression),
+        )
+        self.spectrum_index_dset = group.create_dataset(
+            "image_id", (0,), maxshape=(None,), dtype="i8"
+        )
+
+    def append_spectrum_image(
+        self, image_data, image_id, spectrum_shape, spectrum_dtype, compressed=True
+    ):
+        """Append one sparse 2D spectrometer image (and its source image_id).
+
+        Called only for frames that carry a real reading, so this stream is shorter
+        than the detector stream; the image_id index lets a reader correlate each
+        stored spectrum back to its detector frame without positional alignment.
+        """
+        if self.spectrum_dset is None:
+            self.initialize_spectrum_dataset(spectrum_shape, spectrum_dtype)
+        current_size = self.spectrum_dset.shape[0]
+        self.spectrum_dset.resize(current_size + 1, axis=0)
+        if compressed:
+            chunk_index = (current_size,) + (0,) * len(self.spectrum_shape)
+            self.spectrum_dset.id.write_direct_chunk(
+                chunk_index, image_data, filter_mask=0
+            )
+        else:
+            self.spectrum_dset[-1:] = image_data
+        self.spectrum_index_dset.resize(current_size + 1, axis=0)
+        self.spectrum_index_dset[current_size] = image_id

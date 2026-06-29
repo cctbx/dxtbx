@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Tuple, Union
 
 import zmq
 
@@ -213,3 +213,67 @@ class StreamClass(ABC):
         the resolved wavelength so components never branch on API.
         """
         return 1.0
+
+    def get_wavelength(self, message: dict, **calib: Any) -> Optional[float]:
+        """Resolve the per-frame wavelength (Angstrom) from a decoded image message.
+
+        This is the single authoritative wavelength resolver: every API-specific
+        case (a per-shot spectrum, an eBeam photon energy, a wavelength PV, a
+        configured fallback) is handled here so components make one call and never
+        branch on which detector API is in use. ``calib`` carries the optional PHIL
+        knobs (``spectrum_eV_per_pixel``, ``spectrum_eV_offset``,
+        ``wavelength_offset``, ``wavelength_scale``, ``wavelength_fallback``).
+
+        Base behavior: no per-frame wavelength (APIs that carry wavelength on the
+        start message return None here, leaving the reference-beam wavelength in
+        place). Readers whose image messages carry per-frame energy/spectrum
+        override this with their fallback chain.
+        """
+        return None
+
+    def get_spectrum(self, message: dict, **calib: Any) -> Optional[Any]:
+        """Build a ``dxtbx.model.Spectrum`` for this frame, or None if unavailable.
+
+        Base behavior: no per-frame spectrum. Readers whose image messages carry a
+        spectrometer trace (or a 2D spectrometer image to collapse) override this.
+        ``calib`` carries the spectrometer calibration PHIL (``spectrum_eV_per_pixel``,
+        ``spectrum_eV_offset``).
+        """
+        return None
+
+    def get_spectrometer_image(self, message: dict) -> Optional[Any]:
+        """Return the raw per-frame spectrometer array (a 2D detector image) to archive
+        as a second image stream, or None.
+
+        Base behavior: none. Readers override this when the API carries a 2D
+        spectrometer image whose full native-dimensionality pattern must be stored
+        alongside the main detector frame (the 1D collapse used for the wavelength is
+        a separate concern handled by get_spectrum). A 1D spectrometer trace returns
+        None here because it is already preserved on NXbeam by the get_spectrum path.
+        """
+        return None
+
+    def get_frame_data(
+        self,
+        message: dict,
+        image_shape: Any = None,
+        image_dtype: Any = None,
+        calib: Optional[dict] = None,
+    ) -> Tuple[Any, Optional[float], Optional[Any], Optional[Any]]:
+        """Single per-frame entry point returning
+        ``(image_data, wavelength, spectrum, spectrometer_image)``.
+
+        Components call this once per frame so a reader can decode its payloads a
+        single time and return mutually-consistent models. ``calib`` is the optional
+        wavelength/spectrum PHIL dict. Base composition (for readers with no
+        spectrometer) simply composes the individual accessors; readers that carry a
+        spectrometer override this to decode it once.
+        """
+        calib = calib or {}
+        image_data, _ = self.get_data(
+            message, image_shape=image_shape, image_dtype=image_dtype
+        )
+        wavelength = self.get_wavelength(message, **calib)
+        spectrum = self.get_spectrum(message, **calib)
+        spectrometer_image = self.get_spectrometer_image(message)
+        return image_data, wavelength, spectrum, spectrometer_image

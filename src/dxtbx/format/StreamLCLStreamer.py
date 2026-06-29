@@ -9,10 +9,11 @@ from PSCalib.GeometryAccess import GeometryAccess
 
 from cctbx import factor_ev_angstrom, factor_kev_angstrom
 from cctbx.eltbx import attenuation_coefficient
+from scitbx.array_family import flex
 from scitbx.matrix import col
 
 from dxtbx.format.Stream import StreamClass
-from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
+from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy, Spectrum
 from dxtbx.model.experiment_list import Experiment, ExperimentList
 
 
@@ -264,6 +265,14 @@ class LCLStreamer(StreamClass):
         if "shape" in message.keys():
             if isinstance(message["shape"], str):
                 message["image_shape"] = tuple(map(int, message["shape"].split("x")))
+        # The optional per-frame spectrometer array (1D trace or 2D image) carries
+        # its own shape string (e.g. "2048" or "512x1024"); normalize it to a tuple
+        # so get_spectrum can decompress it. Absent for streams with no spectrometer.
+        if "spectrometer_shape" in message.keys():
+            if isinstance(message["spectrometer_shape"], str):
+                message["spectrometer_shape"] = tuple(
+                    map(int, message["spectrometer_shape"].split("x"))
+                )
         if "datatype" in message.keys():
             message["image_dtype"] = message.pop("datatype")
         if "data_collection_rate" in message.keys():
@@ -385,29 +394,148 @@ class LCLStreamer(StreamClass):
 
         return file_writer_params, reference_experiment
 
-    def get_data(self, message, **kwargs):
+    def _decode_image(self, message, image_shape, image_dtype):
+        # Decompress + reshape the main detector frame (bitshuffle-lz4). Factored so
+        # get_data and the single-decode get_frame_data share one implementation.
         image_data = bitshuffle.decompress_lz4(
             np.frombuffer(message["compressed_data"], dtype=np.uint8),
-            shape=kwargs["image_shape"],
-            dtype=np.dtype(kwargs["image_dtype"]),
+            shape=image_shape,
+            dtype=np.dtype(image_dtype),
+            block_size=2**12,
+        )
+        if self._split_modules:
+            return self._reshape_jungfrau_asic(image_data)
+        return self._reshape_jungfrau_module(image_data)
+
+    def get_data(self, message, **kwargs):
+        image_data = self._decode_image(
+            message, kwargs["image_shape"], kwargs["image_dtype"]
+        )
+        # The (image_data, wavelength) tuple feeds the read-only consumers
+        # (Display, viewers); they have no spectrometer calibration, so the
+        # wavelength here is the non-spectrum fallback chain. Components that need the
+        # spectrum decode it once via get_frame_data instead.
+        return image_data, self.get_wavelength(message)
+
+    def get_frame_data(self, message, image_shape=None, image_dtype=None, calib=None):
+        # Single-decode entry point for components: decompress the main image AND the
+        # spectrometer array exactly once, then derive every per-frame model from
+        # them. Returns (image_data, wavelength, spectrum, spectrometer_image). Avoids
+        # the 2-3x bitshuffle decode that calling get_wavelength + get_spectrum +
+        # get_spectrometer_image separately would incur on each frame.
+        calib = calib or {}
+        image_data = self._decode_image(message, image_shape, image_dtype)
+        spectrometer = self._decode_spectrometer(message)
+        spectrum = self._build_spectrum(
+            spectrometer,
+            calib.get("spectrum_eV_per_pixel"),
+            calib.get("spectrum_eV_offset"),
+        )
+        # A 1D trace is fully preserved on NXbeam via the spectrum; only a 2D image
+        # needs the separate second-stream archive at native dimensionality.
+        spectrometer_image = (
+            spectrometer
+            if spectrometer is not None and spectrometer.ndim == 2
+            else None
+        )
+        wavelength = self._resolve_wavelength(message, spectrum, calib)
+        return image_data, wavelength, spectrum, spectrometer_image
+
+    def _resolve_wavelength(self, message, spectrum, calib):
+        # Wavelength priority (mirrors FormatXTC._beam), given an already-built
+        # spectrum so the spectrometer is not decoded again:
+        #   1. a calibrated per-shot spectrum (its intensity-weighted wavelength),
+        #   2. the eBeam photon_energy (eV) carried on the image message,
+        #   3. the photon_wavelength PV (often 0/unreliable, hence after energy),
+        #   4. the configured wavelength_fallback.
+        # wavelength_scale/offset are applied only when the value did NOT come from a
+        # spectrum (a spectrum already carries the true per-shot value).
+        if spectrum is not None:
+            return spectrum.get_weighted_wavelength()
+
+        photon_energy = message.get("photon_energy")
+        if photon_energy:
+            wavelength = factor_ev_angstrom / photon_energy
+        else:
+            photon_wavelength = message.get("photon_wavelength")
+            wavelength = photon_wavelength if photon_wavelength else None
+        if not wavelength or wavelength <= 0:
+            wavelength = calib.get("wavelength_fallback")
+        if wavelength and wavelength > 0:
+            if calib.get("wavelength_scale") is not None:
+                wavelength *= calib["wavelength_scale"]
+            if calib.get("wavelength_offset") is not None:
+                wavelength += calib["wavelength_offset"]
+            return wavelength
+        return None
+
+    def get_wavelength(self, message, **calib):
+        spectrum = self.get_spectrum(
+            message,
+            spectrum_eV_per_pixel=calib.get("spectrum_eV_per_pixel"),
+            spectrum_eV_offset=calib.get("spectrum_eV_offset"),
+        )
+        return self._resolve_wavelength(message, spectrum, calib)
+
+    def _decode_spectrometer(self, message):
+        # Decompress the optional per-frame spectrometer array (1D trace or 2D
+        # image), compressed bitshuffle-lz4 exactly like the main detector frame.
+        # Returns a numpy array, or None when no spectrometer rode this message.
+        payload = message.get("spectrometer_compressed_data")
+        shape = message.get("spectrometer_shape")
+        dtype = message.get("spectrometer_dtype")
+        if payload is None or shape is None or dtype is None:
+            return None
+        return bitshuffle.decompress_lz4(
+            np.frombuffer(payload, dtype=np.uint8),
+            shape=tuple(shape),
+            dtype=np.dtype(dtype),
             block_size=2**12,
         )
 
-        if self._split_modules:
-            image_data = self._reshape_jungfrau_asic(image_data)
-        else:
-            image_data = self._reshape_jungfrau_module(image_data)
-        return image_data, self._frame_wavelength(message)
+    def _build_spectrum(self, array, spectrum_eV_per_pixel, spectrum_eV_offset):
+        # Build a dxtbx Spectrum from an already-decoded spectrometer array. Needs the
+        # eV calibration; without it the raw pixels cannot be placed on an energy
+        # axis, so return None and let the wavelength resolver fall back.
+        if array is None:
+            return None
+        if spectrum_eV_per_pixel is None or spectrum_eV_offset is None:
+            return None
+        # Collapse a 2D spectrometer image to a 1D trace by averaging the slow axis
+        # (matching FormatXTC._spectrum_hutch); a 1D trace is used as-is. The full
+        # native-dimensionality pattern is archived separately; here we only need
+        # the 1D distribution to weight the wavelength.
+        trace = array.mean(axis=0) if array.ndim == 2 else array
+        trace = np.asarray(trace, dtype=float)
+        energies_eV = spectrum_eV_offset + spectrum_eV_per_pixel * np.arange(len(trace))
+        # Guard the dxtbx.model.Spectrum invariant (weighted_sum > 0 and summed
+        # weights > 0): a non-finite trace or one whose weights sum to <= 0 (e.g. an
+        # over-subtracted background, or a partially-dropped reading) would fire a
+        # fatal CCTBX_ASSERT in get_weighted_wavelength and take down the worker. Treat
+        # such a degenerate reading as absent so the resolver falls back instead.
+        if not np.isfinite(trace).all() or float(trace.sum()) <= 0:
+            return None
+        if float((energies_eV * trace).sum()) <= 0:
+            return None
+        return Spectrum(flex.double(energies_eV), flex.double(trace))
 
-    def _frame_wavelength(self, message):
-        # LCLStreamer image messages carry the per-frame photon_energy (eV) but often
-        # leave photon_wavelength = 0, so prefer the energy and convert it to a
-        # wavelength (Angstrom); fall back to photon_wavelength if energy is absent.
-        photon_energy = message.get("photon_energy")
-        if photon_energy:
-            return factor_ev_angstrom / photon_energy
-        photon_wavelength = message.get("photon_wavelength")
-        return photon_wavelength if photon_wavelength else None
+    def get_spectrum(
+        self, message, spectrum_eV_per_pixel=None, spectrum_eV_offset=None, **kwargs
+    ):
+        return self._build_spectrum(
+            self._decode_spectrometer(message),
+            spectrum_eV_per_pixel,
+            spectrum_eV_offset,
+        )
+
+    def get_spectrometer_image(self, message):
+        # Archive the full 2D spectrometer pattern as a second image stream. A 1D
+        # trace returns None: its full distribution is already stored on NXbeam by
+        # get_spectrum, so there is nothing extra to keep at native dimensionality.
+        array = self._decode_spectrometer(message)
+        if array is None or array.ndim != 2:
+            return None
+        return array
 
     def get_data_scale_factor(self, wavelength: float) -> float:
         # LCLStreamer Jungfrau pixels are deposited energy in keV. Photons are
