@@ -317,9 +317,12 @@ class NXmxStreamWriter(NXmxWriter):
         """Write the per-shot 1D incident spectrum as the incident_wavelength variant.
 
         The scalar incident_wavelength (already written) stays the per-frame weighted
-        wavelength; this adds the full distribution as incident_wavelength_1Dspectrum
-        (N, n_channels) + _weights with a variant attr, mirroring nxmx_writer.add_beams
-        so dxtbx/nexus rebuilds a dxtbx.model.Spectrum on read.
+        wavelength; this adds the full distribution as a shared 1-D
+        incident_wavelength_1Dspectrum (n_channels,) wavelength axis plus per-frame
+        incident_wavelength_1Dspectrum_weights (N, n_channels), with a variant attr, so
+        dxtbx/nexus rebuilds a dxtbx.model.Spectrum on read. The axis is stored once
+        (not copied per frame) because a fixed eV calibration gives every frame the same
+        axis; see nxmx_writer.add_beams for the matching-channels layout this mirrors.
 
         Partial coverage is preserved (consistent with the no-drop principle): present
         frames write their real spectrum; frames missing a reading get a placeholder
@@ -347,24 +350,45 @@ class NXmxStreamWriter(NXmxWriter):
             return
         # The reader stores wavelengths and converts back to energies, so convert the
         # archived energies_eV to wavelengths (Angstrom) here, as nxmx_writer does.
-        # Present frames share one calibration, so a missing frame reuses that axis
-        # with flat unit weights.
+        # Under a fixed eV calibration the wavelength axis is identical for every frame,
+        # so store it ONCE as a shared 1-D (n_channels,) array -- the NeXus matching-
+        # channels layout dxtbx/nexus reads (a 1-D axis is broadcast over every frame) --
+        # instead of a redundant (n_frames, n_channels) copy of the same row. Only the
+        # weights are genuinely per-frame.
         ref_wavelengths = factor_ev_angstrom / np.asarray(
             first["energies_eV"], dtype="f8"
         )
-        rows_x, rows_y = [], []
+        weights_rows = []
+        axis_shared = True
         for spectrum in spectra:
             if spectrum is not None:
-                rows_x.append(
-                    factor_ev_angstrom / np.asarray(spectrum["energies_eV"], dtype="f8")
+                wavelengths = factor_ev_angstrom / np.asarray(
+                    spectrum["energies_eV"], dtype="f8"
                 )
-                rows_y.append(np.asarray(spectrum["weights"], dtype="f8"))
+                if not np.array_equal(wavelengths, ref_wavelengths):
+                    axis_shared = False
+                weights_rows.append(np.asarray(spectrum["weights"], dtype="f8"))
             else:
-                rows_x.append(ref_wavelengths)
-                rows_y.append(np.ones(n_channels, dtype="f8"))
-        spectra_x = np.array(rows_x, dtype="f8")
-        spectra_y = np.array(rows_y, dtype="f8")
+                # Missing frame: flat unit weights (a valid but clearly non-physical
+                # Spectrum that does not perturb the beam wavelength, which comes from
+                # the scalar variant); flagged in the present mask below.
+                weights_rows.append(np.ones(n_channels, dtype="f8"))
+        spectra_y = np.array(weights_rows, dtype="f8")
         present_mask = np.array(present, dtype="u1")
+        if axis_shared:
+            spectra_x = ref_wavelengths  # (n_channels,) shared by every frame
+        else:
+            # Defensive only: a single run uses one fixed calibration, so this is not
+            # expected. If axes genuinely differ, fall back to a per-frame 2-D axis.
+            spectra_x = np.array(
+                [
+                    factor_ev_angstrom / np.asarray(s["energies_eV"], dtype="f8")
+                    if s is not None
+                    else ref_wavelengths
+                    for s in spectra
+                ],
+                dtype="f8",
+            )
         beam.create_dataset(
             "incident_wavelength_1Dspectrum",
             spectra_x.shape,
