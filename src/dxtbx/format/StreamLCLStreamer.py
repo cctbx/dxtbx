@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 import bitshuffle
 import cbor2
@@ -237,15 +237,17 @@ class LCLStreamer(StreamClass):
         self.name = "LCLStreamer"
         self._split_modules = False
 
-    def recv(self, copy: bool = True) -> bytes:
-        # The LCLStream adds a character at the beginning of the message to identify
-        # The message type withouit decoding.
-        #   b"c" == control message
-        #   b"m" == image message
-        encoded_message = self.socket.recv(copy=True)
-        # Strip the leading topic/type byte the wire prepends.
-        encoded_message = encoded_message[1:]
-        return encoded_message
+    def recv(self, copy: bool = True) -> Union[bytes, memoryview]:
+        # The LCLStream prepends a single byte identifying the message type without
+        # decoding the payload: b"c" == control, b"m" == image. Strip it here.
+        if copy:
+            # Caller asked for an owned copy; the slice copy is acceptable on this path.
+            return self.socket.recv(copy=True)[1:]
+        # Hot path: zero-copy. recv(copy=False) returns a zmq.Frame backed by the libzmq
+        # buffer; a memoryview slice strips the topic byte WITHOUT copying ~60 MB and keeps
+        # the Frame (and its buffer) alive as long as the returned view is referenced.
+        frame = self.socket.recv(copy=False)
+        return memoryview(frame)[1:]
 
     def decode(self, encoded_message: bytes) -> Dict[str, Any]:
         message = cbor2.loads(encoded_message)

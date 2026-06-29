@@ -115,7 +115,7 @@ class StreamClass(ABC):
         self.socket.close()
 
     @abstractmethod
-    def recv(self, copy: bool = True) -> bytes:
+    def recv(self, copy: bool = True) -> Union[bytes, memoryview]:
         """Receive a message from the stream"""
         pass
 
