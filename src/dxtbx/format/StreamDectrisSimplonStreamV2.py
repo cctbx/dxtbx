@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 import cbor2
 import numpy as np
@@ -120,7 +120,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
 
         return message
 
-    def recv(self, copy: bool = True) -> bytes:
+    def recv(self, copy: bool = True) -> Union[bytes, memoryview]:
         return self.socket.recv(copy=copy)
 
     def handle_start_message(
