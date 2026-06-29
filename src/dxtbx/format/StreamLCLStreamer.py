@@ -475,6 +475,25 @@ class LCLStreamer(StreamClass):
             return wavelength
         return None
 
+    def get_wavelength_candidates(self, message, spectrum=None, **calib):
+        # The raw per-source wavelength estimates (Angstrom) that _resolve_wavelength
+        # picks between, computed every frame so the losers can be archived next to the
+        # resolved incident_wavelength for diagnostics. These are the uncorrected
+        # per-sensor readings: the global wavelength_scale/offset applied to the chosen
+        # fallback is deliberately NOT applied here, so each candidate reflects what its
+        # sensor actually reported. A source absent on this frame is omitted.
+        del calib  # candidates are uncorrected; signature mirrors the base resolver
+        candidates = {}
+        if spectrum is not None:
+            candidates["spectrum"] = spectrum.get_weighted_wavelength()
+        photon_energy = message.get("photon_energy")
+        if photon_energy:
+            candidates["ebeam"] = factor_ev_angstrom / photon_energy
+        photon_wavelength = message.get("photon_wavelength")
+        if photon_wavelength and photon_wavelength > 0:
+            candidates["pv"] = photon_wavelength
+        return candidates
+
     def get_wavelength(self, message, **calib):
         spectrum = self.get_spectrum(
             message,

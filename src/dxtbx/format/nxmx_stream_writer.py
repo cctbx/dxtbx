@@ -75,6 +75,11 @@ class NXmxStreamWriter(NXmxWriter):
         self.incident_spectrum_weights_dset = None
         self.incident_spectrum_present_dset = None
         self.incident_spectrum_channels = None
+        # Per-source candidate wavelengths on NXbeam (incident_wavelength_<source>):
+        # the raw per-sensor readings the resolver chose between, grown per frame
+        # alongside the scalar incident_wavelength. One resizable dataset per source,
+        # created lazily the first time that source appears; absent readings are NaN.
+        self.candidate_wl_dsets: dict = {}
 
     def __call__(self, experiments=None, imageset=None):
         """
@@ -114,6 +119,7 @@ class NXmxStreamWriter(NXmxWriter):
         incident_wavelengths=None,
         spectrum_has_weights=None,
         spectrum_n_channels=None,
+        wavelength_candidate_names=None,
     ):
         """
         This method is used by the control to link together the data files written
@@ -135,6 +141,10 @@ class NXmxStreamWriter(NXmxWriter):
                 that data file archive any 1D incident spectrum (so it carries the
                 per-frame weights/present datasets the master VDSes from).
             spectrum_n_channels: shared spectrometer channel count, or None.
+            wavelength_candidate_names: list (aligned with data_file_names) of the
+                candidate source names each data file archived (incident_wavelength_<name>
+                datasets), used to VDS the per-source candidate wavelengths from the data
+                files in the same sorted frame order. None when no API reported them.
         """
         total_images = sum(n_images for _, n_images in data_file_names)
         total_shape = (total_images, *self.image_shape)
@@ -252,6 +262,16 @@ class NXmxStreamWriter(NXmxWriter):
             }
             self._write_incident_spectrum_vds(
                 ordered_frames, source_name, has_weights, spectrum_n_channels
+            )
+        if wavelength_candidate_names is not None:
+            candidate_names_by_file = {
+                data_file_name: set(names)
+                for (data_file_name, _), names in zip(
+                    data_file_names, wavelength_candidate_names
+                )
+            }
+            self._write_candidate_wavelengths_vds(
+                ordered_frames, source_name, candidate_names_by_file
             )
         self.handle.flush()
 
@@ -455,6 +475,39 @@ class NXmxStreamWriter(NXmxWriter):
                 "incident_wavelength_1Dspectrum"
             )
 
+    def _write_candidate_wavelengths_vds(
+        self, ordered_frames, source_name, candidate_names_by_file
+    ) -> None:
+        """Build the master's NXbeam per-source candidate-wavelength VDS over the data
+        files' per-frame incident_wavelength_<source> datasets, in the same sorted order
+        as the image VDS.
+
+        ordered_frames: list of (data_file_path, local_index, n_images) in master order.
+        candidate_names_by_file: dict data_file_path -> set of candidate source names
+            that file archived. Frames from a file that did not archive a given source
+            fall to the layout NaN fill value.
+        """
+        all_names = sorted(
+            {name for names in candidate_names_by_file.values() for name in names}
+        )
+        if not all_names:
+            return
+        beam = self.handle["entry/instrument/beam"]
+        total = len(ordered_frames)
+        for name in all_names:
+            path = f"/entry/instrument/beam/incident_wavelength_{name}"
+            layout = h5py.VirtualLayout(shape=(total,), dtype="f8")
+            for virtual_index, (file_path, local_index, n_images) in enumerate(
+                ordered_frames
+            ):
+                if name not in candidate_names_by_file.get(file_path, ()):
+                    continue  # source absent in this file -> layout fill value (NaN)
+                layout[virtual_index] = h5py.VirtualSource(
+                    source_name[file_path], path, shape=(n_images,), dtype="f8"
+                )[local_index]
+            self.handle.create_virtual_dataset(path, layout, fillvalue=np.nan)
+            beam[f"incident_wavelength_{name}"].attrs["units"] = "angstrom"
+
     def initialize_dataset(self):
         if self.data_group is None:
             self.data_group = self.handle["entry"].create_group("data")
@@ -494,16 +547,19 @@ class NXmxStreamWriter(NXmxWriter):
         data_scale_factor: float,
         incident_wavelength: float,
         incident_spectrum=None,
+        wavelength_candidates=None,
     ) -> None:
-        """Append one frame's data_scale_factor, incident_wavelength, and (when present)
-        the 1D incident spectrum.
+        """Append one frame's data_scale_factor, incident_wavelength, the (optional) 1D
+        incident spectrum, and the (optional) per-source candidate wavelengths.
 
         Called once per image written to this data file, in lockstep with
         append_image, so element i of each 1-D dataset describes frame i. Writing it
         per frame (rather than batched at finalize) means a reader that opens the data
         file directly recovers photons per frame even if the run never finalized.
         incident_spectrum is a dict with energies_eV + weights, or None when this frame
-        carried no calibrated spectrum.
+        carried no calibrated spectrum. wavelength_candidates is a dict source-name ->
+        wavelength (Angstrom) of the raw per-sensor readings the resolver chose between,
+        or None/empty when the API carries a single wavelength source.
         """
         if self.scale_factor_dset is None:
             self.initialize_dataset()
@@ -514,6 +570,39 @@ class NXmxStreamWriter(NXmxWriter):
             self.wavelength_dset.resize(n + 1, axis=0)
             self.wavelength_dset[n] = incident_wavelength
         self._append_incident_spectrum(n, incident_spectrum)
+        self._append_wavelength_candidates(n, wavelength_candidates)
+
+    def _append_wavelength_candidates(self, frame_index, candidates) -> None:
+        """Append one frame's per-source candidate wavelengths to NXbeam, in lockstep
+        with the scalar incident_wavelength.
+
+        Each source gets its own resizable dataset incident_wavelength_<source>,
+        created the first time that source appears and back-filled with NaN for the
+        frames already written (a fixed fill value, since a missing reading carries no
+        wavelength). Every known dataset is advanced one row per frame -- with NaN when
+        that source had no reading this frame -- so all stay aligned with
+        incident_wavelength at index frame_index. A no-op for APIs that report a single
+        wavelength source (candidates always empty).
+        """
+        beam = self.handle.get("entry/instrument/beam")
+        if beam is None:
+            return
+        candidates = candidates or {}
+        for name in set(self.candidate_wl_dsets) | set(candidates):
+            dset = self.candidate_wl_dsets.get(name)
+            if dset is None:
+                dset = beam.create_dataset(
+                    f"incident_wavelength_{name}",
+                    (frame_index,),
+                    maxshape=(None,),
+                    dtype="f8",
+                    fillvalue=np.nan,
+                )
+                dset.attrs["units"] = "angstrom"
+                self.candidate_wl_dsets[name] = dset
+            dset.resize(frame_index + 1, axis=0)
+            value = candidates.get(name)
+            dset[frame_index] = np.nan if value is None else value
 
     def append_image(self, image_data, compressed=False):
         """Method for uncompressed data"""

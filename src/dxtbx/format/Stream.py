@@ -231,6 +231,23 @@ class StreamClass(ABC):
         """
         return None
 
+    def get_wavelength_candidates(
+        self, message: dict, spectrum: Optional[Any] = None, **calib: Any
+    ) -> dict:
+        """The per-source candidate wavelengths (Angstrom) that ``get_wavelength``
+        chooses between, computed for every frame regardless of which one wins so the
+        alternatives can be archived alongside the resolved ``incident_wavelength`` for
+        diagnostics.
+
+        Returns a dict mapping a short source name (e.g. ``"spectrum"``, ``"ebeam"``,
+        ``"pv"``) to that source's raw wavelength in Angstrom; a source absent for this
+        frame is omitted. ``spectrum`` is the already-built per-shot Spectrum (passed in
+        so it is not decoded again). Base behavior: no candidates (the resolver returns
+        the start-message reference). Readers whose image messages carry multiple
+        wavelength sources override this.
+        """
+        return {}
+
     def get_spectrum(self, message: dict, **calib: Any) -> Optional[Any]:
         """Build a ``dxtbx.model.Spectrum`` for this frame, or None if unavailable.
 
