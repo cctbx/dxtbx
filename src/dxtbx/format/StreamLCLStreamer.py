@@ -401,14 +401,24 @@ class LCLStreamer(StreamClass):
         return file_writer_params, reference_experiment
 
     def _decode_image(self, message, image_shape, image_dtype):
-        # Decompress + reshape the main detector frame (bitshuffle-lz4). Factored so
-        # get_data and the single-decode get_frame_data share one implementation.
-        image_data = bitshuffle.decompress_lz4(
-            np.frombuffer(message["compressed_data"], dtype=np.uint8),
-            shape=image_shape,
-            dtype=np.dtype(image_dtype),
-            block_size=2**12,
-        )
+        # A gap marker carries no detector payload: the frame was missing/damaged at the
+        # source, and LCLStreamer emitted a "missing_data" marker (no compressed_data)
+        # rather than drop the event. Synthesize a fully-masked frame of the expected
+        # shape so the event is still represented, counted, and ordered. Every pixel is
+        # set below the panel trusted range (TRUSTED_RANGE = (-10, 2e6)), so dials masks
+        # the whole frame and finds no spots -- mirroring how file-based processing
+        # handles a bad frame.
+        if message.get("missing_data") or "compressed_data" not in message:
+            image_data = np.full(image_shape, -100.0, dtype=np.dtype(image_dtype))
+        else:
+            # Decompress + reshape the main detector frame (bitshuffle-lz4). Factored so
+            # get_data and the single-decode get_frame_data share one implementation.
+            image_data = bitshuffle.decompress_lz4(
+                np.frombuffer(message["compressed_data"], dtype=np.uint8),
+                shape=image_shape,
+                dtype=np.dtype(image_dtype),
+                block_size=2**12,
+            )
         if self._split_modules:
             return self._reshape_jungfrau_asic(image_data)
         return self._reshape_jungfrau_module(image_data)
