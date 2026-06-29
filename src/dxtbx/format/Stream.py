@@ -79,69 +79,46 @@ class StreamClass(ABC):
         port: Optional[int] = None,
         ports: Optional[List[int]] = None,
         ip_address: Optional[str] = None,
-        socket_library: Optional[str] = None,
-        socket_type: Optional[str] = None,
-        socket_mode: Optional[str] = None,
         zmq_context: Optional[zmq.Context] = None,
         rcvhwm: Optional[int] = None,
         rcvbuf: Optional[int] = None,
         tcp_keepalive: bool = False,
     ) -> None:
-        if socket_mode == "connect":
-            if ports is None:
-                assert port and ip_address
-                self._address = format_address(ip_address, port)
-            elif ports:
-                assert ip_address
-                self._addresses = [
-                    format_address(ip_address, port_i) for port_i in ports
-                ]
-        elif socket_mode == "bind":
-            if ports is None:
-                self._address = format_address(port=port)
-            else:
-                self._addresses = [format_address(port=port_i) for port_i in ports]
-        else:
-            assert socket_mode is None
+        # A reader constructed without a ZeroMQ context is decoder-only: it
+        # normalizes messages and holds no socket (port/ip are ignored). Live
+        # readers always PULL-connect to the source; ``ports`` connects to
+        # several source endpoints at once.
+        if zmq_context is None:
             self._address = None
-
-        if socket_library is None:
             self.socket = None
-            self.socket_library = None
-        elif socket_library in ["zeromq", "zmq", "0mq"]:
-            self.socket = zmq_context.socket(socket_type)
-            self.socket_library = "zmq"
-            self.socket.setsockopt(zmq.LINGER, 0)
-            if rcvhwm:
-                self.socket.setsockopt(zmq.RCVHWM, rcvhwm)
-            if rcvbuf:
-                self.socket.setsockopt(zmq.RCVBUF, rcvbuf)
-            if tcp_keepalive:
-                # Set before connect so the options apply to the connection: the kernel
-                # then reaps a dead/orphaned peer (e.g. a consumer killed after an SSH
-                # drop) instead of leaving it ESTABLISHED and silently stealing the
-                # detector's round-robined stream.
-                self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
-                self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
-                self.socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 10)
-                self.socket.setsockopt(zmq.TCP_KEEPALIVE_CNT, 3)
-            if socket_mode == "connect":
-                if ports is None:
-                    self.socket.connect(self._address)
-                elif ports:
-                    for address in self._addresses:
-                        self.socket.connect(address)
-            elif socket_mode == "bind":
-                if ports is None:
-                    self.socket.bind(self._address)
-                else:
-                    for address in self._addresses:
-                        self.socket.bind(address)
+            return
+
+        if ports is None:
+            assert port and ip_address
+            self._address = format_address(ip_address, port)
+            addresses = [self._address]
         else:
-            raise ValueError(
-                f"Invalid socket_library '{socket_library}'. "
-                + "Must be None, 'zeromq', 'zmq', or '0mq'."
-            )
+            assert ip_address
+            self._addresses = [format_address(ip_address, port_i) for port_i in ports]
+            addresses = self._addresses
+
+        self.socket = zmq_context.socket(zmq.PULL)
+        self.socket.setsockopt(zmq.LINGER, 0)
+        if rcvhwm:
+            self.socket.setsockopt(zmq.RCVHWM, rcvhwm)
+        if rcvbuf:
+            self.socket.setsockopt(zmq.RCVBUF, rcvbuf)
+        if tcp_keepalive:
+            # Set before connect so the options apply to the connection: the kernel
+            # then reaps a dead/orphaned peer (e.g. a consumer killed after an SSH
+            # drop) instead of leaving it ESTABLISHED and silently stealing the
+            # detector's round-robined stream.
+            self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
+            self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
+            self.socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 10)
+            self.socket.setsockopt(zmq.TCP_KEEPALIVE_CNT, 3)
+        for address in addresses:
+            self.socket.connect(address)
 
     def close_socket(self) -> None:
         self.socket.close()
