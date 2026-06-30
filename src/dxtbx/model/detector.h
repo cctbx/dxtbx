@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <scitbx/vec2.h>
@@ -711,8 +712,8 @@ namespace dxtbx { namespace model {
       return 1.0 / den;
     }
 
-    /** Get ray intersection with detector */
-    coord_type get_ray_intersection(vec3<double> s1) const {
+    /** Get ray intersection with detector, returning boost::none on miss */
+    boost::optional<coord_type> try_get_ray_intersection(vec3<double> s1) const {
       coord_type pxy(-1, vec2<double>(0, 0));
       double w_max = 0;
 
@@ -732,10 +733,15 @@ namespace dxtbx { namespace model {
         }
       }
 
-      // If no coordinate was found then raise an exception
-      // otherwise return the coordinate.
-      DXTBX_ASSERT(w_max > 0);
+      if (w_max <= 0) return boost::none;
       return pxy;
+    }
+
+    /** Get ray intersection with detector */
+    coord_type get_ray_intersection(vec3<double> s1) const {
+      auto r = try_get_ray_intersection(s1);
+      DXTBX_ASSERT(r);
+      return *r;
     }
 
     /** Get ray intersection with detector */
@@ -744,7 +750,9 @@ namespace dxtbx { namespace model {
       scitbx::af::shared<coord_type> result = scitbx::af::shared<coord_type>(s1.size());
 
       for (std::size_t i = 0; i < s1.size(); ++i) {
-        result[i] = get_ray_intersection(s1[i]);
+        auto r = try_get_ray_intersection(s1[i]);
+        DXTBX_ASSERT(r);  // preserve existing throwing semantics on miss
+        result[i] = *r;
       }
       return result;
     }
@@ -757,26 +765,22 @@ namespace dxtbx { namespace model {
       scitbx::af::shared<vec2<double>> xy = scitbx::af::shared<vec2<double>>(s1.size());
 
       for (std::size_t i = 0; i < s1.size(); ++i) {
-        xy[i] = (*this)[panel[i]].get_ray_intersection(s1[i]);
+        auto r = (*this)[panel[i]].try_get_ray_intersection(s1[i]);
+        DXTBX_ASSERT(r);  // preserve existing throwing semantics on miss
+        xy[i] = *r;
       }
       return xy;
     }
 
     /** finds the panel id with which s1 intersects.  Returns -1 if none do. **/
     int get_panel_intersection(vec3<double> s1) {
-      int found_panel = -1;
       for (std::size_t i = 0; i < size(); ++i) {
-        try {
-          vec2<double> intersection = (*this)[i].get_ray_intersection(s1);
-          if ((*this)[i].is_coord_valid_mm(intersection)) {
-            found_panel = (int)i;
-            break;
-          }
-        } catch (dxtbx::error const &) {
-          // pass
+        auto r = (*this)[i].try_get_ray_intersection(s1);
+        if (r && (*this)[i].is_coord_valid_mm(*r)) {
+          return (int)i;
         }
       }
-      return found_panel;
+      return -1;
     }
 
     /** Rotate the detector about an axis */

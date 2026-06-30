@@ -14,6 +14,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <boost_adaptbx/optional_conversions.h>
 #include <boost_adaptbx/std_pair_conversion.h>
 #include <scitbx/array_family/boost_python/flex_wrapper.h>
 #include <scitbx/constants.h>
@@ -31,30 +32,30 @@ namespace dxtbx { namespace model { namespace boost_python {
       return ss.str();
     }
 
-    static scitbx::af::shared<vec3<double> > get_lab_coord_multiple(
+    static scitbx::af::shared<vec3<double>> get_lab_coord_multiple(
       const Panel &panel,
-      scitbx::af::flex<vec2<double> >::type const &xy) {
-      scitbx::af::shared<vec3<double> > result((scitbx::af::reserve(xy.size())));
+      scitbx::af::flex<vec2<double>>::type const &xy) {
+      scitbx::af::shared<vec3<double>> result((scitbx::af::reserve(xy.size())));
       for (std::size_t i = 0; i < xy.size(); i++) {
         result.push_back(panel.get_lab_coord(xy[i]));
       }
       return result;
     }
 
-    static scitbx::af::shared<vec2<double> > pixel_to_millimeter_multiple(
+    static scitbx::af::shared<vec2<double>> pixel_to_millimeter_multiple(
       const Panel &panel,
-      scitbx::af::flex<vec2<double> >::type const &xy) {
-      scitbx::af::shared<vec2<double> > result((scitbx::af::reserve(xy.size())));
+      scitbx::af::flex<vec2<double>>::type const &xy) {
+      scitbx::af::shared<vec2<double>> result((scitbx::af::reserve(xy.size())));
       for (std::size_t i = 0; i < xy.size(); i++) {
         result.push_back(panel.pixel_to_millimeter(xy[i]));
       }
       return result;
     }
 
-    static scitbx::af::shared<vec2<double> > millimeter_to_pixel_multiple(
+    static scitbx::af::shared<vec2<double>> millimeter_to_pixel_multiple(
       const Panel &panel,
-      scitbx::af::flex<vec2<double> >::type const &xy) {
-      scitbx::af::shared<vec2<double> > result((scitbx::af::reserve(xy.size())));
+      scitbx::af::flex<vec2<double>>::type const &xy) {
+      scitbx::af::shared<vec2<double>> result((scitbx::af::reserve(xy.size())));
       for (std::size_t i = 0; i < xy.size(); i++) {
         result.push_back(panel.millimeter_to_pixel(xy[i]));
       }
@@ -102,9 +103,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       }
       if (obj.has_key("fast_axis") && obj.has_key("slow_axis")
           && obj.has_key("origin")) {
-        result->set_local_frame(boost::python::extract<vec3<double> >(obj["fast_axis"]),
-                                boost::python::extract<vec3<double> >(obj["slow_axis"]),
-                                boost::python::extract<vec3<double> >(obj["origin"]));
+        result->set_local_frame(boost::python::extract<vec3<double>>(obj["fast_axis"]),
+                                boost::python::extract<vec3<double>>(obj["slow_axis"]),
+                                boost::python::extract<vec3<double>>(obj["origin"]));
       }
       if (obj.has_key("thickness")) {
         result->set_thickness(boost::python::extract<double>(obj["thickness"]));
@@ -120,7 +121,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       }
       if (obj.has_key("mask")) {
         scitbx::af::shared<int4> mask =
-          boost::python::extract<scitbx::af::shared<int4> >(
+          boost::python::extract<scitbx::af::shared<int4>>(
             boost::python::extract<boost::python::list>(obj["mask"]));
         result->set_mask(mask.const_ref());
       }
@@ -136,15 +137,15 @@ namespace dxtbx { namespace model { namespace boost_python {
       }
       if (obj.has_key("image_size")) {
         result->set_image_size(
-          boost::python::extract<tiny<std::size_t, 2> >(obj["image_size"]));
+          boost::python::extract<tiny<std::size_t, 2>>(obj["image_size"]));
       }
       if (obj.has_key("pixel_size")) {
         result->set_pixel_size(
-          boost::python::extract<tiny<double, 2> >(obj["pixel_size"]));
+          boost::python::extract<tiny<double, 2>>(obj["pixel_size"]));
       }
       if (obj.has_key("trusted_range")) {
         result->set_trusted_range(
-          boost::python::extract<tiny<double, 2> >(obj["trusted_range"]));
+          boost::python::extract<tiny<double, 2>>(obj["trusted_range"]));
       }
       if (obj.has_key("projection_2d")) {
         int4 rotation = boost::python::extract<int4>(obj["projection_2d"][0]);
@@ -157,8 +158,8 @@ namespace dxtbx { namespace model { namespace boost_python {
 
     Panel *panel_from_dict_with_offset_wrapper(
       boost::python::dict obj,
-      scitbx::af::versa<double, scitbx::af::flex_grid<> > dx,
-      scitbx::af::versa<double, scitbx::af::flex_grid<> > dy) {
+      scitbx::af::versa<double, scitbx::af::flex_grid<>> dx,
+      scitbx::af::versa<double, scitbx::af::flex_grid<>> dy) {
       DXTBX_ASSERT(dx.accessor().all().size() == 2);
       DXTBX_ASSERT(dy.accessor().all().size() == 2);
       DXTBX_ASSERT(dx.accessor().all().all_eq(dy.accessor().all()));
@@ -167,8 +168,8 @@ namespace dxtbx { namespace model { namespace boost_python {
       std::size_t xsize = dx.accessor().all()[1];
 
       scitbx::af::c_grid<2> grid(ysize, xsize);
-      scitbx::af::versa<double, scitbx::af::c_grid<2> > dx2(dx.handle(), grid);
-      scitbx::af::versa<double, scitbx::af::c_grid<2> > dy2(dy.handle(), grid);
+      scitbx::af::versa<double, scitbx::af::c_grid<2>> dx2(dx.handle(), grid);
+      scitbx::af::versa<double, scitbx::af::c_grid<2>> dy2(dy.handle(), grid);
 
       return panel_from_dict_with_offset(obj, dx2, dy2);
     }
@@ -184,8 +185,8 @@ namespace dxtbx { namespace model { namespace boost_python {
 
   Panel *panel_from_dict_with_offset(
     boost::python::dict obj,
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > dx,
-    scitbx::af::versa<double, scitbx::af::c_grid<2> > dy) {
+    scitbx::af::versa<double, scitbx::af::c_grid<2>> dx,
+    scitbx::af::versa<double, scitbx::af::c_grid<2>> dy) {
     Panel *result = panel_detail::basic_panel_from_dict(obj);
     DXTBX_ASSERT(dx.accessor()[0] == result->get_image_size()[1]);
     DXTBX_ASSERT(dx.accessor()[1] == result->get_image_size()[0]);
@@ -256,15 +257,15 @@ namespace dxtbx { namespace model { namespace boost_python {
       result->set_type(boost::python::extract<std::string>(obj["type"]));
     }
     if (obj.has_key("fast_axis") && obj.has_key("slow_axis") && obj.has_key("origin")) {
-      result->set_local_frame(boost::python::extract<vec3<double> >(obj["fast_axis"]),
-                              boost::python::extract<vec3<double> >(obj["slow_axis"]),
-                              boost::python::extract<vec3<double> >(obj["origin"]));
+      result->set_local_frame(boost::python::extract<vec3<double>>(obj["fast_axis"]),
+                              boost::python::extract<vec3<double>>(obj["slow_axis"]),
+                              boost::python::extract<vec3<double>>(obj["origin"]));
     }
     return result;
   }
 
   template <>
-  boost::python::dict to_dict<std::shared_ptr<PxMmStrategy> >(
+  boost::python::dict to_dict<std::shared_ptr<PxMmStrategy>>(
     const std::shared_ptr<PxMmStrategy> &obj) {
     boost::python::dict result;
     std::string name = obj->name();
@@ -374,6 +375,9 @@ namespace dxtbx { namespace model { namespace boost_python {
   void export_panel() {
     using namespace panel_detail;
     using namespace boost::python;
+    using boost_adaptbx::optional_conversions::to_and_from_python;
+
+    to_and_from_python<boost::optional<scitbx::vec2<double>>>();
 
     class_<VirtualPanelFrame>("VirtualPanelFrame")
       .def("set_frame",
@@ -411,10 +415,16 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_bidirectional_ray_intersection",
            &VirtualPanelFrame::get_bidirectional_ray_intersection,
            (arg("s1")))
+      .def("try_get_ray_intersection",
+           &VirtualPanelFrame::try_get_ray_intersection,
+           (arg("s1")))
+      .def("try_get_bidirectional_ray_intersection",
+           &VirtualPanelFrame::try_get_bidirectional_ray_intersection,
+           (arg("s1")))
       .def("__eq__", &VirtualPanelFrame::operator==)
       .def("__ne__", &VirtualPanelFrame::operator!=);
 
-    class_<VirtualPanel, bases<VirtualPanelFrame> >("VirtualPanel")
+    class_<VirtualPanel, bases<VirtualPanelFrame>>("VirtualPanel")
       .def("get_name", &VirtualPanel::get_name)
       .def("set_name", &VirtualPanel::set_name)
       .def("get_type", &VirtualPanel::get_type)
@@ -428,7 +438,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       /* .def_pickle(VirtualPanelPickleSuite()) */
       ;
 
-    class_<PanelData, bases<VirtualPanel> >("Panel")
+    class_<PanelData, bases<VirtualPanel>>("Panel")
       .def(init<std::string,
                 std::string,
                 tiny<double, 3>,
@@ -478,7 +488,7 @@ namespace dxtbx { namespace model { namespace boost_python {
             arg("static_only") = false,
             arg("ignore_trusted_range") = false));
 
-    class_<Panel, bases<PanelData> >("Panel")
+    class_<Panel, bases<PanelData>>("Panel")
       .def(init<std::string,
                 std::string,
                 tiny<double, 3>,
@@ -545,6 +555,9 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("get_ray_intersection_px", &Panel::get_ray_intersection_px)
       .def("get_bidirectional_ray_intersection_px",
            &Panel::get_bidirectional_ray_intersection_px)
+      .def("try_get_ray_intersection_px", &Panel::try_get_ray_intersection_px)
+      .def("try_get_bidirectional_ray_intersection_px",
+           &Panel::try_get_bidirectional_ray_intersection_px)
       .def("millimeter_to_pixel", &Panel::millimeter_to_pixel)
       .def("millimeter_to_pixel", millimeter_to_pixel_multiple)
       .def("pixel_to_millimeter", pixel_to_millimeter)

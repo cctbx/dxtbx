@@ -250,12 +250,36 @@ namespace dxtbx { namespace model {
 
     /**
      * @param s1 The ray vector.
+     * @returns the coordinate of a ray intersecting with the detector, or
+     *          boost::none if D_ is not set or v[2] <= 0 (ray misses panel).
+     */
+    boost::optional<vec2<double>> try_get_ray_intersection(vec3<double> s1) const {
+      if (!D_) return boost::none;
+      vec3<double> v = D_.get() * s1;
+      if (v[2] <= 0) return boost::none;
+      return vec2<double>(v[0] / v[2], v[1] / v[2]);
+    }
+
+    /**
+     * @param s1 The ray vector.
      * @returns the coordinate of a ray intersecting with the detector
      */
     vec2<double> get_ray_intersection(vec3<double> s1) const {
-      DXTBX_ASSERT(D_);
+      auto r = try_get_ray_intersection(s1);
+      DXTBX_ASSERT(r);
+      return *r;
+    }
+
+    /**
+     * @param s1 The ray vector.
+     * @returns the coordinate of a ray intersecting with the detector
+     *          (bidirectional), or boost::none if D_ is not set or v[2] == 0.
+     */
+    boost::optional<vec2<double>> try_get_bidirectional_ray_intersection(
+      vec3<double> s1) const {
+      if (!D_) return boost::none;
       vec3<double> v = D_.get() * s1;
-      DXTBX_ASSERT(v[2] > 0);
+      if (v[2] == 0) return boost::none;
       return vec2<double>(v[0] / v[2], v[1] / v[2]);
     }
 
@@ -264,10 +288,9 @@ namespace dxtbx { namespace model {
      * @returns the coordinate of a ray intersecting with the detector
      */
     vec2<double> get_bidirectional_ray_intersection(vec3<double> s1) const {
-      DXTBX_ASSERT(D_);
-      vec3<double> v = D_.get() * s1;
-      DXTBX_ASSERT(v[2] != 0);
-      return vec2<double>(v[0] / v[2], v[1] / v[2]);
+      auto r = try_get_bidirectional_ray_intersection(s1);
+      DXTBX_ASSERT(r);
+      return *r;
     }
 
     /** @returns True/False This and the other frame are the same */
@@ -375,7 +398,7 @@ namespace dxtbx { namespace model {
     vec3<double> parent_slow_axis_;
     vec3<double> parent_normal_;
     mat3<double> d_;
-    boost::optional<mat3<double> > D_;
+    boost::optional<mat3<double>> D_;
     vec3<double> normal_;
     double distance_;
     vec2<double> normal_origin_;
