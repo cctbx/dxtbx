@@ -14,7 +14,7 @@ from scitbx.array_family import flex
 from scitbx.matrix import col
 
 from dxtbx.format.Stream import StreamClass
-from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy, Spectrum
+from dxtbx.model import BeamBase, Detector, ParallaxCorrectedPxMmStrategy, Spectrum
 from dxtbx.model.experiment_list import Experiment, ExperimentList
 
 if TYPE_CHECKING:
@@ -238,16 +238,7 @@ class LCLStreamer(StreamClass):
         self._split_modules = False
 
     def recv(self, copy: bool = True) -> Union[bytes, memoryview]:
-        # The LCLStream prepends a single byte identifying the message type without
-        # decoding the payload: b"c" == control, b"m" == image. Strip it here.
-        if copy:
-            # Caller asked for an owned copy; the slice copy is acceptable on this path.
-            return self.socket.recv(copy=True)[1:]
-        # Hot path: zero-copy. recv(copy=False) returns a zmq.Frame backed by the libzmq
-        # buffer; a memoryview slice strips the topic byte WITHOUT copying ~60 MB and keeps
-        # the Frame (and its buffer) alive as long as the returned view is referenced.
-        frame = self.socket.recv(copy=False)
-        return memoryview(frame)[1:]
+        return self.socket.recv(copy=copy)
 
     def decode(self, encoded_message: bytes) -> Dict[str, Any]:
         # The LCLStreamer image message carries the whole ~60 MB compressed frame as a
@@ -256,19 +247,8 @@ class LCLStreamer(StreamClass):
         # (~35 ms/frame) -- CBOR is a standard wire format, so it reads the cbor2-encoded
         # message identically. cbor2 is kept for the Dectris reader (its tag_hook path).
         message = cbor.loads(encoded_message)
-        # LCLStreamer signals run-end with type "stop"; the rest of the system
-        # (ControlHub dispatch, finalize protocol) keys off the canonical "end".
-        # Normalize here at the reader boundary so no component carries the
-        # API-specific spelling.
-        if message.get("type") == "stop":
-            message["type"] = "end"
-        # Translate the LCLStreamer wire-format run identifier to the internal
-        # "run_id" the components consume. (Start messages carry "run_number",
-        # image/end messages carry "run".)
-        if "run" in message.keys():
-            message["run_id"] = int(message.pop("run"))
-        elif "run_number" in message.keys():
-            message["run_id"] = int(message.pop("run_number"))
+        if "run_id" in message.keys():
+            message["run_id"] = int(message["run_id"])
         if "message_id" in message.keys():
             message["image_id"] = message.pop("message_id")
         if "shape" in message.keys():
@@ -282,8 +262,6 @@ class LCLStreamer(StreamClass):
                 message["spectrometer_shape"] = tuple(
                     map(int, message["spectrometer_shape"].split("x"))
                 )
-        if "datatype" in message.keys():
-            message["image_dtype"] = message.pop("datatype")
         if "data_collection_rate" in message.keys():
             if isinstance(message["data_collection_rate"], str):
                 message["data_collection_rate"] = float(
@@ -353,7 +331,7 @@ class LCLStreamer(StreamClass):
             # Wavelength is not included in the start message ...
             beam_params.beam.wavelength = 1  # float(message["photon_wavelength"])
         beam_params.beam.wavelength_range = None
-        beam = BeamFactory.from_phil(beam_params)
+        beam: BeamBase = BeamFactory.from_phil(beam_params)
 
         if reference_experiment is None or sync_reference_geom:
             # Construct detector
@@ -673,7 +651,5 @@ class LCLStreamer(StreamClass):
 
         from dxtbx.imageset import StreamReader
 
-        image_data = tuple(
-            [flex.double(image_data[i]) for i in range(image_data.shape[0])]
-        )
-        return StreamReader([image_data])
+        panels = tuple(flex.double(image_data[i]) for i in range(image_data.shape[0]))
+        return StreamReader([panels])
