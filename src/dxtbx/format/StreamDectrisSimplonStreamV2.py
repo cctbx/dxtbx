@@ -97,7 +97,7 @@ class StreamDectrisSimplonStreamV2(StreamClass):
             rcvbuf=rcvbuf,
             tcp_keepalive=tcp_keepalive,
         )
-        self.name = "DectrisSimplonStreamV2"
+        self.name = "dectris"
 
     def decode(self, encoded_message: bytes) -> Dict[str, Any]:
         # cbor2 >= 6 returns an immutable frozendict when the message is wrapped

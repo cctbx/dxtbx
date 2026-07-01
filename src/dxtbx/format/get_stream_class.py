@@ -1,27 +1,24 @@
+from __future__ import annotations
+
+
 def get_stream_class(name):
-    if name == "DectrisSimplonStreamV2":
+    if name == "dectris":
         from dxtbx.format.StreamDectrisSimplonStreamV2 import (
             StreamDectrisSimplonStreamV2,
         )
 
         return StreamDectrisSimplonStreamV2
-    elif name == "DectrisSimplonStreamV2Emulator":
+    elif name == "dectris_emulator":
         from dials_streaming.format_class.dectris_simplon_stream_v2 import (
             StreamDectrisSimplonStreamV2Emulator,
         )
 
         return StreamDectrisSimplonStreamV2Emulator
-    elif name == "DectrisSimplonStreamV2HitFiltered":
-        from dials_streaming.format_class.dectris_simplon_stream_v2 import (
-            StreamDectrisSimplonStreamV2HitFiltered,
-        )
-
-        return StreamDectrisSimplonStreamV2HitFiltered
-
-    elif name == "LCLStreamer":
+    elif name == "lcls":
         from dxtbx.format.StreamLCLStreamer import LCLStreamer
+
         return LCLStreamer
-    elif name == "NXmxEmulator":
+    elif name == "nxmx":
         from dials_streaming.format_class.nxmx_stream import NXmxEmulatorStreamer
 
         return NXmxEmulatorStreamer

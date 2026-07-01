@@ -234,7 +234,7 @@ class LCLStreamer(StreamClass):
             rcvbuf=rcvbuf,
             tcp_keepalive=tcp_keepalive,
         )
-        self.name = "LCLStreamer"
+        self.name = "lcls"
         self._split_modules = False
 
     def recv(self, copy: bool = True) -> Union[bytes, memoryview]:
