@@ -167,6 +167,17 @@ class StreamClass(ABC):
         """
         return 1.0
 
+    def apply_frame_wavelength(
+        self, detector: Any, wavelength: Optional[float]
+    ) -> None:
+        """Refresh the detector's per-frame wavelength-dependent panel fields in place.
+
+        Base behavior: none (Dectris/NXmx detectors have no keV/attenuation dependence
+        to refresh). Readers whose detector fields depend on the per-frame wavelength
+        override this.
+        """
+        return
+
     def get_wavelength(self, message: dict, **calib: Any) -> Optional[float]:
         """Resolve the per-frame wavelength (Angstrom) from a decoded image message.
 

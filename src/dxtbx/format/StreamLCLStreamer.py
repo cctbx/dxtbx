@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import logging
 from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 import bitshuffle
@@ -23,6 +24,9 @@ if TYPE_CHECKING:
     from libtbx.phil import scope_extract
 
     from dxtbx.imageset import StreamReader
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_jungfrau_detector_asic(file_content: str, wavelength: float) -> Detector:
@@ -328,8 +332,16 @@ class LCLStreamer(StreamClass):
         if wavelength:
             beam_params.beam.wavelength = wavelength
         else:
-            # Wavelength is not included in the start message ...
-            beam_params.beam.wavelength = 1  # float(message["photon_wavelength"])
+            # The LCLS start message carries no wavelength. BeamFactory.from_phil
+            # requires one, so use a provisional 1 A -- but say so loudly: the true
+            # per-frame wavelength is resolved on every image and supersedes this
+            # placeholder (beam wavelength and detector mu/gain are refreshed per frame).
+            logger.warning(
+                "No params.wavelength configured and the LCLS start message carries no "
+                "wavelength; the reference beam uses a provisional 1 A that is "
+                "superseded per-frame by the resolved wavelength."
+            )
+            beam_params.beam.wavelength = 1.0
         beam_params.beam.wavelength_range = None
         beam: BeamBase = BeamFactory.from_phil(beam_params)
 
@@ -581,6 +593,25 @@ class LCLStreamer(StreamClass):
         if array is None or array.ndim != 2:
             return None
         return array
+
+    def apply_frame_wavelength(
+        self, detector: Detector, wavelength: Optional[float]
+    ) -> None:
+        # Per-frame the observed LCLS wavelength drives mu (attenuation coefficient)
+        # and gain (deposited keV -> photons: factor_kev_angstrom / wavelength). The
+        # parallax px/mm strategy is intentionally NOT rebuilt here; it keeps its
+        # construction-time value.
+        if not wavelength or wavelength <= 0:
+            return
+        for panel in detector:
+            mu = (
+                attenuation_coefficient.get_table(panel.get_material()).mu_at_angstrom(
+                    wavelength
+                )
+                / 10.0
+            )
+            panel.set_mu(mu)
+            panel.set_gain(factor_kev_angstrom / wavelength)
 
     def get_data_scale_factor(self, wavelength: float) -> float:
         # LCLStreamer Jungfrau pixels are deposited energy in keV. Photons are
