@@ -40,24 +40,30 @@ namespace dxtbx { namespace boost_python {
     }
   }  // namespace detail
 
-  ImageSetData::masker_ptr make_masker_pointer(boost::python::object masker) {
-    if (masker == boost::python::object()) {
-      return ImageSetData::masker_ptr();
-    }
-    return boost::python::extract<ImageSetData::masker_ptr>(masker)();
-  }
-
   /**
    * A constructor for the imageset data class
    */
   std::shared_ptr<ImageSetData> make_imageset_data1(boost::python::object reader,
                                                     boost::python::object masker) {
-    // Create the pointer
-    std::shared_ptr<ImageSetData> self(
-      new ImageSetData(reader, make_masker_pointer(masker)));
-
-    // Return the imageset data
-    return self;
+    // Distinguish between the three masker states:
+    // - A direct GoniometerShadowMasker instance
+    // - A callable () -> GoniometerShadowMasker (we want to defer render)
+    // - None
+    boost::python::extract<ImageSetData::masker_ptr> get_masker_ptr(masker);
+    ImageSetData *self = nullptr;
+    if (get_masker_ptr.check()) {
+      self = new ImageSetData(reader, get_masker_ptr());
+    } else if (masker == boost::python::object()) {
+      self = new ImageSetData(reader, nullptr);
+    } else if (PyCallable_Check(masker.ptr())) {
+      self = new ImageSetData(reader, masker);
+    } else {
+      PyErr_SetString(PyExc_TypeError,
+                      "Masker object must be: GoniometerShadowMasker | Callable[[], "
+                      "GoniometerShadow] | None");
+      throw boost::python::error_already_set();
+    }
+    return std::shared_ptr<ImageSetData>(self);
   }
 
   /**
@@ -70,8 +76,7 @@ namespace dxtbx { namespace boost_python {
                                                     boost::python::dict params,
                                                     boost::python::object format) {
     // Create the pointer
-    std::shared_ptr<ImageSetData> self(
-      new ImageSetData(reader, make_masker_pointer(masker)));
+    auto self = make_imageset_data1(reader, masker);
 
     // Set some stuff
     self->set_template(filename_template);
@@ -478,7 +483,8 @@ namespace dxtbx { namespace boost_python {
                     &ExternalLookupItem<T>::get_filename,
                     &ExternalLookupItem<T>::set_filename)
       .add_property(
-        "data", &ExternalLookupItem<T>::get_data, &ExternalLookupItem<T>::set_data);
+        "data", &ExternalLookupItem<T>::get_data, &ExternalLookupItem<T>::set_data)
+      .def("set_data_generator", &ExternalLookupItem<T>::set_data_generator);
   }
 
   /**

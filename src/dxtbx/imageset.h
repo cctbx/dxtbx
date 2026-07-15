@@ -86,6 +86,15 @@ public:
    * Get the data
    */
   Image<T> get_data() const {
+    if (generator_ != boost::python::object()) {
+      auto generated = generator_();
+      // Only replace data if we got "None" from this generator
+      if (generated != boost::python::object()) {
+        data_ = boost::python::extract<Image<T>>(generated)();
+      }
+      // Discard the generator, no matter what
+      generator_ = boost::python::object();
+    }
     return data_;
   }
 
@@ -97,9 +106,18 @@ public:
     data_ = data;
   }
 
+  /// Set a generator, to only load the external item data on first use
+  ///
+  /// This is a Python Callable[[], Image<T>] function. The function will
+  /// be discarded after first use.
+  void set_data_generator(boost::python::object generator) {
+    generator_ = generator;
+  }
+
 protected:
   std::string filename_;
-  Image<T> data_;
+  mutable Image<T> data_;
+  mutable boost::python::object generator_;
 };
 
 /**
@@ -171,12 +189,22 @@ public:
   ImageSetData(boost::python::object reader, masker_ptr masker)
       : reader_(reader),
         masker_(masker),
+        masker_obj_(),
         beams_(boost::python::len(reader)),
         detectors_(boost::python::len(reader)),
         goniometers_(boost::python::len(reader)),
         scans_(boost::python::len(reader)),
         reject_(boost::python::len(reader)) {}
 
+  ImageSetData(boost::python::object reader, boost::python::object masker)
+      : reader_(reader),
+        masker_(),
+        masker_obj_(masker),
+        beams_(boost::python::len(reader)),
+        detectors_(boost::python::len(reader)),
+        goniometers_(boost::python::len(reader)),
+        scans_(boost::python::len(reader)),
+        reject_(boost::python::len(reader)) {}
   /**
    * @returns The reader object
    */
@@ -188,6 +216,11 @@ public:
    * @returns The masker object
    */
   masker_ptr masker() {
+    if (masker_ == nullptr && masker_obj_ != boost::python::object()) {
+      masker_ = boost::python::extract<ImageSetData::masker_ptr>(masker_obj_())();
+      masker_obj_ = boost::python::object();
+    }
+
     return masker_;
   }
 
@@ -195,7 +228,7 @@ public:
    * @returns Does the imageset have a dynamic mask.
    */
   bool has_dynamic_mask() const {
-    return masker_ != NULL;
+    return masker_ != nullptr || masker_obj_ != boost::python::object();
   }
 
   /**
@@ -440,7 +473,12 @@ public:
                             std::size_t first,
                             std::size_t last) const {
     DXTBX_ASSERT(last > first);
-    ImageSetData partial = ImageSetData(reader, masker_);
+    ImageSetData partial;
+    if (masker_ == nullptr && masker_obj_ != boost::python::object()) {
+      partial = ImageSetData(reader, masker_obj_);
+    } else {
+      partial = ImageSetData(reader, masker_);
+    }
     for (size_t i = 0; i < last - first; i++) {
       partial.beams_[i] = beams_[i + first];
       partial.detectors_[i] = detectors_[i + first];
@@ -516,11 +554,18 @@ protected:
     flex_type a = boost::python::extract<flex_type>(obj)();
 
     // Return the image tile
-    return ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2> >(
+    return ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2>>(
       a.handle(), scitbx::af::c_grid<2>(a.accessor())));
   }
 
   boost::python::object reader_;
+  /// Hold an object that can be called to get the masker.
+  ///
+  /// This won't be called until the masker is actually required, under
+  /// the assumption that accessing the masker requires accessing the raw
+  /// data file.
+  boost::python::object masker_obj_;
+  /// The Goniometer Masker object, if loaded (or present)
   std::shared_ptr<GoniometerShadowMasker> masker_;
   scitbx::af::shared<beam_ptr> beams_;
   scitbx::af::shared<detector_ptr> detectors_;
@@ -663,8 +708,8 @@ public:
    * @returns The corrected data array
    */
   Image<double> get_corrected_data(std::size_t index) {
-    typedef scitbx::af::versa<double, scitbx::af::c_grid<2> > array_type;
-    typedef scitbx::af::const_ref<double, scitbx::af::c_grid<2> > const_ref_type;
+    typedef scitbx::af::versa<double, scitbx::af::c_grid<2>> array_type;
+    typedef scitbx::af::const_ref<double, scitbx::af::c_grid<2>> const_ref_type;
 
     // Get the multi-tile data, gain and pedestal
     DXTBX_ASSERT(index < indices_.size());
@@ -761,7 +806,7 @@ public:
           std::size_t xsize = detector[i].get_image_size()[0];
           std::size_t ysize = detector[i].get_image_size()[1];
           scitbx::af::c_grid<2> grid(ysize, xsize);
-          scitbx::af::versa<double, scitbx::af::c_grid<2> > data(grid, gain[i]);
+          scitbx::af::versa<double, scitbx::af::c_grid<2>> data(grid, gain[i]);
           result.push_back(ImageTile<double>(data));
         }
         return result;
@@ -800,7 +845,7 @@ public:
           std::size_t xsize = detector[i].get_image_size()[0];
           std::size_t ysize = detector[i].get_image_size()[1];
           scitbx::af::c_grid<2> grid(ysize, xsize);
-          scitbx::af::versa<double, scitbx::af::c_grid<2> > data(grid, pedestal[i]);
+          scitbx::af::versa<double, scitbx::af::c_grid<2>> data(grid, pedestal[i]);
           result.push_back(ImageTile<double>(data));
         }
         return result;
@@ -827,7 +872,7 @@ public:
     for (std::size_t i = 0; i < detector.size(); ++i) {
       std::size_t xsize = detector[i].get_image_size()[0];
       std::size_t ysize = detector[i].get_image_size()[1];
-      mask.push_back(ImageTile<bool>(scitbx::af::versa<bool, scitbx::af::c_grid<2> >(
+      mask.push_back(ImageTile<bool>(scitbx::af::versa<bool, scitbx::af::c_grid<2>>(
         scitbx::af::c_grid<2>(ysize, xsize), true)));
     }
     return mask;
@@ -857,8 +902,8 @@ public:
     if (!external_mask.empty()) {
       DXTBX_ASSERT(external_mask.n_tiles() == mask.n_tiles());
       for (std::size_t i = 0; i < mask.n_tiles(); ++i) {
-        scitbx::af::ref<bool, scitbx::af::c_grid<2> > m1 = mask.tile(i).data().ref();
-        scitbx::af::const_ref<bool, scitbx::af::c_grid<2> > m2 =
+        scitbx::af::ref<bool, scitbx::af::c_grid<2>> m1 = mask.tile(i).data().ref();
+        scitbx::af::const_ref<bool, scitbx::af::c_grid<2>> m2 =
           external_mask.tile(i).data().const_ref();
         DXTBX_ASSERT(m1.accessor().all_eq(m2.accessor()));
         for (std::size_t j = 0; j < m1.size(); ++j) {
@@ -1105,14 +1150,14 @@ public:
    */
   void clear_cache() {
     data_cache_ = DataCache<ImageBuffer>();
-    double_raw_data_cache_ = DataCache<Image<double> >();
+    double_raw_data_cache_ = DataCache<Image<double>>();
   }
 
 protected:
   ImageSetData data_;
   scitbx::af::shared<std::size_t> indices_;
   DataCache<ImageBuffer> data_cache_;
-  DataCache<Image<double> > double_raw_data_cache_;
+  DataCache<Image<double>> double_raw_data_cache_;
 
   Image<double> get_raw_data_as_double(std::size_t index) {
     DXTBX_ASSERT(index < indices_.size());
