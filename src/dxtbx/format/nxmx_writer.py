@@ -46,10 +46,10 @@ def _compression_phil_str():
     block_size_exponent = 12
       .type = int
       .help = The number of elements per block of the bit shuffle algorithm
-      .help =   will be 2**block_size_exponent  
+      .help =   will be 2**block_size_exponent
     compression_level = 3
       .type = int
-      .help = Compression level, used for bszstd, zstd, and gzip compression. 
+      .help = Compression level, used for bszstd, zstd, and gzip compression.
   }
     """
 
@@ -185,9 +185,9 @@ class NXmxWriter:
             self.handle = None
 
     def setup(self, experiments=None, imageset=None):
-        assert [experiments, imageset].count(
-            None
-        ) == 1, "Supply either experiments or imagset, not both"
+        assert [experiments, imageset].count(None) == 1, (
+            "Supply either experiments or imagset, not both"
+        )
         if experiments:
             if hasattr(experiments, "imagesets"):
                 self.imagesets = experiments.imagesets()
@@ -353,9 +353,26 @@ class NXmxWriter:
                 node = node[i]
             return node
 
+        # Zero-pad the module index at each hierarchy level so that the HDF5
+        # detector-module group names sort numerically. NXmx readers (dxtbx via
+        # nxmx.find_classes) enumerate NXdetector_module groups in alphabetical
+        # name order, so unpadded indices (..., M1, M10, ..., M2, ...) come back
+        # permuted relative to the dxtbx panel order -- which silently mispairs
+        # any externally-indexed artifact (reference geometry, per-panel mask).
+        # Padding keeps alphabetical order == numeric order. See the
+        # detector-geometry skill.
+        _level_width = {}
+        for _k in metro:
+            for _i, _m in enumerate(_k):
+                _level_width[_i] = max(_level_width.get(_i, 0), _m)
+        _level_width = {_i: len(str(_v)) for _i, _v in _level_width.items()}
+
         def level_string(key):
-            # Example for key (0,1,2). "L0M0_L1M1_L2M2", where L is level and M is module
-            return "_".join(["L%dM%d" % (l, m) for l, m in enumerate(key)])
+            # Example for key (0,1,2): "L0M0_L1M01_L2M0"; module index is zero-
+            # padded per level so group-name order == numeric module order.
+            return "_".join(
+                "L%dM%0*d" % (l, _level_width.get(l, 1), m) for l, m in enumerate(key)
+            )
 
         def recursive_setup_basis_dict(key, parent_name="", panel_id=0):
             # Set up NeXus axis names, including equipment components and depends_on chains
@@ -394,17 +411,17 @@ class NXmxWriter:
         source.attrs["NX_class"] = "NXsource"
         source["name"] = self.params.nexus_details.source_name
         if self.params.nexus_details.source_short_name:
-            source["name"].attrs[
-                "short_name"
-            ] = self.params.nexus_details.source_short_name
+            source["name"].attrs["short_name"] = (
+                self.params.nexus_details.source_short_name
+            )
         # --> instrument
         instrument = entry.create_group("instrument")
         instrument.attrs["NX_class"] = "NXinstrument"
         instrument["name"] = self.params.nexus_details.instrument_name
         if self.params.nexus_details.instrument_short_name:
-            instrument["name"].attrs[
-                "short_name"
-            ] = self.params.nexus_details.instrument_short_name
+            instrument["name"].attrs["short_name"] = (
+                self.params.nexus_details.instrument_short_name
+            )
         beam = instrument.create_group("beam")
         beam.attrs["NX_class"] = "NXbeam"
         if self.params.nexus_details.total_flux:
@@ -648,9 +665,9 @@ class NXmxWriter:
                         dtype=spectra_y.dtype,
                     )
                     handle["incident_wavelength_1Dspectrum"].attrs["units"] = "angstrom"
-                    handle["incident_wavelength"].attrs[
-                        "variant"
-                    ] = "incident_wavelength_1Dspectrum"
+                    handle["incident_wavelength"].attrs["variant"] = (
+                        "incident_wavelength_1Dspectrum"
+                    )
             else:
                 if len(beams) > 1:
                     wavelengths = np.array(
@@ -776,7 +793,7 @@ class NXmxWriter:
                 (1, *shape),
                 maxshape=(None, *shape),
                 dtype=dtype,
-                compression=get_compression(params.compression),
+                compression=get_compression(self.params.compression),
             )
 
         if len(data) > 1:
@@ -855,8 +872,9 @@ class NXmxWriter:
                 if axis_number == len(gonio.get_axes()) - 1:
                     axis.attrs["depends_on"] = "."
                 else:
-                    axis.attrs["depends_on"] = "/entry/sample/transformations/%s" % (
-                        gonio.get_names()[axis_number + 1]
+                    axis.attrs["depends_on"] = (
+                        "/entry/sample/transformations/%s"
+                        % (gonio.get_names()[axis_number + 1])
                     )
         else:
             setup_axis("omega", gonio.get_rotation_axis(), main_axis=True)
