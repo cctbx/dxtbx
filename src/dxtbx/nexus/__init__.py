@@ -70,6 +70,7 @@ class CachedWavelengthBeamFactory:
         self.index = None
         self.model = None
         self.spectrum = None
+        self._resolved = False
 
     def make_beam(self, index: int = 0) -> dxtbx.model.Beam:
         self.read_models(index)
@@ -79,11 +80,18 @@ class CachedWavelengthBeamFactory:
         self.read_models(index)
         return self.spectrum
 
-    def read_models(self, index: int = 0):
-        # Cached model
-        if self.model is not None and index == self.index:
-            return
+    def _resolve(self):
+        """Resolve the invariant wavelength/spectrum datasets once.
 
+        Which datasets hold the incident wavelength and the spectral weights,
+        and whether a variant chain is used, is fixed for the file. Only the
+        per-image slice (``[index]``) varies between frames, so the dataset
+        handles are resolved a single time here rather than being re-opened and
+        re-probed on every :meth:`read_models` call. This matters a great deal
+        for files with many frames, especially when a per-image spectrum
+        (e.g. ``incident_wavelength_1Dspectrum``) is present, where the eager
+        re-reading otherwise dominates the load time.
+        """
         # Get the items from the NXbeam class
         # Note it would be better if there were a general way to read weights
         # and variants from the nxmx classes
@@ -118,6 +126,43 @@ class CachedWavelengthBeamFactory:
             else:
                 break
 
+        self._wavelength = wavelength
+        self._spectrum_wavelengths = spectrum_wavelengths
+        self._spectrum_weights = spectrum_weights
+        self._has_variant_spectra = has_variant_spectra
+
+        # When the spectrum wavelength axis is shared across all images (i.e. it
+        # is not itself indexed per image) it can be read and converted to
+        # energies just once here, rather than repeating that work for every
+        # frame.
+        self._shared_spectrum_energies = None
+        if spectrum_weights is not None and len(spectrum_wavelengths.shape) <= 1:
+            shared_wavelengths = (
+                (spectrum_wavelengths[()] * nxmx.units(spectrum_wavelengths))
+                .to("angstrom")
+                .magnitude
+            )
+            self._shared_spectrum_energies = (
+                cctbx.factor_ev_angstrom / shared_wavelengths
+            )
+
+        self._resolved = True
+
+    def read_models(self, index: int = 0):
+        # Cached model
+        if self.model is not None and index == self.index:
+            return
+
+        # Resolve the invariant dataset handles once; only the per-image slice
+        # varies from here on.
+        if not self._resolved:
+            self._resolve()
+
+        wavelength = self._wavelength
+        spectrum_wavelengths = self._spectrum_wavelengths
+        spectrum_weights = self._spectrum_weights
+        has_variant_spectra = self._has_variant_spectra
+
         if index is None:
             index = 0
         self.index = index
@@ -143,22 +188,24 @@ class CachedWavelengthBeamFactory:
             self.model = dxtbx.model.Beam()
             self.model.set_direction((0, 0, 1))
 
-            wavelength_units = nxmx.units(spectrum_wavelengths)
-
-            if len(spectrum_wavelengths.shape) > 1:
-                spectrum_wavelengths = spectrum_wavelengths[index]
+            # Energies: use the once-computed shared axis if available,
+            # otherwise read this frame's per-image wavelengths.
+            if self._shared_spectrum_energies is not None:
+                spectrum_energies = self._shared_spectrum_energies
             else:
-                spectrum_wavelengths = spectrum_wavelengths[()]
+                frame_wavelengths = (
+                    (spectrum_wavelengths[index] * nxmx.units(spectrum_wavelengths))
+                    .to("angstrom")
+                    .magnitude
+                )
+                spectrum_energies = cctbx.factor_ev_angstrom / frame_wavelengths
+
             if len(spectrum_weights.shape) > 1:
-                spectrum_weights = spectrum_weights[index]
+                frame_weights = spectrum_weights[index]
             else:
-                spectrum_weights = spectrum_weights[()]
+                frame_weights = spectrum_weights[()]
 
-            spectrum_wavelengths = (
-                (spectrum_wavelengths * wavelength_units).to("angstrom").magnitude
-            )
-            spectrum_energies = cctbx.factor_ev_angstrom / spectrum_wavelengths
-            self.spectrum = dxtbx.model.Spectrum(spectrum_energies, spectrum_weights)
+            self.spectrum = dxtbx.model.Spectrum(spectrum_energies, frame_weights)
 
             if has_variant_spectra:
                 wavelength_value = get_wavelength(wavelength)
