@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import pathlib
 from typing import Literal, Optional
 
 import h5py
@@ -595,3 +596,164 @@ def get_raw_data(
         )  # handle 3 or 4 dimension arrays
         all_data.append(data_as_flex)
     return tuple(all_data)
+
+
+def _resolve_source(file_name, master_directory: pathlib.Path) -> pathlib.Path:
+    """Resolve a VDS source filename, which may be relative to the master file."""
+    src = pathlib.Path(file_name)
+    if not src.is_absolute():
+        src = master_directory / src
+    return src
+
+
+def _vds_source_map(
+    data: h5py.Dataset, master_file: h5py.File, master_directory: pathlib.Path
+):
+    """Frame-ordered [(global_start, global_end, source_path, dataset_name), ...] for
+    the source data files backing a virtual dataset.
+
+    Each source must ultimately resolve to an *external* data file, matching how DLS
+    NXmx masters are written. Two layouts are supported:
+
+      * the VDS source names the data file directly (``file_name != "."``); or
+      * the VDS source is the master file itself (``file_name == "."``) and names an
+        in-master dataset that is an :class:`h5py.ExternalLink` to the data file (the
+        DLS/GDA two-level layout).
+
+    A ``"."`` source that resolves to a genuine in-master dataset (no external file) is
+    unsupported and raises :class:`ValueError`.
+    """
+    sources = []
+    for vmap in data.virtual_sources():
+        start, end = vmap.vspace.get_select_bounds()
+        file_name = vmap.file_name
+        dset_name = vmap.dset_name
+        if file_name == ".":
+            # Source lives in the master file; on DLS masters it is an external link
+            # to the real data file. Resolve one level to find that file.
+            link = master_file.get(dset_name, getlink=True)
+            if not isinstance(link, h5py.ExternalLink):
+                raise ValueError(
+                    f"VDS source {dset_name!r} in {master_file.filename!r} does not "
+                    "point to an external data file; unsupported layout for live "
+                    "availability checking."
+                )
+            src_path = _resolve_source(link.filename, master_directory)
+            dset_name = link.path
+        else:
+            src_path = _resolve_source(file_name, master_directory)
+        sources.append((int(start[0]), int(end[0]), src_path, dset_name))
+    return sorted(sources)
+
+
+def _written_frame_count(dset) -> int:
+    """Number of frames actually written to a source dataset.
+
+    Detector writers allocate the source dataset at its *full* block extent up front
+    (``shape[0]`` is the planned frame count from creation, before any pixel is
+    written), so the dataset extent cannot tell us how much has arrived. What does
+    grow incrementally is chunk allocation: with one chunk per frame
+    (``chunks == (1, height, width)``) a chunk is only allocated once its frame has
+    been written, so the number of allocated chunks is the number of frames written.
+
+    Falls back to ``shape[0]`` for a genuinely growable/resized dataset or if the
+    chunk count cannot be queried (e.g. contiguous storage).
+    """
+    nframes = int(dset.shape[0])
+    if dset.chunks is not None and dset.chunks[0] == 1:
+        try:
+            n = dset.id.get_num_chunks()
+        except (RuntimeError, OSError, ValueError, TypeError):
+            return nframes
+        # One chunk per frame along the first axis, so allocated chunks == frames
+        # written; clamp defensively to the declared extent.
+        return min(int(n), nframes)
+    return nframes
+
+
+def _frames_written(src_path: pathlib.Path, dset_name: str, method: str) -> int:
+    """Number of frames currently readable in a single VDS source data file.
+
+    Returns 0 if the file/dataset cannot be read yet, e.g. it is still locked by
+    the SWMR writer, mid-flush, or not present.
+    """
+    try:
+        if method == "file_close":
+            # A plain (non-SWMR) open succeeds only once the writer has released the
+            # file, i.e. the whole block has finished; a block still being written is
+            # locked and raises (caught below -> 0). Detector files are preallocated at
+            # full extent, so count written chunks rather than the (static) extent -- a
+            # closed-but-empty pre-created file must not read as fully available.
+            with h5py.File(src_path, "r") as fh:
+                return _written_frame_count(fh[dset_name])
+        else:  # "swmr"
+            with h5py.File(src_path, "r", swmr=True) as fh:
+                dset = fh[dset_name]
+                if hasattr(dset, "refresh"):
+                    dset.refresh()
+                return _written_frame_count(dset)
+    except (OSError, KeyError):
+        return 0
+
+
+def get_frame_counts(master_path, method: str = "swmr") -> tuple[int, int]:
+    """Return ``(available, total)`` frame counts for an NXmx master.
+
+    During live data collection the master file's virtual dataset (VDS) declares the
+    full planned number of frames up front, while the underlying source data files are
+    filled incrementally (typically via SWMR). Reading an unwritten region of the VDS
+    silently returns the fill value, so this inspects the VDS sources directly to report
+    how many frames are genuinely available.
+
+    * ``available``: number of contiguous leading frames actually written to disk.
+    * ``total``: the full planned number of frames the master declares.
+
+    ``method`` selects how a source data file's readiness is judged:
+      * ``"swmr"`` (default): count the frames written to each source via an SWMR read
+        (per-image granularity). Detector datasets are allocated at their full extent up
+        front, so this counts allocated per-frame chunks rather than the (static) extent.
+      * ``"file_close"``: treat a source as ready only once it can be opened without
+        SWMR, i.e. the writer has closed it (per-block granularity).
+
+    A non-virtual dataset (a completed file, or a format without a VDS) is reported as
+    fully available (``available == total``). Returns ``(0, 0)`` if the master itself
+    cannot be read.
+    """
+    master_path = pathlib.Path(master_path)
+    try:
+        fh = h5py.File(master_path, "r", swmr=True)
+    except (OSError, ValueError):
+        try:
+            fh = h5py.File(master_path, "r")
+        except OSError:
+            return 0, 0
+    try:
+        nxmx_obj = nxmx.NXmx(fh)
+        nxdata = nxmx_obj.entries[0].data[0]
+        data = nxdata[nxdata.signal] if nxdata.signal else list(nxdata.values())[0]
+        total = int(data.shape[0])
+        if not data.is_virtual:
+            return total, total
+        available = 0
+        for gstart, gend, src, dset_name in _vds_source_map(
+            data, fh, master_path.parent
+        ):
+            if gstart > available:
+                break  # gap before this source: no longer contiguous from frame 0
+            span = min(gend, total - 1) - gstart + 1
+            written = _frames_written(src, dset_name, method)
+            available = gstart + min(written, span)
+            if written < span:
+                break  # this block is only partially written; stop here
+        return available, total
+    finally:
+        fh.close()
+
+
+def get_available_frame_count(master_path, method: str = "swmr") -> int:
+    """Number of contiguous leading frames of an NXmx master actually written to disk.
+
+    Thin wrapper over :func:`get_frame_counts` returning only the available count. See
+    that function for the full description of ``method`` and the availability model.
+    """
+    return get_frame_counts(master_path, method)[0]
