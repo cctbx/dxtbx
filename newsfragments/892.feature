@@ -1,0 +1,1 @@
+``dxtbx.nexus.get_frame_counts``/``get_available_frame_count``: Tools to report how many leading frames of a live NXmx master are actually written to disk. New ``dev.dxtbx.image_availability`` CLI live-monitors this, and ``dev.dxtbx.simulate_collection`` duplicates a primary nexus's structure, and fills it via SWMR to test it.
