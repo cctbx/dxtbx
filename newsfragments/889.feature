@@ -1,0 +1,1 @@
+This PR adds two new lines so that Fast DP can work with data from the Pilatus 4M detector, at Manacá beamline, LNLS. Though the data is processed as from an Eiger detector, nothing changes in the results.
