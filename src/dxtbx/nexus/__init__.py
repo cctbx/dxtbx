@@ -19,6 +19,13 @@ from dxtbx import flumpy
 logger = logging.getLogger(__name__)
 
 
+# Targets of the fixed unit conversions below, parsed once.
+ANGSTROM = nxmx.ureg.Unit("angstrom")
+DEGREE = nxmx.ureg.Unit("degree")
+MM = nxmx.ureg.Unit("mm")
+SECOND = nxmx.ureg.Unit("second")
+
+
 KNOWN_SENSOR_MATERIALS = {
     "Si": "Si",
     "Silicon": "Si",
@@ -130,7 +137,7 @@ class CachedWavelengthBeamFactory:
                 wavelength_value = wavelength[index]
             wavelength_units = nxmx.units(wavelength)
             wavelength_value = float(
-                (wavelength_value * wavelength_units).to("angstrom").magnitude
+                (wavelength_value * wavelength_units).to(ANGSTROM).magnitude
             )
             return wavelength_value
 
@@ -156,7 +163,7 @@ class CachedWavelengthBeamFactory:
                 spectrum_weights = spectrum_weights[()]
 
             spectrum_wavelengths = (
-                (spectrum_wavelengths * wavelength_units).to("angstrom").magnitude
+                (spectrum_wavelengths * wavelength_units).to(ANGSTROM).magnitude
             )
             spectrum_energies = cctbx.factor_ev_angstrom / spectrum_wavelengths
             self.spectrum = dxtbx.model.Spectrum(spectrum_energies, spectrum_weights)
@@ -206,15 +213,15 @@ def get_dxtbx_scan(
 
     oscillation = (0, 0)
     if is_rotation:
-        start = scan_axis[0].to("degree")
+        start = scan_axis[0].to(DEGREE)
         if scan_axis.end:
             steps = scan_axis.end[()] - scan_axis[()]
         elif num_images > 1:
             steps = np.diff(scan_axis[()])
         else:
-            steps = nxmx.ureg.Quantity(0, "degree")
+            steps = nxmx.ureg.Quantity(0, DEGREE)
 
-        step = np.median(steps).to("degree")
+        step = np.median(steps).to(DEGREE)
         if np.any(np.abs(steps - step) > abs(0.1 * step)):
             logger.warning(
                 "One or more recorded oscillation widths differ from the median "
@@ -226,7 +233,7 @@ def get_dxtbx_scan(
         oscillation = tuple(float(f) for f in (start.magnitude, step.magnitude))
 
     if nxdetector.frame_time is not None:
-        frame_time = float(nxdetector.frame_time.to("seconds").magnitude)
+        frame_time = float(nxdetector.frame_time.to(SECOND).magnitude)
         exposure_times = flex.double(num_images, frame_time)
         epochs = flex.double_range(0, num_images) * frame_time
     else:
@@ -336,8 +343,8 @@ def get_dxtbx_detector(
             pg = root
 
         pixel_size = (
-            module.fast_pixel_direction[()].to("mm").magnitude.item(),
-            module.slow_pixel_direction[()].to("mm").magnitude.item(),
+            module.fast_pixel_direction[()].to(MM).magnitude.item(),
+            module.slow_pixel_direction[()].to(MM).magnitude.item(),
         )
 
         if isinstance(pg, dxtbx.model.DetectorNode):
@@ -345,11 +352,11 @@ def get_dxtbx_detector(
             fast_axis = MCSTAS_TO_IMGCIF @ module.fast_pixel_direction.vector
             slow_axis = MCSTAS_TO_IMGCIF @ module.slow_pixel_direction.vector
             origin = MCSTAS_TO_IMGCIF @ (
-                module.fast_pixel_direction.offset.to("mm").magnitude
+                module.fast_pixel_direction.offset.to(MM).magnitude
                 if module.fast_pixel_direction.offset is not None
                 else (
                     np.array([0.0, 0.0, 0.0])
-                    + module.slow_pixel_direction.offset.to("mm").magnitude
+                    + module.slow_pixel_direction.offset.to(MM).magnitude
                     if module.slow_pixel_direction.offset is not None
                     else np.array([0.0, 0.0, 0.0])
                 )
@@ -399,11 +406,11 @@ def get_dxtbx_detector(
 
             origin = MCSTAS_TO_IMGCIF @ (
                 (
-                    module.fast_pixel_direction.offset.to("mm").magnitude
+                    module.fast_pixel_direction.offset.to(MM).magnitude
                     if module.fast_pixel_direction.offset is not None
                     else (
                         np.array([0.0, 0.0, 0.0])
-                        + module.slow_pixel_direction.offset.to("mm").magnitude
+                        + module.slow_pixel_direction.offset.to(MM).magnitude
                         if module.slow_pixel_direction.offset is not None
                         else np.array([0.0, 0.0, 0.0])
                     )
@@ -445,7 +452,7 @@ def get_dxtbx_detector(
         material = KNOWN_SENSOR_MATERIALS.get(nxdetector.sensor_material)
         if not material:
             raise ValueError(f"Unknown material: {nxdetector.sensor_material}")
-        thickness = float(nxdetector.sensor_thickness.to("mm").magnitude)
+        thickness = float(nxdetector.sensor_thickness.to(MM).magnitude)
         table = eltbx.attenuation_coefficient.get_table(material)
         mu = table.mu_at_angstrom(wavelength) / 10.0
         px_mm = dxtbx.model.ParallaxCorrectedPxMmStrategy(mu, thickness)

@@ -13,6 +13,14 @@ import dxtbx.model
 import dxtbx.nexus
 
 
+def test_conversion_targets_are_the_units_they_name():
+    """The module-level conversion targets are the units the read path converts to."""
+    assert dxtbx.nexus.ANGSTROM == nxmx.ureg.Unit("angstrom")
+    assert dxtbx.nexus.DEGREE == nxmx.ureg.Unit("degree")
+    assert dxtbx.nexus.MM == nxmx.ureg.Unit("mm")
+    assert dxtbx.nexus.SECOND == nxmx.ureg.Unit("seconds")
+
+
 def test_get_dxtbx_goniometer_multi_axis(nxmx_example):
     sample = nxmx.NXmx(nxmx_example).entries[0].samples[0]
     gonio = dxtbx.nexus.get_dxtbx_goniometer(sample)

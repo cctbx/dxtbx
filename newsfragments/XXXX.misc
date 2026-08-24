@@ -1,0 +1,5 @@
+``NXmx``: the fixed unit-conversion targets on the read path are now resolved once at
+import rather than on every conversion. A ``pint`` unit named by a string is re-parsed at
+each ``.to()`` call, and a prefixed name such as ``mm`` goes through the unit-prefix search
+rather than a dictionary lookup; a 256-module detector paid that four times per module.
+Models built from a file are unchanged.
