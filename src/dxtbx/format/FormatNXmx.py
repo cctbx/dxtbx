@@ -116,6 +116,9 @@ class FormatNXmx(FormatNexus):
             dxtbx.nexus.get_static_mask(nxdetector)
         )
         self._bit_depth_readout = nxdetector.bit_depth_readout
+        self._nxdata_cached = nxdata
+        self._nxdetector_cached = nxdetector
+        self._module_slices_cached = dxtbx.nexus.get_detector_module_slices(nxdetector)
 
         if self._scan_model:
             self._num_images = len(self._scan_model)
@@ -158,11 +161,12 @@ class FormatNXmx(FormatNexus):
         return self._static_mask
 
     def get_raw_data(self, index):
-        nxmx_obj = self._get_nxmx(self._cached_file_handle)
-        nxdata = nxmx_obj.entries[0].data[0]
-        nxdetector = nxmx_obj.entries[0].instruments[0].detectors[0]
         raw_data = dxtbx.nexus.get_raw_data(
-            nxdata, nxdetector, index, bit_depth=self._bit_depth_readout
+            self._nxdata_cached,
+            self._nxdetector_cached,
+            index,
+            bit_depth=self._bit_depth_readout,
+            module_slices=self._module_slices_cached,
         )
         if self._bit_depth_readout:
             # if 32 bit then it is a signed int, I think if 8, 16 then it is
