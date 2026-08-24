@@ -59,6 +59,7 @@ try:
         Spectrum,
         VirtualPanel,
         VirtualPanelFrame,
+        XFELBeam,
         get_mod2pi_angles_in_range,
         get_range_of_mod2pi_angles,
         is_angle_in_range,
@@ -97,6 +98,7 @@ except ModuleNotFoundError:
         Spectrum,
         VirtualPanel,
         VirtualPanelFrame,
+        XFELBeam,
         get_mod2pi_angles_in_range,
         get_range_of_mod2pi_angles,
         is_angle_in_range,
@@ -108,6 +110,7 @@ __all__ = (
     "Beam",
     "BeamBase",
     "PolychromaticBeam",
+    "XFELBeam",
     "BeamFactory",
     "Crystal",
     "CrystalBase",
@@ -148,6 +151,35 @@ __all__ = (
     "parallax_correction",
     "parallax_correction_inv",
 )
+
+
+@boost_adaptbx.boost.python.inject_into(XFELBeam)
+class _xfelbeam:
+    def get_monochromatic_beam(self, wavelength):
+        """Return a monochromatic Beam with the given wavelength.
+
+        Carries through polarization, flux, transmission, probe, and sample-to-source
+        distance from the XFELBeam so that downstream consumers (integration's
+        Lorentz-polarization correction in particular) see the instrument values
+        rather than defaults.
+
+        Typical use: imageset.get_beam(i) dispatches here via ImageSequence.get_beam(index).
+        """
+        # Use Beam's full constructor (divergence/sigma_divergence in degrees,
+        # deg=True converts on the way in).
+        return Beam(
+            direction=self.get_sample_to_source_direction(),
+            wavelength=float(wavelength),
+            divergence=self.get_divergence(),
+            sigma_divergence=self.get_sigma_divergence(),
+            polarization_normal=self.get_polarization_normal(),
+            polarization_fraction=self.get_polarization_fraction(),
+            flux=self.get_flux(),
+            transmission=self.get_transmission(),
+            probe=self.get_probe(),
+            sample_to_source_distance=self.get_sample_to_source_distance(),
+            deg=True,
+        )
 
 
 @boost_adaptbx.boost.python.inject_into(Detector)
@@ -564,6 +596,28 @@ class _experiment:
         self.goniometer = self.imageset.get_goniometer(index)
         self.scan = self.imageset.get_scan(index)
 
+    def get_monochromatic_beam(self):
+        """Return a usable monochromatic Beam for this experiment's frame.
+
+        XFEL stills store a shared XFELBeam (no fixed wavelength) plus a
+        per-frame scan whose "wavelength" property holds the shot wavelength.
+        Combine the two into a monochromatic Beam. Any other beam type is
+        returned unchanged, so callers may use this unconditionally.
+
+        The resolvable beam is discovered by capability -- it exposes
+        get_monochromatic_beam -- rather than by isinstance(XFELBeam), so a
+        future per-shot monochromatic beam type opts in by exposing the same
+        helper.
+        """
+        if not hasattr(self.beam, "get_monochromatic_beam"):
+            return self.beam
+        if self.scan is None or not self.scan.has_property("wavelength"):
+            raise RuntimeError(
+                "Cannot resolve a per-frame beam: XFELBeam experiment has no "
+                "scan 'wavelength' property"
+            )
+        return self.beam.get_monochromatic_beam(self.scan.get_property("wavelength")[0])
+
 
 @boost_adaptbx.boost.python.inject_into(ExperimentList)
 class _experimentlist:
@@ -644,8 +698,11 @@ class _experimentlist:
         Consolidate a list of histories into a single history and set this in each
         experiment.
 
-        At the moment, this just combines the lines from the histories and sorts
-        them by timestamp.
+        At the moment, this combines the lines from the histories, removes
+        duplicates, and sorts them by timestamp. Deduplication matters when many
+        experiments share the same provenance (e.g. after split->combine, each
+        source file carries an identical history that would otherwise be
+        repeated once per experiment).
 
         :return History: The consolidated history
         """
@@ -653,7 +710,7 @@ class _experimentlist:
         if len(histories) == 0:
             lines = []
         else:
-            lines = [l for h in histories for l in h.get_history()]
+            lines = list(OrderedSet(l for h in histories for l in h.get_history()))
             lines.sort(key=lambda x: dateutil.parser.isoparse(x.split("|")[0]))
         history = History(lines)
 
@@ -764,6 +821,155 @@ class _experimentlist:
             r["params"] = imset.params()
             result["imageset"].append(r)
 
+        # Consolidate single-frame stills scans into one JSON object when possible.
+        # Each experiment gets a scan_point index; all point to scan 0.
+        # The in-memory model is unchanged; this only affects the JSON.
+        # Guard ensures rotation data (oscillation > 0) is never affected.
+        scan_models = sorted(
+            (s for s in index_lookup["scan"] if s is not None),
+            key=lambda s: s.get_image_range()[0],
+        )
+        all_stills = len(scan_models) >= 1 and all(
+            s.get_image_range()[0] == s.get_image_range()[1]
+            and s.get_image_range()[0] > 0
+            and s.is_still()
+            for s in scan_models
+        )
+
+        # Per-frame identity is now stored only as 0-based single_file_indices
+        # on each imageset (the redundant 1-based frame_numbers array was
+        # removed). That fallback is gone, so consolidation is only safe when
+        # every imageset referenced by a still-scan experiment carries
+        # single_file_indices, i.e. is a single-file reader. The eligibility
+        # test above is purely scan-based and never checks reader type, so this
+        # is the explicit precondition. Multi-file CBF stills (each frame its
+        # own file) are non-single-file readers: they have no single_file_indices
+        # to recover frame labels from, so we skip consolidation and let the
+        # normal per-scan write emit each image_range. (A scan-bearing
+        # experiment with no imageset is likewise ineligible.) Producing a
+        # consolidated structure for multi-file CBF is P6 proper and is
+        # deferred; it would require reintroducing the per-frame frame labels
+        # that P2 deliberately removed.
+        all_single_file = all(
+            exp.imageset is not None and exp.imageset.reader().is_single_file_reader()
+            for exp in self
+            if exp.scan is not None
+        )
+
+        if all_stills and len(scan_models) > 1 and all_single_file:
+            # Assign scan_point per (imageset, unique frame), NOT per unique Scan
+            # object. scans() dedups by identity, so multi-lattice experiments
+            # whose Scan objects are separate-but-equal (the post-combine case:
+            # split_experiments -> combine_experiments breaks Scan identity, see
+            # combine_experiments._consolidate_stills_imagesets) would otherwise
+            # get one scan_point each and over-count the frames. The reader
+            # rebuilds each frame's image_range from the imageset's
+            # single_file_indices, which carries one entry per frame, so the
+            # consolidated property arrays must likewise be one-entry-per-frame
+            # and aligned (per imageset, ascending frame) with single_file_indices.
+            # Group by imageset (a frame index is only unique within an imageset:
+            # file A frame 0 and file B frame 0 both have image_range (1, 1)).
+            imageset_index = index_lookup["imageset"]
+            frames_by_imageset: dict = {}  # iset idx -> {frame: representative Scan}
+            for exp in self:
+                if exp.scan is None:
+                    continue
+                m = imageset_index[exp.imageset]
+                frame = exp.scan.get_image_range()[0]
+                frames_by_imageset.setdefault(m, {}).setdefault(frame, exp.scan)
+
+            # Global scan_points: imagesets in index order, frames ascending, so
+            # within each imageset ascending scan_point matches ascending frame.
+            scan_point_of_frame: dict = {}  # (iset idx, frame) -> scan_point
+            rep_scans = []  # one representative Scan per scan_point (per frame)
+            for m in sorted(frames_by_imageset):
+                for frame in sorted(frames_by_imageset[m]):
+                    scan_point_of_frame[(m, frame)] = len(rep_scans)
+                    rep_scans.append(frames_by_imageset[m][frame])
+
+            for exp_dict, exp in zip(result["experiment"], self):
+                if exp.scan is not None:
+                    m = imageset_index[exp.imageset]
+                    frame = exp.scan.get_image_range()[0]
+                    exp_dict["scan_point"] = scan_point_of_frame[(m, frame)]
+                    exp_dict["scan"] = 0
+
+            # Union of any non-empty valid_image_ranges across the per-frame scans
+            all_vir: dict = {}
+            for s in rep_scans:
+                all_vir.update(s.to_dict().get("valid_image_ranges", {}))
+
+            # Build per-property arrays (one entry per scan_point/frame); skip
+            # entirely-zero arrays on write
+            all_prop_keys: set = set()
+            for s in rep_scans:
+                all_prop_keys.update(s.get_properties().keys())
+            consolidated_props: dict = {}
+            for key in all_prop_keys:
+                if key == "oscillation":
+                    # Stored as radians in the C++ properties table, but the JSON
+                    # convention (see to_dict<Scan> in boost_python/scan.cc) is degrees.
+                    vals = [float(s.get_oscillation(deg=True)[0]) for s in rep_scans]
+                elif key == "oscillation_width":
+                    vals = [float(s.get_oscillation(deg=True)[1]) for s in rep_scans]
+                else:
+                    vals = [
+                        float(s.get_properties().get(key, (0.0,))[0]) for s in rep_scans
+                    ]
+                if any(v != 0.0 for v in vals):
+                    consolidated_props[key] = vals
+
+            result["scan"] = [
+                {
+                    "__stills_consolidated": True,
+                    "batch_offset": rep_scans[0].get_batch_offset(),
+                    "properties": consolidated_props,
+                    "valid_image_ranges": all_vir,
+                }
+            ]
+
+        # XFEL stills: collapse monochromatic per-frame beams (or a single
+        # shared beam carrying one frame's wavelength after combine_experiments
+        # reference_from_experiment.beam=0) back to one XFELBeam. The
+        # per-frame wavelengths live in scan "wavelength" properties, so the
+        # beam wavelength is redundant and dropping it keeps the file compact
+        # and round-trips identically through decode()'s auto-resolve. Runs
+        # whenever there are stills with wavelengths in the scan, independent
+        # of whether scan consolidation fired (so single-experiment writes
+        # from dials.split_experiments also produce XFELBeam).
+        if all_stills and all("wavelength" in s.get_properties() for s in scan_models):
+            beam_models = list(index_lookup["beam"])
+            if beam_models and all(type(b) is Beam for b in beam_models):
+
+                def _geometry(b):
+                    return (
+                        b.get_sample_to_source_direction(),
+                        b.get_divergence(),
+                        b.get_sigma_divergence(),
+                        b.get_polarization_normal(),
+                        b.get_polarization_fraction(),
+                    )
+
+                b0 = beam_models[0]
+                if all(_geometry(b) == _geometry(b0) for b in beam_models):
+                    from dxtbx.model.beam import BeamFactory
+
+                    xfel_beam = BeamFactory.make_xfel_beam(
+                        direction=b0.get_sample_to_source_direction(),
+                        divergence=b0.get_divergence(),
+                        sigma_divergence=b0.get_sigma_divergence(),
+                        polarization_normal=b0.get_polarization_normal(),
+                        polarization_fraction=b0.get_polarization_fraction(),
+                        flux=b0.get_flux(),
+                        transmission=b0.get_transmission(),
+                        probe=b0.get_probe(),
+                        sample_to_source_distance=b0.get_sample_to_source_distance(),
+                    )
+                    result["beam"] = [xfel_beam.to_dict()]
+                    for exp_dict in result["experiment"]:
+                        if "beam" in exp_dict:
+                            exp_dict["beam"] = 0
+
         # Extract all the ordered model dictionaries - is important these
         # preserve the same order as used in experiment serialization above
         for name, models in index_lookup.items():
@@ -791,8 +997,16 @@ class _experimentlist:
         split=False,
         history_as_integrated=False,
         history_as_scaled=False,
+        history_timestamp=None,
     ):
-        """Dump experiment list as json"""
+        """Dump experiment list as json
+
+        :param history_timestamp: ISO-extended UTC timestamp string (e.g.
+            ``"2026-06-02T14:06:08Z"``) to stamp on the appended history item
+            instead of the current time. Lets a single command that writes many
+            files (e.g. ``dials.split_experiments``) give every output file an
+            identical history line so they deduplicate cleanly on recombine.
+        """
 
         # Make sure sys._getframe exists (cctbx/dxtbx#867)
         if not hasattr(sys, "_getframe"):
@@ -863,8 +1077,16 @@ class _experimentlist:
         # Consolidate existing history objects
         history = self.consolidate_histories()
 
-        # Append the new history line
-        history.append_history_item(dispatcher, version, flags)
+        # Append the new history line. When an explicit timestamp is supplied
+        # (matching append_history_item's ISO-extended "...Z" format), build the
+        # line directly so many files written by one command share it verbatim.
+        if history_timestamp is None:
+            history.append_history_item(dispatcher, version, flags)
+        else:
+            message = f"{history_timestamp}|{dispatcher}|{version}"
+            if flags:
+                message += f"|{flags}"
+            history.set_history(list(history.get_history()) + [message])
 
         # Get the dictionary and get the JSON string
         dictionary = self.to_dict()

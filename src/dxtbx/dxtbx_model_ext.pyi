@@ -144,7 +144,7 @@ class Beam(BeamBase):
     @staticmethod
     def get_probe_from_name(name: str) -> Probe: ...
 
-class PolychromaticBeam(Beam):
+class PolychromaticBeam(BeamBase):
     @overload
     def __init__(self, beam: PolychromaticBeam) -> None: ...
     @overload

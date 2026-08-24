@@ -80,6 +80,21 @@ class CachedWavelengthBeamFactory:
         self.read_models(index)
         return self.spectrum
 
+    def get_wavelengths(self) -> list:
+        """Read 1-D incident_wavelength array; return per-frame wavelengths in Angstrom."""
+        primary_key = "incident_wavelength"
+        wavelength = self.handle[primary_key]
+        if wavelength.shape in ((), (1,)):
+            raise RuntimeError(
+                "get_wavelengths requires a 1-D wavelength array; "
+                "this file has a scalar incident_wavelength"
+            )
+        wavelength_units = nxmx.units(wavelength)
+        wl_values = wavelength[()]
+        return [
+            float((w * wavelength_units).to("angstrom").magnitude) for w in wl_values
+        ]
+
     def read_models(self, index: int = 0):
         # Cached model
         if self.model is not None and index == self.index:
@@ -570,6 +585,7 @@ def get_raw_data(
     nxdetector: nxmx.NXdetector,
     index: int,
     bit_depth: int | None = None,
+    module_slices: tuple[tuple[slice, ...], ...] | None = None,
 ) -> tuple[flex.float | flex.double | flex.int, ...]:
     """Return the raw data for an NXdetector.
 
@@ -585,11 +601,13 @@ def get_raw_data(
             data = list(nxdata.values())[0]
     else:
         data = list(nxdata.values())[0]
+    if module_slices is None:
+        module_slices = get_detector_module_slices(nxdetector)
     all_data = []
     sliced_outer = data[index]
-    for module_slices in get_detector_module_slices(nxdetector):
+    for slices in module_slices:
         data_as_flex = _dataset_as_flex(
-            sliced_outer, tuple(module_slices), bit_depth=bit_depth
+            sliced_outer, tuple(slices), bit_depth=bit_depth
         )
         data_as_flex.reshape(
             flex.grid(data_as_flex.all()[-2:])

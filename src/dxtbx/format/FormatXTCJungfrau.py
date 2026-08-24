@@ -22,7 +22,7 @@ from libtbx.phil import parse
 from scitbx.array_family import flex
 from scitbx.matrix import col
 
-from dxtbx.format.FormatXTC import FormatXTC, locator_str
+from dxtbx.format.FormatXTC import FormatXTC, FormatXTCXFEL, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 jungfrau_locator_str = """
@@ -48,7 +48,7 @@ jungfrau_locator_scope = parse(
 )
 
 
-class FormatXTCJungfrau(FormatXTC):
+class FormatXTCJungfrau(FormatXTCXFEL):
     def __init__(self, image_file, **kwargs):
         super().__init__(image_file, locator_scope=jungfrau_locator_scope, **kwargs)
         self._cached_detector = {}

@@ -9,6 +9,7 @@ import scitbx.array_family.flex as flex
 
 import dxtbx.nexus
 from dxtbx.format.FormatNexus import FormatNexus
+from dxtbx.format.FormatXFEL import FormatXFEL
 
 
 class _MaskCache:
@@ -98,6 +99,16 @@ class FormatNXmx(FormatNexus):
         nxdetector = nxinstrument.detectors[0]
         nxbeam = nxinstrument.beams[0]
         nxdata = nxmx_obj.entries[0].data[0]
+        # Cache the NXmx tree handles and module-slice layout on the instance
+        # so that get_raw_data does not re-walk and re-derive them per frame.
+        # The slice tuples are pure Python ints; the nxdata/nxdetector wrappers
+        # retain their lazy h5py handles, which share the same file handle.
+        self._cached_nxmx_obj = nxmx_obj
+        self._cached_nxdata = nxdata
+        self._cached_nxdetector = nxdetector
+        self._detector_module_slices = dxtbx.nexus.get_detector_module_slices(
+            nxdetector
+        )
         self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
         self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
         wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
@@ -158,11 +169,12 @@ class FormatNXmx(FormatNexus):
         return self._static_mask
 
     def get_raw_data(self, index):
-        nxmx_obj = self._get_nxmx(self._cached_file_handle)
-        nxdata = nxmx_obj.entries[0].data[0]
-        nxdetector = nxmx_obj.entries[0].instruments[0].detectors[0]
         raw_data = dxtbx.nexus.get_raw_data(
-            nxdata, nxdetector, index, bit_depth=self._bit_depth_readout
+            self._cached_nxdata,
+            self._cached_nxdetector,
+            index,
+            bit_depth=self._bit_depth_readout,
+            module_slices=self._detector_module_slices,
         )
         if self._bit_depth_readout:
             # if 32 bit then it is a signed int, I think if 8, 16 then it is
@@ -176,3 +188,28 @@ class FormatNXmx(FormatNexus):
                 d1d.set_selected(d1d == top - 1, -1)
                 d1d.set_selected(d1d == top - 2, -2)
         return raw_data
+
+
+class FormatNXmxXFEL(FormatXFEL, FormatNXmx):
+    """NXmx format for XFEL sources with per-frame wavelengths.
+
+    XFEL NXmx files store incident_wavelength as a 1D array (one per pulse);
+    synchrotron NXmx files store it as a scalar. understand() distinguishes the two.
+    """
+
+    @staticmethod
+    def understand(image_file):
+        if not FormatNXmx.understand(image_file):
+            return False
+        # XFEL: incident_wavelength is a 1-D array with >1 entry (one per pulse).
+        # Scalar (ndim=0) or 1-element array (size=1) means constant wavelength
+        # → use regular FormatNXmx instead.
+        try:
+            with h5py.File(image_file) as f:
+                wl = f.get("/entry/instrument/beam/incident_wavelength")
+                return wl is not None and wl.ndim > 0 and wl.size > 1
+        except Exception:
+            return False
+
+    def get_wavelengths(self):
+        return self._beam_factory.get_wavelengths()
