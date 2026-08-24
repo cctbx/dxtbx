@@ -95,12 +95,6 @@ def _merge_dependency_lists(source, merge_into):
             indices[pkg] = len(merge_into) - 1
 
 
-# def _merge_dependency_dictionaries(sources):
-#     # type: (list[dict[str, Dependency]]) -> dict[str, Dependency]
-#     """Merge multiple parsed dependency dictionaries into one."""
-#     Evidently WIP?
-
-
 class DependencySelectorParser(object):
     """
     Parse simple conda-build selectors syntax, with optional variables.
@@ -143,13 +137,12 @@ class DependencySelectorParser(object):
         output_lines = []
         for line in data.splitlines():
             match = re_selector.search(line)
-
             if match:
                 if self._parse_expression(match.group(1)):
-                    output_lines.append(line)
-            elif re_pin.search(line):
-                # Ignore pin_compatible dependencies
-                continue
+                    output_lines.append(line[: match.start()].rstrip())
+            # elif re_pin.search(line):
+            #     # Ignore pin_compatible dependencies
+            #     continue
             else:
                 output_lines.append(line)
         return "\n".join(output_lines)
@@ -172,9 +165,10 @@ class DependencySelectorParser(object):
         output = {}  # type: Dependencies
         current_section = None  # type: SectionName | None
         for n, line in enumerate(data.splitlines()):
-            if "#" in line:
-                line = line[: line.index("#")]
             line = line.strip()
+            # Ignore pure comment lines
+            if line.lstrip().startswith("#"):
+                continue
             if line.endswith(":"):
                 new_section = line[:-1].strip()
                 assert new_section in VALID_SECTIONS
