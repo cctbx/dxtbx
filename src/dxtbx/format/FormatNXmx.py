@@ -74,13 +74,16 @@ class FormatNXmx(FormatNexus):
     @staticmethod
     def understand(image_file):
         with h5py.File(image_file) as handle:
-            return bool(
-                [
-                    entry
-                    for entry in nxmx.find_class(handle, "NXentry")
-                    if "definition" in entry
-                    and nxmx.h5str(entry["definition"][()]) == "NXmx"
-                ]
+            return (
+                bool(
+                    [
+                        entry
+                        for entry in nxmx.find_class(handle, "NXentry")
+                        if "definition" in entry
+                        and nxmx.h5str(entry["definition"][()]) == "NXmx"
+                    ]
+                )
+                and "/entry/data/data" in handle
             )
 
     def __init__(self, image_file, **kwargs):
@@ -115,7 +118,9 @@ class FormatNXmx(FormatNexus):
         self._static_mask = mask_cache.store_unique_and_get(
             dxtbx.nexus.get_static_mask(nxdetector)
         )
-        self._bit_depth_readout = nxdetector.bit_depth_readout
+        self._bit_depth_readout = max(
+            nxdetector.bit_depth_readout, nxdetector.bit_depth_image
+        )
 
         if self._scan_model:
             self._num_images = len(self._scan_model)
