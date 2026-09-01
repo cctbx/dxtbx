@@ -15,6 +15,7 @@ from dxtbx.model import (
     Beam,
     BeamFactory,
     Detector,
+    DetectorFactory,
     Panel,
     ParallaxCorrectedPxMmStrategy,
 )
@@ -481,3 +482,50 @@ def test_detector_resolution():
     dmin3 = detector[0].get_max_resolution_ellipse(pbeam)
     assert dmin1 == pytest.approx(dmin2)
     assert dmin1 == pytest.approx(dmin3)
+
+
+# Tests for https://github.com/cctbx/dxtbx/issues/472: a hierarchy is
+# meaningless for a single panel detector, and must not be created for one.
+
+
+def single_panel_detector():
+    return DetectorFactory.simple(
+        "PAD",
+        100,
+        (10.0, 10.0),
+        "+x",
+        "-y",
+        (0.1, 0.1),
+        (200, 200),
+    )
+
+
+def hierarchical_multipanel_detector():
+    """A detector whose panels hang off a group rather than off the root."""
+    detector = Detector()
+    group = detector.hierarchy().add_group()
+    group.set_frame((1, 0, 0), (0, 1, 0), (0.0, 0.0, -100.0))
+    for i in range(2):
+        panel = group.add_panel()
+        panel.set_local_frame((1, 0, 0), (0, -1, 0), (20.0 * i - 10.0, 10.0, 0.0))
+        panel.set_pixel_size((0.1, 0.1))
+        panel.set_image_size((100, 100))
+    return detector
+
+
+def test_single_panel_detector_has_no_hierarchy():
+    assert not single_panel_detector().has_hierarchy()
+    assert hierarchical_multipanel_detector().has_hierarchy()
+    # A flat multi panel detector is not a hierarchy either: its root sits at
+    # the identity frame and every panel hangs directly off it
+    assert not create_multipanel_detector(offset=0).has_hierarchy()
+
+
+def test_single_panel_detector_is_not_serialized_with_a_hierarchy():
+    detector = single_panel_detector()
+    assert "hierarchy" not in detector.to_dict()
+    assert "hierarchy" in create_multipanel_detector(offset=0).to_dict()
+    assert "hierarchy" in hierarchical_multipanel_detector().to_dict()
+
+    assert Detector.from_dict(detector.to_dict()) == detector
+    assert pickle.loads(pickle.dumps(detector)) == detector
