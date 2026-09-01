@@ -11,6 +11,7 @@ from libtbx.test_utils import approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
 
+from dxtbx.format.Format import Format, check_detector_has_no_pointless_hierarchy
 from dxtbx.model import (
     Beam,
     BeamFactory,
@@ -623,3 +624,17 @@ def test_legacy_single_panel_hierarchy_is_folded_into_the_panel():
     )
     # ... and it stays folded when written back out
     assert "hierarchy" not in restored.to_dict()
+
+
+def test_format_class_rejects_a_single_panel_hierarchy():
+    detector = single_panel_detector()
+    detector.hierarchy().set_frame((1, 0, 0), (0, 1, 0), (1.0, 2.0, 0.0))
+
+    with pytest.raises(RuntimeError, match="meaningless"):
+        check_detector_has_no_pointless_hierarchy(Format, detector)
+
+    # Multiple panels, and no detector at all, are both fine
+    check_detector_has_no_pointless_hierarchy(
+        Format, create_multipanel_detector(offset=0)
+    )
+    check_detector_has_no_pointless_hierarchy(Format, None)
