@@ -594,3 +594,32 @@ def test_set_distance_keeps_a_single_panel_detector_flat():
     assert detector[0].get_distance() == pytest.approx(250.0)
     assert not detector.has_hierarchy()
     assert detector[0].get_local_origin() == pytest.approx(detector[0].get_origin())
+
+
+def test_legacy_single_panel_hierarchy_is_folded_into_the_panel():
+    """A detector written before dxtbx#472 splits its geometry in two.
+
+    The values here are those reported in the issue. Reading such a file must
+    put the panel exactly where it was, which is the sum of the two origins.
+    """
+    panel_origin = (-28.6720009, 28.6720009, -943.0)
+    hierarchy_origin = (0.19599998470000202, -0.9240000081000019, 0.0)
+
+    detector = single_panel_detector()
+    detector[0].set_frame((1, 0, 0), (0, -1, 0), panel_origin)
+    legacy = detector.to_dict()
+    legacy["hierarchy"] = {
+        "fast_axis": (1.0, 0.0, 0.0),
+        "slow_axis": (0.0, 1.0, 0.0),
+        "origin": hierarchy_origin,
+        "children": [{"panel": 0}],
+    }
+
+    restored = DetectorFactory.from_dict(legacy)
+
+    assert not restored.has_hierarchy()
+    assert restored[0].get_origin() == pytest.approx(
+        tuple(a + b for a, b in zip(panel_origin, hierarchy_origin))
+    )
+    # ... and it stays folded when written back out
+    assert "hierarchy" not in restored.to_dict()
