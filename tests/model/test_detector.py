@@ -22,6 +22,8 @@ from dxtbx.model import (
 from dxtbx.model.detector_helpers import (
     get_detector_projection_2d_axes,
     get_panel_projection_2d_from_axes,
+    set_detector_distance,
+    set_fast_slow_beam_centre_mm,
     set_mosflm_beam_centre,
 )
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -529,3 +531,66 @@ def test_single_panel_detector_is_not_serialized_with_a_hierarchy():
 
     assert Detector.from_dict(detector.to_dict()) == detector
     assert pickle.loads(pickle.dumps(detector)) == detector
+
+
+def test_set_beam_centre_moves_the_panel_of_a_single_panel_detector():
+    # Previously the root node was moved instead, leaving the panel behind.
+    # DIALS refinement then moved the panel, and the two drifted apart.
+    detector = single_panel_detector()
+    beam = Beam((0, 0, 1), 1.0)
+    original_origin = matrix.col(detector[0].get_origin())
+
+    set_fast_slow_beam_centre_mm(detector, beam, (5.0, 5.0))
+
+    assert detector[0].get_beam_centre(beam.get_s0()) == pytest.approx((5.0, 5.0))
+    assert not detector.has_hierarchy()
+    assert (matrix.col(detector[0].get_origin()) - original_origin).length() > 1e-6
+    # The panel's stored (local) frame is its laboratory frame
+    assert detector[0].get_local_origin() == pytest.approx(detector[0].get_origin())
+
+
+def test_set_beam_centre_of_a_two_theta_single_panel_detector():
+    """Moving the panel must give the same answer as moving the root did.
+
+    The 2theta shift is undone and re-applied around the beam centre move, so
+    this exercises all three of the branches that used to touch the root node.
+    """
+    beam = Beam((0, 0, 1), 1.0)
+
+    # A single panel detector tilted by 2theta, with no hierarchy...
+    flat = single_panel_detector()
+    panel = flat[0]
+    R = matrix.col((0, 1, 0)).axis_and_angle_as_r3_rotation_matrix(20.0, deg=True)
+    fast = R * matrix.col(panel.get_fast_axis())
+    slow = R * matrix.col(panel.get_slow_axis())
+    origin = R * matrix.col(panel.get_origin())
+    panel.set_frame(fast, slow, origin)
+
+    # ... and the same detector with that tilt carried by the root node instead
+    hierarchical = Detector()
+    root = hierarchical.hierarchy()
+    root.set_frame(fast, slow, origin)
+    hierarchical_panel = root.add_panel()
+    hierarchical_panel.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 0))
+    hierarchical_panel.set_pixel_size(panel.get_pixel_size())
+    hierarchical_panel.set_image_size(panel.get_image_size())
+    assert hierarchical.has_hierarchy()
+    assert hierarchical[0].get_origin() == pytest.approx(flat[0].get_origin())
+
+    set_fast_slow_beam_centre_mm(flat, beam, (5.0, 5.0))
+    set_fast_slow_beam_centre_mm(hierarchical, beam, (5.0, 5.0))
+
+    assert not flat.has_hierarchy()
+    assert flat[0].get_local_origin() == pytest.approx(flat[0].get_origin())
+    assert flat[0].get_origin() == pytest.approx(hierarchical[0].get_origin())
+    assert flat[0].get_fast_axis() == pytest.approx(hierarchical[0].get_fast_axis())
+    assert flat[0].get_slow_axis() == pytest.approx(hierarchical[0].get_slow_axis())
+
+
+def test_set_distance_keeps_a_single_panel_detector_flat():
+    detector = single_panel_detector()
+    set_detector_distance(detector, 250.0)
+
+    assert detector[0].get_distance() == pytest.approx(250.0)
+    assert not detector.has_hierarchy()
+    assert detector[0].get_local_origin() == pytest.approx(detector[0].get_origin())
