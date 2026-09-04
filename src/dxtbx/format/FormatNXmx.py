@@ -97,9 +97,12 @@ class FormatNXmx(FormatNexus):
         nxinstrument = nxentry.instruments[0]
         nxdetector = nxinstrument.detectors[0]
         nxbeam = nxinstrument.beams[0]
+        nxattenuator = nxinstrument.attenuators[0] if nxinstrument.attenuators else None
         nxdata = nxmx_obj.entries[0].data[0]
         self._goniometer_model = dxtbx.nexus.get_dxtbx_goniometer(nxsample)
-        self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(nxbeam)
+        self._beam_factory = dxtbx.nexus.CachedWavelengthBeamFactory(
+            nxbeam, nxattenuator
+        )
         wavelength = self._beam_factory.make_beam(index=0).get_wavelength()
         self._detector_model = dxtbx.nexus.get_dxtbx_detector(
             nxdetector, wavelength, nxdata
