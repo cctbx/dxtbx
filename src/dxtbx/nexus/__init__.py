@@ -65,8 +65,13 @@ def get_dxtbx_goniometer(nxsample: nxmx.NXsample) -> dxtbx.model.Goniometer | No
 class CachedWavelengthBeamFactory:
     """Defer Beam generation whilst caching the wavelength value"""
 
-    def __init__(self, nxbeam: nxmx.NXbeam):
+    def __init__(
+        self,
+        nxbeam: nxmx.NXbeam,
+        nxattenuator: nxmx.NXattenuator | None = None,
+    ):
         self.handle = nxbeam._handle
+        self.attenuator = nxattenuator
         self.index = None
         self.model = None
         self.spectrum = None
@@ -165,6 +170,10 @@ class CachedWavelengthBeamFactory:
                 self.model.set_wavelength(wavelength_value)
             else:
                 self.model.set_wavelength(self.spectrum.get_weighted_wavelength())
+
+        if self.attenuator is not None:
+            transmission = self.attenuator.transmission
+            self.model.set_transmission(float(transmission))
 
 
 def get_dxtbx_scan(
