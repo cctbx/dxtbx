@@ -84,15 +84,20 @@ class StreamClass(ABC):
         tcp_keepalive: bool = False,
     ) -> None:
         # A reader constructed without a ZeroMQ context is decoder-only: it
-        # normalizes messages and holds no socket (port/ip are ignored). Live
-        # readers always PULL-connect to the single source endpoint.
+        # normalizes messages and holds no socket (port/ip are ignored). A live
+        # reader given both port and ip_address PULL-connects to that endpoint; given
+        # neither, it builds the PULL socket unconnected and the caller attaches
+        # endpoints later with connect()/disconnect() (e.g. per-transfer caches).
         if zmq_context is None:
             self._address = None
             self.socket = None
             return
 
-        assert port and ip_address
-        self._address = format_address(ip_address, port)
+        if port is None and ip_address is None:
+            self._address = None
+        else:
+            assert port and ip_address
+            self._address = format_address(ip_address, port)
 
         self.socket = zmq_context.socket(zmq.PULL)
         self.socket.setsockopt(zmq.LINGER, 0)
@@ -109,7 +114,16 @@ class StreamClass(ABC):
             self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
             self.socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 10)
             self.socket.setsockopt(zmq.TCP_KEEPALIVE_CNT, 3)
-        self.socket.connect(self._address)
+        if self._address is not None:
+            self.socket.connect(self._address)
+
+    def connect(self, address: str) -> None:
+        """Attach the PULL socket to one more source endpoint (libzmq fair-queues)."""
+        self.socket.connect(address)
+
+    def disconnect(self, address: str) -> None:
+        """Detach from a source endpoint; frames still queued from it are discarded."""
+        self.socket.disconnect(address)
 
     def close_socket(self) -> None:
         self.socket.close()
