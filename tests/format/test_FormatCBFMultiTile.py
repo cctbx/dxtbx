@@ -129,3 +129,43 @@ def test_multitile_cbf_rotation_round_trip(tmp_path):
     assert list(expt.scan.get_exposure_times()) == list(scan.get_exposure_times())
     assert [p.get_image_size() for p in expt.detector] == sizes
     assert expt.detector.is_similar_to(det)
+
+
+def test_single_panel_cbf_rotation_round_trip(tmp_path):
+    """A single-panel rotation image written by FullCBFWriter is read by
+    FormatCBFFull, whose legacy iotbx data reader does not understand the
+    writer's axis names; the pycbf fallback must return the pixel data."""
+    from dxtbx.model import Goniometer, Scan
+    from dxtbx.model.experiment_list import ExperimentListFactory
+
+    sizes = [(40, 30)]
+    imageset, det, data = _make_imageset(sizes)
+    gonio = Goniometer((1, 0, 0))
+    filenames = []
+    for i in range(2):
+        filename = str(tmp_path / ("single_%04d.cbf" % (i + 1)))
+        writer = FullCBFWriter(imageset=imageset)
+        frame_scan = Scan(
+            (i + 1, i + 1),
+            (0.0 + 0.5 * i, 0.5),
+            exposure_times=flex.double([0.1]),
+            epochs=flex.double([1.7e9 + i]),
+        )
+        cbf = writer.get_cbf_handle(
+            index=0, header_only=True, goniometer=gonio, scan=frame_scan
+        )
+        writer.add_data_to_cbf(cbf, data=tuple(data))
+        writer.write_cbf(filename, cbf=cbf)
+        filenames.append(filename)
+
+    experiments = ExperimentListFactory.from_filenames(filenames)
+    assert len(experiments) == 1
+    expt = experiments[0]
+    assert expt.imageset.__class__.__name__ == "ImageSequence"
+    assert expt.imageset.get_format_class().__name__ == "FormatCBFFull"
+    assert expt.goniometer.is_similar_to(gonio)
+    assert expt.scan.get_image_range() == (1, 2)
+    raw = expt.imageset.get_raw_data(0)
+    assert len(raw) == 1
+    assert raw[0].focus() == (30, 40)
+    assert raw[0][0, 0] == 1000
