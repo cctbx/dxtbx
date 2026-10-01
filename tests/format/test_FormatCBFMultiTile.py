@@ -4,6 +4,7 @@ through the full-CBF writer and the FormatCBFMultiTile(Hierarchy) readers."""
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from scitbx.array_family import flex
 
@@ -83,3 +84,48 @@ def test_multitile_cbf_panels_with_different_sizes(tmp_path):
     # the plain (non-hierarchy) multi-tile reader must also get per-panel sizes
     plain = FormatCBFMultiTileStill(filename)
     assert [p.get_image_size() for p in plain.get_detector()] == sizes
+
+
+def test_multitile_cbf_rotation_round_trip(tmp_path):
+    """Goniometer and scan written to a multi-panel full CBF come back as a
+    rotation sequence with the same models."""
+    from dxtbx.model import Goniometer, Scan
+    from dxtbx.model.experiment_list import ExperimentListFactory
+
+    sizes = [(40, 30), (20, 30)]
+    imageset, det, data = _make_imageset(sizes)
+    gonio = Goniometer((0, 1, 0))
+    n = 3
+    scan = Scan(
+        (1, n),
+        (10.0, 0.25),
+        exposure_times=flex.double(n, 0.5),
+        epochs=flex.double([1.7e9 + i for i in range(n)]),
+    )
+    filenames = []
+    for i in range(n):
+        filename = str(tmp_path / ("rot_%04d.cbf" % (i + 1)))
+        writer = FullCBFWriter(imageset=imageset)
+        frame_scan = Scan(
+            (i + 1, i + 1),
+            (10.0 + 0.25 * i, 0.25),
+            exposure_times=flex.double([0.5]),
+            epochs=flex.double([1.7e9 + i]),
+        )
+        cbf = writer.get_cbf_handle(
+            index=0, header_only=True, goniometer=gonio, scan=frame_scan
+        )
+        writer.add_data_to_cbf(cbf, data=tuple(data))
+        writer.write_cbf(filename, cbf=cbf)
+        filenames.append(filename)
+
+    experiments = ExperimentListFactory.from_filenames(filenames)
+    assert len(experiments) == 1
+    expt = experiments[0]
+    assert expt.imageset.__class__.__name__ == "ImageSequence"
+    assert expt.goniometer.is_similar_to(gonio)
+    assert expt.scan.get_image_range() == scan.get_image_range()
+    assert expt.scan.get_oscillation() == pytest.approx(scan.get_oscillation())
+    assert list(expt.scan.get_exposure_times()) == list(scan.get_exposure_times())
+    assert [p.get_image_size() for p in expt.detector] == sizes
+    assert expt.detector.is_similar_to(det)
