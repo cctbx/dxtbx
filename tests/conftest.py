@@ -39,6 +39,10 @@ def nxmx_example():
         beam["total_flux"] = 1e12
         beam["total_flux"].attrs["units"] = b"Hz"
 
+        attenuator = instrument.create_group("attenuator")
+        attenuator.attrs["NX_class"] = "NXattenuator"
+        attenuator["attenuator_transmission"] = 0.75
+
         detector = instrument.create_group("detector")
         detector.attrs["NX_class"] = "NXdetector"
         detector["beam_center_x"] = 2079.79727597266
