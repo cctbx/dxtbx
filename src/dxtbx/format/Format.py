@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import bz2
 import functools
+import gzip
 import os
 from collections.abc import Callable
 from io import IOBase
@@ -27,12 +28,6 @@ from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.sequence_filenames import template_regex
 from dxtbx.util import get_url_scheme
-
-try:
-    import gzip
-except ImportError:
-    gzip = None  # type: ignore
-
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -551,8 +546,6 @@ class Format:
             fh_func = functools.partial(bz2.BZ2File, filename, mode=mode)
 
         elif filename_str.endswith(".gz"):
-            if not gzip:
-                raise RuntimeError("gz file provided without gzip module")
             fh_func = functools.partial(gzip.GzipFile, filename, mode=mode)
 
         else:

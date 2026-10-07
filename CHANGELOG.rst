@@ -1,3 +1,24 @@
+dxtbx 3.30.0 (2026-08-03)
+=========================
+
+Features
+--------
+
+- Experimental API: ``dxtbx.nexus.get_frame_counts`` / ``get_available_frame_count``: Tools to report how many leading frames of a live NXmx master are actually written to disk. New ``dev.dxtbx.image_availability`` CLI live-monitors this, and ``dev.dxtbx.simulate_collection`` duplicates a primary nexus's structure, and fills it via SWMR to test it. (`#892 <https://github.com/cctbx/dxtbx/issues/892>`_)
+
+
+Bugfixes
+--------
+
+- ``FormatROD``: Fix incorrect ``projection_2d`` data, which lead to wrong display in ``dials.image_viewer``. (https://github.com/dials/dials/issues/3210) (`#890 <https://github.com/cctbx/dxtbx/issues/890>`_)
+
+
+Misc
+----
+
+- `#846 <https://github.com/cctbx/dxtbx/issues/846>`_, `#859 <https://github.com/cctbx/dxtbx/issues/859>`_, `#891 <https://github.com/cctbx/dxtbx/issues/891>`_
+
+
 dxtbx 3.29.0 (2026-06-12)
 =========================
 
