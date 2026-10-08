@@ -5,7 +5,11 @@ scan in their model, as these constructs are not meaningful.
 
 from __future__ import annotations
 
-from dxtbx.format.Format import Format, abstract
+from dxtbx.format.Format import (
+    Format,
+    abstract,
+    check_detector_has_no_pointless_hierarchy,
+)
 from dxtbx.model.beam import Beam
 from dxtbx.model.detector import Detector
 
@@ -36,6 +40,9 @@ class FormatStill(Format):
             pass
         finally:
             self._end()
+
+        # Deliberately outside the try block above, which swallows everything
+        check_detector_has_no_pointless_hierarchy(type(self), self._detector_instance)
 
     def _goniometer(self):
         """Not sensible for still shot data"""

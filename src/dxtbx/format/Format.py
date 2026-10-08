@@ -43,6 +43,27 @@ def abstract(cls):
     return cls
 
 
+def check_detector_has_no_pointless_hierarchy(format_class, detector):
+    """Reject a single panel detector that has been given a panel hierarchy.
+
+    A hierarchy splits the geometry between a root node and the panels beneath
+    it, which only makes sense when there is more than one panel to position.
+    For a single panel it just gives two places to store the same information,
+    which then drift apart: dxtbx moves the root when the beam centre is
+    overridden, while DIALS refinement moves the panel.
+
+    See https://github.com/cctbx/dxtbx/issues/472
+    """
+    if detector is None or len(detector) > 1 or not detector.has_hierarchy():
+        return
+    raise RuntimeError(
+        f"{format_class.__name__} builds a single panel detector with a panel "
+        "hierarchy, which is meaningless. Set the frame of the panel itself "
+        "rather than that of the root node. "
+        "See https://github.com/cctbx/dxtbx/issues/472"
+    )
+
+
 class Reader:
     def __init__(self, format_class, filenames, **kwargs):
         self._kwargs = kwargs
@@ -187,6 +208,8 @@ class Format:
             self._scan_instance = scan_instance
         finally:
             self._end()
+
+        check_detector_has_no_pointless_hierarchy(type(self), self._detector_instance)
 
     @staticmethod
     def get_cache_controller():

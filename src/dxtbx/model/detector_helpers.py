@@ -12,7 +12,14 @@ from scitbx import matrix
 if TYPE_CHECKING:
     from scitbx.array_family import flex
 
-    from dxtbx.model import Detector, Panel
+    from dxtbx.model import Panel
+
+# Imported from the extension module rather than from dxtbx.model, which would
+# be circular: dxtbx.model.detector imports this module
+try:
+    from ..dxtbx_model_ext import Detector
+except ModuleNotFoundError:
+    from dxtbx_model_ext import Detector  # type: ignore
 
 try:
     import sklearn.cluster
@@ -182,6 +189,33 @@ class detector_helper_sensors:
         ]
 
 
+def flatten_hierarchy(detector: Detector) -> Detector:
+    """Return an equivalent single panel detector that has no hierarchy.
+
+    The transformation of the root node, along with that of any intervening
+    groups, is folded into the panel, so that the panel's laboratory frame is
+    unchanged. A hierarchy is meaningless for a single panel detector; see
+    https://github.com/cctbx/dxtbx/issues/472
+    """
+    if len(detector) != 1:
+        raise ValueError(
+            "Only the hierarchy of a single panel detector can be flattened"
+        )
+
+    # These are laboratory frame vectors, i.e. they already include the
+    # contribution of the root node and of any group the panel sits in
+    panel = detector[0]
+    fast = panel.get_fast_axis()
+    slow = panel.get_slow_axis()
+    origin = panel.get_origin()
+
+    # Constructing from a Panel gives a detector whose root is a placeholder at
+    # the identity frame, with the panel as its only child
+    flattened = Detector(panel)
+    flattened[0].set_frame(fast, slow, origin)
+    return flattened
+
+
 def set_fast_slow_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
     """detector and beam are dxtbx objects,
     beam_centre is a tuple of (fast, slow) mm coordinates.
@@ -215,18 +249,20 @@ def set_fast_slow_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
     # Assume a 2theta offset if obliquity >= 5 deg
     two_theta = abs(ang) >= 5.0 * math.pi / 180.0
 
+    use_hierarchy = detector.has_hierarchy()
+
     # Undo 2theta shift
     if two_theta:
         R = axi.axis_and_angle_as_r3_rotation_matrix(ang)
         Rinv = R.inverse()
-        try:
+        if use_hierarchy:
             h = detector.hierarchy()
             h.set_frame(
                 fast_axis=Rinv * matrix.col(h.get_fast_axis()),
                 slow_axis=Rinv * matrix.col(h.get_slow_axis()),
                 origin=Rinv * matrix.col(h.get_origin()),
             )
-        except AttributeError:
+        else:
             for p in detector:
                 p.set_frame(
                     fast_axis=Rinv * matrix.col(p.get_fast_axis()),
@@ -243,15 +279,15 @@ def set_fast_slow_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
     # Lab coord of the current position where we want the beam centre
     intersection_lab = matrix.col(panel.get_lab_coord((beam_f, beam_s)))
 
-    # If the detector has a hierarchy, just update the root note
-    try:
+    # If the detector has a hierarchy, just update the root node
+    if use_hierarchy:
         h = detector.hierarchy()
         translation = beam_centre_lab - intersection_lab
         new_origin = matrix.col(h.get_origin()) + translation
         h.set_frame(
             fast_axis=h.get_fast_axis(), slow_axis=h.get_slow_axis(), origin=new_origin
         )
-    except AttributeError:
+    else:
         # No hierarchy, update each panel instead by finding the offset of
         # its origin from the current position of the desired beam centre. Use
         # this to reposition the panel origin wrt the final beam centre
@@ -271,14 +307,14 @@ def set_fast_slow_beam_centre_mm(detector, beam, beam_centre, panel_id=None):
 
     # Re-apply 2theta shift if required
     if two_theta:
-        try:
+        if use_hierarchy:
             h = detector.hierarchy()
             h.set_frame(
                 fast_axis=R * matrix.col(h.get_fast_axis()),
                 slow_axis=R * matrix.col(h.get_slow_axis()),
                 origin=R * matrix.col(h.get_origin()),
             )
-        except AttributeError:
+        else:
             for p in detector:
                 p.set_frame(
                     fast_axis=R * matrix.col(p.get_fast_axis()),
@@ -306,13 +342,13 @@ def set_detector_distance(detector, distance):
     panels = list(detector)
     if len(panels) > 1:
         # If a multi-panel detector has a hierarchy, we will just update the
-        # root note. Otherwise check that all panels are at the same distance
+        # root node. Otherwise check that all panels are at the same distance
         # and share the same normal vector
-        try:
+        if detector.has_hierarchy():
             panels = [
                 detector.hierarchy(),
             ]
-        except AttributeError:
+        else:
             dists = [p.get_distance() for p in panels]
             norm_vecs = [p.get_normal() for p in panels]
             assert all(v == norm_vecs[0] for v in norm_vecs[1:]) and all(
