@@ -24,6 +24,11 @@ from dxtbx.format.image import ImageBool
 from dxtbx.model import MultiAxisGoniometer
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.geometry import (
+    apply_geometry_overrides,
+    check_getters_not_bypassed,
+    validate_metadata_path,
+)
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.sequence_filenames import template_regex
@@ -91,9 +96,43 @@ class Format:
             class does not declare "file", it will not get called to
             understand "file://" URIs passed to it. An empty `schemes` will
             not ever get called in Format registry searches.
+        missing_metadata: PHIL paths, relative to the ``geometry`` scope, that
+            this Format class cannot determine from the image files and which
+            the user must therefore supply, e.g. ``("beam.wavelength",
+            "goniometer.axis")``. Build placeholder models for these as usual;
+            the placeholders are guaranteed either to be overwritten by the
+            user's values or to raise
+            :exc:`~dxtbx.model.geometry.MissingMetadataError`. Where a value is
+            missing only for some files, call
+            :meth:`declare_missing_metadata` from ``_start()`` instead.
+
+            Resolved by ordinary attribute lookup, not unioned over the MRO, so
+            a subclass that *can* read a value can drop its base class's
+            declaration. To extend one instead, write
+            ``missing_metadata = Base.missing_metadata + ("scan.oscillation",)``.
+
+            Not every geometry parameter may be declared. Excluded are the
+            repeatable ``detector.panel`` and ``detector.hierarchy`` sub-scopes,
+            and the modifiers ``goniometer.invert_rotation_axis``,
+            ``scan.extrapolate_scan`` and ``scan.image_range``. A model left as
+            None cannot generally be built from overrides alone: a beam needs
+            both ``beam.wavelength`` and ``beam.direction``, and a detector
+            cannot be built at all. Format classes that override
+            ``get_beam``/``get_detector``/``get_goniometer``/``get_scan`` so as
+            to bypass the ``_<model>_instance`` attributes cannot declare
+            missing metadata for those models.
+
+            The user's values arrive as the ``geometry_overrides`` keyword
+            argument, a PHIL string rooted at ``geometry``. ``dials.import``
+            builds this from the ``geometry.*`` parameters given on the command
+            line or in a PHIL file. Passing ``ignore_missing_metadata=True``
+            instead suppresses the error and leaves the placeholders in place,
+            for callers that correct the geometry by other means.
     """
 
     schemes: list[str] = [""]
+
+    missing_metadata: ClassVar[tuple[str, ...]] = ()
 
     # Which class is the abstract base. Assigned with the @abstract
     # decorator, and used to check initialization
@@ -161,6 +200,10 @@ class Format:
         self._beam_factory = BeamFactory
         self._scan_factory = ScanFactory
 
+        self._missing_metadata = set(type(self).missing_metadata)
+        self._geometry_overrides = kwargs.get("geometry_overrides")
+        self._ignore_missing_metadata = bool(kwargs.get("ignore_missing_metadata"))
+
         self.setup()
 
     def setup(self):
@@ -187,6 +230,57 @@ class Format:
             self._scan_instance = scan_instance
         finally:
             self._end()
+
+        self._apply_metadata_overrides()
+
+    def _missing_metadata_set(self):
+        """The set of geometry paths this instance cannot read from the file."""
+        # Lazy, because a few Format subclasses reach setup() without having
+        # gone through Format.__init__.
+        try:
+            return self._missing_metadata
+        except AttributeError:
+            self._missing_metadata = set(type(self).missing_metadata)
+            return self._missing_metadata
+
+    def declare_missing_metadata(self, *paths):
+        """Declare, typically from ``_start()``, that these geometry items
+        cannot be read from this particular file - for instance a header field
+        that happens to be absent or zero for some images of a format.
+
+        See :attr:`missing_metadata` for which paths may be declared.
+        """
+        missing = self._missing_metadata_set()
+        for path in paths:
+            validate_metadata_path(path)
+            missing.add(path)
+
+    def _apply_metadata_overrides(self):
+        """Fill in declared-missing metadata from the user's overrides, and
+        raise if anything declared has not been supplied."""
+        missing = self._missing_metadata_set()
+        if not missing:
+            return
+        check_getters_not_bypassed(type(self), missing)
+        # getattr, as for _missing_metadata_set, in case Format.__init__ was
+        # bypassed by a subclass calling setup() directly.
+        if getattr(self, "_ignore_missing_metadata", False):
+            return
+        (
+            self._beam_instance,
+            self._detector_instance,
+            self._goniometer_instance,
+            self._scan_instance,
+        ) = apply_geometry_overrides(
+            missing,
+            getattr(self, "_geometry_overrides", None),
+            beam=self._beam_instance,
+            detector=self._detector_instance,
+            goniometer=self._goniometer_instance,
+            scan=self._scan_instance,
+            format_name=type(self).__name__,
+            image_file=str(self._image_file),
+        )
 
     @staticmethod
     def get_cache_controller():

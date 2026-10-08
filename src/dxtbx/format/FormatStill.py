@@ -37,6 +37,9 @@ class FormatStill(Format):
         finally:
             self._end()
 
+        # Outside the try, so that a MissingMetadataError is not squashed
+        self._apply_metadata_overrides()
+
     def _goniometer(self):
         """Not sensible for still shot data"""
 
