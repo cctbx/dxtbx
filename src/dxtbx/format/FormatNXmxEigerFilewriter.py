@@ -36,7 +36,12 @@ KNOWN_MODULE_SLOW_FAST_DIMS.update(
         (2180, 2073),
     }
 )
-
+# And add PILATUS 4 module sizes
+KNOWN_MODULE_SLOW_FAST_DIMS.update(
+    {
+        (2180, 2073),
+    }
+)
 KNOWN_MODULE_FAST_SLOW_DIMS = {shape[::-1] for shape in KNOWN_MODULE_SLOW_FAST_DIMS}
 
 
