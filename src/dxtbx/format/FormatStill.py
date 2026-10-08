@@ -6,7 +6,7 @@ scan in their model, as these constructs are not meaningful.
 from __future__ import annotations
 
 from dxtbx.format.Format import Format, abstract
-from dxtbx.model.beam import Beam
+from dxtbx.model.beam import BeamBase
 from dxtbx.model.detector import Detector
 
 
@@ -28,7 +28,7 @@ class FormatStill(Format):
             self._detector_instance = detector_instance
 
             beam_instance = self._beam()
-            assert isinstance(beam_instance, Beam)
+            assert isinstance(beam_instance, BeamBase)
             self._beam_instance = beam_instance
 
         except Exception:

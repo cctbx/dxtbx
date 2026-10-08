@@ -1275,13 +1275,16 @@ public:
     // Check the scan is the same length as number of indices
     DXTBX_ASSERT(scan.get() != NULL);
 
-    // Check indices are sequential
+    // Check indices are sequential (not required for still scans where each
+    // index is an independent shot rather than part of a continuous rotation)
     if (indices.size() > 0) {
       if (indices.size() != scan->get_num_images()) {
         throw DXTBX_ERROR("Scan size is not compatible with number of images");
       }
-      for (std::size_t i = 1; i < indices.size(); ++i) {
-        DXTBX_ASSERT(indices[i] == indices[i - 1] + 1);
+      if (!scan->is_still()) {
+        for (std::size_t i = 1; i < indices.size(); ++i) {
+          DXTBX_ASSERT(indices[i] == indices[i - 1] + 1);
+        }
       }
     }
 

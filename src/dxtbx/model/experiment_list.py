@@ -214,6 +214,10 @@ class ExperimentListDict:
                 )
             )
 
+        # Expand consolidated stills scans back to per-frame scan dicts before
+        # _extract_models processes them.
+        self._expand_consolidated_scans()
+
         # Extract lists of models referenced by experiments
         # Go through all the imagesets and make sure the dictionary
         # references by an index rather than a file path.
@@ -230,6 +234,82 @@ class ExperimentListDict:
                 ("scaling_model", self._scaling_model_from_dict),
             )
         }
+
+    def _expand_consolidated_scans(self):
+        """Expand a __stills_consolidated scan object back to per-frame scan
+        dicts and rewrite each experiment's scan index from its scan_point.
+
+        Called in __init__ before _extract_models so that all downstream
+        decode logic sees the standard per-frame format unchanged.
+        """
+        scans = self._obj.get("scan", [])
+        if not (len(scans) == 1 and scans[0].get("__stills_consolidated")):
+            return
+
+        consolidated = scans[0]
+        props = consolidated.get("properties", {})
+        batch_offset = consolidated.get("batch_offset", 0)
+        global_vir = consolidated.get("valid_image_ranges", {})
+
+        # Recover each scan_point's 0-based frame from the imageset's
+        # single_file_indices, the single source of truth (the redundant 1-based
+        # frame_numbers array was removed). Invariant: within each imageset,
+        # single_file_indices is sparse and ascending and aligns positionally
+        # with that imageset's experiments taken in ascending (deduped)
+        # scan_point order. Multi-lattice frames share one scan_point, so dedup
+        # before zipping; group per imageset since scan_point is global while
+        # single_file_indices is per-imageset.
+        # TODO(P9): pre-P2 files carrying 'frame_numbers' are not read here;
+        # handled by version-stamp dispatch.
+        imagesets = self._obj.get("imageset", [])
+        sps_by_imageset: dict = {}
+        for eobj in self._obj["experiment"]:
+            sp = eobj.get("scan_point")
+            if sp is None:
+                continue
+            sps_by_imageset.setdefault(eobj["imageset"], set()).add(sp)
+
+        frame_for_scan_point: dict = {}
+        for m, sp_set in sps_by_imageset.items():
+            sps = sorted(sp_set)
+            sfi_m = imagesets[m]["single_file_indices"]
+            assert len(sfi_m) == len(sps), (
+                "consolidated stills: single_file_indices length %d != %d unique "
+                "scan_points for imageset %d" % (len(sfi_m), len(sps), m)
+            )
+            for local_pos, sp in enumerate(sps):
+                frame_for_scan_point[sp] = sfi_m[local_pos]
+
+        n = len(frame_for_scan_point)
+        expanded = []
+        for sp in range(n):
+            per_frame_props = {key: [vals[sp]] for key, vals in props.items()}
+            # Reconstruct zero-valued arrays that were omitted on write
+            for zero_key in (
+                "epochs",
+                "exposure_time",
+                "oscillation",
+                "oscillation_width",
+            ):
+                if zero_key not in per_frame_props:
+                    per_frame_props[zero_key] = [0.0]
+            # 0-based single_file_indices -> 1-based scan image_range
+            fn = frame_for_scan_point[sp] + 1
+            expanded.append(
+                {
+                    "image_range": [fn, fn],
+                    "batch_offset": batch_offset,
+                    "properties": per_frame_props,
+                    "valid_image_ranges": global_vir,
+                }
+            )
+        self._obj["scan"] = expanded
+
+        # Translate scan_point fields → direct per-frame scan indices
+        for eobj in self._obj["experiment"]:
+            scan_point = eobj.pop("scan_point", None)
+            if scan_point is not None:
+                eobj["scan"] = scan_point
 
     def _extract_models(self, name, from_dict):
         """
@@ -408,7 +488,21 @@ class ExperimentListDict:
                 imageset.set_beam(beam)
                 imageset.set_detector(detector)
                 imageset.set_goniometer(goniometer)
-                imageset.set_scan(scan)
+                existing_scan = imageset.get_scan()
+                # Don't overwrite when the format class already provided a
+                # wavelength-bearing scan (XFEL, check_format=True).
+                # Also don't overwrite for sparse still imagesets where the
+                # merged eobj_scan spans (min_fn, max_fn) > len(imageset).
+                _scan_ok = existing_scan is not None and (
+                    existing_scan.has_property("wavelength")
+                    or (
+                        scan is not None
+                        and scan.is_still()
+                        and scan.get_num_images() != len(imageset)
+                    )
+                )
+                if not _scan_ok:
+                    imageset.set_scan(scan)
             elif isinstance(imageset, (ImageSet, ImageGrid)):
                 for i in range(len(imageset)):
                     imageset.set_beam(beam, i)
@@ -515,6 +609,19 @@ class ExperimentListDict:
             for expt in el:
                 expt.history = history
 
+        # Auto-resolve any per-shot resolvable beam (XFELBeam, discovered by the
+        # get_monochromatic_beam capability rather than isinstance) on each
+        # Experiment.beam to a per-frame monochromatic Beam.  The ImageSequence
+        # and its XFELBeam slot are preserved; the scan's "wavelength" property
+        # is preserved.  Downstream consumers (refinement, detector_residuals,
+        # dials.show, scaling, etc.) see a normal Beam on Experiment.beam and do
+        # not need XFELBeam-awareness.
+        for expt in el:
+            if expt.beam is not None and hasattr(expt.beam, "get_monochromatic_beam"):
+                resolved = expt.get_monochromatic_beam()
+                if resolved is not None:
+                    expt.beam = resolved
+
         return el
 
     def _make_stills(self, imageset, format_kwargs=None):
@@ -566,6 +673,37 @@ class ExperimentListDict:
         if self._check_format is False:
             if "single_file_indices" in imageset:
                 format_class = FormatMultiImage
+
+        # Single-file format with stored indices (possibly non-contiguous):
+        # bypass make_sequence() which assumes contiguous ranges and would
+        # fail the array_range == scan assertion for a sparse imageset.
+        if "single_file_indices" in imageset:
+            if format_class is None:
+                format_class = get_format_class_for_file(template)
+            # For sparse still imagesets the merged eobj_scan spans (min_fn, max_fn)
+            # which is larger than len(single_file_indices).  Pass a compact (1, N)
+            # scan so FormatMultiImage's assertion scan.get_num_images() <= N passes.
+            # The per-experiment scans (with absolute frame numbers and wavelengths)
+            # are stored separately and take precedence for per-experiment beam dispatch.
+            imageset_scan = scan
+            if scan is not None and scan.is_still():
+                n = len(imageset["single_file_indices"])
+                if scan.get_num_images() != n:
+                    imageset_scan = ScanFactory.make_scan_from_properties(
+                        image_range=(1, n),
+                        properties={},
+                    )
+            return format_class.get_imageset(
+                [template],
+                beam=beam,
+                detector=detector,
+                goniometer=goniometer,
+                scan=imageset_scan,
+                single_file_indices=imageset["single_file_indices"],
+                as_sequence=True,
+                check_format=self._check_format,
+                format_kwargs=format_kwargs,
+            )
 
         # Make a sequence from the input data
         return ImageSetFactory.make_sequence(
@@ -808,9 +946,16 @@ class ExperimentListFactory:
                     experiments.append(
                         Experiment(
                             imageset=imageset,
-                            beam=imageset.get_beam(),
-                            detector=imageset.get_detector(),
-                            goniometer=imageset.get_goniometer(),
+                            # Index per-frame: get_beam(j) dispatches through the
+                            # ImageSequence.get_beam override to the per-frame
+                            # monochromatic Beam (XFEL: XFELBeam.get_monochromatic_beam
+                            # (wl[j])). The indexless get_beam() returned the shared
+                            # XFELBeam/base beam for every frame, squashing per-frame
+                            # wavelength. detector/goniometer are shared for a still
+                            # sequence, so get_*(j) equal the shared values.
+                            beam=imageset.get_beam(j),
+                            detector=imageset.get_detector(j),
+                            goniometer=imageset.get_goniometer(j),
                             scan=subset.get_scan(),
                             crystal=crystal,
                         )
