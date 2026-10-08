@@ -162,7 +162,7 @@ class FormatCBFMultiTile(FormatCBFFull):
             slow = cbf_detector.get_detector_axes()[3:6]
             origin = cbf_detector.get_pixel_coordinates_fs(0, 0)
 
-            size = tuple(reversed(cbf.get_image_size(0)))
+            size = tuple(reversed(cbf.get_image_size(i)))
 
             try:
                 min_trusted_value = find_underload_value(cbf)
