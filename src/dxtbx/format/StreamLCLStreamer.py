@@ -403,8 +403,16 @@ class LCLStreamer(StreamClass):
         # set below the panel trusted range (TRUSTED_RANGE = (-10, 2e6)), so dials masks
         # the whole frame and finds no spots -- mirroring how file-based processing
         # handles a bad frame.
-        if message.get("missing_data") or "compressed_data" not in message:
+        if message.get("missing_data") or (
+            "data" not in message and "compressed_data" not in message
+        ):
             image_data = np.full(image_shape, -100.0, dtype=np.dtype(image_dtype))
+        elif "data" in message:
+            # LCLStreamer sends the frame uncompressed as "data". The view is read-only,
+            # but both reshapes below copy it into a new array.
+            image_data = np.frombuffer(
+                message["data"], dtype=np.dtype(image_dtype)
+            ).reshape(image_shape)
         else:
             # Decompress + reshape the main detector frame (bitshuffle-lz4). Factored so
             # get_data and the single-decode get_frame_data share one implementation.
@@ -526,13 +534,20 @@ class LCLStreamer(StreamClass):
         return self._resolve_wavelength(message, spectrum, calib)
 
     def _decode_spectrometer(self, message: Dict[str, Any]) -> Optional[np.ndarray]:
-        # Decompress the optional per-frame spectrometer array (1D trace or 2D
-        # image), compressed bitshuffle-lz4 exactly like the main detector frame.
+        # Decode the optional per-frame spectrometer array (1D trace or 2D image),
+        # sent uncompressed as "spectrometer_data", or compressed bitshuffle-lz4
+        # like the main detector frame as "spectrometer_compressed_data".
         # Returns a numpy array, or None when no spectrometer rode this message.
-        payload = message.get("spectrometer_compressed_data")
         shape = message.get("spectrometer_shape")
         dtype = message.get("spectrometer_dtype")
-        if payload is None or shape is None or dtype is None:
+        if shape is None or dtype is None:
+            return None
+        if "spectrometer_data" in message:
+            return np.frombuffer(
+                message["spectrometer_data"], dtype=np.dtype(dtype)
+            ).reshape(tuple(shape))
+        payload = message.get("spectrometer_compressed_data")
+        if payload is None:
             return None
         return bitshuffle.decompress_lz4(
             np.frombuffer(payload, dtype=np.uint8),
