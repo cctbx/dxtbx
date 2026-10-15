@@ -157,10 +157,13 @@ def test_get_dxtbx_goniometer_grid_scan(nxsample_gridscan):
 
 def test_get_dxtbx_beam(nxmx_example):
     instrument = nxmx.NXmx(nxmx_example).entries[0].instruments[0]
-    beam = dxtbx.nexus.CachedWavelengthBeamFactory(instrument.beams[0]).make_beam()
+    beam = dxtbx.nexus.CachedWavelengthBeamFactory(
+        instrument.beams[0], instrument.attenuators[0]
+    ).make_beam()
     assert isinstance(beam, dxtbx.model.Beam)
     assert beam.get_wavelength() == 0.976223
     assert beam.get_sample_to_source_direction() == (0.0, 0.0, 1.0)
+    assert beam.get_transmission() == 0.75
 
 
 def test_get_dxtbx_beam_array_length_1():
