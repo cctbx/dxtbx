@@ -9,19 +9,19 @@ from dxtbx.model import BeamFactory, DetectorFactory, GoniometerFactory, ScanFac
 from dxtbx.serialize.filename import resolve_path
 
 
-def filename_to_absolute(filename):
-    """Convert filenames to absolute form."""
+def filename_to_normalized(filename):
+    """Convert filenames to normalized form."""
 
     if isinstance(filename, list):
-        return [os.path.abspath(f) for f in filename]
+        return [os.path.normpath(f) for f in filename]
 
-    return os.path.abspath(filename)
+    return os.path.normpath(filename)
 
 
 def filename_or_none(filename):
     if filename is None or filename == "":
         return None
-    return filename_to_absolute(filename)
+    return filename_to_normalized(filename)
 
 
 def basic_imageset_to_dict(imageset):
@@ -37,7 +37,7 @@ def basic_imageset_to_dict(imageset):
 
     return {
         "__id__": "imageset",
-        "filenames": filename_to_absolute(imageset.paths()),
+        "filenames": filename_to_normalized(imageset.paths()),
         "mask": filename_or_none(imageset.external_lookup.mask.filename),
         "gain": filename_or_none(imageset.external_lookup.gain.filename),
         "pedestal": filename_or_none(imageset.external_lookup.pedestal.filename),
@@ -59,7 +59,7 @@ def imagesequence_to_dict(sequence):
 
     return {
         "__id__": "imageset",
-        "template": filename_to_absolute(sequence.get_template()),
+        "template": filename_to_normalized(sequence.get_template()),
         "mask": filename_or_none(sequence.external_lookup.mask.filename),
         "gain": filename_or_none(sequence.external_lookup.gain.filename),
         "pedestal": filename_or_none(sequence.external_lookup.pedestal.filename),
