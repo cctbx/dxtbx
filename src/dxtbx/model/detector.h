@@ -537,6 +537,32 @@ namespace dxtbx { namespace model {
     }
 
     /**
+     * Does the detector have a meaningful panel hierarchy?
+     *
+     * Every detector owns a root node, but for most detectors that root is a
+     * placeholder: it sits at the identity frame and the panels hang directly
+     * off it. Such a root carries no information and the panels' local frames
+     * are the same as their laboratory frames.
+     *
+     * A hierarchy is meaningless for a single panel detector, so this is used
+     * to reject them. See https://github.com/cctbx/dxtbx/issues/472
+     */
+    bool has_hierarchy() const {
+      const_node_pointer r = root();
+      if (r->get_local_fast_axis() != vec3<double>(1.0, 0.0, 0.0)
+          || r->get_local_slow_axis() != vec3<double>(0.0, 1.0, 0.0)
+          || r->get_local_origin() != vec3<double>(0.0, 0.0, 0.0)) {
+        return true;
+      }
+      for (std::size_t i = 0; i < r->size(); ++i) {
+        if ((*r)[i]->is_group()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /**
      * Get the panel at the current position
      */
     panel_type &operator[](std::size_t i) {

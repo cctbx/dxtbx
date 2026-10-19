@@ -1,0 +1,2 @@
+``Detector.to_dict`` and the detector pickle no longer write a ``"hierarchy"`` entry for a single panel detector. A new ``Detector.has_hierarchy()`` tells you whether a detector has a meaningful hierarchy.
+

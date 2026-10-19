@@ -11,16 +11,20 @@ from libtbx.test_utils import approx_equal
 from scitbx import matrix
 from scitbx.array_family import flex
 
+from dxtbx.format.Format import Format, check_detector_has_no_pointless_hierarchy
 from dxtbx.model import (
     Beam,
     BeamFactory,
     Detector,
+    DetectorFactory,
     Panel,
     ParallaxCorrectedPxMmStrategy,
 )
 from dxtbx.model.detector_helpers import (
     get_detector_projection_2d_axes,
     get_panel_projection_2d_from_axes,
+    set_detector_distance,
+    set_fast_slow_beam_centre_mm,
     set_mosflm_beam_centre,
 )
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -481,3 +485,156 @@ def test_detector_resolution():
     dmin3 = detector[0].get_max_resolution_ellipse(pbeam)
     assert dmin1 == pytest.approx(dmin2)
     assert dmin1 == pytest.approx(dmin3)
+
+
+# Tests for https://github.com/cctbx/dxtbx/issues/472: a hierarchy is
+# meaningless for a single panel detector, and must not be created for one.
+
+
+def single_panel_detector():
+    return DetectorFactory.simple(
+        "PAD",
+        100,
+        (10.0, 10.0),
+        "+x",
+        "-y",
+        (0.1, 0.1),
+        (200, 200),
+    )
+
+
+def hierarchical_multipanel_detector():
+    """A detector whose panels hang off a group rather than off the root."""
+    detector = Detector()
+    group = detector.hierarchy().add_group()
+    group.set_frame((1, 0, 0), (0, 1, 0), (0.0, 0.0, -100.0))
+    for i in range(2):
+        panel = group.add_panel()
+        panel.set_local_frame((1, 0, 0), (0, -1, 0), (20.0 * i - 10.0, 10.0, 0.0))
+        panel.set_pixel_size((0.1, 0.1))
+        panel.set_image_size((100, 100))
+    return detector
+
+
+def test_single_panel_detector_has_no_hierarchy():
+    assert not single_panel_detector().has_hierarchy()
+    assert hierarchical_multipanel_detector().has_hierarchy()
+    # A flat multi panel detector is not a hierarchy either: its root sits at
+    # the identity frame and every panel hangs directly off it
+    assert not create_multipanel_detector(offset=0).has_hierarchy()
+
+
+def test_single_panel_detector_is_not_serialized_with_a_hierarchy():
+    detector = single_panel_detector()
+    assert "hierarchy" not in detector.to_dict()
+    assert "hierarchy" in create_multipanel_detector(offset=0).to_dict()
+    assert "hierarchy" in hierarchical_multipanel_detector().to_dict()
+
+    assert Detector.from_dict(detector.to_dict()) == detector
+    assert pickle.loads(pickle.dumps(detector)) == detector
+
+
+def test_set_beam_centre_moves_the_panel_of_a_single_panel_detector():
+    # Previously the root node was moved instead, leaving the panel behind.
+    # DIALS refinement then moved the panel, and the two drifted apart.
+    detector = single_panel_detector()
+    beam = Beam((0, 0, 1), 1.0)
+    original_origin = matrix.col(detector[0].get_origin())
+
+    set_fast_slow_beam_centre_mm(detector, beam, (5.0, 5.0))
+
+    assert detector[0].get_beam_centre(beam.get_s0()) == pytest.approx((5.0, 5.0))
+    assert not detector.has_hierarchy()
+    assert (matrix.col(detector[0].get_origin()) - original_origin).length() > 1e-6
+    # The panel's stored (local) frame is its laboratory frame
+    assert detector[0].get_local_origin() == pytest.approx(detector[0].get_origin())
+
+
+def test_set_beam_centre_of_a_two_theta_single_panel_detector():
+    """Moving the panel must give the same answer as moving the root did.
+
+    The 2theta shift is undone and re-applied around the beam centre move, so
+    this exercises all three of the branches that used to touch the root node.
+    """
+    beam = Beam((0, 0, 1), 1.0)
+
+    # A single panel detector tilted by 2theta, with no hierarchy...
+    flat = single_panel_detector()
+    panel = flat[0]
+    R = matrix.col((0, 1, 0)).axis_and_angle_as_r3_rotation_matrix(20.0, deg=True)
+    fast = R * matrix.col(panel.get_fast_axis())
+    slow = R * matrix.col(panel.get_slow_axis())
+    origin = R * matrix.col(panel.get_origin())
+    panel.set_frame(fast, slow, origin)
+
+    # ... and the same detector with that tilt carried by the root node instead
+    hierarchical = Detector()
+    root = hierarchical.hierarchy()
+    root.set_frame(fast, slow, origin)
+    hierarchical_panel = root.add_panel()
+    hierarchical_panel.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 0))
+    hierarchical_panel.set_pixel_size(panel.get_pixel_size())
+    hierarchical_panel.set_image_size(panel.get_image_size())
+    assert hierarchical.has_hierarchy()
+    assert hierarchical[0].get_origin() == pytest.approx(flat[0].get_origin())
+
+    set_fast_slow_beam_centre_mm(flat, beam, (5.0, 5.0))
+    set_fast_slow_beam_centre_mm(hierarchical, beam, (5.0, 5.0))
+
+    assert not flat.has_hierarchy()
+    assert flat[0].get_local_origin() == pytest.approx(flat[0].get_origin())
+    assert flat[0].get_origin() == pytest.approx(hierarchical[0].get_origin())
+    assert flat[0].get_fast_axis() == pytest.approx(hierarchical[0].get_fast_axis())
+    assert flat[0].get_slow_axis() == pytest.approx(hierarchical[0].get_slow_axis())
+
+
+def test_set_distance_keeps_a_single_panel_detector_flat():
+    detector = single_panel_detector()
+    set_detector_distance(detector, 250.0)
+
+    assert detector[0].get_distance() == pytest.approx(250.0)
+    assert not detector.has_hierarchy()
+    assert detector[0].get_local_origin() == pytest.approx(detector[0].get_origin())
+
+
+def test_legacy_single_panel_hierarchy_is_folded_into_the_panel():
+    """A detector written before dxtbx#472 splits its geometry in two.
+
+    The values here are those reported in the issue. Reading such a file must
+    put the panel exactly where it was, which is the sum of the two origins.
+    """
+    panel_origin = (-28.6720009, 28.6720009, -943.0)
+    hierarchy_origin = (0.19599998470000202, -0.9240000081000019, 0.0)
+
+    detector = single_panel_detector()
+    detector[0].set_frame((1, 0, 0), (0, -1, 0), panel_origin)
+    legacy = detector.to_dict()
+    legacy["hierarchy"] = {
+        "fast_axis": (1.0, 0.0, 0.0),
+        "slow_axis": (0.0, 1.0, 0.0),
+        "origin": hierarchy_origin,
+        "children": [{"panel": 0}],
+    }
+
+    restored = DetectorFactory.from_dict(legacy)
+
+    assert not restored.has_hierarchy()
+    assert restored[0].get_origin() == pytest.approx(
+        tuple(a + b for a, b in zip(panel_origin, hierarchy_origin))
+    )
+    # ... and it stays folded when written back out
+    assert "hierarchy" not in restored.to_dict()
+
+
+def test_format_class_rejects_a_single_panel_hierarchy():
+    detector = single_panel_detector()
+    detector.hierarchy().set_frame((1, 0, 0), (0, 1, 0), (1.0, 2.0, 0.0))
+
+    with pytest.raises(RuntimeError, match="meaningless"):
+        check_detector_has_no_pointless_hierarchy(Format, detector)
+
+    # Multiple panels, and no detector at all, are both fine
+    check_detector_has_no_pointless_hierarchy(
+        Format, create_multipanel_detector(offset=0)
+    )
+    check_detector_has_no_pointless_hierarchy(Format, None)
