@@ -481,3 +481,64 @@ def test_detector_resolution():
     dmin3 = detector[0].get_max_resolution_ellipse(pbeam)
     assert dmin1 == pytest.approx(dmin2)
     assert dmin1 == pytest.approx(dmin3)
+
+
+def test_get_panel_projection_2d_from_axes_picture_pixel_size():
+    """Panels with different pixel sizes projected onto one picture with a
+    common pixel pitch must map a shared lab position to the same picture
+    position, and the returned matrix must carry the scale factor."""
+    px_coarse, px_fine = 0.2, 0.05
+    panels = []
+    for name, px, size, origin in (
+        ("coarse", px_coarse, (100, 100), (-20.0, 10.0, -100.0)),
+        ("fine", px_fine, (400, 400), (0.0, 10.0, -100.0)),
+    ):
+        p = Panel()
+        p.set_name(name)
+        p.set_image_size(size)
+        p.set_pixel_size((px, px))
+        p.set_frame((1, 0, 0), (0, -1, 0), origin)
+        panels.append(p)
+
+    fast = matrix.col((1, 0, 0))
+    slow = matrix.col((0, -1, 0))
+    picture_px = px_fine
+
+    def readout_to_picture(p, R, t, slow_px, fast_px):
+        # inverse of picture -> readout: readout = R * picture + t
+        Rm = matrix.sqr(R)
+        return Rm.inverse() * (matrix.col((slow_px, fast_px)) - matrix.col(t))
+
+    results = []
+    for p in panels:
+        data = flex.double(flex.grid(p.get_image_size()[1], p.get_image_size()[0]))
+        origin = matrix.col(p.get_origin()) * 1e-3
+        R, t = get_panel_projection_2d_from_axes(
+            p, data, fast, slow, origin, picture_pixel_size=picture_px
+        )
+        # scale factor between readout and picture pixels
+        assert abs(matrix.sqr(R).determinant()) == pytest.approx(
+            (picture_px / p.get_pixel_size()[0]) ** 2
+        )
+        results.append((p, R, t))
+
+    # the coarse panel's right edge (fast = 100) and the fine panel's left
+    # edge (fast = 0) are the same lab x; picture columns must agree
+    (pc, Rc, tc), (pf, Rf, tf) = results
+    right_of_coarse = readout_to_picture(pc, Rc, tc, 0, pc.get_image_size()[0])
+    left_of_fine = readout_to_picture(pf, Rf, tf, 0, 0)
+    assert right_of_coarse[1] == pytest.approx(left_of_fine[1])
+    assert right_of_coarse[0] == pytest.approx(left_of_fine[0])
+
+    # the coarse panel spans 100 readout px = 400 picture px
+    far = readout_to_picture(pc, Rc, tc, pc.get_image_size()[1], pc.get_image_size()[0])
+    near = readout_to_picture(pc, Rc, tc, 0, 0)
+    assert abs(far[1] - near[1]) == pytest.approx(400)
+    assert abs(far[0] - near[0]) == pytest.approx(400)
+
+    # default (no picture pitch) behaves as before: picture pixels are readout pixels
+    data = flex.double(flex.grid(100, 100))
+    R, t = get_panel_projection_2d_from_axes(
+        pc, data, fast, slow, matrix.col(pc.get_origin()) * 1e-3
+    )
+    assert abs(matrix.sqr(R).determinant()) == pytest.approx(1.0)

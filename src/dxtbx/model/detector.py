@@ -532,7 +532,7 @@ class DetectorFactory:
                     )
             if panel_id >= len(detector):
                 raise IndexError(f"Detector does not have panel index {panel_id}")
-            px_size_f, px_size_s = detector[0].get_pixel_size()
+            px_size_f, px_size_s = detector[panel_id].get_pixel_size()
             fast_slow_beam_centre_mm = (
                 fast_slow_beam_centre[0] * px_size_f,
                 fast_slow_beam_centre[1] * px_size_s,

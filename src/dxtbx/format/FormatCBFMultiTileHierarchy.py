@@ -238,9 +238,8 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             panel_names_detectororder.append(cbf.get_value())
 
         for panel_number, panel_name in enumerate(panel_names):
-            cbf_detector = cbf.construct_detector(
-                panel_names_detectororder.index(panel_name)
-            )
+            element_number = panel_names_detectororder.index(panel_name)
+            cbf_detector = cbf.construct_detector(element_number)
 
             # code adapted below from dxtbx.model.detector.DetectorFactory.imgCIF_H
             pixel = (
@@ -253,7 +252,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
             assert cbf.get_axis_depends_on(axis0) == axis1
 
             try:
-                size = tuple(cbf.get_image_size_fs(i))
+                size = tuple(cbf.get_image_size_fs(element_number))
             except Exception as e:
                 if "CBF_NOTFOUND" in str(e):
                     # no array data in the file, it's probably just a cbf header.  Get the image size elsewhere
