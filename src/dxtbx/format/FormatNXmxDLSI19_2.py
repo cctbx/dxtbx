@@ -41,7 +41,8 @@ class FormatNXmxDLSI19_2(FormatNXmxDLS):
         """Initialise the image structure from the given file."""
         self._dynamic_shadowing = self.has_dynamic_shadowing(**kwargs)
         super().__init__(image_file, **kwargs)
-        # Older files don't have bit_depth_readout in the master file
+        # Older files don't have bit_depth_readout in the master file,
+        # so we won't have fetched it yet
         if self._bit_depth_readout is None:
             try:
                 self._bit_depth_readout = get_bit_depth_from_meta(self._meta)
