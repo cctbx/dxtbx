@@ -1,0 +1,1 @@
+``FormatNXmxDLSI19_2``: Fix 32-bit data being read with a bit depth of 16.
