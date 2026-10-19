@@ -1,0 +1,1 @@
+``FormatNXmxDLSI19_2``: Fix 32-bit data being read with a bit depth of 16, when the meta file stores bit_depth_image as a length-1 array.

@@ -43,7 +43,7 @@ class FormatNXmxDLSI19_2(FormatNXmxDLS):
         super().__init__(image_file, **kwargs)
         try:
             self._bit_depth_readout = get_bit_depth_from_meta(self._meta)
-        except Exception:
+        except RuntimeError:
             self._bit_depth_readout = 16
 
     def get_goniometer_shadow_masker(self, goniometer=None):
