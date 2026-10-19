@@ -20,6 +20,7 @@ from dxtbx import IncorrectFormatError
 from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import FormatMultiImage, Reader
 from dxtbx.format.FormatStill import FormatStill
+from dxtbx.format.FormatXFEL import FormatXFEL
 from dxtbx.model import Spectrum
 from dxtbx.util.rotate_and_average import rotate_and_average
 
@@ -300,10 +301,10 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             return False
 
         try:
-            FormatXTC._get_datasource(image_file, params)
+            ds = FormatXTC._get_datasource(image_file, params)
         except Exception:
             return False
-        return True
+        return bool(ds)
 
     @staticmethod
     def params_from_phil(master_phil, user_phil, strict=False):
@@ -948,6 +949,24 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
 
     def get_scan(self, index=None):
         return None
+
+
+class FormatXTCXFEL(FormatXFEL, FormatXTC):
+    """XTC format with per-event wavelengths stored in scan properties.
+
+    XTC streams are exclusively LCLS XFEL stills (FormatXTC inherits FormatStill
+    via FormatMultiImage), so understand() simply delegates to FormatXTC — every
+    XTC file that FormatXTC accepts is per-event variable-wavelength data.
+    FormatXFEL.get_imageset() wraps the ImageSequence with an XFELBeam and
+    a scan 'wavelength' property.
+    """
+
+    @staticmethod
+    def understand(image_file):
+        return FormatXTC.understand(image_file)
+
+    def get_wavelengths(self):
+        return [self.get_beam(i).get_wavelength() for i in range(self.get_num_images())]
 
 
 if __name__ == "__main__":

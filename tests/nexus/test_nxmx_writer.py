@@ -60,7 +60,10 @@ def test_writer_jf16M(dials_data, tmpdir):
         assert approx_equal(b1.get_wavelength(), b2.get_wavelength())
         assert approx_equal(b2.get_s0(), b2.get_s0())
 
-    assert not (any(expts2.scans()))
+    # XFEL stills round-trip as an ImageSequence carrying zero-oscillation still
+    # scans (per-frame wavelength lives in the scan "wavelength" property); they
+    # must still be stills (no rotation) and carry no goniometer.
+    assert all(scan.is_still() for scan in expts2.scans())
     assert not (any(expts2.goniometers()))
 
 

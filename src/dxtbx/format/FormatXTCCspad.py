@@ -12,7 +12,7 @@ from scitbx.matrix import col
 from serialtbx.detector import cspad
 from serialtbx.detector.xtc import env_distance
 
-from dxtbx.format.FormatXTC import FormatXTC, locator_str
+from dxtbx.format.FormatXTC import FormatXTC, FormatXTCXFEL, locator_str
 from dxtbx.model import Detector, ParallaxCorrectedPxMmStrategy
 
 cspad_locator_str = """
@@ -41,7 +41,7 @@ cspad_locator_str = """
 cspad_locator_scope = parse(cspad_locator_str + locator_str, process_includes=True)
 
 
-class FormatXTCCspad(FormatXTC):
+class FormatXTCCspad(FormatXTCXFEL):
     def __init__(self, image_file, locator_scope=cspad_locator_scope, **kwargs):
         super().__init__(image_file, locator_scope=locator_scope, **kwargs)
         assert self.params.cspad.detz_offset is not None, (
