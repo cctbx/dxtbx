@@ -13,7 +13,13 @@ import dxtbx.format.FormatHDF5SaclaMPCCD
 import dxtbx.format.image
 import dxtbx.format.Registry
 from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus as FormatClass
-from dxtbx.imageset import ExternalLookup, ImageSequence, ImageSetData, ImageSetFactory
+from dxtbx.imageset import (
+    ExternalLookup,
+    ImageSequence,
+    ImageSet,
+    ImageSetData,
+    ImageSetFactory,
+)
 from dxtbx.model import Beam, Detector, Panel
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -97,6 +103,37 @@ def test_image_buffer():
     assert b.is_float() is False
     assert b.is_double() is False
     assert b.is_empty() is False
+
+
+def test_get_raw_data_uint32():
+    values = [0, 1, 2**16, 2**31, 2**32 - 1, 7]
+
+    class Reader:
+        def read(self, index):
+            data = flex.uint32(values)
+            data.reshape(flex.grid(2, 3))
+            return data
+
+        def paths(self):
+            return ["fake"]
+
+        def __len__(self):
+            return 1
+
+        def master_path(self):
+            return ""
+
+        def identifiers(self):
+            return ["fake"]
+
+        def is_single_file_reader(self):
+            return False
+
+    imageset = ImageSet(ImageSetData(Reader(), None))
+    (raw_data,) = imageset.get_raw_data(0)
+    assert isinstance(raw_data, flex.uint32)
+    assert raw_data.all() == (2, 3)
+    assert list(raw_data) == values
 
 
 def test_external_lookup():
