@@ -99,6 +99,28 @@ def test_image_buffer():
     assert b.is_empty() is False
 
 
+def test_image_buffer_float():
+    data = flex.int(flex.grid(2, 3), 7)
+    b = dxtbx.format.image.ImageBuffer(
+        dxtbx.format.image.ImageInt(dxtbx.format.image.ImageTileInt(data))
+    )
+    as_float = b.as_float()
+    assert isinstance(as_float, dxtbx.format.image.ImageFloat)
+    tile_data = as_float.tile(0).data()
+    assert isinstance(tile_data, flex.float)
+    assert tile_data.all() == (2, 3)
+    assert list(tile_data) == [7.0] * 6
+
+    data = flex.float(flex.grid(2, 3), 1.5)
+    b = dxtbx.format.image.ImageBuffer(
+        dxtbx.format.image.ImageFloat(dxtbx.format.image.ImageTileFloat(data))
+    )
+    assert b.is_float() is True
+    assert b.is_int() is False
+    assert b.is_double() is False
+    assert list(b.as_double().tile(0).data()) == [1.5] * 6
+
+
 def test_external_lookup():
     mask = flex.bool(flex.grid(10, 10), True)
     gain = flex.double(flex.grid(10, 10), 1)

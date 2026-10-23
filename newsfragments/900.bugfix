@@ -1,0 +1,1 @@
+``dxtbx.ext.radial_average``: Fix keyword argument names, which were shifted by one so that ``data=`` was bound to the mask. ``ImageBuffer.as_float()`` now works, as ``ImageFloat`` and ``ImageTileFloat`` are now exposed to Python.
