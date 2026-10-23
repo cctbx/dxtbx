@@ -435,6 +435,22 @@ namespace dxtbx { namespace boost_python {
     return boost::python::tuple(result);
   }
 
+  /**
+   * Return the image tiles as flex arrays. Unlike image_as_tuple, this does not
+   * depend on a to-python converter for the c_grid versa type (scitbx registers
+   * none for unsigned int), sharing the tile memory with a flex_grid versa instead
+   */
+  template <typename T>
+  boost::python::tuple image_as_flex_tuple(const Image<T> &image) {
+    boost::python::list result;
+    for (std::size_t i = 0; i < image.n_tiles(); ++i) {
+      scitbx::af::versa<T, scitbx::af::c_grid<2>> data = image.tile(i).data();
+      result.append(typename scitbx::af::flex<T>::type(data.handle(),
+                                                       data.accessor().as_flex_grid()));
+    }
+    return boost::python::tuple(result);
+  }
+
   boost::python::tuple ImageSet_get_raw_data(ImageSet &self, std::size_t index) {
     boost::python::tuple result;
     ImageBuffer buffer = self.get_raw_data(index);
@@ -444,6 +460,8 @@ namespace dxtbx { namespace boost_python {
       result = image_as_tuple<double>(buffer.as_double());
     } else if (buffer.is_float()) {
       result = image_as_tuple<float>(buffer.as_float());
+    } else if (buffer.is_uint()) {
+      result = image_as_flex_tuple<unsigned int>(buffer.as_uint());
     } else {
       throw DXTBX_ERROR("Problem reading raw data");
     }
