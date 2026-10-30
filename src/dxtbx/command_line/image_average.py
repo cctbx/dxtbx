@@ -50,6 +50,19 @@ def splitit(l, n):
     return r
 
 
+def detector_placement_node(detector):
+    """Return the node that positions the detector as a whole.
+
+    That is the root of the hierarchy for a multi panel detector, but a single
+    panel detector has no hierarchy - its root node is a placeholder sitting at
+    the origin, so the panel itself is what carries the distance.
+    See https://github.com/cctbx/dxtbx/issues/472
+    """
+    if detector.has_hierarchy():
+        return detector.hierarchy()
+    return detector[0]
+
+
 class image_worker:
     """Class to compute running sums while reading image data"""
 
@@ -120,7 +133,7 @@ class multi_image_worker(image_worker):
         wavelength = beam.get_wavelength()
         expt.imageset.clear_cache()
 
-        return img, detector.hierarchy().get_distance(), wavelength
+        return img, detector_placement_node(detector).get_distance(), wavelength
 
 
 class single_image_worker(image_worker):
@@ -147,7 +160,7 @@ class single_image_worker(image_worker):
         img = tuple(image_data[i].as_1d().as_double() for i in range(len(detector)))
         wavelength = beam.get_wavelength()
 
-        return img, detector.hierarchy().get_distance(), wavelength
+        return img, detector_placement_node(detector).get_distance(), wavelength
 
 
 def run(argv=None):
@@ -413,7 +426,7 @@ def run(argv=None):
     expt = experiments[0]
     expt.load_models()
     detector = expt.detector
-    h = detector.hierarchy()
+    h = detector_placement_node(detector)
     origin = h.get_local_origin()
     h.set_local_frame(
         h.get_local_fast_axis(),
