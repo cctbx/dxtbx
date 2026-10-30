@@ -108,15 +108,69 @@ class FormatCBFFull(FormatCBF):
         if self._raw_data is not None:
             return self._raw_data
 
-        self.detectorbase_start()
         try:
+            self.detectorbase_start()
             image = self.detectorbase
             image.read()
             self._raw_data = image.get_raw_data()
 
             return self._raw_data
         except Exception:
-            return None
+            # The iotbx/cbflib_adaptbx reader expects headers written by
+            # particular vendors (e.g. axis_set_id ELEMENT_X). Fall back to
+            # reading the single array directly with pycbf.
+            return self._get_raw_data_pycbf()
+
+    def _get_raw_data_pycbf(self):
+        """Read a single-array CBF image with pycbf, without the iotbx
+        detectorbase machinery."""
+        cbf = self._get_cbf_handle()
+
+        cbf.find_category(b"array_structure")
+        cbf.find_column(b"encoding_type")
+        cbf.select_row(0)
+        types = []
+        for i in range(cbf.count_rows()):
+            types.append(cbf.get_value())
+            cbf.next_row()
+        assert (
+            len(types) == cbf.count_rows() == 1
+        )  # multi-tile data read by different class
+        dtype = types[0]
+
+        # find the data
+        cbf.select_category(0)
+        while cbf.category_name().lower() != b"array_data":
+            try:
+                cbf.next_category()
+            except Exception:
+                return None
+        cbf.select_column(0)
+        cbf.select_row(0)
+
+        cbf.find_column(b"data")
+        assert cbf.get_typeofvalue().find(b"bnry") > -1
+
+        # handle floats vs ints
+        if dtype == b"signed 32-bit integer":
+            array_data = cbf.get_integerarray_as_string()
+            self._raw_data = flex.int(np.frombuffer(array_data, np.int32))
+            parameters = cbf.get_integerarrayparameters_wdims_fs()
+            slow, mid, fast = (parameters[11], parameters[10], parameters[9])
+            assert slow == 1  # sections not supported
+            array_size = mid, fast
+        elif dtype == b"signed 64-bit real IEEE":
+            array_data = cbf.get_realarray_as_string()
+            self._raw_data = flex.double(np.frombuffer(array_data, float))
+            parameters = cbf.get_realarrayparameters_wdims_fs()
+            slow, mid, fast = (parameters[7], parameters[6], parameters[5])
+            assert slow == 1  # sections not supported
+            array_size = mid, fast
+        else:
+            return None  # type not supported
+
+        self._raw_data.reshape(flex.grid(*array_size))
+        return self._raw_data
 
 
 class FormatCBFFullStill(FormatStill, FormatCBFFull):
@@ -165,53 +219,7 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
 
         # Override parent's get_raw_data, which relies on iotbx, which in turn
         # relies on cbflib_adaptbx, which in turn expects a gonio
-        cbf = self._get_cbf_handle()
-
-        cbf.find_category(b"array_structure")
-        cbf.find_column(b"encoding_type")
-        cbf.select_row(0)
-        types = []
-        for i in range(cbf.count_rows()):
-            types.append(cbf.get_value())
-            cbf.next_row()
-        assert (
-            len(types) == cbf.count_rows() == 1
-        )  # multi-tile data read by different class
-        dtype = types[0]
-
-        # find the data
-        cbf.select_category(0)
-        while cbf.category_name().lower() != b"array_data":
-            try:
-                cbf.next_category()
-            except Exception:
-                return None
-        cbf.select_column(0)
-        cbf.select_row(0)
-
-        cbf.find_column(b"data")
-        assert cbf.get_typeofvalue().find(b"bnry") > -1
-
-        # handle floats vs ints
-        if dtype == b"signed 32-bit integer":
-            array_data = cbf.get_integerarray_as_string()
-            self._raw_data = flex.int(np.frombuffer(array_data, np.int32))
-            parameters = cbf.get_integerarrayparameters_wdims_fs()
-            slow, mid, fast = (parameters[11], parameters[10], parameters[9])
-            assert slow == 1  # sections not supported
-            array_size = mid, fast
-        elif dtype == b"signed 64-bit real IEEE":
-            array_data = cbf.get_realarray_as_string()
-            self._raw_data = flex.double(np.frombuffer(array_data, float))
-            parameters = cbf.get_realarrayparameters_wdims_fs()
-            slow, mid, fast = (parameters[7], parameters[6], parameters[5])
-            assert slow == 1  # sections not supported
-            array_size = mid, fast
-        else:
-            return None  # type not supported
-
-        self._raw_data.reshape(flex.grid(*array_size))
-        return self._raw_data
+        return self._get_raw_data_pycbf()
 
 
 if __name__ == "__main__":
