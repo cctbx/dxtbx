@@ -1,0 +1,1 @@
+Format classes can now declare experimental metadata that they cannot read from the image file, removing the need for such formats to invent dummy values that the user might silently fail to override.
