@@ -260,7 +260,7 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             while i < self.get_num_images() and count < 200:
                 evt = self._get_event(i)
                 spectrum = self.get_spectrum(i)
-                eBeam_wav = serialtbx.detector.xtc.evt_wavelength(evt, delta_k=self.params.wavelength_delta_k)
+                eBeam_wav = serialtbx.detector.xtc.evt_wavelength(evt, delta_k=self.params.wavelength_delta_k, run=self.get_run_from_index(i))
                 i += 1
                 if spectrum is None: continue
                 if eBeam_wav is None: continue
@@ -710,7 +710,9 @@ class FormatXTC(FormatMultiImage, FormatStill, Format):
             else:
                 try:
                     wavelength = serialtbx.detector.xtc.evt_wavelength(
-                        evt, delta_k=self.params.wavelength_delta_k
+                        evt,
+                        delta_k=self.params.wavelength_delta_k,
+                        run=self.get_run_from_index(index),
                     )
                 except TypeError:  # no eBeam
                     wavelength = None
