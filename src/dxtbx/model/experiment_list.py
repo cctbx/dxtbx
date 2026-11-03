@@ -205,6 +205,7 @@ class ExperimentListDict:
         self._obj = copy.deepcopy(obj)
         self._check_format = check_format
         self._directory = directory
+        self._cached_pickles = {}
 
         # If this doesn't claim to be an ExperimentList, don't even try
         if self._obj.get("__id__") != "ExperimentList":
@@ -303,6 +304,10 @@ class ExperimentListDict:
             return "", None
 
         filename = resolve_path(imageset_data[param], directory=self._directory)
+
+        if filename in self._cached_pickles:
+            return filename, self._cached_pickles[filename]
+
         data = None
         if filename:
             try:
@@ -312,6 +317,8 @@ class ExperimentListDict:
                 pass
         else:
             filename = ""
+
+        self._cached_pickles[filename] = data
 
         return filename, data
 
