@@ -1,1 +1,0 @@
-Read in transmission from attenuator_transmission in NXattenuator if present in nexus file.

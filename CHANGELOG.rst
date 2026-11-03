@@ -1,3 +1,29 @@
+dxtbx 3.31.0 (2026-11-03)
+=========================
+
+Features
+--------
+
+- Update Pilatus 4M detector database, so that Fast DP can work with data from the Pilatus 4M detector at Manacá beamline, LNLS. (`#889 <https://github.com/cctbx/dxtbx/issues/889>`_)
+- Read in transmission from ``attenuator_transmission`` in NXattenuator, if present in nexus file. (`#896 <https://github.com/cctbx/dxtbx/issues/896>`_)
+
+
+Bugfixes
+--------
+
+- ``FormatNXmxDLSI19_2``: Fix 32-bit data being read with a bit depth of 16. (`#899 <https://github.com/cctbx/dxtbx/issues/899>`_)
+- ``dxtbx.ext.radial_average``: Fix keyword argument names, which were shifted by one so that ``data=`` was bound to the mask. ``ImageBuffer.as_float()`` now works, as ``ImageFloat`` and ``ImageTileFloat`` are now exposed to Python. (`#900 <https://github.com/cctbx/dxtbx/issues/900>`_)
+- ``ImageSet.get_raw_data()``: Fix failures with "Problem reading raw data" for formats that return unsigned 32-bit data, such as ``FormatBrukerModern``. (`#901 <https://github.com/cctbx/dxtbx/issues/901>`_)
+- Sync with psana API for LCLS files. (`#902 <https://github.com/cctbx/dxtbx/issues/902>`_)
+- Further sync with psana API changes for LCLS data. (`#903 <https://github.com/cctbx/dxtbx/issues/903>`_)
+
+
+Misc
+----
+
+- `#898 <https://github.com/cctbx/dxtbx/issues/898>`_
+
+
 dxtbx 3.30.0 (2026-08-03)
 =========================
 
