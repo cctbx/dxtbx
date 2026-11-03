@@ -27,6 +27,7 @@ from dxtbx.model import (
     Scan,
     Spectrum,
 )
+from dxtbx.model.detector_helpers import flatten_hierarchy
 
 try:
     try:
@@ -988,6 +989,13 @@ class DetectorFactoryFromGroup:
                     p.set_px_mm_strategy(
                         ParallaxCorrectedPxMmStrategy(mu, thickness_value)
                     )
+
+        # The depends_on chain is walked the same way however many modules there
+        # are, so a detector group containing a single module ends up with a
+        # hierarchy above one panel. That is meaningless, so fold it away.
+        # See https://github.com/cctbx/dxtbx/issues/472
+        if len(self.model) == 1 and self.model.has_hierarchy():
+            self.model = flatten_hierarchy(self.model)
 
 
 class DetectorFactory:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from scitbx.array_family import flex
 
 from dxtbx.model import Beam, Detector, Goniometer, Scan
@@ -88,3 +90,48 @@ def test_detector():
         assert p1 == p2
     assert d1.hierarchy() == d2.hierarchy()
     assert d1 == d2
+
+
+def single_panel_detector():
+    d = Detector()
+    p = d.add_panel()
+    p.set_name("p1")
+    p.set_type("panel")
+    p.set_pixel_size((0.1, 0.1))
+    p.set_image_size((100, 100))
+    p.set_trusted_range((0, 1000))
+    p.set_frame((1, 0, 0), (0, -1, 0), (-5, 5, -100))
+    return d
+
+
+def test_single_panel_detector_is_not_written_with_a_hierarchy():
+    """A hierarchy is meaningless for one panel. See dxtbx#472."""
+    d1 = single_panel_detector()
+
+    d = d1.to_dict()
+    assert "hierarchy" not in d
+
+    d2 = Detector.from_dict(d)
+    assert d2 == d1
+    assert not d2.has_hierarchy()
+
+
+def test_detector_dict_written_before_dxtbx_472_still_loads():
+    """Such a dict splits the geometry between the root node and the panel.
+
+    The model itself still reads it back faithfully; it is
+    DetectorFactory.from_dict that folds the two together.
+    """
+    d = single_panel_detector().to_dict()
+    d["hierarchy"] = {
+        "fast_axis": (1.0, 0.0, 0.0),
+        "slow_axis": (0.0, 1.0, 0.0),
+        "origin": (0.0, 0.0, -100.0),
+        "children": [{"panel": 0}],
+    }
+
+    detector = Detector.from_dict(d)
+    assert len(detector) == 1
+    assert detector.has_hierarchy()
+    # The panel dict holds the local frame, so the root is added on top of it
+    assert detector[0].get_origin() == pytest.approx((-5, 5, -200))

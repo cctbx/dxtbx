@@ -191,8 +191,11 @@ namespace dxtbx { namespace model { namespace boost_python {
         }
         data["panels"] = panels;
 
-        // Convert hierarchy into dict
-        data["hierarchy"] = to_dict(*detector.root());
+        // Convert hierarchy into dict. A single panel detector may not have a
+        // hierarchy, so don't write out its placeholder root node.
+        if (detector.size() != 1 || detector.has_hierarchy()) {
+          data["hierarchy"] = to_dict(*detector.root());
+        }
 
         // Return the tuple
         return boost::python::make_tuple(version, data);
@@ -209,14 +212,22 @@ namespace dxtbx { namespace model { namespace boost_python {
           boost::python::extract<boost::python::dict>(state[1]);
         boost::python::list panels =
           boost::python::extract<boost::python::list>(data["panels"]);
-        boost::python::dict hierarchy =
-          boost::python::extract<boost::python::dict>(data["hierarchy"]);
 
-        DXTBX_ASSERT(!hierarchy.contains("panel"));
-        Panel *panel = from_dict<Panel>(hierarchy);
-        std::swap(*((Panel *)detector->root()), *panel);
-        copy_node(detector->root(), hierarchy, panels);
-        delete panel;
+        if (data.contains("hierarchy")) {
+          boost::python::dict hierarchy =
+            boost::python::extract<boost::python::dict>(data["hierarchy"]);
+
+          DXTBX_ASSERT(!hierarchy.contains("panel"));
+          Panel *panel = from_dict<Panel>(hierarchy);
+          std::swap(*((Panel *)detector->root()), *panel);
+          copy_node(detector->root(), hierarchy, panels);
+          delete panel;
+        } else {
+          for (std::size_t i = 0; i < boost::python::len(panels); ++i) {
+            Panel panel = boost::python::extract<Panel>(panels[i]);
+            detector->add_panel(panel);
+          }
+        }
 
         for (std::size_t i = 0; i < detector->size(); ++i) {
           DXTBX_ASSERT(detector->at(i) != NULL);
@@ -262,7 +273,11 @@ namespace dxtbx { namespace model { namespace boost_python {
       panels.append(to_dict(obj[i]));
     }
     result["panels"] = panels;
-    result["hierarchy"] = to_dict(*obj.root());
+    // A single panel detector may not have a hierarchy, so don't write out its
+    // placeholder root node. See https://github.com/cctbx/dxtbx/issues/472
+    if (obj.size() != 1 || obj.has_hierarchy()) {
+      result["hierarchy"] = to_dict(*obj.root());
+    }
     return result;
   }
 
@@ -355,6 +370,7 @@ namespace dxtbx { namespace model { namespace boost_python {
       .def("hierarchy",
            (Detector::node_pointer (Detector::*)())&Detector::root,
            return_internal_reference<>())
+      .def("has_hierarchy", &Detector::has_hierarchy)
       .def("add_group",
            (Detector::node_pointer (Detector::*)())&Detector::add_group,
            return_internal_reference<>())
