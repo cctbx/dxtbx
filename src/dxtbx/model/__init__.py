@@ -22,6 +22,7 @@ from dxtbx.imageset import ImageGrid, ImageSequence, ImageSet
 from dxtbx.model.beam import BeamFactory
 from dxtbx.model.crystal import CrystalFactory
 from dxtbx.model.detector import DetectorFactory
+from dxtbx.model.geometry import MissingMetadataError, geometry_phil_scope
 from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.profile import ProfileModelFactory
 from dxtbx.model.scan import ScanFactory
@@ -126,6 +127,7 @@ __all__ = (
     "KappaDirection",
     "KappaGoniometer",
     "KappaScanAxis",
+    "MissingMetadataError",
     "MosaicCrystalKabsch2010",
     "MosaicCrystalSauter2014",
     "MultiAxisGoniometer",
@@ -142,6 +144,7 @@ __all__ = (
     "Spectrum",
     "VirtualPanel",
     "VirtualPanelFrame",
+    "geometry_phil_scope",
     "get_mod2pi_angles_in_range",
     "get_range_of_mod2pi_angles",
     "is_angle_in_range",
