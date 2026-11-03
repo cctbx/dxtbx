@@ -7,7 +7,7 @@ import pytest
 from libtbx.phil import parse
 from scitbx import matrix
 
-from dxtbx.model import Beam, PolychromaticBeam
+from dxtbx.model import Beam, BeamBase, PolychromaticBeam, XFELBeam
 from dxtbx.model.beam import BeamFactory, Probe, beam_phil_scope
 
 
@@ -338,3 +338,80 @@ def test_copy_beam():
     assert beam == copy.deepcopy(beam)
     beam = Beam()
     assert beam == copy.deepcopy(beam)
+
+
+def test_beam_hierarchy():
+    """The three spectral beam types are direct siblings under BeamBase.
+
+    Beam stays the (only) monochromatic type; PolychromaticBeam and XFELBeam no
+    longer inherit from Beam, so generic "any beam" code must bind BeamBase.
+    """
+    assert issubclass(Beam, BeamBase)
+    assert issubclass(PolychromaticBeam, BeamBase)
+    assert issubclass(XFELBeam, BeamBase)
+
+    # PolychromaticBeam / XFELBeam are no longer Beam subclasses.
+    assert not issubclass(PolychromaticBeam, Beam)
+    assert not issubclass(XFELBeam, Beam)
+
+    assert isinstance(PolychromaticBeam(), BeamBase)
+    assert isinstance(XFELBeam(), BeamBase)
+    assert not isinstance(PolychromaticBeam(), Beam)
+    assert not isinstance(XFELBeam(), Beam)
+
+    # The per-shot resolve boundary discriminates by the get_monochromatic_beam
+    # capability, so it must live on XFELBeam only -- never on plain Beam.
+    assert not hasattr(Beam(), "get_monochromatic_beam")
+    assert hasattr(XFELBeam(), "get_monochromatic_beam")
+
+
+def test_beambase_is_abstract():
+    """BeamBase is abstract (no_init) and cannot be instantiated from Python."""
+    with pytest.raises((RuntimeError, TypeError)):
+        BeamBase()
+
+
+def test_xfel_beam_spectral_guards():
+    """XFELBeam has no fixed wavelength/s0 but reports zero scan points so that
+    generic scan-varying probes succeed without XFEL-awareness."""
+    beam = XFELBeam()
+
+    # Deliberately 0 (not a throw) -- generic copy/compare/serialize code.
+    assert beam.get_num_scan_points() == 0
+
+    with pytest.raises(RuntimeError):
+        _ = beam.get_wavelength()
+    with pytest.raises(RuntimeError):
+        _ = beam.get_s0()
+    with pytest.raises(RuntimeError):
+        beam.set_wavelength(1.0)
+    with pytest.raises(RuntimeError):
+        beam.set_s0((0.0, 0.0, 0.1))
+
+
+def test_xfel_get_monochromatic_beam():
+    """get_monochromatic_beam(λ) resolves an XFELBeam to a real monochromatic
+    Beam carrying the XFEL geometry/polarization/probe at the supplied λ."""
+    beam = XFELBeam(
+        direction=(0.0, 0.0, 1.0),
+        divergence=0.0,
+        sigma_divergence=0.0,
+        polarization_normal=(0.0, 1.0, 0.0),
+        polarization_fraction=0.6,
+        flux=1.5e12,
+        transmission=0.8,
+        probe=Probe.electron,
+        sample_to_source_distance=12.0,
+    )
+
+    mono = beam.get_monochromatic_beam(1.3)
+
+    assert isinstance(mono, Beam)
+    assert mono.get_wavelength() == pytest.approx(1.3)
+    assert mono.get_sample_to_source_direction() == pytest.approx((0.0, 0.0, 1.0))
+    assert mono.get_polarization_normal() == pytest.approx((0.0, 1.0, 0.0))
+    assert mono.get_polarization_fraction() == pytest.approx(0.6)
+    assert mono.get_flux() == pytest.approx(1.5e12)
+    assert mono.get_transmission() == pytest.approx(0.8)
+    assert mono.get_probe() == Probe.electron
+    assert mono.get_sample_to_source_distance() == pytest.approx(12.0)

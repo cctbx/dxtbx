@@ -17,7 +17,9 @@ from scitbx.array_family import flex
 import dxtbx
 import dxtbx.model.experiment_list
 from dxtbx.format.Format import Format
-from dxtbx.imageset import ImageSetFactory
+from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.format.FormatMultiImage import Reader as MultiImageReader
+from dxtbx.imageset import ImageSequence, ImageSetData, ImageSetFactory
 from dxtbx.model import (
     Beam,
     BeamFactory,
@@ -334,6 +336,82 @@ def test_experimentlist_to_dict(experiment_list):
         assert eobj["detector"] == d[i]
         assert eobj["goniometer"] == g[i]
         assert eobj["scan"] == s[i]
+
+
+def _shared_still_sequence(n):
+    """A single-file-reader ImageSequence backing ``n`` frames (no real data).
+
+    After P2 a consolidated stills scan stores per-frame identity only as the
+    imageset's 0-based ``single_file_indices``, so every referenced imageset
+    must be a single-file reader. FormatMultiImage's reader reports
+    ``is_single_file_reader() == True`` and (with ``num_images``) needs no file.
+    """
+    reader = MultiImageReader(FormatMultiImage, ["dummy.h5"], num_images=n)
+    return ImageSequence(
+        ImageSetData(reader=reader, masker=None),
+        scan=Scan(image_range=(1, n), oscillation=(0.0, 0.0)),
+        beam=Beam(),
+        detector=Detector(),
+        goniometer=None,
+    )
+
+
+def test_stills_consolidated_scan_oscillation_roundtrip():
+    """Non-zero still oscillation must round-trip through __stills_consolidated
+    in degrees, not radians. Regression for the consolidation write side that
+    used to dump raw radians from the C++ properties table.
+
+    Also covers P2: per-frame identity is stored only as the imageset's 0-based
+    ``single_file_indices`` (``frame_numbers`` removed); each per-frame scan's
+    ``image_range`` is reconstructed as ``fi + 1`` on load.
+    """
+    shared = _shared_still_sequence(3)
+    experiments = ExperimentList()
+    for fi in (1, 2, 3):
+        experiments.append(
+            Experiment(
+                beam=shared.get_beam(),
+                detector=shared.get_detector(),
+                scan=Scan((fi, fi), (10.0, 0.0)),
+                imageset=shared,
+            )
+        )
+
+    obj = experiments.to_dict()
+
+    assert len(obj["scan"]) == 1
+    consolidated = obj["scan"][0]
+    assert consolidated.get("__stills_consolidated") is True
+    assert "frame_numbers" not in consolidated
+    # Per-frame identity lives only in the imageset's 0-based single_file_indices.
+    assert obj["imageset"][0]["single_file_indices"] == [0, 1, 2]
+    osc_arr = consolidated["properties"]["oscillation"]
+    assert osc_arr == [10.0, 10.0, 10.0]
+
+    restored = ExperimentListDict(obj, check_format=False).decode()
+    # image_range reconstructed from single_file_indices (1-based fi + 1).
+    assert [e.scan.get_image_range() for e in restored] == [(1, 1), (2, 2), (3, 3)]
+    for exp in restored:
+        assert exp.scan.get_oscillation() == (10.0, 0.0)
+
+
+def test_stills_consolidated_rotation_not_consolidated():
+    """Rotation scans (non-zero oscillation width) must never trigger
+    consolidation, regardless of how many experiments share them."""
+    experiments = ExperimentList()
+    beam = Beam()
+    detector = Detector()
+    for fi in (1, 2):
+        experiments.append(
+            Experiment(
+                beam=beam,
+                detector=detector,
+                scan=Scan((fi, fi), (0.0, 1.0)),
+            )
+        )
+
+    obj = experiments.to_dict()
+    assert all(not s.get("__stills_consolidated") for s in obj["scan"])
 
 
 def test_experimentlist_where(experiment_list):
@@ -904,7 +982,11 @@ def test_experimentlist_imagesequence_decode(mocker):
     detector = Detector()
     gonio = Goniometer()
 
-    # Construct the experiment list
+    # Construct the experiment list as a contiguous rotation sweep (each frame
+    # advances the oscillation by its width) so the shared-imageset decode path
+    # under test is not perturbed by stills-scan consolidation. Stills decode is
+    # covered separately by the test_stills_consolidated_* tests, which require
+    # single-file-reader imagesets carrying single_file_indices after P2.
     experiments = ExperimentList()
     for i in range(3):
         experiments.append(
@@ -914,7 +996,7 @@ def test_experimentlist_imagesequence_decode(mocker):
                 scan=ScanFactory.make_scan(
                     image_range=(i + 1, i + 1),
                     exposure_times=[1],
-                    oscillation=(0, 0),
+                    oscillation=(i, 1),
                     epochs=[0],
                 ),
                 goniometer=gonio,
@@ -1332,3 +1414,56 @@ def test_history(tmp_path):
         -1
     ]
     assert "integrated,scaled" in check
+
+
+def test_consolidate_histories_dedup():
+    # Many experiments sharing identical provenance (e.g. after a
+    # split->combine, where each source file carries the same history) must
+    # collapse to a single line, not be repeated once per experiment.
+    shared = "2026-01-01T00:00:00Z|dials.stills_process|v1"
+    el = ExperimentList()
+    for _ in range(5):
+        e = Experiment()
+        e.history = History([shared])  # distinct objects, identical content
+        el.append(e)
+    lines = el.consolidate_histories().get_history()
+    assert lines == [shared]
+    assert len(lines) == len(set(lines))
+
+    # Genuinely distinct lines are preserved and sorted by timestamp.
+    el2 = ExperimentList()
+    e_late = Experiment()
+    e_late.history = History(["2026-01-02T00:00:00Z|dials.b|v1"])
+    e_early = Experiment()
+    e_early.history = History(["2026-01-01T00:00:00Z|dials.a|v1"])
+    el2.append(e_late)
+    el2.append(e_early)
+    lines2 = el2.consolidate_histories().get_history()
+    assert lines2 == [
+        "2026-01-01T00:00:00Z|dials.a|v1",
+        "2026-01-02T00:00:00Z|dials.b|v1",
+    ]
+
+
+def test_as_json_history_timestamp(tmp_path):
+    # as_json(history_timestamp=...) stamps the appended item with the supplied
+    # timestamp instead of the current time, so many files written by one
+    # command (e.g. dials.split_experiments) carry an identical provenance line
+    # that deduplicates on recombine.
+    ts = "2026-01-01T00:00:00Z"
+    written = []
+    for i in range(3):
+        el = ExperimentList()
+        el.append(Experiment())
+        path = tmp_path / f"split_{i}.expt"
+        el.as_json(path, history_timestamp=ts)
+        last = ExperimentList.from_file(path)[0].history.get_history()[-1]
+        assert last.startswith(ts + "|")
+        written.append(last)
+
+    # Identical lines across files -> consolidate to a single entry.
+    assert len(set(written)) == 1
+    merged = ExperimentList()
+    for i in range(3):
+        merged.extend(ExperimentList.from_file(tmp_path / f"split_{i}.expt"))
+    assert merged.consolidate_histories().get_history().count(written[0]) == 1
