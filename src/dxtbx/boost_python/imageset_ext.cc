@@ -386,46 +386,6 @@ namespace dxtbx { namespace boost_python {
 #endif
   }
 
-  /**
-   * Set the external lookup data
-   */
-  template <typename T>
-  void ExternalLookupItem_set_data(ExternalLookupItem<T> &obj,
-                                   boost::python::object item) {
-    typedef typename scitbx::af::flex<T>::type flex_type;
-
-    Image<T> data;
-
-    // If item is not None
-    if (item != boost::python::object()) {
-      std::string name =
-        boost::python::extract<std::string>(item.attr("__class__").attr("__name__"))();
-
-      if (name == "tuple") {
-        // If we have a tuple then add items of tuple to image data
-        for (std::size_t i = 0; i < boost::python::len(item); ++i) {
-          flex_type a = boost::python::extract<flex_type>(item)();
-          data.push_back(ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2>>(
-            a.handle(), scitbx::af::c_grid<2>(a.accessor()))));
-        }
-      } else {
-        try {
-          // If we have a single array then add
-          flex_type a = boost::python::extract<flex_type>(item)();
-          data.push_back(ImageTile<T>(scitbx::af::versa<T, scitbx::af::c_grid<2>>(
-            a.handle(), scitbx::af::c_grid<2>(a.accessor()))));
-
-        } catch (boost::python::error_already_set) {
-          data = boost::python::extract<Image<T>>(item)();
-          boost::python::handle_exception();
-        }
-      }
-    }
-
-    // Set the image data
-    obj.set_data(data);
-  }
-
   template <typename T>
   boost::python::tuple image_as_tuple(const Image<T> &image) {
     boost::python::list result;

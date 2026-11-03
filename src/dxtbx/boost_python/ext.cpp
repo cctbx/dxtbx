@@ -268,6 +268,7 @@ namespace dxtbx { namespace boost_python {
     def("radial_average",
         &radial_average,
         (arg("data"),
+         arg("mask"),
          arg("beam_center"),
          arg("sums"),
          arg("sums_sq"),

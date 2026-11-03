@@ -12,8 +12,10 @@ __all__ = (  # noqa: F405
     "ImageBool",
     "ImageBuffer",
     "ImageDouble",
+    "ImageFloat",
     "ImageInt",
     "ImageTileBool",
     "ImageTileDouble",
+    "ImageTileFloat",
     "ImageTileInt",
 )
