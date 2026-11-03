@@ -1,0 +1,64 @@
+{% set name = "dxtbx" %}
+{% set version = "3.24.0.dev0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  path: .
+
+build:
+  skip: true  # [py<10]
+  number: 0
+  entry_points:
+    - cxi.image2pickle = dxtbx.command_line.image2pickle:run
+    - cxi.image_average = dxtbx.command_line.image_average:run
+    - dev.dxtbx.debug_memory = dxtbx.command_line.debug_memory:run
+    - dev.dxtbx.read_sequence = dxtbx.command_line.read_sequence:run
+    - dxtbx.any2nexus = dxtbx.command_line.any2nexus:run
+    - dxtbx.depends_on = dxtbx.command_line.depends_on:run
+    - dxtbx.detector_superpose = dxtbx.command_line.detector_superpose:run
+    - dxtbx.display_parallax_correction = dxtbx.command_line.display_parallax_correction:run
+    - dxtbx.dlsnxs2cbf = dxtbx.command_line.dlsnxs2cbf:run
+    - dxtbx.image2pickle = dxtbx.command_line.image2pickle:run
+    - dxtbx.image_average = dxtbx.command_line.image_average:run
+    - dxtbx.install_format = dxtbx.command_line.install_format:run
+    - dxtbx.overload = dxtbx.command_line.overload:run
+    - dxtbx.plot_detector_models = dxtbx.command_line.plot_detector_models:run
+    - dxtbx.print_header = dxtbx.command_line.print_header:run
+    - dxtbx.print_matching_images = dxtbx.command_line.print_matching_images:run
+    - dxtbx.radial_average = dxtbx.command_line.radial_average:run
+    - dxtbx.saturation = dxtbx.command_line.saturation:run
+    - dxtbx.show_mask_info = dxtbx.command_line.show_mask_info:run
+    - dxtbx.show_matching_formats = dxtbx.command_line.show_matching_formats:run
+    - dxtbx.show_registry = dxtbx.command_line.show_registry:run
+
+requirements:
+  $REQUIRES
+
+test:
+  source_files:
+    - dxtbx/tests
+    - dxtbx/conftest.py
+  requires:
+      $TEST_REQUIRES
+  imports:
+    - dxtbx.ext
+  commands:
+    - pytest $SRC_DIR/dxtbx/tests --regression  # [not win]
+    - pytest %SRC_DIR%/dxtbx/tests --regression  # [win]
+    - pip check
+
+about:
+  home: https://github.com/cctbx/dxtbx
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: dxtbx/LICENSE.txt
+  summary: Diffraction Experiment Toolbox
+  description: |
+    A cctbx-style toolbox to describe single-crystal diffraction experiments,
+    where a monochromatic beam is used to illuminate a sample which is rotated
+    during the exposure and diffraction recorded on a flat area detector.
+  doc_url: https://dials.github.io/documentation/index.html
+  dev_url: https://github.com/cctbx/dxtbx
