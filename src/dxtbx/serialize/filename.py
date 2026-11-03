@@ -9,7 +9,7 @@ from dxtbx.sequence_filenames import template_string_to_glob_expr
 def resolve_path(path, directory=None):
     """Resolve a file path.
 
-    First expand any environment and user variables. Then create the absolute
+    First expand any environment and user variables. Then create a normalized
     path by applying the relative path to the provided directory, if necessary.
 
     Args:
@@ -17,7 +17,7 @@ def resolve_path(path, directory=None):
       directory (Optional[str]): The local path to resolve relative links
 
     Returns:
-        str: The absolute path to the file to read if accessible, otherwise
+        str: The normalized path to the file to read if accessible, otherwise
         return the original path as provided
     """
     if not path:
@@ -25,7 +25,7 @@ def resolve_path(path, directory=None):
     trial_path = os.path.expanduser(os.path.expandvars(path))
     if directory and not os.path.isabs(trial_path):
         trial_path = os.path.join(directory, trial_path)
-    trial_path = os.path.abspath(trial_path)
+    trial_path = os.path.normpath(trial_path)
     if glob.glob(template_string_to_glob_expr(trial_path)):
         return trial_path
     else:

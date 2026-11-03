@@ -701,7 +701,7 @@ class ExperimentListFactory:
                     unhandled.append(filename)
             elif issubclass(format_class, FormatMultiImage):
                 imageset = format_class.get_imageset(
-                    os.path.abspath(filename), format_kwargs=format_kwargs
+                    os.path.normpath(filename), format_kwargs=format_kwargs
                 )
                 format_groups[format_class].append(imageset)
                 logger.debug("Loaded file: %s", filename)
@@ -1507,7 +1507,7 @@ def _create_imagesequence(
     index_start, index_end = record.scan.get_image_range()
     # Create the sequence
     sequence = dxtbx.imageset.ImageSetFactory.make_sequence(
-        template=os.path.abspath(record.template),
+        template=os.path.normpath(record.template),
         indices=list(range(index_start, index_end + 1)),
         format_class=format_class,
         beam=record.beam,
