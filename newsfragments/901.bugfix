@@ -1,0 +1,1 @@
+Fix ``ImageSet.get_raw_data()`` failing with "Problem reading raw data" for formats that return unsigned 32-bit data, such as ``FormatBrukerModern``.
