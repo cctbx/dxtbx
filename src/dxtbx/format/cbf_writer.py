@@ -1,5 +1,6 @@
 """
-Note, scans and gonios not supported here. This writer essentially writes still images
+Goniometer and scan models are written when the imageset is a sequence (or when
+they are passed explicitly), so rotation data can be round-tripped as well as stills
 
 Example to write the first 10 images from an h5 file:
 writer = FullCBFWriter("data.h5")
@@ -9,6 +10,7 @@ for i in range(10):
 
 from __future__ import annotations
 
+import datetime
 import os
 import sys
 
@@ -30,11 +32,15 @@ def add_frame_specific_cbf_tables(
     is_xfel=True,
     gain=1.0,
     flux=None,
+    goniometer_axis_names=None,
+    exposure_time=0.0,
 ):
     """Adds tables to cbf handle that won't already exsist if the cbf file is just a header
     @ param wavelength Wavelength in angstroms
     @ param timestamp String formatted timestamp for the image
     @ param trusted_ranges Array of trusted range tuples (min, max), one for each element
+    @ param goniometer_axis_names Names of goniometer axes (rotation data), if any
+    @ param exposure_time Exposure time of the frame in seconds
     """
 
     """Data items in the DIFFRN_RADIATION category describe
@@ -66,20 +72,40 @@ def add_frame_specific_cbf_tables(
     cbf.add_category(
         "diffrn_measurement", ["diffrn_id", "id", "number_of_axes", "method", "details"]
     )
-    cbf.add_row(
-        [
-            diffrn_id,
-            "INJECTION" if is_xfel else "unknown",
-            "0",
-            (
-                "electrospray"
-                if is_xfel
-                else (
-                    "unknowncrystals injected by electrospray" if is_xfel else "unknown"
-                )
-            ),
-        ]
-    )
+    goniometer_axis_names = goniometer_axis_names or []
+    if goniometer_axis_names:
+        measurement_id = "GONIOMETER"
+        cbf.add_row(
+            [
+                diffrn_id,
+                measurement_id,
+                str(len(goniometer_axis_names)),
+                "rotation",
+                ".",
+            ]
+        )
+        """Data items in the DIFFRN_MEASUREMENT_AXIS category associate
+       axes with goniometers."""
+        cbf.add_category("diffrn_measurement_axis", ["measurement_id", "axis_id"])
+        for name in goniometer_axis_names:
+            cbf.add_row([measurement_id, name])
+    else:
+        cbf.add_row(
+            [
+                diffrn_id,
+                "INJECTION" if is_xfel else "unknown",
+                "0",
+                (
+                    "electrospray"
+                    if is_xfel
+                    else (
+                        "unknowncrystals injected by electrospray"
+                        if is_xfel
+                        else "unknown"
+                    )
+                ),
+            ]
+        )
 
     """ Data items in the DIFFRN_SCAN category describe the parameters of one
      or more scans, relating axis positions to frames."""
@@ -92,7 +118,7 @@ def add_frame_specific_cbf_tables(
         "diffrn_scan_frame",
         ["frame_id", "frame_number", "integration_time", "scan_id", "date"],
     )
-    cbf.add_row(["FRAME1", "1", "0.0", "SCAN1", timestamp])
+    cbf.add_row(["FRAME1", "1", "%g" % exposure_time, "SCAN1", timestamp])
 
     """ Data items in the ARRAY_INTENSITIES category record the
    information required to recover the intensity data from
@@ -181,8 +207,18 @@ class FullCBFWriter:
         recursive_setup_dict(detector.hierarchy(), (0,))
         return metro
 
-    def get_cbf_handle(self, index=None, header_only=False, detector_only=False):
-        """Build a cbf handle in memory"""
+    def get_cbf_handle(
+        self,
+        index=None,
+        header_only=False,
+        detector_only=False,
+        goniometer=None,
+        scan=None,
+    ):
+        """Build a cbf handle in memory. For rotation data, the goniometer and
+        scan are taken from the imageset if it is a sequence, or may be passed
+        explicitly; the frame written is the one at position index of the scan
+        (or its first frame if index is None)."""
         # set up the metrology dictionary to include axis names, pixel sizes, and so forth
         if index is None:
             detector = self.imageset.get_detector()
@@ -190,6 +226,73 @@ class FullCBFWriter:
         else:
             detector = self.imageset.get_detector(index)
             beam = self.imageset.get_beam(index)
+
+        if goniometer is None:
+            try:
+                goniometer = self.imageset.get_goniometer()
+            except Exception:
+                goniometer = None
+        if scan is None:
+            try:
+                scan = self.imageset.get_scan()
+            except Exception:
+                scan = None
+        goniometer_axis_names = []
+        gonio_axis_rows = []  # rows for the axis table
+        gonio_scan_axis_rows = []  # rows for diffrn_scan_axis
+        gonio_frame_axis_rows = []  # rows for diffrn_scan_frame_axis
+        exposure_time = 0.0
+        timestamp = "unknown"
+        if goniometer is not None and scan is not None:
+            frame = 0 if index is None else index
+            osc_start, osc_width = scan.get_oscillation()
+            scan_angle = osc_start + frame * osc_width
+            exposure_times = scan.get_exposure_times()
+            if len(exposure_times) > frame:
+                exposure_time = exposure_times[frame]
+            # the imgCIF scan reader needs a parseable date for each frame
+            epochs = scan.get_epochs()
+            epoch = epochs[frame] if len(epochs) > frame and epochs[frame] > 0 else 0.0
+            timestamp = datetime.datetime.fromtimestamp(
+                epoch, datetime.timezone.utc
+            ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+            if hasattr(goniometer, "get_axes"):
+                # multi-axis goniometer
+                axes = list(goniometer.get_axes())
+                angles = list(goniometer.get_angles())
+                names = list(goniometer.get_names())
+                scan_axis = goniometer.get_scan_axis()
+            else:
+                # single axis goniometer
+                axes = [goniometer.get_rotation_axis()]
+                angles = [0.0]
+                names = ["GONIOMETER_PHI"]
+                scan_axis = 0
+            if not names or any(not n for n in names):
+                names = ["GONIOMETER_AXIS%d" % i for i in range(len(axes))]
+            # dxtbx orders axes from the crystal outwards to the goniometer base;
+            # imgCIF depends_on chains from each axis to the one it sits on
+            for i, (name, axis) in enumerate(zip(names, axes)):
+                depends_on = names[i + 1] if i + 1 < len(names) else "."
+                gonio_axis_rows.append(
+                    [name, "rotation", "goniometer", depends_on]
+                    + ["%.10g" % v for v in axis]
+                    + ["0", "0", "0", "."]
+                )
+                if i == scan_axis:
+                    start, rng, inc, angle = (
+                        scan_angle,
+                        osc_width,
+                        osc_width,
+                        scan_angle,
+                    )
+                else:
+                    start, rng, inc, angle = angles[i], 0.0, 0.0, angles[i]
+                gonio_scan_axis_rows.append(
+                    [name, "SCAN1", "%g" % start, "%g" % rng, "%g" % inc, "0", "0", "0"]
+                )
+                gonio_frame_axis_rows.append([name, "FRAME1", "%g" % angle, "0"])
+            goniometer_axis_names = names
 
         metro = self.get_metrology_dict()
 
@@ -338,12 +441,14 @@ class FullCBFWriter:
                 add_frame_specific_cbf_tables(
                     cbf,
                     beam.get_wavelength(),
-                    "unknown",
+                    timestamp,
                     trusted_ranges,
                     diffrn_id,
                     False,
                     gain=[panel.get_gain() for panel in sorted_panels],
                     flux=beam.get_flux(),
+                    goniometer_axis_names=goniometer_axis_names,
+                    exposure_time=exposure_time,
                 )
             except TypeError:
                 # Needed until next cctbx release
@@ -403,6 +508,8 @@ class FullCBFWriter:
             "AXIS_GRAVITY general     gravity  .        0 -1  0 . . . .".split()
         )
         axis_names.append("AXIS_GRAVITY")
+        for row in gonio_axis_rows:
+            cbf.add_row(row)
         cbf.add_row(
             (
                 "%s_Z         translation detector .        0  0  1 . . . %s"
@@ -502,6 +609,8 @@ class FullCBFWriter:
         )
         for name in axis_names:
             cbf.add_row([name, "SCAN1", "0", "0", "0", "0", "0", "0"])
+        for row in gonio_scan_axis_rows:
+            cbf.add_row(row)
 
         """Data items in the DIFFRN_SCAN_FRAME_AXIS category describe the
        settings of axes for particular frames.  Unspecified axes are
@@ -510,6 +619,8 @@ class FullCBFWriter:
             "diffrn_scan_frame_axis", ["axis_id", "frame_id", "angle", "displacement"]
         )
         for row in axis_settings:
+            cbf.add_row(row)
+        for row in gonio_frame_axis_rows:
             cbf.add_row(row)
 
         """Data items in the ARRAY_STRUCTURE_LIST category record the size
