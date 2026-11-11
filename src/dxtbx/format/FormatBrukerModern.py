@@ -73,7 +73,7 @@ class FormatBrukerModern(FormatBruker):
         if scan_axis is None:
             scan_axis = 2  # "OMEGA" default
 
-        if "CMOS-PHOTONII" in self.header_dict["DETTYPE"].upper():
+        if self.header_dict["DETTYPE"].upper().startswith("CMOS-PHOTONI"):
             # https://journals.iucr.org/d/issues/2014/10/00/dz5309/dz5309sup1.pdf
             axes = flex.vec3_double(((0, -1, 0), (0, 0, 1), (0, 1, 0)))
         else:
@@ -130,13 +130,13 @@ class FormatBrukerModern(FormatBruker):
 
         # Here we get some detector specifics. It is unclear whether these are
         # correct, or if we could read these value properly from the header.
-        if "CMOS-PHOTONII" in self.header_dict["DETTYPE"].upper():
+        if self.header_dict["DETTYPE"].upper().startswith("CMOS-PHOTONI"):
             fast = matrix.col((1, 0, 0))
             slow = matrix.col((0, 1, 0))
             beam = matrix.col((0, 0, 1))
             pixel_mm = 5.0 / float(self.header_dict["DETTYPE"].split()[1])
-            # Not a CCD, but is an integrating detector. Photon II has a 90 um Gadox
-            # scintillator.
+            # Photon II-IV. Not a CCD, but is an integrating detector. Photon II
+            # has a 90 um Gadox scintillator.
             type_str = "CCD"
         else:  # EIGER-type
             fast = matrix.col((1, 0, 0))
