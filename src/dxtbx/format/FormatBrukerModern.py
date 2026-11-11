@@ -163,6 +163,16 @@ class FormatBrukerModern(FormatBruker):
 
         wavelength = float(self.header_dict["WAVELEN"].split()[0])
         gain = self._calculate_gain(wavelength)
+
+        # The raw data returned by get_raw_data always includes the baseline
+        # offset NEXP[2], either because it is stored in the pixel values or
+        # because it is added back after baseline subtraction. Record this
+        # offset as the pedestal.
+        try:
+            pedestal = float(self.header_dict["NEXP"].split()[2])
+        except (KeyError, IndexError, ValueError):
+            pedestal = 0.0
+
         detector = self._detector_factory.complex(
             type_str,
             origin.elems,
@@ -172,6 +182,7 @@ class FormatBrukerModern(FormatBruker):
             image_size,
             (min_trusted_value, full_scale),
             gain=gain,
+            pedestal=pedestal,
         )
 
         # For the electron diffraction case (assumed if wavelength < 0.1 Angstrom)
