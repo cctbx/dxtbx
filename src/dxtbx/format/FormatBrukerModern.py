@@ -297,19 +297,23 @@ class FormatBrukerModern(FormatBruker):
             overflow.reshape(flex.grid(*image_size))
             raw_data += overflow
 
-        # handle underflows
-        if underflow_vals is not None:
-            sel = (raw_data == 0).as_1d()
-            underflow = flex.uint32(nrows * ncols, 0)
-            underflow.set_selected(sel, underflow_vals)
-            underflow.reshape(flex.grid(*image_size))
-            raw_data += underflow
-
         # handle baseline. num_underflows == -1 means no baseline subtraction. See
         # https://github.com/cctbx/cctbx_project/files/1262952/BISFrameFileFormats.zip
         if num_underflows != -1:
+            # Pixels flagged as underflows (stored as 0) are identified before
+            # adding back the baseline
+            if underflow_vals is not None:
+                underflow_sel = (raw_data == 0).as_1d()
             num_exposures = [int(e) for e in self.header_dict["NEXP"].split()]
             baseline = num_exposures[2]
             raw_data += baseline
+
+            # handle underflows. The underflow table stores the full pixel values,
+            # without baseline subtraction, so these replace (rather than add to)
+            # the baseline-restored values
+            if underflow_vals is not None:
+                raw_data.reshape(flex.grid(nrows * ncols))
+                raw_data.set_selected(underflow_sel, underflow_vals)
+                raw_data.reshape(flex.grid(*image_size))
 
         return raw_data
