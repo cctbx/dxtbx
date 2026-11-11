@@ -161,7 +161,8 @@ class FormatBrukerModern(FormatBruker):
             int(self.header_dict["NROWS"].split()[0]),
         )
 
-        gain = self._calculate_gain(float(self.header_dict["WAVELEN"].split()[0]))
+        wavelength = float(self.header_dict["WAVELEN"].split()[0])
+        gain = self._calculate_gain(wavelength)
         detector = self._detector_factory.complex(
             type_str,
             origin.elems,
@@ -176,12 +177,10 @@ class FormatBrukerModern(FormatBruker):
         # For the electron diffraction case (assumed if wavelength < 0.1 Angstrom)
         # effectively disable parallax and QE corrections by setting the simple
         # pixel-to-millimetre strategy and a very high mu value.
-        for panel in detector:
-            panel.set_gain(gain)
-            panel.set_thickness(0.450)
-            panel.set_material("Si")
-            panel.set_px_mm_strategy(SimplePxMmStrategy())
-            panel.set_mu(1e10)
+        if wavelength < 0.1:
+            for panel in detector:
+                panel.set_px_mm_strategy(SimplePxMmStrategy())
+                panel.set_mu(1e10)
 
         return detector
 
