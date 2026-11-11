@@ -1,0 +1,1 @@
+``FormatBrukerModern``: Fix several bugs. Electron diffraction panel settings are no longer applied to X-ray data, underflow pixels no longer have the baseline counted twice, the baseline offset is now set as the panel pedestal, and Photon IV data is now treated like Photon II/III.
