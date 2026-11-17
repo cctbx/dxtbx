@@ -131,7 +131,7 @@ class FormatXTCJungfrau(FormatXTC):
             self._det = psana.Detector(self.params.detector_address[0], run.env())
         except AttributeError:
             # psana2
-            self._det = evt.run().Detector("jungfrau")
+            self._det = run.Detector("jungfrau")
         wavelength = self.get_beam(index).get_wavelength()
 
         if self._dist_det is None:
@@ -139,7 +139,7 @@ class FormatXTCJungfrau(FormatXTC):
                 self._dist_det = psana.Detector("CXI:DS1:MMS:06.RBV")
             except AttributeError:
                 # psana2
-                self._dist_det = evt.run().Detector("MFX:DET:MMS:04.RBV")
+                self._dist_det = run.Detector("MFX:DET:MMS:04.RBV")
 
         try:
             geom = self._det.pyda.geoaccess(evt.run())

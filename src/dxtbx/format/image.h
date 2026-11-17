@@ -244,6 +244,21 @@ namespace dxtbx { namespace format {
     };
 
     /**
+     * Is the data an unsigned int type
+     */
+    class IsUintVisitor : public boost::static_visitor<bool> {
+    public:
+      bool operator()(const uint_image_type &v) const {
+        return true;
+      }
+
+      template <typename OtherImageType>
+      bool operator()(const OtherImageType &v) const {
+        return false;
+      }
+    };
+
+    /**
      * Is the data a float type
      */
     class IsFloatVisitor : public boost::static_visitor<bool> {
@@ -298,6 +313,13 @@ namespace dxtbx { namespace format {
     }
 
     /**
+     * @returns Is the buffer an unsigned int
+     */
+    bool is_uint() const {
+      return boost::apply_visitor(IsUintVisitor(), data_);
+    }
+
+    /**
      * @returns Is the buffer a float
      */
     bool is_float() const {
@@ -316,6 +338,13 @@ namespace dxtbx { namespace format {
      */
     Image<int> as_int() const {
       return boost::apply_visitor(ConverterVisitor<Image<int> >(), data_);
+    }
+
+    /**
+     * @returns The buffer as an unsigned int image
+     */
+    Image<unsigned int> as_uint() const {
+      return boost::apply_visitor(ConverterVisitor<Image<unsigned int> >(), data_);
     }
 
     /**

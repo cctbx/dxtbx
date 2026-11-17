@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def get_bit_depth_from_meta(meta_file_name: Path) -> int:
     with h5py.File(meta_file_name) as f:
         with contextlib.suppress(KeyError):
-            return int(f["/_dectris/bit_depth_image"][()])
+            return int(nxmx.h5scalar(f["/_dectris/bit_depth_image"]))
 
         # This might be a very old meta file, that only had 'datatype'?
         if "datatype" in f:

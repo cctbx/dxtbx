@@ -73,7 +73,7 @@ class FormatBrukerModern(FormatBruker):
         if scan_axis is None:
             scan_axis = 2  # "OMEGA" default
 
-        if "CMOS-PHOTONII" in self.header_dict["DETTYPE"].upper():
+        if self.header_dict["DETTYPE"].upper().startswith("CMOS-PHOTONI"):
             # https://journals.iucr.org/d/issues/2014/10/00/dz5309/dz5309sup1.pdf
             axes = flex.vec3_double(((0, -1, 0), (0, 0, 1), (0, 1, 0)))
         else:
@@ -130,13 +130,13 @@ class FormatBrukerModern(FormatBruker):
 
         # Here we get some detector specifics. It is unclear whether these are
         # correct, or if we could read these value properly from the header.
-        if "CMOS-PHOTONII" in self.header_dict["DETTYPE"].upper():
+        if self.header_dict["DETTYPE"].upper().startswith("CMOS-PHOTONI"):
             fast = matrix.col((1, 0, 0))
             slow = matrix.col((0, 1, 0))
             beam = matrix.col((0, 0, 1))
             pixel_mm = 5.0 / float(self.header_dict["DETTYPE"].split()[1])
-            # Not a CCD, but is an integrating detector. Photon II has a 90 um Gadox
-            # scintillator.
+            # Photon II-IV. Not a CCD, but is an integrating detector. Photon II
+            # has a 90 um Gadox scintillator.
             type_str = "CCD"
         else:  # EIGER-type
             fast = matrix.col((1, 0, 0))
@@ -161,7 +161,18 @@ class FormatBrukerModern(FormatBruker):
             int(self.header_dict["NROWS"].split()[0]),
         )
 
-        gain = self._calculate_gain(float(self.header_dict["WAVELEN"].split()[0]))
+        wavelength = float(self.header_dict["WAVELEN"].split()[0])
+        gain = self._calculate_gain(wavelength)
+
+        # The raw data returned by get_raw_data always includes the baseline
+        # offset NEXP[2], either because it is stored in the pixel values or
+        # because it is added back after baseline subtraction. Record this
+        # offset as the pedestal.
+        try:
+            pedestal = float(self.header_dict["NEXP"].split()[2])
+        except (KeyError, IndexError, ValueError):
+            pedestal = 0.0
+
         detector = self._detector_factory.complex(
             type_str,
             origin.elems,
@@ -171,17 +182,16 @@ class FormatBrukerModern(FormatBruker):
             image_size,
             (min_trusted_value, full_scale),
             gain=gain,
+            pedestal=pedestal,
         )
 
         # For the electron diffraction case (assumed if wavelength < 0.1 Angstrom)
         # effectively disable parallax and QE corrections by setting the simple
         # pixel-to-millimetre strategy and a very high mu value.
-        for panel in detector:
-            panel.set_gain(gain)
-            panel.set_thickness(0.450)
-            panel.set_material("Si")
-            panel.set_px_mm_strategy(SimplePxMmStrategy())
-            panel.set_mu(1e10)
+        if wavelength < 0.1:
+            for panel in detector:
+                panel.set_px_mm_strategy(SimplePxMmStrategy())
+                panel.set_mu(1e10)
 
         return detector
 
@@ -298,19 +308,23 @@ class FormatBrukerModern(FormatBruker):
             overflow.reshape(flex.grid(*image_size))
             raw_data += overflow
 
-        # handle underflows
-        if underflow_vals is not None:
-            sel = (raw_data == 0).as_1d()
-            underflow = flex.uint32(nrows * ncols, 0)
-            underflow.set_selected(sel, underflow_vals)
-            underflow.reshape(flex.grid(*image_size))
-            raw_data += underflow
-
         # handle baseline. num_underflows == -1 means no baseline subtraction. See
         # https://github.com/cctbx/cctbx_project/files/1262952/BISFrameFileFormats.zip
         if num_underflows != -1:
+            # Pixels flagged as underflows (stored as 0) are identified before
+            # adding back the baseline
+            if underflow_vals is not None:
+                underflow_sel = (raw_data == 0).as_1d()
             num_exposures = [int(e) for e in self.header_dict["NEXP"].split()]
             baseline = num_exposures[2]
             raw_data += baseline
+
+            # handle underflows. The underflow table stores the full pixel values,
+            # without baseline subtraction, so these replace (rather than add to)
+            # the baseline-restored values
+            if underflow_vals is not None:
+                raw_data.reshape(flex.grid(nrows * ncols))
+                raw_data.set_selected(underflow_sel, underflow_vals)
+                raw_data.reshape(flex.grid(*image_size))
 
         return raw_data
