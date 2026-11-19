@@ -196,7 +196,7 @@ class GoniometerMaskerFactory:
         return SmarGonShadowMasker(goniometer)
 
     @staticmethod
-    def diamond_anvil_cell(goniometer, cone_opening_angle):
+    def diamond_anvil_cell(goniometer, cone_opening_angle) -> GoniometerShadowMasker:
         radius_height_ratio = math.tan(1 / 2 * cone_opening_angle)
         height = 10  # mm
         radius = radius_height_ratio * height

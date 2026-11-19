@@ -137,16 +137,20 @@ namespace dxtbx { namespace format { namespace boost_python {
   BOOST_PYTHON_MODULE(dxtbx_format_image_ext) {
     image_tile_wrapper<bool>("ImageTileBool");
     image_tile_wrapper<int>("ImageTileInt");
+    image_tile_wrapper<float>("ImageTileFloat");
     image_tile_wrapper<double>("ImageTileDouble");
     image_wrapper<bool>("ImageBool");
     image_wrapper<int>("ImageInt");
+    image_wrapper<float>("ImageFloat");
     image_wrapper<double>("ImageDouble");
 
     class_<ImageBuffer>("ImageBuffer")
       .def(init<Image<int> >())
+      .def(init<Image<float> >())
       .def(init<Image<double> >())
       .def("is_empty", &ImageBuffer::is_empty)
       .def("is_int", &ImageBuffer::is_int)
+      .def("is_uint", &ImageBuffer::is_uint)
       .def("is_float", &ImageBuffer::is_float)
       .def("is_double", &ImageBuffer::is_double)
       .def("as_int", &ImageBuffer::as_int)
