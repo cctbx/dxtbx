@@ -1,0 +1,1 @@
+``NXmx``: require existence of /entry/data/data virtual data set to support NXmx data, fall back to FormatNexus if missing (for e.g. DECTRIS file writer data)
