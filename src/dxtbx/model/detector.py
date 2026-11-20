@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from copy import deepcopy
 
@@ -14,6 +15,7 @@ from dxtbx.model.detector_helpers import (
     find_gain_value,
     find_undefined_value,
     find_underload_value,
+    flatten_hierarchy,
     set_detector_distance,
     set_fast_slow_beam_centre_mm,
     set_mosflm_beam_centre,
@@ -34,6 +36,8 @@ except ModuleNotFoundError:
         ParallaxCorrectedPxMmStrategy,
         SimplePxMmStrategy,
     )
+
+logger = logging.getLogger(__name__)
 
 # N.B. this should probably be generalized for non
 # flat detectors, or composite detectors constructed from a number of flat
@@ -248,6 +252,26 @@ def merge_panel_scope_extracts_by_id(panel_params):
     return merged_params
 
 
+_SINGLE_PANEL_HIERARCHY_ERROR = (
+    "A hierarchy is meaningless for a single panel detector, so the "
+    "detector.hierarchy parameters cannot be used here. Set the panel frame "
+    "directly instead. See https://github.com/cctbx/dxtbx/issues/472"
+)
+
+
+def _hierarchy_phil_is_set(hierarchy_params):
+    """Would these phil parameters place a transformation above the panels?
+
+    The hierarchy name alone doesn't, so it is not considered here.
+    """
+    return (
+        hierarchy_params.fast_axis is not None
+        or hierarchy_params.slow_axis is not None
+        or hierarchy_params.origin is not None
+        or bool(hierarchy_params.group)
+    )
+
+
 class DetectorFactory:
     """A factory class for detector objects, which will encapsulate standard
     detector designs to make it a little easier to get started with these. In
@@ -318,6 +342,9 @@ class DetectorFactory:
             if panel_params.id in panel_list:
                 raise RuntimeError("Multiple panels with id=%d" % panel_params.id)
             panel_list[panel_params.id] = panel
+
+        if len(panel_list) == 1 and _hierarchy_phil_is_set(params.detector.hierarchy):
+            raise RuntimeError(_SINGLE_PANEL_HIERARCHY_ERROR)
 
         # Create the hierarchy
         panel_counter = 0
@@ -429,6 +456,8 @@ class DetectorFactory:
 
         # Create the hierarchy
         if params.detector.hierarchy is not None:
+            if len(detector) == 1 and _hierarchy_phil_is_set(params.detector.hierarchy):
+                raise RuntimeError(_SINGLE_PANEL_HIERARCHY_ERROR)
             root = detector.hierarchy()
             if params.detector.hierarchy.name is not None:
                 root.set_name(params.detector.hierarchy.name)
@@ -563,7 +592,20 @@ class DetectorFactory:
         joint.update(d)
 
         # Create the model from the joint dictionary
-        return Detector.from_dict(joint)
+        detector = Detector.from_dict(joint)
+
+        # Experiment lists written before dxtbx#472 may contain a single panel
+        # detector with a hierarchy, in which case the geometry is split between
+        # the root node and the panel. Fold the two together; this leaves the
+        # panel in the same place, it just stops the two halves drifting apart.
+        if len(detector) == 1 and detector.has_hierarchy():
+            logger.warning(
+                "Removing the meaningless hierarchy of a single panel detector. "
+                "See https://github.com/cctbx/dxtbx/issues/472"
+            )
+            detector = flatten_hierarchy(detector)
+
+        return detector
 
     @staticmethod
     def make_detector(
