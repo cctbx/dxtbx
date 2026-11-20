@@ -19,7 +19,7 @@ from libtbx.phil import parse
 from scitbx.array_family import flex
 from serialtbx.detector import rayonix
 
-from dxtbx.format.FormatXTC import FormatXTC, locator_str
+from dxtbx.format.FormatXTC import FormatXTC, FormatXTCXFEL, locator_str
 
 rayonix_locator_str = """
   rayonix {
@@ -41,7 +41,7 @@ rayonix_locator_str = """
 rayonix_locator_scope = parse(rayonix_locator_str + locator_str, process_includes=True)
 
 
-class FormatXTCRayonix(FormatXTC):
+class FormatXTCRayonix(FormatXTCXFEL):
     def __init__(self, image_file, **kwargs):
         super().__init__(image_file, locator_scope=rayonix_locator_scope, **kwargs)
 
