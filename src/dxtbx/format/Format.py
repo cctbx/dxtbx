@@ -15,7 +15,7 @@ import gzip
 import os
 from collections.abc import Callable
 from io import IOBase
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import libtbx
 
@@ -28,6 +28,9 @@ from dxtbx.model.goniometer import GoniometerFactory
 from dxtbx.model.scan import ScanFactory
 from dxtbx.sequence_filenames import template_regex
 from dxtbx.util import get_url_scheme
+
+if TYPE_CHECKING:
+    from dxtbx.masking import GoniometerShadowMasker
 
 _cache_controller = dxtbx.filecache_controller.simple_controller()
 
@@ -522,7 +525,9 @@ class Format:
         """
         return None
 
-    def get_goniometer_shadow_masker(self, goniometer=None):
+    def get_goniometer_shadow_masker(
+        self, goniometer=None
+    ) -> GoniometerShadowMasker | None:
         """Overload this method to allow generation of dynamic goniometer shadow
         masks to be used during spotfinding or integration."""
 
