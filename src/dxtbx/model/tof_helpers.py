@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import logging
+import re
 import xml
+from pathlib import Path
 from typing import Dict, Generic, List, Tuple, TypeVar
 
 import numpy as np
@@ -8,6 +11,8 @@ from scipy.constants import Planck, m_n
 from scipy.interpolate import interp1d
 
 import cctbx.array_family.flex as flex
+
+logger = logging.getLogger(__name__)
 
 Shape = TypeVar("Shape")
 DType = TypeVar("DType")
@@ -72,6 +77,160 @@ def tof_to_frame_interpolator(tof: list[float], frames: list[float]) -> interp1d
     assert all(i < j for i, j in zip(frames, frames[1:]))
     assert all(i < j for i, j in zip(tof, tof[1:]))
     return interp1d(tof, frames, kind="cubic")
+
+
+DETCAL_PANEL_COLUMNS = (
+    "DETNUM",
+    "NROWS",
+    "NCOLS",
+    "WIDTH",
+    "HEIGHT",
+    "DETD",
+    "CENTERX",
+    "CENTERY",
+    "CENTERZ",
+    "BASEX",
+    "BASEY",
+    "BASEZ",
+    "UPX",
+    "UPY",
+    "UPZ",
+)
+
+
+def read_detcal(
+    detcal_path: str | Path,
+) -> tuple[dict[str, float], dict[int, dict[str, float]]]:
+    """
+    Parse an ISAW/Mantid .DetCal file.
+
+    return ({column: value}, where for the type 7 record, {DETNUM: {column: value}})
+    """
+    detcal_path = Path(detcal_path)
+    headers = {}
+    instrument, panels = {}, {}
+    for line_no, line in enumerate(detcal_path.read_text().splitlines(), 1):
+        f = line.split()
+        if not f or f[0].startswith("#"):
+            continue
+        if f[0] in ("4", "6"):
+            headers[str(int(f[0]) + 1)] = [h.upper() for h in f[1:]]
+            continue
+        if f[0] not in headers:
+            continue
+        cols = headers[f[0]]
+        if len(f) - 1 != len(cols):
+            raise ValueError(
+                f"{detcal_path.name}:{line_no}: expected {len(cols)} values,"
+                f" got {len(f) - 1}"
+            )
+        record = dict(zip(cols, map(float, f[1:])))
+        if f[0] == "7":
+            instrument = record
+        else:
+            panels[int(record["DETNUM"])] = record
+
+    if not panels:
+        raise ValueError(
+            f"No panel records (type 5 rows after a type 4 header) in {detcal_path}"
+        )
+    missing_columns = set(DETCAL_PANEL_COLUMNS) - set(headers["5"])
+    if missing_columns:
+        raise ValueError(
+            f"{detcal_path.name} panel header lacks {sorted(missing_columns)}"
+        )
+    return instrument, panels
+
+
+def apply_detcal_geometry(imageset, detcal_path: str | Path) -> None:
+    """
+    Replace the imported detector geometry with an ISAW/Mantid .DetCal one.
+
+    Useful for, e.g., MANDI data, where nominal geometry can place panels several pixels out.
+    Refinement typically absorbs this into the crystal orientation rather than correcting, due
+    to insufficient reflections for per panel refinement.
+
+    Conventions: Base -> fast axis, Up -> slow, Center is the panel midpoint in
+    cm, DETNUM matches the dxtbx panel "bank<DETNUM>". Pixel sizes are taken
+    from WIDTH/NCOLS and HEIGHT/NROWS, L1 sets the sample to source distance.
+    """
+
+    detcal_path = Path(detcal_path)
+    instrument, cal = read_detcal(detcal_path)
+    if instrument.get("T0_SHIFT", 0.0) != 0.0:
+        raise NotImplementedError(
+            f"{detcal_path.name} has a non-zero T0_SHIFT, which is not yet applied"
+        )
+
+    # Validate every panel before changing, so a bad file does not change detector
+    max_axis_deviation_deg = 25
+    min_axis_dot = np.cos(np.radians(max_axis_deviation_deg))
+    detector = imageset.get_detector()
+    frames, missing, mismatched = [], [], []
+    for panel in detector:
+        match = re.fullmatch(r"bank(\d+)", panel.get_name())
+        if not match or int(match.group(1)) not in cal:
+            missing.append(panel.get_name())
+            continue
+        r = cal[int(match.group(1))]
+
+        if (int(r["NCOLS"]), int(r["NROWS"])) != tuple(panel.get_image_size()):
+            raise ValueError(
+                f"{detcal_path.name}: NCOLS x NROWS of {int(r['NCOLS'])} x"
+                f" {int(r['NROWS'])} does not match the image size"
+                f" {panel.get_image_size()} of {panel.get_name()}"
+            )
+        centre = np.array([r["CENTERX"], r["CENTERY"], r["CENTERZ"]])
+        if abs(np.linalg.norm(centre) - r["DETD"]) > 0.05:
+            raise ValueError(
+                f"{detcal_path.name}: Center of {panel.get_name()} is"
+                f" {np.linalg.norm(centre):.2f} cm from the sample, but DETD is"
+                f" {r['DETD']:.2f} cm"
+            )
+
+        base = np.array([r["BASEX"], r["BASEY"], r["BASEZ"]])
+        up = np.array([r["UPX"], r["UPY"], r["UPZ"]])
+        fast = base / np.linalg.norm(base)
+        slow = up - np.dot(up, fast) * fast
+        slow /= np.linalg.norm(slow)
+        if (
+            float(np.dot(fast, np.array(panel.get_fast_axis()))) < min_axis_dot
+            or float(np.dot(slow, np.array(panel.get_slow_axis()))) < min_axis_dot
+        ):
+            mismatched.append(panel.get_name())
+            continue
+
+        # DetCal file is in cm
+        width, height = r["WIDTH"] * 10.0, r["HEIGHT"] * 10.0  # (mm)
+        origin = centre * 10.0 - 0.5 * width * fast - 0.5 * height * slow
+        pixel_size = (width / r["NCOLS"], height / r["NROWS"])
+        frames.append((panel, pixel_size, fast, slow, origin))
+
+    if mismatched:
+        raise ValueError(
+            f"{detcal_path.name} does not describe this detector: the axes of"
+            f" {len(mismatched)} panel(s) disagree by more than"
+            f" {max_axis_deviation_deg} deg, starting with {mismatched[0]}"
+        )
+    if not frames:
+        raise ValueError(f"{detcal_path.name} matched none of this detector's panels")
+    if missing:
+        logger.info(
+            "No %s entry for %d panel(s): %s",
+            detcal_path.name,
+            len(missing),
+            ", ".join(missing),
+        )
+
+    for panel, pixel_size, fast, slow, origin in frames:
+        panel.set_pixel_size(pixel_size)
+        panel.set_frame(tuple(fast), tuple(slow), tuple(origin))
+    imageset.set_detector(detector)
+
+    if "L1" in instrument:
+        beam = imageset.get_beam()
+        beam.set_sample_to_source_distance(instrument["L1"] * 10.0)  # (mm)
+        imageset.set_beam(beam)
 
 
 class InstrumentDefinitionReader:
