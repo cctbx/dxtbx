@@ -1,0 +1,1 @@
+``FormatESSNMX``: Read the ToF bin edges from ``original_time_edges`` when ``time_of_flight`` holds bin centres, as in current essnmx output. Previously the centres were read as edges, which placed every image half a ToF bin late and dropped the last image.
