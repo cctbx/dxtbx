@@ -60,6 +60,10 @@ class FormatBrukerModern(FormatBruker):
 
         self.header_dict = FormatBrukerModern.parse_header(header_lines)
 
+    def _is_photon(self):
+        """True for Bruker PHOTON II, III and IV (CMOS) detectors"""
+        return self.header_dict["DETTYPE"].upper().startswith("CMOS-PHOTONI")
+
     def _goniometer(self):
         # goniometer angles in ANGLES are 2-theta, omega, phi, chi (FIXED)
         # AXIS indexes into this list to define the scan axis (in FORTRAN counting)
@@ -73,14 +77,14 @@ class FormatBrukerModern(FormatBruker):
         if scan_axis is None:
             scan_axis = 2  # "OMEGA" default
 
-        if self.header_dict["DETTYPE"].upper().startswith("CMOS-PHOTONI"):
+        if self._is_photon():
             # https://journals.iucr.org/d/issues/2014/10/00/dz5309/dz5309sup1.pdf
             axes = flex.vec3_double(((0, -1, 0), (0, 0, 1), (0, 1, 0)))
         else:
             # Axes here determined by trial and error to give the correct rotation
             # axis for the ED-1 prototype, in which the CHI angle is 267°
             axes = flex.vec3_double(((1, 0, 0), (0, 0, -1), (0, 1, 0)))
-        omega -= 180
+            omega -= 180
         angles = flex.double((phi, chi, omega))
 
         g = self._goniometer_factory.make_multi_axis_goniometer(
@@ -130,10 +134,16 @@ class FormatBrukerModern(FormatBruker):
 
         # Here we get some detector specifics. It is unclear whether these are
         # correct, or if we could read these value properly from the header.
-        if self.header_dict["DETTYPE"].upper().startswith("CMOS-PHOTONI"):
+        beam_y, beam_x = (
+            float(bp) for bp in self.header_dict["CENTER"].split()[:-3:-1]
+        )
+        if self._is_photon():
             fast = matrix.col((1, 0, 0))
-            slow = matrix.col((0, 1, 0))
+            slow = matrix.col((0, -1, 0))
             beam = matrix.col((0, 0, 1))
+            # CENTER y is counted from the bottom of the image
+            beam_y = int(self.header_dict["NROWS"].split()[0]) - beam_y
+            two_theta_axis = matrix.col((0, 1, 0))
             pixel_mm = 5.0 / float(self.header_dict["DETTYPE"].split()[1])
             # Photon II-IV. Not a CCD, but is an integrating detector. Photon II
             # has a 90 um Gadox scintillator.
@@ -142,18 +152,16 @@ class FormatBrukerModern(FormatBruker):
             fast = matrix.col((1, 0, 0))
             slow = matrix.col((0, -1, 0))
             beam = matrix.col((0, 0, 1))
+            two_theta_axis = slow
             pixel_mm = 0.075
             type_str = "PAD"
-        beam_pixel = [float(bp) for bp in self.header_dict["CENTER"].split()[:-3:-1]]
         distance_mm = 10.0 * float(self.header_dict["DISTANC"].split()[1])
         origin = (
-            -distance_mm * beam
-            - fast * pixel_mm * beam_pixel[1]
-            - slow * pixel_mm * beam_pixel[0]
+            -distance_mm * beam - fast * pixel_mm * beam_x - slow * pixel_mm * beam_y
         )
-        # 2theta rotation appears to be around the slow axis
-        origin = origin.rotate_around_origin(slow, two_theta, deg=True)
-        fast = fast.rotate_around_origin(slow, two_theta, deg=True)
+        # 2theta rotation is around the vertical axis
+        origin = origin.rotate_around_origin(two_theta_axis, two_theta, deg=True)
+        fast = fast.rotate_around_origin(two_theta_axis, two_theta, deg=True)
         pixel_size = pixel_mm, pixel_mm
         # ncols is nfast, nrows is nslow
         image_size = (

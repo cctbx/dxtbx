@@ -1,0 +1,1 @@
+``FormatBrukerModern``: Fix Photon II/III/IV images being read upside down, and remove a 180° omega offset that put phi scans out of step with omega scans of the same crystal.
