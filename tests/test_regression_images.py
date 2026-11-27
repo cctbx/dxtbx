@@ -111,6 +111,9 @@ def test_read_image(test_image):
     # From old test_dxtbx; get the image size
     if detector is not None:
         detector[0].get_image_size()
+        # A hierarchy is meaningless for a single panel detector, and the two
+        # halves of the geometry drift apart. See dxtbx#472
+        assert len(detector) > 1 or not detector.has_hierarchy()
 
     for panel in detector:
         d_mat = scitbx.matrix.sqr(panel.get_d_matrix())

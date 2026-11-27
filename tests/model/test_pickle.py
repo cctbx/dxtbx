@@ -56,6 +56,34 @@ def test_hierarchical_detector():
     assert obj1 == obj2
 
 
+def test_single_panel_detector_is_not_pickled_with_a_hierarchy():
+    """A hierarchy is meaningless for one panel. See dxtbx#472."""
+    p = Panel()
+    p.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    obj1 = Detector(p)
+    assert not obj1.has_hierarchy()
+
+    version, state = obj1.__getstate__()
+    assert "hierarchy" not in state
+
+    obj2 = pickle_then_unpickle(obj1)
+    assert obj1 == obj2
+    assert not obj2.has_hierarchy()
+
+
+def test_detector_pickled_before_dxtbx_472_still_loads():
+    """Such a pickle carries a hierarchy above its single panel."""
+    p = Panel()
+    p.set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    obj1 = Detector(p)
+    obj1.hierarchy().set_local_frame((1, 0, 0), (0, 1, 0), (0, 0, 100))
+    assert obj1.has_hierarchy()
+
+    obj2 = pickle_then_unpickle(obj1)
+    assert obj1 == obj2
+    assert obj2[0].get_origin() == obj1[0].get_origin()
+
+
 def test_scan():
     """Test pickling the scan data object."""
     obj1 = Scan((1, 2), (1, 1))
