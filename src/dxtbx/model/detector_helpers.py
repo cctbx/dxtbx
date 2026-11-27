@@ -450,16 +450,29 @@ def get_panel_projection_2d_from_axes(
     fast_axis_2d: matrix.col,
     slow_axis_2d: matrix.col,
     origin_2d: matrix.col,
+    picture_pixel_size: float | None = None,
 ) -> tuple[Float4, Float2]:
     """
     Gets translation and rotation required to project image_data from panel,
     based on axes given.
+
+    picture_pixel_size is the pitch (mm) of one pixel of the composite picture
+    the panel is projected onto. Panels of a detector may have different pixel
+    sizes, so pass the same value for every panel of a detector (e.g. the
+    smallest pixel size) to place them at a consistent scale; the returned 2x2
+    matrix then includes the scale factor between picture and readout pixels.
+    If None, the panel's own pixel size is used (picture pixels are readout
+    pixels).
     """
 
     pixel_size = (
         panel.get_pixel_size()[0] * 1e-3,
         panel.get_pixel_size()[1] * 1e-3,
     )
+    if picture_pixel_size is None:
+        picture_px = pixel_size
+    else:
+        picture_px = (picture_pixel_size * 1e-3, picture_pixel_size * 1e-3)
 
     center = (
         origin_2d
@@ -513,7 +526,7 @@ def get_panel_projection_2d_from_axes(
     # the right.  XXX Is this orthographic projection the only one
     # that makes any sense?
     E = matrix.rec(
-        elems=[0, +pixel_size[1], 0, -pixel_size[0], 0, 0, 0, 0, 0, 0, 0, 1],
+        elems=[0, +picture_px[1], 0, -picture_px[0], 0, 0, 0, 0, 0, 0, 0, 1],
         n=[4, 3],
     )
 
