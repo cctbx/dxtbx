@@ -138,8 +138,8 @@ class FormatMultiImage(Format):
             assert len(set(filenames)) == 1
             filenames = filenames[0:1]
 
-        # Make filenames absolute
-        filenames = [os.path.abspath(x) for x in filenames]
+        # Normalise file paths
+        filenames = [os.path.normpath(x) for x in filenames]
 
         # Make it a dictionary
         if format_kwargs is None:

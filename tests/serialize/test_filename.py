@@ -28,4 +28,4 @@ def test_resolve_path(monkeypatch):
 
     new_path = os.path.join("$HELLO_WORLD", filename)
     path = resolve_path(new_path)
-    assert path == os.path.abspath(os.path.join("EXPANDED", filename))
+    assert path == os.path.join("EXPANDED", filename)
