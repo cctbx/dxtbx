@@ -15,7 +15,7 @@ from dxtbx.format.FormatSMV import FormatSMV
 
 
 class FormatSMVCMOS1(FormatSMV):
-    """A class for reading SMV format CMOS1 images. 'Abstract' class."""
+    """A class for reading SMV format CMOS1 images."""
 
     @staticmethod
     def understand(image_file):
@@ -81,6 +81,12 @@ class FormatSMVCMOS1(FormatSMV):
 
     def _goniometer(self):
         axis = tuple(map(float, self._header_dictionary["ROTATION_VECTOR"].split()))
+
+        # In practice the rotation axis appears to be inverted for tested datasets:
+        # https://proteindiffraction.org/project/8t8k/
+        # https://proteindiffraction.org/project/9arr/
+        # https://proteindiffraction.org/project/8f0v/
+        axis = tuple(-1.0 * e for e in axis)
 
         return self._goniometer_factory.known_axis(axis)
 
