@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import bz2
+import math
 
 import numpy as np
 import pytest
+
+from scitbx import matrix
 
 from dxtbx.format.FormatBrukerModern import FormatBrukerModern
 from dxtbx.model.experiment_list import ExperimentListFactory
@@ -170,4 +173,55 @@ def test_photon_iv_treated_as_photon(photon_ii_raw, photon_ii_image, tmp_path):
     )
     assert list(photon_iv.get_goniometer().get_axes().as_double()) == pytest.approx(
         list(photon_ii.get_goniometer().get_axes().as_double())
+    )
+
+
+def _write(raw, path):
+    path.write_bytes(raw)
+    return _load(path)
+
+
+def test_photon_detector_orientation(photon_ii_raw, photon_ii_image, tmp_path):
+    """Rows run downwards, CENTER y counts from the bottom edge, and 2theta
+    swings the detector about the vertical axis"""
+    two_theta, *other_angles = _get_header_item(photon_ii_raw, "ANGLES").split()
+    raw = _set_header_item(photon_ii_raw, "ANGLES", " ".join(["0.0"] + other_angles))
+    panel = _write(raw, tmp_path / "twotheta0_01_0001.sfrm").get_detector()[0]
+    assert panel.get_fast_axis() == pytest.approx((1, 0, 0))
+    assert panel.get_slow_axis() == pytest.approx((0, -1, 0))
+    centre_x, centre_y = map(float, _get_header_item(raw, "CENTER").split()[-2:])
+    nrows = int(_get_header_item(raw, "NROWS").split()[0])
+    assert panel.get_beam_centre_px((0, 0, -1)) == pytest.approx(
+        (centre_x, nrows - centre_y)
+    )
+
+    t = math.radians(float(two_theta))
+    panel = _load(photon_ii_image).get_detector()[0]
+    assert panel.get_normal() == pytest.approx((-math.sin(t), 0, -math.cos(t)))
+
+
+def _rotation_at_scan_start(imageset):
+    gonio = imageset.get_goniometer()
+    angle = imageset.get_scan().get_angle_from_array_index(0)
+    axis = matrix.col(gonio.get_rotation_axis_datum())
+    return (
+        matrix.sqr(gonio.get_setting_rotation())
+        * axis.axis_and_angle_as_r3_rotation_matrix(angle, deg=True)
+        * matrix.sqr(gonio.get_fixed_rotation())
+    )
+
+
+def test_photon_omega_scan_matches_phi_scan(photon_ii_raw, photon_ii_image, tmp_path):
+    """A phi scan and an omega scan starting from the same goniometer position
+    must give the same crystal orientation"""
+    assert _get_header_item(photon_ii_raw, "AXIS") == "3"
+    omega = _get_header_item(photon_ii_raw, "ANGLES").split()[1]
+    raw = _set_header_item(photon_ii_raw, "AXIS", "2")
+    raw = _set_header_item(raw, "START", omega)
+    phi_scan = _load(photon_ii_image)
+    omega_scan = _write(raw, tmp_path / "omega_01_0001.sfrm")
+
+    assert omega_scan.get_goniometer().get_scan_axis() == 2
+    assert _rotation_at_scan_start(omega_scan).elems == pytest.approx(
+        _rotation_at_scan_start(phi_scan).elems
     )
