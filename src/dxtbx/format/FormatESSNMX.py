@@ -19,6 +19,38 @@ from dxtbx.model.tof_helpers import wavelength_from_tof
 logger = logging.getLogger(__name__)
 
 
+def get_tof_bin_edges(panel: h5py.Group, scale: float) -> np.ndarray:
+    """
+    ToF bin edges for an NXdetector panel, as the stored values times scale.
+
+    Older essnmx output stored the n + 1 bin edges in ``time_of_flight``.
+    Newer output stores the n bin centres there and the n + 1 edges in
+    ``original_time_edges``. Reading the centres as edges places every image
+    half a bin late and drops the last one, so the number of ToF slices in
+    ``data`` decides which of the two datasets holds edges.
+    """
+    n_slices = panel["data"].shape[-1]
+    for name in ("original_time_edges", "time_of_flight"):
+        if name in panel:
+            values = np.asarray(panel[name][...], dtype=float).ravel()
+            if values.size == n_slices + 1:
+                return values * scale
+
+    if "time_of_flight" in panel:
+        centres = np.asarray(panel["time_of_flight"][...], dtype=float).ravel()
+        if centres.size == n_slices and n_slices > 1:
+            # Only centres are stored: put the edges halfway between them
+            mids = 0.5 * (centres[:-1] + centres[1:])
+            first = centres[0] - (mids[0] - centres[0])
+            last = centres[-1] + (centres[-1] - mids[-1])
+            return np.concatenate([[first], mids, [last]]) * scale
+
+    raise ValueError(
+        f"{panel.name}: no time_of_flight or original_time_edges dataset "
+        f"matches the {n_slices} ToF slices in data"
+    )
+
+
 class FormatESSNMX(FormatHDF5):
     """
     Class to read files from NMX
@@ -98,12 +130,12 @@ class FormatESSNMX(FormatHDF5):
 
         return tuple(raw_data)
 
-    def _get_time_channel_bins(self) -> list[float]:
-        # (usec)
+    def _get_time_channel_bins(self) -> np.ndarray:
+        # (usec) ToF bin edges, stored in ns
         # the tofs are recorded separately per panel but they
         # should all be the same
         for panel in self._get_panels():
-            return panel["time_of_flight"][...] / 1e3
+            return get_tof_bin_edges(panel, 1e-3)
 
     def _get_time_of_flight(self) -> list[float]:
         # (usec)
@@ -394,12 +426,12 @@ class FormatESSNMX_McStas(FormatHDF5):
 
         return tuple(raw_data)
 
-    def _get_time_channel_bins(self) -> list[float]:
-        # (usec)
+    def _get_time_channel_bins(self) -> np.ndarray:
+        # (usec) ToF bin edges, stored in s
         # the tofs are recorded separately per panel but they
         # should all be the same
         for panel in self._get_panels():
-            return panel["time_of_flight"][...] * 1e6
+            return get_tof_bin_edges(panel, 1e6)
 
     def _get_time_of_flight(self) -> list[float]:
         # (usec)
